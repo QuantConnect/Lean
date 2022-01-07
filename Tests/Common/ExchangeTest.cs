@@ -46,9 +46,11 @@ namespace QuantConnect.Tests.Common
         [TestCase("ISE_GEMINI", "")]
         [TestCase("ISE_MERCURY", "")]
         [TestCase("OPRA", "")]
-        public void ExchangeCorrectlyReturnedAsSingleLetter(string exchange, string expectedExchange)
+        public void ExchangeCorrectlyReturnedAsSingleLetter(string exchange, string expectedExchangeCode)
         {
-            Assert.AreEqual(expectedExchange, exchange.GetPrimaryExchangeAsSingleCharacter());
+            var primaryExchange = exchange.GetPrimaryExchange();
+            Assert.AreEqual(expectedExchangeCode, primaryExchange.Code);
+            Assert.AreEqual(primaryExchange, primaryExchange.Code.GetPrimaryExchange());
         }
 
         [TestCase("ISE_GEMINI", "H", SecurityType.Option)]
@@ -83,6 +85,15 @@ namespace QuantConnect.Tests.Common
             {
                 Assert.AreEqual(expectedResult, left.GetHashCode() == right.GetHashCode());
             }
+        }
+
+        [Test]
+        public void RoundTripSerialization_unknown()
+        {
+            var serialized = JsonConvert.SerializeObject(Exchange.UNKNOWN);
+            var deserialized = JsonConvert.DeserializeObject<Exchange>(serialized);
+
+            Assert.AreEqual(Exchange.UNKNOWN, deserialized);
         }
 
         [Test]

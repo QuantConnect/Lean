@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -229,29 +229,6 @@ namespace QuantConnect
         [EnumMember(Value = "Py")]
         Python
     }
-
-
-    /// <summary>
-    /// User / Algorithm Job Subscription Level
-    /// </summary>
-    public enum UserPlan
-    {
-        /// <summary>
-        /// Free User (Backtesting).
-        /// </summary>
-        Free,
-
-        /// <summary>
-        /// Hobbyist User with Included 512mb Server.
-        /// </summary>
-        Hobbyist,
-
-        /// <summary>
-        /// Professional plan for financial advisors
-        /// </summary>
-        Professional
-    }
-
 
     /// <summary>
     /// Live server types available through the web IDE. / QC deployment.
@@ -692,7 +669,44 @@ namespace QuantConnect
         /// <summary>
         /// The split adjusted price plus dividends
         /// </summary>
-        TotalReturn
+        TotalReturn,
+        /// <summary>
+        /// Eliminates price jumps between two consecutive contracts, adding a factor based on the difference of their prices.
+        /// </summary>
+        /// <remarks>First contract is the true one, factor 0</remarks>
+        ForwardPanamaCanal,
+        /// <summary>
+        /// Eliminates price jumps between two consecutive contracts, adding a factor based on the difference of their prices.
+        /// </summary>
+        /// <remarks>Last contract is the true one, factor 0</remarks>
+        BackwardsPanamaCanal,
+        /// <summary>
+        /// Eliminates price jumps between two consecutive contracts, multiplying the prices by their ratio.
+        /// </summary>
+        /// <remarks>Last contract is the true one, factor 1</remarks>
+        BackwardsRatio
+    }
+
+    /// <summary>
+    /// Continuous contracts mapping modes
+    /// </summary>
+    public enum DataMappingMode
+    {
+        /// <summary>
+        /// The contract maps on the previous day of expiration of the front month.
+        /// </summary>
+        LastTradingDay,
+        /// <summary>
+        /// The contract maps on the first date of the delivery month of the front month. If the contract expires prior to this date,
+        /// then it rolls on the contract's last trading date instead.
+        /// </summary>
+        /// <remarks>For example Crude Oil WTI (CL) 'DEC 2021 CLZ1' contract expires on Nov 19 2021, so mapping date will be it's expiration date</remarks>
+        /// <remarks>Another example Corn 'DEC 2021 ZCZ1' contract expires on Dec 14 2021, so mapping date will be Dec 1st</remarks>
+        FirstDayMonth,
+        /// <summary>
+        /// The contract maps when the back month contract has a higher volume that the current front month.
+        /// </summary>
+        OpenInterest
     }
 
     /// <summary>
@@ -709,29 +723,6 @@ namespace QuantConnect
             string market = Market.USA)
         {
             return exchange.GetPrimaryExchange(securityType, market).Code;
-        }
-
-        /// <summary>
-        /// Gets the exchange as single character representation.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [Obsolete("This overload has not enough information to determine the exchange. " +
-            "Please use overload expecting a SecurityType and Market")]
-        public static string GetPrimaryExchangeAsSingleCharacter(this string exchange)
-        {
-            return exchange.GetPrimaryExchange().Code;
-        }
-
-        /// <summary>
-        /// Returns the main Exchange from the single character encoding.
-        /// </summary>
-        /// <param name="exchange"></param>
-        /// <returns></returns>
-        [Obsolete("This overload has not enough information to determine the exchange. " +
-            "Please use overload expecting a string, SecurityType and Market")]
-        public static Exchange GetPrimaryExchange(char exchange)
-        {
-            return exchange.ToString().GetPrimaryExchange();
         }
 
         /// <summary>
@@ -848,6 +839,26 @@ namespace QuantConnect
                     case "W":
                     case "C2":
                         return Exchange.C2;
+                    default:
+                        return Exchange.UNKNOWN;
+                }
+            }
+            else if (securityType == SecurityType.Future || securityType == SecurityType.FutureOption)
+            {
+                switch (exchange.LazyToUpper())
+                {
+                    case "CME":
+                        return Exchange.CME;
+                    case "CBOT":
+                        return Exchange.CBOT;
+                    case "NYMEX":
+                        return Exchange.NYMEX;
+                    case "ICE":
+                        return Exchange.ICE;
+                    case "CFE":
+                        return Exchange.CFE;
+                    case "COMEX":
+                        return Exchange.COMEX;
                     default:
                         return Exchange.UNKNOWN;
                 }

@@ -282,8 +282,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             }
                         }
 
-                        // special handling of futures data to build the futures chain
-                        if (symbol.SecurityType == SecurityType.Future)
+                        // special handling of futures data to build the futures chain. Don't push canonical continuous contract
+                        if (symbol.SecurityType == SecurityType.Future && !symbol.IsCanonical())
                         {
                             // internal feeds, like open interest, will not create the chain but will update it if it exists
                             // this is because the open interest could arrive at some closed market hours in which there is no other data and we don't

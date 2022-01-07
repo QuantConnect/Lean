@@ -144,9 +144,8 @@ namespace QuantConnect.Util
                 ticker = Path.GetFileNameWithoutExtension(path);
                 if (securityType.IsOption())
                 {
-                    // ticker_trade_american
-                    var tickerWithoutStyle = ticker.Substring(0, ticker.LastIndexOfInvariant("_"));
-                    ticker = tickerWithoutStyle.Substring(0, tickerWithoutStyle.LastIndexOfInvariant("_"));
+                    // ticker_year_trade_american
+                    ticker = ticker.Substring(0, ticker.IndexOf("_", StringComparison.InvariantCulture));
                 }
                 if (securityType == SecurityType.Future)
                 {

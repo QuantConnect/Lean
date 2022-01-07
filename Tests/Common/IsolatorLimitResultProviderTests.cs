@@ -28,12 +28,15 @@ namespace QuantConnect.Tests.Common
     [TestFixture]
     public class IsolatorLimitResultProviderTests
     {
-        private TimeMonitor _timeMonitor;
+        private TimeMonitorTest _timeMonitor;
+        private AutoResetEvent _timeMonitorEvent;
 
         [OneTimeSetUp]
         public void Setup()
         {
-            _timeMonitor = new TimeMonitor(monitorIntervalMs:3);
+            _timeMonitor = new TimeMonitorTest(monitorIntervalMs:3);
+            _timeMonitorEvent = new AutoResetEvent(false);
+            _timeMonitor.TimeMonitorEvent = _timeMonitorEvent;
         }
 
         [OneTimeTearDown]
@@ -69,19 +72,15 @@ namespace QuantConnect.Tests.Common
                 Assert.Fail("Consume should have started.");
             }
 
-            // lets give the monitor time to register the initial time
-            Thread.Sleep(100);
+            // Let's give the monitor time to register the initial time
+            _timeMonitorEvent.WaitOne();
             timeProvider.Advance(TimeSpan.FromSeconds(45));
 
             Assert.AreEqual(0, provider.Invocations.Count);
 
             timeProvider.Advance(TimeSpan.FromSeconds(15));
 
-            var count = 10;
-            while (provider.Invocations.Count == 0 && --count > 0)
-            {
-                Thread.Sleep(10);
-            }
+            _timeMonitorEvent.WaitOne();
 
             minuteElapsed.Set();
             if (!consumeCompleted.Wait(50))
@@ -93,7 +92,7 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(1, provider.Invocations[0]);
 
             // give time to the monitor to register the time consumer ended
-            Thread.Sleep(50);
+            _timeMonitorEvent.WaitOne();
             Assert.AreEqual(0, _timeMonitor.Count);
         }
 
@@ -102,18 +101,19 @@ namespace QuantConnect.Tests.Common
         {
             var timeProvider = new ManualTimeProvider(new DateTime(2000, 01, 01));
             var provider = new FakeIsolatorLimitResultProvider();
+
             Action code = () =>
             {
-                Thread.Sleep(5);
+                _timeMonitorEvent.WaitOne();
                 timeProvider.Advance(TimeSpan.FromMinutes(.99));
-                Thread.Sleep(5);
+                _timeMonitorEvent.WaitOne();
             };
             provider.Consume(timeProvider, code, _timeMonitor);
 
             Assert.IsEmpty(provider.Invocations);
 
             // give time to the monitor to register the time consumer ended
-            Thread.Sleep(50);
+            _timeMonitorEvent.WaitOne();
             Assert.AreEqual(0, _timeMonitor.Count);
         }
 
@@ -122,15 +122,16 @@ namespace QuantConnect.Tests.Common
         {
             var timeProvider = new ManualTimeProvider(new DateTime(2000, 01, 01));
             var provider = new FakeIsolatorLimitResultProvider();
+
             Action code = () =>
             {
                 // lets give the monitor time to register the initial time
-                Thread.Sleep(100);
+                _timeMonitorEvent.WaitOne();
                 for (int i = 0; i < 4; i++)
                 {
                     timeProvider.AdvanceSeconds(45);
                     // give the monitoring task time to request more time
-                    Thread.Sleep(20);
+                    _timeMonitorEvent.WaitOne();
                 }
             };
 
@@ -138,9 +139,8 @@ namespace QuantConnect.Tests.Common
 
             Assert.AreEqual(3, provider.Invocations.Count);
             Assert.IsTrue(provider.Invocations.TrueForAll(invoc => invoc == 1));
-
             // give time to the monitor to register the time consumer ended
-            Thread.Sleep(50);
+            _timeMonitorEvent.WaitOne();
             Assert.AreEqual(0, _timeMonitor.Count);
         }
 
@@ -178,6 +178,33 @@ namespace QuantConnect.Tests.Common
                     _ivocations.Add(minutes);
                 }
                 return true;
+            }
+        }
+
+        private class TimeMonitorTest: TimeMonitor
+        {
+            public AutoResetEvent TimeMonitorEvent;
+
+            public TimeMonitorTest(int monitorIntervalMs = 100) : base(monitorIntervalMs) { }
+
+            protected override void ProcessConsumer(TimeConsumer consumer)
+            {
+                base.ProcessConsumer(consumer);
+
+                TimeMonitorEvent.Set();
+            }
+            protected override void RemoveAll()
+            {
+                // Store the TimeConsumer objects to remove
+                var toRemove = TimeConsumers.Where(time => time.Finished).ToList();
+
+                base.RemoveAll();
+
+                // Check if there were elements removed
+                if (toRemove.Any())
+                {
+                    TimeMonitorEvent.Set();
+                }
             }
         }
     }

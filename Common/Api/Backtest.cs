@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using QuantConnect.Optimizer.Parameters;
 using QuantConnect.Statistics;
 
 namespace QuantConnect.Api
@@ -29,86 +30,92 @@ namespace QuantConnect.Api
         /// Name of the backtest
         /// </summary>
         [JsonProperty(PropertyName = "name")]
-        public string Name;
+        public string Name { get; set; }
 
         /// <summary>
         /// Note on the backtest attached by the user
         /// </summary>
         [JsonProperty(PropertyName = "note")]
-        public string Note;
+        public string Note { get; set; }
 
         /// <summary>
         /// Assigned backtest Id
         /// </summary>
         [JsonProperty(PropertyName = "backtestId")]
-        public string BacktestId;
+        public string BacktestId { get; set; }
 
         /// <summary>
         /// Boolean true when the backtest is completed.
         /// </summary>
         [JsonProperty(PropertyName = "completed")]
-        public bool Completed;
+        public bool Completed { get; set; }
 
         /// <summary>
         /// Progress of the backtest in percent 0-1.
         /// </summary>
         [JsonProperty(PropertyName = "progress")]
-        public decimal Progress;
+        public decimal Progress { get; set; }
 
         /// <summary>
         /// Backtest error message
         /// </summary>
         [JsonProperty(PropertyName = "error")]
-        public string Error;
+        public string Error { get; set; }
 
         /// <summary>
         /// Backtest error stacktrace
         /// </summary>
         [JsonProperty(PropertyName = "stacktrace")]
-        public string StackTrace;
+        public string StackTrace { get; set; }
 
         /// <summary>
         /// Backtest creation date and time
         /// </summary>
         [JsonProperty(PropertyName = "created")]
-        public DateTime Created;
+        public DateTime Created { get; set; }
 
         /// <summary>
         /// Rolling window detailed statistics.
         /// </summary>
         [JsonProperty(PropertyName = "rollingWindow", NullValueHandling = NullValueHandling.Ignore)]
-        public Dictionary<string, AlgorithmPerformance> RollingWindow;
+        public Dictionary<string, AlgorithmPerformance> RollingWindow { get; set; }
 
         /// <summary>
         /// Rolling window detailed statistics.
         /// </summary>
         [JsonProperty(PropertyName = "totalPerformance", NullValueHandling = NullValueHandling.Ignore)]
-        public AlgorithmPerformance TotalPerformance;
+        public AlgorithmPerformance TotalPerformance { get; set; }
 
         /// <summary>
         /// Contains population averages scores over the life of the algorithm
         /// </summary>
         [JsonProperty(PropertyName = "alphaRuntimeStatistics", NullValueHandling = NullValueHandling.Ignore)]
-        public AlphaRuntimeStatistics AlphaRuntimeStatistics;
+        public AlphaRuntimeStatistics AlphaRuntimeStatistics { get; set; }
 
         /// <summary>
         /// Charts updates for the live algorithm since the last result packet
         /// </summary>
         [JsonProperty(PropertyName = "charts", NullValueHandling = NullValueHandling.Ignore)]
-        public IDictionary<string, Chart> Charts;
+        public IDictionary<string, Chart> Charts { get; set; }
 
         /// <summary>
         /// Statistics information sent during the algorithm operations.
         /// </summary>
         /// <remarks>Intended for update mode -- send updates to the existing statistics in the result GUI. If statistic key does not exist in GUI, create it</remarks>
         [JsonProperty(PropertyName = "statistics", NullValueHandling = NullValueHandling.Ignore)]
-        public IDictionary<string, string> Statistics;
+        public IDictionary<string, string> Statistics { get; set; }
 
         /// <summary>
         /// Runtime banner/updating statistics in the title banner of the live algorithm GUI.
         /// </summary>
         [JsonProperty(PropertyName = "runtimeStatistics", NullValueHandling = NullValueHandling.Ignore)]
-        public IDictionary<string, string> RuntimeStatistics;
+        public IDictionary<string, string> RuntimeStatistics { get; set; }
+
+        /// <summary>
+        /// Optimization parameters
+        /// </summary>
+        [JsonProperty(PropertyName = "parameterSet")]
+        public ParameterSet ParameterSet { get; set; }
     }
 
     /// <summary>
@@ -121,7 +128,7 @@ namespace QuantConnect.Api
         /// Backtest Object
         /// </summary>
         [JsonProperty(PropertyName = "backtest")]
-        public Backtest Backtest;
+        public Backtest Backtest { get; set; }
     }
 
     /// <summary>
@@ -133,6 +140,6 @@ namespace QuantConnect.Api
         /// Collection of summarized backtest objects
         /// </summary>
         [JsonProperty(PropertyName = "backtests")]
-        public List<Backtest> Backtests; 
+        public List<Backtest> Backtests { get; set; }
     }
 }

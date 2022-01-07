@@ -14,18 +14,19 @@
  *
 */
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using NodaTime;
+using QuantConnect.Configuration;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Packets;
+using QuantConnect.Util;
+using RestSharp;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using NodaTime;
-using QuantConnect.Data;
-using QuantConnect.Data.Market;
-using QuantConnect.Packets;
-using RestSharp;
 
 namespace QuantConnect.Brokerages.Tradier
 {
@@ -37,11 +38,7 @@ namespace QuantConnect.Brokerages.Tradier
         #region IDataQueueHandler implementation
 
         private const string WebSocketUrl = "wss://ws.tradier.com/v1/markets/events";
-        private const int ConnectionTimeout = 30000;
 
-        private readonly WebSocketClientWrapper _webSocketClient = new WebSocketClientWrapper();
-
-        private bool _isDataQueueHandlerInitialized;
         private TradierStreamSession _streamSession;
 
         private readonly ConcurrentDictionary<string, Symbol> _subscribedTickers = new ConcurrentDictionary<string, Symbol>();
@@ -52,6 +49,25 @@ namespace QuantConnect.Brokerages.Tradier
         /// <param name="job">Job we're subscribing for</param>
         public void SetJob(LiveNodePacket job)
         {
+            var useSandbox = bool.Parse(job.BrokerageData["tradier-use-sandbox"]);
+            var accountId = job.BrokerageData["tradier-account-id"];
+            var accessToken = job.BrokerageData["tradier-access-token"];
+            var aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
+
+            Initialize(
+                wssUrl: WebSocketUrl,
+                accountId: accountId,
+                accessToken: accessToken,
+                useSandbox: useSandbox,
+                algorithm: null,
+                orderProvider: null,
+                securityProvider: null,
+                aggregator: aggregator);
+
+            if (!IsConnected)
+            {
+                Connect();
+            }
         }
 
         /// <summary>
@@ -69,36 +85,13 @@ namespace QuantConnect.Brokerages.Tradier
                     "TradierBrokerage.DataQueueHandler.Subscribe(): The sandbox does not support data streaming.");
             }
 
-            // initialize data queue handler on-demand
-            if (!_isDataQueueHandlerInitialized)
-            {
-                _isDataQueueHandlerInitialized = true;
-
-                _streamSession = CreateStreamSession();
-
-                using (var resetEvent = new ManualResetEvent(false))
-                {
-                    EventHandler triggerEvent = (o, args) => resetEvent.Set();
-                    _webSocketClient.Open += triggerEvent;
-
-                    _webSocketClient.Connect();
-
-                    if (!resetEvent.WaitOne(ConnectionTimeout))
-                    {
-                        throw new TimeoutException("Websockets connection timeout.");
-                    }
-
-                    _webSocketClient.Open -= triggerEvent;
-                }
-            }
-
             if (!CanSubscribe(dataConfig.Symbol))
             {
-                return Enumerable.Empty<BaseData>().GetEnumerator();
+                return null;
             }
 
             var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
-            _subscriptionManager.Subscribe(dataConfig);
+            SubscriptionManager.Subscribe(dataConfig);
 
             return enumerator;
         }
@@ -106,7 +99,9 @@ namespace QuantConnect.Brokerages.Tradier
         private bool CanSubscribe(Symbol symbol)
         {
             return (symbol.ID.SecurityType == SecurityType.Equity || symbol.ID.SecurityType == SecurityType.Option)
-                && !symbol.Value.Contains("-UNIVERSE-");
+                && !symbol.Value.Contains("-UNIVERSE-")
+                // continuous futures and canonical symbols not supported
+                && !symbol.IsCanonical();
         }
 
         /// <summary>
@@ -115,11 +110,11 @@ namespace QuantConnect.Brokerages.Tradier
         /// <param name="dataConfig">Subscription config to be removed</param>
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            _subscriptionManager.Unsubscribe(dataConfig);
+            SubscriptionManager.Unsubscribe(dataConfig);
             _aggregator.Remove(dataConfig);
         }
 
-        private bool Subscribe(IEnumerable<Symbol> symbols, TickType tickType)
+        protected override bool Subscribe(IEnumerable<Symbol> symbols)
         {
             var symbolsAdded = false;
 
@@ -144,7 +139,7 @@ namespace QuantConnect.Brokerages.Tradier
             return true;
         }
 
-        private bool Unsubscribe(IEnumerable<Symbol> symbols, TickType tickType)
+        private bool Unsubscribe(IEnumerable<Symbol> symbols)
         {
             var symbolsRemoved = false;
 
@@ -179,7 +174,7 @@ namespace QuantConnect.Brokerages.Tradier
         {
             var obj = new
             {
-                sessionid = _streamSession.SessionId,
+                sessionid = GetStreamSession().SessionId,
                 symbols = tickers,
                 filter = new[] { "trade", "quote" },
                 linebreak = true
@@ -187,10 +182,13 @@ namespace QuantConnect.Brokerages.Tradier
 
             var json = JsonConvert.SerializeObject(obj);
 
-            _webSocketClient.Send(json);
+            WebSocket.Send(json);
         }
 
-        private void OnMessage(object sender, WebSocketMessage webSocketMessage)
+        /// <summary>
+        /// Handles websocket received messages
+        /// </summary>
+        protected override void OnMessage(object sender, WebSocketMessage webSocketMessage)
         {
             var e = (WebSocketClientWrapper.TextMessage)webSocketMessage.Data;
             var obj = JObject.Parse(e.Message);
@@ -245,7 +243,7 @@ namespace QuantConnect.Brokerages.Tradier
             switch (tsd.Type)
             {
                 case "trade":
-                    return new Tick(time, symbol, "", tsd.TradeExchange, (int) tsd.TradeSize, tsd.TradePrice);
+                    return new Tick(time, symbol, "", tsd.TradeExchange, (int)tsd.TradeSize, tsd.TradePrice);
 
                 case "quote":
                     return new Tick(time, symbol, "", "", tsd.BidSize, tsd.BidPrice, tsd.AskSize, tsd.AskPrice);
@@ -255,14 +253,19 @@ namespace QuantConnect.Brokerages.Tradier
         }
 
         /// <summary>
-        /// Get the current market status
+        /// Get the current Tradier stream session
         /// </summary>
-        private TradierStreamSession CreateStreamSession()
+        private TradierStreamSession GetStreamSession()
         {
-            var request = new RestRequest("markets/events/session", Method.POST);
-            return Execute<TradierStreamSession>(request, TradierApiRequestType.Data, "stream");
+            if (_streamSession == null)
+            {
+                var request = new RestRequest("markets/events/session", Method.POST);
+                _streamSession = Execute<TradierStreamSession>(request, TradierApiRequestType.Data, "stream");
+            }
+
+            return _streamSession;
         }
 
-        #endregion
+        #endregion IDataQueueHandler implementation
     }
 }

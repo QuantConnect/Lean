@@ -17,6 +17,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -25,6 +27,7 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 using QuantConnect.Securities.Positions;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Backtesting
 {
@@ -148,7 +151,7 @@ namespace QuantConnect.Brokerages.Backtesting
                 var submitted = new OrderEvent(order,
                         Algorithm.UtcTime,
                         OrderFee.Zero)
-                    { Status = OrderStatus.Submitted };
+                { Status = OrderStatus.Submitted };
                 OnOrderEvent(submitted);
 
                 return true;
@@ -225,7 +228,7 @@ namespace QuantConnect.Brokerages.Backtesting
             var canceled = new OrderEvent(order,
                     Algorithm.UtcTime,
                     OrderFee.Zero)
-                { Status = OrderStatus.Canceled };
+            { Status = OrderStatus.Canceled };
             OnOrderEvent(canceled);
 
             return true;
@@ -252,7 +255,7 @@ namespace QuantConnect.Brokerages.Backtesting
                 var stillNeedsScan = false;
 
                 // process each pending order to produce fills/fire events
-                foreach (var kvp in _pending.OrderBy(x => x.Key))
+                foreach (var kvp in _pending.OrderBySafe(x => x.Key))
                 {
                     var order = kvp.Value;
                     if (order == null)
@@ -342,7 +345,7 @@ namespace QuantConnect.Brokerages.Backtesting
                                 Algorithm.UtcTime,
                                 OrderFee.Zero,
                                 err.Message)
-                            { Status = OrderStatus.Invalid });
+                        { Status = OrderStatus.Invalid });
                         Order pending;
                         _pending.TryRemove(order.Id, out pending);
 
@@ -398,6 +401,11 @@ namespace QuantConnect.Brokerages.Backtesting
                             Algorithm.Error($"Order Error: id: {order.Id}, Transaction model failed to fill for order type: {order.Type} with error: {err.Message}");
                         }
                     }
+                    else if (order.Status == OrderStatus.CancelPending)
+                    {
+                        // the pending CancelOrderRequest will be handled during the next transaction handler run
+                        continue;
+                    }
                     else
                     {
                         // invalidate the order in the algorithm before removing
@@ -406,7 +414,7 @@ namespace QuantConnect.Brokerages.Backtesting
                                 Algorithm.UtcTime,
                                 OrderFee.Zero,
                                 message)
-                            { Status = OrderStatus.Invalid });
+                        { Status = OrderStatus.Invalid });
                         Order pending;
                         _pending.TryRemove(order.Id, out pending);
 
@@ -523,6 +531,68 @@ namespace QuantConnect.Brokerages.Backtesting
         private void SetPendingOrder(Order order)
         {
             _pending[order.Id] = order;
+        }
+
+        /// <summary>
+        /// Process delistings
+        /// </summary>
+        /// <param name="delistings">Delistings to process</param>
+        public void ProcessDelistings(Delistings delistings)
+        {
+            // Process our delistings, important to do options first because of possibility of having future options contracts
+            // and underlying future delisting at the same time.
+            foreach (var delisting in delistings?.Values.OrderBy(x => !x.Symbol.SecurityType.IsOption()))
+            {
+                Log.Trace($"BacktestingBrokerage.ProcessDelistings(): Delisting {delisting.Type}: {delisting.Symbol.Value}, UtcTime: {Algorithm.UtcTime}, DelistingTime: {delisting.Time}");
+                if (delisting.Type == DelistingType.Warning)
+                {
+                    // We do nothing with warnings
+                    continue;
+                }
+
+                var security = Algorithm.Securities[delisting.Symbol];
+
+                if (security.Symbol.SecurityType.IsOption())
+                {
+                    // Process the option delisting
+                    OnOptionNotification(new OptionNotificationEventArgs(delisting.Symbol, 0));
+                }
+                else
+                {
+                    // Any other type of delisting
+                    OnDelistingNotification(new DelistingNotificationEventArgs(delisting.Symbol));
+                }
+
+                // don't allow users to open a new position once we sent the liquidation order
+                security.IsTradable = false;
+                security.IsDelisted = true;
+
+                // the subscription are getting removed from the data feed because they end
+                // remove security from all universes
+                foreach (var ukvp in Algorithm.UniverseManager)
+                {
+                    var universe = ukvp.Value;
+                    if (universe.ContainsMember(security.Symbol))
+                    {
+                        var userUniverse = universe as UserDefinedUniverse;
+                        if (userUniverse != null)
+                        {
+                            userUniverse.Remove(security.Symbol);
+                        }
+                        else
+                        {
+                            universe.RemoveMember(Algorithm.UtcTime, security);
+                        }
+                    }
+                }
+
+                // Cancel any other orders
+                var cancelledOrders = Algorithm.Transactions.CancelOpenOrders(delisting.Symbol);
+                foreach (var cancelledOrder in cancelledOrders)
+                {
+                    Log.Trace("AlgorithmManager.Run(): " + cancelledOrder);
+                }
+            }
         }
     }
 }

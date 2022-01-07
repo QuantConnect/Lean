@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -238,9 +238,9 @@ namespace QuantConnect.ToolBox.IEX
                           "is not supported by current implementation of  IEXDataQueueHandler. Sorry. Please try the higher resolution.");
             }
 
-            if (dataConfig.SecurityType != SecurityType.Equity)
+            if (!CanSubscribe(dataConfig.Symbol))
             {
-                return Enumerable.Empty<BaseData>().GetEnumerator();
+                return null;
             }
 
             var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
@@ -255,6 +255,16 @@ namespace QuantConnect.ToolBox.IEX
         /// <param name="job">Job we're subscribing for</param>
         public void SetJob(LiveNodePacket job)
         {
+        }
+
+        /// <summary>
+        /// Checks if this brokerage supports the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol</param>
+        /// <returns>returns true if brokerage supports the specified symbol; otherwise false</returns>
+        private static bool CanSubscribe(Symbol symbol)
+        {
+            return symbol.SecurityType == SecurityType.Equity;
         }
 
         private void Refresh()

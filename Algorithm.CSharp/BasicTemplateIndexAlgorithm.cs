@@ -30,36 +30,39 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="indexes" />
     public class BasicTemplateIndexAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _spx;
-        private Symbol _spxOption;
+        protected Symbol Spx;
+        protected Symbol SpxOption;
         private ExponentialMovingAverage _emaSlow;
         private ExponentialMovingAverage _emaFast;
+        
+        protected virtual Resolution Resolution => Resolution.Minute;
+        protected virtual int StartDay => 4;
 
         /// <summary>
         /// Initialize your algorithm and add desired assets.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2021, 1, 4);
-            SetEndDate(2021, 1, 15);
+            SetStartDate(2021, 1, StartDay);
+            SetEndDate(2021, 1, 18);
             SetCash(1000000);
 
             // Use indicator for signal; but it cannot be traded
-            _spx = AddIndex("SPX", Resolution.Minute).Symbol;
+            Spx = AddIndex("SPX", Resolution).Symbol;
 
             // Trade on SPX ITM calls
-            _spxOption = QuantConnect.Symbol.CreateOption(
-                _spx,
+            SpxOption = QuantConnect.Symbol.CreateOption(
+                Spx,
                 Market.USA,
                 OptionStyle.European,
                 OptionRight.Call,
                 3200m,
                 new DateTime(2021, 1, 15));
 
-            AddIndexOptionContract(_spxOption, Resolution.Minute);
+            AddIndexOptionContract(SpxOption, Resolution);
 
-            _emaSlow = EMA(_spx, 80);
-            _emaFast = EMA(_spx, 200);
+            _emaSlow = EMA(Spx, 80);
+            _emaFast = EMA(Spx, 200);
         }
 
         /// <summary>
@@ -67,7 +70,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void OnData(Slice slice)
         {
-            if (!slice.Bars.ContainsKey(_spx) || !slice.Bars.ContainsKey(_spxOption))
+            if (!slice.Bars.ContainsKey(Spx) || !slice.Bars.ContainsKey(SpxOption))
             {
                 return;
             }
@@ -80,7 +83,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (_emaFast > _emaSlow)
             {
-                SetHoldings(_spxOption, 1);
+                SetHoldings(SpxOption, 1);
             }
             else
             {
@@ -90,7 +93,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            if (Portfolio[_spx].TotalSaleVolume > 0)
+            if (Portfolio[Spx].TotalSaleVolume > 0)
             {
                 throw new Exception("Index is not tradable.");
             }
@@ -99,46 +102,46 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
-        public bool CanRunLocally { get; } = true;
+        public virtual bool CanRunLocally { get; } = true;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+        public virtual Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "4"},
             {"Average Win", "0%"},
             {"Average Loss", "-53.10%"},
-            {"Compounding Annual Return", "-96.172%"},
+            {"Compounding Annual Return", "-92.544%"},
             {"Drawdown", "10.100%"},
             {"Expectancy", "-1"},
             {"Net Profit", "-9.915%"},
-            {"Sharpe Ratio", "-4.068"},
-            {"Probabilistic Sharpe Ratio", "0.055%"},
+            {"Sharpe Ratio", "-3.845"},
+            {"Probabilistic Sharpe Ratio", "0.053%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.745"},
-            {"Beta", "0.432"},
-            {"Annual Standard Deviation", "0.126"},
-            {"Annual Variance", "0.016"},
-            {"Information Ratio", "-7.972"},
-            {"Tracking Error", "0.132"},
-            {"Treynor Ratio", "-1.189"},
+            {"Alpha", "-0.558"},
+            {"Beta", "0.313"},
+            {"Annual Standard Deviation", "0.112"},
+            {"Annual Variance", "0.013"},
+            {"Information Ratio", "-6.652"},
+            {"Tracking Error", "0.125"},
+            {"Treynor Ratio", "-1.379"},
             {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$14000000.00"},
+            {"Estimated Strategy Capacity", "$13000000.00"},
             {"Lowest Capacity Asset", "SPX XL80P3GHDZXQ|SPX 31"},
-            {"Fitness Score", "0.044"},
+            {"Fitness Score", "0.039"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-1.96"},
-            {"Return Over Maximum Drawdown", "-10.171"},
-            {"Portfolio Turnover", "0.34"},
+            {"Sortino Ratio", "-1.763"},
+            {"Return Over Maximum Drawdown", "-9.371"},
+            {"Portfolio Turnover", "0.278"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -152,7 +155,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "52521ab779446daf4d38a7c9bbbdd893"}
+            {"OrderListHash", "0668385036aba3e95127607dfc2f1a59"}
         };
     }
 }

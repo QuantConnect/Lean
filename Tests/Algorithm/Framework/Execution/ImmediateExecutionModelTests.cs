@@ -30,6 +30,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using QuantConnect.Tests.Common.Data.UniverseSelection;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Execution
@@ -46,7 +47,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             var orderProcessor = new Mock<IOrderProcessor>();
             orderProcessor.Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
                 .Returns((OrderTicket)null)
-                .Callback((SubmitOrderRequest request) => actualOrdersSubmitted.Add(request));
+                .Callback((OrderRequest request) => actualOrdersSubmitted.Add((SubmitOrderRequest)request));
 
             var algorithm = new QCAlgorithm();
             algorithm.SetPandasConverter();
@@ -55,7 +56,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             var model = GetExecutionModel(language);
             algorithm.SetExecution(model);
 
-            var changes = new SecurityChanges(Enumerable.Empty<Security>(), Enumerable.Empty<Security>());
+            var changes = SecurityChangesTests.CreateNonInternal(Enumerable.Empty<Security>(), Enumerable.Empty<Security>());
             model.OnSecuritiesChanged(algorithm, changes);
 
             model.Execute(algorithm, new IPortfolioTarget[0]);
@@ -113,7 +114,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             var orderProcessor = new Mock<IOrderProcessor>();
             orderProcessor.Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
                 .Returns((SubmitOrderRequest request) => new OrderTicket(algorithm.Transactions, request))
-                .Callback((SubmitOrderRequest request) => actualOrdersSubmitted.Add(request));
+                .Callback((OrderRequest request) => actualOrdersSubmitted.Add((SubmitOrderRequest)request));
             orderProcessor.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>()))
                 .Returns(new List<Order> { new MarketOrder(Symbols.AAPL, openOrdersQuantity, DateTime.MinValue) });
             orderProcessor.Setup(m => m.GetOpenOrderTickets(It.IsAny<Func<OrderTicket, bool>>()))
@@ -123,7 +124,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             var model = GetExecutionModel(language);
             algorithm.SetExecution(model);
 
-            var changes = new SecurityChanges(new[] { security }, Enumerable.Empty<Security>());
+            var changes = SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>());
             model.OnSecuritiesChanged(algorithm, changes);
 
             var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) };
@@ -167,7 +168,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             var orderProcessor = new Mock<IOrderProcessor>();
             orderProcessor.Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
                 .Returns((SubmitOrderRequest request) => new OrderTicket(algorithm.Transactions, request))
-                .Callback((SubmitOrderRequest request) => actualOrdersSubmitted.Add(request));
+                .Callback((OrderRequest request) => actualOrdersSubmitted.Add((SubmitOrderRequest)request));
             orderProcessor.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>()))
                 .Returns(new List<Order> { new MarketOrder(Symbols.AAPL, 100, DateTime.MinValue) });
             orderProcessor.Setup(m => m.GetOpenOrderTickets(It.IsAny<Func<OrderTicket, bool>>()))
@@ -177,7 +178,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             var model = GetExecutionModel(language);
             algorithm.SetExecution(model);
 
-            var changes = new SecurityChanges(Enumerable.Empty<Security>(), Enumerable.Empty<Security>());
+            var changes = SecurityChangesTests.CreateNonInternal(Enumerable.Empty<Security>(), Enumerable.Empty<Security>());
             model.OnSecuritiesChanged(algorithm, changes);
 
             var targets = new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 80) };
@@ -211,7 +212,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             var orderProcessor = new Mock<IOrderProcessor>();
             orderProcessor.Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
                 .Returns((SubmitOrderRequest request) => new OrderTicket(algorithm.Transactions, request))
-                .Callback((SubmitOrderRequest request) => actualOrdersSubmitted.Add(request));
+                .Callback((OrderRequest request) => actualOrdersSubmitted.Add((SubmitOrderRequest)request));
             algorithm.Transactions.SetOrderProcessor(orderProcessor.Object);
 
             var model = GetExecutionModel(language);

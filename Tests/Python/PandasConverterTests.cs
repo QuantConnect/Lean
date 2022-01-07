@@ -26,6 +26,7 @@ using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Tests.Common.Data.UniverseSelection;
 using QuantConnect.Tests.ToolBox;
 using QuantConnect.ToolBox;
 using QuantConnect.Util;
@@ -60,6 +61,41 @@ namespace QuantConnect.Tests.Python
         public void TearDown()
         {
             SymbolCache.Clear();
+        }
+
+        [Test]
+        public void HandlesEnumerableDataType()
+        {
+            var converter = new PandasConverter();
+            var data = new []
+            {
+                new EnumerableData
+                {
+                    Data = new List<BaseData>
+                    {
+                        new TradeBar(new DateTime(2020, 1, 2), Symbols.IBM, 101m, 102m, 100m, 101m, 10m),
+                        new TradeBar(new DateTime(2020, 1, 3), Symbols.IBM, 101m, 102m, 100m, 101m, 20m),
+                    },
+                    Symbol = Symbols.IBM,
+                    Time = new DateTime(2020, 1, 1)
+                }
+            };
+
+            dynamic dataFrame = converter.GetDataFrame(data);
+
+            using (Py.GIL())
+            {
+                Assert.IsFalse(dataFrame.empty.AsManagedObject(typeof(bool)));
+
+                var subDataFrame = dataFrame.loc[Symbols.IBM];
+                Assert.IsFalse(subDataFrame.empty.AsManagedObject(typeof(bool)));
+
+                var count = subDataFrame.__len__().AsManagedObject(typeof(int));
+                Assert.AreEqual(1, count);
+
+                var dataCount = subDataFrame.values[0][0].__len__().AsManagedObject(typeof(int));
+                Assert.AreEqual(2, dataCount);
+            }
         }
 
         [Test]
@@ -3471,7 +3507,7 @@ def Test(dataFrame, symbol):
             return data.Select(t => timeSliceFactory.Create(
                t.Time,
                new List<DataFeedPacket> { new DataFeedPacket(security, subscriptionDataConfig, new List<BaseData>() { t as BaseData }) },
-               new SecurityChanges(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
+               SecurityChangesTests.CreateNonInternal(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
                 new Dictionary<Universe, BaseDataCollection>()).Slice);
         }
 
@@ -3571,6 +3607,11 @@ def Test(dataFrame, symbol):
             public CustomQuandl() : base("Value")
             {
             }
+        }
+
+        internal class EnumerableData : BaseDataCollection
+        {
+
         }
     }
 }

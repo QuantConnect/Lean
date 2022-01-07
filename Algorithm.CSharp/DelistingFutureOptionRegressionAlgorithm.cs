@@ -108,9 +108,9 @@ namespace QuantConnect.Algorithm.CSharp
             {"Average Loss", "-0.02%"},
             {"Compounding Annual Return", "-0.111%"},
             {"Drawdown", "0.100%"},
-            {"Expectancy", "-0.679"},
-            {"Net Profit", "-0.112%"},
-            {"Sharpe Ratio", "-0.966"},
+            {"Expectancy", "-0.678"},
+            {"Net Profit", "-0.111%"},
+            {"Sharpe Ratio", "-0.967"},
             {"Probabilistic Sharpe Ratio", "0.000%"},
             {"Loss Rate", "80%"},
             {"Win Rate", "20%"},
@@ -121,8 +121,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Annual Variance", "0"},
             {"Information Ratio", "-1.075"},
             {"Tracking Error", "0.107"},
-            {"Treynor Ratio", "1.354"},
-            {"Total Fees", "$37.00"},
+            {"Treynor Ratio", "1.353"},
+            {"Total Fees", "$14.80"},
             {"Estimated Strategy Capacity", "$860000000.00"},
             {"Lowest Capacity Asset", "DC V5E8P9SH0U0X"},
             {"Fitness Score", "0"},
@@ -144,7 +144,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "de309ab56d2fcd80ff03df2802d9feda"}
+            {"OrderListHash", "d10e8665214344369e3e8f1c49dbdd67"}
         };
     }
 }

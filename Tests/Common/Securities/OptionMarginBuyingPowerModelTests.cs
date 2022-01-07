@@ -19,6 +19,7 @@ using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 using QuantConnect.Tests.Engine.DataFeeds;
@@ -409,6 +410,72 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual(10000m + algorithm.Portfolio.CashBook[Currencies.USD].ValueInAccountCurrency,
                 quantity.Value);
+        }
+
+        // This test set showcases some odd behaviour by our OptionMarginModel margin requirement calculation.
+
+        // ~-1.5% Target (~-15K). If we are already shorted or long we reduce holdings to 0, this is because the requirement for a
+        // short option position is at base ~-200K, but the issue is if we have zero holdings it allows us to buy -31 contracts for
+        // 478 margin requirement per unit. This is because the margin requirement seems to be contingent upon the current holdings.
+        [TestCase(-31, 31, -.015)] // Short to Short (-31 + 31 = 0)
+        [TestCase(0, -31, -.015)] // Open Short (0 + -31 = -31)
+        [TestCase(31, -31, -.015)] // Long To Short (31 + -31 = 0)
+
+        // -40% Target (~-400k), All end up at different allocations.
+        // This is because of the initial margin requirement calculations.
+        [TestCase(-31, -380, -0.40)] // Short to Shorter (-31 + -380 = -411)
+        [TestCase(0, -836, -0.40)] // Open Short (0 + -836 = -836)
+        [TestCase(31, -467, -0.40)] // Long To Short (31 + -467 = -436)
+
+        // 40% Target (~400k), All end up at different allocations.
+        // This is because of the initial margin requirement calculations.
+        [TestCase(-31, 855, 0.40)] // Short to Long (-31 + 855 = 824)
+        [TestCase(0, 836, 0.40)] // Open Long (0 + 836 = 836)
+        [TestCase(31, 818, 0.40)] // Long To Longer (31 + 818 = 849)
+
+        // ~0.04% Target (~400). This is below the needed margin for one unit. We end up at 0 holdings for all cases.
+        [TestCase(-31, 31, 0.0004)] // Short to Long (-31 + 31 = 0)
+        [TestCase(0, 0, 0.0004)] // Open Long (0 + 0 = 0)
+        [TestCase(31, -31, 0.0004)] // Long To Longer (31 + -31 = 0)
+        public void CallOTM_MarginRequirement(int startingHoldings, int expectedOrderSize, decimal targetPercentage)
+        {
+            // Initialize algorithm
+            var algorithm = new QCAlgorithm();
+            algorithm.SetFinishedWarmingUp();
+            algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
+
+            algorithm.SetCash(1000000);
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+
+            var optionSymbol = Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 411m, DateTime.UtcNow);
+            var option = algorithm.AddOptionContract(optionSymbol);
+
+            option.Holdings.SetHoldings(4.74m, startingHoldings);
+            option.FeeModel = new ConstantFeeModel(0);
+            option.SetLeverage(1);
+
+            // Update option data
+            UpdatePrice(option, 4.78m);
+
+            // Update the underlying data
+            UpdatePrice(option.Underlying, 395.51m);
+
+            var model = new OptionMarginModel();
+            var result = model.GetMaximumOrderQuantityForTargetBuyingPower(algorithm.Portfolio, option, targetPercentage, 0);
+            Assert.AreEqual(expectedOrderSize, result.Quantity);
+        }
+
+        private static void UpdatePrice(Security security, decimal close)
+        {
+            security.SetMarketPrice(new TradeBar
+            {
+                Time = DateTime.Now,
+                Symbol = security.Symbol,
+                Open = close,
+                High = close,
+                Low = close,
+                Close = close
+            });
         }
     }
 }

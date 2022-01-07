@@ -37,7 +37,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2019, 2, 21);
             SetCash("EUR", 100000);
 
-            _symbol = AddCfd("DE30EUR", Resolution.Minute, Market.Oanda).Symbol;
+            _symbol = AddCfd("DE30EUR").Symbol;
 
             SetBenchmark(_symbol);
         }

@@ -46,9 +46,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var start = new DateTime(2019, 12, 9);
             var end = new DateTime(2019, 12, 12);
 
-            var mapFileProvider = TestGlobals.MapFileProvider;
-            var mapFileResolver = new MapFileResolver(mapFileProvider.Get(Market.USA));
-
             var dataReader = new SubscriptionDataReader(
                 new SubscriptionDataConfig(typeof(TradeBar),
                     Symbols.SPY,
@@ -60,7 +57,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     false),
                 start,
                 end,
-                mapFileResolver,
+                TestGlobals.MapFileProvider,
                 TestGlobals.FactorFileProvider,
                 LinqExtensions.Range(start, end, time => time + TimeSpan.FromDays(1)),
                 false,

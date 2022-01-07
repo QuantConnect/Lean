@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using QuantConnect.Configuration;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Util;
@@ -59,10 +60,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // Resolve any mapping before requesting option contract list for equities
             // Needs to be done in order for the data file key to be accurate
             Symbol mappedSymbol;
-            if (underlyingSymbol.SecurityType.RequiresMapping())
+            if (underlyingSymbol.RequiresMapping())
             {
-                var mapFileResolver = _mapFileProvider.Get(underlyingSymbol.ID.Market);
-                var mapFile = mapFileResolver.ResolveMapFile(underlyingSymbol.ID.Symbol, date);
+                var mapFileResolver = _mapFileProvider.Get(AuxiliaryDataKey.Create(underlyingSymbol));
+                var mapFile = mapFileResolver.ResolveMapFile(underlyingSymbol);
                 var ticker = mapFile.GetMappedSymbol(date, underlyingSymbol.Value);
                 mappedSymbol = underlyingSymbol.UpdateMappedSymbol(ticker);
             }

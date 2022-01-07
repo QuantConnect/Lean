@@ -33,9 +33,16 @@ namespace QuantConnect.Orders.Fees
         private readonly Dictionary<string, Func<decimal, decimal, CashAmount>> _optionFee =
             new Dictionary<string, Func<decimal, decimal, CashAmount>>();
 
-        private readonly Dictionary<string, CashAmount> _futureFee =
+        /// <summary>
+        /// Reference at https://www.interactivebrokers.com/en/index.php?f=commission&p=futures1
+        /// </summary>
+        private readonly Dictionary<string, Func<Security, CashAmount>> _futureFee =
             //                                                               IB fee + exchange fee
-            new Dictionary<string, CashAmount> { { Market.USA, new CashAmount(0.85m + 1, "USD") } };
+            new()
+            {
+                { Market.USA, UnitedStatesFutureFees },
+                { Market.HKFE, HongKongFutureFees }
+            };
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ImmediateFillModel"/>
@@ -115,11 +122,12 @@ namespace QuantConnect.Orders.Fees
                         market = Market.USA;
                     }
 
-                    CashAmount feeRatePerContract;
-                    if (!_futureFee.TryGetValue(market, out feeRatePerContract))
+                    if (!_futureFee.TryGetValue(market, out var feeRatePerContractFunc))
                     {
                         throw new KeyNotFoundException($"InteractiveBrokersFeeModel(): unexpected future Market {market}");
                     }
+
+                    var feeRatePerContract = feeRatePerContractFunc(security);
                     feeResult = order.AbsoluteQuantity * feeRatePerContract.Amount;
                     feeCurrency = feeRatePerContract.Currency;
                     break;
@@ -129,7 +137,7 @@ namespace QuantConnect.Orders.Fees
                     switch (market)
                     {
                         case Market.USA:
-                            equityFee = new EquityFee("USD", feePerShare: 0.005m, minimumFee: 1, maximumFeeRate: 0.005m);
+                            equityFee = new EquityFee(Currencies.USD, feePerShare: 0.005m, minimumFee: 1, maximumFeeRate: 0.005m);
                             break;
                         default:
                             throw new KeyNotFoundException($"InteractiveBrokersFeeModel(): unexpected equity Market {market}");
@@ -233,6 +241,42 @@ namespace QuantConnect.Orders.Fees
                     return new CashAmount(Math.Max(orderSize * commissionRate, 1.0m), Currencies.USD);
                 };
             }
+        }
+
+        private static CashAmount UnitedStatesFutureFees(Security security)
+        {
+            return new CashAmount(0.85m + 1, Currencies.USD);
+        }
+
+        /// <summary>
+        /// See https://www.hkex.com.hk/Services/Rules-and-Forms-and-Fees/Fees/Listed-Derivatives/Trading/Transaction?sc_lang=en
+        /// </summary>
+        private static CashAmount HongKongFutureFees(Security security)
+        {
+            if (security.Symbol.ID.Symbol.Equals("HSI", StringComparison.InvariantCultureIgnoreCase))
+            {
+                // IB fee + exchange fee
+                return new CashAmount(30 + 10, Currencies.HKD);
+            }
+
+            decimal ibFeePerContract;
+            switch (security.QuoteCurrency.Symbol)
+            {
+                case Currencies.CNH:
+                    ibFeePerContract = 13;
+                    break;
+                case Currencies.HKD:
+                    ibFeePerContract = 20;
+                    break;
+                case Currencies.USD:
+                    ibFeePerContract = 2.40m;
+                    break;
+                default:
+                    throw new ArgumentException($"Unexpected quote currency {security.QuoteCurrency.Symbol} for Hong Kong futures exchange");
+            }
+
+            // let's add a 50% extra charge for exchange fees
+            return new CashAmount(ibFeePerContract * 1.5m, security.QuoteCurrency.Symbol);
         }
 
         /// <summary>

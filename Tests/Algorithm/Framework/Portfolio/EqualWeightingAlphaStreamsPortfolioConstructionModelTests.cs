@@ -20,7 +20,6 @@ using QuantConnect.Data;
 using QuantConnect.Util;
 using QuantConnect.Algorithm;
 using System.Collections.Generic;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Tests.Engine.DataFeeds;
@@ -28,6 +27,7 @@ using QuantConnect.Data.Custom.AlphaStreams;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Tests.Common.Data.UniverseSelection;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 {
@@ -35,22 +35,16 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
     public class EqualWeightingAlphaStreamsPortfolioConstructionModelTests
     {
         private ZipDataCacheProvider _cacheProvider;
-        private DefaultDataProvider _dataProvider;
         private QCAlgorithm _algorithm;
 
         [SetUp]
         public virtual void SetUp()
         {
             _algorithm = new QCAlgorithm();
-            _dataProvider = new DefaultDataProvider();
-            var mapFileProvider = new LocalDiskMapFileProvider();
-            mapFileProvider.Initialize(_dataProvider);
-            var factorFileProvider = new LocalZipFactorFileProvider();
-            factorFileProvider.Initialize(mapFileProvider, _dataProvider);
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
-            _cacheProvider = new ZipDataCacheProvider(_dataProvider);
+            _cacheProvider = new ZipDataCacheProvider(TestGlobals.DataProvider);
             historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null,
-                _dataProvider, _cacheProvider, mapFileProvider, factorFileProvider,
+                TestGlobals.DataProvider, _cacheProvider, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider,
                 null, true, new DataPermissionManager()));
             _algorithm.SetHistoryProvider(historyProvider);
             _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
@@ -62,7 +56,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         public virtual void TearDown()
         {
             _cacheProvider.DisposeSafely();
-            _dataProvider.DisposeSafely();
         }
 
         [TestCase(Language.CSharp)]
@@ -165,7 +158,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             _algorithm.Settings.FreePortfolioValue = freePortfolioValue;
             var alpha1 = _algorithm.AddData<AlphaStreamsPortfolioState>("9fc8ef73792331b11dbd5429a");
             var alpha2 = _algorithm.AddData<AlphaStreamsPortfolioState>("623b06b231eb1cc1aa3643a46");
-            _algorithm.OnFrameworkSecuritiesChanged(SecurityChanges.Added(alpha1, alpha2));
+            _algorithm.OnFrameworkSecuritiesChanged(SecurityChangesTests.AddedNonInternal(alpha1, alpha2));
             var symbol = alpha1.Symbol;
             var symbol2 = alpha2.Symbol;
             var data = _algorithm.History<AlphaStreamsPortfolioState>(symbol, TimeSpan.FromDays(1)).Last();
@@ -238,7 +231,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             _algorithm.Portfolio.SetCash(100000);
             SetUtcTime(new DateTime(2018, 4, 5));
 
-            var changes = SecurityChanges.Added(_algorithm.Securities.Values.ToArray());
+            var changes = SecurityChangesTests.AddedNonInternal(_algorithm.Securities.Values.ToArray());
             _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, changes);
         }
     }

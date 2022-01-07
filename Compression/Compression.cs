@@ -23,6 +23,7 @@ using System.Text;
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
+using Ionic.Zip;
 using QuantConnect.Logging;
 using ZipEntry = ICSharpCode.SharpZipLib.Zip.ZipEntry;
 using ZipFile = Ionic.Zip.ZipFile;
@@ -185,6 +186,39 @@ namespace QuantConnect
                     }
 
                     zip.AddEntry(entry, data);
+                    zip.UseZip64WhenSaving = Zip64Option.Always;
+                    zip.Save();
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Append the zip data to the file-entry specified.
+        /// </summary>
+        /// <param name="path">The zip file path</param>
+        /// <param name="entry">The entry name</param>
+        /// <param name="data">The entry data</param>
+        /// <param name="overrideEntry">True if should override entry if it already exists</param>
+        /// <returns>True on success</returns>
+        public static bool ZipCreateAppendData(string path, string entry, byte[] data, bool overrideEntry = false)
+        {
+            try
+            {
+                using (var zip = File.Exists(path) ? ZipFile.Read(path) : new ZipFile(path))
+                {
+                    if (overrideEntry && zip.ContainsEntry(entry))
+                    {
+                        zip.RemoveEntry(entry);
+                    }
+
+                    zip.AddEntry(entry, data);
+                    zip.UseZip64WhenSaving = Zip64Option.Always;
                     zip.Save();
                 }
             }
@@ -690,14 +724,27 @@ namespace QuantConnect
         /// <summary>
         /// Unzip a stream that represents a zip file and return the first entry as a stream
         /// </summary>
-        public static Stream UnzipStream(Stream zipstream, out ZipFile zipFile)
+        public static Stream UnzipStream(Stream zipstream, out ZipFile zipFile, string entryName = null)
         {
             zipFile = ZipFile.Read(zipstream);
 
             try
             {
-                //Read the file entry into buffer:
-                var entry = zipFile.Entries.FirstOrDefault();
+                Ionic.Zip.ZipEntry entry;
+                if (string.IsNullOrEmpty(entryName))
+                {
+                    //Read the file entry into buffer:
+                    entry = zipFile.Entries.FirstOrDefault();
+                }
+                else
+                {
+                    // Attempt to find our specific entry
+                    if (!zipFile.ContainsEntry(entryName))
+                    {
+                        return null;
+                    }
+                    entry = zipFile[entryName];
+                }
 
                 if (entry != null)
                 {

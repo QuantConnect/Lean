@@ -14,14 +14,6 @@
  *
 */
 
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Threading;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
@@ -33,6 +25,14 @@ using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Util;
 using RestSharp;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace QuantConnect.Brokerages.Tradier
 {
@@ -45,11 +45,10 @@ namespace QuantConnect.Brokerages.Tradier
     ///  - Getting user data.
     /// </summary>
     [BrokerageFactory(typeof(TradierBrokerageFactory))]
-    public partial class TradierBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider, IHistoryProvider
+    public partial class TradierBrokerage : BaseWebsocketsBrokerage, IDataQueueHandler, IDataQueueUniverseProvider, IHistoryProvider
     {
-        private readonly bool _useSandbox;
-        private readonly string _accountId;
-        private readonly string _accessToken;
+        private bool _useSandbox;
+        private string _accountId;
 
         // we're reusing the equity exchange here to grab typical exchange hours
         private static readonly EquityExchange Exchange =
@@ -62,39 +61,50 @@ namespace QuantConnect.Brokerages.Tradier
         private readonly object _lockAccessCredentials = new object();
 
         // polling timer for checking for fill events
-        private readonly Timer _orderFillTimer;
+        private Timer _orderFillTimer;
 
         //Tradier Spec:
-        private readonly Dictionary<TradierApiRequestType, RateGate> _rateLimitNextRequest;
+        private Dictionary<TradierApiRequestType, RateGate> _rateLimitNextRequest;
 
-        //Endpoints:
-        private readonly string _requestEndpoint;
-
-        private readonly IAlgorithm _algorithm;
-        private readonly IOrderProvider _orderProvider;
-        private readonly ISecurityProvider _securityProvider;
-        private readonly IDataAggregator _aggregator;
+        private IAlgorithm _algorithm;
+        private IOrderProvider _orderProvider;
+        private ISecurityProvider _securityProvider;
+        private IDataAggregator _aggregator;
 
         private readonly object _fillLock = new object();
         private readonly DateTime _initializationDateTime = DateTime.Now;
-        private readonly ConcurrentDictionary<long, TradierCachedOpenOrder> _cachedOpenOrdersByTradierOrderID;
+        private ConcurrentDictionary<long, TradierCachedOpenOrder> _cachedOpenOrdersByTradierOrderID;
+
         // this is used to block reentrance when doing look ups for orders with IDs we don't have cached
         private readonly HashSet<long> _reentranceGuardByTradierOrderID = new HashSet<long>();
+
         private readonly FixedSizeHashQueue<long> _filledTradierOrderIDs = new FixedSizeHashQueue<long>(10000);
+
         // this is used to handle the zero crossing case, when the first order is filled we'll submit the next order
         private readonly ConcurrentDictionary<long, ContingentOrderQueue> _contingentOrdersByQCOrderID = new ConcurrentDictionary<long, ContingentOrderQueue>();
+
         private readonly ConcurrentDictionary<long, Order> _zeroCrossingOrdersByTradierClosingOrderId = new ConcurrentDictionary<long, Order>();
+
         // this is used to block reentrance when handling contingent orders
         private readonly HashSet<long> _contingentReentranceGuardByQCOrderID = new HashSet<long>();
+
         private readonly HashSet<long> _unknownTradierOrderIDs = new HashSet<long>();
         private readonly FixedSizeHashQueue<long> _verifiedUnknownTradierOrderIDs = new FixedSizeHashQueue<long>(1000);
         private readonly FixedSizeHashQueue<int> _cancelledQcOrderIDs = new FixedSizeHashQueue<int>(10000);
-        private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
+        private string _restApiUrl = "https://api.tradier.com/v1/";
+        private string _restApiSandboxUrl = "https://sandbox.tradier.com/v1/";
 
         /// <summary>
         /// Returns the brokerage account's base currency
         /// </summary>
         public override string AccountBaseCurrency => Currencies.USD;
+
+        /// <summary>
+        /// Create a new Tradier Object:
+        /// </summary>
+        public TradierBrokerage() : base("Tradier Brokerage")
+        {
+        }
 
         /// <summary>
         /// Create a new Tradier Object:
@@ -109,35 +119,16 @@ namespace QuantConnect.Brokerages.Tradier
             string accessToken)
             : base("Tradier Brokerage")
         {
-            _algorithm = algorithm;
-            _orderProvider = orderProvider;
-            _securityProvider = securityProvider;
-            _aggregator = aggregator;
-            _useSandbox = useSandbox;
-            _accountId = accountId;
-            _accessToken = accessToken;
-
-            _requestEndpoint = useSandbox ? "https://sandbox.tradier.com/v1/" : "https://api.tradier.com/v1/";
-
-            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
-            _subscriptionManager.SubscribeImpl += Subscribe;
-            _subscriptionManager.UnsubscribeImpl += Unsubscribe;
-
-            _cachedOpenOrdersByTradierOrderID = new ConcurrentDictionary<long, TradierCachedOpenOrder>();
-
-            // we can poll orders once a second in sandbox and twice a second in production
-            var interval = _useSandbox ? 1000 : 500;
-            _rateLimitNextRequest = new Dictionary<TradierApiRequestType, RateGate>
-            {
-                { TradierApiRequestType.Data, new RateGate(1, TimeSpan.FromMilliseconds(interval))},
-                { TradierApiRequestType.Standard, new RateGate(1, TimeSpan.FromMilliseconds(interval))},
-                { TradierApiRequestType.Orders, new RateGate(1, TimeSpan.FromMilliseconds(1000))},
-            };
-
-            _orderFillTimer = new Timer(state => CheckForFills(), null, interval, interval);
-
-            _webSocketClient.Initialize(WebSocketUrl);
-            _webSocketClient.Message += OnMessage;
+            Initialize(
+                wssUrl: WebSocketUrl,
+                accountId: accountId,
+                accessToken: accessToken,
+                useSandbox: useSandbox,
+                algorithm: algorithm,
+                orderProvider: orderProvider,
+                securityProvider: securityProvider,
+                aggregator: aggregator
+            );
         }
 
         #region Tradier client implementation
@@ -159,15 +150,11 @@ namespace QuantConnect.Brokerages.Tradier
 
             lock (_lockAccessCredentials)
             {
-                var client = new RestClient(_requestEndpoint);
-                client.AddDefaultHeader("Accept", "application/json");
-                client.AddDefaultHeader("Authorization", "Bearer " + _accessToken);
-
                 //Wait for the API rate limiting
                 _rateLimitNextRequest[type].WaitToProceed();
 
                 //Send the request:
-                var raw = client.Execute(request);
+                var raw = RestClient.Execute(request);
                 _previousResponseRaw = raw.Content;
 
                 if (!raw.IsSuccessful)
@@ -391,7 +378,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// Place Order through API.
         /// accounts/{account-id}/orders
         /// </summary>
-        public TradierOrderResponse PlaceOrder(
+        private TradierOrderResponse PlaceOrder(
             TradierOrderClass classification,
             TradierOrderDirection direction,
             string symbol,
@@ -604,14 +591,14 @@ namespace QuantConnect.Brokerages.Tradier
             return obj;
         }
 
-        #endregion
+        #endregion Tradier client implementation
 
         #region IBrokerage implementation
 
         /// <summary>
         /// Returns true if we're currently connected to the broker
         /// </summary>
-        public override bool IsConnected => !_isDataQueueHandlerInitialized || _webSocketClient.IsOpen;
+        public override bool IsConnected => WebSocket.IsOpen;
 
         /// <summary>
         /// Gets all open orders on the account.
@@ -844,7 +831,7 @@ namespace QuantConnect.Brokerages.Tradier
 
             // success
             OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero)
-                { Status = OrderStatus.UpdateSubmitted });
+            { Status = OrderStatus.UpdateSubmitted });
 
             // if we have contingents, update them as well
             if (contingent != null)
@@ -899,7 +886,7 @@ namespace QuantConnect.Brokerages.Tradier
                     TradierCachedOpenOrder tradierOrder;
                     _cachedOpenOrdersByTradierOrderID.TryRemove(id, out tradierOrder);
                     OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "Tradier Order Event")
-                        { Status = OrderStatus.Canceled });
+                    { Status = OrderStatus.Canceled });
                 }
             }
 
@@ -907,20 +894,13 @@ namespace QuantConnect.Brokerages.Tradier
         }
 
         /// <summary>
-        /// Connects the client to the broker's remote servers
-        /// </summary>
-        public override void Connect()
-        {
-        }
-
-        /// <summary>
         /// Disconnects the client from the broker's remote servers
         /// </summary>
         public override void Disconnect()
         {
-            if (_webSocketClient != null && _webSocketClient.IsOpen)
+            if (WebSocket != null && WebSocket.IsOpen)
             {
-                _webSocketClient.Close();
+                WebSocket.Close();
             }
 
             _orderFillTimer.Change(Timeout.Infinite, Timeout.Infinite);
@@ -1012,7 +992,7 @@ namespace QuantConnect.Brokerages.Tradier
             {
                 // invalidate the order, bad request
                 OnOrderEvent(new OrderEvent(order.QCOrder, DateTime.UtcNow, OrderFee.Zero)
-                    { Status = OrderStatus.Invalid });
+                { Status = OrderStatus.Invalid });
 
                 string message = _previousResponseRaw;
                 if (response != null && response.Errors != null && !response.Errors.Errors.IsNullOrEmpty())
@@ -1345,7 +1325,7 @@ namespace QuantConnect.Brokerages.Tradier
             }
         }
 
-        #endregion
+        #endregion IBrokerage implementation
 
         #region Conversion routines
 
@@ -1380,12 +1360,14 @@ namespace QuantConnect.Brokerages.Tradier
                 case TradierOrderDirection.SellToOpen:
                 case TradierOrderDirection.SellToClose:
                     return true;
+
                 case TradierOrderDirection.Buy:
                 case TradierOrderDirection.BuyToCover:
                 case TradierOrderDirection.BuyToClose:
                 case TradierOrderDirection.BuyToOpen:
                 case TradierOrderDirection.None:
                     return false;
+
                 default:
                     throw new ArgumentOutOfRangeException("direction", direction, null);
             }
@@ -1403,12 +1385,15 @@ namespace QuantConnect.Brokerages.Tradier
                 case TradierOrderType.Limit:
                     qcOrder = new LimitOrder { LimitPrice = order.Price };
                     break;
+
                 case TradierOrderType.Market:
                     qcOrder = new MarketOrder();
                     break;
+
                 case TradierOrderType.StopMarket:
                     qcOrder = new StopMarketOrder { StopPrice = GetOrder(order.Id).StopPrice };
                     break;
+
                 case TradierOrderType.StopLimit:
                     qcOrder = new StopLimitOrder { LimitPrice = order.Price, StopPrice = GetOrder(order.Id).StopPrice };
                     break;
@@ -1780,19 +1765,71 @@ namespace QuantConnect.Brokerages.Tradier
             return 0;
         }
 
-        #endregion
+        #endregion Conversion routines
+
+        /// <summary>
+        /// Initailze the instance of this class
+        /// </summary>
+        private void Initialize(string wssUrl,
+            string accountId, string accessToken, bool useSandbox, IAlgorithm algorithm,
+            IOrderProvider orderProvider, ISecurityProvider securityProvider, IDataAggregator aggregator)
+        {
+            if (IsInitialized)
+            {
+                return;
+            }
+            var restClient = new RestClient(useSandbox ? _restApiSandboxUrl : _restApiUrl);
+            base.Initialize(wssUrl, new WebSocketClientWrapper(), restClient, null, null);
+            _algorithm = algorithm;
+            _orderProvider = orderProvider;
+            _securityProvider = securityProvider;
+            _aggregator = aggregator;
+            _useSandbox = useSandbox;
+            _accountId = accountId;
+
+            RestClient.AddDefaultHeader("Accept", "application/json");
+            RestClient.AddDefaultHeader("Authorization", $"Bearer {accessToken}");
+
+            var subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            subscriptionManager.SubscribeImpl += (symbols, _) => Subscribe(symbols);
+            subscriptionManager.UnsubscribeImpl += (symbols, _) => Unsubscribe(symbols);
+            SubscriptionManager = subscriptionManager;
+
+            _cachedOpenOrdersByTradierOrderID = new ConcurrentDictionary<long, TradierCachedOpenOrder>();
+
+            // we can poll orders once a second in sandbox and twice a second in production
+            var interval = _useSandbox ? 1000 : 500;
+            _rateLimitNextRequest = new Dictionary<TradierApiRequestType, RateGate>
+            {
+                { TradierApiRequestType.Data, new RateGate(1, TimeSpan.FromMilliseconds(interval))},
+                { TradierApiRequestType.Standard, new RateGate(1, TimeSpan.FromMilliseconds(interval))},
+                { TradierApiRequestType.Orders, new RateGate(1, TimeSpan.FromMilliseconds(1000))},
+            };
+
+            _orderFillTimer = new Timer(state => CheckForFills(), null, interval, interval);
+            WebSocket.Error += (sender, error) =>
+            {
+                if (!WebSocket.IsOpen)
+                {
+                    // on error we clear our state, on Open we will re susbscribe
+                    _subscribedTickers.Clear();
+                    _streamSession = null;
+                }
+            };
+        }
 
         private readonly HashSet<string> ErrorsDuringMarketHours = new HashSet<string>
         {
             "CheckForFillsError", "UnknownIdResolution", "ContingentOrderError", "NullResponse", "PendingOrderNotReturned"
         };
 
-        class ContingentOrderQueue
+        private class ContingentOrderQueue
         {
             /// <summary>
             /// The original order produced by the algorithm
             /// </summary>
             public readonly Order QCOrder;
+
             /// <summary>
             /// A queue of contingent orders to be placed after fills
             /// </summary>
@@ -1817,7 +1854,7 @@ namespace QuantConnect.Brokerages.Tradier
             }
         }
 
-        class TradierCachedOpenOrder
+        private class TradierCachedOpenOrder
         {
             public bool EmittedOrderFee;
             public TradierOrder Order;

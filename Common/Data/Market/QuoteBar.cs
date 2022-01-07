@@ -31,7 +31,7 @@ namespace QuantConnect.Data.Market
     [ProtoContract(SkipConstructor = true)]
     public class QuoteBar : BaseData, IBaseDataBar
     {
-        // scale factor used in QC equity/forex data files
+        // scale factor used in QC equity/option/indexOption data files
         private const decimal _scaleFactor = 1 / 10000m;
 
         /// <summary>
@@ -459,7 +459,7 @@ namespace QuantConnect.Data.Market
         /// <returns><see cref="QuoteBar"/> with the bid/ask set to same values</returns>
         public QuoteBar ParseOption(SubscriptionDataConfig config, string line, DateTime date)
         {
-            return ParseQuote(config, date, line, config.Symbol.SecurityType == SecurityType.Option);
+            return ParseQuote(config, date, line, OptionUseScaleFactor(config.Symbol));
         }
 
         /// <summary>
@@ -472,7 +472,18 @@ namespace QuantConnect.Data.Market
         public QuoteBar ParseOption(SubscriptionDataConfig config, StreamReader streamReader, DateTime date)
         {
             // scale factor only applies for equity and index options
-            return ParseQuote(config, date, streamReader, useScaleFactor: config.Symbol.SecurityType != SecurityType.FutureOption);
+            return ParseQuote(config, date, streamReader, useScaleFactor: OptionUseScaleFactor(config.Symbol));
+        }
+        
+        /// <summary>
+        /// Helper method that defines the types of options that should use scale factor
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <returns></returns>
+        private static bool OptionUseScaleFactor(Symbol symbol)
+        {
+            return symbol.SecurityType == SecurityType.Option ||
+                   symbol.SecurityType == SecurityType.IndexOption;
         }
 
         /// <summary>

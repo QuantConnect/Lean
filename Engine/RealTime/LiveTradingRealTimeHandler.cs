@@ -109,7 +109,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                 Thread.Sleep(delay < 0 ? 1 : delay);
 
                 // poke each event to see if it should fire, we order by unique id to be deterministic
-                foreach (var kvp in ScheduledEvents.OrderBy(pair => pair.Value))
+                foreach (var kvp in ScheduledEvents.OrderBySafe(pair => pair.Value))
                 {
                     var scheduledEvent = kvp.Key;
                     try

@@ -46,12 +46,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 new SecurityCache()
             );
 
-            var mapFileProvider = TestGlobals.MapFileProvider;
             var fileProvider = TestGlobals.DataProvider;
-            var factorFileProvider = TestGlobals.FactorFileProvider;
-            var mapFileResolver = mapFileProvider.Get(security.Symbol.ID.Market);
-
-            var factory = new BaseDataSubscriptionEnumeratorFactory(false, mapFileResolver, factorFileProvider);
+            var factory = new BaseDataSubscriptionEnumeratorFactory(false, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider);
 
             GC.Collect();
             var ramUsageBeforeLoop = OS.TotalPhysicalMemoryUsed;

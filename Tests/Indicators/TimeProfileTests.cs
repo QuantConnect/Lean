@@ -124,12 +124,14 @@ namespace QuantConnect.Tests.Indicators
         public override void WarmsUpProperly()
         {
             var tp = new TimeProfile(20);
-            var time = new DateTime(2020, 8, 1);
+            var reference = new DateTime(2000, 1, 1);
             var period = ((IIndicatorWarmUpPeriodProvider)tp).WarmUpPeriod;
 
+            // Check TimeProfile indicator assigns properly a WarmUpPeriod
+            Assert.AreEqual(20, period);
             for (var i = 0; i < period; i++)
             {
-                tp.Update(time.AddDays(i), i);
+                tp.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Time = reference.AddDays(1 + i) });
                 Assert.AreEqual(i == period - 1, tp.IsReady);
             }
         }

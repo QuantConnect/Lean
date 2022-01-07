@@ -644,6 +644,69 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Log.Trace("Count: " + count + " ReaderCount: " + RestApiBaseData.ReaderCount);
         }
 
+        [TestCase("AAPL", SecurityType.Equity)]
+        [TestCase("BTCUSD", SecurityType.Crypto)]
+        [TestCase("SPX500USD", SecurityType.Cfd)]
+        [TestCase("ES", SecurityType.Future)]
+        [TestCase("ES", SecurityType.FutureOption)]
+        [TestCase("AAPL", SecurityType.Option)]
+        public void UserDefinedUniverseSelection(string ticker, SecurityType securityType)
+        {
+            var feed = RunDataFeed();
+            _algorithm.SetDateTime(_manualTimeProvider.GetUtcNow());
+            _algorithm.SetFinishedWarmingUp();
+
+            Symbol symbol = null;
+            if (securityType == SecurityType.Cfd)
+            {
+                symbol = _algorithm.AddCfd(ticker).Symbol;
+            }
+            else if (securityType == SecurityType.Equity)
+            {
+                symbol = _algorithm.AddEquity(ticker).Symbol;
+            }
+            else if (securityType == SecurityType.Crypto)
+            {
+                symbol = _algorithm.AddCrypto(ticker).Symbol;
+            }
+            else if (securityType == SecurityType.Option)
+            {
+                symbol = Symbol.CreateOption(Symbols.AAPL, Symbols.AAPL.ID.Market, OptionStyle.American,
+                    OptionRight.Call, 1, _manualTimeProvider.GetUtcNow().AddDays(20));
+                _algorithm.AddOptionContract(symbol);
+            }
+            else if (securityType == SecurityType.Future)
+            {
+                symbol = _algorithm.AddFuture(ticker).Symbol;
+            }
+            else if (securityType == SecurityType.FutureOption)
+            {
+                var expiration = _manualTimeProvider.GetUtcNow().AddDays(20);
+                symbol = Symbol.CreateFuture("ES", Market.CME, expiration);
+                symbol = Symbol.CreateOption(symbol, symbol.ID.Market, OptionStyle.American, OptionRight.Call, 1, expiration);
+                _algorithm.AddFutureOptionContract(symbol);
+            }
+
+            var receivedSecurityChanges = false;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(3), ts =>
+            {
+                foreach (var addedSecurity in ts.SecurityChanges.AddedSecurities)
+                {
+                    if (addedSecurity.Symbol == symbol)
+                    {
+                        receivedSecurityChanges = true;
+                        // we got what we wanted, end unit test
+                        _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                    }
+                }
+            },
+            alwaysInvoke: true,
+            secondsTimeStep: 1,
+            endDate: _startDate.AddSeconds(2));
+
+            Assert.IsTrue(receivedSecurityChanges, "Did not add symbol!");
+        }
+
         [Test]
         public void DelistedEventEmitted_Equity()
         {
@@ -896,7 +959,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             if (securityType == SecurityType.Future)
             {
-                _algorithm.AddFuture(Futures.Metals.Gold);
+                _algorithm.AddFuture(Futures.Indices.SP500EMini);
             }
             else
             {
@@ -1287,10 +1350,20 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // result handler is used due to dependency in SubscriptionDataReader
             var resultHandler = new BacktestingResultHandler();
 
-            _dataQueueHandler = new FuncDataQueueHandlerUniverseProvider(getNextTicksFunction, lookupSymbolsFunction, canPerformSelection, _manualTimeProvider);
+            _dataQueueHandler = new FuncDataQueueHandlerUniverseProvider(getNextTicksFunction,
+                lookupSymbolsFunction ?? ((symbol, _, _) =>
+                {
+                    return new List<Symbol> { Symbol.CreateOption(symbol.Underlying ?? symbol,
+                        symbol.ID.Market,
+                        symbol.SecurityType.DefaultOptionStyle(),
+                        OptionRight.Call,
+                        1,
+                        _manualTimeProvider.GetUtcNow().AddDays(10))};
+                }),
+                canPerformSelection ?? (() => true), _manualTimeProvider);
 
             _feed = new TestableLiveTradingDataFeed(_dataQueueHandler);
-            var fileProvider = new DefaultDataProvider();
+            var fileProvider = TestGlobals.DataProvider;
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
             var securityService = new SecurityService(_algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, _algorithm, RegisteredSecurityDataTypesProvider.Null, new SecurityCacheProvider(_algorithm.Portfolio));
@@ -1313,7 +1386,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 TestGlobals.FactorFileProvider, fileProvider, _dataManager, _synchronizer, new TestDataChannelProvider());
 
             _algorithm.PostInitialize();
-            Thread.Sleep(150); // small handicap for the data to be pumped so TimeSlices have data of all subscriptions
             return _feed;
         }
 
@@ -1427,14 +1499,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             new TestCaseData(Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda), Resolution.Tick, 1, 25, 0, 0, 0, 0, false, _instances[typeof(BaseData)]),
 
             // CFD - FXCM
-            new TestCaseData(Symbols.DE30EUR, Resolution.Hour, 1, 0, 0, 14, 0, 0, false, _instances[typeof(BaseData)]),
-            new TestCaseData(Symbols.DE30EUR, Resolution.Minute, 1, 0, 0, 1 * 60, 0, 0, false, _instances[typeof(BaseData)]),
-            new TestCaseData(Symbols.DE30EUR, Resolution.Tick, 1, 14, 0, 0, 0, 0, false, _instances[typeof(BaseData)]),
+            new TestCaseData(Symbol.Create("DE30EUR", SecurityType.Cfd, Market.FXCM), Resolution.Hour, 1, 0, 0, 14, 0, 0, false, _instances[typeof(BaseData)]),
+            new TestCaseData(Symbol.Create("DE30EUR", SecurityType.Cfd, Market.FXCM), Resolution.Minute, 1, 0, 0, 1 * 60, 0, 0, false, _instances[typeof(BaseData)]),
+            new TestCaseData(Symbol.Create("DE30EUR", SecurityType.Cfd, Market.FXCM), Resolution.Tick, 1, 14, 0, 0, 0, 0, false, _instances[typeof(BaseData)]),
 
             // CFD - Oanda
-            new TestCaseData(Symbol.Create("DE30EUR", SecurityType.Cfd, Market.Oanda), Resolution.Hour, 1, 0, 0, 21, 0, 0, false, _instances[typeof(BaseData)]),
-            new TestCaseData(Symbol.Create("DE30EUR", SecurityType.Cfd, Market.Oanda), Resolution.Minute, 1, 0, 0, 1 * 60, 0, 0, false, _instances[typeof(BaseData)]),
-            new TestCaseData(Symbol.Create("DE30EUR", SecurityType.Cfd, Market.Oanda), Resolution.Tick, 1, 21, 0, 0, 0, 0, false, _instances[typeof(BaseData)]),
+            new TestCaseData(Symbols.DE30EUR, Resolution.Hour, 1, 0, 0, 21, 0, 0, false, _instances[typeof(BaseData)]),
+            new TestCaseData(Symbols.DE30EUR, Resolution.Minute, 1, 0, 0, 1 * 60, 0, 0, false, _instances[typeof(BaseData)]),
+            new TestCaseData(Symbols.DE30EUR, Resolution.Tick, 1, 21, 0, 0, 0, 0, false, _instances[typeof(BaseData)]),
 
             // Crypto
             new TestCaseData(Symbols.BTCUSD, Resolution.Hour, 1, 0, 24, 24, 0, 0, false, _instances[typeof(BaseData)]),
@@ -2134,9 +2206,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new SecurityCacheProvider(algorithm.Portfolio));
             algorithm.Securities.SetSecurityService(securityService);
             var dataPermissionManager = new DataPermissionManager();
-            var dataProvider = new DefaultDataProvider();
             var dataManager = new DataManager(_feed,
-                new UniverseSelection(algorithm, securityService, dataPermissionManager, dataProvider),
+                new UniverseSelection(algorithm, securityService, dataPermissionManager, TestGlobals.DataProvider),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
@@ -2175,7 +2246,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
 
             _feed.Initialize(algorithm, new LiveNodePacket(), new BacktestingResultHandler(),
-                TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, dataProvider,
+                TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider,
                 dataManager, _synchronizer, new TestDataChannelProvider());
 
             var cancellationTokenSource = new CancellationTokenSource();
@@ -2241,11 +2312,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     if (securityType == SecurityType.Future)
                     {
-                        Assert.AreEqual(futureSymbols.Count, futureContractCount);
+                        // -1 to remove canonical since it's not part of the chain
+                        Assert.AreEqual(futureSymbols.Count - 1, futureContractCount);
 
                         foreach (var symbol in futureSymbols)
                         {
-                            Assert.IsTrue(timeSlice.Slice.ContainsKey(symbol));
+                            // only assert there is data for non internal subscriptions
+                            if (algorithm.SubscriptionManager.SubscriptionDataConfigService
+                                .GetSubscriptionDataConfigs(symbol).Any())
+                            {
+                                Assert.IsTrue(timeSlice.Slice.ContainsKey(symbol), $"{symbol} was not found, has [{string.Join(",", timeSlice.Slice.Keys)}]");
+                            }
                         }
                     }
 
@@ -2266,6 +2343,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         lastSecurityChangedTime = timeSlice.Time;
                         Log.Debug($"{timeSlice.Time} - Adding future symbol: {security.Symbol}");
+
                         futureSymbols.Add(security.Symbol);
                     }
                     else if (security.Symbol.SecurityType == SecurityType.Option)
@@ -2322,7 +2400,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             if (securityType == SecurityType.Future)
             {
-                Assert.AreEqual(2, futureSymbols.Count, "Future symbols count mismatch");
+                // we add 2 symbols + 1 continuous future + 1 continuous future mapped symbol
+                Assert.AreEqual(4, futureSymbols.Count, "Future symbols count mismatch");
             }
             else if (securityType == SecurityType.Option)
             {

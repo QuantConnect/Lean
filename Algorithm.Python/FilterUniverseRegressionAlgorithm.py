@@ -25,7 +25,7 @@ class FilterUniverseRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         self.SetStartDate(2015, 12, 24)
-        self.SetEndDate(2015, 12, 24)
+        self.SetEndDate(2015, 12, 28)
         self.SetCash(100000)
 
         equity = self.AddEquity(self.UnderlyingTicker)

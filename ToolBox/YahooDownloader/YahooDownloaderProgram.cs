@@ -52,7 +52,7 @@ namespace QuantConnect.ToolBox.YahooDownloader
                 {
                     // Download the data
                     var symbolObject = Symbol.Create(ticker, SecurityType.Equity, market);
-                    var data = downloader.Get(symbolObject, castResolution, startDate, endDate);
+                    var data = downloader.Get(new DataDownloaderGetParameters(symbolObject, castResolution, startDate, endDate));
 
                     // Save the data
                     var writer = new LeanDataWriter(castResolution, symbolObject, dataDirectory);

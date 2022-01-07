@@ -26,7 +26,6 @@ using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 using QuantConnect.Data.Fundamental;
-using QuantConnect.Data.Market;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -38,7 +37,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IDataFeedSubscriptionManager _dataManager;
         private readonly IAlgorithm _algorithm;
         private readonly ISecurityService _securityService;
-        private readonly IDataPermissionManager _dataPermissionManager;
         private readonly Dictionary<DateTime, Dictionary<Symbol, Security>> _pendingSecurityAdditions = new Dictionary<DateTime, Dictionary<Symbol, Security>>();
         private readonly PendingRemovalsManager _pendingRemovalsManager;
         private readonly CurrencySubscriptionDataConfigManager _currencySubscriptionDataConfigManager;
@@ -46,6 +44,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private bool _initializedSecurityBenchmark;
         private readonly IDataProvider _dataProvider;
         private bool _anyDoesNotHaveFundamentalDataWarningLogged;
+        private readonly SecurityChangesConstructor _securityChangesConstructor;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UniverseSelection"/> class
@@ -65,7 +64,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _dataProvider = dataProvider;
             _algorithm = algorithm;
             _securityService = securityService;
-            _dataPermissionManager = dataPermissionManager;
             _pendingRemovalsManager = new PendingRemovalsManager(algorithm.Transactions);
             _currencySubscriptionDataConfigManager = new CurrencySubscriptionDataConfigManager(algorithm.Portfolio.CashBook,
                 algorithm.Securities,
@@ -74,6 +72,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Resolution.Minute);
             // TODO: next step is to merge currency internal subscriptions under the same 'internal manager' instance and we could move this directly into the DataManager class
             _internalSubscriptionManager = new InternalSubscriptionManager(_algorithm, internalConfigResolution);
+            _securityChangesConstructor = new SecurityChangesConstructor();
         }
 
         /// <summary>
@@ -178,7 +177,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             {
                                 lock (fineCollection.Data)
                                 {
-                                    fineCollection.Data.Add(enumerator.Current);
+                                    fineCollection.Add(enumerator.Current);
                                 }
                             }
                         }
@@ -228,7 +227,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             fine.Value = coarse.Value;
                         }
 
-                        universeData.Data.Add(fundamentals);
+                        universeData.Add(fundamentals);
                     }
 
                     // END -- HACK ATTACK -- END
@@ -246,14 +245,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // materialize the enumerable into a set for processing
             var selections = selectSymbolsResult.ToHashSet();
 
-            var additions = new List<Security>();
-            var removals = new List<Security>();
-
             // first check for no pending removals, even if the universe selection
             // didn't change we might need to remove a security because a position was closed
             RemoveSecurityFromUniverse(
                 _pendingRemovalsManager.CheckPendingRemovals(selections, universe),
-                removals,
                 dateTimeUtc,
                 algorithmEndDateUtc);
 
@@ -273,13 +268,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // don't remove if the universe wants to keep him in
                 if (!universe.CanRemoveMember(dateTimeUtc, security)) continue;
 
-                // remove the member - this marks this member as not being
-                // selected by the universe, but it may remain in the universe
-                // until open orders are closed and the security is liquidated
-                removals.Add(security);
+                _securityChangesConstructor.Remove(member.Security, member.IsInternal);
 
                 RemoveSecurityFromUniverse(_pendingRemovalsManager.TryRemoveMember(security, universe),
-                    removals,
                     dateTimeUtc,
                     algorithmEndDateUtc);
             }
@@ -314,6 +305,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 var addedSubscription = false;
                 var dataFeedAdded = false;
+                var internalFeed = true;
                 foreach (var request in universe.GetSubscriptionRequests(security, dateTimeUtc, algorithmEndDateUtc,
                                                                          _algorithm.SubscriptionManager.SubscriptionDataConfigService))
                 {
@@ -339,29 +331,27 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (!request.IsUniverseSubscription)
                     {
                         addedSubscription = true;
-
+                        // if any config isn't internal then it's not internal
+                        internalFeed &= request.Configuration.IsInternalFeed;
                         _internalSubscriptionManager.AddedSubscriptionRequest(request);
                     }
                 }
 
                 if (addedSubscription)
                 {
-                    var addedMember = universe.AddMember(dateTimeUtc, security);
+                    var addedMember = universe.AddMember(dateTimeUtc, security, internalFeed);
 
                     if (addedMember && dataFeedAdded)
                     {
-                        additions.Add(security);
+                        _securityChangesConstructor.Add(security, internalFeed);
                     }
                 }
             }
 
-            // return None if there's no changes, otherwise return what we've modified
-            var securityChanges = additions.Count + removals.Count != 0
-                ? new SecurityChanges(additions, removals)
-                : SecurityChanges.None;
+            var securityChanges = _securityChangesConstructor.Flush();
 
             // Add currency data feeds that weren't explicitly added in Initialize
-            if (additions.Count > 0)
+            if (securityChanges.AddedSecurities.Count > 0)
             {
                 EnsureCurrencyDataFeeds(securityChanges);
             }
@@ -465,7 +455,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private void RemoveSecurityFromUniverse(
             List<PendingRemovalsManager.RemovedMember> removedMembers,
-            List<Security> removals,
             DateTime dateTimeUtc,
             DateTime algorithmEndDateUtc)
         {
@@ -488,17 +477,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 foreach (var subscription in universe.GetSubscriptionRequests(member, dateTimeUtc, algorithmEndDateUtc,
                                                                               _algorithm.SubscriptionManager.SubscriptionDataConfigService))
                 {
-                    if (subscription.IsUniverseSubscription)
+                    if (_dataManager.RemoveSubscription(subscription.Configuration, universe))
                     {
-                        removals.Remove(member);
-                    }
-                    else
-                    {
-                        if (_dataManager.RemoveSubscription(subscription.Configuration, universe))
-                        {
-                            _internalSubscriptionManager.RemovedSubscriptionRequest(subscription);
-                            member.IsTradable = false;
-                        }
+                        _internalSubscriptionManager.RemovedSubscriptionRequest(subscription);
+                        member.IsTradable = false;
                     }
                 }
             }
@@ -510,15 +492,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Security security;
             if (!pendingAdditions.TryGetValue(symbol, out security) && !_algorithm.Securities.TryGetValue(symbol, out security))
             {
-                // For now this is required for retro compatibility with usages of security.Subscriptions
-                var configs = _algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(symbol,
-                    universeSettings.Resolution,
-                    universeSettings.FillForward,
-                    universeSettings.ExtendedMarketHours,
-                    dataNormalizationMode: universeSettings.DataNormalizationMode,
-                    subscriptionDataTypes: universeSettings.SubscriptionDataTypes);
-
-                security = _securityService.CreateSecurity(symbol, configs, universeSettings.Leverage, symbol.ID.SecurityType.IsOption(), underlying);
+                security = _securityService.CreateSecurity(symbol, new List<SubscriptionDataConfig>(), universeSettings.Leverage, symbol.ID.SecurityType.IsOption(), underlying);
 
                 pendingAdditions.Add(symbol, security);
             }

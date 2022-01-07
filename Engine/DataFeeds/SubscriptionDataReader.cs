@@ -61,9 +61,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private DateTime _periodStart;
         private readonly DateTime _periodFinish;
 
-        private readonly MapFileResolver _mapFileResolver;
+        private readonly IMapFileProvider _mapFileProvider;
         private readonly IFactorFileProvider _factorFileProvider;
-        private FactorFile _factorFile;
+        private IFactorProvider _factorFile;
         private MapFile _mapFile;
 
         private bool _pastDelistedDate;
@@ -141,7 +141,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public SubscriptionDataReader(SubscriptionDataConfig config,
             DateTime periodStart,
             DateTime periodFinish,
-            MapFileResolver mapFileResolver,
+            IMapFileProvider mapFileProvider,
             IFactorFileProvider factorFileProvider,
             IEnumerable<DateTime> tradeableDates,
             bool isLiveMode,
@@ -154,7 +154,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             //Save Start and End Dates:
             _periodStart = periodStart;
             _periodFinish = periodFinish;
-            _mapFileResolver = mapFileResolver;
+            _mapFileProvider = mapFileProvider;
             _factorFileProvider = factorFileProvider;
             _dataCacheProvider = dataCacheProvider;
 
@@ -208,21 +208,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
-            _factorFile = new FactorFile(_config.Symbol.Value, new List<FactorFileRow>());
-            _mapFile = new MapFile(_config.Symbol.Value, new List<MapFileRow>());
-
             // load up the map files for equities, options, and custom data if it supports it.
             // Only load up factor files for equities
             if (_dataFactory.RequiresMapping())
             {
                 try
                 {
-                    var mapFile = _mapFileResolver.ResolveMapFile(_config.Symbol, _config.Type);
+                    var mapFile = _mapFileProvider.ResolveMapFile(_config);
 
                     // only take the resolved map file if it has data, otherwise we'll use the empty one we defined above
                     if (mapFile.Any()) _mapFile = mapFile;
 
-                    if (!_config.IsCustomData && !_config.SecurityType.IsOption())
+                    if (_config.PricesShouldBeScaled())
                     {
                         var factorFile = _factorFileProvider.Get(_config.Symbol);
                         _hasScaleFactors = factorFile != null;
@@ -260,6 +257,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     Log.Error(err, "Fetching Price/Map Factors: " + _config.Symbol.ID + ": ");
                 }
             }
+
+            _factorFile ??= _config.Symbol.GetEmptyFactorFile();
+            _mapFile ??= new MapFile(_config.Symbol.Value, Enumerable.Empty<MapFileRow>());
 
             _delistingDate = _config.Symbol.GetDelistingDate(_mapFile);
 

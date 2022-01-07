@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 // Can specify the default exchange to execute an order on.
                 // If not specified will default to the primary exchange
-                Exchange = Exchange.NASDAQ,
+                Exchange = Exchange.BATS,
                 // Currently only support order for the day
                 TimeInForce = TimeInForce.Day
             };
@@ -59,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
-                // will set 25% of our buying power with a market order that will be routed to exchange set in the default order properties (NASDAQ)
+                // will set 25% of our buying power with a market order that will be routed to exchange set in the default order properties (BATS)
                 SetHoldings("SPY", 0.25m);
                 // will increase our SPY holdings to 50% of our buying power with a market order that will be routed to ARCA
                 SetHoldings("SPY", 0.50m, orderProperties: new AtreyuOrderProperties { Exchange = Exchange.ARCA });
@@ -86,10 +86,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "93.443%"},
+            {"Compounding Annual Return", "93.340%"},
             {"Drawdown", "1.100%"},
             {"Expectancy", "0"},
-            {"Net Profit", "0.847%"},
+            {"Net Profit", "0.846%"},
             {"Sharpe Ratio", "6.515"},
             {"Probabilistic Sharpe Ratio", "67.535%"},
             {"Loss Rate", "0%"},
@@ -102,14 +102,14 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "6.515"},
             {"Tracking Error", "0.11"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.52"},
+            {"Total Fees", "$1.20"},
             {"Estimated Strategy Capacity", "$8600000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Fitness Score", "0.124"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "78.376"},
+            {"Return Over Maximum Drawdown", "78.222"},
             {"Portfolio Turnover", "0.124"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -124,7 +124,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "867df80d1338dc526316a01e68435498"}
+            {"OrderListHash", "01a751a837beafd90015b2fd82edf994"}
         };
     }
 }

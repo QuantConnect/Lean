@@ -154,13 +154,14 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
-        public void OptionExersiceWhenFullyInvested()
+        public void OptionExerciseWhenFullyInvested()
         {
             var algorithm = new AlgorithmStub();
             algorithm.SetFinishedWarmingUp();
             var backtestingTransactionHandler = new BacktestingTransactionHandler();
+            var brokerage = new BacktestingBrokerage(algorithm);
             algorithm.Transactions.SetOrderProcessor(backtestingTransactionHandler);
-            backtestingTransactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), new TestResultHandler());
+            backtestingTransactionHandler.Initialize(algorithm, brokerage, new TestResultHandler());
 
             const decimal price = 2600m;
             var time = new DateTime(2020, 10, 14);
@@ -178,11 +179,8 @@ namespace QuantConnect.Tests.Common.Securities
             optionSecurity.Underlying.SetMarketPrice(new Tick { Value = price, Time = time });
             optionSecurity.SetMarketPrice(new Tick { Value = 150, Time = time });
             optionSecurity.Holdings.SetHoldings(1.5m, 10);
-
-            var request = optionSecurity.CreateDelistedSecurityOrderRequest(algorithm.UtcTime);
-
-            var ticket = algorithm.Transactions.AddOrder(request);
-
+            
+            var ticket = algorithm.ExerciseOption(optionSecurity.Symbol, 10, true);
             Assert.AreEqual(OrderStatus.Filled, ticket.Status);
         }
 

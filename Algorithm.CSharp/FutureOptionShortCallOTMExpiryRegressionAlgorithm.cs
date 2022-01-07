@@ -173,12 +173,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "2"},
             {"Average Win", "1.81%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "3.752%"},
+            {"Compounding Annual Return", "3.756%"},
             {"Drawdown", "0.000%"},
             {"Expectancy", "0"},
-            {"Net Profit", "1.809%"},
+            {"Net Profit", "1.811%"},
             {"Sharpe Ratio", "1.183"},
-            {"Probabilistic Sharpe Ratio", "60.809%"},
+            {"Probabilistic Sharpe Ratio", "60.811%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "100%"},
             {"Profit-Loss Ratio", "0"},
@@ -188,15 +188,15 @@ namespace QuantConnect.Algorithm.CSharp
             {"Annual Variance", "0"},
             {"Information Ratio", "0.012"},
             {"Tracking Error", "0.375"},
-            {"Treynor Ratio", "-24.051"},
-            {"Total Fees", "$3.70"},
+            {"Treynor Ratio", "-24.052"},
+            {"Total Fees", "$1.85"},
             {"Estimated Strategy Capacity", "$78000000.00"},
             {"Lowest Capacity Asset", "ES XFH59UPNF7B8|ES XFH59UK0MYO1"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "95.495"},
+            {"Return Over Maximum Drawdown", "95.594"},
             {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -211,7 +211,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "35baadd70ec72c735eadbf55d702fe04"}
+            {"OrderListHash", "8cb012d36057103bf26a897fe5fa54d6"}
         };
     }
 }

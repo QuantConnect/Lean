@@ -18,6 +18,7 @@ using System.IO;
 using System.Text;
 using NUnit.Framework;
 using QuantConnect.Data;
+using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Tests.Common.Data.Market
@@ -126,7 +127,8 @@ namespace QuantConnect.Tests.Common.Data.Market
                 DataNormalizationMode.Raw);
 
             var tradeLine = "40560000,10000,15000,10000,15000,90";
-            var stream = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(tradeLine)));
+            using var memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(tradeLine));
+            using var stream = new StreamReader(memoryStream);
 
             var tradeBarFromLine = (TradeBar)factory.Reader(config, tradeLine, new DateTime(2020, 9, 22), false);
             var tradeBarFromStream = (TradeBar)factory.Reader(config, stream, new DateTime(2020, 9, 22), false);
@@ -176,7 +178,8 @@ namespace QuantConnect.Tests.Common.Data.Market
                 DataNormalizationMode.Raw);
 
             var tradeLine = "40560000,1.0,1.5,1.0,1.5,90.0";
-            var stream = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(tradeLine)));
+            using var memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(tradeLine));
+            using var stream = new StreamReader(memoryStream);
 
             var unscaledTradeBarFromLine = (TradeBar)factory.Reader(config, tradeLine, new DateTime(2020, 9, 22), false);
             var unscaledTradeBarFromStream = (TradeBar)factory.Reader(config, stream, new DateTime(2020, 9, 22), false);
@@ -196,6 +199,57 @@ namespace QuantConnect.Tests.Common.Data.Market
             Assert.AreEqual(1m, unscaledTradeBarFromStream.Low);
             Assert.AreEqual(1.5m, unscaledTradeBarFromStream.Close);
             Assert.AreEqual(90m, unscaledTradeBarFromStream.Volume);
+        }
+
+        [TestCase(Resolution.Minute, "43140000,21.04,21.44,20.4,21.24,0")]
+        [TestCase(Resolution.Hour, "20200922 11:00,21.04,21.44,20.4,21.24,0")]
+        [TestCase(Resolution.Daily, "20200921 00:00,21.04,21.44,20.4,21.24,0")]
+        public void TradeBarIndexLowResolutionParsing(Resolution resolution, string tradeLine)
+        {
+            var factory = new TradeBar();
+            var symbol = Symbols.CreateIndexSymbol("VIX");
+            var entry = MarketHoursDatabase.FromDataFolder()
+                .GetEntry(symbol.ID.Market, symbol, symbol.SecurityType);
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                symbol,
+                resolution,
+                entry.DataTimeZone,
+                entry.ExchangeHours.TimeZone,
+                true,
+                false,
+                false,
+                false,
+                TickType.Trade,
+                true,
+                DataNormalizationMode.Raw);
+
+            using var memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(tradeLine));
+            using var stream = new StreamReader(memoryStream);
+
+            var fromLine = (TradeBar)factory.Reader(config, tradeLine, new DateTime(2020, 9, 22), false);
+            var fromStream = (TradeBar)factory.Reader(config, stream, new DateTime(2020, 9, 22), false);
+
+            var expectedEndTime = new DateTime(2020, 9, 22, 12, 0, 0);
+            if (resolution == Resolution.Daily)
+            {
+                expectedEndTime = expectedEndTime.AddHours(-expectedEndTime.Hour);
+            }
+            Assert.AreEqual(expectedEndTime, fromLine.EndTime);
+            Assert.AreEqual(symbol, fromLine.Symbol);
+            Assert.AreEqual(21.04m, fromLine.Open);
+            Assert.AreEqual(21.44m, fromLine.High);
+            Assert.AreEqual(20.4m, fromLine.Low);
+            Assert.AreEqual(21.24m, fromLine.Close);
+            Assert.AreEqual(0m, fromLine.Volume);
+
+            Assert.AreEqual(expectedEndTime, fromStream.EndTime);
+            Assert.AreEqual(symbol, fromLine.Symbol);
+            Assert.AreEqual(21.04m, fromLine.Open);
+            Assert.AreEqual(21.44m, fromLine.High);
+            Assert.AreEqual(20.4m, fromLine.Low);
+            Assert.AreEqual(21.24m, fromLine.Close);
+            Assert.AreEqual(0m, fromLine.Volume);
         }
     }
 }

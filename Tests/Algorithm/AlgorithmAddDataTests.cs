@@ -191,12 +191,12 @@ namespace QuantConnect.Tests.Algorithm
 
         [TestCase("EURUSD", typeof(IndexedLinkedData), SecurityType.Cfd, false, true)]
         [TestCase("BTCUSD", typeof(IndexedLinkedData), SecurityType.Crypto, false, true)]
-        [TestCase("CL", typeof(IndexedLinkedData), SecurityType.Future, false, true)]
+        [TestCase("CL", typeof(IndexedLinkedData), SecurityType.Future, true, true)]
         [TestCase("EURUSD", typeof(IndexedLinkedData), SecurityType.Forex, false, true)]
         [TestCase("AAPL", typeof(IndexedLinkedData), SecurityType.Equity, true, true)]
         [TestCase("EURUSD", typeof(UnlinkedData), SecurityType.Cfd, false, false)]
         [TestCase("BTCUSD", typeof(UnlinkedData), SecurityType.Crypto, false, false)]
-        [TestCase("CL", typeof(UnlinkedData), SecurityType.Future, false, false)]
+        [TestCase("CL", typeof(UnlinkedData), SecurityType.Future, true, false)]
         [TestCase("AAPL", typeof(UnlinkedData), SecurityType.Equity, true, false)]
         [TestCase("EURUSD", typeof(UnlinkedData), SecurityType.Forex, false, false)]
         public void AddDataSecuritySymbolWithUnderlying(string ticker, Type customDataType, SecurityType securityType, bool securityShouldBeMapped, bool customDataShouldBeMapped)
@@ -328,7 +328,7 @@ namespace QuantConnect.Tests.Algorithm
 
         [TestCase("EURUSD", typeof(UnlinkedData), SecurityType.Cfd, false, false)]
         [TestCase("BTCUSD", typeof(UnlinkedData), SecurityType.Crypto, false, false)]
-        [TestCase("CL", typeof(UnlinkedData), SecurityType.Future, false, false)]
+        [TestCase("CL", typeof(UnlinkedData), SecurityType.Future, true, false)]
         [TestCase("AAPL", typeof(UnlinkedData), SecurityType.Equity, true, false)]
         [TestCase("EURUSD", typeof(UnlinkedData), SecurityType.Forex, false, false)]
         public void AddDataSecurityTickerNoUnderlying(string ticker, Type customDataType, SecurityType securityType, bool securityShouldBeMapped, bool customDataShouldBeMapped)

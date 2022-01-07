@@ -87,7 +87,7 @@ class MockUniverseSelectionModel(FundamentalUniverseSelectionModel):
                 Assert.AreEqual(1, universes.Count);
 
                 var data = new BaseDataCollection();
-                data.Data.Add(new CoarseFundamental());
+                data.Add(new CoarseFundamental());
 
                 var universe = universes.First();
                 var symbols = universe.SelectSymbols(DateTime.Now, data).ToList();

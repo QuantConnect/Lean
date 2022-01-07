@@ -17,10 +17,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using Newtonsoft.Json;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
+using QuantConnect.Logging;
+using QuantConnect.Securities;
 
 namespace QuantConnect.ToolBox.CoinApi
 {
@@ -41,7 +42,9 @@ namespace QuantConnect.ToolBox.CoinApi
         {
             { Market.GDAX, "COINBASE" },
             { Market.Bitfinex, "BITFINEX" },
-            { Market.Binance, "BINANCE" }
+            { Market.Binance, "BINANCE" },
+            { Market.FTX, "FTX" },
+            { Market.Kraken, "KRAKEN" }
         };
         private static readonly Dictionary<string, string> MapExchangeIdsToMarkets =
             MapMarketsToExchangeIds.ToDictionary(x => x.Value, x => x.Key);
@@ -197,24 +200,25 @@ namespace QuantConnect.ToolBox.CoinApi
             // There were cases of entries in the CoinApiSymbols list with the following pattern:
             // <Exchange>_SPOT_<BaseCurrency>_<QuoteCurrency>_<ExtraSuffix>
             // Those cases should be ignored for SPOT prices.
-            _symbolMap = result
+            foreach (var x in  result
                 .Where(x => x.SymbolType == "SPOT" &&
                     x.SymbolId.Split('_').Length == 4 &&
                     // exclude Bitfinex BCH pre-2018-fork as for now we don't have historical mapping data
                     (x.ExchangeId != "BITFINEX" || x.AssetIdBase != "BCH" && x.AssetIdQuote != "BCH")
                     // solves the cases where we request 'binance' and get 'binanceus'
-                    && MapExchangeIdsToMarkets.ContainsKey(x.ExchangeId))
-                .ToDictionary(
-                    x =>
-                    {
-                        var market = MapExchangeIdsToMarkets[x.ExchangeId];
-                        return Symbol.Create(
-                            ConvertCoinApiCurrencyToLeanCurrency(x.AssetIdBase, market) +
-                            ConvertCoinApiCurrencyToLeanCurrency(x.AssetIdQuote, market),
-                            SecurityType.Crypto,
-                            market);
-                    },
-                    x => x.SymbolId);
+                    && MapExchangeIdsToMarkets.ContainsKey(x.ExchangeId)))
+            {
+                var market = MapExchangeIdsToMarkets[x.ExchangeId];
+                var symbol = GetLeanSymbol(x.SymbolId, SecurityType.Crypto, market);
+
+                if (_symbolMap.ContainsKey(symbol))
+                {
+                    // skipping duplicate symbols. Kraken has both USDC/AD & USD/CAD symbols
+                    Log.Error($"CoinApiSymbolMapper(): Duplicate symbol found {symbol} will be skipped!");
+                    continue;
+                }
+                _symbolMap[symbol] = x.SymbolId;
+            }
         }
 
         private static string ConvertCoinApiCurrencyToLeanCurrency(string currency, string market)

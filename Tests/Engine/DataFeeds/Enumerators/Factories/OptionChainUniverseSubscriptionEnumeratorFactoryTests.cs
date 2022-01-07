@@ -71,7 +71,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             );
 
             var dataProvider = TestGlobals.DataProvider;
-            var enumeratorFactory = new BaseDataSubscriptionEnumeratorFactory(false, MapFileResolver.Create(Globals.DataFolder, Market.USA), TestGlobals.FactorFileProvider);
+            var enumeratorFactory = new BaseDataSubscriptionEnumeratorFactory(false, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider);
             var fillForwardResolution = Ref.CreateReadOnly(() => Resolution.Minute.ToTimeSpan());
             Func<SubscriptionRequest, IEnumerator<BaseData>> underlyingEnumeratorFunc = (req) =>
                 {
@@ -90,7 +90,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             var factory = new OptionChainUniverseSubscriptionEnumeratorFactory(underlyingEnumeratorFunc);
 
             var request = new SubscriptionRequest(true, null, option, config, startTime, endTime);
-            var enumerator = factory.CreateEnumerator(request, new DefaultDataProvider());
+            var enumerator = factory.CreateEnumerator(request, dataProvider);
 
             var emittedCount = 0;
             foreach (var data in enumerator.AsEnumerable())
@@ -165,7 +165,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             var universeSettings = new UniverseSettings(Resolution.Minute, 0, true, false, TimeSpan.Zero);
             var universe = new OptionChainUniverse(option, universeSettings, true);
             var request = new SubscriptionRequest(true, universe, option, config, startTime, Time.EndOfTime);
-            var enumerator = (DataQueueOptionChainUniverseDataCollectionEnumerator) factory.CreateEnumerator(request, new DefaultDataProvider());
+            var enumerator = (DataQueueOptionChainUniverseDataCollectionEnumerator) factory.CreateEnumerator(request, TestGlobals.DataProvider);
 
             // 2018-10-19 10:00 AM UTC
             underlyingEnumerator.Enqueue(new Tick { Symbol = Symbols.SPY, Value = 280m });

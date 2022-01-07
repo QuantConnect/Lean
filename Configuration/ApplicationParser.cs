@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -88,6 +88,39 @@ namespace QuantConnect.Configuration
                 application.ShowHelp();
             }
             return optionsObject;
+        }
+
+        public static void PrintMessageAndExit(int exitCode = 0, string message = "")
+        {
+            if (!string.IsNullOrEmpty(message))
+            {
+                Console.WriteLine("\n" + message);
+            }
+            Console.WriteLine("\nUse the '--help' parameter for more information");
+            Console.WriteLine("Press any key to quit");
+            Console.ReadLine();
+            Environment.Exit(exitCode);
+        }
+
+        public static string GetParameterOrExit(IReadOnlyDictionary<string, object> optionsObject, string parameter)
+        {
+            if (!optionsObject.ContainsKey(parameter))
+            {
+                PrintMessageAndExit(1, "ERROR: REQUIRED parameter --" + parameter + "= is missing");
+            }
+            return optionsObject[parameter].ToString();
+        }
+
+        public static string GetParameterOrDefault(IReadOnlyDictionary<string, object> optionsObject, string parameter, string defaultValue)
+        {
+            object value;
+            if (!optionsObject.TryGetValue(parameter, out value))
+            {
+                Console.WriteLine($"'{parameter}' was not specified. Using default value: '{defaultValue}'");
+                return defaultValue;
+            }
+
+            return value.ToString();
         }
     }
 }

@@ -15,6 +15,7 @@
 
 using System.Linq;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace QuantConnect
 {
@@ -183,6 +184,42 @@ namespace QuantConnect
             = new("ISE_MERCURY", "J", "International Securities Options Exchange MERCURY", QuantConnect.Market.USA, SecurityType.Option);
 
         /// <summary>
+        /// The Chicago Mercantile Exchange (CME), is an organized exchange for the trading of futures and options.
+        /// </summary>
+        public static Exchange CME { get; }
+            = new("CME", "CME", "Futures and Options Chicago Mercantile Exchange", QuantConnect.Market.CME, SecurityType.Future, SecurityType.FutureOption);
+
+        /// <summary>
+        /// The Chicago Board of Trade (CBOT) is a commodity exchange
+        /// </summary>
+        public static Exchange CBOT { get; }
+            = new("CBOT", "CBOT", " Chicago Board of Trade Commodity Exchange", QuantConnect.Market.CBOT, SecurityType.Future, SecurityType.FutureOption);
+
+        /// <summary>
+        /// Cboe Futures Exchange
+        /// </summary>
+        public static Exchange CFE { get; }
+            = new("CFE", "CFE", "CFE Futures Exchange", QuantConnect.Market.CFE, SecurityType.Future);
+
+        /// <summary>
+        /// COMEX Commodity Exchange
+        /// </summary>
+        public static Exchange COMEX { get; }
+            = new("COMEX", "COMEX", "COMEX Futures Exchange", QuantConnect.Market.COMEX, SecurityType.Future);
+
+        /// <summary>
+        /// The Intercontinental Exchange
+        /// </summary>
+        public static Exchange ICE { get; }
+            = new("ICE", "ICE", "The Intercontinental Exchange", QuantConnect.Market.ICE, SecurityType.Future);
+
+        /// <summary>
+        /// New York Mercantile Exchange
+        /// </summary>
+        public static Exchange NYMEX { get; }
+            = new("NYMEX", "NYMEX", "New York Mercantile Exchange", QuantConnect.Market.NYMEX, SecurityType.Future, SecurityType.FutureOption);
+
+        /// <summary>
         /// Exchange description
         /// </summary>
         [JsonIgnore]
@@ -206,7 +243,8 @@ namespace QuantConnect
         /// <summary>
         /// Security types traded in this exchange
         /// </summary>
-        public SecurityType[] SecurityTypes { get; init; }
+        [JsonProperty(ReferenceLoopHandling = ReferenceLoopHandling.Ignore)]
+        public IReadOnlyList<SecurityType> SecurityTypes { get; init; } = new List<SecurityType>();
 
         /// <summary>
         /// Creates a new empty exchange instance
@@ -224,7 +262,7 @@ namespace QuantConnect
             Name = name;
             Market = market;
             Description = description;
-            SecurityTypes = securityTypes?.ToArray();
+            SecurityTypes = securityTypes?.ToList() ?? new List<SecurityType>();
             Code = string.IsNullOrEmpty(code) ? name : code;
         }
 
@@ -264,7 +302,7 @@ namespace QuantConnect
             return Code == exchange.Code
                 && Market == exchange.Market
                 && SecurityTypes.All(exchange.SecurityTypes.Contains)
-                && SecurityTypes.Length == exchange.SecurityTypes.Length;
+                && SecurityTypes.Count == exchange.SecurityTypes.Count;
         }
 
         /// <summary>
@@ -306,7 +344,7 @@ namespace QuantConnect
             {
                 var hashCode = Code.GetHashCode();
                 hashCode = (hashCode * 397) ^ Market.GetHashCode();
-                for (var i = 0; i < SecurityTypes.Length; i++)
+                for (var i = 0; i < SecurityTypes.Count; i++)
                 {
                     hashCode = (hashCode * 397) ^ SecurityTypes[i].GetHashCode();
                 }
