@@ -1749,6 +1749,29 @@ namespace QuantConnect.Algorithm
             return sharpeRatio;
         }
 
+        /// <summary>
+        /// Creates a new RollingSortinoRatio indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose SORTINO we want</param>
+        /// <param name="sortinoPeriod">Period of historical observation for sortino ratio calculation</param>
+        /// <param name="riskFreeRate">Risk-free rate for sortino ratio calculation</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The RollingSortinoRatio indicator for the requested symbol over the specified period</returns>
+        [DocumentationAttribute(Indicators)]
+        public SortinoRatio SORTINO(Symbol symbol, int sortinoPeriod, decimal riskFreeRate = 0.0m, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"SORTINO({sortinoPeriod},{riskFreeRate})", resolution);
+            var sortinoRatio = new SortinoRatio(name, sortinoPeriod, riskFreeRate);
+            RegisterIndicator(symbol, sortinoRatio, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, sortinoRatio, resolution);
+            }
+
+            return sortinoRatio;
+        }
 
         /// <summary>
         /// Creates an SimpleMovingAverage indicator for the symbol. The indicator will be automatically
