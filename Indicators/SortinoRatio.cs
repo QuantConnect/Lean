@@ -31,9 +31,14 @@ namespace QuantConnect.Indicators
         private readonly int _period;
 
         /// <summary>
-        /// RateOfChange indicator for calculating the sortino ratio
+        /// RateOfChange indicator for calculating sma for the sortino ratio
         /// </summary>
-        private readonly RateOfChange _roc;
+        private readonly RateOfChange _rocForSMA;
+
+        /// <summary>
+        /// RateOfChange indicator for calculating downside deviation for the sortino ratio
+        /// </summary>
+        private readonly RateOfChange _rocForSTD;
 
         /// <summary>
         /// Indicator to store the calculation of the sortino ratio
@@ -72,21 +77,22 @@ namespace QuantConnect.Indicators
             _period = period;
 
             // calculate sortino ratio using indicators
-            _roc = new RateOfChange(1);
-            _roc.Updated += (sender, args) =>
-            {
+            _rocForSMA = new RateOfChange(1);
+            _rocForSTD = new RateOfChange(1);
+            _rocForSTD.Updated += (sender, args) =>
+            {                
                 //ensure we are only using the downside deviation for calculation
                 var _roc = sender.ConvertInvariant<RateOfChange>();
                 if (_roc.Current.Value > 0)
-                    _roc.Update(System.DateTime.UtcNow, 0m);
+                    _roc.Current.Value = 0;
             };
-            var std = new StandardDeviation(period).Of(_roc);
-            var sma = _roc.SMA(period);
+            var std = new StandardDeviation(period).Of(_rocForSTD);
+            var sma = _rocForSMA.SMA(period);
             _sortinoRatio = sma.Minus(riskFreeRate).Over(std);
 
             // define warmup value; 
             // _roc is the base of our indicator chain + period of STD and SMA
-            WarmUpPeriod = _roc.WarmUpPeriod + _period;
+            WarmUpPeriod = _rocForSMA.WarmUpPeriod + _period;
         }
 
         /// <summary>
@@ -96,7 +102,8 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
-            _roc.Update(input);
+            _rocForSMA.Update(input);
+            _rocForSTD.Update(input);
             return _sortinoRatio;
         }
 
@@ -106,7 +113,8 @@ namespace QuantConnect.Indicators
         public override void Reset()
         {
             _sortinoRatio.Reset();
-            _roc.Reset();
+            _rocForSMA.Reset();
+            _rocForSTD.Reset();
             base.Reset();
         }
     }

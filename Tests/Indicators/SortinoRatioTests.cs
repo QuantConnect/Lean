@@ -49,7 +49,8 @@ namespace QuantConnect.Tests.Indicators
                 sr.Update(point);
             }
 
-            Assert.AreNotEqual(sr.Current.Value, 0m);
+            // ensure we only have values <= 0. This checks the event handler logic in the SortinoRatio class
+            Assert.LessOrEqual(sr.Current.Value, 0m);
         }
 
         [Test]
