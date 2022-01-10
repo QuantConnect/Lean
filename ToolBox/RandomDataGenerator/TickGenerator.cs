@@ -18,7 +18,6 @@ using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QLNet;
 using QuantConnect.Logging;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
@@ -28,12 +27,12 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     /// </summary>
     public class TickGenerator : ITickGenerator
     {
-        private IPriceGenerator _priceGenerator;
+        private readonly IPriceGenerator _priceGenerator;
         private Symbol Symbol => Security.Symbol;
 
-        private IRandomValueGenerator Random;
-        private RandomDataGeneratorSettings Settings;
-        private TickType[] TickTypes;
+        private readonly IRandomValueGenerator _random;
+        private readonly RandomDataGeneratorSettings _settings;
+        private readonly TickType[] _tickTypes;
 
         private MarketHoursDatabase MarketHoursDatabase { get; }
         private SymbolPropertiesDatabase SymbolPropertiesDatabase { get; }
@@ -41,9 +40,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
         public TickGenerator(RandomDataGeneratorSettings settings, TickType[] tickTypes, Security security, IRandomValueGenerator random)
         {
-            Random = random;
-            Settings = settings;
-            TickTypes = tickTypes;
+            _random = random;
+            _settings = settings;
+            _tickTypes = tickTypes;
             Security = security;
             SymbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             MarketHoursDatabase = MarketHoursDatabase.FromDataFolder();
@@ -60,24 +59,24 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
         public IEnumerable<Tick> GenerateTicks()
         {
-            var current = Settings.Start;
+            var current = _settings.Start;
 
             // There is a possibility that even though this succeeds, the DateTime
             // generated may be the same as the starting DateTime, although the probability
             // of this happening diminishes the longer the period we're generating data for is
-            if (Random.NextBool(Settings.HasIpoPercentage))
+            if (_random.NextBool(_settings.HasIpoPercentage))
             {
-                current = Random.NextDate(Settings.Start, Settings.End, null);
+                current = _random.NextDate(_settings.Start, _settings.End, null);
                 Log.Trace($"\tSymbol: {Symbol} has delayed IPO at date {current:yyyy MMMM dd}");
             }
 
             // creates a max deviation that scales parabolically as resolution decreases (lower frequency)
-            var deviation = GetMaximumDeviation(Settings.Resolution);
-            while (current <= Settings.End)
+            var deviation = GetMaximumDeviation(_settings.Resolution);
+            while (current <= _settings.End)
             {
 
-                var next = NextTickTime(current, Settings.Resolution, Settings.DataDensity);
-                if (TickTypes.Contains(TickType.OpenInterest))
+                var next = NextTickTime(current, _settings.Resolution, _settings.DataDensity);
+                if (_tickTypes.Contains(TickType.OpenInterest))
                 {
                     if (next.Date != current.Date)
                     {
@@ -89,25 +88,25 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
                 Tick nextTick = null;
                 // keeps quotes close to the trades for consistency
-                if (TickTypes.Contains(TickType.Trade) &&
-                    TickTypes.Contains(TickType.Quote))
+                if (_tickTypes.Contains(TickType.Trade) &&
+                    _tickTypes.Contains(TickType.Quote))
                 {
                     // %odds of getting a trade tick, for example, a quote:trade ratio of 2 means twice as likely
                     // to get a quote, which means you have a 33% chance of getting a trade => 1/3
-                    var tradeChancePercent = 100 / (1 + Settings.QuoteTradeRatio);
+                    var tradeChancePercent = 100 / (1 + _settings.QuoteTradeRatio);
                     nextTick = NextTick(
                         next,
-                        Random.NextBool(tradeChancePercent)
+                        _random.NextBool(tradeChancePercent)
                             ? TickType.Trade
                             : TickType.Quote,
                         deviation);
                 }
-                else if (TickTypes.Contains(TickType.Trade))
+                else if (_tickTypes.Contains(TickType.Trade))
                 {
                     nextTick = NextTick(next, TickType.Trade, deviation);
 
                 }
-                else if (TickTypes.Contains(TickType.Quote))
+                else if (_tickTypes.Contains(TickType.Quote))
                 {
                     nextTick = NextTick(next, TickType.Quote, deviation);
                 }
@@ -150,25 +149,25 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     return NextOpenInterest(dateTime, Security.OpenInterest, maximumPercentDeviation);
 
                 case TickType.Trade:
-                    tick.Quantity = Random.NextInt(1, 1500);
+                    tick.Quantity = _random.NextInt(1, 1500);
                     return tick;
 
                 case TickType.Quote:
-                    var bid = Random.NextPrice(Symbol.SecurityType, Symbol.ID.Market, tick.Value, maximumPercentDeviation);
+                    var bid = _random.NextPrice(Symbol.SecurityType, Symbol.ID.Market, tick.Value, maximumPercentDeviation);
                     if (bid > tick.Value)
                     {
                         bid = tick.Value - (bid - tick.Value);
                     }
-                    var ask = Random.NextPrice(Symbol.SecurityType, Symbol.ID.Market, tick.Value, maximumPercentDeviation);
+                    var ask = _random.NextPrice(Symbol.SecurityType, Symbol.ID.Market, tick.Value, maximumPercentDeviation);
                     if (ask < tick.Value)
                     {
                         ask = tick.Value + (tick.Value - ask);
                     }
 
                     tick.BidPrice = bid;
-                    tick.BidSize = Random.NextInt(1, 1500);
+                    tick.BidSize = _random.NextInt(1, 1500);
                     tick.AskPrice = ask;
-                    tick.AskSize = Random.NextInt(1, 1500);
+                    tick.AskSize = _random.NextInt(1, 1500);
                     return tick;
 
                 default:
@@ -190,7 +189,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// from the <paramref name="previousValue"/></returns>
         public Tick NextOpenInterest(DateTime dateTime, decimal previousValue, decimal maximumPercentDeviation)
         {
-            var next = (long)Random.NextPrice(Symbol.SecurityType, Symbol.ID.Market, previousValue, maximumPercentDeviation);
+            var next = (long)_random.NextPrice(Symbol.SecurityType, Symbol.ID.Market, previousValue, maximumPercentDeviation);
             return new Tick
             {
                 Time = dateTime,
@@ -225,15 +224,15 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             switch (density)
             {
                 case DataDensity.Dense:
-                    steps = 0.5 * Random.NextDouble();
+                    steps = 0.5 * _random.NextDouble();
                     break;
 
                 case DataDensity.Sparse:
-                    steps = 5 * Random.NextDouble();
+                    steps = 5 * _random.NextDouble();
                     break;
 
                 case DataDensity.VerySparse:
-                    steps = 50 * Random.NextDouble();
+                    steps = 50 * _random.NextDouble();
                     break;
 
                 default:
