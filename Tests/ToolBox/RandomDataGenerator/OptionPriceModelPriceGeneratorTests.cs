@@ -28,12 +28,12 @@ using Option = QuantConnect.Securities.Option.Option;
 namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 {
     [TestFixture]
-    public class BlackScholesPriceGeneratorTests
+    public class OptionPriceModelPriceGeneratorTests
     {
         private Security _underlying;
         private Option _option;
 
-        public BlackScholesPriceGeneratorTests()
+        public OptionPriceModelPriceGeneratorTests()
         {
             _underlying = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
