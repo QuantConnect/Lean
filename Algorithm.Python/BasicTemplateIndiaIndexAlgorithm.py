@@ -25,6 +25,7 @@ class BasicTemplateIndiaIndexAlgorithm(QCAlgorithm):
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
+        self.SetAccountCurrency("INR")
         self.SetStartDate(2019, 1, 1)  #Set Start Date
         self.SetEndDate(2019, 1, 5)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
@@ -65,6 +66,6 @@ class BasicTemplateIndiaIndexAlgorithm(QCAlgorithm):
 
 
     def OnEndOfAlgorithm(self):
-        if Portfolio[self.Nifty].TotalSaleVolume > 0:
+        if self.Portfolio[self.Nifty].TotalSaleVolume > 0:
             raise Exception("Index is not tradable.")
 
