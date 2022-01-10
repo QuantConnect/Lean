@@ -15,10 +15,12 @@
 
 using QuantConnect.Brokerages;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
@@ -46,7 +48,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         public string OptionPriceEngineName { get; init; }
         public int ChainSymbolCount { get; init; } = 1;
         public Resolution VolatilityModelResolution{ get; init; } = Resolution.Daily;
-
+        public List<string> Tickers { get; init; }
         public static RandomDataGeneratorSettings FromCommandLineArguments(
             string startDateString,
             string endDateString,
@@ -65,7 +67,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             string dividendEveryQuarterPercentageString,
             string optionPriceEngineName,
             string volatilityModelResolutionString,
-            string chainSymbolCountString
+            string chainSymbolCountString,
+            List<string> tickers
             )
         {
             var randomSeedSet = true;
@@ -101,8 +104,14 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 Log.Error($"RandomDataGeneratorSettings(): Required parameter --to-date was incorrectly formatted. Please specify in yyyyMMdd format. Value provided: '{endDateString}'");
             }
 
+            // --tickers
+            if (!tickers.IsNullOrEmpty())
+            {
+                symbolCount = tickers.Count;
+                Log.Trace("RandomDataGeneratorSettings(): Ignoring symbol count will use provided tickers");
+            }
             // --symbol-count
-            if (!int.TryParse(symbolCountString, out symbolCount) || symbolCount <= 0)
+            else if (!int.TryParse(symbolCountString, out symbolCount) || symbolCount <= 0)
             {
                 failed = true;
                 Log.Error($"RandomDataGeneratorSettings(): Required parameter --symbol-count was incorrectly formatted. Please specify a valid integer greater than zero. Value provided: '{symbolCountString}'");
@@ -313,7 +322,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 HasDividendsPercentage = hasDividendsPercentage,
                 DividendEveryQuarterPercentage = dividendEveryQuarterPercentage,
                 OptionPriceEngineName = optionPriceEngineName,
-                VolatilityModelResolution = volatilityModelResolution
+                VolatilityModelResolution = volatilityModelResolution,
+                Tickers = tickers
             };
         }
     }

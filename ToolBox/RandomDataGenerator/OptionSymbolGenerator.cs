@@ -49,16 +49,16 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// and should be rounded to reasonable value for the given price. For example, a price of 100 dollars would round
         /// to 5 dollar increments and a price of 5 dollars would round to 50 cent increments
         /// </summary>
+        /// <param name="ticker">Optionally can provide a ticker that should be used</param>
         /// <remarks>
         /// Standard contracts expiry on the third Friday.
         /// Weekly contracts expiry every week on Friday
         /// </remarks>
         /// <returns>A new option contract Symbol within the specified expiration and strike price parameters along with its underlying symbol</returns>
-        public override IEnumerable<Symbol> GenerateAsset()
+        protected override IEnumerable<Symbol> GenerateAsset(string ticker = null)
         {
             // first generate the underlying
-            var underlying = NextSymbol(_underlyingSecurityType, _market);
-
+            var underlying = NextSymbol(_underlyingSecurityType, _market, ticker);
             yield return underlying;
 
             var marketHours = MarketHoursDatabase.GetExchangeHours(_market, underlying, _underlyingSecurityType);

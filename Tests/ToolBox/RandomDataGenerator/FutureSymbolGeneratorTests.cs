@@ -65,7 +65,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         [Test]
         public void NextFuture_CreatesSymbol_WithFutureSecurityTypeAndRequestedMarket()
         {
-            var symbols = _symbolGenerator.GenerateAsset().ToList();
+            var symbols = BaseSymbolGeneratorTests.GenerateAsset(_symbolGenerator).ToList();
             Assert.AreEqual(1, symbols.Count);
 
             var symbol = symbols.First();
@@ -77,7 +77,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         [Test]
         public void NextFuture_CreatesSymbol_WithFutureWithValidFridayExpiry()
         {
-            var symbols = _symbolGenerator.GenerateAsset().ToList();
+            var symbols = BaseSymbolGeneratorTests.GenerateAsset(_symbolGenerator).ToList();
             Assert.AreEqual(1, symbols.Count);
 
             var symbol = symbols.First();
@@ -91,7 +91,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         [Test]
         public void NextFuture_CreatesSymbol_WithEntryInSymbolPropertiesDatabase()
         {
-            var symbols = _symbolGenerator.GenerateAsset().ToList();
+            var symbols = BaseSymbolGeneratorTests.GenerateAsset(_symbolGenerator).ToList();
             Assert.AreEqual(1, symbols.Count);
 
             var symbol = symbols.First();

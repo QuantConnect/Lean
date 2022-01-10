@@ -18,7 +18,9 @@ using NUnit.Framework;
 using QuantConnect.Securities;
 using QuantConnect.ToolBox.RandomDataGenerator;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 {
@@ -72,6 +74,12 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
             {
                 BaseSymbolGenerator.Create(new RandomDataGeneratorSettings(), null);
             });
+        }
+
+        internal static IEnumerable<Symbol> GenerateAsset(BaseSymbolGenerator instance)
+        {
+            var generateAsset = typeof(BaseSymbolGenerator).GetMethod("GenerateAsset", BindingFlags.NonPublic | BindingFlags.Instance);
+            return (IEnumerable<Symbol>)generateAsset.Invoke(instance, new [] { (object)null });
         }
     }
 }

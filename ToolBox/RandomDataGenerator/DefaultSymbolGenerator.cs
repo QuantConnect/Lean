@@ -49,9 +49,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// Generates a single-item list at a time using base random implementation 
         /// </summary>
         /// <returns></returns>
-        public override IEnumerable<Symbol> GenerateAsset()
+        protected override IEnumerable<Symbol> GenerateAsset(string ticker = null)
         {
-            yield return NextSymbol(Settings.SecurityType, Settings.Market);
+            yield return NextSymbol(Settings.SecurityType, Settings.Market, ticker);
         }
 
         /// <summary>

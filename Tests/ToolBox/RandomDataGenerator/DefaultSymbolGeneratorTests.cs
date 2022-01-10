@@ -18,7 +18,9 @@ using NUnit.Framework;
 using QuantConnect.Securities;
 using QuantConnect.ToolBox.RandomDataGenerator;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 {
@@ -96,7 +98,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                 Market = market
             }, _randomValueGenerator);
 
-            var symbols = symbolGenerator.GenerateAsset().ToList();
+            var symbols = BaseSymbolGeneratorTests.GenerateAsset(symbolGenerator).ToList().ToList();
             Assert.AreEqual(1, symbols.Count);
 
             var symbol = symbols.First();
@@ -120,7 +122,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                 Market = market
             }, _randomValueGenerator);
 
-            var symbols = symbolGenerator.GenerateAsset().ToList();
+            var symbols = BaseSymbolGeneratorTests.GenerateAsset(symbolGenerator).ToList().ToList();
             Assert.AreEqual(1, symbols.Count);
 
             var symbol = symbols.First();
@@ -158,12 +160,12 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 
             for (var i = 0; i < symbolCount; i++)
             {
-                var symbols = symbolGenerator.GenerateAsset().ToList();
+                var symbols = BaseSymbolGeneratorTests.GenerateAsset(symbolGenerator).ToList();
                 Assert.AreEqual(1, symbols.Count);
             }
 
             Assert.Throws<NoTickersAvailableException>(() =>
-                symbolGenerator.GenerateAsset().ToList()
+                BaseSymbolGeneratorTests.GenerateAsset(symbolGenerator).ToList()
             );
         }
     }

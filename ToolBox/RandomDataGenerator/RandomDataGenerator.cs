@@ -121,7 +121,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     security.Update(new List<BaseData> { dataPoint }, dataPoint.GetType(), false);
                 }
 
-                foreach (var (currentSymbol, tickHistory) in tickHistories.Where(s => s.Key.SecurityType != SecurityType.Equity))
+                foreach (var (currentSymbol, tickHistory) in tickHistories)
                 {
                     var symbol = currentSymbol;
 

@@ -22,6 +22,7 @@ using QuantConnect.Securities.Option;
 using QuantConnect.ToolBox.CoarseUniverseGenerator;
 using QuantConnect.Util;
 using System;
+using System.Collections.Generic;
 using QuantConnect.Logging;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
@@ -49,7 +50,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             string dividendEveryQuarterPercentageString,
             string optionPriceEngineName,
             string volatilityModelResolutionString,
-            string chainSymbolCountString
+            string chainSymbolCountString,
+            List<string> tickers
             )
         {
             var settings = RandomDataGeneratorSettings.FromCommandLineArguments(
@@ -70,7 +72,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 dividendEveryQuarterPercentageString,
                 optionPriceEngineName,
                 volatilityModelResolutionString,
-                chainSymbolCountString
+                chainSymbolCountString,
+                tickers
             );
 
             if (settings.Start.Year < 1998)

@@ -231,6 +231,7 @@ namespace QuantConnect.ToolBox
                         break;
                     case "rdg":
                     case "randomdatagenerator":
+                        var tickers = ToolboxArgumentParser.GetTickers(optionsObject);
                         RandomDataGeneratorProgram.RandomDataGenerator(
                             GetParameterOrExit(optionsObject, "start"),
                             GetParameterOrExit(optionsObject, "end"),
@@ -249,7 +250,8 @@ namespace QuantConnect.ToolBox
                             GetParameterOrDefault(optionsObject, "dividend-every-quarter-percentage", "30.0"),
                             GetParameterOrDefault(optionsObject, "option-price-engine", "BaroneAdesiWhaleyApproximationEngine"),
                             GetParameterOrDefault(optionsObject, "volatility-model-resolution", "Daily"),
-                            GetParameterOrDefault(optionsObject, "chain-symbol-count", "1")
+                            GetParameterOrDefault(optionsObject, "chain-symbol-count", "1"),
+                            tickers
                         );
                         break;
 

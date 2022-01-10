@@ -102,11 +102,21 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// <returns>Set of random symbols</returns>
         public IEnumerable<Symbol> GenerateRandomSymbols()
         {
-            for (var i = 0; i < Settings.SymbolCount; i++)
+            if (!Settings.Tickers.IsNullOrEmpty())
             {
-                foreach (var symbol in GenerateAsset())
+                foreach (var symbol in Settings.Tickers.SelectMany(GenerateAsset))
                 {
                     yield return symbol;
+                }
+            }
+            else
+            {
+                for (var i = 0; i < Settings.SymbolCount; i++)
+                {
+                    foreach (var symbol in GenerateAsset())
+                    {
+                        yield return symbol;
+                    }
                 }
             }
         }
@@ -114,35 +124,38 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// <summary>
         /// Generates a random asset
         /// </summary>
+        /// <param name="ticker">Optionally can provide a ticker that should be used</param>
         /// <returns>Random asset</returns>
-        public abstract IEnumerable<Symbol> GenerateAsset();
+        protected abstract IEnumerable<Symbol> GenerateAsset(string ticker = null);
 
         /// <summary>
         /// Generates random symbol, used further down for asset
         /// </summary>
         /// <param name="securityType">security type</param>
         /// <param name="market">market</param>
+        /// <param name="ticker">Optionally can provide a ticker to use</param>
         /// <returns>Random symbol</returns>
-        public Symbol NextSymbol(SecurityType securityType, string market)
+        public Symbol NextSymbol(SecurityType securityType, string market, string ticker = null)
         {
             if (securityType == SecurityType.Option || securityType == SecurityType.Future)
             {
                 throw new ArgumentException("Please use OptionSymbolGenerator or FutureSymbolGenerator for SecurityType.Option and SecurityType.Future respectively.");
             }
 
-            string ticker;
-
-            // we must return a Symbol matching an entry in the Symbol properties database
-            // if there is a wildcard entry, we can generate a truly random Symbol
-            // if there is no wildcard entry, the symbols we can generate are limited by the entries in the database
-            if (SymbolPropertiesDatabase.ContainsKey(market, SecurityDatabaseKey.Wildcard, securityType))
+            if (ticker == null)
             {
-                // let's make symbols all have 3 chars as it's acceptable for all security types with wildcard entries
-                ticker = NextUpperCaseString(3, 3);
-            }
-            else
-            {
-                ticker = NextTickerFromSymbolPropertiesDatabase(securityType, market);
+                // we must return a Symbol matching an entry in the Symbol properties database
+                // if there is a wildcard entry, we can generate a truly random Symbol
+                // if there is no wildcard entry, the symbols we can generate are limited by the entries in the database
+                if (SymbolPropertiesDatabase.ContainsKey(market, SecurityDatabaseKey.Wildcard, securityType))
+                {
+                    // let's make symbols all have 3 chars as it's acceptable for all security types with wildcard entries
+                    ticker = NextUpperCaseString(3, 3);
+                }
+                else
+                {
+                    ticker = NextTickerFromSymbolPropertiesDatabase(securityType, market);
+                }
             }
 
             // by chance we may generate a ticker that actually exists, and if map files exist that match this
