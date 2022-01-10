@@ -1,17 +1,36 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using QuantConnect.Data;
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using QuantConnect.Configuration;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
+using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 using QuantConnect.ToolBox.CoarseUniverseGenerator;
+using QuantConnect.Util;
+using System;
+using System.Collections.Generic;
+using QuantConnect.Logging;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
     /// <summary>
-    /// Generates random data according to the specified parameters
+    /// Creates and starts <see cref="RandomDataGenerator"/> instance
     /// </summary>
-    public class RandomDataGeneratorProgram
+    public static class RandomDataGeneratorProgram
     {
         public static void RandomDataGenerator(
             string startDateString,
@@ -24,14 +43,17 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             string includeCoarseString,
             string quoteTradeRatioString,
             string randomSeed,
-            string hasIpoPercentageString, 
+            string hasIpoPercentageString,
             string hasRenamePercentageString,
             string hasSplitsPercentageString,
             string hasDividendsPercentageString,
-            string dividendEveryQuarterPercentageString
+            string dividendEveryQuarterPercentageString,
+            string optionPriceEngineName,
+            string volatilityModelResolutionString,
+            string chainSymbolCountString,
+            List<string> tickers
             )
         {
-            var output = new ConsoleLeveledOutput();
             var settings = RandomDataGeneratorSettings.FromCommandLineArguments(
                 startDateString,
                 endDateString,
@@ -48,234 +70,61 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 hasSplitsPercentageString,
                 hasDividendsPercentageString,
                 dividendEveryQuarterPercentageString,
-
-                output
+                optionPriceEngineName,
+                volatilityModelResolutionString,
+                chainSymbolCountString,
+                tickers
             );
 
             if (settings.Start.Year < 1998)
             {
-                output.Error.WriteLine($"Required parameter --start must be at least 19980101");
+                Log.Error($"RandomDataGeneratorProgram(): Required parameter --start must be at least 19980101");
                 Environment.Exit(1);
             }
+            
+            var securityManager = new SecurityManager(new TimeKeeper(settings.Start, new[] { TimeZones.Utc }));
+            var securityService = new SecurityService(
+                new CashBook(),
+                MarketHoursDatabase.FromDataFolder(),
+                SymbolPropertiesDatabase.FromDataFolder(),
+                new SecurityInitializerProvider(new FuncSecurityInitializer(security =>
+                {
+                    // init price
+                    security.SetMarketPrice(new Tick(settings.Start, security.Symbol, 100, 100));
+                    security.SetMarketPrice(new OpenInterest(settings.Start, security.Symbol, 10000));
 
-            GenerateRandomData(settings, output);
+                    // from settings
+                    security.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(settings.VolatilityModelResolution);
+
+                    // from settings
+                    if (security is Option option)
+                    {
+                        option.PriceModel = OptionPriceModels.Create(settings.OptionPriceEngineName, Statistics.PortfolioStatistics.GetRiskFreeRate());
+                    }
+                })),
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCacheProvider(
+                    new SecurityPortfolioManager(securityManager, new SecurityTransactionManager(null, securityManager))),
+                new MapFilePrimaryExchangeProvider(Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider")))
+            );
+            securityManager.SetSecurityService(securityService);
+
+            var generator = new RandomDataGenerator();
+            generator.Init(settings, securityManager);
+            generator.Run();
 
             if (settings.IncludeCoarse && settings.SecurityType == SecurityType.Equity)
             {
-                output.Info.WriteLine("Launching coarse data generator...");
+                Log.Trace("RandomDataGeneratorProgram(): Launching coarse data generator...");
 
                 CoarseUniverseGeneratorProgram.CoarseUniverseGenerator();
             }
 
             if (!Console.IsInputRedirected)
             {
-                output.Info.WriteLine("Press any key to exit...");
+                Log.Trace("RandomDataGeneratorProgram(): Press any key to exit...");
                 Console.ReadKey();
             }
-        }
-
-        public static DateTime GetDateMidpoint(DateTime start, DateTime end)
-        {
-            TimeSpan span = end.Subtract(start);
-            int span_time = (int)span.TotalMinutes;
-            double diff_span = -(span_time / 2.0);
-            DateTime start_time = end.AddMinutes(Math.Round(diff_span, 2, MidpointRounding.ToEven));
-
-            //Returns a DateTime object that is halfway between start and end
-            return start_time;
-        }
-
-        public static DateTime GetDelistingDate(DateTime start, DateTime end, RandomValueGenerator randomValueGenerator)
-        {
-            var mid_point = GetDateMidpoint(start, end);            
-            var delist_Date = randomValueGenerator.NextDate(mid_point, end, null);
-
-            //Returns a DateTime object that is a random value between the mid_point and end
-            return delist_Date;
-        }
-
-        public static void GenerateRandomData(RandomDataGeneratorSettings settings, ConsoleLeveledOutput output)
-        {
-            // can specify a seed value in this ctor if determinism is desired
-            var random = new Random();
-            var randomValueGenerator = new RandomValueGenerator();
-            if (settings.RandomSeedSet)
-            {
-                random = new Random(settings.RandomSeed);
-                randomValueGenerator = new RandomValueGenerator(settings.RandomSeed);
-            }
-
-            var maxSymbolCount = randomValueGenerator.GetAvailableSymbolCount(settings.SecurityType, settings.Market);
-            if (settings.SymbolCount > maxSymbolCount)
-            {
-                output.Warn.WriteLine($"Limiting symbol count to {maxSymbolCount}, we don't have more {settings.SecurityType} tickers for {settings.Market}");
-                settings.SymbolCount = maxSymbolCount;
-            }
-
-            var symbolGenerator = new SymbolGenerator(settings, randomValueGenerator);
-            var tickGenerator = new TickGenerator(settings, randomValueGenerator);
-
-            output.Warn.WriteLine($"Begin data generation of {settings.SymbolCount} randomly generated {settings.SecurityType} assets...");
-
-            // iterate over our randomly generated symbols
-            var count = 0;
-            var progress = 0d;
-            var previousMonth = -1;
-
-            Func<Tick, DateTime> tickDay = (tick => new DateTime(tick.Time.Year, tick.Time.Month, tick.Time.Day));
-            Func<Data.BaseData, DateTime> dataDay = (data => new DateTime(data.Time.Year, data.Time.Month, data.Time.Day));
-
-            foreach (var currentSymbol in symbolGenerator.GenerateRandomSymbols())
-            {
-                // This is done so that we can update the symbol in the case of a rename event
-                var delistDate = GetDelistingDate(settings.Start, settings.End, randomValueGenerator);
-                var symbol = currentSymbol;
-                var willBeDelisted = randomValueGenerator.NextBool(1.0);
-                var monthsTrading = 0;
-
-                // Keep track of renamed symbols and the time they were renamed. 
-                var renamedSymbols = new Dictionary<Symbol, DateTime>();
-
-                output.Warn.WriteLine($"\tSymbol[{++count}]: {symbol} Progress: {progress:0.0}% - Generating data...");
-
-                // define aggregators via settings
-                var aggregators = settings.CreateAggregators().ToList();
-                var tickHistory = tickGenerator.GenerateTicks(symbol).ToList();
-
-                // Companies rarely IPO then disappear within 6 months
-                if (willBeDelisted && tickHistory.Select(tick => tick.Time.Month).Distinct().Count() <= 6)
-                {
-                    willBeDelisted = false;
-                }
-
-                var dividendsSplitsMaps = new DividendSplitMapGenerator(
-                    symbol, 
-                    settings, 
-                    randomValueGenerator, 
-                    random, 
-                    delistDate, 
-                    willBeDelisted);
-
-                if (settings.SecurityType == SecurityType.Equity)
-                {
-                    dividendsSplitsMaps.GenerateSplitsDividends(tickHistory);
-
-                    if (!willBeDelisted)
-                    {
-                        dividendsSplitsMaps.DividendsSplits.Add(new CorporateFactorRow(new DateTime(2050, 12, 31), 1m, 1m));
-
-                        if (dividendsSplitsMaps.MapRows.Count > 1)
-                        {
-                            // Remove the last element if we're going to have a 20501231 entry
-                            dividendsSplitsMaps.MapRows.RemoveAt(dividendsSplitsMaps.MapRows.Count - 1);
-                        }
-                        dividendsSplitsMaps.MapRows.Add(new MapFileRow(new DateTime(2050, 12, 31), dividendsSplitsMaps.CurrentSymbol.Value));
-                    }
-
-                    // If the symbol value has changed, update the current symbol
-                    if (symbol != dividendsSplitsMaps.CurrentSymbol)
-                    {
-                        // Add all symbol rename events to dictionary
-                        // We skip the first row as it contains the listing event instead of a rename event
-                        foreach (var renameEvent in dividendsSplitsMaps.MapRows.Skip(1))
-                        {
-                            // Symbol.UpdateMappedSymbol does not update the underlying security ID symbol, which 
-                            // is used to create the hash code. Create a new equity symbol from scratch instead.
-                            symbol = Symbol.Create(renameEvent.MappedSymbol, SecurityType.Equity, settings.Market);
-                            renamedSymbols.Add(symbol, renameEvent.Date);
-
-                            output.Warn.WriteLine($"\tSymbol[{count}]: {symbol} will be renamed on {renameEvent.Date}");
-                        }
-                    }
-                    else
-                    {
-                        // This ensures that ticks will be written for the current symbol up until 9999-12-31
-                        renamedSymbols.Add(symbol, new DateTime(9999, 12, 31));
-                    }
-
-                    symbol = dividendsSplitsMaps.CurrentSymbol;
-
-                    // Write Splits and Dividend events to directory factor_files
-                    var factorFile = new CorporateFactorProvider(symbol.Value, dividendsSplitsMaps.DividendsSplits, settings.Start);
-                    var mapFile = new MapFile(symbol.Value, dividendsSplitsMaps.MapRows);
-
-                    factorFile.WriteToFile(symbol);
-                    mapFile.WriteToCsv(settings.Market, symbol.SecurityType);
-
-                    output.Warn.WriteLine($"\tSymbol[{count}]: {symbol} Dividends, splits, and map files have been written to disk.");
-                }
-                else
-                {
-                    // This ensures that ticks will be written for the current symbol up until 9999-12-31
-                    renamedSymbols.Add(symbol, new DateTime(9999, 12, 31));
-                }
-
-                Symbol previousSymbol = null;
-                var currentCount = 0;
-
-                foreach (var renamed in renamedSymbols) 
-                {
-                    var previousRenameDate = previousSymbol == null ? new DateTime(1, 1, 1) : renamedSymbols[previousSymbol];
-                    var previousRenameDateDay = new DateTime(previousRenameDate.Year, previousRenameDate.Month, previousRenameDate.Day);
-                    var renameDate = renamed.Value;
-                    var renameDateDay = new DateTime(renameDate.Year, renameDate.Month, renameDate.Day);
-
-                    foreach (var tick in tickHistory.Where(tick => tick.Time >= previousRenameDate && previousRenameDateDay != tickDay(tick)))
-                    {
-                        // Prevents the aggregator from being updated with ticks after the rename event
-                        if (tickDay(tick) > renameDateDay)
-                        {
-                            break;
-                        }
-
-                        if (tick.Time.Month != previousMonth)
-                        {
-                            output.Info.WriteLine($"\tSymbol[{count}]: Month: {tick.Time:MMMM}");
-                            previousMonth = tick.Time.Month;
-                            monthsTrading++;
-                        }
-
-                        foreach (var item in aggregators)
-                        {
-                            tick.Value = tick.Value / dividendsSplitsMaps.FinalSplitFactor;
-                            item.Consolidator.Update(tick);
-                        }
-
-                        if (monthsTrading >= 6 && willBeDelisted && tick.Time > delistDate)
-                        {
-                            output.Warn.WriteLine($"\tSymbol[{count}]: {renamed.Key} delisted at {tick.Time:MMMM yyyy}");
-                            break;
-                        }
-                    }
-
-                    // count each stage as a point, so total points is 2*symbol-count
-                    // and the current progress is twice the current, but less one because we haven't finished writing data yet
-                    progress = 100 * (2 * count - 1) / (2.0 * settings.SymbolCount);
-
-                    output.Warn.WriteLine($"\tSymbol[{count}]: {renamed.Key} Progress: {progress:0.0}% - Saving data in LEAN format");
-
-                    // persist consolidated data to disk
-                    foreach (var item in aggregators)
-                    {
-                        var writer = new LeanDataWriter(item.Resolution, renamed.Key, Globals.DataFolder, item.TickType);
-
-                        // send the flushed data into the writer. pulling the flushed list is very important,
-                        // lest we likely wouldn't get the last piece of data stuck in the consolidator
-                        // Filter out the data we're going to write here because filtering them in the consolidator update phase
-                        // makes it write all dates for some unknown reason
-                        writer.Write(item.Flush().Where(data => data.Time > previousRenameDate && previousRenameDateDay != dataDay(data)));
-                    }
-
-                    // update progress
-                    progress = 100 * (2 * count) / (2.0 * settings.SymbolCount);
-                    output.Warn.WriteLine($"\tSymbol[{count}]: {symbol} Progress: {progress:0.0}% - Symbol data generation and output completed");
-
-                    previousSymbol = renamed.Key;
-                    currentCount++;
-                }
-            }
-
-            output.Info.WriteLine("Random data generation has completed.");
         }
     }
 }

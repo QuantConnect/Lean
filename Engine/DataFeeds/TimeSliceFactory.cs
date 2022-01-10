@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -450,19 +450,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             OptionContract contract;
             if (!chain.Contracts.TryGetValue(baseData.Symbol, out contract))
             {
-                var underlyingSymbol = baseData.Symbol.Underlying;
-                contract = new OptionContract(baseData.Symbol, underlyingSymbol)
-                {
-                    Time = baseData.EndTime,
-                    LastPrice = security.Close,
-                    Volume = (long)security.Volume,
-                    BidPrice = security.BidPrice,
-                    BidSize = (long)security.BidSize,
-                    AskPrice = security.AskPrice,
-                    AskSize = (long)security.AskSize,
-                    OpenInterest = security.OpenInterest,
-                    UnderlyingLastPrice = chain.Underlying.Price
-                };
+                contract = OptionContract.Create(baseData, security, chain.Underlying.Price);
 
                 chain.Contracts[baseData.Symbol] = contract;
 

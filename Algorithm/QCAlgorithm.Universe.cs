@@ -657,27 +657,9 @@ namespace QuantConnect.Algorithm
                 bar.Symbol = security.Symbol;
                 
                 var maxSupportedResolution = bar.SupportedResolutions().Max();
-
                 var updateFrequency = maxSupportedResolution.ToTimeSpan();
-                int periods;
-                switch (maxSupportedResolution)
-                {
-                    case Resolution.Tick:
-                    case Resolution.Second:
-                        periods = 600;
-                        break;
-                    case Resolution.Minute:
-                        periods = 60 * 24;
-                        break;
-                    case Resolution.Hour:
-                        periods = 24 * 30;
-                        break;
-                    default:
-                        periods = 30;
-                        break;
-                }
                 
-                security.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(periods, maxSupportedResolution, updateFrequency);
+                security.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(maxSupportedResolution, updateFrequency);
             }
         }
 

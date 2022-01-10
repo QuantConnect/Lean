@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,15 +13,19 @@
  * limitations under the License.
 */
 
-using System;
-using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Option;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using Moq;
+using QLNet;
+using Cash = QuantConnect.Securities.Cash;
+using Option = QuantConnect.Securities.Option.Option;
 
 namespace QuantConnect.Tests.Common
 {
@@ -195,7 +199,7 @@ namespace QuantConnect.Tests.Common
             var rightPart = greeks.Theta + riskFreeRate * underlyingPrice * greeks.Delta + 0.5m * underlyingVol * underlyingVol * underlyingPrice * underlyingPrice * greeks.Gamma;
             var leftPart = riskFreeRate * callPrice;
 
-            Assert.GreaterOrEqual(Math.Round(leftPart, 4), Math.Round(rightPart,4));
+            Assert.GreaterOrEqual(Math.Round(leftPart, 4), Math.Round(rightPart, 4));
         }
 
         [Test]
@@ -252,6 +256,20 @@ namespace QuantConnect.Tests.Common
             Assert.Greater(callPrice1, callPrice2);
         }
 
+        [Test]
+        [TestCase("BaroneAdesiWhaleyApproximationEngine")]
+        [TestCase("QLNet.BaroneAdesiWhaleyApproximationEngine")]
+        public void CreatesOptionPriceModelByName(string priceEngineName)
+        {
+            IOptionPriceModel priceModel = null;
+            Assert.DoesNotThrow(() =>
+            {
+                priceModel = OptionPriceModels.Create(priceEngineName, 0.01m);
+            });
+
+            Assert.NotNull(priceModel);
+            Assert.IsInstanceOf<QLOptionPriceModel>(priceModel);
+        }
 
         [Test]
         public void GreekApproximationTest()
@@ -313,6 +331,83 @@ namespace QuantConnect.Tests.Common
             Assert.LessOrEqual(greeks.Theta, 0);
             Assert.AreNotEqual(greeks.Rho, 0);
             Assert.Greater(greeks.Vega, 0);
+        }
+
+        [Test]
+        [TestCase(true)]
+        [TestCase(false)]
+        public void HasBeenWarmedUp(bool warmUp)
+        {
+            var volatilityModel = new Mock<IQLUnderlyingVolatilityEstimator>();
+            volatilityModel.SetupGet(s => s.IsReady).Returns(warmUp);
+            var priceModel = new QLOptionPriceModel(
+                process => new IntegralEngine(process),
+                volatilityModel.Object,
+                null,
+                null);
+
+            Assert.AreEqual(warmUp, priceModel.VolatilityEstimatorWarmedUp);
+        }
+
+        [Test]
+        public void ReturnsNoneIfNotWarmedUp()
+        {
+            const decimal underlyingPrice = 200m;
+            const decimal underlyingVol = 0.15m;
+            const decimal riskFreeRate = 0.01m;
+            var tz = TimeZones.NewYork;
+            var evaluationDate = new DateTime(2015, 2, 19);
+            var SPY_C_192_Feb19_2016E = Symbol.CreateOption("SPY", Market.USA, OptionStyle.European, OptionRight.Call, 192m, new DateTime(2016, 02, 19));
+            var SPY_P_192_Feb19_2016E = Symbol.CreateOption("SPY", Market.USA, OptionStyle.European, OptionRight.Put, 192m, new DateTime(2016, 02, 19));
+
+            // setting up underlying
+            var equity = new Equity(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
+            equity.SetMarketPrice(new Tick { Value = underlyingPrice });
+            equity.VolatilityModel = new DummyVolatilityModel(underlyingVol);
+
+            // setting up European style call option
+            var contractCall = new OptionContract(SPY_C_192_Feb19_2016E, Symbols.SPY) { Time = evaluationDate };
+            var optionCall = new Option(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new SubscriptionDataConfig(typeof(TradeBar), SPY_C_192_Feb19_2016E, Resolution.Minute, tz, tz, true, false, false),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
+            optionCall.Underlying = equity;
+
+            // setting up European style put option
+            var contractPut = new OptionContract(SPY_P_192_Feb19_2016E, Symbols.SPY) { Time = evaluationDate };
+            var optionPut = new Option(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new SubscriptionDataConfig(typeof(TradeBar), SPY_P_192_Feb19_2016E, Resolution.Minute, tz, tz, true, false, false),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
+            optionPut.Underlying = equity;
+
+            // running evaluation
+            var volatilityModel = new Mock<IQLUnderlyingVolatilityEstimator>();
+            volatilityModel.SetupGet(s => s.IsReady).Returns(false);
+            var priceModel = new QLOptionPriceModel(process => new AnalyticEuropeanEngine(process),
+                volatilityModel.Object,
+                null,
+                null);
+            var resultsCall = priceModel.Evaluate(optionCall, null, contractCall);
+            var resultsPut = priceModel.Evaluate(optionPut, null, contractPut);
+
+            Assert.AreEqual(OptionPriceModelResult.None, resultsCall);
+            Assert.AreEqual(OptionPriceModelResult.None, resultsCall);
         }
 
         /// <summary>

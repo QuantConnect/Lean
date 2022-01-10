@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,8 +13,10 @@
  * limitations under the License.
 */
 
-using System;
+using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
+using System;
 
 namespace QuantConnect.Data.Market
 {
@@ -23,8 +25,7 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public class OptionContract
     {
-        private Lazy<OptionPriceModelResult> _optionPriceModelResult = new Lazy<OptionPriceModelResult>(() => 
-                                                                            new OptionPriceModelResult(0m, new Greeks())); 
+        private Lazy<OptionPriceModelResult> _optionPriceModelResult = new(() => OptionPriceModelResult.None);
 
         /// <summary>
         /// Gets the option contract's symbol
@@ -176,5 +177,40 @@ namespace QuantConnect.Data.Market
         /// A string that represents the current object.
         /// </returns>
         public override string ToString() => Symbol.Value;
+
+        /// <summary>
+        /// Creates a <see cref="OptionContract"/> 
+        /// </summary>
+        /// <param name="baseData"></param>
+        /// <param name="security">provides price properties for a <see cref="Security"/></param>
+        /// <param name="underlyingLastPrice">last price the underlying security traded at</param>
+        /// <returns>Option contract</returns>
+        public static OptionContract Create(BaseData baseData, ISecurityPrice security, decimal underlyingLastPrice)
+            => Create(baseData.Symbol, baseData.Symbol.Underlying, baseData.EndTime, security, underlyingLastPrice);
+
+        /// <summary>
+        /// Creates a <see cref="OptionContract"/>
+        /// </summary>
+        /// <param name="symbol">The option contract symbol</param>
+        /// <param name="underlyingSymbol">The symbol of the underlying security</param>
+        /// <param name="endTime">local date time this contract's data was last updated</param>
+        /// <param name="security">provides price properties for a <see cref="Security"/></param>
+        /// <param name="underlyingLastPrice">last price the underlying security traded at</param>
+        /// <returns>Option contract</returns>
+        public static OptionContract Create(Symbol symbol, Symbol underlyingSymbol, DateTime endTime, ISecurityPrice security, decimal underlyingLastPrice)
+        {
+            return new OptionContract(symbol, underlyingSymbol)
+            {
+                Time = endTime,
+                LastPrice = security.Close,
+                Volume = (long)security.Volume,
+                BidPrice = security.BidPrice,
+                BidSize = (long)security.BidSize,
+                AskPrice = security.AskPrice,
+                AskSize = (long)security.AskSize,
+                OpenInterest = security.OpenInterest,
+                UnderlyingLastPrice = underlyingLastPrice
+            };
+        }
     }
 }

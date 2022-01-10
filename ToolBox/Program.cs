@@ -41,6 +41,7 @@ using QuantConnect.ToolBox.ZerodhaDownloader;
 using QuantConnect.Util;
 using System;
 using System.IO;
+using QuantConnect.Interfaces;
 using static QuantConnect.Configuration.ApplicationParser;
 
 namespace QuantConnect.ToolBox
@@ -63,6 +64,16 @@ namespace QuantConnect.ToolBox
             {
                 PrintMessageAndExit();
             }
+
+            var dataProvider
+                = Composer.Instance.GetExportedValueByTypeName<IDataProvider>(Config.Get("data-provider", "DefaultDataProvider"));
+            var mapFileProvider
+                = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"));
+            var factorFileProvider
+                = Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>(Config.Get("factor-file-provider", "LocalDiskFactorFileProvider"));
+            
+            mapFileProvider.Initialize(dataProvider);
+            factorFileProvider.Initialize(mapFileProvider, dataProvider);
 
             var targetApp = GetParameterOrExit(optionsObject, "app").ToLowerInvariant();
             if (targetApp.Contains("download") || targetApp.EndsWith("dl"))
@@ -220,6 +231,7 @@ namespace QuantConnect.ToolBox
                         break;
                     case "rdg":
                     case "randomdatagenerator":
+                        var tickers = ToolboxArgumentParser.GetTickers(optionsObject);
                         RandomDataGeneratorProgram.RandomDataGenerator(
                             GetParameterOrExit(optionsObject, "start"),
                             GetParameterOrExit(optionsObject, "end"),
@@ -235,7 +247,11 @@ namespace QuantConnect.ToolBox
                             GetParameterOrDefault(optionsObject, "rename-percentage", "30.0"),
                             GetParameterOrDefault(optionsObject, "splits-percentage", "15.0"),
                             GetParameterOrDefault(optionsObject, "dividends-percentage", "60.0"),
-                            GetParameterOrDefault(optionsObject, "dividend-every-quarter-percentage", "30.0")
+                            GetParameterOrDefault(optionsObject, "dividend-every-quarter-percentage", "30.0"),
+                            GetParameterOrDefault(optionsObject, "option-price-engine", "BaroneAdesiWhaleyApproximationEngine"),
+                            GetParameterOrDefault(optionsObject, "volatility-model-resolution", "Daily"),
+                            GetParameterOrDefault(optionsObject, "chain-symbol-count", "1"),
+                            tickers
                         );
                         break;
 

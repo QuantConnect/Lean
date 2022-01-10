@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -15,12 +15,6 @@
 
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QLNet;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QuantConnect.Securities.Option
 {
@@ -28,7 +22,7 @@ namespace QuantConnect.Securities.Option
     /// Defines QuantLib dividend yield estimator for option pricing model. User may define his own estimators, 
     /// including those forward and backward looking ones.
     /// </summary>
-    interface IQLDividendYieldEstimator
+    public interface IQLDividendYieldEstimator
     {
         /// <summary>
         /// Returns current estimate of the stock dividend yield

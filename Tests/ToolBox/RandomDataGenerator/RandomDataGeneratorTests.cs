@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -20,7 +20,7 @@ using QuantConnect.ToolBox.RandomDataGenerator;
 namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 {
     [TestFixture]
-    public class RandomDataGeneratorProgramTests
+    public class RandomDataGeneratorTests
     {
         [Test]
         [TestCase("2020, 1, 1 00:00:00", "2020, 1, 1 00:00:00", "2020, 1, 1 00:00:00")]
@@ -31,8 +31,8 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         public void NextRandomGeneratedData(DateTime start, DateTime end, DateTime expectedMidPoint)
         {
             var randomValueGenerator = new RandomValueGenerator();
-            var midPoint = RandomDataGeneratorProgram.GetDateMidpoint(start, end);
-            var delistDate = RandomDataGeneratorProgram.GetDelistingDate(start, end, randomValueGenerator);
+            var midPoint = QuantConnect.ToolBox.RandomDataGenerator.RandomDataGenerator.GetDateMidpoint(start, end);
+            var delistDate = QuantConnect.ToolBox.RandomDataGenerator.RandomDataGenerator.GetDelistingDate(start, end, randomValueGenerator);
 
             // midPoint and expectedMidPoint must be the same
             Assert.AreEqual(expectedMidPoint, midPoint);
