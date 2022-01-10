@@ -94,7 +94,9 @@ namespace QuantConnect.Brokerages.Zerodha
             // Include future options as a special case with no matching market, otherwise
             // our subscriptions are removed without any sort of notice.
             return
-                (securityType == SecurityType.Equity) && (market == Market.India);
+                (securityType == SecurityType.Equity ||
+                securityType == SecurityType.Index) && 
+                (market == Market.India);
         }
 
         #endregion IDataQueueHandler implementation
