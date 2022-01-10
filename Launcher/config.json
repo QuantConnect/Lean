@@ -452,7 +452,7 @@
       "history-provider": "BrokerageHistoryProvider"
     },
 
-    // defines the 'live-ftx' environment
+    // defines the 'live-ftxus' environment
     "live-ftxus": {
       "live-mode": true,
 
