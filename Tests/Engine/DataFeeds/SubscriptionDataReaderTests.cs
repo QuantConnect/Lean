@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
 using QuantConnect.Data;
@@ -79,7 +80,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             public void Dispose()
             {
             }
-
+            public List<string> GetZipEntries(string zipFile)
+            {
+                throw new NotImplementedException();
+            }
             public bool IsDataEphemeral => true;
             public Stream Fetch(string key)
             {

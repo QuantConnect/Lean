@@ -16,6 +16,7 @@
 
 using System;
 using System.IO;
+using System.Collections.Generic;
 
 namespace QuantConnect.Interfaces
 {
@@ -42,5 +43,10 @@ namespace QuantConnect.Interfaces
         /// <param name="key">The source of the data, used as a key to retrieve data in the cache</param>
         /// <param name="data">The data to cache as a byte array</param>
         void Store(string key, byte[] data);
+
+        /// <summary>
+        /// Returns a list of zip entries in a provided zip file
+        /// </summary>
+        List<string> GetZipEntries(string zipFile);
     }
 }

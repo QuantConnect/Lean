@@ -40,8 +40,8 @@ namespace QuantConnect.Algorithm.CSharp
         private int _expectedContractIndex;
         private readonly List<Symbol> _expectedContracts = new List<Symbol>
         {
-            SymbolRepresentation.ParseOptionTickerOSI("GOOG  151224P00750000"),
             SymbolRepresentation.ParseOptionTickerOSI("GOOG  151224P00747500"),
+            SymbolRepresentation.ParseOptionTickerOSI("GOOG  151224P00750000"),
             SymbolRepresentation.ParseOptionTickerOSI("GOOG  151224P00752500")
         };
 
@@ -109,6 +109,11 @@ namespace QuantConnect.Algorithm.CSharp
                 var googOptionChain = AddOption(UnderlyingTicker);
                 googOptionChain.SetFilter(u =>
                 {
+                    // we added the universe at 10, the universe selection data should not be from before
+                    if (u.Underlying.EndTime.Hour < 10)
+                    {
+                        throw new Exception($"Unexpected underlying data point {u.Underlying.EndTime} {u.Underlying}");
+                    }
                     // find first put above market price
                     return u.IncludeWeeklys()
                         .Strikes(+1, +1)
@@ -231,7 +236,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Treynor Ratio", "0"},
             {"Total Fees", "$6.00"},
             {"Estimated Strategy Capacity", "$2000.00"},
-            {"Lowest Capacity Asset", "GOOCV 305RBQ2BZBZT2|GOOCV VP83T1ZUHROL"},
+            {"Lowest Capacity Asset", "GOOCV 305RBR0BSWIX2|GOOCV VP83T1ZUHROL"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
@@ -251,7 +256,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "1e7b3e90918777b9dbf46353a96f3329"}
+            {"OrderListHash", "550a99c482106defd8ba15f48183768e"}
         };
     }
 }

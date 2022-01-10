@@ -95,7 +95,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.PostInitialize();
 
             var resultHandler = new BacktestingResultHandler();
-            var factory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(resultHandler, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider, enablePriceScaling: false);
+            using var cache = new ZipDataCacheProvider(TestGlobals.DataProvider);
+            var factory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(resultHandler, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, cache, enablePriceScaling: false);
 
             var universe = algorithm.UniverseManager.Single().Value;
             var security = algorithm.Securities.Single().Value;
@@ -139,9 +140,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.Initialize();
             algorithm.PostInitialize();
 
-            var dataProvider = new DefaultDataProvider();
             var resultHandler = new TestResultHandler();
-            var factory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(resultHandler, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider, enablePriceScaling: false);
+            using var cache = new ZipDataCacheProvider(TestGlobals.DataProvider);
+            var factory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(resultHandler, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, cache, enablePriceScaling: false);
 
             var universe = algorithm.UniverseManager.Single().Value;
             var security = algorithm.AddEquity("AAA", Resolution.Daily);
@@ -149,7 +150,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // start date is before the first date in the map file
             var subscriptionRequest = new SubscriptionRequest(false, universe, security, securityConfig, new DateTime(2001, 12, 1),
                 new DateTime(2016, 11, 1));
-            var enumerator = factory.CreateEnumerator(subscriptionRequest, dataProvider);
+            var enumerator = factory.CreateEnumerator(subscriptionRequest, TestGlobals.DataProvider);
             // should initialize the data source reader
             enumerator.MoveNext();
 
