@@ -26,6 +26,7 @@ using QuantConnect.Packets;
 using QuantConnect.Indicators;
 using QuantConnect.Tests.Engine.DataFeeds;
 using Python.Runtime;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Util;
@@ -107,6 +108,30 @@ namespace QuantConnect.Tests.Algorithm
 
             Log.Trace($"WarmUpDataCount: {_algorithm.WarmUpDataCount}. Resolution {resolution}. SecurityType {securityType}");
             Assert.GreaterOrEqual(_algorithm.WarmUpDataCount, estimateExpectedDataCount);
+        }
+
+        [Test]
+        public void WarmUpInternalSubscriptionsHistoryRequest()
+        {
+            var algo = new AlgorithmStub(new MockDataFeed())
+            {
+                HistoryProvider = new SubscriptionDataReaderHistoryProvider()
+            };
+
+            algo.SetStartDate(2013, 10, 08);
+            algo.AddCfd("DE30EUR", Resolution.Second, Market.Oanda);
+            algo.SetWarmup(10);
+            algo.PostInitialize();
+            algo.OnEndOfTimeStep();
+            algo.DataManager.UniverseSelection.EnsureCurrencyDataFeeds(SecurityChanges.None);
+
+            var result = algo.GetWarmupHistoryRequests();
+
+            foreach (var historyRequest in result)
+            {
+                Assert.AreEqual(Resolution.Second, historyRequest.Resolution);
+                Assert.AreEqual(TimeSpan.FromSeconds(10), historyRequest.EndTimeUtc - historyRequest.StartTimeUtc);
+            }
         }
 
         [Test]
