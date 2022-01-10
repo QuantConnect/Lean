@@ -23,6 +23,11 @@ namespace QuantConnect.Securities.Option
     /// </summary>
     public class OptionPriceModelResult
     {
+        /// <summary>
+        /// Represents the zero option price and greeks.
+        /// </summary>
+        public static OptionPriceModelResult None { get; } = new(0, new Greeks());
+
         private readonly Lazy<Greeks> _greeks;
         private readonly Lazy<decimal> _impliedVolatility;
 
@@ -80,10 +85,5 @@ namespace QuantConnect.Securities.Option
             _impliedVolatility = new Lazy<decimal>(impliedVolatility);
             _greeks = new Lazy<Greeks>(greeks);
         }
-
-        /// <summary>
-        /// Represents the zero option price and greeks. 
-        /// </summary>
-        public static OptionPriceModelResult None { get; } = new(0, new Greeks());
     }
 }

@@ -102,10 +102,12 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// <returns>Set of random symbols</returns>
         public IEnumerable<Symbol> GenerateRandomSymbols()
         {
-            for (int i = 0; i < Settings.SymbolCount; i++)
+            for (var i = 0; i < Settings.SymbolCount; i++)
             {
                 foreach (var symbol in GenerateAsset())
+                {
                     yield return symbol;
+                }
             }
         }
 

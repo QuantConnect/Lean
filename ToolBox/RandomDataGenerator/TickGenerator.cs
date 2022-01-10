@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QLNet;
+using QuantConnect.Logging;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
@@ -28,15 +29,15 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     public class TickGenerator : ITickGenerator
     {
         private IPriceGenerator _priceGenerator;
+        private Symbol Symbol => Security.Symbol;
 
-        protected IRandomValueGenerator Random;
-        protected RandomDataGeneratorSettings Settings;
-        protected TickType[] TickTypes;
+        private IRandomValueGenerator Random;
+        private RandomDataGeneratorSettings Settings;
+        private TickType[] TickTypes;
 
-        protected MarketHoursDatabase MarketHoursDatabase { get; }
-        protected SymbolPropertiesDatabase SymbolPropertiesDatabase { get; }
-        public Security Security { get; }
-        public Symbol Symbol => Security.Symbol;
+        private MarketHoursDatabase MarketHoursDatabase { get; }
+        private SymbolPropertiesDatabase SymbolPropertiesDatabase { get; }
+        private Security Security { get; }
 
         public TickGenerator(RandomDataGeneratorSettings settings, TickType[] tickTypes, Security security, IRandomValueGenerator random)
         {
@@ -49,7 +50,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
             if (Symbol.SecurityType.IsOption())
             {
-                _priceGenerator = new BlackScholesPriceGenerator(security);
+                _priceGenerator = new OptionPriceModelPriceGenerator(security);
             }
             else
             {
@@ -67,7 +68,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             if (Random.NextBool(Settings.HasIpoPercentage))
             {
                 current = Random.NextDate(Settings.Start, Settings.End, null);
-                Console.WriteLine($"\tSymbol: {Symbol} has delayed IPO at date {current:yyyy MMMM dd}");
+                Log.Trace($"\tSymbol: {Symbol} has delayed IPO at date {current:yyyy MMMM dd}");
             }
 
             // creates a max deviation that scales parabolically as resolution decreases (lower frequency)

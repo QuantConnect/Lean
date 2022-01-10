@@ -1,5 +1,19 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 using QuantConnect.Configuration;
-using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
@@ -8,16 +22,14 @@ using QuantConnect.Securities.Option;
 using QuantConnect.ToolBox.CoarseUniverseGenerator;
 using QuantConnect.Util;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Logging;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
     /// <summary>
     /// Creates and starts <see cref="RandomDataGenerator"/> instance
     /// </summary>
-    public class RandomDataGeneratorProgram
+    public static class RandomDataGeneratorProgram
     {
         public static void RandomDataGenerator(
             string startDateString,
@@ -36,10 +48,10 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             string hasDividendsPercentageString,
             string dividendEveryQuarterPercentageString,
             string optionPriceEngineName,
-            string volatilityModelResolutionString
+            string volatilityModelResolutionString,
+            string chainSymbolCountString
             )
         {
-            var output = new ConsoleLeveledOutput();
             var settings = RandomDataGeneratorSettings.FromCommandLineArguments(
                 startDateString,
                 endDateString,
@@ -58,13 +70,12 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 dividendEveryQuarterPercentageString,
                 optionPriceEngineName,
                 volatilityModelResolutionString,
-
-                output
+                chainSymbolCountString
             );
 
             if (settings.Start.Year < 1998)
             {
-                output.Error.WriteLine($"Required parameter --start must be at least 19980101");
+                Log.Error($"RandomDataGeneratorProgram(): Required parameter --start must be at least 19980101");
                 Environment.Exit(1);
             }
             
@@ -96,19 +107,19 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             securityManager.SetSecurityService(securityService);
 
             var generator = new RandomDataGenerator();
-            generator.Init(settings, output, securityManager);
+            generator.Init(settings, securityManager);
             generator.Run();
 
             if (settings.IncludeCoarse && settings.SecurityType == SecurityType.Equity)
             {
-                output.Info.WriteLine("Launching coarse data generator...");
+                Log.Trace("RandomDataGeneratorProgram(): Launching coarse data generator...");
 
                 CoarseUniverseGeneratorProgram.CoarseUniverseGenerator();
             }
 
             if (!Console.IsInputRedirected)
             {
-                output.Info.WriteLine("Press any key to exit...");
+                Log.Trace("RandomDataGeneratorProgram(): Press any key to exit...");
                 Console.ReadKey();
             }
         }

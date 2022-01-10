@@ -78,7 +78,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         {
             Assert.Throws<ArgumentNullException>(() =>
             {
-                _ = new BlackScholesPriceGenerator(null);
+                _ = new OptionPriceModelPriceGenerator(null);
             });
         }
 
@@ -87,7 +87,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         {
             Assert.Throws<ArgumentException>(() =>
             {
-                _ = new BlackScholesPriceGenerator(_underlying);
+                _ = new OptionPriceModelPriceGenerator(_underlying);
             });
         }
 
@@ -99,7 +99,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                 .Setup(s => s.Evaluate(It.IsAny<Security>(), It.IsAny<Slice>(), It.IsAny<OptionContract>()))
                 .Returns(new OptionPriceModelResult(1000, new Greeks()));
             _option.PriceModel = priceModelMock.Object;
-            var randomPriceGenerator = new BlackScholesPriceGenerator(_option);
+            var randomPriceGenerator = new OptionPriceModelPriceGenerator(_option);
 
             Assert.AreEqual(1000, randomPriceGenerator.NextValue(50, new DateTime(2020, 1, 1)));
         }
@@ -108,7 +108,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         public void WarmedUpIfNotQLOptionPriceModel()
         {
             _option.PriceModel = Mock.Of<IOptionPriceModel>();
-            var blackScholesModel = new BlackScholesPriceGenerator(_option);
+            var blackScholesModel = new OptionPriceModelPriceGenerator(_option);
 
             Assert.True(blackScholesModel.WarmedUp);
         }
@@ -125,7 +125,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                 null,
                 null);
 
-            var blackScholesModel = new BlackScholesPriceGenerator(_option);
+            var blackScholesModel = new OptionPriceModelPriceGenerator(_option);
 
             Assert.AreEqual(warmUp, blackScholesModel.WarmedUp);
         }

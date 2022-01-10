@@ -25,6 +25,11 @@ namespace QuantConnect.Securities.Option
     public class ConstantQLUnderlyingVolatilityEstimator : IQLUnderlyingVolatilityEstimator
     {
         /// <summary>
+        /// Indicates whether volatility model has been warmed ot not
+        /// </summary>
+        public bool IsReady { get; private set; }
+
+        /// <summary>
         /// Returns current estimate of the underlying volatility
         /// </summary>
         /// <param name="security">The option security object</param>
@@ -47,10 +52,5 @@ namespace QuantConnect.Securities.Option
 
             return 0.0;
         }
-
-        /// <summary>
-        /// Indicates whether volatility model has been warmed ot not
-        /// </summary>
-        public bool IsReady { get; private set; }
     }
 }

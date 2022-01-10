@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 
@@ -27,6 +26,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         private readonly DateTime _minExpiry;
         private readonly DateTime _maxExpiry;
         private readonly string _market;
+        private readonly int _symbolChainSize;
         private readonly decimal _underlyingPrice;
         private readonly decimal _maximumStrikePriceDeviation;
         private readonly SecurityType _underlyingSecurityType  = SecurityType.Equity;
@@ -38,6 +38,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             _maxExpiry = settings.End;
             _market = settings.Market;
             _underlyingPrice = underlyingPrice;
+            _symbolChainSize = settings.ChainSymbolCount;
             _maximumStrikePriceDeviation = maximumStrikePriceDeviation;
         }
 
@@ -63,20 +64,30 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             var marketHours = MarketHoursDatabase.GetExchangeHours(_market, underlying, _underlyingSecurityType);
             var expiry = GetRandomExpiration(marketHours, _minExpiry, _maxExpiry);
 
-            // generate a random strike while respecting the maximum deviation from the underlying's price
-            // since these are underlying prices, use Equity as the security type
-            var strike = Random.NextPrice(_underlyingSecurityType, _market, _underlyingPrice, _maximumStrikePriceDeviation);
+            var strikes = new HashSet<decimal>();
+            for (var i = 0; i < _symbolChainSize; i++)
+            {
+                decimal strike;
+                do
+                {
+                    // generate a random strike while respecting the maximum deviation from the underlying's price
+                    // since these are underlying prices, use Equity as the security type
+                    strike = Random.NextPrice(_underlyingSecurityType, _market, _underlyingPrice,
+                        _maximumStrikePriceDeviation);
 
-            // round the strike price to something reasonable
-            var order = 1 + Math.Log10((double)strike);
-            strike = strike.RoundToSignificantDigits((int)order);
+                    // round the strike price to something reasonable
+                    var order = 1 + Math.Log10((double)strike);
+                    strike = strike.RoundToSignificantDigits((int)order);
+                }
+                // don't allow duplicate strikes
+                while (!strikes.Add(strike));
 
-            var optionRight = Random.NextBool(0.5)
-                ? OptionRight.Call
-                : OptionRight.Put;
-
-            // when providing a null option w/ an expiry, it will automatically create the OSI ticker string for the Value
-            yield return Symbol.CreateOption(underlying, _market, underlying.SecurityType.DefaultOptionStyle(), optionRight, strike, expiry);
+                foreach (var optionRight in new [] { OptionRight.Put, OptionRight.Call })
+                {
+                    // when providing a null option w/ an expiry, it will automatically create the OSI ticker string for the Value
+                    yield return Symbol.CreateOption(underlying, _market, underlying.SecurityType.DefaultOptionStyle(), optionRight, strike, expiry);
+                }
+            }
         }
 
         /// <summary>

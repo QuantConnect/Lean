@@ -25,11 +25,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     public interface ITickGenerator
     {
         /// <summary>
-        /// The symbol TickGenerator generates data for
-        /// </summary>
-        Symbol Symbol { get; }
-
-        /// <summary>
         /// Generates and enumerates data points for current symbol
         /// </summary>
         IEnumerable<Tick> GenerateTicks();

@@ -1,16 +1,27 @@
-using QuantConnect.Configuration;
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
-using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Option;
-using QuantConnect.ToolBox.CoarseUniverseGenerator;
-using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Logging;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
@@ -20,19 +31,16 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     public class RandomDataGenerator
     {
         private RandomDataGeneratorSettings _settings;
-        private ConsoleLeveledOutput _output;
         private SecurityManager _securityManager;
 
         /// <summary>
         /// Initializes <see cref="RandomDataGenerator"/> instance fields
         /// </summary>
         /// <param name="settings">random data generation settings</param>
-        /// <param name="output">output</param>
         /// <param name="securityManager">security management</param>
-        public void Init(RandomDataGeneratorSettings settings, ConsoleLeveledOutput output, SecurityManager securityManager)
+        public void Init(RandomDataGeneratorSettings settings, SecurityManager securityManager)
         {
             _settings = settings;
-            _output = output;
             _securityManager = securityManager;
         }
 
@@ -56,11 +64,11 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             var maxSymbolCount = symbolGenerator.GetAvailableSymbolCount();
             if (_settings.SymbolCount > maxSymbolCount)
             {
-                _output.Warn.WriteLine($"Limiting Symbol count to {maxSymbolCount}, we don't have more {_settings.SecurityType} tickers for {_settings.Market}");
+                Log.Error($"RandomDataGenerator.Run(): Limiting Symbol count to {maxSymbolCount}, we don't have more {_settings.SecurityType} tickers for {_settings.Market}");
                 _settings.SymbolCount = maxSymbolCount;
             }
 
-            _output.Warn.WriteLine($"Begin data generation of {_settings.SymbolCount} randomly generated {_settings.SecurityType} assets...");
+            Log.Trace($"RandomDataGenerator.Run(): Begin data generation of {_settings.SymbolCount} randomly generated {_settings.SecurityType} assets...");
 
             // iterate over our randomly generated symbols
             var count = 0;
@@ -71,7 +79,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 .GroupBy(s => s.HasUnderlying ? s.Underlying : s)
                 .Select(g => (g.Key, g.OrderBy(s => s.HasUnderlying).ToList())))
             {
-                _output.Warn.WriteLine($"\tSymbol[{++count}]: {symbolRef} Progress: {progress:0.0}% - Generating data...");
+                Log.Trace($"RandomDataGenerator.Run(): Symbol[{++count}]: {symbolRef} Progress: {progress:0.0}% - Generating data...");
 
                 var tickGenerators = new List<IEnumerator<Tick>>();
                 var tickHistories = new Dictionary<Symbol, List<Tick>>();
@@ -105,7 +113,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     var dataPoint = sync.Current;
                     if (!_securityManager.TryGetValue(dataPoint.Symbol, out var security))
                     {
-                        _output.Error.WriteLine($"Could not find security for symbol {sync.Current.Symbol}");
+                        Log.Error($"RandomDataGenerator.Run(): Could not find security for symbol {sync.Current.Symbol}");
                         continue;
                     }
 
@@ -167,7 +175,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                                 symbol = Symbol.Create(renameEvent.MappedSymbol, SecurityType.Equity, _settings.Market);
                                 renamedSymbols.Add(symbol, renameEvent.Date);
 
-                                _output.Warn.WriteLine($"\tSymbol[{count}]: {symbol} will be renamed on {renameEvent.Date}");
+                                Log.Trace($"RandomDataGenerator.Run(): Symbol[{count}]: {symbol} will be renamed on {renameEvent.Date}");
                             }
                         }
                         else
@@ -185,7 +193,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         factorFile.WriteToFile(symbol);
                         mapFile.WriteToCsv(_settings.Market, symbol.SecurityType);
 
-                        _output.Warn.WriteLine($"\tSymbol[{count}]: {symbol} Dividends, splits, and map files have been written to disk.");
+                        Log.Trace($"RandomDataGenerator.Run(): Symbol[{count}]: {symbol} Dividends, splits, and map files have been written to disk.");
                     }
                     else
                     {
@@ -216,7 +224,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
                             if (tick.Time.Month != previousMonth)
                             {
-                                _output.Info.WriteLine($"\tSymbol[{count}]: Month: {tick.Time:MMMM}");
+                                Log.Trace($"RandomDataGenerator.Run(): Symbol[{count}]: Month: {tick.Time:MMMM}");
                                 previousMonth = tick.Time.Month;
                                 monthsTrading++;
                             }
@@ -229,7 +237,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
                             if (monthsTrading >= 6 && willBeDelisted && tick.Time > delistDate)
                             {
-                                _output.Warn.WriteLine($"\tSymbol[{count}]: {renamed.Key} delisted at {tick.Time:MMMM yyyy}");
+                                Log.Trace($"RandomDataGenerator.Run(): Symbol[{count}]: {renamed.Key} delisted at {tick.Time:MMMM yyyy}");
                                 break;
                             }
                         }
@@ -238,7 +246,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         // and the current progress is twice the current, but less one because we haven't finished writing data yet
                         progress = 100 * (2 * count - 1) / (2.0 * _settings.SymbolCount);
 
-                        _output.Warn.WriteLine($"\tSymbol[{count}]: {renamed.Key} Progress: {progress:0.0}% - Saving data in LEAN format");
+                        Log.Trace($"RandomDataGenerator.Run(): Symbol[{count}]: {renamed.Key} Progress: {progress:0.0}% - Saving data in LEAN format");
 
                         // persist consolidated data to disk
                         foreach (var item in aggregators)
@@ -254,7 +262,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
                         // update progress
                         progress = 100 * (2 * count) / (2.0 * _settings.SymbolCount);
-                        _output.Warn.WriteLine($"\tSymbol[{count}]: {symbol} Progress: {progress:0.0}% - Symbol data generation and output completed");
+                        Log.Trace($"RandomDataGenerator.Run(): Symbol[{count}]: {symbol} Progress: {progress:0.0}% - Symbol data generation and output completed");
 
                         previousSymbol = renamed.Key;
                         currentCount++;
@@ -262,7 +270,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 }
             }
 
-            _output.Info.WriteLine("Random data generation has completed.");
+            Log.Trace("RandomDataGenerator.Run(): Random data generation has completed.");
 
             DateTime TickDay(Tick tick) => new(tick.Time.Year, tick.Time.Month, tick.Time.Day);
             DateTime DataDay(BaseData data) => new(data.Time.Year, data.Time.Month, data.Time.Day);

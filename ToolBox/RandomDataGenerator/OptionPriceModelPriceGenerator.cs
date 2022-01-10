@@ -18,22 +18,26 @@ using System;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities.Option;
 
-
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
     /// <summary>
     /// Pricing model used to determine the fair price or theoretical value for a call or a put option price
-    /// based on Black-Scholes-Merton model
+    /// by default using the Black-Scholes-Merton model
     /// </summary>
-    public class BlackScholesPriceGenerator : IPriceGenerator
+    public class OptionPriceModelPriceGenerator : IPriceGenerator
     {
-        private readonly Securities.Option.Option _option;
+        private readonly Option _option;
 
         /// <summary>
-        /// Creates instance of <see cref="BlackScholesPriceGenerator"/>
+        /// <see cref="RandomPriceGenerator"/> is always ready to generate new price values as it does not depend on volatility model
+        /// </summary>
+        public bool WarmedUp => _option.PriceModel is QLOptionPriceModel optionPriceModel && optionPriceModel.VolatilityEstimatorWarmedUp || _option.PriceModel is not QLOptionPriceModel;
+
+        /// <summary>
+        /// Creates instance of <see cref="OptionPriceModelPriceGenerator"/>
         /// </summary>
         ///<param name="security"><see cref="Security"/> object for which to generate price data</param>
-        public BlackScholesPriceGenerator(Security security)
+        public OptionPriceModelPriceGenerator(Security security)
         {
             if (security == null)
             {
@@ -42,10 +46,10 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
             if (!security.Symbol.SecurityType.IsOption())
             {
-                throw new ArgumentException("Black-Scholes pricing model cannot be applied to non-option security.");
+                throw new ArgumentException($"{nameof(OptionPriceModelPriceGenerator)} model cannot be applied to non-option security.");
             }
 
-            _option = security as Securities.Option.Option;
+            _option = security as Option;
         }
 
         /// <summary>
@@ -70,10 +74,5 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         ))
                 .TheoreticalPrice;
         }
-
-        /// <summary>
-        /// <see cref="RandomPriceGenerator"/> is always ready to generate new price values as it does not depend on volatility model
-        /// </summary>
-        public bool WarmedUp => _option.PriceModel is QLOptionPriceModel optionPriceModel && optionPriceModel.VolatilityEstimatorWarmedUp || _option.PriceModel is not QLOptionPriceModel;
     }
 }
