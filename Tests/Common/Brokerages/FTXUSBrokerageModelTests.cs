@@ -15,6 +15,7 @@
 
 using NUnit.Framework;
 using QuantConnect.Brokerages;
+using QuantConnect.Orders.Fees;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
@@ -23,9 +24,12 @@ namespace QuantConnect.Tests.Common.Brokerages
     {
         protected override FTXBrokerageModel GetBrokerageModel(AccountType accountType = AccountType.Margin) => new FTXUSBrokerageModel(accountType);
 
-        public override void ShouldReturnProperMarket(SecurityType securityType)
+        protected override string Market => QuantConnect.Market.FTXUS;
+
+        [Test]
+        public override void GetFeeModelTest()
         {
-            Assert.AreEqual(Market.FTX, GetBrokerageModel().DefaultMarkets[securityType]);
+            Assert.IsInstanceOf<FTXUSFeeModel>(GetBrokerageModel().GetFeeModel(Security));
         }
     }
 }
