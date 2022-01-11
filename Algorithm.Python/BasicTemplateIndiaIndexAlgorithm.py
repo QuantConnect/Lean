@@ -28,7 +28,7 @@ class BasicTemplateIndiaIndexAlgorithm(QCAlgorithm):
         self.SetAccountCurrency("INR")
         self.SetStartDate(2019, 1, 1)  #Set Start Date
         self.SetEndDate(2019, 1, 5)    #Set End Date
-        self.SetCash(100000)           #Set Strategy Cash
+        self.SetCash(1000000)           #Set Strategy Cash
 
         # Use indicator for signal; but it cannot be traded
         self.Nifty = self.AddIndex("NIFTY", Resolution.Minute, Market.India).Symbol
