@@ -8,8 +8,8 @@ FROM quantconnect/lean:foundation
 
 MAINTAINER QuantConnect <contact@quantconnect.com>
 
-#Install Python Tool for Visual Studio Debugger for remote python debugging
-RUN pip install ptvsd
+#Install debugpy for remote python debugging
+RUN pip install --no-cache-dir debugpy
 
 #Install PyDev Debugger for Pycharm for remote python debugging
 RUN pip install pydevd-pycharm~=201.8538.36
