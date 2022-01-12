@@ -156,10 +156,6 @@
   // To get your access token go to https://data.nasdaq.com/account/profile
   "nasdaq-auth-token": "",
 
-  // Required to access data from Quandl
-  // To get your access token go to https://www.quandl.com/account/api
-  "quandl-auth-token": "",
-
   // Required to access data from Tiingo
   // To get your access token go to https://www.tiingo.com
   "tiingo-auth-token": "",
