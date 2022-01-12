@@ -48,17 +48,17 @@ namespace QuantConnect.AlgorithmFactory
 
             /// <summary>
             ///  Python Tool for Visual Studio Debugger for remote python debugging.
-            /// <see cref="Language.Python"/>. Deprecated, routes to debugpy which
+            /// <see cref="Language.Python"/>. Deprecated, routes to DebugPy which
             /// is it's replacement. Used in the same way.
             /// </summary>
             PTVSD,
 
             /// <summary>
-            ///  debugpy - a debugger for Python.
+            ///  DebugPy - a debugger for Python.
             /// <see cref="Language.Python"/> can use  `Python Extension` in VS Code
             /// or attach to Python in Visual Studio
             /// </summary>
-            debugpy,
+            DebugPy,
 
             /// <summary>
             ///  PyCharm PyDev Debugger for remote python debugging.
@@ -75,7 +75,7 @@ namespace QuantConnect.AlgorithmFactory
             if (language == Language.Python)
             {
                 DebuggingMethod debuggingType;
-                Enum.TryParse(Config.Get("debugging-method", DebuggingMethod.LocalCmdline.ToString()), out debuggingType);
+                Enum.TryParse(Config.Get("debugging-method", DebuggingMethod.LocalCmdline.ToString()), true, out debuggingType);
 
                 Log.Trace("DebuggerHelper.Initialize(): initializing python...");
                 PythonInitializer.Initialize();
@@ -98,7 +98,7 @@ while not sys.gettrace():
                             break;
 
                         case DebuggingMethod.PTVSD:
-                        case DebuggingMethod.debugpy:
+                        case DebuggingMethod.DebugPy:
                             Log.Trace("DebuggerHelper.Initialize(): debugpy waiting for attach at port 5678...");
                             PythonEngine.RunSimpleString("import debugpy; debugpy.listen(('0.0.0.0', 5678)); debugpy.wait_for_client()");
                             break;
