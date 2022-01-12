@@ -195,7 +195,7 @@
   "ftx-api-key": "",
 
   // FTX.US configuration
-  "ftxus-account-tier": "Tier1", // accept "Tier1", "Tier2", "Tier3", "Tier4", "Tier5", "Tier6", "VIP1", "VIP2", "VIP3", "MM1", "MM2", "MM3"
+  "ftxus-account-tier": "Tier1", // accept "Tier1", "Tier2", "Tier3", "Tier4", "Tier5", "Tier6", "Tier7", "Tier8", "Tier9", "VIP1", "VIP2", "MM1", "MM2", "MM3"
   "ftxus-api-secret": "",
   "ftxus-api-key": "",
 
@@ -458,7 +458,7 @@
 
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "QuantConnect.FTXBrokerage.FTXUSBrokerage",
-      "data-queue-handler": "QuantConnect.FTXBrokerage.FTXUSBrokerage",
+      "data-queue-handler": [ "QuantConnect.FTXBrokerage.FTXUSBrokerage" ],
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",

@@ -35,19 +35,18 @@ namespace QuantConnect.Brokerages
         protected virtual string MarketName => Market.FTX;
 
         /// <summary>
+        /// Gets a map of the default markets to be used for each security type
+        /// </summary>
+        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets(Market.FTX);
+
+        /// <summary>
         /// Creates an instance of <see cref="FTXBrokerageModel"/> class
         /// </summary>
         /// <param name="accountType">Cash or Margin</param>
         public FTXBrokerageModel(AccountType accountType = AccountType.Margin) : base(accountType)
         {
         }
-
-        /// <summary>
-        /// Gets a map of the default markets to be used for each security type
-        /// </summary>
-        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets(Market.FTX);
-
-
+        
         /// <summary>
         /// Gets a new buying power model for the security, returning the default model with the security's configured leverage.
         /// For cash accounts, leverage = 1 is used.
