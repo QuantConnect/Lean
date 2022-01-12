@@ -41,6 +41,7 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
             Market.Bitfinex,
             Market.Binance,
             Market.FTX,
+            Market.FTXUS,
             Market.Kraken
         }.ToHashSet();
 

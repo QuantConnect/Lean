@@ -37,8 +37,8 @@ namespace QuantConnect.Tests.Common.Brokerages
         [SetUp]
         public void Init()
         {
-            _brokerageModel = new();
-            _symbol = Symbol.Create("ETHUSD", SecurityType.Crypto, Market.FTX);
+            _brokerageModel = GetBrokerageModel();
+            _symbol = Symbol.Create("ETHUSD", SecurityType.Crypto, Market);
         }
 
         protected Crypto Security =>
@@ -60,10 +60,12 @@ namespace QuantConnect.Tests.Common.Brokerages
                 RegisteredSecurityDataTypesProvider.Null
             );
 
+        protected virtual string Market => QuantConnect.Market.FTX;
+
         [Test]
         public void GetCashBuyingPowerModelTest()
         {
-            var model = new FTXBrokerageModel(AccountType.Cash);
+            var model = GetBrokerageModel(AccountType.Cash);
             Assert.IsInstanceOf<CashBuyingPowerModel>(model.GetBuyingPowerModel(Security));
             Assert.AreEqual(1, model.GetLeverage(Security));
         }
@@ -71,33 +73,36 @@ namespace QuantConnect.Tests.Common.Brokerages
         [Test]
         public void GetSecurityMarginModelTest()
         {
-            var model = new FTXBrokerageModel(AccountType.Margin);
+            var model = GetBrokerageModel(AccountType.Margin);
             Assert.IsInstanceOf<SecurityMarginModel>(model.GetBuyingPowerModel(Security));
             Assert.AreEqual(3M, model.GetLeverage(Security));
         }
 
         [Test]
-        public void GetFeeModelTest()
+        public virtual void GetFeeModelTest()
         {
             Assert.IsInstanceOf<FTXFeeModel>(_brokerageModel.GetFeeModel(Security));
         }
 
         [TestCase(SecurityType.Crypto)]
-        public void ShouldReturnFTXMarket(SecurityType securityType)
+        public void ShouldReturnProperMarket(SecurityType securityType)
         {
-            Assert.AreEqual(Market.FTX, _brokerageModel.DefaultMarkets[securityType]);
+            Assert.AreEqual(Market, _brokerageModel.DefaultMarkets[securityType]);
         }
 
         [TestCase(0.01, true)]
         [TestCase(0.00005, false)]
         public void CanSubmitOrder_WhenQuantityIsLargeEnough(decimal orderQuantity, bool isValidOrderQuantity)
         {
-            BrokerageMessageEvent message;
-            var order = new Mock<Order>();
+            var order = new Mock<Order>
+            {
+                Object =
+                {
+                    Quantity = orderQuantity
+                }
+            };
 
-            order.Object.Quantity = orderQuantity;
-
-            Assert.AreEqual(isValidOrderQuantity, _brokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(market: Market.FTX), order.Object, out message));
+            Assert.AreEqual(isValidOrderQuantity, _brokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(market: Market), order.Object, out _));
         }
 
         [Test]
@@ -190,5 +195,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.AreEqual(false, _brokerageModel.CanSubmitOrder(security, order.Object, out var message));
             Assert.NotNull(message);
         }
+
+        protected virtual FTXBrokerageModel GetBrokerageModel(AccountType accountType = AccountType.Margin) => new(accountType);
     }
 }

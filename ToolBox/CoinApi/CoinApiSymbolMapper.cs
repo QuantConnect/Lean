@@ -44,6 +44,7 @@ namespace QuantConnect.ToolBox.CoinApi
             { Market.Bitfinex, "BITFINEX" },
             { Market.Binance, "BINANCE" },
             { Market.FTX, "FTX" },
+            { Market.FTXUS, "FTXUS" },
             { Market.Kraken, "KRAKEN" }
         };
         private static readonly Dictionary<string, string> MapExchangeIdsToMarkets =
