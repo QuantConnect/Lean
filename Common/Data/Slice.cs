@@ -18,7 +18,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using QuantConnect.Data.Custom;
+using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Market;
 using QuantConnect.Python;
 
@@ -44,7 +44,7 @@ namespace QuantConnect.Data
         // string -> data   for non-tick data
         // string -> list{data} for tick data
         private readonly Lazy<DataDictionary<SymbolData>> _data;
-        // Quandl -> DataDictonary<Quandl>
+        // UnlinkedData -> DataDictonary<UnlinkedData>
         private Dictionary<Type, object> _dataByType;
 
         /// <summary>
@@ -284,7 +284,7 @@ namespace QuantConnect.Data
         /// Gets the data corresponding to the specified symbol. If the requested data
         /// is of <see cref="MarketDataType.Tick"/>, then a <see cref="List{Tick}"/> will
         /// be returned, otherwise, it will be the subscribed type, for example, <see cref="TradeBar"/>
-        /// or event <see cref="Quandl"/> for custom data.
+        /// or event <see cref="UnlinkedData"/> for custom data.
         /// </summary>
         /// <param name="symbol">The data's symbols</param>
         /// <returns>The data for the specified symbol</returns>
@@ -304,7 +304,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Gets the <see cref="DataDictionary{T}"/> for all data of the specified type
         /// </summary>
-        /// <typeparam name="T">The type of data we want, for example, <see cref="TradeBar"/> or <see cref="Quandl"/>, ect...</typeparam>
+        /// <typeparam name="T">The type of data we want, for example, <see cref="TradeBar"/> or <see cref="UnlinkedData"/>, ect...</typeparam>
         /// <returns>The <see cref="DataDictionary{T}"/> containing the data of the specified type</returns>
         public DataDictionary<T> Get<T>()
             where T : IBaseData

@@ -244,10 +244,10 @@
     <Content Include="TestData\stock_prices.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\quandl_future_chris_cme_es1.csv">
+    <Content Include="TestData\custom_future_chris_cme_es1.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TestData\quandl_future_chris_cme_es2.csv">
+    <Content Include="TestData\custom_future_chris_cme_es2.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\00010101_05_example_psychsignal_testdata.csv">

@@ -60,6 +60,7 @@ from QuantConnect.Data.Shortable import *
 from QuantConnect.Orders.Slippage import *
 from QuantConnect.Securities.Forex import *
 from QuantConnect.Data.Fundamental import *
+from QuantConnect.Algorithm.CSharp import *
 from QuantConnect.Securities.Option import *
 from QuantConnect.Securities.Equity import *
 from QuantConnect.Securities.Future import *
@@ -69,6 +70,7 @@ from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Securities.Volatility import *
 from QuantConnect.Securities.Interfaces import *
 from QuantConnect.Data.UniverseSelection import *
+from QuantConnect.Data.Custom.IconicTypes import *
 from QuantConnect.Data.Custom.AlphaStreams import *
 from QuantConnect.Algorithm.Framework.Risk import *
 from QuantConnect.Algorithm.Framework.Alphas import *

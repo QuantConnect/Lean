@@ -83,7 +83,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                         var repr = attr.Repr().GetStringBetweenChars('\'', '\'');
 
                         if (repr.StartsWith(moduleName) &&                // Must be defined in the module
-                            attr.TryConvert(out type) &&                  // Must be a Type
+                            attr.TryConvert(out type, true) &&                  // Must be a Type
                             typeof(QCAlgorithm).IsAssignableFrom(type))   // Must inherit from QCAlgorithm
                         {
                             Logging.Log.Trace("AlgorithmPythonWrapper(): Creating IAlgorithm instance.");

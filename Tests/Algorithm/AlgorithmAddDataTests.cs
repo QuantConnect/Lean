@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Python.Runtime;
 using Newtonsoft.Json;
 using NodaTime;
 using NUnit.Framework;
@@ -26,10 +27,8 @@ using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Consolidators;
-using QuantConnect.Data.Custom;
 using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Market;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
@@ -136,10 +135,10 @@ namespace QuantConnect.Tests.Algorithm
             var bitcoinSubscription = qcAlgorithm.SubscriptionManager.Subscriptions.FirstOrDefault(x => x.Type == typeof(Bitcoin));
             Assert.AreEqual(bitcoinSubscription.Type, typeof(Bitcoin));
 
-            // Add a quandl subscription
-            qcAlgorithm.AddData<Quandl>("EURCAD");
-            var quandlSubscription = qcAlgorithm.SubscriptionManager.Subscriptions.FirstOrDefault(x => x.Type == typeof(Quandl));
-            Assert.AreEqual(quandlSubscription.Type, typeof(Quandl));
+            // Add a unlinkedData subscription
+            qcAlgorithm.AddData<UnlinkedData>("EURCAD");
+            var unlinkedDataSubscription = qcAlgorithm.SubscriptionManager.Subscriptions.FirstOrDefault(x => x.Type == typeof(UnlinkedData));
+            Assert.AreEqual(unlinkedDataSubscription.Type, typeof(UnlinkedData));
         }
 
         [Test]
@@ -556,7 +555,7 @@ namespace QuantConnect.Tests.Algorithm
 
             // Initialize contains the statements:
             // self.AddData(Nifty, "NIFTY")
-            // self.AddData(QuandlFuture, "SCF/CME_CL1_ON", Resolution.Daily)
+            // self.AddData(CustomPythonData, "IBM", Resolution.Daily)
             qcAlgorithm.Initialize();
 
             var niftySubscription = qcAlgorithm.SubscriptionManager.Subscriptions.FirstOrDefault(x => x.Symbol.Value == "NIFTY");
@@ -565,11 +564,13 @@ namespace QuantConnect.Tests.Algorithm
             var niftyFactory = (BaseData)ObjectActivator.GetActivator(niftySubscription.Type).Invoke(new object[] { niftySubscription.Type });
             Assert.DoesNotThrow(() => niftyFactory.GetSource(niftySubscription, DateTime.UtcNow, false));
 
-            var quandlSubscription = qcAlgorithm.SubscriptionManager.Subscriptions.FirstOrDefault(x => x.Symbol.Value == "SCF/CME_CL1_ON");
-            Assert.IsNotNull(quandlSubscription);
+            var customDataSubscription = qcAlgorithm.SubscriptionManager.Subscriptions.FirstOrDefault(x => x.Symbol.Value == "IBM");
+            Assert.IsNotNull(customDataSubscription);
+            Assert.IsTrue(customDataSubscription.IsCustomData);
+            Assert.AreEqual("custom_data.CustomPythonData", customDataSubscription.Type.ToString());
 
-            var quandlFactory = (BaseData)ObjectActivator.GetActivator(quandlSubscription.Type).Invoke(new object[] { quandlSubscription.Type });
-            Assert.DoesNotThrow(() => quandlFactory.GetSource(quandlSubscription, DateTime.UtcNow, false));
+            var customDataFactory = (BaseData)ObjectActivator.GetActivator(customDataSubscription.Type).Invoke(new object[] { customDataSubscription.Type });
+            Assert.DoesNotThrow(() => customDataFactory.GetSource(customDataSubscription, DateTime.UtcNow, false));
         }
 
         [Test]
@@ -580,14 +581,14 @@ namespace QuantConnect.Tests.Algorithm
 
             // Initialize contains the statements:
             // self.AddData(Nifty, "NIFTY")
-            // self.AddData(QuandlFuture, "SCF/CME_CL1_ON", Resolution.Daily)
+            // self.AddData(CustomPythonData, "IBM", Resolution.Daily)
             qcAlgorithm.Initialize();
 
             var niftyConsolidator = new DynamicDataConsolidator(TimeSpan.FromDays(2));
             Assert.DoesNotThrow(() => qcAlgorithm.SubscriptionManager.AddConsolidator("NIFTY", niftyConsolidator));
 
-            var quandlConsolidator = new DynamicDataConsolidator(TimeSpan.FromDays(2));
-            Assert.DoesNotThrow(() => qcAlgorithm.SubscriptionManager.AddConsolidator("SCF/CME_CL1_ON", quandlConsolidator));
+            var customDataConsolidator = new DynamicDataConsolidator(TimeSpan.FromDays(2));
+            Assert.DoesNotThrow(() => qcAlgorithm.SubscriptionManager.AddConsolidator("IBM", customDataConsolidator));
         }
 
         [Test]
@@ -607,10 +608,10 @@ namespace QuantConnect.Tests.Algorithm
             const string ticker = "ticker";
             var algorithm = Algorithm();
 
-            var security = algorithm.AddData<Quandl>(ticker);
+            var security = algorithm.AddData<UnlinkedData>(ticker);
             Assert.AreEqual(ticker.ToUpperInvariant(), security.Symbol.Value);
-            Assert.AreEqual($"{ticker.ToUpperInvariant()}.{typeof(Quandl).Name}", security.Symbol.ID.Symbol);
-            Assert.AreEqual(SecurityIdentifier.GenerateBaseSymbol(typeof(Quandl), ticker), security.Symbol.ID.Symbol);
+            Assert.AreEqual($"{ticker.ToUpperInvariant()}.{typeof(UnlinkedData).Name}", security.Symbol.ID.Symbol);
+            Assert.AreEqual(SecurityIdentifier.GenerateBaseSymbol(typeof(UnlinkedData), ticker), security.Symbol.ID.Symbol);
         }
 
         [Test]
@@ -619,7 +620,7 @@ namespace QuantConnect.Tests.Algorithm
             var algorithm = Algorithm();
 
             Symbol cachedSymbol;
-            var security = algorithm.AddData<Quandl>("ticker");
+            var security = algorithm.AddData<UnlinkedData>("ticker");
             var symbolCacheAlias = security.Symbol.ID.Symbol;
 
             Assert.IsTrue(SymbolCache.TryGetSymbol(symbolCacheAlias, out cachedSymbol));
@@ -632,16 +633,16 @@ namespace QuantConnect.Tests.Algorithm
             const string ticker = "ticker";
             var algorithm = Algorithm();
 
-            var security1 = algorithm.AddData<Quandl>(ticker);
+            var security1 = algorithm.AddData<UnlinkedData>(ticker);
             var security2 = algorithm.AddData<Bitcoin>(ticker);
 
-            var quandl = algorithm.Securities[security1.Symbol];
-            Assert.AreSame(security1, quandl);
+            var unlinkedData = algorithm.Securities[security1.Symbol];
+            Assert.AreSame(security1, unlinkedData);
 
             var bitcoin = algorithm.Securities[security2.Symbol];
             Assert.AreSame(security2, bitcoin);
 
-            Assert.AreNotSame(quandl, bitcoin);
+            Assert.AreNotSame(unlinkedData, bitcoin);
         }
 
         private static SubscriptionDataConfig GetMatchingSubscription(QCAlgorithm algorithm, Symbol symbol, Type type)

@@ -22,9 +22,9 @@ using NodaTime;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Algorithm;
+using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Custom.AlphaStreams;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
@@ -846,6 +846,40 @@ namespace QuantConnect.Tests.Common.Util
         }
 
         [Test]
+        public void PyObjectTryConvertCustomCSharpData()
+        {
+            // Wrap a custom C# data around a PyObject and convert it back
+            var value = ConvertToPyObject(new CustomData());
+
+            BaseData baseData;
+            var canConvert = value.TryConvert(out baseData);
+            Assert.IsTrue(canConvert);
+            Assert.IsNotNull(baseData);
+            Assert.IsAssignableFrom<CustomData>(baseData);
+        }
+
+        [Test]
+        public void PyObjectTryConvertPythonClass()
+        {
+            PyObject value;
+            using (Py.GIL())
+            {
+                // Try to convert a python class which inherits from a C# object
+                value = PythonEngine.ModuleFromString("testModule",
+                    @"
+from AlgorithmImports import *
+
+class Test(PythonData):
+    def __init__(self):
+        return 0;").GetAttr("Test");
+            }
+
+            Type type;
+            bool canConvert = value.TryConvert(out type, true);
+            Assert.IsTrue(canConvert);
+        }
+
+        [Test]
         public void PyObjectTryConvertSymbolArray()
         {
             PyObject value;
@@ -889,6 +923,27 @@ namespace QuantConnect.Tests.Common.Util
                 Assert.IsFalse(canConvert);
                 Assert.IsNull(indicatorBaseTradeBar);
             }
+        }
+
+        [Test]
+        public void PyObjectTryConvertFailPythonClass()
+        {
+            PyObject value;
+            using (Py.GIL())
+            {
+                // Try to convert a python class which inherits from a C# object
+                value = PythonEngine.ModuleFromString("testModule",
+                    @"
+from AlgorithmImports import *
+
+class Test(PythonData):
+    def __init__(self):
+        return 0;").GetAttr("Test");
+            }
+
+            Type type;
+            bool canConvert = value.TryConvert(out type);
+            Assert.IsFalse(canConvert);
         }
 
         [Test]

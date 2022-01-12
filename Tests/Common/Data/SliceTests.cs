@@ -19,7 +19,6 @@ using System.Linq;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Data;
-using QuantConnect.Data.Custom;
 using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
@@ -35,17 +34,17 @@ namespace QuantConnect.Tests.Common.Data
         {
             var now = DateTime.UtcNow;
             var tradeBar = new TradeBar { Symbol = Symbols.SPY, Time = now };
-            var quandl = new Quandl { Symbol = Symbols.SPY, Time = now };
+            var unlinkedData = new UnlinkedData { Symbol = Symbols.SPY, Time = now };
             var quoteBar = new QuoteBar { Symbol = Symbols.SPY, Time = now };
             var tick = new Tick(now, Symbols.SPY, 1.1m, 2.1m) {TickType = TickType.Trade};
             var openInterest = new OpenInterest(now, Symbols.SPY, 1);
             var split = new Split(Symbols.SPY, now, 1, 1, SplitType.SplitOccurred);
             var delisting = new Delisting(Symbols.SPY, now, 1, DelistingType.Delisted);
 
-            var slice = new Slice(now, new BaseData[] {quoteBar, tradeBar, quandl, tick, split, delisting, openInterest });
+            var slice = new Slice(now, new BaseData[] {quoteBar, tradeBar, unlinkedData, tick, split, delisting, openInterest });
 
             Assert.AreEqual(slice.Get(typeof(TradeBar))[Symbols.SPY], tradeBar);
-            Assert.AreEqual(slice.Get(typeof(Quandl))[Symbols.SPY], quandl);
+            Assert.AreEqual(slice.Get(typeof(UnlinkedData))[Symbols.SPY], unlinkedData);
             Assert.AreEqual(slice.Get(typeof(QuoteBar))[Symbols.SPY], quoteBar);
             Assert.AreEqual(slice.Get(typeof(Tick))[Symbols.SPY], tick);
             Assert.AreEqual(slice.Get(typeof(Split))[Symbols.SPY], split);
@@ -156,22 +155,22 @@ namespace QuantConnect.Tests.Common.Data
         public void AccessesCustomGenericallyByTypeOtherTypesPresent()
         {
             var tradeBar = new TradeBar { Symbol = Symbols.SPY, Time = DateTime.Now };
-            var quandlSpy = new Quandl { Symbol = Symbols.SPY, Time = DateTime.Now };
-            Slice slice = new Slice(DateTime.Now, new BaseData[] { quandlSpy, tradeBar });
+            var unlinkedDataSpy = new UnlinkedData { Symbol = Symbols.SPY, Time = DateTime.Now };
+            var slice = new Slice(DateTime.Now, new BaseData[] { unlinkedDataSpy, tradeBar });
 
-            DataDictionary<Quandl> quandlData = slice.Get<Quandl>();
-            Assert.AreEqual(1, quandlData.Count);
+            var unlinkedData = slice.Get<UnlinkedData>();
+            Assert.AreEqual(1, unlinkedData.Count);
         }
 
         [Test]
         public void AccessesCustomGenericallyByType()
         {
-            Quandl quandlSpy = new Quandl { Symbol = Symbols.SPY, Time = DateTime.Now };
-            Quandl quandlAapl = new Quandl { Symbol = Symbols.AAPL, Time = DateTime.Now };
-            Slice slice = new Slice(DateTime.Now, new[] { quandlSpy, quandlAapl });
+            var unlinkedDataSpy = new UnlinkedData { Symbol = Symbols.SPY, Time = DateTime.Now };
+            var unlinkedDataAapl = new UnlinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now };
+            var slice = new Slice(DateTime.Now, new[] { unlinkedDataSpy, unlinkedDataAapl });
 
-            DataDictionary<Quandl> quandlData = slice.Get<Quandl>();
-            Assert.AreEqual(2, quandlData.Count);
+            var unlinkedData = slice.Get<UnlinkedData>();
+            Assert.AreEqual(2, unlinkedData.Count);
         }
 
         [Test]
@@ -199,12 +198,12 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void AccessesGenericallyByTypeAndSymbol()
         {
-            Quandl quandlSpy = new Quandl { Symbol = Symbols.SPY, Time = DateTime.Now };
-            Quandl quandlAapl = new Quandl { Symbol = Symbols.AAPL, Time = DateTime.Now };
-            Slice slice = new Slice(DateTime.Now, new[] { quandlSpy, quandlAapl });
+            var unlinkedDataSpy = new UnlinkedData { Symbol = Symbols.SPY, Time = DateTime.Now };
+            var unlinkedDataAapl = new UnlinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now };
+            var slice = new Slice(DateTime.Now, new[] { unlinkedDataSpy, unlinkedDataAapl });
 
-            Quandl quandlData = slice.Get<Quandl>(Symbols.SPY);
-            Assert.AreEqual(quandlSpy, quandlData);
+            var unlinkedData = slice.Get<UnlinkedData>(Symbols.SPY);
+            Assert.AreEqual(unlinkedDataSpy, unlinkedData);
         }
 
         [Test]
@@ -217,11 +216,11 @@ namespace QuantConnect.Tests.Common.Data
 from AlgorithmImports import *
 
 def Test(slice):
-    data = slice.Get(Quandl)
+    data = slice.Get(UnlinkedData)
     return data").GetAttr("Test");
-                var quandlSpy = new Quandl { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
-                var quandlAapl = new Quandl { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
-                var slice = new Slice(DateTime.Now, new[] { quandlSpy, quandlAapl });
+                var unlinkedDataSpy = new UnlinkedData { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
+                var unlinkedDataAapl = new UnlinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
+                var slice = new Slice(DateTime.Now, new[] { unlinkedDataSpy, unlinkedDataAapl });
 
                 var data = test(new PythonSlice(slice));
                 Assert.AreEqual(2, (int)data.Count);
@@ -242,8 +241,8 @@ from AlgorithmImports import *
 def Test(slice):
     for dataPoint in slice:
         return dataPoint").GetAttr("Test");
-                var quandlAapl = new Quandl { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
-                var slice = new Slice(DateTime.Now, new[] { quandlAapl });
+                var unlinkedDataAapl = new UnlinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
+                var slice = new Slice(DateTime.Now, new[] { unlinkedDataAapl });
 
                 var data = test(new PythonSlice(slice)) as PyObject;
                 var keyValuePair = data.As<KeyValuePair<Symbol, BaseData>>();
@@ -263,13 +262,13 @@ from AlgorithmImports import *
 from QuantConnect.Tests import *
 
 def Test(slice):
-    data = slice.Get(Quandl)
+    data = slice.Get(UnlinkedData)
     value = data[Symbols.AAPL].Value
     if value != 11:
         raise Exception('Unexpected value')").GetAttr("Test");
-                var quandlSpy = new Quandl { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
-                var quandlAapl = new Quandl { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
-                var slice = new Slice(DateTime.Now, new[] { quandlSpy, quandlAapl });
+                var unlinkedDataSpy = new UnlinkedData { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
+                var unlinkedDataAapl = new UnlinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
+                var slice = new Slice(DateTime.Now, new[] { unlinkedDataSpy, unlinkedDataAapl });
 
                 Assert.DoesNotThrow(() => test(new PythonSlice(slice)));
             }
@@ -286,13 +285,13 @@ from AlgorithmImports import *
 from QuantConnect.Tests import *
 
 def Test(slice):
-    data = slice.Get(Quandl, Symbols.AAPL)
+    data = slice.Get(UnlinkedData, Symbols.AAPL)
     value = data.Value
     if value != 11:
         raise Exception('Unexpected value')").GetAttr("Test");
-                var quandlSpy = new Quandl { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
-                var quandlAapl = new Quandl { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
-                var slice = new Slice(DateTime.Now, new[] { quandlSpy, quandlAapl });
+                var unlinkedDataSpy = new UnlinkedData { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
+                var unlinkedDataAapl = new UnlinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
+                var slice = new Slice(DateTime.Now, new[] { unlinkedDataSpy, unlinkedDataAapl });
 
                 Assert.DoesNotThrow(() => test(new PythonSlice(slice)));
             }
@@ -312,9 +311,9 @@ def Test(slice):
     return data").GetAttr("Test");
                 var TradeBarSpy = new TradeBar { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 8 };
                 var TradeBarAapl = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 9 };
-                var quandlSpy = new Quandl { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
-                var quandlAapl = new Quandl { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
-                var slice = new Slice(DateTime.Now, new BaseData[] { quandlSpy, TradeBarAapl, quandlAapl, TradeBarSpy });
+                var unlinkedDataSpy = new UnlinkedData { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
+                var unlinkedDataAapl = new UnlinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
+                var slice = new Slice(DateTime.Now, new BaseData[] { unlinkedDataSpy, TradeBarAapl, unlinkedDataAapl, TradeBarSpy });
 
                 var data = test(new PythonSlice(slice));
                 Assert.AreEqual(2, (int)data.Count);
@@ -341,10 +340,10 @@ def Test(slice):
                 var now = DateTime.UtcNow;
                 var TradeBarSpy = new TradeBar { Symbol = Symbols.SPY, Time = now, Value = 8 };
                 var TradeBarAapl = new TradeBar { Symbol = Symbols.AAPL, Time = now, Value = 9 };
-                var quandlSpy = new Quandl { Symbol = Symbols.SPY, Time = now, Value = 10 };
-                var quandlAapl = new Quandl { Symbol = Symbols.AAPL, Time = now, Value = 11 };
+                var unlinkedDataSpy = new UnlinkedData { Symbol = Symbols.SPY, Time = now, Value = 10 };
+                var unlinkedDataAapl = new UnlinkedData { Symbol = Symbols.AAPL, Time = now, Value = 11 };
                 var openInterest = new OpenInterest(now, Symbols.AAPL, 33);
-                var slice = new Slice(now, new BaseData[] { quandlSpy, TradeBarAapl, quandlAapl, TradeBarSpy, openInterest });
+                var slice = new Slice(now, new BaseData[] { unlinkedDataSpy, TradeBarAapl, unlinkedDataAapl, TradeBarSpy, openInterest });
 
                 Assert.DoesNotThrow(() => test(new PythonSlice(slice)));
             }
@@ -367,9 +366,9 @@ def Test(slice):
         raise Exception('Unexpected value')").GetAttr("Test");
                 var TradeBarSpy = new TradeBar { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 8 };
                 var TradeBarAapl = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 9 };
-                var quandlSpy = new Quandl { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
-                var quandlAapl = new Quandl { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
-                var slice = new Slice(DateTime.Now, new BaseData[] { quandlSpy, TradeBarAapl, quandlAapl, TradeBarSpy });
+                var unlinkedDataSpy = new UnlinkedData { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
+                var unlinkedDataAapl = new UnlinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
+                var slice = new Slice(DateTime.Now, new BaseData[] { unlinkedDataSpy, TradeBarAapl, unlinkedDataAapl, TradeBarSpy });
 
                 Assert.DoesNotThrow(() => test(new PythonSlice(slice)));
             }
@@ -392,9 +391,9 @@ def Test(slice):
         raise Exception('Unexpected value')").GetAttr("Test");
                 var TradeBarSpy = new TradeBar { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 8 };
                 var TradeBarAapl = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 9 };
-                var quandlSpy = new Quandl { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
-                var quandlAapl = new Quandl { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
-                var slice = new Slice(DateTime.Now, new BaseData[] { quandlSpy, TradeBarAapl, quandlAapl, TradeBarSpy });
+                var unlinkedDataSpy = new UnlinkedData { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
+                var unlinkedDataAapl = new UnlinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
+                var slice = new Slice(DateTime.Now, new BaseData[] { unlinkedDataSpy, TradeBarAapl, unlinkedDataAapl, TradeBarSpy });
 
                 Assert.DoesNotThrow(() => test(new PythonSlice(slice)));
             }
@@ -419,10 +418,10 @@ def Test(slice):
         count += 1
     if count != 2:
         raise Exception('Unexpected value')").GetAttr("Test");
-                var quandlSpy = new IndexedLinkedData { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
+                var indexedLinkedDataSpy = new IndexedLinkedData { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
                 var tradeBarAapl = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 9 };
-                var quandlAapl = new IndexedLinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
-                var slice = new Slice(DateTime.Now, new BaseData[] { quandlSpy, tradeBarAapl, quandlAapl });
+                var indexedLinkedDataAapl = new IndexedLinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
+                var slice = new Slice(DateTime.Now, new BaseData[] { indexedLinkedDataSpy, tradeBarAapl, indexedLinkedDataAapl });
 
                 Assert.DoesNotThrow(() => test(new PythonSlice(slice)));
             }
@@ -466,15 +465,15 @@ def Test(slice):
 from AlgorithmImports import *
 
 def Test(slice):
-    data = slice.Get(Quandl)
+    data = slice.Get(UnlinkedData)
     count = 0
     for singleData in data:
         count += 1
     if count != 2:
         raise Exception('Unexpected value')").GetAttr("Test");
-                var quandlSpy = new Quandl { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
-                var quandlAapl = new Quandl { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
-                var slice = new Slice(DateTime.Now, new[] { quandlSpy, quandlAapl });
+                var unlinkedDataSpy = new UnlinkedData { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
+                var unlinkedDataAapl = new UnlinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
+                var slice = new Slice(DateTime.Now, new[] { unlinkedDataSpy, unlinkedDataAapl });
 
                 Assert.DoesNotThrow(() => test(new PythonSlice(slice)));
             }
@@ -1061,10 +1060,10 @@ def Test(slice, symbol):
         private Slice GetSlice()
         {
             SymbolCache.Clear();
-            var quandlSpy = new IndexedLinkedData { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
+            var indexedLinkedDataSpy = new IndexedLinkedData { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
             var tradeBarAapl = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 9 };
-            var quandlAapl = new IndexedLinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
-            return new Slice(DateTime.Now, new BaseData[] { quandlSpy, tradeBarAapl, quandlAapl });
+            var indexedLinkedDataAapl = new IndexedLinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
+            return new Slice(DateTime.Now, new BaseData[] { indexedLinkedDataSpy, tradeBarAapl, indexedLinkedDataAapl });
         }
 
         private PythonSlice GetPythonSlice() => new PythonSlice(GetSlice());

@@ -2505,11 +2505,25 @@ namespace QuantConnect
             {
                 try
                 {
+                    // We must first check if allowPythonDerivative is true to then only return true
+                    // when the PyObject is assignable from Type or IEnumerable and is a C# type
+                    // wrapped in PyObject
+                    if (allowPythonDerivative)
+                    {
+                        result = (T)pyObject.AsManagedObject(type);
+                        return true;
+                    }
+
                     // Special case: Type
                     if (typeof(Type).IsAssignableFrom(type))
                     {
                         result = (T)pyObject.AsManagedObject(type);
-                        return true;
+                        // pyObject is a C# object wrapped in PyObject, in this case return true
+                        // Otherwise, pyObject is a python object that subclass a C# class, only return true if 'allowPythonDerivative'
+                        var castedResult = (Type)pyObject.AsManagedObject(type);
+                        var pythonName = pyObject.GetAttr("__name__").GetAndDispose<string>();
+
+                        return pythonName == castedResult.Name;
                     }
 
                     // Special case: IEnumerable
@@ -2535,7 +2549,7 @@ namespace QuantConnect
                     // Otherwise, pyObject is a python object that subclass a C# class, only return true if 'allowPythonDerivative'
                     var name = (((dynamic) pythonType).__name__ as PyObject).GetAndDispose<string>();
                     pythonType.Dispose();
-                    return allowPythonDerivative || name == result.GetType().Name;
+                    return name == result.GetType().Name;
                 }
                 catch
                 {
@@ -2835,9 +2849,7 @@ namespace QuantConnect
         public static Type CreateType(this PyObject pyObject)
         {
             Type type;
-            if (pyObject.TryConvert(out type) &&
-                type != typeof(PythonQuandl) &&
-                type != typeof(PythonData))
+            if (pyObject.TryConvert(out type))
             {
                 return type;
             }

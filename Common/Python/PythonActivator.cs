@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -42,40 +42,13 @@ namespace QuantConnect.Python
         {
             Type = type;
 
-            var isPythonQuandl = false;
-
-            using (Py.GIL())
+            Factory = x =>
             {
-                var pythonType = value.Invoke().GetPythonType();
-                isPythonQuandl = pythonType.As<Type>() == typeof(PythonQuandl);
-                pythonType.Dispose();
-            }
-
-            if (isPythonQuandl)
-            {
-                Factory = x =>
+                using (Py.GIL())
                 {
-                    using (Py.GIL())
-                    {
-                        var instance = value.Invoke();
-                        var pyValueColumnName = instance.GetAttr("ValueColumnName");
-                        var valueColumnName = pyValueColumnName.ToString();
-                        instance.Dispose();
-                        pyValueColumnName.Dispose();
-                        return new PythonQuandl(valueColumnName);
-                    }
-                };
-            }
-            else
-            {
-                Factory = x =>
-                {
-                    using (Py.GIL())
-                    {
-                        var instance = value.Invoke();
-                        return new PythonData(instance);
-                    }
-                };
+                    var instance = value.Invoke();
+                    return new PythonData(instance);
+                }
             };
         }
     }

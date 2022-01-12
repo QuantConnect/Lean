@@ -33,7 +33,6 @@ using QuantConnect.ToolBox.KrakenDownloader;
 using QuantConnect.ToolBox.NseMarketDataConverter;
 using QuantConnect.ToolBox.OandaDownloader;
 using QuantConnect.ToolBox.Polygon;
-using QuantConnect.ToolBox.QuandlBitfinexDownloader;
 using QuantConnect.ToolBox.QuantQuoteConverter;
 using QuantConnect.ToolBox.RandomDataGenerator;
 using QuantConnect.ToolBox.YahooDownloader;
@@ -125,9 +124,6 @@ namespace QuantConnect.ToolBox
                         OandaDownloaderProgram.OandaDownloader(tickers, resolution, fromDate, toDate);
                         break;
                     case "qbdl":
-                    case "quandlbitfinexdownloader":
-                        QuandlBitfinexDownloaderProgram.QuandlBitfinexDownloader(fromDate, GetParameterOrExit(optionsObject, "api-key"));
-                        break;
                     case "ydl":
                     case "yahoodownloader":
                         YahooDownloaderProgram.YahooDownloader(tickers, resolution, fromDate, toDate);
