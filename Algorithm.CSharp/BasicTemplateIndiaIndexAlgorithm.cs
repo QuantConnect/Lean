@@ -47,10 +47,10 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(1000000);
 
             // Use indicator for signal; but it cannot be traded
-            Nifty = AddIndex("NIFTY", Resolution.Minute, Market.India).Symbol;
+            Nifty = AddIndex("NIFTY50", Resolution.Minute, Market.India).Symbol;
 
             //Trade Index based ETF
-            NiftyETF = AddEquity("NIFTYBEES", Resolution.Minute, Market.India).Symbol;
+            NiftyETF = AddEquity("JUNIORBEES", Resolution.Minute, Market.India).Symbol;
 
             //Set Order Prperties as per the requirements for order placement
             DefaultOrderProperties = new IndiaOrderProperties(exchange: Exchange.NSE);
