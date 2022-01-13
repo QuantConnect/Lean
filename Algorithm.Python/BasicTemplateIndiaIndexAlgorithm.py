@@ -14,7 +14,7 @@
 from AlgorithmImports import *
 
 ### <summary>
-### Basic template framework algorithm uses framework components to define the algorithm.
+### Basic Template India Index Algorithm uses framework components to define the algorithm.
 ### </summary>
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="using quantconnect" />
