@@ -31,9 +31,9 @@ class BasicTemplateIndiaIndexAlgorithm(QCAlgorithm):
         self.SetCash(1000000)           #Set Strategy Cash
 
         # Use indicator for signal; but it cannot be traded
-        self.Nifty = self.AddIndex("NIFTY", Resolution.Minute, Market.India).Symbol
+        self.Nifty = self.AddIndex("NIFTY50", Resolution.Minute, Market.India).Symbol
         # Trade Index based ETF
-        self.NiftyETF = self.AddEquity("NIFTYBEES", Resolution.Minute, Market.India).Symbol
+        self.NiftyETF = self.AddEquity("JUNIORBEES", Resolution.Minute, Market.India).Symbol
    
         # Set Order Prperties as per the requirements for order placement
         self.DefaultOrderProperties = IndiaOrderProperties(Exchange.NSE)
