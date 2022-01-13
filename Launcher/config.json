@@ -24,7 +24,7 @@
   // engine
   "data-folder": "../../../Data/",
 
-  // debugging configuration - options for debugging-method LocalCmdLine, VisualStudio, PTVSD, PyCharm
+  // debugging configuration - options for debugging-method LocalCmdLine, VisualStudio, Debugpy, PyCharm
   "debugging": false,
   "debugging-method": "LocalCmdline",
 
