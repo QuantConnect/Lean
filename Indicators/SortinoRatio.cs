@@ -83,8 +83,8 @@ namespace QuantConnect.Indicators
             {                
                 //ensure we are only using the downside deviation for calculation
                 var _roc = sender.ConvertInvariant<RateOfChange>();
-                if (_roc.Current.Value > 0)
-                    _roc.Current.Value = 0;
+                if (_roc.Current.Value > riskFreeRate)
+                    _roc.Current.Value = riskFreeRate;
             };
             var std = new StandardDeviation(period).Of(_rocForSTD);
             var sma = _rocForSMA.SMA(period);
