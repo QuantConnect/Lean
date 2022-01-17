@@ -69,7 +69,7 @@ RUN conda install -y                \
     pandas=0.25.3                   \
     numpy=1.18.1                    \
     wrapt=1.12.1                    \
-    jupyterlab=2.1.2                \
+    jupyterlab=3.2.6                \
     matplotlib=3.2.1                \
     scipy=1.4.1                     \
     && conda clean -y --all
