@@ -472,7 +472,8 @@ namespace QuantConnect.Util
         ///  <see cref="QuoteBar"/> or <see cref="OpenInterest"/></returns>
         public static bool IsCommonLeanDataType(Type baseDataType)
         {
-            if (baseDataType == typeof(TradeBar) ||
+            if (baseDataType == typeof(Tick) ||
+                baseDataType == typeof(TradeBar) ||
                 baseDataType == typeof(QuoteBar) ||
                 baseDataType == typeof(OpenInterest))
             {

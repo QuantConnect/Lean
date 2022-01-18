@@ -183,6 +183,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.IsTrue(LeanData.IsCommonLeanDataType(typeof(OpenInterest)));
             Assert.IsTrue(LeanData.IsCommonLeanDataType(typeof(TradeBar)));
             Assert.IsTrue(LeanData.IsCommonLeanDataType(typeof(QuoteBar)));
+            Assert.IsTrue(LeanData.IsCommonLeanDataType(typeof(Tick)));
             Assert.IsFalse(LeanData.IsCommonLeanDataType(typeof(Bitcoin)));
         }
 
