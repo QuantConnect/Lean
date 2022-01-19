@@ -45,6 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
+            SetAccountCurrency("INR");  //Set Account Currency 
             SetStartDate(2004, 5, 20);  //Set Start Date
             SetEndDate(2016, 7, 26);    //Set End Date
             _mappingSymbol = AddEquity("3MINDIA", Resolution.Daily, Market.India).Symbol;

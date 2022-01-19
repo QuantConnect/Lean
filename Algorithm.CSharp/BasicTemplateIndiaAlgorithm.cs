@@ -14,8 +14,9 @@
 */
 
 using QuantConnect.Data;
-using QuantConnect.Orders;
 using System.Collections.Generic;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -26,16 +27,17 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="using quantconnect" />
     /// <meta name="tag" content="trading and orders" />
-    public class BasicTemplateIndiaAlgorithm : QCAlgorithm
+    public class BasicTemplateIndiaAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
+            SetAccountCurrency("INR");  //Set Account Currency
             SetStartDate(2019, 1, 23);  //Set Start Date
-            SetEndDate(2019, 10, 31);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetEndDate(2019, 10, 31);   //Set End Date
+            SetCash(100000);            //Set Strategy Cash
 
             // Find more symbols here: http://quantconnect.com/data
             // Equities Resolutions: Tick, Second, Minute, Hour, Daily.
