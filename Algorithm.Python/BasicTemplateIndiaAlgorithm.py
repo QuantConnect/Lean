@@ -43,7 +43,7 @@ class BasicTemplateIndiaAlgorithm(QCAlgorithm):
             data: Slice object keyed by symbol containing the stock data
         '''
         if not self.Portfolio.Invested:
-            self.SetHoldings("YESBANK", 1)
+            self.MarketOrder("YESBANK", 1)
 
     def OnOrderEvent(self, orderEvent):
         if orderEvent.Status == OrderStatus.Filled:
