@@ -24,6 +24,8 @@ class IndiaDataRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
+        
+        self.SetAccountCurrency("INR")
         self.SetStartDate(2004, 5, 20)
         self.SetEndDate(2016, 7, 26) 
         self._mappingSymbol = self.AddEquity("3MINDIA", Resolution.Daily, Market.India).Symbol

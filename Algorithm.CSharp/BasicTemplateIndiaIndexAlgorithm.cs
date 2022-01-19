@@ -41,10 +41,10 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetAccountCurrency("INR");
-            SetStartDate(2019, 1, 1);
-            SetEndDate(2019, 1, 5);
-            SetCash(1000000);
+            SetAccountCurrency("INR"); //Set Account Currency
+            SetStartDate(2019, 1, 1);  //Set End Date
+            SetEndDate(2019, 1, 5);    //Set End Date
+            SetCash(1000000);          //Set Strategy Cash
 
             // Use indicator for signal; but it cannot be traded
             Nifty = AddIndex("NIFTY50", Resolution.Minute, Market.India).Symbol;

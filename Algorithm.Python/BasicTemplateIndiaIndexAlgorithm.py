@@ -25,10 +25,10 @@ class BasicTemplateIndiaIndexAlgorithm(QCAlgorithm):
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetAccountCurrency("INR")
+        self.SetAccountCurrency("INR") #Set Account Currency
         self.SetStartDate(2019, 1, 1)  #Set Start Date
         self.SetEndDate(2019, 1, 5)    #Set End Date
-        self.SetCash(1000000)           #Set Strategy Cash
+        self.SetCash(1000000)          #Set Strategy Cash
 
         # Use indicator for signal; but it cannot be traded
         self.Nifty = self.AddIndex("NIFTY50", Resolution.Minute, Market.India).Symbol

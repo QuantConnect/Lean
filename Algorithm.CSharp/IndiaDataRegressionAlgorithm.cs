@@ -45,6 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
+            SetAccountCurrency("INR");  //Set Account Currency 
             SetStartDate(2004, 5, 20);  //Set Start Date
             SetEndDate(2016, 7, 26);    //Set End Date
             _mappingSymbol = AddEquity("3MINDIA", Resolution.Daily, Market.India).Symbol;
@@ -170,8 +171,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-0.427"},
-            {"Tracking Error", "0.158"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
@@ -188,9 +189,9 @@ namespace QuantConnect.Algorithm.CSharp
             {"Long Insight Count", "0"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$0"},
-            {"Total Accumulated Estimated Alpha Value", "$0"},
-            {"Mean Population Estimated Insight Value", "$0"},
+            {"Estimated Monthly Alpha Value", "₹0"},
+            {"Total Accumulated Estimated Alpha Value", "₹0"},
+            {"Mean Population Estimated Insight Value", "₹0"},
             {"Mean Population Direction", "0%"},
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
