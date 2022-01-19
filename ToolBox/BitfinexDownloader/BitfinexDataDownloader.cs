@@ -97,7 +97,18 @@ namespace QuantConnect.ToolBox.BitfinexDownloader
         /// <returns></returns>
         internal Symbol GetSymbol(string ticker)
         {
-            return _symbolMapper.GetLeanSymbol(ticker, SecurityType.Crypto, Market.Bitfinex);
+            if (_symbolMapper.IsKnownBrokerageSymbol(ticker))
+            {
+                return _symbolMapper.GetLeanSymbol(ticker, SecurityType.Crypto, Market.Bitfinex);
+            }
+            else if (SymbolPropertiesDatabase.FromDataFolder().ContainsKey(Market.Bitfinex, ticker, SecurityType.Crypto))
+            {
+                return Symbol.Create(ticker, SecurityType.Crypto, Market.Bitfinex);
+            }
+            else
+            {
+                throw new Exception($"Unknown ticker symbol: {ticker}");
+            }
         }
         
         #region Console Helper
