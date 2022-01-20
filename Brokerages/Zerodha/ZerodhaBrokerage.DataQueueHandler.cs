@@ -42,7 +42,7 @@ namespace QuantConnect.Brokerages.Zerodha
                 job.BrokerageData["zerodha-access-token"],
                 null,
                 null,
-                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"))
+                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"), forceTypeNameOnExisting: false)
             );
 
             if (!IsConnected)

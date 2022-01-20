@@ -88,7 +88,7 @@ namespace QuantConnect.Brokerages.Binance
                 job.BrokerageData["binance-api-url"],
                 job.BrokerageData["binance-websocket-url"],
                 algorithm,
-                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")),
+                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"), forceTypeNameOnExisting: false),
                 job);
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
 

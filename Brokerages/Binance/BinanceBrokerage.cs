@@ -320,7 +320,7 @@ namespace QuantConnect.Brokerages.Binance
             var apiKey = job.BrokerageData["binance-api-key"];
             var apiSecret = job.BrokerageData["binance-api-secret"];
             var aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
-                Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
+                Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"), forceTypeNameOnExisting: false);
 
             Initialize(
                 wssUrl: webSocketBaseUrl,

@@ -96,7 +96,7 @@ namespace QuantConnect.Brokerages.Oanda
             var brokerage = new OandaBrokerage(
                 algorithm.Transactions, 
                 algorithm.Portfolio,
-                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")),
+                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"), forceTypeNameOnExisting: false),
                 environment, 
                 accessToken, 
                 accountId, 

@@ -101,7 +101,7 @@ namespace QuantConnect.Brokerages.Tradier
                 algorithm,
                 algorithm.Transactions,
                 algorithm.Portfolio,
-                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")),
+                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"), forceTypeNameOnExisting: false),
                 useSandbox,
                 accountId,
                 accessToken);
