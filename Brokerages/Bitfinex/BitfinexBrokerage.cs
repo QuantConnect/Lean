@@ -443,7 +443,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             var apiKey = job.BrokerageData["bitfinex-api-key"];
             var apiSecret = job.BrokerageData["bitfinex-api-secret"];
             var aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(
-                Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
+                Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"), forceTypeNameOnExisting: false);
 
             Initialize(
                 wssUrl: WebSocketUrl,

@@ -52,7 +52,7 @@ namespace QuantConnect.Brokerages.Tradier
             var useSandbox = bool.Parse(job.BrokerageData["tradier-use-sandbox"]);
             var accountId = job.BrokerageData["tradier-account-id"];
             var accessToken = job.BrokerageData["tradier-access-token"];
-            var aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
+            var aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"), forceTypeNameOnExisting: false);
 
             Initialize(
                 wssUrl: WebSocketUrl,

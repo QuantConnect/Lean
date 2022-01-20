@@ -84,7 +84,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 job.BrokerageData["bitfinex-api-secret"],
                 algorithm,
                 priceProvider,
-                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")),
+                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"), forceTypeNameOnExisting: false),
                 job);
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
 
