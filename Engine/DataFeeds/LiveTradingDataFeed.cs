@@ -237,6 +237,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                 }
 
+                // scale prices before 'SubscriptionFilterEnumerator' since it updates securities realtime price
+                // and before fill forwarding so we don't happen to apply twice the factor
+                if (request.Configuration.PricesShouldBeScaled(liveMode:true))
+                {
+                    enumerator = new PriceScaleFactorEnumerator(
+                        enumerator,
+                        request.Configuration,
+                        _factorFileProvider,
+                        liveMode:true);
+                }
+
                 if (request.Configuration.FillDataForward)
                 {
                     var fillForwardResolution = _subscriptions.UpdateAndGetFillForwardResolution(request.Configuration);
@@ -248,15 +259,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (request.Configuration.IsFilteredSubscription)
                 {
                     enumerator = new SubscriptionFilterEnumerator(enumerator, request.Security, localEndTime, request.Configuration.ExtendedMarketHours, true, request.ExchangeHours);
-                }
-
-                if (request.Configuration.PricesShouldBeScaled(liveMode:true))
-                {
-                    enumerator = new PriceScaleFactorEnumerator(
-                        enumerator,
-                        request.Configuration,
-                        _factorFileProvider,
-                        liveMode:true);
                 }
 
                 // finally, make our subscriptions aware of the frontier of the data feed, prevents future data from spewing into the feed

@@ -653,12 +653,35 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var feed = RunDataFeed();
             _algorithm.SetFinishedWarmingUp();
 
-            var symbol = _algorithm.AddFuture("ES",
-                dataNormalizationMode: dataNormalizationMode).Symbol;
+            var security = _algorithm.AddFuture("ES",
+                dataNormalizationMode: dataNormalizationMode);
+            var symbol = security.Symbol;
 
             var receivedSecurityChanges = false;
             var receivedData = false;
-            ConsumeBridge(feed, TimeSpan.FromSeconds(3), ts =>
+
+            var assertPrice = new Action<decimal>((decimal price) =>
+            {
+                if (dataNormalizationMode == DataNormalizationMode.ForwardPanamaCanal && price < 150)
+                {
+                    throw new Exception($"unexpected price {price} for {symbol} @{security.LocalTime}");
+                }
+                else if (dataNormalizationMode == DataNormalizationMode.Raw && price == 2)
+                {
+                    throw new Exception($"unexpected price {price} for {symbol} @{security.LocalTime}");
+                }
+                else if (dataNormalizationMode == DataNormalizationMode.BackwardsPanamaCanal && price < -150)
+                {
+                    throw new Exception($"unexpected price {price} for {symbol} @{security.LocalTime}");
+                }
+                else if (dataNormalizationMode == DataNormalizationMode.BackwardsRatio && Math.Abs(price - 1.48m) > price * 0.1m)
+                {
+                    throw new Exception($"unexpected price {price} for {symbol} @{security.LocalTime}");
+                }
+            });
+
+            var lastPrice = 0m;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(10), ts =>
             {
                 foreach (var addedSecurity in ts.SecurityChanges.AddedSecurities)
                 {
@@ -668,36 +691,22 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     }
                 }
 
-                if (ts.Slice.ContainsKey(symbol))
+                if (ts.Slice.Bars.ContainsKey(symbol))
                 {
                     receivedData = true;
+                    assertPrice(ts.Slice.Bars[symbol].Price);
+                }
 
-                    var point = ts.Slice.Bars[symbol];
-
-                    if (dataNormalizationMode == DataNormalizationMode.ForwardPanamaCanal && point.Price < 150)
-                    {
-                        throw new Exception($"unexpected price {point.Price} for {symbol}");
-                    }
-                    else if (dataNormalizationMode == DataNormalizationMode.Raw && point.Price == 2)
-                    {
-                        throw new Exception($"unexpected price {point.Price} for {symbol}");
-                    }
-                    else if (dataNormalizationMode == DataNormalizationMode.BackwardsPanamaCanal && point.Price < -150)
-                    {
-                        throw new Exception($"unexpected price {point.Price} for {symbol}");
-                    }
-                    else if (dataNormalizationMode == DataNormalizationMode.BackwardsRatio && Math.Abs(point.Price - 1.48m) > point.Price * 0.1m)
-                    {
-                        throw new Exception($"unexpected price {point.Price} for {symbol}");
-                    }
-
-                    // we got what we wanted, end unit test
-                    _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                if (lastPrice != security.Price && security.HasData)
+                {
+                    lastPrice = security.Price;
+                    // assert realtime prices too
+                    assertPrice(lastPrice);
                 }
             },
             alwaysInvoke: true,
-            secondsTimeStep: 60,
-            endDate: _startDate.AddDays(2));
+            secondsTimeStep: 60 * 60 * 8,
+            endDate: _startDate.AddDays(7));
 
             Assert.IsTrue(receivedSecurityChanges, "Did not add symbol!");
             Assert.IsTrue(receivedData, "Did not get any symbol data!");
@@ -1381,7 +1390,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _algorithm.SetDateTime(_manualTimeProvider.GetUtcNow());
 
             var lastTime = _manualTimeProvider.GetUtcNow();
-            getNextTicksFunction = getNextTicksFunction ?? (fdqh =>
+            getNextTicksFunction ??= (fdqh =>
             {
                 var time = _manualTimeProvider.GetUtcNow();
                 if (time == lastTime) return Enumerable.Empty<BaseData>();
