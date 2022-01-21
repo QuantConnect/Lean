@@ -125,8 +125,6 @@ namespace QuantConnect.Storage
             encoding = encoding ?? Encoding.UTF8;
 
             var data = _store.ReadBytes(key);
-
-
             return data != null ? encoding.GetString(data) : null;
         }
 

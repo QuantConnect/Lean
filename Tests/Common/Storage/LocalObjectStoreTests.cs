@@ -448,7 +448,7 @@ namespace QuantConnect.Tests.Common.Storage
         }
 
         [Test]
-        public void GetFilePathWorksProperly()
+        public void GetFilePathMethodWorksProperly()
         {
             using (var store = new ObjectStore(new LocalObjectStore()))
             {
@@ -463,7 +463,7 @@ namespace QuantConnect.Tests.Common.Storage
         }
 
         [Test]
-        public void WriteFileTwiceFromExternalMethod()
+        public void SkipMethodWorksProperly()
         {
             using (var store = new ObjectStore(new LocalObjectStore()))
             {
