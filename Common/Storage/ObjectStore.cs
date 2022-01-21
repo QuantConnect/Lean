@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -124,7 +124,10 @@ namespace QuantConnect.Storage
         {
             encoding = encoding ?? Encoding.UTF8;
 
-            return encoding.GetString(_store.ReadBytes(key));
+            var data = _store.ReadBytes(key);
+
+
+            return data != null ? encoding.GetString(data) : null;
         }
 
         /// <summary>
@@ -184,6 +187,38 @@ namespace QuantConnect.Storage
             encoding = encoding ?? Encoding.UTF8;
 
             return _store.SaveBytes(key, encoding.GetBytes(text));
+        }
+
+        /// <summary>
+        /// Tell Lean to skip this key when updating the files with the value associated with the key
+        /// </summary>
+        /// <param name="key">The object key</param>
+        /// <returns>True if the object was signed to being skiped by LEAN successfully</returns>
+        public bool Skip(string key)
+        {
+            return _store.SaveBytes(key, null);
+        }
+
+        /// <summary>
+        /// Saves the object data in text format for the specified key
+        /// </summary>
+        /// <remarks>This method is going to use as text the content of the file associated with
+        /// the given key. If the file does not exist it will use as content an empty string</remarks>
+        /// <param name="key">The object key</param>
+        /// <returns>True if the object was saved successfully</returns>
+        public bool Save(string key)
+        {
+            // Default content value to use if the file does not exist yet
+            byte[] bytes = Encoding.UTF8.GetBytes("");
+
+            // Check the file exists
+            if (File.Exists(GetFilePath(key)))
+            {
+                bytes = File.ReadAllBytes(GetFilePath(key));
+            }
+            // Otherwise create an empty file associated with the given key
+
+            return _store.SaveBytes(key, bytes);
         }
 
         /// <summary>

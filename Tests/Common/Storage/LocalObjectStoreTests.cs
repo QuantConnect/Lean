@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -68,7 +68,7 @@ namespace QuantConnect.Tests.Common.Storage
             Log.LogHandler = _logHandler;
         }
 
-        [TestCase(FileAccess.Read, false)]
+        [TestCase(FileAccess.Read, true)]
         [TestCase(FileAccess.ReadWrite, false)]
         [TestCase(0, true)]
         [TestCase(FileAccess.Write, true)]
@@ -83,7 +83,7 @@ namespace QuantConnect.Tests.Common.Storage
             }
             else
             {
-                Assert.Throws<KeyNotFoundException>(() => store.GetFilePath("Jose"));
+                Assert.DoesNotThrow(() => store.GetFilePath("Jose"));
             }
         }
 
@@ -250,7 +250,6 @@ namespace QuantConnect.Tests.Common.Storage
         public void GetFilePathReturnsFileName(string key, string expectedRelativePath)
         {
             var expectedPath = Path.GetFullPath(expectedRelativePath).Replace("\\", "/");
-            _store.SaveString(key, "data");
             Assert.AreEqual(expectedPath, _store.GetFilePath(key).Replace("\\", "/"));
         }
 
@@ -413,6 +412,85 @@ namespace QuantConnect.Tests.Common.Storage
         }
 
         [Test]
+        public void WriteFromExternalMethodAndSaveFromSource()
+        {
+            using (var store = new ObjectStore(new LocalObjectStore()))
+            {
+                store.Initialize("test", 0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+                Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests/test"));
+
+                var key = "Test";
+                var content = "Example text";
+
+                var path = store.GetFilePath(key);
+
+                DummyMachineLearning(path, content);
+                store.Save(key);
+
+                var storeContent = store.Read(key);
+                Assert.AreEqual(content, storeContent);
+            }
+        }
+
+        [Test]
+        public void SaveKeyWithoutAnyValueGiven()
+        {
+            using (var store = new ObjectStore(new LocalObjectStore()))
+            {
+                store.Initialize("test", 0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+                Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests/test"));
+
+                var key = "test";
+                store.Save(key);
+                Assert.IsTrue(File.Exists(store.GetFilePath(key)));
+                Assert.IsEmpty(store.Read(key));
+            }
+        }
+
+        [Test]
+        public void GetFilePathWorksProperly()
+        {
+            using (var store = new ObjectStore(new LocalObjectStore()))
+            {
+                store.Initialize("test", 0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+                Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests/test"));
+
+                var key = "test";
+                var path = store.GetFilePath(key);
+                Assert.IsFalse(File.Exists(path));
+                Assert.IsNull(store.Read(key));
+            }
+        }
+
+        [Test]
+        public void WriteFileTwiceFromExternalMethod()
+        {
+            using (var store = new ObjectStore(new LocalObjectStore()))
+            {
+                store.Initialize("test", 0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+                Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests/test"));
+
+                var key = "Test";
+                var content = "Example text";
+                var anotherContent = "Another text";
+
+                var path = store.GetFilePath(key);
+
+                DummyMachineLearning(path, content);
+                store.Save(key);
+                Assert.AreEqual(content, store.Read(key));
+
+                store.Skip(key);
+                Assert.IsNull(store.Read(key));
+
+                DummyMachineLearning(path, anotherContent);
+                store.Save(key);
+                Assert.AreNotEqual(content, store.Read(key));
+                Assert.AreEqual(anotherContent, store.Read(key));
+            }
+        }
+
+        [Test]
         public void DeletedObjectIsNotReloaded()
         {
             using (var store = new LocalObjectStore())
@@ -445,6 +523,20 @@ namespace QuantConnect.Tests.Common.Storage
                 // Check our files; a should be gone, b should be there
                 Assert.IsFalse(store.ContainsKey("a.txt"));
                 Assert.IsTrue(store.ContainsKey("b.txt"));
+            }
+        }
+
+        public void DummyMachineLearning(string outputFile, string content)
+        {
+            try
+            {
+                StreamWriter sw = new StreamWriter(outputFile);
+                sw.Write(content);
+                sw.Close();
+            }
+            catch(Exception e)
+            {
+                throw e;
             }
         }
 
