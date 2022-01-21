@@ -433,21 +433,6 @@ namespace QuantConnect.Tests.Common.Storage
         }
 
         [Test]
-        public void SaveKeyWithoutAnyValueGiven()
-        {
-            using (var store = new ObjectStore(new LocalObjectStore()))
-            {
-                store.Initialize("test", 0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
-                Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests/test"));
-
-                var key = "test";
-                store.Save(key);
-                Assert.IsTrue(File.Exists(store.GetFilePath(key)));
-                Assert.IsEmpty(store.Read(key));
-            }
-        }
-
-        [Test]
         public void GetFilePathMethodWorksProperly()
         {
             using (var store = new ObjectStore(new LocalObjectStore()))
@@ -463,30 +448,15 @@ namespace QuantConnect.Tests.Common.Storage
         }
 
         [Test]
-        public void SkipMethodWorksProperly()
+        public void TrySaveKeyWithNotFileAssociated()
         {
             using (var store = new ObjectStore(new LocalObjectStore()))
             {
                 store.Initialize("test", 0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
                 Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests/test"));
 
-                var key = "Test";
-                var content = "Example text";
-                var anotherContent = "Another text";
-
-                var path = store.GetFilePath(key);
-
-                DummyMachineLearning(path, content);
-                store.Save(key);
-                Assert.AreEqual(content, store.Read(key));
-
-                store.Skip(key);
-                Assert.IsNull(store.Read(key));
-
-                DummyMachineLearning(path, anotherContent);
-                store.Save(key);
-                Assert.AreNotEqual(content, store.Read(key));
-                Assert.AreEqual(anotherContent, store.Read(key));
+                var key = "test";
+                Assert.Throws<Exception>(() => store.Save(key));
             }
         }
 

@@ -188,34 +188,21 @@ namespace QuantConnect.Storage
         }
 
         /// <summary>
-        /// Tell Lean to skip this key when updating the files with the value associated with the key
-        /// </summary>
-        /// <param name="key">The object key</param>
-        /// <returns>True if the object was signed to being skiped by LEAN successfully</returns>
-        public bool Skip(string key)
-        {
-            return _store.SaveBytes(key, null);
-        }
-
-        /// <summary>
         /// Saves the object data in text format for the specified key
         /// </summary>
         /// <remarks>This method is going to use as text the content of the file associated with
-        /// the given key. If the file does not exist it will use as content an empty string</remarks>
+        /// the given key. If the file does not exist it will throw an exception</remarks>
         /// <param name="key">The object key</param>
         /// <returns>True if the object was saved successfully</returns>
         public bool Save(string key)
         {
-            // Default content value to use if the file does not exist yet
-            byte[] bytes = Encoding.UTF8.GetBytes("");
-
             // Check the file exists
-            if (File.Exists(GetFilePath(key)))
+            if (!File.Exists(GetFilePath(key)))
             {
-                bytes = File.ReadAllBytes(GetFilePath(key));
+                throw new Exception($"There is no file associated with key {key} in {GetFilePath(key)}");
             }
-            // Otherwise create an empty file associated with the given key
 
+            var bytes = File.ReadAllBytes(GetFilePath(key));
             return _store.SaveBytes(key, bytes);
         }
 
