@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
@@ -64,6 +65,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             var benchmark = AddEquity("SPY");
             SetBenchmark(benchmark.Symbol);
+
+            var seeder = new FuncSecuritySeeder(GetLastKnownPrices);
+            SetSecurityInitializer(security => seeder.SeedSecurity(security));
         }
 
         /// <summary>
@@ -110,6 +114,19 @@ namespace QuantConnect.Algorithm.CSharp
             var maintenanceOvernight = futureMarginModel.MaintenanceOvernightMarginRequirement;
             var initialIntraday = futureMarginModel.InitialIntradayMarginRequirement;
             var maintenanceIntraday = futureMarginModel.MaintenanceIntradayMarginRequirement;
+        }
+
+        public override void OnSecuritiesChanged(SecurityChanges changes)
+        {
+            foreach (var addedSecurity in changes.AddedSecurities)
+            {
+                if (addedSecurity.Symbol.SecurityType == SecurityType.Future
+                    && !addedSecurity.Symbol.IsCanonical()
+                    && !addedSecurity.HasData)
+                {
+                    throw new Exception($"Future contracts did not work up as expected: {addedSecurity.Symbol}");
+                }
+            }
         }
 
         /// <summary>

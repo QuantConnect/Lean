@@ -43,6 +43,8 @@ class BasicTemplateFuturesAlgorithm(QCAlgorithm):
         benchmark = self.AddEquity("SPY")
         self.SetBenchmark(benchmark.Symbol)
 
+        seeder = FuncSecuritySeeder(self.GetLastKnownPrices)
+        self.SetSecurityInitializer(lambda security: seeder.SeedSecurity(security))
 
     def OnData(self,slice):
         if not self.Portfolio.Invested:
@@ -70,3 +72,8 @@ class BasicTemplateFuturesAlgorithm(QCAlgorithm):
         maintenanceOvernight = buyingPowerModel.MaintenanceOvernightMarginRequirement
         initialIntraday = buyingPowerModel.InitialIntradayMarginRequirement
         maintenanceIntraday = buyingPowerModel.MaintenanceIntradayMarginRequirement
+
+    def OnSecuritiesChanged(self, changes):
+        for addedSecurity in changes.AddedSecurities:
+            if addedSecurity.Symbol.SecurityType == SecurityType.Future and not addedSecurity.Symbol.IsCanonical() and not addedSecurity.HasData:
+                raise Exception(f"Future contracts did not work up as expected: {addedSecurity.Symbol}")
