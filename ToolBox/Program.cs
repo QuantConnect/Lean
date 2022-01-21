@@ -36,7 +36,6 @@ using QuantConnect.ToolBox.Polygon;
 using QuantConnect.ToolBox.QuantQuoteConverter;
 using QuantConnect.ToolBox.RandomDataGenerator;
 using QuantConnect.ToolBox.YahooDownloader;
-using QuantConnect.ToolBox.ZerodhaDownloader;
 using QuantConnect.Util;
 using System;
 using System.IO;
@@ -87,10 +86,6 @@ namespace QuantConnect.ToolBox
                     : DateTime.UtcNow;
                 switch (targetApp)
                 {
-                    case "zdl":
-                    case "zerodhadownloader":
-                        ZerodhaDataDownloaderProgram.ZerodhaDataDownloader(tickers, market, resolution, securityType, fromDate, toDate);
-                        break;
                     case "gdaxdl":
                     case "gdaxdownloader":
                         GDAXDownloaderProgram.GDAXDownloader(tickers, resolution, fromDate, toDate);
