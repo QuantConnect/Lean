@@ -23,6 +23,7 @@ using System;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Data;
+using QuantConnect.Securities.Crypto;
 
 namespace QuantConnect.Brokerages.Binance
 {
@@ -188,6 +189,24 @@ namespace QuantConnect.Brokerages.Binance
                 var updTime = Time.UnixMillisecondTimeStampToDateTime(data.TransactionTime);
                 var orderFee = new OrderFee(new CashAmount(data.Fee, data.FeeCurrency));
                 var status = ConvertOrderStatus(data.OrderStatus);
+
+                if (_algorithm.BrokerageModel.AccountType == AccountType.Cash && order.Direction == OrderDirection.Buy)
+                {
+                    var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(order.Symbol.ID.Market,
+                        order.Symbol,
+                        order.Symbol.SecurityType,
+                        AccountBaseCurrency);
+                    Crypto.DecomposeCurrencyPair(order.Symbol, symbolProperties, out var baseCurrency, out _);
+
+                    if (orderFee.Value.Currency == baseCurrency)
+                    {
+                        // fees are debited in the base currency, so we have to subtract them from the filled quantity
+                        // else the virtual position will bigger than the real size and we might no be able to liquidate
+                        fillQuantity -= orderFee.Value.Amount;
+                        orderFee = new ModifiedFillQuantityOrderFee(orderFee.Value);
+                    }
+                }
+
                 var orderEvent = new OrderEvent
                 (
                     order.Id, order.Symbol, updTime, status,
