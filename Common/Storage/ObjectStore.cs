@@ -206,6 +206,20 @@ namespace QuantConnect.Storage
         }
 
         /// <summary>
+        /// Saves the object data in text format for the specified key
+        /// </summary>
+        /// <param name="key">The object key</param>
+        /// <param name="text">The string object to be saved. Null by default</param>
+        /// <param name="encoding">The string encoding used. Null by default</param>
+        /// <returns>True if the object was saved successfully</returns>
+        public bool SaveString(string key, string text, Encoding encoding = null)
+        {
+            encoding = encoding ?? Encoding.UTF8;
+
+            return _store.SaveBytes(key, encoding.GetBytes(text));
+        }
+
+        /// <summary>
         /// Saves the object data in JSON format for the specified key
         /// </summary>
         /// <param name="key">The object key</param>
@@ -218,7 +232,7 @@ namespace QuantConnect.Storage
             encoding = encoding ?? Encoding.UTF8;
 
             var json = JsonConvert.SerializeObject(obj, settings);
-            return Save(key, json, encoding);
+            return SaveString(key, json, encoding);
         }
 
         /// <summary>
@@ -238,7 +252,7 @@ namespace QuantConnect.Storage
                 serializer.Serialize(writer, obj);
 
                 var xml = writer.ToString();
-                return Save(key, xml, encoding);
+                return SaveString(key, xml, encoding);
             }
         }
 
