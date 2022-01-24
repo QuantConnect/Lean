@@ -127,15 +127,16 @@ namespace QuantConnect.Data
         /// <param name="config">The subscription data configuration we are processing</param>
         /// <remarks>One of the objectives of this method is to normalize the 'use price scale'
         /// check and void code duplication and related issues</remarks>
+        /// <param name="liveMode">True, is this is a live mode data stream</param>
         /// <returns>True if ticker prices should be scaled</returns>
-        public static bool PricesShouldBeScaled(this SubscriptionDataConfig config)
+        public static bool PricesShouldBeScaled(this SubscriptionDataConfig config, bool liveMode = false)
         {
             if (config.IsCustomData || config.Symbol.Value.Contains("UNIVERSE"))
             {
                 return false;
             }
 
-            if(config.SecurityType == SecurityType.Equity)
+            if(config.SecurityType == SecurityType.Equity && !liveMode)
             {
                 return true;
             }

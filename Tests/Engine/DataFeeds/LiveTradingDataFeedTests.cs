@@ -644,6 +644,74 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Log.Trace("Count: " + count + " ReaderCount: " + RestApiBaseData.ReaderCount);
         }
 
+        [TestCase(DataNormalizationMode.Raw)]
+        [TestCase(DataNormalizationMode.BackwardsRatio)]
+        [TestCase(DataNormalizationMode.BackwardsPanamaCanal)]
+        [TestCase(DataNormalizationMode.ForwardPanamaCanal)]
+        public void LivePriceScaling(DataNormalizationMode dataNormalizationMode)
+        {
+            var feed = RunDataFeed();
+            _algorithm.SetFinishedWarmingUp();
+
+            var security = _algorithm.AddFuture("ES",
+                dataNormalizationMode: dataNormalizationMode);
+            var symbol = security.Symbol;
+
+            var receivedSecurityChanges = false;
+            var receivedData = false;
+
+            var assertPrice = new Action<decimal>((decimal price) =>
+            {
+                if (dataNormalizationMode == DataNormalizationMode.ForwardPanamaCanal && price < 150)
+                {
+                    throw new Exception($"unexpected price {price} for {symbol} @{security.LocalTime}");
+                }
+                else if (dataNormalizationMode == DataNormalizationMode.Raw && price == 2)
+                {
+                    throw new Exception($"unexpected price {price} for {symbol} @{security.LocalTime}");
+                }
+                else if (dataNormalizationMode == DataNormalizationMode.BackwardsPanamaCanal && price < -150)
+                {
+                    throw new Exception($"unexpected price {price} for {symbol} @{security.LocalTime}");
+                }
+                else if (dataNormalizationMode == DataNormalizationMode.BackwardsRatio && Math.Abs(price - 1.48m) > price * 0.1m)
+                {
+                    throw new Exception($"unexpected price {price} for {symbol} @{security.LocalTime}");
+                }
+            });
+
+            var lastPrice = 0m;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(10), ts =>
+            {
+                foreach (var addedSecurity in ts.SecurityChanges.AddedSecurities)
+                {
+                    if (addedSecurity.Symbol == symbol)
+                    {
+                        receivedSecurityChanges = true;
+                    }
+                }
+
+                if (ts.Slice.Bars.ContainsKey(symbol))
+                {
+                    receivedData = true;
+                    assertPrice(ts.Slice.Bars[symbol].Price);
+                }
+
+                if (lastPrice != security.Price && security.HasData)
+                {
+                    lastPrice = security.Price;
+                    // assert realtime prices too
+                    assertPrice(lastPrice);
+                }
+            },
+            alwaysInvoke: true,
+            secondsTimeStep: 60 * 60 * 8,
+            endDate: _startDate.AddDays(7));
+
+            Assert.IsTrue(receivedSecurityChanges, "Did not add symbol!");
+            Assert.IsTrue(receivedData, "Did not get any symbol data!");
+        }
+
         [TestCase("AAPL", SecurityType.Equity)]
         [TestCase("BTCUSD", SecurityType.Crypto)]
         [TestCase("SPX500USD", SecurityType.Cfd)]
@@ -653,7 +721,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void UserDefinedUniverseSelection(string ticker, SecurityType securityType)
         {
             var feed = RunDataFeed();
-            _algorithm.SetDateTime(_manualTimeProvider.GetUtcNow());
             _algorithm.SetFinishedWarmingUp();
 
             Symbol symbol = null;
@@ -1320,9 +1387,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Func<bool> canPerformSelection = null)
         {
             _algorithm.SetStartDate(_startDate);
+            _algorithm.SetDateTime(_manualTimeProvider.GetUtcNow());
 
             var lastTime = _manualTimeProvider.GetUtcNow();
-            getNextTicksFunction = getNextTicksFunction ?? (fdqh =>
+            getNextTicksFunction ??= (fdqh =>
             {
                 var time = _manualTimeProvider.GetUtcNow();
                 if (time == lastTime) return Enumerable.Empty<BaseData>();

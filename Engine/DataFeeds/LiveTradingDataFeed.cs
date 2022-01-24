@@ -237,6 +237,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                 }
 
+                // scale prices before 'SubscriptionFilterEnumerator' since it updates securities realtime price
+                // and before fill forwarding so we don't happen to apply twice the factor
+                if (request.Configuration.PricesShouldBeScaled(liveMode:true))
+                {
+                    enumerator = new PriceScaleFactorEnumerator(
+                        enumerator,
+                        request.Configuration,
+                        _factorFileProvider,
+                        liveMode:true);
+                }
+
                 if (request.Configuration.FillDataForward)
                 {
                     var fillForwardResolution = _subscriptions.UpdateAndGetFillForwardResolution(request.Configuration);
