@@ -153,7 +153,7 @@ namespace QuantConnect.Tests.Common.Storage
                 Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests/test"));
 
                 var key = "ILove";
-                store.SaveString(key, "Pizza");
+                store.Save(key, "Pizza");
                 var path = store.GetFilePath(key);
 
                 Assert.IsTrue(File.Exists(path));
@@ -258,7 +258,7 @@ namespace QuantConnect.Tests.Common.Storage
         {
             const string expectedText = "12;26";
 
-            Assert.IsTrue(_store.SaveString("my_settings_text", expectedText));
+            Assert.IsTrue(_store.Save("my_settings_text", expectedText));
 
             var actualText = _store.Read("my_settings_text");
 
@@ -404,11 +404,11 @@ namespace QuantConnect.Tests.Common.Storage
             // Write 100 Files first, should not throw
             for (int i = _store.Count(); i < 100; i++)
             {
-                Assert.IsTrue(_store.SaveString($"{i}", $"{i}"));
+                Assert.IsTrue(_store.Save($"{i}", $"{i}"));
             }
 
             // Write 1 more; should throw
-            Assert.IsFalse(_store.SaveString("breaker", "gotem"));
+            Assert.IsFalse(_store.Save("breaker", "gotem"));
         }
 
         [Test]

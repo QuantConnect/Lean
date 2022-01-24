@@ -176,48 +176,33 @@ namespace QuantConnect.Storage
         /// <summary>
         /// Saves the object data in text format for the specified key
         /// </summary>
+        /// <remarks>If no text is provided, this method is going to use as text the content 
+        /// of the file associated with the given key. If the file does not exist it will 
+        /// throw an exception</remarks>
         /// <param name="key">The object key</param>
-        /// <param name="text">The string object to be saved</param>
-        /// <param name="encoding">The string encoding used</param>
+        /// <param name="text">The string object to be saved. Null by default</param>
+        /// <param name="encoding">The string encoding used. Null by default</param>
         /// <returns>True if the object was saved successfully</returns>
-        public bool Save(string key, string text, Encoding encoding = null)
+        public bool Save(string key, string text = null, Encoding encoding = null)
         {
-            encoding = encoding ?? Encoding.UTF8;
-
-            return _store.SaveBytes(key, encoding.GetBytes(text));
-        }
-
-        /// <summary>
-        /// Saves the object data in text format for the specified key
-        /// </summary>
-        /// <remarks>This method is going to use as text the content of the file associated with
-        /// the given key. If the file does not exist it will throw an exception</remarks>
-        /// <param name="key">The object key</param>
-        /// <returns>True if the object was saved successfully</returns>
-        public bool Save(string key)
-        {
-            // Check the file exists
-            if (!File.Exists(GetFilePath(key)))
+            byte[] bytes;
+            if (text == null)
             {
-                throw new Exception($"There is no file associated with key {key} in {GetFilePath(key)}");
+                // Check the file exists
+                if (!File.Exists(GetFilePath(key)))
+                {
+                    throw new Exception($"There is no file associated with key {key} in {GetFilePath(key)}");
+                }
+
+                bytes = File.ReadAllBytes(GetFilePath(key));
+            }
+            else
+            {
+                encoding = encoding ?? Encoding.UTF8;
+                bytes = encoding.GetBytes(text);
             }
 
-            var bytes = File.ReadAllBytes(GetFilePath(key));
             return _store.SaveBytes(key, bytes);
-        }
-
-        /// <summary>
-        /// Saves the object data in text format for the specified key
-        /// </summary>
-        /// <param name="key">The object key</param>
-        /// <param name="text">The string object to be saved</param>
-        /// <param name="encoding">The string encoding used</param>
-        /// <returns>True if the object was saved successfully</returns>
-        public bool SaveString(string key, string text, Encoding encoding = null)
-        {
-            encoding = encoding ?? Encoding.UTF8;
-
-            return _store.SaveBytes(key, encoding.GetBytes(text));
         }
 
         /// <summary>
@@ -233,7 +218,7 @@ namespace QuantConnect.Storage
             encoding = encoding ?? Encoding.UTF8;
 
             var json = JsonConvert.SerializeObject(obj, settings);
-            return SaveString(key, json, encoding);
+            return Save(key, json, encoding);
         }
 
         /// <summary>
@@ -253,7 +238,7 @@ namespace QuantConnect.Storage
                 serializer.Serialize(writer, obj);
 
                 var xml = writer.ToString();
-                return SaveString(key, xml, encoding);
+                return Save(key, xml, encoding);
             }
         }
 
