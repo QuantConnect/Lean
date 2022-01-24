@@ -128,8 +128,8 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
                 feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
             Assert.AreEqual(
-                BitfinexFeeModel.MakerFee * price * Math.Abs(Quantity), fee.Value.Amount);
-            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+                BitfinexFeeModel.MakerFee * Math.Abs(Quantity), fee.Value.Amount);
+            Assert.AreEqual("ETH", fee.Value.Currency);
         }
 
         [Test]
@@ -144,8 +144,8 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
                 feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
             Assert.AreEqual(
-                BitfinexFeeModel.TakerFee * price * Math.Abs(Quantity), fee.Value.Amount);
-            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+                BitfinexFeeModel.TakerFee * Math.Abs(Quantity), fee.Value.Amount);
+            Assert.AreEqual("ETH", fee.Value.Currency);
         }
     }
 }

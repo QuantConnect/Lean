@@ -23,7 +23,6 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Crypto;
 using QuantConnect.Util;
 using RestSharp;
 using System;
@@ -308,16 +307,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 foreach (var holding in GetAccountHoldings().Where(x => x.Symbol.SecurityType == SecurityType.Crypto))
                 {
                     var defaultQuoteCurrency = _algorithm.Portfolio.CashBook.AccountCurrency;
-
-                    var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(
-                        holding.Symbol.ID.Market,
-                        holding.Symbol,
-                        holding.Symbol.SecurityType,
-                        defaultQuoteCurrency);
-
-                    string baseCurrency;
-                    string quoteCurrency;
-                    Crypto.DecomposeCurrencyPair(holding.Symbol, symbolProperties, out baseCurrency, out quoteCurrency);
+                    CurrencyPairUtil.DecomposeCurrencyPair(holding.Symbol, out var baseCurrency, out var quoteCurrency, defaultQuoteCurrency);
 
                     var baseQuantity = holding.Quantity;
                     CashAmount baseCurrencyAmount;

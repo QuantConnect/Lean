@@ -1011,6 +1011,19 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                                 order.Tag += " - " + orderEvent.Message;
                             }
                         }
+
+                        if (_algorithm.BrokerageModel.AccountType == AccountType.Cash
+                            && order.Direction == OrderDirection.Buy
+                            && CurrencyPairUtil.TryDecomposeCurrencyPair(orderEvent.Symbol, out var baseCurrency, out _)
+                            && orderEvent.OrderFee.Value.Currency == baseCurrency)
+                        {
+                            // fees are in the base currency, so we have to subtract them from the filled quantity
+                            // else the virtual position will bigger than the real size and we might no be able to liquidate
+                            orderEvent.FillQuantity -= orderEvent.OrderFee.Value.Amount;
+                            orderEvent.OrderFee = new ModifiedFillQuantityOrderFee(orderEvent.OrderFee.Value);
+
+                            Log.Trace($"BrokerageTransactionHandler.HandleOrderEvent({orderEvent.Symbol}): Detected fee in base currency, deducting from fill quantity: {orderEvent}");
+                        }
                         break;
 
                     case OrderStatus.UpdateSubmitted:

@@ -39,7 +39,6 @@ namespace QuantConnect.Brokerages.Binance
     public partial class BinanceBrokerage : BaseWebsocketsBrokerage, IDataQueueHandler
     {
         private IAlgorithm _algorithm;
-        private SymbolPropertiesDatabase _symbolPropertiesDatabase;
         private readonly SymbolPropertiesDatabaseSymbolMapper _symbolMapper = new SymbolPropertiesDatabaseSymbolMapper(Market.Binance);
 
         // Binance allows 5 messages per second, but we still get rate limited if we send a lot of messages at that rate
@@ -424,7 +423,6 @@ namespace QuantConnect.Brokerages.Binance
             _algorithm = algorithm;
             _aggregator = aggregator;
             _webSocketBaseUrl = wssUrl;
-            _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             _messageHandler = new BrokerageConcurrentMessageHandler<WebSocketMessage>(OnUserMessage);
 
             var maximumWebSocketConnections = Config.GetInt("binance-maximum-websocket-connections");

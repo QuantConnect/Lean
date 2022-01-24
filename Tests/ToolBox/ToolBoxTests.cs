@@ -63,7 +63,7 @@ namespace QuantConnect.Tests.ToolBox
             var options = ToolboxArgumentParser.ParseArguments(args.Split(' '));
             var tickers = ToolboxArgumentParser.GetTickers(options);
 
-            var downloader = new BitfinexDataDownloader();
+            using var downloader = new BitfinexDataDownloader();
             var count = 0;
             foreach (var ticker in tickers)
             {

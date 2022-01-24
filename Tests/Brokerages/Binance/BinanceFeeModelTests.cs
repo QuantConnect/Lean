@@ -77,9 +77,9 @@ namespace QuantConnect.Tests.Brokerages.Binance
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
             Assert.AreEqual(
-                BinanceFeeModel.MakerTier1Fee * price * Math.Abs(Quantity),
+                BinanceFeeModel.MakerTier1Fee * Math.Abs(Quantity),
                 fee.Value.Amount);
-            Assert.AreEqual("USDT", fee.Value.Currency);
+            Assert.AreEqual("ETH", fee.Value.Currency);
         }
 
         [Test]
@@ -93,9 +93,9 @@ namespace QuantConnect.Tests.Brokerages.Binance
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
             Assert.AreEqual(
-                BinanceFeeModel.TakerTier1Fee * price * Math.Abs(Quantity),
+                BinanceFeeModel.TakerTier1Fee * Math.Abs(Quantity),
                 fee.Value.Amount);
-            Assert.AreEqual("USDT", fee.Value.Currency);
+            Assert.AreEqual("ETH", fee.Value.Currency);
         }
 
         [Test]
@@ -141,9 +141,9 @@ namespace QuantConnect.Tests.Brokerages.Binance
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
             Assert.AreEqual(
-                mFee * price * Math.Abs(Quantity),
+                mFee * Math.Abs(Quantity),
                 fee.Value.Amount);
-            Assert.AreEqual("USDT", fee.Value.Currency);
+            Assert.AreEqual("ETH", fee.Value.Currency);
         }
 
         [Test]
@@ -157,9 +157,9 @@ namespace QuantConnect.Tests.Brokerages.Binance
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
             Assert.AreEqual(
-                tFee * price * Math.Abs(Quantity),
+                tFee * Math.Abs(Quantity),
                 fee.Value.Amount);
-            Assert.AreEqual("USDT", fee.Value.Currency);
+            Assert.AreEqual("ETH", fee.Value.Currency);
         }
 
         private static Symbol Symbol => Symbol.Create("ETHUSDT", SecurityType.Crypto, Market.Binance);
