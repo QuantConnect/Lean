@@ -41,7 +41,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly HashSet<SecurityType> _unsupportedSecurityType;
         private readonly DataPricesList _dataPrices;
         private readonly Api.Api _api;
-        private readonly bool _subscribedToEquityMapAndFactorFiles;
+        private readonly bool _subscribedToIndiaEquityMapAndFactorFiles;
+        private readonly bool _subscribedToUsaEquityMapAndFactorFiles;
         private readonly bool _subscribedToFutureMapAndFactorFiles;
         private volatile bool _invalidSecurityTypeLog;
 
@@ -71,12 +72,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (productItem.Id == 37)
                 {
                     // Determine if the user is subscribed to Equity map and factor files (Data product Id 37)
-                    _subscribedToEquityMapAndFactorFiles = true;
+                    _subscribedToUsaEquityMapAndFactorFiles = true;
                 }
                 else if (productItem.Id == 137)
                 {
                     // Determine if the user is subscribed to Future map and factor files (Data product Id 137)
                     _subscribedToFutureMapAndFactorFiles = true;
+                }
+                else if (productItem.Id == 172)
+                {
+                    // Determine if the user is subscribed to India map and factor files (Data product Id 172)
+                    _subscribedToIndiaEquityMapAndFactorFiles = true;
                 }
             }
 
@@ -161,7 +167,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // Some security types can't be downloaded, lets attempt to extract that information
-            if (LeanData.TryParseSecurityType(filePath, out SecurityType securityType) && _unsupportedSecurityType.Contains(securityType))
+            if (LeanData.TryParseSecurityType(filePath, out SecurityType securityType, out var market) && _unsupportedSecurityType.Contains(securityType))
             {
                 // we do support future auxiliary data (map and factor files)
                 if (securityType != SecurityType.Future || !IsAuxiliaryData(filePath))
@@ -192,11 +198,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                 }
                 // Final check; If we want to download and the request requires equity data we need to be sure they are subscribed to map and factor files
-                else if (!_subscribedToEquityMapAndFactorFiles && (securityType == SecurityType.Equity || securityType == SecurityType.Option || IsAuxiliaryData(filePath)))
+                else if (!_subscribedToUsaEquityMapAndFactorFiles && market.Equals(Market.USA, StringComparison.InvariantCultureIgnoreCase)
+                         && (securityType == SecurityType.Equity || securityType == SecurityType.Option || IsAuxiliaryData(filePath)))
                 {
                     throw new ArgumentException("ApiDataProvider(): Must be subscribed to map and factor files to use the ApiDataProvider " +
                         "to download Equity data from QuantConnect. " +
                         "Please visit https://www.quantconnect.com/datasets/quantconnect-security-master for details.");
+                }
+                else if (!_subscribedToIndiaEquityMapAndFactorFiles && market.Equals(Market.India, StringComparison.InvariantCultureIgnoreCase)
+                         && (securityType == SecurityType.Equity || securityType == SecurityType.Option || IsAuxiliaryData(filePath)))
+                {
+                    throw new ArgumentException("ApiDataProvider(): Must be subscribed to map and factor files to use the ApiDataProvider " +
+                        "to download India data from QuantConnect. " +
+                        "Please visit https://www.quantconnect.com/datasets/truedata-india-equity-security-master for details.");
                 }
             }
 

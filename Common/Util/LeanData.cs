@@ -38,8 +38,8 @@ namespace QuantConnect.Util
         /// The different <see cref="SecurityType"/> used for data paths
         /// </summary>
         /// <remarks>This includes 'alternative'</remarks>
-        public static IReadOnlyList<string> SecurityTypeAsDataPath => Enum.GetNames(typeof(SecurityType))
-            .Select(x => x.ToLowerInvariant()).Union(new[] { "alternative" }).ToList();
+        public static HashSet<string> SecurityTypeAsDataPath => Enum.GetNames(typeof(SecurityType))
+            .Select(x => x.ToLowerInvariant()).Union(new[] { "alternative" }).ToHashSet();
 
         /// <summary>
         /// Converts the specified base data instance into a lean data file csv line.
@@ -966,9 +966,11 @@ namespace QuantConnect.Util
         /// </summary>
         /// <param name="fileName">File name to be parsed</param>
         /// <param name="securityType">The securityType as parsed from the fileName</param>
-        public static bool TryParseSecurityType(string fileName, out SecurityType securityType)
+        /// <param name="market">The market as parsed from the fileName</param>
+        public static bool TryParseSecurityType(string fileName, out SecurityType securityType, out string market)
         {
             securityType = SecurityType.Base;
+            market = string.Empty;
 
             try
             {
@@ -977,6 +979,13 @@ namespace QuantConnect.Util
                 // find the securityType and parse it
                 var typeString = info.Find(x => SecurityTypeAsDataPath.Contains(x.ToLowerInvariant()));
                 securityType = ParseDataSecurityType(typeString);
+
+                var existingMarkets = Market.SupportedMarkets();
+                var foundMarket = info.Find(x => existingMarkets.Contains(x.ToLowerInvariant()));
+                if (foundMarket != null)
+                {
+                    market = foundMarket;
+                }
             }
             catch (Exception e)
             {
