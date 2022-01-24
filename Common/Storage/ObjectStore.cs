@@ -209,8 +209,8 @@ namespace QuantConnect.Storage
         /// Saves the object data in text format for the specified key
         /// </summary>
         /// <param name="key">The object key</param>
-        /// <param name="text">The string object to be saved. Null by default</param>
-        /// <param name="encoding">The string encoding used. Null by default</param>
+        /// <param name="text">The string object to be saved</param>
+        /// <param name="encoding">The string encoding used</param>
         /// <returns>True if the object was saved successfully</returns>
         public bool SaveString(string key, string text, Encoding encoding = null)
         {
