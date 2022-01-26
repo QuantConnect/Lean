@@ -18,7 +18,6 @@ using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Util;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using static QuantConnect.StringExtensions;
@@ -30,6 +29,8 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class BinanceBrokerageModel : DefaultBrokerageModel
     {
+        private const decimal _defaultLeverage = 3;
+
         /// <summary>
         /// Gets a map of the default markets to be used for each security type
         /// </summary>
@@ -41,22 +42,20 @@ namespace QuantConnect.Brokerages
         /// <param name="accountType">The type of account to be modeled, defaults to <see cref="AccountType.Cash"/></param>
         public BinanceBrokerageModel(AccountType accountType = AccountType.Cash) : base(accountType)
         {
-            if (accountType == AccountType.Margin)
-            {
-                throw new ArgumentException("The Binance brokerage does not currently support Margin trading.");
-            }
         }
 
         /// <summary>
         /// Gets a new buying power model for the security, returning the default model with the security's configured leverage.
         /// For cash accounts, leverage = 1 is used.
-        /// Margin trading is not currently supported
+        /// For standard account margin trading the leverage is 3x, leverage 5x only supported in the master account
         /// </summary>
         /// <param name="security">The security to get a buying power model for</param>
         /// <returns>The buying power model for this brokerage/security</returns>
         public override IBuyingPowerModel GetBuyingPowerModel(Security security)
         {
-            return new CashBuyingPowerModel();
+            return AccountType == AccountType.Cash
+                ? new CashBuyingPowerModel()
+                : new SecurityMarginModel(GetLeverage(security));
         }
 
         /// <summary>
@@ -66,8 +65,12 @@ namespace QuantConnect.Brokerages
         /// <returns></returns>
         public override decimal GetLeverage(Security security)
         {
-            // margin trading is not currently supported by Binance
-            return 1m;
+            if (AccountType == AccountType.Cash || security.IsInternalFeed() || security.Type == SecurityType.Base)
+            {
+                return 1m;
+            }
+
+            return _defaultLeverage;
         }
 
         /// <summary>
