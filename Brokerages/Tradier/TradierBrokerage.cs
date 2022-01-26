@@ -468,7 +468,8 @@ namespace QuantConnect.Brokerages.Tradier
             request.AddParameter("symbols", csvSymbols, ParameterType.QueryString);
 
             var dataContainer = Execute<TradierQuoteContainer>(request, TradierApiRequestType.Data, "quotes");
-            return dataContainer.Quotes;
+            // can return null quotes and not really be failing for cases where the provided symbols do not match
+            return dataContainer.Quotes ?? new List<TradierQuote>();
         }
 
         /// <summary>

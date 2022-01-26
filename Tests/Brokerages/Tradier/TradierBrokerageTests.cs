@@ -76,6 +76,16 @@ namespace QuantConnect.Tests.Brokerages.Tradier
             return false;
         }
 
+        [Test]
+        public void GetQuotesDoesNotReturnNull()
+        {
+            var tradier = (TradierBrokerage) Brokerage;
+            var quotes = tradier.GetQuotes(new List<string> { "VXX190517P00016000" });
+
+            Assert.IsNotNull(quotes);
+            Assert.IsEmpty(quotes);
+        }
+
         /// <summary>
         /// Gets the current market price of the specified security
         /// </summary>

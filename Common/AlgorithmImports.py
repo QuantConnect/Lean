@@ -40,6 +40,7 @@ from QuantConnect.Python import *
 from QuantConnect.Storage import *
 from QuantConnect.Research import *
 from QuantConnect.Algorithm import *
+from QuantConnect.Statistics import *
 from QuantConnect.Parameters import *
 from QuantConnect.Benchmarks import *
 from QuantConnect.Brokerages import *
