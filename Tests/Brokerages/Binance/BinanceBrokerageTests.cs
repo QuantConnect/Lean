@@ -33,7 +33,7 @@ namespace QuantConnect.Tests.Brokerages.Binance
     [TestFixture, Explicit("This test requires a configured and testable Binance practice account")]
     public partial class BinanceBrokerageTests : BrokerageTests
     {
-        private BinanceRestApiClient _binanceApi;
+        private BinanceBaseRestApiClient _binanceApi;
 
         /// <summary>
         /// Creates the brokerage under test and connects it
@@ -61,7 +61,7 @@ namespace QuantConnect.Tests.Brokerages.Binance
             var apiUrl = Config.Get("binance-api-url", "https://api.binance.com");
             var websocketUrl = Config.Get("binance-websocket-url", "wss://stream.binance.com:9443/ws");
 
-            _binanceApi = new BinanceRestApiClient(
+            _binanceApi = new BinanceSpotRestApiClient(
                 new SymbolPropertiesDatabaseSymbolMapper(Market.Binance),
                 algorithm.Object?.Portfolio,
                 apiKey,

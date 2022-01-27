@@ -51,7 +51,7 @@ namespace QuantConnect.Brokerages.Binance
         private string _webSocketBaseUrl;
         private Timer _keepAliveTimer;
         private Timer _reconnectTimer;
-        private BinanceRestApiClient _apiClient;
+        private BinanceBaseRestApiClient _apiClient;
         private BrokerageConcurrentMessageHandler<WebSocketMessage> _messageHandler;
 
         private const int MaximumSymbolsPerConnection = 512;
@@ -441,11 +441,9 @@ namespace QuantConnect.Brokerages.Binance
 
             SubscriptionManager = subscriptionManager;
 
-            _apiClient = new BinanceRestApiClient(_symbolMapper,
-                algorithm?.Portfolio,
-                apiKey,
-                apiSecret,
-                restApiUrl);
+            _apiClient = _algorithm.BrokerageModel.AccountType == AccountType.Cash
+                ? new BinanceSpotRestApiClient(_symbolMapper, algorithm?.Portfolio, apiKey, apiSecret, restApiUrl)
+                : new BinanceCrossMarginRestApiClient(_symbolMapper, algorithm?.Portfolio, apiKey, apiSecret, restApiUrl);
 
             _apiClient.OrderSubmit += (s, e) => OnOrderSubmit(e);
             _apiClient.OrderStatusChanged += (s, e) => OnOrderEvent(e);

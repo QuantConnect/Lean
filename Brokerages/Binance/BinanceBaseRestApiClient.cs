@@ -32,17 +32,21 @@ using System.Text;
 namespace QuantConnect.Brokerages.Binance
 {
     /// <summary>
-    /// Binance REST API implementation
+    /// Binance REST API base implementation
     /// </summary>
-    public class BinanceRestApiClient : IDisposable
+    public abstract class BinanceBaseRestApiClient : IDisposable
     {
-        private const string UserDataStreamEndpoint = "/api/v3/userDataStream";
+        // depends on SPOT or MARGIN trading
+        private readonly string _apiPrefix;
+        private readonly string _wsPrefix;
+
+        private string UserDataStreamEndpoint => $"{_wsPrefix}/userDataStream";
 
         private readonly SymbolPropertiesDatabaseSymbolMapper _symbolMapper;
         private readonly ISecurityProvider _securityProvider;
         private readonly IRestClient _restClient;
-        private readonly RateGate _restRateLimiter = new RateGate(10, TimeSpan.FromSeconds(1));
-        private readonly object _listenKeyLocker = new object();
+        private readonly RateGate _restRateLimiter = new(10, TimeSpan.FromSeconds(1));
+        private readonly object _listenKeyLocker = new();
 
         /// <summary>
         /// Event that fires each time an order is filled
@@ -80,21 +84,24 @@ namespace QuantConnect.Brokerages.Binance
         public string SessionId { get; private set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BinanceRestApiClient"/> class.
+        /// Initializes a new instance of the <see cref="BinanceBaseRestApiClient"/> class.
         /// </summary>
         /// <param name="symbolMapper">The symbol mapper.</param>
         /// <param name="securityProvider">The holdings provider.</param>
         /// <param name="apiKey">The Binance API key</param>
         /// <param name="apiSecret">The The Binance API secret</param>
         /// <param name="restApiUrl">The Binance API rest url</param>
-        public BinanceRestApiClient(SymbolPropertiesDatabaseSymbolMapper symbolMapper, ISecurityProvider securityProvider,
-            string apiKey, string apiSecret, string restApiUrl)
+        /// <param name="apiPrefix">REST API path prefix depending on SPOT or CROSS MARGIN trading</param>
+        public BinanceBaseRestApiClient(SymbolPropertiesDatabaseSymbolMapper symbolMapper, ISecurityProvider securityProvider,
+            string apiKey, string apiSecret, string restApiUrl, string restApiPrefix, string wsApiPrefix)
         {
             _symbolMapper = symbolMapper;
             _securityProvider = securityProvider;
             _restClient = new RestClient(restApiUrl);
             ApiKey = apiKey;
             ApiSecret = apiSecret;
+            _apiPrefix = restApiPrefix;
+            _wsPrefix = wsApiPrefix;
         }
 
         /// <summary>
@@ -113,7 +120,7 @@ namespace QuantConnect.Brokerages.Binance
         public Messages.AccountInformation GetCashBalance()
         {
             var queryString = $"timestamp={GetNonce()}";
-            var endpoint = $"/api/v3/account?{queryString}&signature={AuthenticationToken(queryString)}";
+            var endpoint = $"{_apiPrefix}/account?{queryString}&signature={AuthenticationToken(queryString)}";
             var request = new RestRequest(endpoint, Method.GET);
             request.AddHeader(KeyHeader, ApiKey);
 
@@ -133,7 +140,7 @@ namespace QuantConnect.Brokerages.Binance
         public IEnumerable<Messages.OpenOrder> GetOpenOrders()
         {
             var queryString = $"timestamp={GetNonce()}";
-            var endpoint = $"/api/v3/openOrders?{queryString}&signature={AuthenticationToken(queryString)}";
+            var endpoint = $"{_apiPrefix}/openOrders?{queryString}&signature={AuthenticationToken(queryString)}";
             var request = new RestRequest(endpoint, Method.GET);
             request.AddHeader(KeyHeader, ApiKey);
 
@@ -195,11 +202,10 @@ namespace QuantConnect.Brokerages.Binance
                 default:
                     throw new NotSupportedException($"BinanceBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");
             }
-
-            const string endpoint = "/api/v3/order";
+            
             body["timestamp"] = GetNonce();
             body["signature"] = AuthenticationToken(body.ToQueryString());
-            var request = new RestRequest(endpoint, Method.POST);
+            var request = new RestRequest($"{_apiPrefix}/order", Method.POST);
             request.AddHeader(KeyHeader, ApiKey);
             request.AddParameter(
                 "application/x-www-form-urlencoded",
@@ -264,7 +270,7 @@ namespace QuantConnect.Brokerages.Binance
                 body["timestamp"] = GetNonce();
                 body["signature"] = AuthenticationToken(body.ToQueryString());
 
-                var request = new RestRequest("/api/v3/order", Method.DELETE);
+                var request = new RestRequest($"{_apiPrefix}/order", Method.DELETE);
                 request.AddHeader(KeyHeader, ApiKey);
                 request.AddParameter(
                     "application/x-www-form-urlencoded",
