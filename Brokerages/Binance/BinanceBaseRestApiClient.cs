@@ -28,6 +28,8 @@ using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
+using QuantConnect.Brokerages.Binance.Messages;
+using Order = QuantConnect.Orders.Order;
 
 namespace QuantConnect.Brokerages.Binance
 {
@@ -130,8 +132,16 @@ namespace QuantConnect.Brokerages.Binance
                 throw new Exception($"BinanceBrokerage.GetCashBalance: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
             }
 
-            return JsonConvert.DeserializeObject<Messages.AccountInformation>(response.Content);
+            return DeserializeAccountInformation(response.Content);
         }
+
+        /// <summary>
+        /// Deserialize Binance account information
+        /// </summary>
+        /// <param name="content">API response content</param>
+        /// <returns>Cash or Margin Account</returns>
+        protected virtual AccountInformation DeserializeAccountInformation(string content)
+            => JsonConvert.DeserializeObject<Messages.AccountInformation>(content);
 
         /// <summary>
         /// Gets all orders not yet closed

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -24,15 +24,21 @@ namespace QuantConnect.Brokerages.Binance.Messages
 
     public class AccountInformation
     {
-        public Balance[] Balances { get; set; }
+        public virtual BalanceEntry[] Balances { get; set; }
+    }
 
-        public class Balance
-        {
-            public string Asset { get; set; }
-            public decimal Free { get; set; }
-            public decimal Locked { get; set; }
-            public decimal Amount => Free + Locked;
-        }
+    public class MarginAccountInformation : AccountInformation
+    {
+        [JsonProperty("userAssets")]
+        public override BalanceEntry[] Balances { get; set; }
+    }
+
+    public class BalanceEntry
+    {
+        public string Asset { get; set; }
+        public decimal Free { get; set; }
+        public decimal Locked { get; set; }
+        public decimal Amount => Free + Locked;
     }
 
     public class PriceTicker
