@@ -66,13 +66,25 @@ namespace QuantConnect.Api
         /// </returns>
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            var jObject = JObject.Load(reader);
+            if (reader.TokenType == JsonToken.StartArray)
+            {
+                if (JArray.Load(reader).Count == 0)
+                {
+                    return new ParameterSet(-1, new Dictionary<string, string>());
+                }
+            }
+            else if (reader.TokenType == JsonToken.StartObject)
+            {
+                var jObject = JObject.Load(reader);
 
-            var value = jObject["parameterSet"] ?? jObject;
+                var value = jObject["parameterSet"] ?? jObject;
 
-            var parameterSet = new ParameterSet(-1, value.ToObject<Dictionary<string, string>>());
+                var parameterSet = new ParameterSet(-1, value.ToObject<Dictionary<string, string>>());
 
-            return parameterSet;
+                return parameterSet;
+            }
+
+            throw new ArgumentException($"Unexpected Tokentype {reader.TokenType}");
         }
     }
 }
