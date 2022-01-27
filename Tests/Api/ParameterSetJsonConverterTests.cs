@@ -13,10 +13,9 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using System.Collections.Generic;
 using QuantConnect.Optimizer.Parameters;
 
 namespace QuantConnect.Tests.API
@@ -24,7 +23,7 @@ namespace QuantConnect.Tests.API
     [TestFixture]
     public class ParameterSetJsonConverterTests
     {
-        private string _validSerialization = "{\"parameterSet\":{\"pinocho\":\"19\",\"pepe\":\"-1\"}}";
+        private const string ValidSerialization = "{\"parameterSet\":{\"pinocho\":\"19\",\"pepe\":\"-1\"}}";
 
         [Test]
         public void SerializationNulls()
@@ -47,18 +46,23 @@ namespace QuantConnect.Tests.API
 
             var serialized = JsonConvert.SerializeObject(parameterSet);
 
-            Assert.AreEqual(_validSerialization, serialized);
+            Assert.AreEqual(ValidSerialization, serialized);
         }
 
-        [Test]
-        public void Deserialization()
+        [TestCase("{}", 0)]
+        [TestCase("[]", 0)]
+        [TestCase(ValidSerialization, 2)]
+        public void Deserialization(string validSerialization, int count)
         {
-            var deserialized = JsonConvert.DeserializeObject<ParameterSet>(_validSerialization);
+            var deserialized = JsonConvert.DeserializeObject<ParameterSet>(validSerialization);
             Assert.IsNotNull(deserialized);
             Assert.AreEqual(-1, deserialized.Id);
-            Assert.IsTrue(deserialized.Value.Count == 2);
-            Assert.IsTrue(deserialized.Value["pinocho"] == "19");
-            Assert.IsTrue(deserialized.Value["pepe"] == "-1");
+            Assert.AreEqual(count, deserialized.Value.Count);
+            if (count != 0)
+            {
+                Assert.IsTrue(deserialized.Value["pinocho"] == "19");
+                Assert.IsTrue(deserialized.Value["pepe"] == "-1");
+            }
         }
     }
 }
