@@ -16,8 +16,8 @@
 using System;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Cfd;
-using QuantConnect.Securities.Crypto;
 using QuantConnect.Securities.Forex;
+using QuantConnect.Securities.Crypto;
 
 namespace QuantConnect.Util
 {
@@ -30,26 +30,46 @@ namespace QuantConnect.Util
             new Lazy<SymbolPropertiesDatabase>(Securities.SymbolPropertiesDatabase.FromDataFolder);
 
         /// <summary>
+        /// Tries to decomposes the specified currency pair into a base and quote currency provided as out parameters
+        /// </summary>
+        /// <param name="currencyPair">The input currency pair to be decomposed</param>
+        /// <param name="baseCurrency">The output base currency</param>
+        /// <param name="quoteCurrency">The output quote currency</param>
+        /// <returns>True if was able to decompose the currency pair</returns>
+        public static bool TryDecomposeCurrencyPair(Symbol currencyPair, out string baseCurrency, out string quoteCurrency)
+        {
+            baseCurrency = null;
+            quoteCurrency = null;
+
+            if (!IsValidSecurityType(currencyPair?.SecurityType, throwException: false))
+            {
+                return false;
+            }
+
+            try
+            {
+                DecomposeCurrencyPair(currencyPair, out baseCurrency, out quoteCurrency);
+                return true;
+            }
+            catch
+            {
+                // ignored
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Decomposes the specified currency pair into a base and quote currency provided as out parameters
         /// </summary>
         /// <param name="currencyPair">The input currency pair to be decomposed</param>
         /// <param name="baseCurrency">The output base currency</param>
         /// <param name="quoteCurrency">The output quote currency</param>
-        public static void DecomposeCurrencyPair(Symbol currencyPair, out string baseCurrency, out string quoteCurrency)
+        /// <param name="defaultQuoteCurrency">Optionally can provide a default quote currency</param>
+        public static void DecomposeCurrencyPair(Symbol currencyPair, out string baseCurrency, out string quoteCurrency, string defaultQuoteCurrency = Currencies.USD)
         {
-            if (currencyPair == null)
-            {
-                throw new ArgumentException("Currency pair must not be null");
-            }
-
+            IsValidSecurityType(currencyPair?.SecurityType, throwException: true);
             var securityType = currencyPair.SecurityType;
-
-            if (securityType != SecurityType.Forex &&
-                securityType != SecurityType.Cfd &&
-                securityType != SecurityType.Crypto)
-            {
-                throw new ArgumentException($"Unsupported security type: {securityType}");
-            }
 
             if (securityType == SecurityType.Forex)
             {
@@ -61,7 +81,7 @@ namespace QuantConnect.Util
                 currencyPair.ID.Market,
                 currencyPair,
                 currencyPair.SecurityType,
-                Currencies.USD);
+                defaultQuoteCurrency);
 
             if (securityType == SecurityType.Cfd)
             {
@@ -183,6 +203,31 @@ namespace QuantConnect.Util
             }
 
             return Match.NoMatch;
+        }
+
+        private static bool IsValidSecurityType(SecurityType? securityType, bool throwException)
+        {
+            if (securityType == null)
+            {
+                if (throwException)
+                {
+                    throw new ArgumentException("Currency pair must not be null");
+                }
+                return false;
+            }
+
+            if (securityType != SecurityType.Forex &&
+                securityType != SecurityType.Cfd &&
+                securityType != SecurityType.Crypto)
+            {
+                if (throwException)
+                {
+                    throw new ArgumentException($"Unsupported security type: {securityType}");
+                }
+                return false;
+            }
+
+            return true;
         }
     }
 }

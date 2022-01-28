@@ -24,7 +24,6 @@ using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Crypto;
 using QuantConnect.Util;
 using RestSharp;
 using System;
@@ -49,7 +48,6 @@ namespace QuantConnect.Brokerages.Bitfinex
         private IAlgorithm _algorithm;
         private readonly RateGate _restRateLimiter = new RateGate(10, TimeSpan.FromMinutes(1));
         private readonly ConcurrentDictionary<int, decimal> _fills = new ConcurrentDictionary<int, decimal>();
-        private SymbolPropertiesDatabase _symbolPropertiesDatabase;
         private IDataAggregator _aggregator;
 
         // map Bitfinex ClientOrderId -> LEAN order (only used for orders submitted in PlaceOrder, not for existing orders)
@@ -188,7 +186,6 @@ namespace QuantConnect.Brokerages.Bitfinex
                 TimeSpan.Zero,
                 _connectionRateLimiter);
 
-            _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             _algorithm = algorithm;
             _aggregator = aggregator;
 
@@ -473,26 +470,13 @@ namespace QuantConnect.Brokerages.Bitfinex
                         : OrderStatus.PartiallyFilled;
                 }
 
-                if (_algorithm.BrokerageModel.AccountType == AccountType.Cash &&
-                    order.Direction == OrderDirection.Buy)
+                if (_algorithm.BrokerageModel.AccountType == AccountType.Cash && order.Direction == OrderDirection.Buy)
                 {
-                    var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market,
-                        symbol,
-                        symbol.SecurityType,
-                        AccountBaseCurrency);
-                    Crypto.DecomposeCurrencyPair(symbol, symbolProperties, out var baseCurrency, out var _);
-
+                    CurrencyPairUtil.DecomposeCurrencyPair(symbol, out var baseCurrency, out _);
                     if (orderFee.Value.Currency != baseCurrency)
                     {
                         OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "UnexpectedFeeCurrency", $"Unexpected fee currency {orderFee.Value.Currency} for symbol {symbol}. OrderId {order.Id}. BrokerageOrderId {brokerId}. " +
                             "This error can happen because your account is Margin type and Lean is configured to be Cash type or while using Cash type the Bitfinex account fee settings are set to 'Asset Trading Fee' and should be set to 'Currency Exchange Fee'."));
-                    }
-                    else
-                    {
-                        // fees are debited in the base currency, so we have to subtract them from the filled quantity
-                        fillQuantity -= orderFee.Value.Amount;
-
-                        orderFee = new ModifiedFillQuantityOrderFee(orderFee.Value);
                     }
                 }
 

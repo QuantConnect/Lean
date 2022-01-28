@@ -177,9 +177,8 @@ namespace QuantConnect.Messaging
                     continue;
                 }
 
-                if (line.Contains("public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>")
-                    || line.Contains("public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>")
-                    || line.Contains("public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>"))
+                if (line.Contains("Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>")
+                    || line.Contains("Dictionary<string, string> ExpectedStatistics => new()"))
                 {
                     lines.Add(line);
                     lines.Add("        {");
