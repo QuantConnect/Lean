@@ -136,8 +136,7 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns></returns>
         public override List<CashAmount> GetCashBalance()
         {
-            var account = _apiClient.GetCashBalance();
-            var balances = account.Balances?.Where(balance => balance.Amount > 0).ToList();
+            var balances = _apiClient.GetCashBalance()?.Where(balance => balance.Amount > 0).ToList();
             if (balances == null || !balances.Any())
                 return new List<CashAmount>();
 

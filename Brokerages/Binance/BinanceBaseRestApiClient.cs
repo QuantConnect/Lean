@@ -119,7 +119,7 @@ namespace QuantConnect.Brokerages.Binance
         /// Gets the total account cash balance for specified account type
         /// </summary>
         /// <returns></returns>
-        public Messages.AccountInformation GetCashBalance()
+        public BalanceEntry[] GetCashBalance()
         {
             var queryString = $"timestamp={GetNonce()}";
             var endpoint = $"{_apiPrefix}/account?{queryString}&signature={AuthenticationToken(queryString)}";
@@ -140,8 +140,8 @@ namespace QuantConnect.Brokerages.Binance
         /// </summary>
         /// <param name="content">API response content</param>
         /// <returns>Cash or Margin Account</returns>
-        protected virtual AccountInformation DeserializeAccountInformation(string content)
-            => JsonConvert.DeserializeObject<Messages.AccountInformation>(content);
+        protected virtual BalanceEntry[] DeserializeAccountInformation(string content)
+            => JsonConvert.DeserializeObject<SpotAccountInformation>(content).Balances;
 
         /// <summary>
         /// Gets all orders not yet closed

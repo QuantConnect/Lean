@@ -22,15 +22,19 @@ namespace QuantConnect.Brokerages.Binance.Messages
 {
 #pragma warning disable 1591
 
-    public class AccountInformation
+    public class AccountInformation<T> where T : BalanceEntry
     {
-        public virtual BalanceEntry[] Balances { get; set; }
+        public virtual T[] Balances { get; set; }
     }
 
-    public class MarginAccountInformation : AccountInformation
+    public class SpotAccountInformation : AccountInformation<SpotBalance>
+    {
+    }
+
+    public class MarginAccountInformation : AccountInformation<MarginBalance>
     {
         [JsonProperty("userAssets")]
-        public override BalanceEntry[] Balances { get; set; }
+        public override MarginBalance[] Balances { get; set; }
     }
 
     public class BalanceEntry
@@ -38,7 +42,19 @@ namespace QuantConnect.Brokerages.Binance.Messages
         public string Asset { get; set; }
         public decimal Free { get; set; }
         public decimal Locked { get; set; }
-        public decimal Amount => Free + Locked;
+        public virtual decimal Amount { get; }
+    }
+
+    public class SpotBalance : BalanceEntry
+    {
+        public override decimal Amount => Free + Locked;
+    }
+
+    public class MarginBalance : BalanceEntry
+    {
+        public decimal Borrowed { get; set; }
+        public decimal NetAsset { get; set; }
+        public override decimal Amount => NetAsset;
     }
 
     public class PriceTicker

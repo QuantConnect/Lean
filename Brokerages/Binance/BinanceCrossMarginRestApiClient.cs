@@ -40,8 +40,8 @@ namespace QuantConnect.Brokerages.Binance
         {
         }
 
-        protected override MarginAccountInformation DeserializeAccountInformation(string content)
-            => JsonConvert.DeserializeObject<Messages.MarginAccountInformation>(content);
+        protected override BalanceEntry[] DeserializeAccountInformation(string content)
+            => JsonConvert.DeserializeObject<MarginAccountInformation>(content).Balances;
 
         protected override IDictionary<string, object> CreateOrderBody(Order order)
         {
