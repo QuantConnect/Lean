@@ -65,7 +65,9 @@ namespace QuantConnect.Algorithm.Selection
                 _symbols.Remove(removedSymbol);
 
                 // the option has been removed! This can happen when the user manually removed the option contract we remove the underlying
-                if (removedSymbol.SecurityType.IsOption())
+                // but only if there isn't any other option selected using the same underlying!
+                if (removedSymbol.SecurityType.IsOption()
+                    && !_symbols.Any(symbol => symbol.SecurityType.IsOption() && symbol.Underlying == removedSymbol.Underlying))
                 {
                     Remove(removedSymbol.Underlying);
                 }

@@ -1228,10 +1228,14 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     {
                         if (e.Position == 0)
                         {
-                            Log.Trace(
-                                "BrokerageTransactionHandler.HandleOptionNotification(): clearing position for expired option holding: " +
-                                $"Symbol: {e.Symbol.Value}, " +
-                                $"Quantity: {security.Holdings.Quantity}");
+                            // only log always in live trading, in backtesting log if not 0 holdings
+                            if (_algorithm.LiveMode || security.Holdings.Quantity != 0)
+                            {
+                                Log.Trace(
+                                    "BrokerageTransactionHandler.HandleOptionNotification(): clearing position for expired option holding: " +
+                                    $"Symbol: {e.Symbol.Value}, " +
+                                    $"Holdings: {security.Holdings.Quantity}");
+                            }
 
                             var quantity = -security.Holdings.Quantity;
 
