@@ -13,9 +13,11 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using QuantConnect.Brokerages.Binance.Messages;
 using QuantConnect.Securities;
+using Order = QuantConnect.Orders.Order;
 
 namespace QuantConnect.Brokerages.Binance
 {
@@ -40,5 +42,14 @@ namespace QuantConnect.Brokerages.Binance
 
         protected override MarginAccountInformation DeserializeAccountInformation(string content)
             => JsonConvert.DeserializeObject<Messages.MarginAccountInformation>(content);
+
+        protected override IDictionary<string, object> CreateOrderBody(Order order)
+        {
+            var body = base.CreateOrderBody(order);
+            body["isisolated"] = "FALSE";
+            body["sideEffectType"] = "MARGIN_BUY";
+
+            return body;
+        }
     }
 }

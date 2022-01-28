@@ -127,11 +127,7 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns></returns>
         public override List<Holding> GetAccountHoldings()
         {
-            if (_algorithm.BrokerageModel.AccountType == AccountType.Cash)
-            {
-                return base.GetAccountHoldings(_job?.BrokerageData, _algorithm.Securities.Values);
-            }
-            return _apiClient.GetAccountHoldings();
+            return base.GetAccountHoldings(_job?.BrokerageData, _algorithm.Securities.Values);
         }
 
         /// <summary>
@@ -411,14 +407,14 @@ namespace QuantConnect.Brokerages.Binance
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
         /// <param name="aggregator">the aggregator for consolidating ticks</param>
         /// <param name="job">The live job packet</param>
-        private void Initialize(string wssUrl, string restApiUrl,string apiKey, string apiSecret,
+        private void Initialize(string wssUrl, string restApiUrl, string apiKey, string apiSecret,
             IAlgorithm algorithm, IDataAggregator aggregator, LiveNodePacket job)
         {
             if (IsInitialized)
             {
                 return;
             }
-            base.Initialize(wssUrl,  new WebSocketClientWrapper(), null, apiKey, apiSecret);
+            base.Initialize(wssUrl, new WebSocketClientWrapper(), null, apiKey, apiSecret);
             _job = job;
             _algorithm = algorithm;
             _aggregator = aggregator;

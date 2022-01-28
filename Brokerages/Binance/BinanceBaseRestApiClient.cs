@@ -170,49 +170,8 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
         public bool PlaceOrder(Order order)
         {
-            // supported time in force values {GTC, IOC, FOK}
-            // use GTC as LEAN doesn't support others yet
-            IDictionary<string, object> body = new Dictionary<string, object>()
-            {
-                { "symbol", _symbolMapper.GetBrokerageSymbol(order.Symbol) },
-                { "quantity", Math.Abs(order.Quantity).ToString(CultureInfo.InvariantCulture) },
-                { "side", ConvertOrderDirection(order.Direction) }
-            };
+            var body = CreateOrderBody(order);
 
-            switch (order)
-            {
-                case LimitOrder limitOrder:
-                    body["type"] = (order.Properties as BinanceOrderProperties)?.PostOnly == true
-                        ? "LIMIT_MAKER"
-                        : "LIMIT";
-                    body["price"] = limitOrder.LimitPrice.ToString(CultureInfo.InvariantCulture);
-                    // timeInForce is not required for LIMIT_MAKER
-                    if (Equals(body["type"], "LIMIT"))
-                        body["timeInForce"] = "GTC";
-                    break;
-                case MarketOrder:
-                    body["type"] = "MARKET";
-                    break;
-                case StopLimitOrder stopLimitOrder:
-                    var ticker = GetTickerPrice(order);
-                    var stopPrice = stopLimitOrder.StopPrice;
-                    if (order.Direction == OrderDirection.Sell)
-                    {
-                        body["type"] = stopPrice <= ticker ? "STOP_LOSS_LIMIT" : "TAKE_PROFIT_LIMIT";
-                    }
-                    else
-                    {
-                        body["type"] = stopPrice <= ticker ? "TAKE_PROFIT_LIMIT" : "STOP_LOSS_LIMIT";
-                    }
-
-                    body["timeInForce"] = "GTC";
-                    body["stopPrice"] = stopPrice.ToStringInvariant();
-                    body["price"] = stopLimitOrder.LimitPrice.ToStringInvariant();
-                    break;
-                default:
-                    throw new NotSupportedException($"BinanceBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");
-            }
-            
             body["timestamp"] = GetNonce();
             body["signature"] = AuthenticationToken(body.ToQueryString());
             var request = new RestRequest($"{_apiPrefix}/order", Method.POST);
@@ -256,6 +215,58 @@ namespace QuantConnect.Brokerages.Binance
             OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
 
             return true;
+        }
+
+        /// <summary>
+        /// Create account new order body payload
+        /// </summary>
+        /// <param name="order">Lean order</param>
+        protected virtual IDictionary<string, object> CreateOrderBody(Order order)
+        {
+            // supported time in force values {GTC, IOC, FOK}
+            // use GTC as LEAN doesn't support others yet
+            var body = new Dictionary<string, object>
+            {
+                { "symbol", _symbolMapper.GetBrokerageSymbol(order.Symbol) },
+                { "quantity", Math.Abs(order.Quantity).ToString(CultureInfo.InvariantCulture) },
+                { "side", ConvertOrderDirection(order.Direction) }
+            };
+
+            switch (order)
+            {
+                case LimitOrder limitOrder:
+                    body["type"] = (order.Properties as BinanceOrderProperties)?.PostOnly == true
+                        ? "LIMIT_MAKER"
+                        : "LIMIT";
+                    body["price"] = limitOrder.LimitPrice.ToString(CultureInfo.InvariantCulture);
+                    // timeInForce is not required for LIMIT_MAKER
+                    if (Equals(body["type"], "LIMIT"))
+                        body["timeInForce"] = "GTC";
+                    break;
+                case MarketOrder:
+                    body["type"] = "MARKET";
+                    break;
+                case StopLimitOrder stopLimitOrder:
+                    var ticker = GetTickerPrice(order);
+                    var stopPrice = stopLimitOrder.StopPrice;
+                    if (order.Direction == OrderDirection.Sell)
+                    {
+                        body["type"] = stopPrice <= ticker ? "STOP_LOSS_LIMIT" : "TAKE_PROFIT_LIMIT";
+                    }
+                    else
+                    {
+                        body["type"] = stopPrice <= ticker ? "TAKE_PROFIT_LIMIT" : "STOP_LOSS_LIMIT";
+                    }
+
+                    body["timeInForce"] = "GTC";
+                    body["stopPrice"] = stopPrice.ToStringInvariant();
+                    body["price"] = stopLimitOrder.LimitPrice.ToStringInvariant();
+                    break;
+                default:
+                    throw new NotSupportedException($"BinanceBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");
+            }
+
+            return body;
         }
 
         /// <summary>
