@@ -132,7 +132,11 @@ namespace QuantConnect.Brokerages.Binance
                 throw new Exception($"BinanceBrokerage.GetCashBalance: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
             }
 
-            return DeserializeAccountInformation(response.Content);
+            return JsonConvert
+                .DeserializeObject<AccountInformation>(response.Content, CreateAccountConverter())
+                .Balances
+                .Where(s => s.Amount != 0)
+                .ToArray();
         }
 
         /// <summary>
@@ -140,8 +144,7 @@ namespace QuantConnect.Brokerages.Binance
         /// </summary>
         /// <param name="content">API response content</param>
         /// <returns>Cash or Margin Account</returns>
-        protected virtual BalanceEntry[] DeserializeAccountInformation(string content)
-            => JsonConvert.DeserializeObject<SpotAccountInformation>(content).Balances;
+        protected abstract JsonConverter CreateAccountConverter();
 
         /// <summary>
         /// Gets all orders not yet closed

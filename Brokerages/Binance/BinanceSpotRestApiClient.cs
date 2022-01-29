@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using Newtonsoft.Json;
+using QuantConnect.Brokerages.Binance.Messages;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Brokerages.Binance
@@ -34,5 +36,8 @@ namespace QuantConnect.Brokerages.Binance
             : base(symbolMapper, securityProvider, apiKey, apiSecret, restApiUrl, _apiPrefix, _apiPrefix)
         {
         }
+
+        protected override JsonConverter CreateAccountConverter()
+            => new SpotAccountConverter();
     }
 }

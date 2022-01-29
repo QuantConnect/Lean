@@ -22,19 +22,9 @@ namespace QuantConnect.Brokerages.Binance.Messages
 {
 #pragma warning disable 1591
 
-    public class AccountInformation<T> where T : BalanceEntry
+    public class AccountInformation
     {
-        public virtual T[] Balances { get; set; }
-    }
-
-    public class SpotAccountInformation : AccountInformation<SpotBalance>
-    {
-    }
-
-    public class MarginAccountInformation : AccountInformation<MarginBalance>
-    {
-        [JsonProperty("userAssets")]
-        public override MarginBalance[] Balances { get; set; }
+        public BalanceEntry[] Balances { get; set; }
     }
 
     public class BalanceEntry
