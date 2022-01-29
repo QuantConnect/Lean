@@ -32,12 +32,12 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// RateOfChange indicator for calculating the sharpe ratio
         /// </summary>
-        private readonly RateOfChange _roc;
+        internal RateOfChange _roc;
 
         /// <summary>
         /// Indicator to store the calculation of the sharpe ratio
         /// </summary>
-        private readonly CompositeIndicator _sharpeRatio;
+        internal CompositeIndicator _sharpeRatio;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
