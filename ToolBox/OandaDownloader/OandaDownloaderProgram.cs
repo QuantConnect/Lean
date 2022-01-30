@@ -46,7 +46,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
                 var castResolution = allResolutions ? Resolution.Second : (Resolution)Enum.Parse(typeof(Resolution), resolution);
 
                 // Load settings from config.json
-                var dataDirectory = Config.Get("data-directory", "../../../Data");
+                var dataDirectory = Config.Get("custom-data-directory", "../../../Data");
                 var accessToken = Config.Get("oanda-access-token", "73eba38ad5b44778f9a0c0fec1a66ed1-44f47f052c897b3e1e7f24196bbc071f");
                 var accountId = Config.Get("oanda-account-id", "621396");
 

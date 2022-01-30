@@ -42,7 +42,7 @@ namespace QuantConnect.ToolBox.YahooDownloader
                 var castResolution = (Resolution)Enum.Parse(typeof(Resolution), resolution);
 
                 // Load settings from config.json
-                var dataDirectory = Config.Get("data-directory", "../../../Data");
+                var dataDirectory = Config.Get("custom-data-directory", "../../../Data");
 
                 // Create an instance of the downloader
                 const string market = Market.USA;
