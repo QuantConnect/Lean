@@ -138,5 +138,29 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.AreEqual(false, _binanceBrokerageModel.CanSubmitOrder(security, order.Object, out var message));
             Assert.NotNull(message);
         }
+
+        [Test]
+        public void Returns1m_IfCashAccount()
+        {
+            Assert.AreEqual(1m, new BinanceBrokerageModel(AccountType.Cash).GetLeverage(_security));
+        }
+
+        [Test]
+        public void Returns3m_IfMarginAccount()
+        {
+            Assert.AreEqual(3m, new BinanceBrokerageModel(AccountType.Margin).GetLeverage(_security));
+        }
+
+        [Test]
+        public void ReturnsCashBuyinPowerModel_ForCashAccount()
+        {
+            Assert.IsInstanceOf<CashBuyingPowerModel>(new BinanceBrokerageModel(AccountType.Cash).GetBuyingPowerModel(_security));
+        }
+
+        [Test]
+        public void ReturnsSecurityMarginModel_ForMarginAccount()
+        {
+            Assert.IsInstanceOf<SecurityMarginModel>(new BinanceBrokerageModel(AccountType.Margin).GetBuyingPowerModel(_security));
+        }
     }
 }
