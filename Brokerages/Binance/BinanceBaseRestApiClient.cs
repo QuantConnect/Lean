@@ -93,7 +93,8 @@ namespace QuantConnect.Brokerages.Binance
         /// <param name="apiKey">The Binance API key</param>
         /// <param name="apiSecret">The The Binance API secret</param>
         /// <param name="restApiUrl">The Binance API rest url</param>
-        /// <param name="apiPrefix">REST API path prefix depending on SPOT or CROSS MARGIN trading</param>
+        /// <param name="restApiPrefix">REST API path prefix depending on SPOT or CROSS MARGIN trading</param>
+        /// <param name="wsApiPrefix">REST API path prefix for user data streaming auth process depending on SPOT or CROSS MARGIN trading</param>
         public BinanceBaseRestApiClient(SymbolPropertiesDatabaseSymbolMapper symbolMapper, ISecurityProvider securityProvider,
             string apiKey, string apiSecret, string restApiUrl, string restApiPrefix, string wsApiPrefix)
         {
