@@ -203,7 +203,7 @@ namespace QuantConnect.Lean.Engine.Storage
             // Before saving confirm we are abiding by the control rules
             // Start by counting our file and its length
             var fileCount = 1;
-            var expectedStorageSizeBytes = contents != null ? contents.Length : 0;
+            var expectedStorageSizeBytes = contents?.Length ?? 0;
             foreach (var kvp in _storage)
             {
                 if (key.Equals(kvp.Key))
@@ -280,8 +280,7 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <summary>
         /// Returns the file path for the specified key
         /// </summary>
-        /// <remarks>If the key is not already inserted
-        /// it will just return a path asociated with it
+        /// <remarks>If the key is not already inserted it will just return a path associated with it
         /// and add the key with null value</remarks>
         /// <param name="key">The object key</param>
         /// <returns>The path for the file</returns>
@@ -294,9 +293,11 @@ namespace QuantConnect.Lean.Engine.Storage
                 // with this key and not update it with the value associated with the key(null)
                 SaveBytes(key, null);
             }
-
-            // Persist to ensure pur files are up to date
-            Persist();
+            else
+            {
+                // Persist to ensure pur files are up to date
+                Persist();
+            }
 
             // Fetch the path to file and return it
             return PathForKey(key);

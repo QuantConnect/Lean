@@ -496,11 +496,11 @@ namespace QuantConnect.Tests.Common.Storage
             }
         }
 
-        public void DummyMachineLearning(string outputFile, string content)
+        private static void DummyMachineLearning(string outputFile, string content)
         {
             try
             {
-                StreamWriter sw = new StreamWriter(outputFile);
+                var sw = new StreamWriter(outputFile);
                 sw.Write(content);
                 sw.Close();
             }
