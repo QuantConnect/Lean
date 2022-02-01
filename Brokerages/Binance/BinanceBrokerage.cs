@@ -94,7 +94,7 @@ namespace QuantConnect.Brokerages.Binance
         /// <summary>
         /// Checks if the websocket connection is connected or in the process of connecting
         /// </summary>
-        public override bool IsConnected => WebSocket.IsOpen || !_apiClientLazy.IsValueCreated;
+        public override bool IsConnected => WebSocket.IsOpen || _apiClientLazy?.IsValueCreated != true;
 
         /// <summary>
         /// Creates wss connection
