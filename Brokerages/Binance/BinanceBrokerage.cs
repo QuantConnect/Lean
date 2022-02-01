@@ -105,11 +105,7 @@ namespace QuantConnect.Brokerages.Binance
                 return;
 
             ApiClient.CreateListenKey();
-            _reconnectTimer.Start();
-
-            WebSocket.Initialize($"{_webSocketBaseUrl}/{ApiClient.SessionId}");
-
-            base.Connect();
+            Connect(ApiClient.SessionId);
         }
 
         /// <summary>
@@ -455,10 +451,9 @@ namespace QuantConnect.Brokerages.Binance
                     apiClient.Message += (s, e) => OnMessage(e);
 
                     apiClient.CreateListenKey();
-                    WebSocket.Initialize($"{_webSocketBaseUrl}/{apiClient.SessionId}");
                     _keepAliveTimer.Elapsed += (s, e) => apiClient.SessionKeepAlive();
 
-                    Reconnect();
+                    Connect(apiClient.SessionId);
 
                     return apiClient;
                 });
@@ -612,12 +607,13 @@ namespace QuantConnect.Brokerages.Binance
         /// <summary>
         /// Force reconnect websocket
         /// </summary>
-        public void Reconnect()
+        public void Connect(string sessionId)
         {
-            Disconnect();
+            Log.Trace("BaseWebSocketsBrokerage.Connect(): Connecting...");
 
             _reconnectTimer.Start();
-            base.Connect();
+            WebSocket.Initialize($"{_webSocketBaseUrl}/{sessionId}");
+            ConnectSync();
         }
     }
 }
