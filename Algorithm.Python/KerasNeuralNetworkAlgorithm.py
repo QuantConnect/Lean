@@ -33,8 +33,8 @@ class KerasNeuralNetworkAlgorithm(QCAlgorithm):
             # Read the model saved in the ObjectStore
             for kvp in self.ObjectStore:
                 key = f'{symbol}_model'
-                if not key == kvp.Key:
-                    continue;
+                if not key == kvp.Key or kvp.Value is None:
+                    continue
                 filePath = self.ObjectStore.GetFilePath(kvp.Key)
                 self.modelBySymbol[symbol] = keras.models.load_model(filePath)
                 self.Debug(f'Model for {symbol} sucessfully retrieved. File {filePath}. Size {kvp.Value.Length}. Weights {self.modelBySymbol[symbol].get_weights()}')
