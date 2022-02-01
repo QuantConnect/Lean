@@ -456,7 +456,7 @@ namespace QuantConnect.Tests.Common.Storage
                 Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests/test"));
 
                 var key = "test";
-                Assert.Throws<Exception>(() => store.Save(key));
+                Assert.Throws<ArgumentException>(() => store.Save(key));
             }
         }
 
