@@ -247,14 +247,6 @@ namespace QuantConnect.Securities
         /// <param name="dataType">The data type</param>
         public void StoreData(IReadOnlyList<BaseData> data, Type dataType)
         {
-#if DEBUG // don't run this in release as we should never fail here, but it's also nice to have here as documentation of intent
-            if (data.DistinctBy(d => d.GetType()).Skip(1).Any())
-            {
-                throw new ArgumentException(
-                    "SecurityCache.StoreData data list must contain elements of the same type."
-                );
-            }
-#endif
             if (dataType == typeof(Tick))
             {
                 var tick = data[data.Count - 1] as Tick;
