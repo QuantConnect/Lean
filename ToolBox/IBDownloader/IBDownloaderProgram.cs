@@ -71,7 +71,7 @@ namespace QuantConnect.ToolBox.IBDownloader
 
                 // Only FOREX for now
                 SecurityType securityType = SecurityType.Forex;
-                string market = Market.FXCM;
+                string market = Market.Oanda;
 
 
                 using (var downloader = new IBDataDownloader())

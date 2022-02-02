@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "QuantConnect.ToolBox": {
+      "commandName": "Project",
+      "commandLineArgs": "--app=IBDownloader --from-date=20190101-00:00:00 --resolution=Hour --tickers=eurusd",
+      "workingDirectory": "D:\\repos\\lean\\Launcher\\bin\\Debug"
+    }
+  }
+}
