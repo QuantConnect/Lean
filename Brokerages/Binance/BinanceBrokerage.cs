@@ -607,7 +607,7 @@ namespace QuantConnect.Brokerages.Binance
         /// <summary>
         /// Force reconnect websocket
         /// </summary>
-        public void Connect(string sessionId)
+        private void Connect(string sessionId)
         {
             Log.Trace("BaseWebSocketsBrokerage.Connect(): Connecting...");
 
