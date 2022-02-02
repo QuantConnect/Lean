@@ -53,6 +53,7 @@ namespace QuantConnect.Tests.Brokerages.Binance
 
             var algorithm = new Mock<IAlgorithm>();
             algorithm.Setup(a => a.Transactions).Returns(transactions);
+            algorithm.Setup(a => a.Securities).Returns(securities);
             algorithm.Setup(a => a.BrokerageModel).Returns(new BinanceBrokerageModel());
             algorithm.Setup(a => a.Portfolio).Returns(new SecurityPortfolioManager(securities, transactions));
 
