@@ -52,7 +52,7 @@ namespace QuantConnect.Brokerages.Binance
         private Timer _keepAliveTimer;
         private Timer _reconnectTimer;
         private Lazy<BinanceBaseRestApiClient> _apiClientLazy;
-        private BinanceBaseRestApiClient ApiClient => _apiClientLazy.Value;
+        private BinanceBaseRestApiClient ApiClient => _apiClientLazy?.Value;
 
         private BrokerageConcurrentMessageHandler<WebSocketMessage> _messageHandler;
 
@@ -389,7 +389,10 @@ namespace QuantConnect.Brokerages.Binance
         {
             _keepAliveTimer.DisposeSafely();
             _reconnectTimer.DisposeSafely();
-            ApiClient.DisposeSafely();
+            if (_apiClientLazy?.IsValueCreated == true)
+            {
+                ApiClient.DisposeSafely();
+            }
             _webSocketRateLimiter.DisposeSafely();
         }
 
