@@ -95,7 +95,7 @@ namespace QuantConnect.Brokerages.Binance
         /// Checks if the websocket connection is connected or in the process of connecting
         /// WebSocket is responsible for Binance UserData stream only.
         /// </summary>
-        public override bool IsConnected => WebSocket.IsOpen || _apiClientLazy?.IsValueCreated != true;
+        public override bool IsConnected => _apiClientLazy?.IsValueCreated != true || WebSocket?.IsOpen == true;
 
         /// <summary>
         /// Creates wss connection
