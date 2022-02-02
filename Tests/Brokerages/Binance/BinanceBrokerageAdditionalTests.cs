@@ -23,12 +23,21 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Common.Securities;
 using System;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Brokerages.Binance
 {
     [TestFixture, Explicit("This test requires a configured and testable Binance practice account")]
     public class BinanceBrokerageAdditionalTests
     {
+        [Test]
+        public void ParameterlessConstructorComposerUsage()
+        {
+            var brokerage = Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>("BinanceBrokerage");
+            Assert.IsNotNull(brokerage);
+            Assert.True(brokerage.IsConnected);
+        }
+
         [Test]
         public void ConnectedIfNoAlgorithm()
         {

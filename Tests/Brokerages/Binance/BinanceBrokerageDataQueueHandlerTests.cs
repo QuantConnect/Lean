@@ -29,14 +29,6 @@ namespace QuantConnect.Tests.Brokerages.Binance
     {
         private static readonly Symbol XRP_USDT = Symbol.Create("XRPUSDT", SecurityType.Crypto, Market.FTX);
 
-        [Test]
-        public void ParameterlessConstructorComposerUsage()
-        {
-            var brokerage = Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>("BinanceBrokerage");
-            Assert.IsNotNull(brokerage);
-            Assert.True(brokerage.IsConnected);
-        }
-
         private static TestCaseData[] TestParameters
         {
             get
