@@ -93,6 +93,7 @@ namespace QuantConnect.Brokerages.Binance
 
         /// <summary>
         /// Checks if the websocket connection is connected or in the process of connecting
+        /// WebSocket is responsible for Binance UserData stream only.
         /// </summary>
         public override bool IsConnected => WebSocket.IsOpen || _apiClientLazy?.IsValueCreated != true;
 
@@ -104,6 +105,10 @@ namespace QuantConnect.Brokerages.Binance
             if (IsConnected)
                 return;
 
+            // cannot reach this code if rest api client is not created
+            // WebSocket is  responsible for Binance UserData stream only
+            // as a result we don't need to connect user data stream if BinanceBrokerage is used as DQH only
+            // or until Algorithm is actually initialized
             ApiClient.CreateListenKey();
             Connect(ApiClient.SessionId);
         }
@@ -437,8 +442,12 @@ namespace QuantConnect.Brokerages.Binance
 
             SubscriptionManager = subscriptionManager;
 
+            // can be null, if BinanceBrokerage is used as DataQueueHandler only
             if (_algorithm != null)
             {
+                // Binance rest api endpoint is different for sport and margin trading
+                // we need to delay initialization of rest api client until Algorithm is initialized
+                // and user brokerage choise is actually applied
                 _apiClientLazy = new Lazy<BinanceBaseRestApiClient>(() =>
                 {
                     BinanceBaseRestApiClient apiClient = _algorithm.BrokerageModel.AccountType == AccountType.Cash
@@ -450,6 +459,7 @@ namespace QuantConnect.Brokerages.Binance
                     apiClient.OrderStatusChanged += (s, e) => OnOrderEvent(e);
                     apiClient.Message += (s, e) => OnMessage(e);
 
+                    // once we know the api endpoint we can subscribe to user data stream
                     apiClient.CreateListenKey();
                     _keepAliveTimer.Elapsed += (s, e) => apiClient.SessionKeepAlive();
 
