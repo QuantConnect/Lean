@@ -42,6 +42,10 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="config.json" />
+    <None Remove="config.stochasticrsi.json" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="QuantConnect.pythonnet" Version="2.0.11" />
     <PackageReference Include="Deedle" Version="2.1.0" />
     <PackageReference Include="MathNet.Numerics" Version="4.15.0" />
@@ -57,6 +61,12 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="config.stochasticrsi.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="css\report.css">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

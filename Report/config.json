@@ -1,0 +1,37 @@
+{
+  "data-folder": "../../../Data",
+  "strategy-name": "StochasticRsi",
+  "strategy-version": "v1.0.0",
+  "strategy-description": "One of Sofien's, using Stochastic and RSI together",
+  // "live-data-source-file": "Foobar-live.json",
+  "backtest-data-source-file": "D:/repos/lean/launcher/bin/debug/StochasticRsiAlgorithm.json",
+  "report-destination": "StochasticRSI/StochasticRSI.html",
+
+  "environment": "report",
+
+  // handlers
+  "log-handler": "QuantConnect.Logging.CompositeLogHandler",
+  "messaging-handler": "QuantConnect.Messaging.Messaging",
+  "job-queue-handler": "QuantConnect.Queues.JobQueue",
+  "api-handler": "QuantConnect.Api.Api",
+  "map-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskMapFileProvider",
+  "factor-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskFactorFileProvider",
+  "data-provider": "QuantConnect.Lean.Engine.DataFeeds.DefaultDataProvider",
+  "alpha-handler": "QuantConnect.Lean.Engine.Alphas.DefaultAlphaHandler",
+  "data-channel-provider": "DataChannelProvider",
+
+  "environments": {
+
+    // defines the 'backtesting' environment
+    "report": {
+      "live-mode": false,
+
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.BacktestingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler",
+      "history-provider": "QuantConnect.Lean.Engine.HistoricalData.SubscriptionDataReaderHistoryProvider",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"
+    }
+  }
+}
