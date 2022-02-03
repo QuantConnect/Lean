@@ -13,6 +13,7 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
     <Description>QuantConnect LEAN Engine: Tests Project - The test collection</Description>
     <NoWarn>CS0618</NoWarn>
   </PropertyGroup>
