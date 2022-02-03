@@ -126,12 +126,13 @@ namespace QuantConnect.Queues
             if (_liveMode)
             {
                 var dataHandlers = Config.Get("data-queue-handler", DefaultDataQueueHandler);
+                var historyProviders = Config.Get("history-provider", DefaultHistoryProvider);
                 var liveJob = new LiveNodePacket
                 {
                     Type = PacketType.LiveNode,
                     Algorithm = File.ReadAllBytes(AlgorithmLocation),
                     Brokerage = Config.Get("live-mode-brokerage", PaperBrokerageTypeName),
-                    HistoryProvider = Config.Get("history-provider", DefaultHistoryProvider),
+                    HistoryProvider = historyProviders,
                     DataQueueHandler = dataHandlers,
                     DataChannelProvider = Config.Get("data-channel-provider", DefaultDataChannelProvider),
                     Channel = AccessToken,
