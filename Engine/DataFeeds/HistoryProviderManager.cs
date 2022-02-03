@@ -16,6 +16,7 @@
 using NodaTime;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Util;
@@ -101,6 +102,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             {
                                 mergedHistory[slice.Time] = slice;
                             }
+                            else
+                            {
+                                mergedHistory[slice.Time] = MergeSlice(slice, mergedHistory[slice.Time]);
+                            }
                         }
                     }
                 }
@@ -109,11 +114,52 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // ignore
                 }
             }
-            if (mergedHistory.IsNullOrEmpty())
-            {
-                return null;
-            }
             return mergedHistory.Values;
+        }
+
+        /// <summary>
+        /// Merge two slice with same Time
+        /// </summary>
+        /// <param name="slice1">slice instance</param>
+        /// <param name="slice2">slice instance</param>
+        private Slice MergeSlice(Slice slice1, Slice slice2)
+        {
+            var time = slice1.Time;
+            List<BaseData> rawData = new();
+            List<TradeBar> tradeBars = new();
+            List<QuoteBar> quoteBars = new();
+
+            // Merge TradeBars
+            if (slice1.Bars != null && slice2.Bars != null)
+            {
+                List<TradeBar> tempBars = new();
+                Dictionary<DateTime, TradeBar> barsMapping = new();
+                tempBars.AddRange(slice1.ListOfBars);
+                tempBars.AddRange(slice2.ListOfBars);
+                foreach (var bar in tempBars)
+                {
+                    // Assuming resolution of all bars are same as history request was same
+                    if (!barsMapping.ContainsKey(bar.Time))
+                    {
+                        barsMapping.Add(bar.Time, bar);
+                    }
+                }
+                tradeBars.AddRange(barsMapping.Values);
+            }
+            else
+            {
+                tradeBars = slice1.ListOfBars ?? slice2.ListOfBars;
+            }
+
+            // Merge QuoteBars
+            // Merge Ticks
+
+            // Compile all Data types together to convert into Slice
+            rawData.AddRange(tradeBars);
+            rawData.AddRange(quoteBars);
+
+            // Return merged slice
+            return new Slice(time, rawData);
         }
     }
 }
