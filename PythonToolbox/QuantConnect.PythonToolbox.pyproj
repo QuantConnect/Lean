@@ -12,6 +12,7 @@
     <OutputPath>.</OutputPath>
     <Name>QuantConnect.ApiPython</Name>
     <RootNamespace>ApiPython</RootNamespace>
+    <InterpreterId>Global|VisualStudio|pyenv (Python 3.8 (64-bit))</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -41,6 +42,9 @@
     <Content Include="README.rst">
       <SubType>Code</SubType>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="Global|VisualStudio|pyenv (Python 3.8 (64-bit))" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
