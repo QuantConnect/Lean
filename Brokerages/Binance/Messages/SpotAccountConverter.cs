@@ -19,11 +19,21 @@ using Newtonsoft.Json.Linq;
 
 namespace QuantConnect.Brokerages.Binance.Messages
 {
+    /// <summary>
+    /// Deserializes Spot Account data
+    /// https://binance-docs.github.io/apidocs/spot/en/#account-information-user_data
+    /// </summary>
     public class SpotAccountConverter : JsonConverter
     {
         public override bool CanConvert(Type objectType)
             => typeof(AccountInformation).IsAssignableFrom(objectType);
 
+        /// <summary>Reads the JSON representation of the spot account data and asset balances.</summary>
+        /// <param name="reader">The <see cref="T:Newtonsoft.Json.JsonReader" /> to read from.</param>
+        /// <param name="objectType">Type of the object.</param>
+        /// <param name="existingValue">The existing value of object being read.</param>
+        /// <param name="serializer">The calling serializer.</param>
+        /// <returns>The object value.</returns>
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             JObject token = JObject.Load(reader);
