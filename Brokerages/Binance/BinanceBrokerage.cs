@@ -123,7 +123,6 @@ namespace QuantConnect.Brokerages.Binance
 
             _reconnectTimer.Stop();
             WebSocket.Close();
-            ApiClient.StopSession();
         }
 
         /// <summary>
@@ -479,7 +478,10 @@ namespace QuantConnect.Brokerages.Binance
                 Interval = 30 * 60 * 1000
             };
 
-            WebSocket.Open += (s, e) => { _keepAliveTimer.Start(); };
+            WebSocket.Open += (s, e) =>
+            {
+                _keepAliveTimer.Start();
+            };
             WebSocket.Closed += (s, e) =>
             {
                 ApiClient.StopSession();

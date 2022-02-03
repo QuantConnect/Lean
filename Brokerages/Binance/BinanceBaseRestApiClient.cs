@@ -413,7 +413,10 @@ namespace QuantConnect.Brokerages.Binance
                     Encoding.UTF8.GetBytes($"listenKey={SessionId}"),
                     ParameterType.RequestBody
                 );
-                ExecuteRestRequest(request);
+                if (ExecuteRestRequest(request).StatusCode == HttpStatusCode.OK)
+                {
+                    SessionId = null;
+                };
             }
         }
 
