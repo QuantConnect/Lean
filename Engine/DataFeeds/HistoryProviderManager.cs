@@ -14,6 +14,7 @@
 */
 
 using NodaTime;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.HistoricalData;
@@ -36,7 +37,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <remarks>Protected for testing purposes</remarks>
         protected List<IHistoryProvider> HistoryProviders { get; } = new();
 
-        private IDataPermissionManager _dataPermissionManager;
         private IBrokerage _brokerage;
         private bool _initialized;
 
@@ -61,13 +61,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 throw new InvalidOperationException("BrokerageHistoryProvider can only be initialized once");
             }
             _initialized = true;
-            _brokerage.Connect();
-            foreach (var historyProvider in parameters.Job.HistoryProvider.DeserializeList())
+
+            var dataProvidersList = parameters.Job.HistoryProvider.DeserializeList();
+            if (dataProvidersList.IsNullOrEmpty())
             {
-                var provider = Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>(historyProvider);
-                HistoryProviders.Add(provider);
+                dataProvidersList.Add(Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider"));
             }
-            _dataPermissionManager = parameters.DataPermissionManager;
+
+            foreach (var historyProviderName in dataProvidersList)
+            {
+                var historyProvider = Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>(historyProviderName);
+                if (historyProvider is BrokerageHistoryProvider)
+                {
+                    (historyProvider as BrokerageHistoryProvider).SetBrokerage(_brokerage);
+                }
+                historyProvider.Initialize(parameters);
+                HistoryProviders.Add(historyProvider);
+            }
         }
 
         /// <summary>
@@ -78,19 +88,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
         public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
         {
-            // create subscription objects from the configs
-            var subscriptions = new List<Subscription>();
-            foreach (var request in requests)
+            foreach (var historyPrpvider in HistoryProviders)
             {
-                var history = _brokerage.GetHistory(request);
-                var subscription = CreateSubscription(request, history);
-
-                _dataPermissionManager.AssertConfiguration(subscription.Configuration, request.StartTimeLocal, request.EndTimeLocal);
-
-                subscriptions.Add(subscription);
+                var history = historyPrpvider.GetHistory(requests, sliceTimeZone);
+                if (history.IsNullOrEmpty())
+                {
+                    return history;
+                }
             }
-
-            return CreateSliceEnumerableFromSubscriptions(subscriptions, sliceTimeZone);
+            return null;
         }
     }
 }

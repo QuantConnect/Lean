@@ -186,11 +186,7 @@ namespace QuantConnect.Lean.Engine
 
                     // set the history provider before setting up the algorithm
                     var historyProvider = GetHistoryProvider();
-                    if (historyProvider is BrokerageHistoryProvider)
-                    {
-                        (historyProvider as BrokerageHistoryProvider).SetBrokerage(brokerage);
-                    }
-
+                    (historyProvider as HistoryProviderManager).SetBrokerage(brokerage);
                     historyDataCacheProvider = new ZipDataCacheProvider(AlgorithmHandlers.DataProvider, isDataEphemeral:_liveMode);
                     historyProvider.Initialize(
                         new HistoryProviderInitializeParameters(
