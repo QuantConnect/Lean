@@ -36,7 +36,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <remarks>Protected for testing purposes</remarks>
         protected List<IHistoryProvider> HistoryProviders { get; } = new();
-
         private IBrokerage _brokerage;
         private bool _initialized;
 
@@ -88,15 +87,33 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
         public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
         {
-            foreach (var historyPrpvider in HistoryProviders)
+            SortedDictionary<DateTime, Slice> mergedHistory = new();
+            foreach (var historyProvider in HistoryProviders)
             {
-                var history = historyPrpvider.GetHistory(requests, sliceTimeZone);
-                if (history.IsNullOrEmpty())
+                try
                 {
-                    return history;
+                    var history = historyProvider.GetHistory(requests, sliceTimeZone);
+                    if (history != null)
+                    {
+                        foreach (var slice in history)
+                        {
+                            if (!mergedHistory.ContainsKey(slice.Time))
+                            {
+                                mergedHistory[slice.Time] = slice;
+                            }
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    // ignore
                 }
             }
-            return null;
+            if (mergedHistory.IsNullOrEmpty())
+            {
+                return null;
+            }
+            return mergedHistory.Values;
         }
     }
 }
