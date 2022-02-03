@@ -129,20 +129,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Subscription data reader takes a subscription request, loads the type, accepts the data source and enumerate on the results.
         /// </summary>
         /// <param name="config">Subscription configuration object</param>
-        /// <param name="periodStart">Start date for the data request/backtest</param>
-        /// <param name="periodFinish">Finish date for the data request/backtest</param>
-        /// <param name="mapFileResolver">Used for resolving the correct map files</param>
+        /// <param name="dataRequest">The data request</param>
+        /// <param name="mapFileProvider">Used for resolving the correct map files</param>
         /// <param name="factorFileProvider">Used for getting factor files</param>
         /// <param name="dataCacheProvider">Used for caching files</param>
-        /// <param name="tradeableDates">Defines the dates for which we'll request data, in order, in the security's data time zone</param>
         /// <param name="isLiveMode">True if we're in live mode, false otherwise</param>
         /// <param name="dataProvider">The data provider to use</param>
         public SubscriptionDataReader(SubscriptionDataConfig config,
-            DateTime periodStart,
-            DateTime periodFinish,
+            BaseDataRequest dataRequest,
             IMapFileProvider mapFileProvider,
             IFactorFileProvider factorFileProvider,
-            IEnumerable<DateTime> tradeableDates,
             bool isLiveMode,
             IDataCacheProvider dataCacheProvider,
             IDataProvider dataProvider)
@@ -151,15 +147,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _config = config;
 
             //Save Start and End Dates:
-            _periodStart = periodStart;
-            _periodFinish = periodFinish;
+            _periodStart = dataRequest.StartTimeLocal;
+            _periodFinish = dataRequest.EndTimeLocal;
             _mapFileProvider = mapFileProvider;
             _factorFileProvider = factorFileProvider;
             _dataCacheProvider = dataCacheProvider;
 
             //Save access to securities
             _isLiveMode = isLiveMode;
-            _tradeableDates = tradeableDates.GetEnumerator();
+            _tradeableDates = dataRequest.TradableDays.GetEnumerator();
             _dataProvider = dataProvider;
         }
 
@@ -254,7 +250,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // adding a day so we stop at EOD
             _delistingDate = _delistingDate.AddDays(1);
-
             UpdateDataEnumerator(true);
 
             _initialized = true;
@@ -343,6 +338,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // if we move past our current 'date' then we need to do daily things, such
                     // as updating factors and symbol mapping
                     var shouldSkip = false;
+
                     while (instance.Time.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date > _tradeableDates.Current)
                     {
                         var currentTradeableDate = _tradeableDates.Current;
@@ -521,7 +517,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>True if we got a new date from the enumerator, false if it's exhausted, or in live mode if we're already at today</returns>
         private bool TryGetNextDate(out DateTime date)
         {
-            if (_isLiveMode && _tradeableDates.Current >= DateTime.Today)
+            if (_isLiveMode && _tradeableDates.Current.ConvertToUtc(_config.DataTimeZone) >= DateTime.UtcNow)
             {
                 // special behavior for live mode, don't advance past today
                 date = _tradeableDates.Current;

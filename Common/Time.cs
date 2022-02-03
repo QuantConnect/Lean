@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Globalization;
 using NodaTime;
 using QuantConnect.Logging;
@@ -487,7 +486,7 @@ namespace QuantConnect
         /// </summary>
         /// <remarks>
         /// This is mainly used to bridge the gap between exchange time zone and data time zone for file written to disk. The returned
-        /// enumerable of dates is gauranteed to be the same size or longer than those generated via <see cref="EachTradeableDay(ICollection{Security},DateTime,DateTime)"/>
+        /// enumerable of dates is guaranteed to be the same size or longer than those generated via <see cref="EachTradeableDay(ICollection{Security},DateTime,DateTime)"/>
         /// </remarks>
         /// <param name="exchange">The exchange hours</param>
         /// <param name="from">The start time in the exchange time zone</param>

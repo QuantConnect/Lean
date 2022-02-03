@@ -310,7 +310,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 // next.EndTime calculated as Time + resolution,
                 // and both should be based on the same TZ (for example UTC)
                 var nextEndTimeUTC = next.Time.ConvertToUtc(Exchange.TimeZone) + _dataResolution;
-                if (potentialBarEndTime < nextEndTimeUTC)
+                if (next.Time == next.EndTime && next.DataType == MarketDataType.Auxiliary)
+                {
+                    // we merge corporate event data points (mapping, delisting, splits, dividend) which do not have
+                    // a period or resolution
+                    nextEndTimeUTC = next.Time.ConvertToUtc(Exchange.TimeZone);
+                }
+                if (potentialBarEndTime < nextEndTimeUTC
+                    // let's fill forward based on previous, which isn't auxiliary, if next is auxiliary and they share the end time
+                    || next.DataType == MarketDataType.Auxiliary && potentialBarEndTime == nextEndTimeUTC)
                 {
                     // to check open hours we need to convert potential
                     // bar EndTime into exchange time zone

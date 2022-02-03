@@ -15,6 +15,7 @@
 
 using System;
 using QuantConnect.Securities;
+using System.Collections.Generic;
 
 namespace QuantConnect.Data
 {
@@ -50,6 +51,11 @@ namespace QuantConnect.Data
         /// Gets the exchange hours used for processing fill forward requests
         /// </summary>
         public SecurityExchangeHours ExchangeHours { get; }
+
+        /// <summary>
+        /// Gets the tradable days specified by this request, in the security's data time zone
+        /// </summary>
+        public abstract IEnumerable<DateTime> TradableDays { get; }
 
         /// <summary>
         /// Initializes the base data request

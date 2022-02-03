@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Data;
 using QuantConnect.Orders;
 using QuantConnect.Interfaces;
@@ -62,7 +63,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             foreach (var changedEvent in data.SymbolChangedEvents.Values)
             {
-                Log($"{Time} - SymbolChanged event: {changedEvent}");
+                Debug($"{Time} - SymbolChanged event: {changedEvent}");
+                if (Time.TimeOfDay != TimeSpan.Zero)
+                {
+                    throw new Exception($"{Time} unexpected symbol changed event {changedEvent}!");
+                }
             }
 
             if (!Portfolio.Invested)

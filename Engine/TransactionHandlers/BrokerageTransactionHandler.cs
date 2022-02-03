@@ -1183,10 +1183,14 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             if (_algorithm.Securities.TryGetValue(e.Symbol, out var security))
             {
-                Log.Trace(
-                    "BrokerageTransactionHandler.HandleDelistingNotification(): clearing position for delisted holding: " +
-                    $"Symbol: {e.Symbol.Value}, " +
-                    $"Quantity: {security.Holdings.Quantity}");
+                // only log always in live trading, in backtesting log if not 0 holdings
+                if (_algorithm.LiveMode || security.Holdings.Quantity != 0)
+                {
+                    Log.Trace(
+                        $"BrokerageTransactionHandler.HandleDelistingNotification(): UtcTime: {CurrentTimeUtc} clearing position for delisted holding: " +
+                        $"Symbol: {e.Symbol.Value}, " +
+                        $"Quantity: {security.Holdings.Quantity}");
+                }
 
                 // Only submit an order if we have holdings
                 var quantity = -security.Holdings.Quantity;
@@ -1232,7 +1236,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                             if (_algorithm.LiveMode || security.Holdings.Quantity != 0)
                             {
                                 Log.Trace(
-                                    "BrokerageTransactionHandler.HandleOptionNotification(): clearing position for expired option holding: " +
+                                    $"BrokerageTransactionHandler.HandleOptionNotification(): UtcTime: {CurrentTimeUtc} clearing position for expired option holding: " +
                                     $"Symbol: {e.Symbol.Value}, " +
                                     $"Holdings: {security.Holdings.Quantity}");
                             }

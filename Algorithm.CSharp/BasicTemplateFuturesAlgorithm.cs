@@ -76,6 +76,15 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">The current slice of data keyed by symbol string</param>
         public override void OnData(Slice slice)
         {
+            foreach (var changedEvent in slice.SymbolChangedEvents.Values)
+            {
+                Debug($"{Time} - SymbolChanged event: {changedEvent}");
+                if (Time.TimeOfDay != TimeSpan.Zero)
+                {
+                    throw new Exception($"{Time} unexpected symbol changed event {changedEvent}!");
+                }
+            }
+
             if (!Portfolio.Invested)
             {
                 foreach(var chain in slice.FutureChains)
