@@ -118,12 +118,11 @@ namespace QuantConnect.Brokerages.Binance
         /// </summary>
         public override void Disconnect()
         {
-            if (!WebSocket.IsOpen)
+            if (WebSocket?.IsOpen != true)
                 return;
 
             _reconnectTimer.Stop();
-
-            WebSocket?.Close();
+            WebSocket.Close();
             ApiClient.StopSession();
         }
 
