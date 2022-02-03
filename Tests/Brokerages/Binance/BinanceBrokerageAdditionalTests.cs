@@ -41,82 +41,31 @@ namespace QuantConnect.Tests.Brokerages.Binance
         [Test]
         public void ConnectedIfNoAlgorithm()
         {
-            var securities = new SecurityManager(new TimeKeeper(DateTime.UtcNow, TimeZones.NewYork));
-
-            var transactions = new SecurityTransactionManager(null, securities);
-            transactions.SetOrderProcessor(new FakeOrderProcessor());
-
-            var apiKey = Config.Get("binance-api-key");
-            var apiSecret = Config.Get("binance-api-secret");
-            var apiUrl = Config.Get("binance-api-url", "https://api.binance.com");
-            var websocketUrl = Config.Get("binance-websocket-url", "wss://stream.binance.com:9443/ws");
-
-            using var brokerage = new BinanceBrokerage(
-                apiKey,
-                apiSecret,
-                apiUrl,
-                websocketUrl,
-                null,
-                new AggregationManager(),
-                null
-            );
-
+            using var brokerage = CreateBrokerage(null);
             Assert.True(brokerage.IsConnected);
         }
 
         [Test]
-        public void ConnectedIfAlgorithmIsNotInitialized()
+        public void ConnectedIfAlgorithmIsNotNullAndClientNotCreated()
+        {
+            using var brokerage = CreateBrokerage(Mock.Of<IAlgorithm>());
+            Assert.True(brokerage.IsConnected);
+        }
+
+        [Test]
+        public void ConnectToUserDataStreamIfAlgorithmNotNullAndApiIsCreated()
         {
             var securities = new SecurityManager(new TimeKeeper(DateTime.UtcNow, TimeZones.NewYork));
 
             var transactions = new SecurityTransactionManager(null, securities);
             transactions.SetOrderProcessor(new FakeOrderProcessor());
-
-            var apiKey = Config.Get("binance-api-key");
-            var apiSecret = Config.Get("binance-api-secret");
-            var apiUrl = Config.Get("binance-api-url", "https://api.binance.com");
-            var websocketUrl = Config.Get("binance-websocket-url", "wss://stream.binance.com:9443/ws");
-
-            using var brokerage = new BinanceBrokerage(
-                apiKey,
-                apiSecret,
-                apiUrl,
-                websocketUrl,
-                null,
-                new AggregationManager(),
-                null
-            );
-
-            Assert.True(brokerage.IsConnected);
-        }
-
-        [Test]
-        public void ConnectToUserDataStreamIfAlgorithmIsInitializedAndApiIsCreated()
-        {
-            var securities = new SecurityManager(new TimeKeeper(DateTime.UtcNow, TimeZones.NewYork));
-
-            var transactions = new SecurityTransactionManager(null, securities);
-            transactions.SetOrderProcessor(new FakeOrderProcessor());
-
-            var apiKey = Config.Get("binance-api-key");
-            var apiSecret = Config.Get("binance-api-secret");
-            var apiUrl = Config.Get("binance-api-url", "https://api.binance.com");
-            var websocketUrl = Config.Get("binance-websocket-url", "wss://stream.binance.com:9443/ws");
 
             var algorithm = new Mock<IAlgorithm>();
             algorithm.Setup(a => a.Transactions).Returns(transactions);
             algorithm.Setup(a => a.BrokerageModel).Returns(new BinanceBrokerageModel());
             algorithm.Setup(a => a.Portfolio).Returns(new SecurityPortfolioManager(securities, transactions));
 
-            using var brokerage = new BinanceBrokerage(
-                apiKey,
-                apiSecret,
-                apiUrl,
-                websocketUrl,
-                algorithm.Object,
-                new AggregationManager(),
-                null
-            );
+            using var brokerage =  CreateBrokerage(algorithm.Object);
 
             Assert.True(brokerage.IsConnected);
             
@@ -127,6 +76,24 @@ namespace QuantConnect.Tests.Brokerages.Binance
             brokerage.Disconnect();
 
             Assert.False(brokerage.IsConnected);
+        }
+
+        private static Brokerage CreateBrokerage(IAlgorithm algorithm)
+        {
+            var apiKey = Config.Get("binance-api-key");
+            var apiSecret = Config.Get("binance-api-secret");
+            var apiUrl = Config.Get("binance-api-url", "https://api.binance.com");
+            var websocketUrl = Config.Get("binance-websocket-url", "wss://stream.binance.com:9443/ws");
+
+            return new BinanceBrokerage(
+                apiKey,
+                apiSecret,
+                apiUrl,
+                websocketUrl,
+                algorithm,
+                new AggregationManager(),
+                null
+            );
         }
     }
 }
