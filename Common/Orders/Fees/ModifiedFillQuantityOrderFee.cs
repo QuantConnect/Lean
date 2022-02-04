@@ -26,13 +26,16 @@ namespace QuantConnect.Orders.Fees
     /// </remarks>
     public class ModifiedFillQuantityOrderFee : OrderFee
     {
+        private readonly string _quoteCurrency;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ModifiedFillQuantityOrderFee"/> class
         /// </summary>
         /// <param name="orderFee">The order fee</param>
-        public ModifiedFillQuantityOrderFee(CashAmount orderFee)
+        public ModifiedFillQuantityOrderFee(CashAmount orderFee, string quoteCurrency)
             : base(orderFee)
         {
+            _quoteCurrency = quoteCurrency;
         }
 
         /// <summary>
@@ -42,7 +45,7 @@ namespace QuantConnect.Orders.Fees
         /// <param name="fill">The order fill event</param>
         public override void ApplyToPortfolio(SecurityPortfolioManager portfolio, OrderEvent fill)
         {
-            // do not apply the fee twice
+            portfolio.CashBook[_quoteCurrency].AddAmount(-fill.FillQuantity * fill.FillPrice);
         }
     }
 }
