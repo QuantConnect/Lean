@@ -1697,8 +1697,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             while (fillForwardEnumerator.MoveNext())
             {
                 Assert.NotNull(fillForwardEnumerator.Current);
-                // we don't care about .Time because lean only uses .EndTime
-                // in case some auxiliary data point comes in it will respect endtime being ascendant but it's time == endtime
+                // we don't care about 'Time' because lean only uses 'EndTime', in case some auxiliary data point comes in 'Time == EndTime'
+                // but the enumerator output should always go increasing 'EndTime'
                 Assert.GreaterOrEqual(fillForwardEnumerator.Current.EndTime, previous?.EndTime);
                 Assert.AreEqual(
                     fillForwardEnumerator.Current.DataType != MarketDataType.Auxiliary,
@@ -1874,8 +1874,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             while (fillForwardEnumerator.MoveNext())
             {
                 Assert.NotNull(fillForwardEnumerator.Current);
-                // we don't care about .Time because lean only uses .EndTime
-                // in case some auxiliary data point comes in it will respect endtime being ascendant but it's time == endtime
+                // we don't care about 'Time' because lean only uses 'EndTime', in case some auxiliary data point comes in 'Time == EndTime'
+                // but the enumerator output should always go increasing 'EndTime'
                 if (previous != null)
                 {
                     Assert.GreaterOrEqual(fillForwardEnumerator.Current.EndTime, previous?.EndTime);

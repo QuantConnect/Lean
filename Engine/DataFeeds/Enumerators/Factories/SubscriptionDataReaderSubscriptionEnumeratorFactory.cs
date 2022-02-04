@@ -32,7 +32,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     /// <remarks>Only used on backtesting by the <see cref="FileSystemDataFeed"/></remarks>
     public class SubscriptionDataReaderSubscriptionEnumeratorFactory : ISubscriptionEnumeratorFactory, IDisposable
     {
-        private readonly bool _isLiveMode;
         private readonly IResultHandler _resultHandler;
         private readonly IFactorFileProvider _factorFileProvider;
         private readonly IDataCacheProvider _dataCacheProvider;
@@ -66,7 +65,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             _dataCacheProvider = cacheProvider;
             _numericalPrecisionLimitedWarnings = new ConcurrentDictionary<Symbol, string>();
             _startDateLimitedWarnings = new ConcurrentDictionary<Symbol, string>();
-            _isLiveMode = false;
             _enablePriceScaling = enablePriceScaling;
         }
 
@@ -82,7 +80,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 request,
                 _mapFileProvider,
                 _factorFileProvider,
-                _isLiveMode,
                 _dataCacheProvider,
                 dataProvider
                 );

@@ -64,7 +64,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new HistoryRequest(config, entry.ExchangeHours, start, end),
                 TestGlobals.MapFileProvider,
                 TestGlobals.FactorFileProvider,
-                false,
                 new TestDataCacheProvider
                 { Data = data },
                 TestGlobals.DataProvider

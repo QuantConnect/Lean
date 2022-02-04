@@ -16,8 +16,8 @@
 
 using System;
 using System.Linq;
-using System.Collections;
 using QuantConnect.Data;
+using System.Collections;
 using System.Globalization;
 using QuantConnect.Logging;
 using QuantConnect.Interfaces;
@@ -66,9 +66,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private MapFile _mapFile;
 
         private bool _pastDelistedDate;
-
-        // true if we're in live mode, false otherwise
-        private readonly bool _isLiveMode;
 
         private BaseData _previous;
         private decimal? _lastRawPrice;
@@ -139,7 +136,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             BaseDataRequest dataRequest,
             IMapFileProvider mapFileProvider,
             IFactorFileProvider factorFileProvider,
-            bool isLiveMode,
             IDataCacheProvider dataCacheProvider,
             IDataProvider dataProvider)
         {
@@ -154,7 +150,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _dataCacheProvider = dataCacheProvider;
 
             //Save access to securities
-            _isLiveMode = isLiveMode;
             _tradeableDates = dataRequest.TradableDays.GetEnumerator();
             _dataProvider = dataProvider;
         }
@@ -213,7 +208,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             _factorFile = factorFile;
 
                             // if factor file has minimum date, update start period if before minimum date
-                            if (!_isLiveMode && _factorFile != null && _factorFile.FactorFileMinimumDate.HasValue)
+                            if (_factorFile != null && _factorFile.FactorFileMinimumDate.HasValue)
                             {
                                 if (_periodStart < _factorFile.FactorFileMinimumDate.Value)
                                 {
@@ -284,14 +279,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             if (_subscriptionFactoryEnumerator == null)
             {
-                // in live mode the trade able dates will eventually advance to the next
-                if (_isLiveMode)
-                {
-                    // HACK attack -- we don't want to block in live mode
-                    Current = null;
-                    return true;
-                }
-
                 _endOfStream = true;
                 return false;
             }
@@ -412,7 +399,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // called on date changes, never return null for live mode, we'll always
                 // just keep trying to refresh the subscription
                 DateTime date;
-                if (!TryGetNextDate(out date) && !_isLiveMode)
+                if (!TryGetNextDate(out date))
                 {
                     _subscriptionFactoryEnumerator = null;
                     // if we run out of dates then we're finished with this subscription
@@ -420,12 +407,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 // fetch the new source, using the data time zone for the date
-                var newSource = _dataFactory.GetSource(_config, date, _isLiveMode);
+                var newSource = _dataFactory.GetSource(_config, date, false);
 
                 // check if we should create a new subscription factory
                 var sourceChanged = _source != newSource && newSource.Source != "";
-                var liveRemoteFile = _isLiveMode && (_source == null || _source.TransportMedium == SubscriptionTransportMedium.RemoteFile);
-                if (sourceChanged || liveRemoteFile)
+                if (sourceChanged)
                 {
                     // dispose of the current enumerator before creating a new one
                     Dispose();
@@ -453,7 +439,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private ISubscriptionDataSourceReader CreateSubscriptionFactory(SubscriptionDataSource source, BaseData baseDataInstance, IDataProvider dataProvider)
         {
-            var factory = SubscriptionDataSourceReader.ForSource(source, _dataCacheProvider, _config, _tradeableDates.Current, _isLiveMode, baseDataInstance, dataProvider);
+            var factory = SubscriptionDataSourceReader.ForSource(source, _dataCacheProvider, _config, _tradeableDates.Current, false, baseDataInstance, dataProvider);
             AttachEventHandlers(factory, source);
             return factory;
         }
@@ -517,13 +503,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>True if we got a new date from the enumerator, false if it's exhausted, or in live mode if we're already at today</returns>
         private bool TryGetNextDate(out DateTime date)
         {
-            if (_isLiveMode && _tradeableDates.Current.ConvertToUtc(_config.DataTimeZone) >= DateTime.UtcNow)
-            {
-                // special behavior for live mode, don't advance past today
-                date = _tradeableDates.Current;
-                return false;
-            }
-
             while (_tradeableDates.MoveNext())
             {
                 date = _tradeableDates.Current;

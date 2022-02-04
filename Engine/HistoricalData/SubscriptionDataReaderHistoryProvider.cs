@@ -109,7 +109,6 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 request,
                 _mapFileProvider,
                 _factorFileProvider,
-                false,
                 _dataCacheProvider,
                 _dataProvider
                 );
