@@ -461,9 +461,8 @@ namespace QuantConnect.Data
                 Log.Debug($"Nothing to merge, data point count 0");
                 return;
             }
-
+            
             // Merge TradeBars
-            // Change for enummerable
             if (inputSlice.Bars.Count != 0)
             {
                 var kvpTradeBars = inputSlice.Bars;
@@ -472,6 +471,13 @@ namespace QuantConnect.Data
                     if (!_bars.ContainsKey(kvp.Key))
                     {
                         _bars.Add(kvp.Key, kvp.Value);
+                        var tempSymbolData = new SymbolData(kvp.Key) { TradeBar = kvp.Value };
+                        KeyValuePair<Symbol,SymbolData> tempKvp = new(kvp.Key, tempSymbolData);
+                        if (!_data.Value.Contains(tempKvp))
+                        {
+                            _data.Value.Add(tempKvp);
+                        }
+                        
                     }
                 }
             }
