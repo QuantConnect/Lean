@@ -207,6 +207,21 @@ namespace QuantConnect.Tests.Common.Data
         }
 
         [Test]
+        public void MergeSlice()
+        {
+            TradeBar tradeBar1 = new TradeBar { Symbol = Symbols.SPY, Time = DateTime.Now };
+            TradeBar tradeBar2 = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now };
+            Slice slice1 = new Slice(DateTime.Today, new[] { tradeBar1, tradeBar2 });
+
+            TradeBar tradeBar3 = new TradeBar { Symbol = Symbols.MSFT, Time = DateTime.Now };
+            TradeBar tradeBar4 = new TradeBar { Symbol = Symbols.SBIN, Time = DateTime.Now };
+            Slice slice2 = new Slice(DateTime.Today, new[] { tradeBar3, tradeBar4 });
+
+            slice1.MergeSlice(slice2);
+            Assert.AreEqual(4, slice1.Bars.Count);
+        }
+
+        [Test]
         public void PythonGetCustomData()
         {
             using (Py.GIL())

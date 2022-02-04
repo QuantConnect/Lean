@@ -20,6 +20,7 @@ using System.Linq;
 using System.Reflection;
 using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Market;
+using QuantConnect.Logging;
 using QuantConnect.Python;
 
 namespace QuantConnect.Data
@@ -69,14 +70,6 @@ namespace QuantConnect.Data
         public TradeBars Bars
         {
             get { return _bars; }
-        }
-
-        /// <summary>
-        /// Gets the <see cref="TradeBars"/> for this slice of data
-        /// </summary>
-        public List<TradeBar> ListOfBars
-        {
-            get { return (List<TradeBar>)_bars.Values; }
         }
 
         /// <summary>
@@ -450,6 +443,95 @@ namespace QuantConnect.Data
                 return data != null;
             }
             return false;
+        }
+
+        /// <summary>
+        /// Merge two slice with same Time
+        /// </summary>
+        /// <param name="inputSlice">slice instance</param>
+        public void MergeSlice(Slice inputSlice)
+        {
+            if (Time != inputSlice.Time)
+            {
+                Log.Trace($"Slice can't be merged having different time than {Time}, input slice time - {inputSlice.Time}");
+                return;
+            }
+
+            if (inputSlice.Values.Count == 0)
+            {
+                Log.Trace($"Nothing to merge, data point count 0");
+                return;
+            }
+
+            // Merge TradeBars
+            // Change for enummerable
+            if (inputSlice.Bars.Count != 0)
+            {
+                var kvpTradeBars = inputSlice.Bars;
+                foreach (var kvp in kvpTradeBars)
+                {
+                    if (!_bars.ContainsKey(kvp.Key))
+                    {
+                        _bars.Add(kvp.Key, kvp.Value);
+                    }
+                }
+            }
+
+            // Merge QuoteBars
+            if (inputSlice.QuoteBars.Count != 0)
+            {
+                var kvpQuoteBars = inputSlice.QuoteBars;
+                foreach (var kvp in kvpQuoteBars)
+                {
+                    if (!_quoteBars.ContainsKey(kvp.Key))
+                    {
+                        _quoteBars.Add(kvp.Key, kvp.Value);
+                    }
+                }
+            }
+
+            // Merge Ticks
+            if (inputSlice.Ticks.Count != 0)
+            {
+                var kvpTicks = inputSlice.Ticks;
+                foreach (var kvp in kvpTicks)
+                {
+                    if (!_ticks.ContainsKey(kvp.Key))
+                    {
+                        _ticks.Add(kvp.Key, kvp.Value);
+                    }
+                    else
+                    {
+                        //Merge ticks
+                    }
+                }
+            }
+
+            // Merge OptionChains
+            if (inputSlice.OptionChains.Count != 0)
+            {
+                var kvpOptionChains = inputSlice.OptionChains;
+                foreach (var kvp in kvpOptionChains)
+                {
+                    if (!_optionChains.ContainsKey(kvp.Key))
+                    {
+                        _optionChains.Add(kvp.Key, kvp.Value);
+                    }
+                }
+            }
+
+            // Merge Splits
+            if (inputSlice.Splits.Count != 0)
+            {
+                var kvpSplits = inputSlice.Splits;
+                foreach (var kvp in kvpSplits)
+                {
+                    if (!_splits.ContainsKey(kvp.Key))
+                    {
+                        _splits.Add(kvp.Key, kvp.Value);
+                    }
+                }
+            }
         }
 
         /// <summary>
