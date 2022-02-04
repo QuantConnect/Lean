@@ -453,13 +453,12 @@ namespace QuantConnect.Data
         {
             if (Time != inputSlice.Time)
             {
-                Log.Trace($"Slice can't be merged having different time than {Time}, input slice time - {inputSlice.Time}");
-                return;
+                throw new Exception($"Slice with time {Time} can't be merged with given slice with different {inputSlice.Time}");
             }
 
             if (inputSlice.Values.Count == 0)
             {
-                Log.Trace($"Nothing to merge, data point count 0");
+                Log.Debug($"Nothing to merge, data point count 0");
                 return;
             }
 
@@ -500,10 +499,6 @@ namespace QuantConnect.Data
                     {
                         _ticks.Add(kvp.Key, kvp.Value);
                     }
-                    else
-                    {
-                        //Merge ticks
-                    }
                 }
             }
 
@@ -520,6 +515,19 @@ namespace QuantConnect.Data
                 }
             }
 
+            // Merge FutureChains
+            if (inputSlice.FutureChains.Count != 0)
+            {
+                var kvpFutureChains = inputSlice.FutureChains;
+                foreach (var kvp in kvpFutureChains)
+                {
+                    if (!_futuresChains.ContainsKey(kvp.Key))
+                    {
+                        _futuresChains.Add(kvp.Key, kvp.Value);
+                    }
+                }
+            }
+
             // Merge Splits
             if (inputSlice.Splits.Count != 0)
             {
@@ -529,6 +537,45 @@ namespace QuantConnect.Data
                     if (!_splits.ContainsKey(kvp.Key))
                     {
                         _splits.Add(kvp.Key, kvp.Value);
+                    }
+                }
+            }
+
+            // Merge Dividends
+            if (inputSlice.Dividends.Count != 0)
+            {
+                var kvpDividends = inputSlice.Dividends;
+                foreach (var kvp in kvpDividends)
+                {
+                    if (!_dividends.ContainsKey(kvp.Key))
+                    {
+                        _dividends.Add(kvp.Key, kvp.Value);
+                    }
+                }
+            }
+
+            // Merge Delistings
+            if (inputSlice.Delistings.Count != 0)
+            {
+                var kvpDelistings = inputSlice.Delistings;
+                foreach (var kvp in kvpDelistings)
+                {
+                    if (!_delistings.ContainsKey(kvp.Key))
+                    {
+                        _delistings.Add(kvp.Key, kvp.Value);
+                    }
+                }
+            }
+
+            // Merge symbolChangeEvent
+            if (inputSlice.SymbolChangedEvents.Count != 0)
+            {
+                var kvpSymbolChangedEvents = inputSlice.SymbolChangedEvents;
+                foreach (var kvp in kvpSymbolChangedEvents)
+                {
+                    if (!_symbolChangedEvents.ContainsKey(kvp.Key))
+                    {
+                        _symbolChangedEvents.Add(kvp.Key, kvp.Value);
                     }
                 }
             }
