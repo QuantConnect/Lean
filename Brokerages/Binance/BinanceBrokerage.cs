@@ -51,7 +51,9 @@ namespace QuantConnect.Brokerages.Binance
         private string _webSocketBaseUrl;
         private Timer _keepAliveTimer;
         private Timer _reconnectTimer;
-        private BinanceRestApiClient _apiClient;
+        private Lazy<BinanceBaseRestApiClient> _apiClientLazy;
+        private BinanceBaseRestApiClient ApiClient => _apiClientLazy?.Value;
+
         private BrokerageConcurrentMessageHandler<WebSocketMessage> _messageHandler;
 
         private const int MaximumSymbolsPerConnection = 512;
@@ -91,8 +93,9 @@ namespace QuantConnect.Brokerages.Binance
 
         /// <summary>
         /// Checks if the websocket connection is connected or in the process of connecting
+        /// WebSocket is responsible for Binance UserData stream only.
         /// </summary>
-        public override bool IsConnected => WebSocket.IsOpen;
+        public override bool IsConnected => _apiClientLazy?.IsValueCreated != true || WebSocket?.IsOpen == true;
 
         /// <summary>
         /// Creates wss connection
@@ -102,12 +105,12 @@ namespace QuantConnect.Brokerages.Binance
             if (IsConnected)
                 return;
 
-            _apiClient.CreateListenKey();
-            _reconnectTimer.Start();
-
-            WebSocket.Initialize($"{_webSocketBaseUrl}/{_apiClient.SessionId}");
-
-            base.Connect();
+            // cannot reach this code if rest api client is not created
+            // WebSocket is  responsible for Binance UserData stream only
+            // as a result we don't need to connect user data stream if BinanceBrokerage is used as DQH only
+            // or until Algorithm is actually initialized
+            ApiClient.CreateListenKey();
+            Connect(ApiClient.SessionId);
         }
 
         /// <summary>
@@ -115,10 +118,11 @@ namespace QuantConnect.Brokerages.Binance
         /// </summary>
         public override void Disconnect()
         {
-            _reconnectTimer.Stop();
+            if (WebSocket?.IsOpen != true)
+                return;
 
-            WebSocket?.Close();
-            _apiClient.StopSession();
+            _reconnectTimer.Stop();
+            WebSocket.Close();
         }
 
         /// <summary>
@@ -127,11 +131,7 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns></returns>
         public override List<Holding> GetAccountHoldings()
         {
-            if (_algorithm.BrokerageModel.AccountType == AccountType.Cash)
-            {
-                return base.GetAccountHoldings(_job?.BrokerageData, _algorithm.Securities.Values);
-            }
-            return _apiClient.GetAccountHoldings();
+            return base.GetAccountHoldings(_job?.BrokerageData, _algorithm.Securities.Values);
         }
 
         /// <summary>
@@ -140,8 +140,7 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns></returns>
         public override List<CashAmount> GetCashBalance()
         {
-            var account = _apiClient.GetCashBalance();
-            var balances = account.Balances?.Where(balance => balance.Amount > 0).ToList();
+            var balances = ApiClient.GetCashBalance();
             if (balances == null || !balances.Any())
                 return new List<CashAmount>();
 
@@ -156,7 +155,7 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns></returns>
         public override List<Order> GetOpenOrders()
         {
-            var orders = _apiClient.GetOpenOrders();
+            var orders = ApiClient.GetOpenOrders();
             List<Order> list = new List<Order>();
             foreach (var item in orders)
             {
@@ -221,7 +220,7 @@ namespace QuantConnect.Brokerages.Binance
 
             _messageHandler.WithLockedStream(() =>
             {
-                submitted = _apiClient.PlaceOrder(order);
+                submitted = ApiClient.PlaceOrder(order);
             });
 
             return submitted;
@@ -248,7 +247,7 @@ namespace QuantConnect.Brokerages.Binance
 
             _messageHandler.WithLockedStream(() =>
             {
-                submitted = _apiClient.CancelOrder(order);
+                submitted = ApiClient.CancelOrder(order);
             });
 
             return submitted;
@@ -277,7 +276,7 @@ namespace QuantConnect.Brokerages.Binance
 
             var period = request.Resolution.ToTimeSpan();
 
-            foreach (var kline in _apiClient.GetHistory(request))
+            foreach (var kline in ApiClient.GetHistory(request))
             {
                 yield return new TradeBar()
                 {
@@ -388,7 +387,10 @@ namespace QuantConnect.Brokerages.Binance
         {
             _keepAliveTimer.DisposeSafely();
             _reconnectTimer.DisposeSafely();
-            _apiClient.DisposeSafely();
+            if (_apiClientLazy?.IsValueCreated == true)
+            {
+                ApiClient.DisposeSafely();
+            }
             _webSocketRateLimiter.DisposeSafely();
         }
 
@@ -411,14 +413,14 @@ namespace QuantConnect.Brokerages.Binance
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
         /// <param name="aggregator">the aggregator for consolidating ticks</param>
         /// <param name="job">The live job packet</param>
-        private void Initialize(string wssUrl, string restApiUrl,string apiKey, string apiSecret,
+        private void Initialize(string wssUrl, string restApiUrl, string apiKey, string apiSecret,
             IAlgorithm algorithm, IDataAggregator aggregator, LiveNodePacket job)
         {
             if (IsInitialized)
             {
                 return;
             }
-            base.Initialize(wssUrl,  new WebSocketClientWrapper(), null, apiKey, apiSecret);
+            base.Initialize(wssUrl, new WebSocketClientWrapper(), null, apiKey, apiSecret);
             _job = job;
             _algorithm = algorithm;
             _aggregator = aggregator;
@@ -441,15 +443,32 @@ namespace QuantConnect.Brokerages.Binance
 
             SubscriptionManager = subscriptionManager;
 
-            _apiClient = new BinanceRestApiClient(_symbolMapper,
-                algorithm?.Portfolio,
-                apiKey,
-                apiSecret,
-                restApiUrl);
+            // can be null, if BinanceBrokerage is used as DataQueueHandler only
+            if (_algorithm != null)
+            {
+                // Binance rest api endpoint is different for sport and margin trading
+                // we need to delay initialization of rest api client until Algorithm is initialized
+                // and user brokerage choise is actually applied
+                _apiClientLazy = new Lazy<BinanceBaseRestApiClient>(() =>
+                {
+                    BinanceBaseRestApiClient apiClient = _algorithm.BrokerageModel.AccountType == AccountType.Cash
+                        ? new BinanceSpotRestApiClient(_symbolMapper, algorithm?.Portfolio, apiKey, apiSecret, restApiUrl)
+                        : new BinanceCrossMarginRestApiClient(_symbolMapper, algorithm?.Portfolio, apiKey, apiSecret,
+                            restApiUrl);
 
-            _apiClient.OrderSubmit += (s, e) => OnOrderSubmit(e);
-            _apiClient.OrderStatusChanged += (s, e) => OnOrderEvent(e);
-            _apiClient.Message += (s, e) => OnMessage(e);
+                    apiClient.OrderSubmit += (s, e) => OnOrderSubmit(e);
+                    apiClient.OrderStatusChanged += (s, e) => OnOrderEvent(e);
+                    apiClient.Message += (s, e) => OnMessage(e);
+
+                    // once we know the api endpoint we can subscribe to user data stream
+                    apiClient.CreateListenKey();
+                    _keepAliveTimer.Elapsed += (s, e) => apiClient.SessionKeepAlive();
+
+                    Connect(apiClient.SessionId);
+
+                    return apiClient;
+                });
+            }
 
             // User data streams will close after 60 minutes. It's recommended to send a ping about every 30 minutes.
             // Source: https://github.com/binance-exchange/binance-official-api-docs/blob/master/user-data-stream.md#pingkeep-alive-a-listenkey
@@ -458,10 +477,16 @@ namespace QuantConnect.Brokerages.Binance
                 // 30 minutes
                 Interval = 30 * 60 * 1000
             };
-            _keepAliveTimer.Elapsed += (s, e) => _apiClient.SessionKeepAlive();
 
-            WebSocket.Open += (s, e) => { _keepAliveTimer.Start(); };
-            WebSocket.Closed += (s, e) => { _keepAliveTimer.Stop(); };
+            WebSocket.Open += (s, e) =>
+            {
+                _keepAliveTimer.Start();
+            };
+            WebSocket.Closed += (s, e) =>
+            {
+                ApiClient.StopSession();
+                _keepAliveTimer.Stop();
+            };
 
             // A single connection to stream.binance.com is only valid for 24 hours; expect to be disconnected at the 24 hour mark
             // Source: https://github.com/binance-exchange/binance-official-api-docs/blob/master/web-socket-streams.md#general-wss-information
@@ -591,6 +616,18 @@ namespace QuantConnect.Brokerages.Binance
             }
 
             return dict;
+        }
+
+        /// <summary>
+        /// Force reconnect websocket
+        /// </summary>
+        private void Connect(string sessionId)
+        {
+            Log.Trace("BaseWebSocketsBrokerage.Connect(): Connecting...");
+
+            _reconnectTimer.Start();
+            WebSocket.Initialize($"{_webSocketBaseUrl}/{sessionId}");
+            ConnectSync();
         }
     }
 }

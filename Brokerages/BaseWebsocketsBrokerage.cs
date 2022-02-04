@@ -149,7 +149,10 @@ namespace QuantConnect.Brokerages
             return SubscriptionManager?.GetSubscribedSymbols() ?? Enumerable.Empty<Symbol>();
         }
 
-        private void ConnectSync()
+        /// <summary>
+        /// Start websocket connect
+        /// </summary>
+        protected void ConnectSync()
         {
             var resetEvent = new ManualResetEvent(false);
             EventHandler triggerEvent = (o, args) => resetEvent.Set();

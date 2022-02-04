@@ -28,21 +28,27 @@ using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
+using QuantConnect.Brokerages.Binance.Messages;
+using Order = QuantConnect.Orders.Order;
 
 namespace QuantConnect.Brokerages.Binance
 {
     /// <summary>
-    /// Binance REST API implementation
+    /// Binance REST API base implementation
     /// </summary>
-    public class BinanceRestApiClient : IDisposable
+    public abstract class BinanceBaseRestApiClient : IDisposable
     {
-        private const string UserDataStreamEndpoint = "/api/v3/userDataStream";
+        // depends on SPOT or MARGIN trading
+        private readonly string _apiPrefix;
+        private readonly string _wsPrefix;
+
+        private string UserDataStreamEndpoint => $"{_wsPrefix}/userDataStream";
 
         private readonly SymbolPropertiesDatabaseSymbolMapper _symbolMapper;
         private readonly ISecurityProvider _securityProvider;
         private readonly IRestClient _restClient;
-        private readonly RateGate _restRateLimiter = new RateGate(10, TimeSpan.FromSeconds(1));
-        private readonly object _listenKeyLocker = new object();
+        private readonly RateGate _restRateLimiter = new(10, TimeSpan.FromSeconds(1));
+        private readonly object _listenKeyLocker = new();
 
         /// <summary>
         /// Event that fires each time an order is filled
@@ -80,21 +86,25 @@ namespace QuantConnect.Brokerages.Binance
         public string SessionId { get; private set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BinanceRestApiClient"/> class.
+        /// Initializes a new instance of the <see cref="BinanceBaseRestApiClient"/> class.
         /// </summary>
         /// <param name="symbolMapper">The symbol mapper.</param>
         /// <param name="securityProvider">The holdings provider.</param>
         /// <param name="apiKey">The Binance API key</param>
         /// <param name="apiSecret">The The Binance API secret</param>
         /// <param name="restApiUrl">The Binance API rest url</param>
-        public BinanceRestApiClient(SymbolPropertiesDatabaseSymbolMapper symbolMapper, ISecurityProvider securityProvider,
-            string apiKey, string apiSecret, string restApiUrl)
+        /// <param name="restApiPrefix">REST API path prefix depending on SPOT or CROSS MARGIN trading</param>
+        /// <param name="wsApiPrefix">REST API path prefix for user data streaming auth process depending on SPOT or CROSS MARGIN trading</param>
+        public BinanceBaseRestApiClient(SymbolPropertiesDatabaseSymbolMapper symbolMapper, ISecurityProvider securityProvider,
+            string apiKey, string apiSecret, string restApiUrl, string restApiPrefix, string wsApiPrefix)
         {
             _symbolMapper = symbolMapper;
             _securityProvider = securityProvider;
             _restClient = new RestClient(restApiUrl);
             ApiKey = apiKey;
             ApiSecret = apiSecret;
+            _apiPrefix = restApiPrefix;
+            _wsPrefix = wsApiPrefix;
         }
 
         /// <summary>
@@ -110,10 +120,10 @@ namespace QuantConnect.Brokerages.Binance
         /// Gets the total account cash balance for specified account type
         /// </summary>
         /// <returns></returns>
-        public Messages.AccountInformation GetCashBalance()
+        public BalanceEntry[] GetCashBalance()
         {
             var queryString = $"timestamp={GetNonce()}";
-            var endpoint = $"/api/v3/account?{queryString}&signature={AuthenticationToken(queryString)}";
+            var endpoint = $"{_apiPrefix}/account?{queryString}&signature={AuthenticationToken(queryString)}";
             var request = new RestRequest(endpoint, Method.GET);
             request.AddHeader(KeyHeader, ApiKey);
 
@@ -123,8 +133,19 @@ namespace QuantConnect.Brokerages.Binance
                 throw new Exception($"BinanceBrokerage.GetCashBalance: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
             }
 
-            return JsonConvert.DeserializeObject<Messages.AccountInformation>(response.Content);
+            return JsonConvert
+                .DeserializeObject<AccountInformation>(response.Content, CreateAccountConverter())
+                .Balances
+                .Where(s => s.Amount != 0)
+                .ToArray();
         }
+
+        /// <summary>
+        /// Deserialize Binance account information
+        /// </summary>
+        /// <param name="content">API response content</param>
+        /// <returns>Cash or Margin Account</returns>
+        protected abstract JsonConverter CreateAccountConverter();
 
         /// <summary>
         /// Gets all orders not yet closed
@@ -133,7 +154,7 @@ namespace QuantConnect.Brokerages.Binance
         public IEnumerable<Messages.OpenOrder> GetOpenOrders()
         {
             var queryString = $"timestamp={GetNonce()}";
-            var endpoint = $"/api/v3/openOrders?{queryString}&signature={AuthenticationToken(queryString)}";
+            var endpoint = $"{_apiPrefix}/openOrders?{queryString}&signature={AuthenticationToken(queryString)}";
             var request = new RestRequest(endpoint, Method.GET);
             request.AddHeader(KeyHeader, ApiKey);
 
@@ -153,53 +174,11 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
         public bool PlaceOrder(Order order)
         {
-            // supported time in force values {GTC, IOC, FOK}
-            // use GTC as LEAN doesn't support others yet
-            IDictionary<string, object> body = new Dictionary<string, object>()
-            {
-                { "symbol", _symbolMapper.GetBrokerageSymbol(order.Symbol) },
-                { "quantity", Math.Abs(order.Quantity).ToString(CultureInfo.InvariantCulture) },
-                { "side", ConvertOrderDirection(order.Direction) }
-            };
+            var body = CreateOrderBody(order);
 
-            switch (order)
-            {
-                case LimitOrder limitOrder:
-                    body["type"] = (order.Properties as BinanceOrderProperties)?.PostOnly == true
-                        ? "LIMIT_MAKER"
-                        : "LIMIT";
-                    body["price"] = limitOrder.LimitPrice.ToString(CultureInfo.InvariantCulture);
-                    // timeInForce is not required for LIMIT_MAKER
-                    if (Equals(body["type"], "LIMIT"))
-                        body["timeInForce"] = "GTC";
-                    break;
-                case MarketOrder:
-                    body["type"] = "MARKET";
-                    break;
-                case StopLimitOrder stopLimitOrder:
-                    var ticker = GetTickerPrice(order);
-                    var stopPrice = stopLimitOrder.StopPrice;
-                    if (order.Direction == OrderDirection.Sell)
-                    {
-                        body["type"] = stopPrice <= ticker ? "STOP_LOSS_LIMIT" : "TAKE_PROFIT_LIMIT";
-                    }
-                    else
-                    {
-                        body["type"] = stopPrice <= ticker ? "TAKE_PROFIT_LIMIT" : "STOP_LOSS_LIMIT";
-                    }
-
-                    body["timeInForce"] = "GTC";
-                    body["stopPrice"] = stopPrice.ToStringInvariant();
-                    body["price"] = stopLimitOrder.LimitPrice.ToStringInvariant();
-                    break;
-                default:
-                    throw new NotSupportedException($"BinanceBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");
-            }
-
-            const string endpoint = "/api/v3/order";
             body["timestamp"] = GetNonce();
             body["signature"] = AuthenticationToken(body.ToQueryString());
-            var request = new RestRequest(endpoint, Method.POST);
+            var request = new RestRequest($"{_apiPrefix}/order", Method.POST);
             request.AddHeader(KeyHeader, ApiKey);
             request.AddParameter(
                 "application/x-www-form-urlencoded",
@@ -243,6 +222,58 @@ namespace QuantConnect.Brokerages.Binance
         }
 
         /// <summary>
+        /// Create account new order body payload
+        /// </summary>
+        /// <param name="order">Lean order</param>
+        protected virtual IDictionary<string, object> CreateOrderBody(Order order)
+        {
+            // supported time in force values {GTC, IOC, FOK}
+            // use GTC as LEAN doesn't support others yet
+            var body = new Dictionary<string, object>
+            {
+                { "symbol", _symbolMapper.GetBrokerageSymbol(order.Symbol) },
+                { "quantity", Math.Abs(order.Quantity).ToString(CultureInfo.InvariantCulture) },
+                { "side", ConvertOrderDirection(order.Direction) }
+            };
+
+            switch (order)
+            {
+                case LimitOrder limitOrder:
+                    body["type"] = (order.Properties as BinanceOrderProperties)?.PostOnly == true
+                        ? "LIMIT_MAKER"
+                        : "LIMIT";
+                    body["price"] = limitOrder.LimitPrice.ToString(CultureInfo.InvariantCulture);
+                    // timeInForce is not required for LIMIT_MAKER
+                    if (Equals(body["type"], "LIMIT"))
+                        body["timeInForce"] = "GTC";
+                    break;
+                case MarketOrder:
+                    body["type"] = "MARKET";
+                    break;
+                case StopLimitOrder stopLimitOrder:
+                    var ticker = GetTickerPrice(order);
+                    var stopPrice = stopLimitOrder.StopPrice;
+                    if (order.Direction == OrderDirection.Sell)
+                    {
+                        body["type"] = stopPrice <= ticker ? "STOP_LOSS_LIMIT" : "TAKE_PROFIT_LIMIT";
+                    }
+                    else
+                    {
+                        body["type"] = stopPrice <= ticker ? "TAKE_PROFIT_LIMIT" : "STOP_LOSS_LIMIT";
+                    }
+
+                    body["timeInForce"] = "GTC";
+                    body["stopPrice"] = stopPrice.ToStringInvariant();
+                    body["price"] = stopLimitOrder.LimitPrice.ToStringInvariant();
+                    break;
+                default:
+                    throw new NotSupportedException($"BinanceBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");
+            }
+
+            return body;
+        }
+
+        /// <summary>
         /// Cancels the order with the specified ID
         /// </summary>
         /// <param name="order">The order to cancel</param>
@@ -264,7 +295,7 @@ namespace QuantConnect.Brokerages.Binance
                 body["timestamp"] = GetNonce();
                 body["signature"] = AuthenticationToken(body.ToQueryString());
 
-                var request = new RestRequest("/api/v3/order", Method.DELETE);
+                var request = new RestRequest($"{_apiPrefix}/order", Method.DELETE);
                 request.AddHeader(KeyHeader, ApiKey);
                 request.AddParameter(
                     "application/x-www-form-urlencoded",
@@ -382,7 +413,10 @@ namespace QuantConnect.Brokerages.Binance
                     Encoding.UTF8.GetBytes($"listenKey={SessionId}"),
                     ParameterType.RequestBody
                 );
-                ExecuteRestRequest(request);
+                if (ExecuteRestRequest(request).StatusCode == HttpStatusCode.OK)
+                {
+                    SessionId = null;
+                };
             }
         }
 

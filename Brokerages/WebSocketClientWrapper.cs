@@ -148,7 +148,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Wraps IsAlive
         /// </summary>
-        public bool IsOpen => _client != null && _client.State == WebSocketState.Open;
+        public bool IsOpen => _client?.State == WebSocketState.Open;
 
         /// <summary>
         /// Wraps message event
