@@ -245,6 +245,22 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(2, slice1.Dividends.Count);
             Assert.AreEqual(2, slice1.Delistings.Count);
             Assert.AreEqual(2, slice1.SymbolChangedEvents.Count);
+
+            // Use List<tick>
+            var ticks = new Ticks { { Symbols.MSFT, new List<Tick> { tick2 } } };
+            Slice slice3 = new Slice(DateTime.Today, new BaseData[] { tradeBar3, tradeBar4,
+                                        quoteBar2, split2, dividend2, delisting2, symbolChangedEvent2
+                                    }, null, null, ticks, null, null, null, null, null, null);
+
+            slice1.MergeSlice(slice3);
+            Assert.AreEqual(4, slice1.Bars.Count);
+            Assert.AreEqual(2, slice1.QuoteBars.Count);
+            // Tick should increase
+            Assert.AreEqual(3, slice1.Ticks.Count);
+            Assert.AreEqual(2, slice1.Splits.Count);
+            Assert.AreEqual(2, slice1.Dividends.Count);
+            Assert.AreEqual(2, slice1.Delistings.Count);
+            Assert.AreEqual(2, slice1.SymbolChangedEvents.Count);
         }
 
         [Test]

@@ -44,10 +44,10 @@ namespace QuantConnect.Data
 
         // string -> data   for non-tick data
         // string -> list{data} for tick data
-        private readonly Lazy<DataDictionary<SymbolData>> _data;
+        private Lazy<DataDictionary<SymbolData>> _data;
         // UnlinkedData -> DataDictonary<UnlinkedData>
         private Dictionary<Type, object> _dataByType;
-
+        private IEnumerable<BaseData> _rawDataList;
         /// <summary>
         /// Gets the timestamp for this slice of data
         /// </summary>
@@ -224,7 +224,7 @@ namespace QuantConnect.Data
         protected Slice(Slice slice)
         {
             Time = slice.Time;
-
+            _rawDataList = slice._rawDataList;
             _dataByType = slice._dataByType;
 
             _data = slice._data;
@@ -262,7 +262,7 @@ namespace QuantConnect.Data
         public Slice(DateTime time, IEnumerable<BaseData> data, TradeBars tradeBars, QuoteBars quoteBars, Ticks ticks, OptionChains optionChains, FuturesChains futuresChains, Splits splits, Dividends dividends, Delistings delistings, SymbolChangedEvents symbolChanges, bool? hasData = null)
         {
             Time = time;
-
+            _rawDataList = data;
             // market data
             _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(data));
 
@@ -463,7 +463,7 @@ namespace QuantConnect.Data
             }
             
             // Merge TradeBars
-            if (inputSlice.Bars.Count != 0)
+            if (inputSlice.Bars?.Count > 0)
             {
                 var kvpTradeBars = inputSlice.Bars;
                 foreach (var kvp in kvpTradeBars)
@@ -471,19 +471,13 @@ namespace QuantConnect.Data
                     if (!_bars.ContainsKey(kvp.Key))
                     {
                         _bars.Add(kvp.Key, kvp.Value);
-                        var tempSymbolData = new SymbolData(kvp.Key) { TradeBar = kvp.Value };
-                        KeyValuePair<Symbol,SymbolData> tempKvp = new(kvp.Key, tempSymbolData);
-                        if (!_data.Value.Contains(tempKvp))
-                        {
-                            _data.Value.Add(tempKvp);
-                        }
-                        
+                        _rawDataList = _rawDataList.Append(kvp.Value);
                     }
                 }
             }
 
             // Merge QuoteBars
-            if (inputSlice.QuoteBars.Count != 0)
+            if (inputSlice.QuoteBars?.Count > 0)
             {
                 var kvpQuoteBars = inputSlice.QuoteBars;
                 foreach (var kvp in kvpQuoteBars)
@@ -491,12 +485,13 @@ namespace QuantConnect.Data
                     if (!_quoteBars.ContainsKey(kvp.Key))
                     {
                         _quoteBars.Add(kvp.Key, kvp.Value);
+                        _rawDataList = _rawDataList.Append(kvp.Value);
                     }
                 }
             }
 
             // Merge Ticks
-            if (inputSlice.Ticks.Count != 0)
+            if (inputSlice.Ticks?.Count > 0)
             {
                 var kvpTicks = inputSlice.Ticks;
                 foreach (var kvp in kvpTicks)
@@ -504,12 +499,16 @@ namespace QuantConnect.Data
                     if (!_ticks.ContainsKey(kvp.Key))
                     {
                         _ticks.Add(kvp.Key, kvp.Value);
+                        foreach (var tick in kvp.Value)
+                        {
+                            _rawDataList = _rawDataList.Append(tick);
+                        }
                     }
                 }
             }
 
             // Merge OptionChains
-            if (inputSlice.OptionChains.Count != 0)
+            if (inputSlice.OptionChains?.Count > 0)
             {
                 var kvpOptionChains = inputSlice.OptionChains;
                 foreach (var kvp in kvpOptionChains)
@@ -517,12 +516,13 @@ namespace QuantConnect.Data
                     if (!_optionChains.ContainsKey(kvp.Key))
                     {
                         _optionChains.Add(kvp.Key, kvp.Value);
+                        _rawDataList = _rawDataList.Append(kvp.Value);
                     }
                 }
             }
 
             // Merge FutureChains
-            if (inputSlice.FutureChains.Count != 0)
+            if (inputSlice.FutureChains?.Count > 0)
             {
                 var kvpFutureChains = inputSlice.FutureChains;
                 foreach (var kvp in kvpFutureChains)
@@ -530,12 +530,13 @@ namespace QuantConnect.Data
                     if (!_futuresChains.ContainsKey(kvp.Key))
                     {
                         _futuresChains.Add(kvp.Key, kvp.Value);
+                        _rawDataList = _rawDataList.Append(kvp.Value);
                     }
                 }
             }
 
             // Merge Splits
-            if (inputSlice.Splits.Count != 0)
+            if (inputSlice.Splits?.Count > 0)
             {
                 var kvpSplits = inputSlice.Splits;
                 foreach (var kvp in kvpSplits)
@@ -543,12 +544,13 @@ namespace QuantConnect.Data
                     if (!_splits.ContainsKey(kvp.Key))
                     {
                         _splits.Add(kvp.Key, kvp.Value);
+                        _rawDataList = _rawDataList.Append(kvp.Value);
                     }
                 }
             }
 
             // Merge Dividends
-            if (inputSlice.Dividends.Count != 0)
+            if (inputSlice.Dividends?.Count > 0)
             {
                 var kvpDividends = inputSlice.Dividends;
                 foreach (var kvp in kvpDividends)
@@ -556,12 +558,13 @@ namespace QuantConnect.Data
                     if (!_dividends.ContainsKey(kvp.Key))
                     {
                         _dividends.Add(kvp.Key, kvp.Value);
+                        _rawDataList = _rawDataList.Append(kvp.Value);
                     }
                 }
             }
 
             // Merge Delistings
-            if (inputSlice.Delistings.Count != 0)
+            if (inputSlice.Delistings?.Count > 0)
             {
                 var kvpDelistings = inputSlice.Delistings;
                 foreach (var kvp in kvpDelistings)
@@ -569,12 +572,13 @@ namespace QuantConnect.Data
                     if (!_delistings.ContainsKey(kvp.Key))
                     {
                         _delistings.Add(kvp.Key, kvp.Value);
+                        _rawDataList = _rawDataList.Append(kvp.Value);
                     }
                 }
             }
 
             // Merge symbolChangeEvent
-            if (inputSlice.SymbolChangedEvents.Count != 0)
+            if (inputSlice.SymbolChangedEvents?.Count > 0)
             {
                 var kvpSymbolChangedEvents = inputSlice.SymbolChangedEvents;
                 foreach (var kvp in kvpSymbolChangedEvents)
@@ -582,9 +586,12 @@ namespace QuantConnect.Data
                     if (!_symbolChangedEvents.ContainsKey(kvp.Key))
                     {
                         _symbolChangedEvents.Add(kvp.Key, kvp.Value);
+                        _rawDataList = _rawDataList.Append(kvp.Value);
                     }
                 }
             }
+
+            _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(_rawDataList));
         }
 
         /// <summary>
