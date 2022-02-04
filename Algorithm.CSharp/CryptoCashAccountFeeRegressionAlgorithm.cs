@@ -13,7 +13,11 @@
  * limitations under the License.
 */
 
+using System;
+using System.Linq;
+using QuantConnect.Util;
 using QuantConnect.Data;
+using QuantConnect.Orders;
 using QuantConnect.Interfaces;
 using QuantConnect.Brokerages;
 using System.Collections.Generic;
@@ -54,7 +58,28 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
-                Buy(_symbol, 0.1m);
+                CurrencyPairUtil.DecomposeCurrencyPair(_symbol, out var baseCurrency, out var quoteCurrency);
+
+                var initialQuoteCurrency = Portfolio.CashBook[quoteCurrency].Amount;
+                var ticket = Buy(_symbol, 0.1m);
+                var filledEvent = ticket.OrderEvents.Single(orderEvent => orderEvent.Status == OrderStatus.Filled);
+
+                if (Portfolio.CashBook[baseCurrency].Amount != ticket.QuantityFilled
+                    || filledEvent.FillQuantity != ticket.QuantityFilled
+                    || (0.1m - filledEvent.OrderFee.Value.Amount) != ticket.QuantityFilled)
+                {
+                    throw new Exception($"Unexpected BaseCurrency porfoltio status. Event {filledEvent}. CashBook: {Portfolio.CashBook}. ");
+                }
+
+                if (Portfolio.CashBook[quoteCurrency].Amount != (initialQuoteCurrency - 0.1m * filledEvent.FillPrice))
+                {
+                    throw new Exception($"Unexpected QuoteCurrency porfoltio status. Event {filledEvent}. CashBook: {Portfolio.CashBook}. ");
+                }
+
+                if (Securities[_symbol].Holdings.Quantity != (0.1m - filledEvent.OrderFee.Value.Amount))
+                {
+                    throw new Exception($"Unexpected Holdings: {Securities[_symbol].Holdings}. Event {filledEvent}");
+                }
             }
             else
             {

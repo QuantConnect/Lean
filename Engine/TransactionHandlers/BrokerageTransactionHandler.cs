@@ -1065,7 +1065,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                         // fees are in the base currency, so we have to subtract them from the filled quantity
                         // else the virtual position will bigger than the real size and we might no be able to liquidate
                         orderEvent.FillQuantity -= orderEvent.OrderFee.Value.Amount;
-                        orderEvent.OrderFee = new ModifiedFillQuantityOrderFee(orderEvent.OrderFee.Value, quoteCurrency);
+                        orderEvent.OrderFee = new ModifiedFillQuantityOrderFee(orderEvent.OrderFee.Value, quoteCurrency, security.SymbolProperties.ContractMultiplier);
 
                         if (!_loggedFeeAdjustmentWarning)
                         {
