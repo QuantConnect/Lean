@@ -130,7 +130,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="mapFileProvider">Used for resolving the correct map files</param>
         /// <param name="factorFileProvider">Used for getting factor files</param>
         /// <param name="dataCacheProvider">Used for caching files</param>
-        /// <param name="isLiveMode">True if we're in live mode, false otherwise</param>
         /// <param name="dataProvider">The data provider to use</param>
         public SubscriptionDataReader(SubscriptionDataConfig config,
             BaseDataRequest dataRequest,
