@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -203,7 +203,7 @@ namespace QuantConnect.Lean.Engine.Storage
             // Before saving confirm we are abiding by the control rules
             // Start by counting our file and its length
             var fileCount = 1;
-            var expectedStorageSizeBytes = contents.Length;
+            var expectedStorageSizeBytes = contents?.Length ?? 0;
             foreach (var kvp in _storage)
             {
                 if (key.Equals(kvp.Key))
@@ -214,7 +214,10 @@ namespace QuantConnect.Lean.Engine.Storage
                 else
                 {
                     fileCount++;
-                    expectedStorageSizeBytes += kvp.Value.Length;
+                    if(kvp.Value != null)
+                    {
+                        expectedStorageSizeBytes += kvp.Value.Length;
+                    }
                 }
             }
 
@@ -277,6 +280,8 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <summary>
         /// Returns the file path for the specified key
         /// </summary>
+        /// <remarks>If the key is not already inserted it will just return a path associated with it
+        /// and add the key with null value</remarks>
         /// <param name="key">The object key</param>
         /// <returns>The path for the file</returns>
         public virtual string GetFilePath(string key)
@@ -284,13 +289,15 @@ namespace QuantConnect.Lean.Engine.Storage
             // Ensure we have an object for that key
             if (!ContainsKey(key))
             {
-                throw new KeyNotFoundException($"Object with key '{key}' was not found in the current project. " +
-                    "Please use ObjectStore.ContainsKey(key) to check if an object exists before attempting to read."
-                );
+                // Add a key with null value to tell Persist() not to delete the file created in the path associated
+                // with this key and not update it with the value associated with the key(null)
+                SaveBytes(key, null);
             }
-
-            // Persist to ensure pur files are up to date
-            Persist();
+            else
+            {
+                // Persist to ensure pur files are up to date
+                Persist();
+            }
 
             // Fetch the path to file and return it
             return PathForKey(key);
@@ -414,9 +421,13 @@ namespace QuantConnect.Lean.Engine.Storage
                 // Write all our store data to disk
                 foreach (var kvp in data)
                 {
-                    // Get a path for this key and write to it
-                    var path = PathForKey(kvp.Key);
-                    File.WriteAllBytes(path, kvp.Value);
+                    // Skip the key associated with null values. They are not linked to a file yet
+                    if (kvp.Value != null)
+                    {
+                        // Get a path for this key and write to it
+                        var path = PathForKey(kvp.Key);
+                        File.WriteAllBytes(path, kvp.Value);
+                    }
                 }
 
                 return true;

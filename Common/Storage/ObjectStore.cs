@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -124,7 +124,8 @@ namespace QuantConnect.Storage
         {
             encoding = encoding ?? Encoding.UTF8;
 
-            return encoding.GetString(_store.ReadBytes(key));
+            var data = _store.ReadBytes(key);
+            return data != null ? encoding.GetString(data) : null;
         }
 
         /// <summary>
@@ -173,16 +174,34 @@ namespace QuantConnect.Storage
         }
 
         /// <summary>
+        /// Saves the data from a local file path associated with the specified key
+        /// </summary>
+        /// <remarks>If the file does not exist it will throw an exception</remarks>
+        /// <param name="key">The object key</param>
+        /// <returns>True if the object was saved successfully</returns>
+        public bool Save(string key)
+        {
+            // Check the file exists
+            var filePath = GetFilePath(key);
+            if (!File.Exists(filePath))
+            {
+                throw new ArgumentException($"There is no file associated with key {key} in '{filePath}'");
+            }
+            var bytes = File.ReadAllBytes(filePath);
+
+            return _store.SaveBytes(key, bytes);
+        }
+
+        /// <summary>
         /// Saves the object data in text format for the specified key
         /// </summary>
         /// <param name="key">The object key</param>
         /// <param name="text">The string object to be saved</param>
-        /// <param name="encoding">The string encoding used</param>
+        /// <param name="encoding">The string encoding used, <see cref="Encoding.UTF8"/> by default</param>
         /// <returns>True if the object was saved successfully</returns>
         public bool Save(string key, string text, Encoding encoding = null)
         {
-            encoding = encoding ?? Encoding.UTF8;
-
+            encoding ??= Encoding.UTF8;
             return _store.SaveBytes(key, encoding.GetBytes(text));
         }
 
