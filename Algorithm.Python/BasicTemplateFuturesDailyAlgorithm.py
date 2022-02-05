@@ -23,7 +23,7 @@ class BasicTemplateFuturesDailyAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         self.SetStartDate(2013, 10, 8)
-        self.SetEndDate(2013, 10, 10)
+        self.SetEndDate(2014, 10, 10)
         self.SetCash(1000000)
 
         self.contractSymbol = None

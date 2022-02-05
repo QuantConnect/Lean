@@ -80,7 +80,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             var subscriptions = new List<Subscription>();
             foreach (var request in requests)
             {
-                var subscription = CreateSubscription(request, request.StartTimeUtc, request.EndTimeUtc);
+                var subscription = CreateSubscription(request);
                 subscriptions.Add(subscription);
             }
 
@@ -90,14 +90,10 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <summary>
         /// Creates a subscription to process the request
         /// </summary>
-        private Subscription CreateSubscription(HistoryRequest request, DateTime startUtc, DateTime endUtc)
+        private Subscription CreateSubscription(HistoryRequest request)
         {
-            // data reader expects these values in local times
-            var startTimeLocal = startUtc.ConvertFromUtc(request.ExchangeHours.TimeZone);
-            var endTimeLocal = endUtc.ConvertFromUtc(request.ExchangeHours.TimeZone);
-
             var config = request.ToSubscriptionDataConfig();
-            DataPermissionManager.AssertConfiguration(config, startTimeLocal, endTimeLocal);
+            DataPermissionManager.AssertConfiguration(config, request.StartTimeLocal, request.EndTimeLocal);
 
             var security = new Security(
                 request.ExchangeHours,
@@ -109,16 +105,10 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 new SecurityCache()
             );
 
-            // Tradable dates are defined with the data time zone to access the right source
-            var tradableDates = Time.EachTradeableDayInTimeZone(request.ExchangeHours, startTimeLocal, endTimeLocal, request.DataTimeZone, request.IncludeExtendedMarketHours);
-
             var dataReader = new SubscriptionDataReader(config,
-                startTimeLocal,
-                endTimeLocal,
+                request,
                 _mapFileProvider,
                 _factorFileProvider,
-                tradableDates,
-                false,
                 _dataCacheProvider,
                 _dataProvider
                 );
@@ -143,7 +133,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 _factorFileProvider,
                 dataReader,
                 _mapFileProvider,
-                startTimeLocal);
+                request.StartTimeLocal);
 
             // optionally apply fill forward behavior
             if (request.FillForwardResolution.HasValue)
@@ -155,7 +145,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 }
 
                 var readOnlyRef = Ref.CreateReadOnly(() => request.FillForwardResolution.Value.ToTimeSpan());
-                reader = new FillForwardEnumerator(reader, security.Exchange, readOnlyRef, request.IncludeExtendedMarketHours, endTimeLocal, config.Increment, config.DataTimeZone);
+                reader = new FillForwardEnumerator(reader, security.Exchange, readOnlyRef, request.IncludeExtendedMarketHours, request.EndTimeLocal, config.Increment, config.DataTimeZone);
             }
 
             // since the SubscriptionDataReader performs an any overlap condition on the trade bar's entire
@@ -163,7 +153,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             // so to combat this we deliberately filter the results from the data reader to fix these cases
             // which only apply to non-tick data
 
-            reader = new SubscriptionFilterEnumerator(reader, security, endTimeLocal, config.ExtendedMarketHours, false, request.ExchangeHours);
+            reader = new SubscriptionFilterEnumerator(reader, security, request.EndTimeLocal, config.ExtendedMarketHours, false, request.ExchangeHours);
             reader = new FilterEnumerator<BaseData>(reader, data =>
             {
                 // allow all ticks
@@ -171,9 +161,9 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 // filter out all aux data
                 if (data.DataType == MarketDataType.Auxiliary) return false;
                 // filter out future data
-                if (data.EndTime > endTimeLocal) return false;
+                if (data.EndTime > request.EndTimeLocal) return false;
                 // filter out data before the start
-                return data.EndTime > startTimeLocal;
+                return data.EndTime > request.StartTimeLocal;
             });
             var subscriptionRequest = new SubscriptionRequest(false, null, security, config, request.StartTimeUtc, request.EndTimeUtc);
             if (_parallelHistoryRequestsEnabled)

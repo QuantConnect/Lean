@@ -17,6 +17,7 @@
 using System;
 using NodaTime;
 using QuantConnect.Securities;
+using System.Collections.Generic;
 
 namespace QuantConnect.Data
 {
@@ -93,6 +94,15 @@ namespace QuantConnect.Data
         /// For example, 0 (default) will use the front month, 1 will use the back month contract
         /// </summary>
         public uint ContractDepthOffset { get; }
+
+        /// <summary>
+        /// Gets the tradable days specified by this request, in the security's data time zone
+        /// </summary>
+        public override IEnumerable<DateTime> TradableDays => Time.EachTradeableDayInTimeZone(ExchangeHours,
+            StartTimeLocal,
+            EndTimeLocal,
+            DataTimeZone,
+            IncludeExtendedMarketHours);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HistoryRequest"/> class from the specified parameters

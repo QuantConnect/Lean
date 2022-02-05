@@ -91,7 +91,7 @@ namespace QuantConnect.Tests
                 from type in typeof(BasicTemplateAlgorithm).Assembly.GetTypes()
                 where typeof(IRegressionAlgorithmDefinition).IsAssignableFrom(type)
                 where !type.IsAbstract                          // non-abstract
-                where type.GetConstructor(new Type[0]) != null  // has default ctor
+                where type.GetConstructor(Array.Empty<Type>()) != null  // has default ctor
                 let instance = (IRegressionAlgorithmDefinition) Activator.CreateInstance(type)
                 let status = nonDefaultStatuses.GetValueOrDefault(type.Name, AlgorithmStatus.Completed)
                 where instance.CanRunLocally                   // open source has data to run this algorithm

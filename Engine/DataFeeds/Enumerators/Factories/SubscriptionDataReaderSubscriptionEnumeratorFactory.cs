@@ -32,7 +32,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     /// <remarks>Only used on backtesting by the <see cref="FileSystemDataFeed"/></remarks>
     public class SubscriptionDataReaderSubscriptionEnumeratorFactory : ISubscriptionEnumeratorFactory, IDisposable
     {
-        private readonly bool _isLiveMode;
         private readonly IResultHandler _resultHandler;
         private readonly IFactorFileProvider _factorFileProvider;
         private readonly IDataCacheProvider _dataCacheProvider;
@@ -40,7 +39,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         private readonly int _numericalPrecisionLimitedWarningsMaxCount = 10;
         private readonly ConcurrentDictionary<Symbol, string> _startDateLimitedWarnings;
         private readonly int _startDateLimitedWarningsMaxCount = 10;
-        private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
         private readonly IMapFileProvider _mapFileProvider;
         private readonly bool _enablePriceScaling;
 
@@ -58,7 +56,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             IMapFileProvider mapFileProvider,
             IFactorFileProvider factorFileProvider,
             IDataCacheProvider cacheProvider,
-            Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null,
             bool enablePriceScaling = true
             )
         {
@@ -68,8 +65,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             _dataCacheProvider = cacheProvider;
             _numericalPrecisionLimitedWarnings = new ConcurrentDictionary<Symbol, string>();
             _startDateLimitedWarnings = new ConcurrentDictionary<Symbol, string>();
-            _isLiveMode = false;
-            _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
             _enablePriceScaling = enablePriceScaling;
         }
 
@@ -82,12 +77,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataProvider dataProvider)
         {
             var dataReader = new SubscriptionDataReader(request.Configuration,
-                request.StartTimeLocal,
-                request.EndTimeLocal,
+                request,
                 _mapFileProvider,
                 _factorFileProvider,
-                _tradableDaysProvider(request),
-                _isLiveMode,
                 _dataCacheProvider,
                 dataProvider
                 );
