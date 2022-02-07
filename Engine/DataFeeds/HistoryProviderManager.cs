@@ -21,14 +21,13 @@ using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// Provides an implementation of <see cref="IHistoryProvider"/> that relies on
-    /// a brokerage connection to retrieve historical data
+    /// Provides an implementation of <see cref="IHistoryProvider"/> which
+    /// acts as a wrapper to use multiple history providers together
     /// </summary>
     public class HistoryProviderManager : SynchronizingHistoryProvider
     {
