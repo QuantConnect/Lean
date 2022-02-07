@@ -1012,26 +1012,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                                 order.Tag += " - " + orderEvent.Message;
                             }
                         }
-
-                        if (_algorithm.BrokerageModel.AccountType == AccountType.Cash
-                            && order.Direction == OrderDirection.Buy
-                            && CurrencyPairUtil.TryDecomposeCurrencyPair(orderEvent.Symbol, out var baseCurrency, out _)
-                            && orderEvent.OrderFee.Value.Currency == baseCurrency)
-                        {
-                            // fees are in the base currency, so we have to subtract them from the filled quantity
-                            // else the virtual position will bigger than the real size and we might no be able to liquidate
-                            orderEvent.FillQuantity -= orderEvent.OrderFee.Value.Amount;
-                            orderEvent.OrderFee = new ModifiedFillQuantityOrderFee(orderEvent.OrderFee.Value);
-
-                            if (!_loggedFeeAdjustmentWarning)
-                            {
-                                _loggedFeeAdjustmentWarning = true;
-                                const string message = "When buying currency pairs, using Cash account types, fees in base currency" +
-                                    " will be deducted from the filled quantity so virtual positions reflect actual holdings.";
-                                Log.Trace($"BrokerageTransactionHandler.HandleOrderEvent(): {message}");
-                                _algorithm.Debug(message);
-                            }
-                        }
                         break;
 
                     case OrderStatus.UpdateSubmitted:
@@ -1076,15 +1056,26 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                     // check if the fill currency and the order currency match the symbol currency
                     var security = _algorithm.Securities[orderEvent.Symbol];
-                    // Bug in FXCM API flipping the currencies -- disabling for now. 5/17/16 RFB
-                    //if (fill.FillPriceCurrency != security.SymbolProperties.QuoteCurrency)
-                    //{
-                    //    Log.Error(string.Format("Currency mismatch: Fill currency: {0}, Symbol currency: {1}", fill.FillPriceCurrency, security.SymbolProperties.QuoteCurrency));
-                    //}
-                    //if (order.PriceCurrency != security.SymbolProperties.QuoteCurrency)
-                    //{
-                    //    Log.Error(string.Format("Currency mismatch: Order currency: {0}, Symbol currency: {1}", order.PriceCurrency, security.SymbolProperties.QuoteCurrency));
-                    //}
+
+                    if (_algorithm.BrokerageModel.AccountType == AccountType.Cash
+                        && order.Direction == OrderDirection.Buy
+                        && CurrencyPairUtil.TryDecomposeCurrencyPair(orderEvent.Symbol, out var baseCurrency, out var quoteCurrency)
+                        && orderEvent.OrderFee.Value.Currency == baseCurrency)
+                    {
+                        // fees are in the base currency, so we have to subtract them from the filled quantity
+                        // else the virtual position will bigger than the real size and we might no be able to liquidate
+                        orderEvent.FillQuantity -= orderEvent.OrderFee.Value.Amount;
+                        orderEvent.OrderFee = new ModifiedFillQuantityOrderFee(orderEvent.OrderFee.Value, quoteCurrency, security.SymbolProperties.ContractMultiplier);
+
+                        if (!_loggedFeeAdjustmentWarning)
+                        {
+                            _loggedFeeAdjustmentWarning = true;
+                            const string message = "When buying currency pairs, using Cash account types, fees in base currency" +
+                                " will be deducted from the filled quantity so virtual positions reflect actual holdings.";
+                            Log.Trace($"BrokerageTransactionHandler.HandleOrderEvent(): {message}");
+                            _algorithm.Debug(message);
+                        }
+                    }
 
                     var multiplier = security.SymbolProperties.ContractMultiplier;
                     var securityConversionRate = security.QuoteCurrency.ConversionRate;
