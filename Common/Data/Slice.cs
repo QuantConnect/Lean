@@ -455,12 +455,6 @@ namespace QuantConnect.Data
             {
                 throw new Exception($"Slice with time {Time} can't be merged with given slice with different {inputSlice.Time}");
             }
-
-            if (inputSlice.Values.Count == 0)
-            {
-                Log.Debug($"Nothing to merge, data point count 0");
-                return;
-            }
             
             // Merge TradeBars
             if (inputSlice.Bars?.Count > 0)
