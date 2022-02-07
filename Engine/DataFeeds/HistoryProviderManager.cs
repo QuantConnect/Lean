@@ -94,19 +94,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 try
                 {
-                    var history = historyProvider.GetHistory(requests, sliceTimeZone).ToList();
-                    if (history != null)
+                    var history = historyProvider.GetHistory(requests, sliceTimeZone);
+                    foreach (var slice in history)
                     {
-                        foreach (var slice in history)
+                        if (!mergedHistory.ContainsKey(slice.Time))
                         {
-                            if (!mergedHistory.ContainsKey(slice.Time))
-                            {
-                                mergedHistory[slice.Time] = slice;
-                            }
-                            else
-                            {
-                                mergedHistory[slice.Time].MergeSlice(slice);
-                            }
+                            mergedHistory[slice.Time] = slice;
+                        }
+                        else
+                        {
+                            mergedHistory[slice.Time].MergeSlice(slice);
                         }
                     }
                 }
