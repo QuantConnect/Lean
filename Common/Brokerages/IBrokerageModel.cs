@@ -227,6 +227,9 @@ namespace QuantConnect.Brokerages
                 
                 case BrokerageName.Kraken:
                     return new KrakenBrokerageModel(accountType);
+                
+                case BrokerageName.Exante:
+                    return new ExanteBrokerageModel(accountType);
 
                 case BrokerageName.FTX:
                     return new FTXBrokerageModel(accountType);

@@ -95,7 +95,7 @@ namespace QuantConnect.Brokerages
         /// Transaction and submit/execution rules will use TradingTechnologies models
         /// </summary>
         TradingTechnologies,
-        
+
         /// <summary>
         /// Transaction and submit/execution rules will use Kraken models
         /// </summary>
@@ -109,6 +109,11 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Transaction and submit/execution rules will use ftx us models
         /// </summary>
-        FTXUS
+        FTXUS,
+
+        /// <summary>
+        /// Transaction and submit/execution rules will use Exante models
+        /// </summary>
+        Exante,
     }
 }
