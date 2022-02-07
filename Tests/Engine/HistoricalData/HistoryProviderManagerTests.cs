@@ -15,6 +15,7 @@
 */
 
 using NUnit.Framework;
+using QuantConnect.Brokerages.Binance;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -36,11 +37,12 @@ namespace QuantConnect.Tests.Engine.HistoricalData
         [OneTimeSetUp]
         public void Setup()
         {
-            var historyProviders = Newtonsoft.Json.JsonConvert.SerializeObject(new[] { "SubscriptionDataReaderHistoryProvider" });
+            var historyProviders = Newtonsoft.Json.JsonConvert.SerializeObject(new[] { "SubscriptionDataReaderHistoryProvider", "FakeHistoryProvider" });
             var jobWithArrayHistoryProviders = new LiveNodePacket
             {
                 HistoryProvider = historyProviders
             };
+            _historyProviderWrapper.SetBrokerage(new BinanceBrokerage());
             _historyProviderWrapper.Initialize(new HistoryProviderInitializeParameters(
                 jobWithArrayHistoryProviders,
                 null,
@@ -91,17 +93,18 @@ namespace QuantConnect.Tests.Engine.HistoricalData
             Assert.IsNotEmpty(result);
 
             // assert we fetch the data for the previous and new symbol
-            var firstBar = result.First().Values.Single();
+            var firstBar = result[1].Values.Single();
             var lastBar = result.Last().Values.Single();
 
             Assert.IsTrue(firstBar.Symbol.Value.Contains("NWSA"));
             Assert.AreEqual(28, firstBar.Time.Date.Day);
             Assert.IsTrue(lastBar.Symbol.Value.Contains("FOXA"));
             Assert.AreEqual(2, lastBar.Time.Date.Day);
+            Assert.AreEqual(425, result.Count);
         }
 
         [Test]
-        public void EquitiesAreMappedCorrectly()
+        public void EquitiesMergedCorrectly()
         {
             var symbol = Symbol.Create("WM", SecurityType.Equity, Market.USA);
 
@@ -123,9 +126,10 @@ namespace QuantConnect.Tests.Engine.HistoricalData
                 },
                 TimeZones.NewYork).ToList();
 
+            Assert.IsNotEmpty(result);
             var firstBar = result.First().Values.Single();
             Assert.AreEqual("WMI", firstBar.Symbol.Value);
-            Assert.IsNotEmpty(result);
+            Assert.AreEqual(4, result.Count);
         }
     }
 }
