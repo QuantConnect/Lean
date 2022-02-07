@@ -19,6 +19,7 @@ using System.Linq;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Data;
+using QuantConnect.Data.Custom;
 using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
@@ -282,6 +283,13 @@ namespace QuantConnect.Tests.Common.Data
             slice4.MergeSlice(slice5);
             Assert.AreEqual(2, slice4.OptionChains.Count);
             Assert.AreEqual(2, slice4.FutureChains.Count);
+
+            // Merge custom data
+            var custom1 = new FxcmVolume { DataType = MarketDataType.Base, Symbol = Symbols.SPY };
+            var custom2 = new FxcmVolume { DataType = MarketDataType.Base, Symbol = Symbols.SBIN };
+            Slice slice6 = new Slice(DateTime.Today, new BaseData[] { custom1, custom2 });
+            slice5.MergeSlice(slice6);
+            Assert.AreEqual(2, slice5.Values.Where(x => x.DataType == MarketDataType.Base).Count());
         }
 
         [Test]

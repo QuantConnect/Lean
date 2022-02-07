@@ -585,6 +585,7 @@ namespace QuantConnect.Data
                 }
             }
 
+            _rawDataList = _rawDataList.Concat(inputSlice._data.Value.Values.Select(x => x.Custom).Where(o => o != null));
             _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(_rawDataList));
         }
 
