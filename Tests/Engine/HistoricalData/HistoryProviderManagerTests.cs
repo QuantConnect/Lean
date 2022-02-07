@@ -28,28 +28,40 @@ using HistoryRequest = QuantConnect.Data.HistoryRequest;
 namespace QuantConnect.Tests.Engine.HistoricalData
 {
     [TestFixture]
-    internal class HistoryProviderManagerTests
+    public class HistoryProviderManagerTests
     {
-        [Test]
-        public void OptionsAreMappedCorrectly()
+        private readonly HistoryProviderManager _historyProviderWrapper = new();
+        private readonly ZipDataCacheProvider _zipCache = new(TestGlobals.DataProvider);
+
+        [OneTimeSetUp]
+        public void Setup()
         {
-            var historyProviderWrapper = new HistoryProviderManager();
-            var zipCache = new ZipDataCacheProvider(TestGlobals.DataProvider);
             var historyProviders = Newtonsoft.Json.JsonConvert.SerializeObject(new[] { "SubscriptionDataReaderHistoryProvider" });
             var jobWithArrayHistoryProviders = new LiveNodePacket
             {
                 HistoryProvider = historyProviders
             };
-            historyProviderWrapper.Initialize(new HistoryProviderInitializeParameters(
+            _historyProviderWrapper.Initialize(new HistoryProviderInitializeParameters(
                 jobWithArrayHistoryProviders,
                 null,
                 TestGlobals.DataProvider,
-                zipCache,
+                _zipCache,
                 TestGlobals.MapFileProvider,
                 TestGlobals.FactorFileProvider,
                 null,
                 false,
                 new DataPermissionManager()));
+        }
+
+        [OneTimeTearDown]
+        public void TearDown()
+        {
+            _zipCache.DisposeSafely();
+        }
+
+        [Test]
+        public void OptionsAreMappedCorrectly()
+        {
             var symbol = Symbol.CreateOption(
                 "FOXA",
                 Market.USA,
@@ -58,7 +70,7 @@ namespace QuantConnect.Tests.Engine.HistoricalData
                 32,
                 new DateTime(2013, 07, 20));
 
-            var result = historyProviderWrapper.GetHistory(
+            var result = _historyProviderWrapper.GetHistory(
                 new[]
                 {
                     new HistoryRequest(new DateTime(2013, 06,28),
@@ -86,32 +98,14 @@ namespace QuantConnect.Tests.Engine.HistoricalData
             Assert.AreEqual(28, firstBar.Time.Date.Day);
             Assert.IsTrue(lastBar.Symbol.Value.Contains("FOXA"));
             Assert.AreEqual(2, lastBar.Time.Date.Day);
-            zipCache.DisposeSafely();
         }
 
         [Test]
         public void EquitiesAreMappedCorrectly()
         {
-            var historyProviderWrapper = new HistoryProviderManager();
-            var zipCache = new ZipDataCacheProvider(TestGlobals.DataProvider);
-            var historyProviders = Newtonsoft.Json.JsonConvert.SerializeObject(new[] { "SubscriptionDataReaderHistoryProvider" });
-            var jobWithArrayHistoryProviders = new LiveNodePacket
-            {
-                HistoryProvider = historyProviders
-            };
-            historyProviderWrapper.Initialize(new HistoryProviderInitializeParameters(
-                jobWithArrayHistoryProviders,
-                null,
-                TestGlobals.DataProvider,
-                zipCache,
-               TestGlobals.MapFileProvider,
-                TestGlobals.FactorFileProvider,
-                null,
-                false,
-                new DataPermissionManager()));
             var symbol = Symbol.Create("WM", SecurityType.Equity, Market.USA);
 
-            var result = historyProviderWrapper.GetHistory(
+            var result = _historyProviderWrapper.GetHistory(
                 new[]
                 {
                     new HistoryRequest(new DateTime(2008, 01,01),
@@ -132,7 +126,6 @@ namespace QuantConnect.Tests.Engine.HistoricalData
             var firstBar = result.First().Values.Single();
             Assert.AreEqual("WMI", firstBar.Symbol.Value);
             Assert.IsNotEmpty(result);
-            zipCache.DisposeSafely();
         }
     }
 }
