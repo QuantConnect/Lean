@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using QuantConnect.Securities.Option;
 using static QuantConnect.StringExtensions;
 using QuantConnect.Algorithm.Framework.Portfolio;
-using QuantConnect.Data;
 
 namespace QuantConnect.Algorithm
 {
