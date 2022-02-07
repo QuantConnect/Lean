@@ -230,6 +230,39 @@ def Test(slice):
         }
 
         [Test]
+        public void PythonGetPythonCustomData()
+        {
+            using (Py.GIL())
+            {
+                dynamic testModule = PythonEngine.ModuleFromString("testModule",
+                    @"
+
+from AlgorithmImports import *
+
+class CustomDataTest(PythonData):
+    def GetSource(self, config, date, isLiveMode):
+        return None
+    def Reader(self, config, line, date, isLiveMode):
+        return None
+
+def Test(slice):
+    data = slice.Get(CustomDataTest)
+    return data");
+                var test = testModule.GetAttr("Test");
+                var customDataTest = testModule.GetAttr("CustomDataTest")();
+                customDataTest.Symbol = Symbols.SPY;
+                customDataTest.Value = 10;
+
+                var unlinkedDataSpy = new UnlinkedData { Symbol = Symbols.SPY, Time = DateTime.UtcNow, Value = 10 };
+                var slice = new Slice(DateTime.UtcNow, new[] { unlinkedDataSpy, (BaseData)customDataTest });
+
+                var data = test(new PythonSlice(slice));
+                Assert.AreEqual(1, (int)data.Count);
+                Assert.AreEqual(10, (int)data[Symbols.SPY].Value);
+            }
+        }
+
+        [Test]
         public void PythonEnumerationWorks()
         {
             using (Py.GIL())

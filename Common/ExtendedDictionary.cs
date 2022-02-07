@@ -19,13 +19,16 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Interfaces;
 using System.Collections;
+using System.Dynamic;
+using System.Reflection;
+using Fasterflect;
 
 namespace QuantConnect
 {
     /// <summary>
     /// Provides a base class for types holding instances keyed by <see cref="Symbol"/>
     /// </summary>
-    public abstract class ExtendedDictionary<T> : IExtendedDictionary<Symbol, T>
+    public abstract class ExtendedDictionary<T> : DynamicObject, IExtendedDictionary<Symbol, T>
     {
         /// <summary>
         /// Removes all items from the <see cref="T:System.Collections.Generic.ICollection`1"/>.
@@ -346,6 +349,25 @@ namespace QuantConnect
         public PyList values()
         {
             return GetValues.ToPyList();
+        }
+
+        public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object? result)
+        {
+            result = this[(Symbol)indexes[0]];
+            return true;
+        }
+
+        public override bool TryInvokeMember(InvokeMemberBinder binder, object?[]? args, out object? result)
+        {
+            var members = GetType().GetMethod(binder.Name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+
+            if (members != null)
+            {
+                result = members.Invoke(this, args);
+                return true;
+            }
+
+            return base.TryInvokeMember(binder, args, out result);
         }
     }
 }

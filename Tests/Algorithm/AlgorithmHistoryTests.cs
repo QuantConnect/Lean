@@ -30,6 +30,7 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Data.Custom.AlphaStreams;
 using QuantConnect.Lean.Engine.HistoricalData;
+using QuantConnect.Python;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Tests.Algorithm
@@ -292,10 +293,12 @@ class Test(PythonData):
 
     def Reader(self, config, line, date, isLiveMode):
 
+        data = line.split(',')
+
         result = Test()
         result.DataType = MarketDataType.Base
         result.Symbol = config.Symbol
-        result.Time = date
+        result.Time = date + timedelta(milliseconds=int(data[0]))
         result.Value = 1
 
         return result
@@ -312,7 +315,7 @@ class Test(PythonData):
             }
             else
             {
-                Assert.AreEqual(1, lastKnownPrices.Count(data => data.GetType() == typeof(PyObject)));
+                Assert.AreEqual(1, lastKnownPrices.Count(data => data.GetType() == typeof(PythonData)));
             }
         }
 

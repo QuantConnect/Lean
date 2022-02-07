@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using QuantConnect.Securities.Option;
 using static QuantConnect.StringExtensions;
 using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Data;
 
 namespace QuantConnect.Algorithm
 {
@@ -1269,13 +1270,11 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(SecuritiesAndPortfolio)]
         public bool IsMarketOpen(Symbol symbol)
         {
-            var exchangeHours = MarketHoursDatabase
-                .FromDataFolder()
-                .GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
-
-            var time = UtcTime.ConvertFromUtc(exchangeHours.TimeZone);
-
-            return exchangeHours.IsOpen(time, false);
+            if (Securities.TryGetValue(symbol, out var security))
+            {
+                return security.IsMarketOpen(false);
+            }
+            return symbol.IsMarketOpen(UtcTime, false);
         }
 
         private SubmitOrderRequest CreateSubmitOrderRequest(OrderType orderType, Security security, decimal quantity, string tag, IOrderProperties properties, decimal stopPrice = 0m, decimal limitPrice = 0m,  decimal triggerPrice = 0m)

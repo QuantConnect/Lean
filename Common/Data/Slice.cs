@@ -390,6 +390,11 @@ namespace QuantConnect.Data
                 }
                 else
                 {
+                    if (type.IsAssignableTo(typeof(PythonData)))
+                    {
+                        type = typeof(PythonData);
+                    }
+
                     var dataDictionaryCache = GenericDataDictionary.Get(type);
                     dictionary = Activator.CreateInstance(dataDictionaryCache.GenericType);
 

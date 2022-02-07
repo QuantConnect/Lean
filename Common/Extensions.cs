@@ -1635,6 +1635,44 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Helper method to determine if a specific market is open
+        /// </summary>
+        /// <param name="security">The target security</param>
+        /// <param name="extendedMarketHours">True if should consider extended market hours</param>
+        /// <returns>True if the market is open</returns>
+        public static bool IsMarketOpen(this Security security, bool extendedMarketHours)
+        {
+            if (!security.Exchange.Hours.IsOpen(security.LocalTime, extendedMarketHours))
+            {
+                // if we're not open at the current time exactly, check the bar size, this handle large sized bars (hours/days)
+                var currentBar = security.GetLastData();
+                if (security.LocalTime.Date != currentBar.EndTime.Date
+                    || !security.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, extendedMarketHours))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Helper method to determine if a specific market is open
+        /// </summary>
+        /// <param name="symbol">The target symbol</param>
+        /// <param name="utcTime">The current UTC time</param>
+        /// <param name="extendedMarketHours">True if should consider extended market hours</param>
+        /// <returns>True if the market is open</returns>
+        public static bool IsMarketOpen(this Symbol symbol, DateTime utcTime, bool extendedMarketHours)
+        {
+            var exchangeHours = MarketHoursDatabase.FromDataFolder()
+                .GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+
+            var time = utcTime.ConvertFromUtc(exchangeHours.TimeZone);
+
+            return exchangeHours.IsOpen(time, extendedMarketHours);
+        }
+
+        /// <summary>
         /// Extension method to round a datetime to the nearest unit timespan.
         /// </summary>
         /// <param name="datetime">Datetime object we're rounding.</param>
