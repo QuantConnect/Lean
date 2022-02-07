@@ -213,8 +213,6 @@ namespace QuantConnect.Tests.Common.Data
             TradeBar tradeBar2 = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now };
             var quoteBar1 = new QuoteBar { Symbol = Symbols.SPY, Time = DateTime.Now };
             var tick1 = new Tick(DateTime.Now, Symbols.SPY, 1.1m, 2.1m) { TickType = TickType.Trade };
-            var optionChain1 = new OptionChain(Symbols.SPY, DateTime.Now);
-            var futuresChain1 = new FuturesChain(Symbols.SPY, DateTime.Now);
             var split1 = new Split(Symbols.SPY, DateTime.Now, 1, 1, SplitType.SplitOccurred);
             var dividend1 = new Dividend(Symbols.SPY, DateTime.Now, 1, 1);
             var delisting1 = new Delisting(Symbols.SPY, DateTime.Now, 1, DelistingType.Delisted);
@@ -227,8 +225,6 @@ namespace QuantConnect.Tests.Common.Data
             TradeBar tradeBar4 = new TradeBar { Symbol = Symbols.SBIN, Time = DateTime.Now };
             var quoteBar2 = new QuoteBar { Symbol = Symbols.SBIN, Time = DateTime.Now };
             var tick2 = new Tick(DateTime.Now, Symbols.SBIN, 1.1m, 2.1m) { TickType = TickType.Trade };
-            var optionChain2 = new OptionChain(Symbols.SBIN, DateTime.Now);
-            var futuresChain2 = new FuturesChain(Symbols.SBIN, DateTime.Now);
             var split2 = new Split(Symbols.SBIN, DateTime.Now, 1, 1, SplitType.SplitOccurred);
             var dividend2 = new Dividend(Symbols.SBIN, DateTime.Now, 1, 1);
             var delisting2 = new Delisting(Symbols.SBIN, DateTime.Now, 1, DelistingType.Delisted);
@@ -261,6 +257,31 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(2, slice1.Dividends.Count);
             Assert.AreEqual(2, slice1.Delistings.Count);
             Assert.AreEqual(2, slice1.SymbolChangedEvents.Count);
+
+            // Merge optionChains and FutureChains
+            var optionChain1 = new OptionChains();
+            var optionChain2 = new OptionChains();
+            optionChain1.Add(Symbols.SPY, new OptionChain(Symbols.SPY, DateTime.Now));
+            optionChain2.Add(Symbols.AAPL, new OptionChain(Symbols.SPY, DateTime.Now));
+            var futuresChain1 = new FuturesChains();
+            var futuresChain2 = new FuturesChains();
+            futuresChain1.Add(Symbols.SPY, new FuturesChain(Symbols.SPY, DateTime.Now));
+            futuresChain2.Add(Symbols.AAPL, new FuturesChain(Symbols.SPY, DateTime.Now));
+            var slice4 = new Slice(DateTime.Today, new List<BaseData>(),
+                                new TradeBars(DateTime.Today), new QuoteBars(),
+                                new Ticks(), optionChain1,
+                                futuresChain1, new Splits(),
+                                new Dividends(DateTime.Today), new Delistings(),
+                                new SymbolChangedEvents());
+            var slice5 = new Slice(DateTime.Today, new List<BaseData>(),
+                new TradeBars(DateTime.Today), new QuoteBars(),
+                new Ticks(), optionChain2,
+                futuresChain2, new Splits(),
+                new Dividends(DateTime.Today), new Delistings(),
+                new SymbolChangedEvents());
+            slice4.MergeSlice(slice5);
+            Assert.AreEqual(2, slice4.OptionChains.Count);
+            Assert.AreEqual(2, slice4.FutureChains.Count);
         }
 
         [Test]
