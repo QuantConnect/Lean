@@ -50,6 +50,7 @@ class BasicTemplateFuturesDailyAlgorithm(QCAlgorithm):
                 front = sorted(contracts, key = lambda x: x.Expiry, reverse=True)[0]
 
                 self.contractSymbol = front.Symbol
-                self.MarketOrder(front.Symbol , 1)
+                if self.IsMarketOpen(self.contractSymbol):
+                    self.MarketOrder(front.Symbol , 1)
         else:
             self.Liquidate()

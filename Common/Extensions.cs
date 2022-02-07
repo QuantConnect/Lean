@@ -1646,7 +1646,8 @@ namespace QuantConnect
             {
                 // if we're not open at the current time exactly, check the bar size, this handle large sized bars (hours/days)
                 var currentBar = security.GetLastData();
-                if (security.LocalTime.Date != currentBar.EndTime.Date
+                if (currentBar == null
+                    || security.LocalTime.Date != currentBar.EndTime.Date
                     || !security.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, extendedMarketHours))
                 {
                     return false;
@@ -2895,15 +2896,12 @@ namespace QuantConnect
             PythonActivator pythonType;
             if (!PythonActivators.TryGetValue(pyObject.Handle, out pythonType))
             {
-                AssemblyName an;
-                using (Py.GIL())
-                {
-                    an = new AssemblyName(pyObject.Repr().Split('\'')[1]);
-                }
+                var assemblyName = pyObject.GetAssemblyName();
                 var typeBuilder = AssemblyBuilder
-                    .DefineDynamicAssembly(an, AssemblyBuilderAccess.Run)
+                    .DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run)
                     .DefineDynamicModule("MainModule")
-                    .DefineType(an.Name, TypeAttributes.Class, type);
+                    // creating the type as public is required to allow 'dynamic' to be able to bind at runtime
+                    .DefineType(assemblyName.Name, TypeAttributes.Class | TypeAttributes.Public, type);
 
                 pythonType = new PythonActivator(typeBuilder.CreateType(), pyObject);
 
@@ -2913,6 +2911,19 @@ namespace QuantConnect
                 PythonActivators.Add(pyObject.Handle, pythonType);
             }
             return pythonType.Type;
+        }
+
+        /// <summary>
+        /// Helper method to get the assembly name from a python type
+        /// </summary>
+        /// <param name="pyObject">Python object pointing to the python type. <see cref="PyObject.GetPythonType"/></param>
+        /// <returns>The python type assembly name</returns>
+        public static AssemblyName GetAssemblyName(this PyObject pyObject)
+        {
+            using (Py.GIL())
+            {
+                return new AssemblyName(pyObject.Repr().Split('\'')[1]);
+            }
         }
 
         /// <summary>

@@ -21,6 +21,7 @@ using Python.Runtime;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Util;
+using QuantConnect.Python;
 using QuantConnect.Algorithm;
 using QuantConnect.Securities;
 using QuantConnect.Interfaces;
@@ -30,7 +31,6 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Data.Custom.AlphaStreams;
 using QuantConnect.Lean.Engine.HistoricalData;
-using QuantConnect.Python;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Tests.Algorithm
@@ -486,7 +486,7 @@ class Test(PythonData):
             }
         }
 
-        private class CustomData : TradeBar
+        public class CustomData : TradeBar
         {
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {

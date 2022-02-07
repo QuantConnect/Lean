@@ -77,7 +77,7 @@ namespace QuantConnect.Algorithm.CSharp
                     ).FirstOrDefault();
 
                     // if found, trade it
-                    if (contract != null)
+                    if (contract != null && IsMarketOpen(contract.Symbol))
                     {
                         _contractSymbol = contract.Symbol;
                         MarketOrder(_contractSymbol, 1);
