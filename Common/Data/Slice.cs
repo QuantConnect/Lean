@@ -47,7 +47,7 @@ namespace QuantConnect.Data
         private Lazy<DataDictionary<SymbolData>> _data;
         // UnlinkedData -> DataDictonary<UnlinkedData>
         private Dictionary<Type, object> _dataByType;
-        private IEnumerable<BaseData> _rawDataList;
+        private List<BaseData> _rawDataList;
 
         /// <summary>
         /// Gets the timestamp for this slice of data
@@ -260,7 +260,7 @@ namespace QuantConnect.Data
         /// <param name="delistings">The delistings for this slice</param>
         /// <param name="symbolChanges">The symbol changed events for this slice</param>
         /// <param name="hasData">true if this slice contains data</param>
-        public Slice(DateTime time, IEnumerable<BaseData> data, TradeBars tradeBars, QuoteBars quoteBars, Ticks ticks, OptionChains optionChains, FuturesChains futuresChains, Splits splits, Dividends dividends, Delistings delistings, SymbolChangedEvents symbolChanges, bool? hasData = null)
+        public Slice(DateTime time, List<BaseData> data, TradeBars tradeBars, QuoteBars quoteBars, Ticks ticks, OptionChains optionChains, FuturesChains futuresChains, Splits splits, Dividends dividends, Delistings delistings, SymbolChangedEvents symbolChanges, bool? hasData = null)
         {
             Time = time;
             _rawDataList = data;
@@ -576,7 +576,9 @@ namespace QuantConnect.Data
 
             // Should keep this._rawDataList last so that selected data points are not overriden
             // while creating _data
-            _rawDataList = inputSlice._rawDataList.Concat(_rawDataList); 
+            var tempRawDataList = inputSlice._rawDataList;
+            tempRawDataList.AddRange(_rawDataList);
+            _rawDataList = tempRawDataList; 
             _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(_rawDataList));
         }
 
