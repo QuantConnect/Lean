@@ -47,7 +47,8 @@ namespace QuantConnect.Data
         private Lazy<DataDictionary<SymbolData>> _data;
         // UnlinkedData -> DataDictonary<UnlinkedData>
         private Dictionary<Type, object> _dataByType;
-        private IEnumerable<BaseData> _rawDataList;
+        private List<BaseData> _rawDataList;
+
         /// <summary>
         /// Gets the timestamp for this slice of data
         /// </summary>
@@ -262,7 +263,7 @@ namespace QuantConnect.Data
         public Slice(DateTime time, IEnumerable<BaseData> data, TradeBars tradeBars, QuoteBars quoteBars, Ticks ticks, OptionChains optionChains, FuturesChains futuresChains, Splits splits, Dividends dividends, Delistings delistings, SymbolChangedEvents symbolChanges, bool? hasData = null)
         {
             Time = time;
-            _rawDataList = data;
+            _rawDataList = data.ToList();
             // market data
             _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(data));
 
@@ -465,7 +466,6 @@ namespace QuantConnect.Data
                     if (!_bars.ContainsKey(kvp.Key))
                     {
                         _bars.Add(kvp.Key, kvp.Value);
-                        _rawDataList = _rawDataList.Append(kvp.Value);
                     }
                 }
             }
@@ -479,7 +479,6 @@ namespace QuantConnect.Data
                     if (!_quoteBars.ContainsKey(kvp.Key))
                     {
                         _quoteBars.Add(kvp.Key, kvp.Value);
-                        _rawDataList = _rawDataList.Append(kvp.Value);
                     }
                 }
             }
@@ -493,10 +492,6 @@ namespace QuantConnect.Data
                     if (!_ticks.ContainsKey(kvp.Key))
                     {
                         _ticks.Add(kvp.Key, kvp.Value);
-                        foreach (var tick in kvp.Value)
-                        {
-                            _rawDataList = _rawDataList.Append(tick);
-                        }
                     }
                 }
             }
@@ -510,7 +505,6 @@ namespace QuantConnect.Data
                     if (!_optionChains.ContainsKey(kvp.Key))
                     {
                         _optionChains.Add(kvp.Key, kvp.Value);
-                        _rawDataList = _rawDataList.Append(kvp.Value);
                     }
                 }
             }
@@ -524,7 +518,6 @@ namespace QuantConnect.Data
                     if (!_futuresChains.ContainsKey(kvp.Key))
                     {
                         _futuresChains.Add(kvp.Key, kvp.Value);
-                        _rawDataList = _rawDataList.Append(kvp.Value);
                     }
                 }
             }
@@ -538,7 +531,6 @@ namespace QuantConnect.Data
                     if (!_splits.ContainsKey(kvp.Key))
                     {
                         _splits.Add(kvp.Key, kvp.Value);
-                        _rawDataList = _rawDataList.Append(kvp.Value);
                     }
                 }
             }
@@ -552,7 +544,6 @@ namespace QuantConnect.Data
                     if (!_dividends.ContainsKey(kvp.Key))
                     {
                         _dividends.Add(kvp.Key, kvp.Value);
-                        _rawDataList = _rawDataList.Append(kvp.Value);
                     }
                 }
             }
@@ -566,7 +557,6 @@ namespace QuantConnect.Data
                     if (!_delistings.ContainsKey(kvp.Key))
                     {
                         _delistings.Add(kvp.Key, kvp.Value);
-                        _rawDataList = _rawDataList.Append(kvp.Value);
                     }
                 }
             }
@@ -580,12 +570,11 @@ namespace QuantConnect.Data
                     if (!_symbolChangedEvents.ContainsKey(kvp.Key))
                     {
                         _symbolChangedEvents.Add(kvp.Key, kvp.Value);
-                        _rawDataList = _rawDataList.Append(kvp.Value);
                     }
                 }
             }
 
-            _rawDataList = _rawDataList.Concat(inputSlice._data.Value.Values.Select(x => x.Custom).Where(o => o != null));
+            _rawDataList = inputSlice._rawDataList.Concat(_rawDataList).ToList(); 
             _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(_rawDataList));
         }
 

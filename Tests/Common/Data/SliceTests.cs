@@ -211,7 +211,7 @@ namespace QuantConnect.Tests.Common.Data
         public void MergeSlice()
         {
             TradeBar tradeBar1 = new TradeBar { Symbol = Symbols.SPY, Time = DateTime.Now };
-            TradeBar tradeBar2 = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now };
+            TradeBar tradeBar2 = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now, Open = 23 };
             var quoteBar1 = new QuoteBar { Symbol = Symbols.SPY, Time = DateTime.Now };
             var tick1 = new Tick(DateTime.Now, Symbols.SPY, 1.1m, 2.1m) { TickType = TickType.Trade };
             var split1 = new Split(Symbols.SPY, DateTime.Now, 1, 1, SplitType.SplitOccurred);
@@ -222,7 +222,7 @@ namespace QuantConnect.Tests.Common.Data
                 quoteBar1, tick1, split1, dividend1, delisting1, symbolChangedEvent1
             });
 
-            TradeBar tradeBar3 = new TradeBar { Symbol = Symbols.MSFT, Time = DateTime.Now };
+            TradeBar tradeBar3 = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now, Open = 24 };
             TradeBar tradeBar4 = new TradeBar { Symbol = Symbols.SBIN, Time = DateTime.Now };
             var quoteBar2 = new QuoteBar { Symbol = Symbols.SBIN, Time = DateTime.Now };
             var tick2 = new Tick(DateTime.Now, Symbols.SBIN, 1.1m, 2.1m) { TickType = TickType.Trade };
@@ -235,13 +235,16 @@ namespace QuantConnect.Tests.Common.Data
             });
 
             slice1.MergeSlice(slice2);
-            Assert.AreEqual(4, slice1.Bars.Count);
+            Assert.AreEqual(3, slice1.Bars.Count);
             Assert.AreEqual(2, slice1.QuoteBars.Count);
             Assert.AreEqual(2, slice1.Ticks.Count);
             Assert.AreEqual(2, slice1.Splits.Count);
             Assert.AreEqual(2, slice1.Dividends.Count);
             Assert.AreEqual(2, slice1.Delistings.Count);
             Assert.AreEqual(2, slice1.SymbolChangedEvents.Count);
+            // Should use first non Null value
+            var testTradeBar = (TradeBar)slice1.Values.Where(datum => datum.DataType == MarketDataType.TradeBar && datum.Symbol.Value == "AAPL").Single();
+            Assert.AreEqual(23, testTradeBar.Open);
 
             // Use List<tick>
             var ticks = new Ticks { { Symbols.MSFT, new List<Tick> { tick2 } } };
@@ -250,7 +253,7 @@ namespace QuantConnect.Tests.Common.Data
                                     }, null, null, ticks, null, null, null, null, null, null);
 
             slice1.MergeSlice(slice3);
-            Assert.AreEqual(4, slice1.Bars.Count);
+            Assert.AreEqual(3, slice1.Bars.Count);
             Assert.AreEqual(2, slice1.QuoteBars.Count);
             // Tick should increase
             Assert.AreEqual(3, slice1.Ticks.Count);
