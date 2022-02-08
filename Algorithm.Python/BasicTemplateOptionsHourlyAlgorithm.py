@@ -57,7 +57,7 @@ class BasicTemplateOptionsHourlyAlgorithm(QCAlgorithm):
             key = lambda x: x.Right, reverse=True)
 
         # if found, trade it
-        if len(contracts) == 0: return
+        if len(contracts) == 0 or not self.IsMarketOpen(contracts[0].Symbol): return
         symbol = contracts[0].Symbol
         self.MarketOrder(symbol, 1)
         self.MarketOnCloseOrder(symbol, -1)

@@ -1635,6 +1635,45 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Helper method to determine if a specific market is open
+        /// </summary>
+        /// <param name="security">The target security</param>
+        /// <param name="extendedMarketHours">True if should consider extended market hours</param>
+        /// <returns>True if the market is open</returns>
+        public static bool IsMarketOpen(this Security security, bool extendedMarketHours)
+        {
+            if (!security.Exchange.Hours.IsOpen(security.LocalTime, extendedMarketHours))
+            {
+                // if we're not open at the current time exactly, check the bar size, this handle large sized bars (hours/days)
+                var currentBar = security.GetLastData();
+                if (currentBar == null
+                    || security.LocalTime.Date != currentBar.EndTime.Date
+                    || !security.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, extendedMarketHours))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Helper method to determine if a specific market is open
+        /// </summary>
+        /// <param name="symbol">The target symbol</param>
+        /// <param name="utcTime">The current UTC time</param>
+        /// <param name="extendedMarketHours">True if should consider extended market hours</param>
+        /// <returns>True if the market is open</returns>
+        public static bool IsMarketOpen(this Symbol symbol, DateTime utcTime, bool extendedMarketHours)
+        {
+            var exchangeHours = MarketHoursDatabase.FromDataFolder()
+                .GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+
+            var time = utcTime.ConvertFromUtc(exchangeHours.TimeZone);
+
+            return exchangeHours.IsOpen(time, extendedMarketHours);
+        }
+
+        /// <summary>
         /// Extension method to round a datetime to the nearest unit timespan.
         /// </summary>
         /// <param name="datetime">Datetime object we're rounding.</param>
@@ -2857,15 +2896,12 @@ namespace QuantConnect
             PythonActivator pythonType;
             if (!PythonActivators.TryGetValue(pyObject.Handle, out pythonType))
             {
-                AssemblyName an;
-                using (Py.GIL())
-                {
-                    an = new AssemblyName(pyObject.Repr().Split('\'')[1]);
-                }
+                var assemblyName = pyObject.GetAssemblyName();
                 var typeBuilder = AssemblyBuilder
-                    .DefineDynamicAssembly(an, AssemblyBuilderAccess.Run)
+                    .DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run)
                     .DefineDynamicModule("MainModule")
-                    .DefineType(an.Name, TypeAttributes.Class, type);
+                    // creating the type as public is required to allow 'dynamic' to be able to bind at runtime
+                    .DefineType(assemblyName.Name, TypeAttributes.Class | TypeAttributes.Public, type);
 
                 pythonType = new PythonActivator(typeBuilder.CreateType(), pyObject);
 
@@ -2875,6 +2911,19 @@ namespace QuantConnect
                 PythonActivators.Add(pyObject.Handle, pythonType);
             }
             return pythonType.Type;
+        }
+
+        /// <summary>
+        /// Helper method to get the assembly name from a python type
+        /// </summary>
+        /// <param name="pyObject">Python object pointing to the python type. <see cref="PyObject.GetPythonType"/></param>
+        /// <returns>The python type assembly name</returns>
+        public static AssemblyName GetAssemblyName(this PyObject pyObject)
+        {
+            using (Py.GIL())
+            {
+                return new AssemblyName(pyObject.Repr().Split('\'')[1]);
+            }
         }
 
         /// <summary>

@@ -76,7 +76,7 @@ namespace QuantConnect.Algorithm.CSharp
                         .ThenByDescending(x => x.Right)
                         .FirstOrDefault();
 
-                    if (atmContract != null)
+                    if (atmContract != null && IsMarketOpen(atmContract.Symbol))
                     {
                         // if found, trade it
                         MarketOrder(atmContract.Symbol, 1);

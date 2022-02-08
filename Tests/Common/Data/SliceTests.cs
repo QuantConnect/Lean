@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NodaTime;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Data;
@@ -226,6 +227,58 @@ def Test(slice):
                 Assert.AreEqual(2, (int)data.Count);
                 Assert.AreEqual(10, (int)data[Symbols.SPY].Value);
                 Assert.AreEqual(11, (int)data[Symbols.AAPL].Value);
+            }
+        }
+
+        [Test]
+        public void PythonGetPythonCustomData()
+        {
+            using (Py.GIL())
+            {
+                dynamic testModule = PythonEngine.ModuleFromString("testModule",
+                    @"
+
+from AlgorithmImports import *
+
+class CustomDataTest(PythonData):
+    def Reader(self, config, line, date, isLiveMode):
+        result = CustomDataTest()
+        result.Symbol = config.Symbol
+        result.Value = 10
+        return result
+    def GetSource(config, date, isLiveMode):
+        return None
+
+class CustomDataTest2(PythonData):
+    def Reader(self, config, line, date, isLiveMode):
+        result = CustomDataTest2()
+        result.Symbol = config.Symbol
+        result.Value = 11
+        return result
+    def GetSource(config, date, isLiveMode):
+        return None
+
+def Test(slice):
+    data = slice.Get(CustomDataTest)
+    return data");
+                var test = testModule.GetAttr("Test");
+
+                var type = Extensions.CreateType(testModule.GetAttr("CustomDataTest"));
+                var customDataTest = new PythonData(testModule.GetAttr("CustomDataTest")());
+                var config = new SubscriptionDataConfig(type, Symbols.SPY, Resolution.Daily, DateTimeZone.Utc,
+                    DateTimeZone.Utc, false, false, false, isCustom: true);
+                var data1 = customDataTest.Reader(config, "something", DateTime.UtcNow, false);
+
+                var customDataTest2 = new PythonData(testModule.GetAttr("CustomDataTest2")());
+                var config2 = new SubscriptionDataConfig(config, Extensions.CreateType(testModule.GetAttr("CustomDataTest2")));
+                var data2 = customDataTest2.Reader(config2, "something2", DateTime.UtcNow, false);
+
+                var unlinkedDataSpy = new UnlinkedData { Symbol = Symbols.SPY, Time = DateTime.UtcNow, Value = 10 };
+                var slice = new Slice(DateTime.UtcNow, new[] { unlinkedDataSpy, data2, data1 });
+
+                var data = test(new PythonSlice(slice));
+                Assert.AreEqual(1, (int)data.Count);
+                Assert.AreEqual(10, (int)data[Symbols.SPY].Value);
             }
         }
 

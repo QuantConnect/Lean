@@ -15,11 +15,15 @@
 
 using System;
 using NodaTime;
+using System.IO;
 using System.Linq;
+using Python.Runtime;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Util;
+using QuantConnect.Python;
 using QuantConnect.Algorithm;
+using QuantConnect.Securities;
 using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
@@ -27,7 +31,6 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Data.Custom.AlphaStreams;
 using QuantConnect.Lean.Engine.HistoricalData;
-using QuantConnect.Securities;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Tests.Algorithm
@@ -262,6 +265,60 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(1, lastKnownPrices.Count(data => data.GetType() == typeof(QuoteBar)));
         }
 
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void GetLastKnownPricesCustomData(Language language)
+        {
+            var algorithm = GetAlgorithm(new DateTime(2013, 10, 8));
+
+            Symbol symbol;
+            if (language == Language.CSharp)
+            {
+                symbol = algorithm.AddData<CustomData>("SPY").Symbol;
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    var customDataType = PythonEngine.ModuleFromString("testModule",
+                        @"
+from AlgorithmImports import *
+from QuantConnect.Tests import *
+
+class Test(PythonData):
+    def GetSource(self, config, date, isLiveMode):
+        fileName = LeanData.GenerateZipFileName(Symbols.SPY, date, config.Resolution, config.TickType)
+        source = f'{Globals.DataFolder}equity/usa/minute/spy/{fileName}'
+        return SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv)
+
+    def Reader(self, config, line, date, isLiveMode):
+
+        data = line.split(',')
+
+        result = Test()
+        result.DataType = MarketDataType.Base
+        result.Symbol = config.Symbol
+        result.Time = date + timedelta(milliseconds=int(data[0]))
+        result.Value = 1
+
+        return result
+        ").GetAttr("Test");
+                    symbol = algorithm.AddData(customDataType, "SPY").Symbol;
+                }
+            }
+
+            var lastKnownPrices = algorithm.GetLastKnownPrices(symbol).ToList();
+            Assert.AreEqual(1, lastKnownPrices.Count);
+            if (language == Language.CSharp)
+            {
+                Assert.AreEqual(1, lastKnownPrices.Count(data => data.GetType() == typeof(CustomData)));
+            }
+            else
+            {
+                Assert.AreEqual(1, lastKnownPrices.Count(data => data.GetType() == typeof(PythonData)));
+            }
+        }
+
         [Test]
         public void GetLastKnownPriceEquity()
         {
@@ -426,6 +483,28 @@ namespace QuantConnect.Tests.Algorithm
                 var endTime = requests.Max(x => x.EndTimeUtc.ConvertFromUtc(x.DataTimeZone));
 
                 return Slices.Where(x => x.Time >= startTime && x.Time <= endTime).ToList();
+            }
+        }
+
+        public class CustomData : TradeBar
+        {
+            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            {
+                var source = Path.Combine(Globals.DataFolder, "equity", "usa", config.Resolution.ToString().ToLower(),
+                    Symbols.SPY.Value.ToLowerInvariant(), LeanData.GenerateZipFileName(Symbols.SPY, date, config.Resolution, config.TickType));
+                return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+            }
+            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+            {
+                var baseData = base.Reader(new SubscriptionDataConfig(config, symbol: Symbols.SPY), line, date, isLiveMode);
+
+                return new CustomData
+                {
+                    DataType = MarketDataType.Base,
+                    Symbol = config.Symbol,
+                    Time = baseData.EndTime,
+                    Value = baseData.Price
+                };
             }
         }
     }

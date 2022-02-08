@@ -340,7 +340,7 @@ namespace QuantConnect.Data
                 var requestedOpenInterest = type == typeof(OpenInterest);
                 if (type == typeof(Tick) || requestedOpenInterest)
                 {
-                    var dataDictionaryCache = GenericDataDictionary.Get(type);
+                    var dataDictionaryCache = GenericDataDictionary.Get(type, isPythonData: false);
                     dictionary = Activator.CreateInstance(dataDictionaryCache.GenericType);
 
                     foreach (var data in instance.Ticks)
@@ -390,10 +390,23 @@ namespace QuantConnect.Data
                 }
                 else
                 {
-                    var dataDictionaryCache = GenericDataDictionary.Get(type);
+                    var isPythonData = type.IsAssignableTo(typeof(PythonData));
+
+                    var dataDictionaryCache = GenericDataDictionary.Get(type, isPythonData);
                     dictionary = Activator.CreateInstance(dataDictionaryCache.GenericType);
 
-                    foreach (var data in instance._data.Value.Values.Select(x => x.Custom).Where(o => o != null && o.GetType() == type))
+                    foreach (var data in instance._data.Value.Values.Select(x => x.Custom).Where(o =>
+                             {
+                                 if (o == null)
+                                 {
+                                     return false;
+                                 }
+                                 if (isPythonData && o is PythonData data)
+                                 {
+                                     return data.IsOfType(type);
+                                 }
+                                 return o.GetType() == type;
+                             }))
                     {
                         dataDictionaryCache.MethodInfo.Invoke(dictionary, new object[] { data.Symbol, data });
                     }
@@ -653,15 +666,22 @@ namespace QuantConnect.Data
             /// <summary>
             /// Provides a <see cref="GenericDataDictionary"/> instance for a given <see cref="Type"/>
             /// </summary>
-            /// <param name="type"></param>
+            /// <param name="type">The requested data type</param>
+            /// <param name="isPythonData">True if data is of <see cref="PythonData"/> type</param>
             /// <returns>A new instance or retrieved from the cache</returns>
-            public static GenericDataDictionary Get(Type type)
+            public static GenericDataDictionary Get(Type type, bool isPythonData)
             {
                 GenericDataDictionary dataDictionaryCache;
                 if (!_genericCache.TryGetValue(type, out dataDictionaryCache))
                 {
-                    var generic = typeof(DataDictionary<>).MakeGenericType(type);
-                    var method = generic.GetMethod("Add", new[] { typeof(Symbol), type });
+                    var dictionaryType = type;
+                    if (isPythonData)
+                    {
+                        // let's create a python data dictionary because the data itself will be a PythonData type in C#
+                        dictionaryType = typeof(PythonData);
+                    }
+                    var generic = typeof(DataDictionary<>).MakeGenericType(dictionaryType);
+                    var method = generic.GetMethod("Add", new[] { typeof(Symbol), dictionaryType });
                     _genericCache[type] = dataDictionaryCache = new GenericDataDictionary(generic, method);
                 }
 

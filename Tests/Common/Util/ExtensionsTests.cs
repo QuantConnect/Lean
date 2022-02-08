@@ -42,6 +42,33 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class ExtensionsTests
     {
+        [TestCase("20220101", false, true, Resolution.Daily)]
+        [TestCase("20220101", false, false, Resolution.Daily)]
+        [TestCase("20220103 09:31", true, false, Resolution.Minute)]
+        [TestCase("20220103 07:31", false, false, Resolution.Minute)]
+        [TestCase("20220103 07:31", false, false, Resolution.Daily)]
+        [TestCase("20220103 07:31", true, true, Resolution.Daily)]
+        [TestCase("20220103 08:31", true, true, Resolution.Daily)]
+        public void IsMarketOpenSecurity(string exchangeTime, bool expectedResult, bool extendedMarketHours, Resolution resolution)
+        {
+            var security = CreateSecurity(Symbols.SPY);
+            var utcTime = Time.ParseDate(exchangeTime).ConvertToUtc(security.Exchange.TimeZone);
+            security.SetLocalTimeKeeper(new LocalTimeKeeper(utcTime, security.Exchange.TimeZone));
+
+            Assert.AreEqual(expectedResult, security.IsMarketOpen(extendedMarketHours));
+        }
+
+        [TestCase("20220101", false, true)]
+        [TestCase("20220101", false, false)]
+        [TestCase("20220103 09:31", true, false)]
+        [TestCase("20220103 07:31", false, false)]
+        [TestCase("20220103 08:31", true, true)]
+        public void IsMarketOpenSymbol(string nyTime, bool expectedResult, bool extendedMarketHours)
+        {
+            var utcTime = Time.ParseDate(nyTime).ConvertToUtc(TimeZones.NewYork);
+            Assert.AreEqual(expectedResult, Symbols.SPY.IsMarketOpen(utcTime, extendedMarketHours));
+        }
+
         [TestCase("CL XTN6UA1G9QKH")]
         [TestCase("ES VU1EHIDJYLMP")]
         [TestCase("ES VRJST036ZY0X")]
@@ -1447,6 +1474,21 @@ actualDictionary.update({'IBM': 5})
 
         private class Derived2 : Derived1
         {
+        }
+
+        private static Security CreateSecurity(Symbol symbol)
+        {
+            var entry = MarketHoursDatabase.FromDataFolder()
+                .GetEntry(symbol.ID.Market, symbol, symbol.SecurityType);
+
+            return new Security(symbol,
+                entry.ExchangeHours,
+                new Cash(Currencies.USD, 0, 1),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
         }
     }
 }

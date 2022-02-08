@@ -77,7 +77,7 @@ namespace QuantConnect.Algorithm.CSharp
                     ).FirstOrDefault();
 
                     // if found, trade it
-                    if (contract != null)
+                    if (contract != null && IsMarketOpen(contract.Symbol))
                     {
                         _contractSymbol = contract.Symbol;
                         MarketOrder(_contractSymbol, 1);
@@ -154,7 +154,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "157cdc340dd50771ffa85dcdff49ad13"}
+            {"OrderListHash", "09b2f274fa2385597a803e58b784f675"}
         };
     }
 }
