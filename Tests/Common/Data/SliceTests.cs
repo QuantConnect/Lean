@@ -224,18 +224,19 @@ namespace QuantConnect.Tests.Common.Data
 
             TradeBar tradeBar3 = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now, Open = 24 };
             TradeBar tradeBar4 = new TradeBar { Symbol = Symbols.SBIN, Time = DateTime.Now };
+            TradeBar tradeBar3_4 = new TradeBar { Symbol = Symbols.BTCEUR, Time = DateTime.Now };
             var quoteBar2 = new QuoteBar { Symbol = Symbols.SBIN, Time = DateTime.Now };
             var tick2 = new Tick(DateTime.Now, Symbols.SBIN, 1.1m, 2.1m) { TickType = TickType.Trade };
             var split2 = new Split(Symbols.SBIN, DateTime.Now, 1, 1, SplitType.SplitOccurred);
             var dividend2 = new Dividend(Symbols.SBIN, DateTime.Now, 1, 1);
             var delisting2 = new Delisting(Symbols.SBIN, DateTime.Now, 1, DelistingType.Delisted);
             var symbolChangedEvent2 = new SymbolChangedEvent(Symbols.SBIN, DateTime.Now, "SBIN", "BIN");
-            Slice slice2 = new Slice(DateTime.Today, new BaseData[] { tradeBar3, tradeBar4,
+            Slice slice2 = new Slice(DateTime.Today, new BaseData[] { tradeBar3, tradeBar4, tradeBar3_4,
                 quoteBar2, tick2, split2, dividend2, delisting2, symbolChangedEvent2
             });
 
             slice1.MergeSlice(slice2);
-            Assert.AreEqual(3, slice1.Bars.Count);
+            Assert.AreEqual(4, slice1.Bars.Count);
             Assert.AreEqual(2, slice1.QuoteBars.Count);
             Assert.AreEqual(2, slice1.Ticks.Count);
             Assert.AreEqual(2, slice1.Splits.Count);
@@ -246,6 +247,9 @@ namespace QuantConnect.Tests.Common.Data
             var testTradeBar = (TradeBar)slice1.Values.Where(datum => datum.DataType == MarketDataType.TradeBar && datum.Symbol.Value == "AAPL").Single();
             Assert.AreEqual(23, testTradeBar.Open);
 
+            // Check private _data is updated
+            Assert.AreEqual(4, slice1.Values.Count);
+
             // Use List<tick>
             var ticks = new Ticks { { Symbols.MSFT, new List<Tick> { tick2 } } };
             Slice slice3 = new Slice(DateTime.Today, new BaseData[] { tradeBar3, tradeBar4,
@@ -253,7 +257,7 @@ namespace QuantConnect.Tests.Common.Data
                                     }, null, null, ticks, null, null, null, null, null, null);
 
             slice1.MergeSlice(slice3);
-            Assert.AreEqual(3, slice1.Bars.Count);
+            Assert.AreEqual(4, slice1.Bars.Count);
             Assert.AreEqual(2, slice1.QuoteBars.Count);
             // Tick should increase
             Assert.AreEqual(3, slice1.Ticks.Count);
