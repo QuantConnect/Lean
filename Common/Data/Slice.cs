@@ -30,17 +30,17 @@ namespace QuantConnect.Data
     /// </summary>
     public class Slice : ExtendedDictionary<dynamic>, IEnumerable<KeyValuePair<Symbol, BaseData>>
     {
-        private readonly Ticks _ticks;
-        private readonly TradeBars _bars;
-        private readonly QuoteBars _quoteBars;
-        private readonly OptionChains _optionChains;
-        private readonly FuturesChains _futuresChains;
+        private Ticks _ticks;
+        private TradeBars _bars;
+        private QuoteBars _quoteBars;
+        private OptionChains _optionChains;
+        private FuturesChains _futuresChains;
 
         // aux data
-        private readonly Splits _splits;
-        private readonly Dividends _dividends;
-        private readonly Delistings _delistings;
-        private readonly SymbolChangedEvents _symbolChangedEvents;
+        private Splits _splits;
+        private Dividends _dividends;
+        private Delistings _delistings;
+        private SymbolChangedEvents _symbolChangedEvents;
 
         // string -> data   for non-tick data
         // string -> list{data} for tick data
@@ -456,123 +456,16 @@ namespace QuantConnect.Data
             {
                 throw new Exception($"Slice with time {Time} can't be merged with given slice with different {inputSlice.Time}");
             }
-            
-            // Merge TradeBars
-            if (inputSlice.Bars?.Count > 0)
-            {
-                var kvpTradeBars = inputSlice.Bars;
-                foreach (var kvp in kvpTradeBars)
-                {
-                    if (!_bars.ContainsKey(kvp.Key))
-                    {
-                        _bars.Add(kvp.Key, kvp.Value);
-                    }
-                }
-            }
 
-            // Merge QuoteBars
-            if (inputSlice.QuoteBars?.Count > 0)
-            {
-                var kvpQuoteBars = inputSlice.QuoteBars;
-                foreach (var kvp in kvpQuoteBars)
-                {
-                    if (!_quoteBars.ContainsKey(kvp.Key))
-                    {
-                        _quoteBars.Add(kvp.Key, kvp.Value);
-                    }
-                }
-            }
-
-            // Merge Ticks
-            if (inputSlice.Ticks?.Count > 0)
-            {
-                var kvpTicks = inputSlice.Ticks;
-                foreach (var kvp in kvpTicks)
-                {
-                    if (!_ticks.ContainsKey(kvp.Key))
-                    {
-                        _ticks.Add(kvp.Key, kvp.Value);
-                    }
-                }
-            }
-
-            // Merge OptionChains
-            if (inputSlice.OptionChains?.Count > 0)
-            {
-                var kvpOptionChains = inputSlice.OptionChains;
-                foreach (var kvp in kvpOptionChains)
-                {
-                    if (!_optionChains.ContainsKey(kvp.Key))
-                    {
-                        _optionChains.Add(kvp.Key, kvp.Value);
-                    }
-                }
-            }
-
-            // Merge FutureChains
-            if (inputSlice.FutureChains?.Count > 0)
-            {
-                var kvpFutureChains = inputSlice.FutureChains;
-                foreach (var kvp in kvpFutureChains)
-                {
-                    if (!_futuresChains.ContainsKey(kvp.Key))
-                    {
-                        _futuresChains.Add(kvp.Key, kvp.Value);
-                    }
-                }
-            }
-
-            // Merge Splits
-            if (inputSlice.Splits?.Count > 0)
-            {
-                var kvpSplits = inputSlice.Splits;
-                foreach (var kvp in kvpSplits)
-                {
-                    if (!_splits.ContainsKey(kvp.Key))
-                    {
-                        _splits.Add(kvp.Key, kvp.Value);
-                    }
-                }
-            }
-
-            // Merge Dividends
-            if (inputSlice.Dividends?.Count > 0)
-            {
-                var kvpDividends = inputSlice.Dividends;
-                foreach (var kvp in kvpDividends)
-                {
-                    if (!_dividends.ContainsKey(kvp.Key))
-                    {
-                        _dividends.Add(kvp.Key, kvp.Value);
-                    }
-                }
-            }
-
-            // Merge Delistings
-            if (inputSlice.Delistings?.Count > 0)
-            {
-                var kvpDelistings = inputSlice.Delistings;
-                foreach (var kvp in kvpDelistings)
-                {
-                    if (!_delistings.ContainsKey(kvp.Key))
-                    {
-                        _delistings.Add(kvp.Key, kvp.Value);
-                    }
-                }
-            }
-
-            // Merge symbolChangeEvent
-            if (inputSlice.SymbolChangedEvents?.Count > 0)
-            {
-                var kvpSymbolChangedEvents = inputSlice.SymbolChangedEvents;
-                foreach (var kvp in kvpSymbolChangedEvents)
-                {
-                    if (!_symbolChangedEvents.ContainsKey(kvp.Key))
-                    {
-                        _symbolChangedEvents.Add(kvp.Key, kvp.Value);
-                    }
-                }
-            }
+            _bars = (TradeBars)UpdateCollection<TradeBar>(_bars, inputSlice.Bars);
+            _quoteBars = (QuoteBars)UpdateCollection<QuoteBar>(_quoteBars, inputSlice.QuoteBars);
+            _ticks = (Ticks)UpdateCollection<List<Tick>>(_ticks, inputSlice.Ticks);
+            _optionChains = (OptionChains)UpdateCollection<OptionChain>(_optionChains, inputSlice.OptionChains);
+            _futuresChains = (FuturesChains)UpdateCollection<FuturesChain>(_futuresChains, inputSlice.FuturesChains);
+            _splits = (Splits)UpdateCollection<Split>(_splits, inputSlice.Splits);
+            _dividends = (Dividends)UpdateCollection<Dividend>(_dividends, inputSlice.Dividends);
+            _delistings = (Delistings)UpdateCollection<Delisting>(_delistings, inputSlice.Delistings);
+            _symbolChangedEvents = (SymbolChangedEvents)UpdateCollection<SymbolChangedEvent>(_symbolChangedEvents, inputSlice.SymbolChangedEvents);
 
             // Should keep this._rawDataList last so that selected data points are not overriden
             // while creating _data
@@ -580,6 +473,21 @@ namespace QuantConnect.Data
             tempRawDataList.AddRange(_rawDataList);
             _rawDataList = tempRawDataList; 
             _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(_rawDataList));
+        }
+
+        private static DataDictionary<T> UpdateCollection<T>(DataDictionary<T> baseCollection, DataDictionary<T> inputCollection)
+        {
+            if (inputCollection?.Count > 0)
+            {
+                foreach (var kvp in inputCollection)
+                {
+                    if (!baseCollection.ContainsKey(kvp.Key))
+                    {
+                        baseCollection.Add(kvp.Key, kvp.Value);
+                    }
+                }
+            }
+            return baseCollection;
         }
 
         /// <summary>
