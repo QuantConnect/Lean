@@ -131,5 +131,36 @@ namespace QuantConnect.Tests.Engine.HistoricalData
             Assert.AreEqual("WMI", firstBar.Symbol.Value);
             Assert.AreEqual(4, result.Count);
         }
+
+        [Test]
+        public void DataIncreasesInTime()
+        {
+            var symbol = Symbol.Create("WM", SecurityType.Equity, Market.USA);
+
+            var result = _historyProviderWrapper.GetHistory(
+                new[]
+                {
+                    new HistoryRequest(new DateTime(2008, 01,01),
+                        new DateTime(2008, 01,05),
+                        typeof(TradeBar),
+                        symbol,
+                        Resolution.Daily,
+                        SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                        TimeZones.NewYork,
+                        null,
+                        false,
+                        false,
+                        DataNormalizationMode.Raw,
+                        TickType.Trade)
+                },
+                TimeZones.NewYork).ToList();
+
+            var initialTime = result[0].Time;
+            foreach (var slice in result.Skip(1))
+            {
+                Assert.That(slice.Time, Is.GreaterThan(initialTime));
+                initialTime = slice.Time;
+            }
+        }
     }
 }
