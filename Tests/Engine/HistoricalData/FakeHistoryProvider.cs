@@ -17,11 +17,12 @@ using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.HistoricalData;
 using System;
 using System.Collections.Generic;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
-namespace QuantConnect.Lean.Engine.HistoricalData
+namespace QuantConnect.Tests.Engine.HistoricalData
 {
     /// <summary>
     /// Provides FAKE implementation of <see cref="IHistoryProvider"/>
@@ -58,31 +59,27 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             List<Slice> result = new();
             var slice1Date = new DateTime(2008, 01, 03);
             var slice2Date = new DateTime(2013, 06, 28, 09, 32, 0);
-            var spy = new Symbol(SecurityIdentifier.GenerateEquity("SPY", Market.USA), "SPY");
-            var aapl = new Symbol(SecurityIdentifier.GenerateEquity("AAPL", Market.USA), "SPY");
-            var msft = new Symbol(SecurityIdentifier.GenerateEquity("MSFT", Market.USA), "SPY");
-            var sbin = new Symbol(SecurityIdentifier.GenerateEquity("SBIN", Market.USA), "SPY");
 
-            TradeBar tradeBar1 = new TradeBar { Symbol = spy, Time = DateTime.Now };
-            TradeBar tradeBar2 = new TradeBar { Symbol = aapl, Time = DateTime.Now };
-            var quoteBar1 = new QuoteBar { Symbol = spy, Time = DateTime.Now };
-            var tick1 = new Tick(DateTime.Now, spy, 1.1m, 2.1m) { TickType = TickType.Trade };
-            var split1 = new Split(spy, DateTime.Now, 1, 1, SplitType.SplitOccurred);
-            var dividend1 = new Dividend(spy, DateTime.Now, 1, 1);
-            var delisting1 = new Delisting(spy, DateTime.Now, 1, DelistingType.Delisted);
-            var symbolChangedEvent1 = new SymbolChangedEvent(spy, DateTime.Now, "SPY", "SP");
+            TradeBar tradeBar1 = new TradeBar { Symbol = Symbols.SPY, Time = DateTime.Now };
+            TradeBar tradeBar2 = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now };
+            var quoteBar1 = new QuoteBar { Symbol = Symbols.SPY, Time = DateTime.Now };
+            var tick1 = new Tick(DateTime.Now, Symbols.SPY, 1.1m, 2.1m) { TickType = TickType.Trade };
+            var split1 = new Split(Symbols.SPY, DateTime.Now, 1, 1, SplitType.SplitOccurred);
+            var dividend1 = new Dividend(Symbols.SPY, DateTime.Now, 1, 1);
+            var delisting1 = new Delisting(Symbols.SPY, DateTime.Now, 1, DelistingType.Delisted);
+            var symbolChangedEvent1 = new SymbolChangedEvent(Symbols.SPY, DateTime.Now, "SPY", "SP");
             Slice slice1 = new Slice(slice1Date, new BaseData[] { tradeBar1, tradeBar2,
                 quoteBar1, tick1, split1, dividend1, delisting1, symbolChangedEvent1
             });
 
-            TradeBar tradeBar3 = new TradeBar { Symbol = msft, Time = DateTime.Now };
-            TradeBar tradeBar4 = new TradeBar { Symbol = sbin, Time = DateTime.Now };
-            var quoteBar2 = new QuoteBar { Symbol = sbin, Time = DateTime.Now };
-            var tick2 = new Tick(DateTime.Now, sbin, 1.1m, 2.1m) { TickType = TickType.Trade };
-            var split2 = new Split(sbin, DateTime.Now, 1, 1, SplitType.SplitOccurred);
-            var dividend2 = new Dividend(sbin, DateTime.Now, 1, 1);
-            var delisting2 = new Delisting(sbin, DateTime.Now, 1, DelistingType.Delisted);
-            var symbolChangedEvent2 = new SymbolChangedEvent(sbin, DateTime.Now, "SBIN", "BIN");
+            TradeBar tradeBar3 = new TradeBar { Symbol = Symbols.MSFT, Time = DateTime.Now };
+            TradeBar tradeBar4 = new TradeBar { Symbol = Symbols.SBIN, Time = DateTime.Now };
+            var quoteBar2 = new QuoteBar { Symbol = Symbols.SBIN, Time = DateTime.Now };
+            var tick2 = new Tick(DateTime.Now, Symbols.SBIN, 1.1m, 2.1m) { TickType = TickType.Trade };
+            var split2 = new Split(Symbols.SBIN, DateTime.Now, 1, 1, SplitType.SplitOccurred);
+            var dividend2 = new Dividend(Symbols.SBIN, DateTime.Now, 1, 1);
+            var delisting2 = new Delisting(Symbols.SBIN, DateTime.Now, 1, DelistingType.Delisted);
+            var symbolChangedEvent2 = new SymbolChangedEvent(Symbols.SBIN, DateTime.Now, "SBIN", "BIN");
             Slice slice2 = new Slice(slice2Date, new BaseData[] { tradeBar3, tradeBar4,
                 quoteBar2, tick2, split2, dividend2, delisting2, symbolChangedEvent2
             });
