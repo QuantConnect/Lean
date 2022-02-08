@@ -47,7 +47,7 @@ namespace QuantConnect.Data
         private Lazy<DataDictionary<SymbolData>> _data;
         // UnlinkedData -> DataDictonary<UnlinkedData>
         private Dictionary<Type, object> _dataByType;
-        private List<BaseData> _rawDataList;
+        private IEnumerable<BaseData> _rawDataList;
 
         /// <summary>
         /// Gets the timestamp for this slice of data
@@ -263,7 +263,7 @@ namespace QuantConnect.Data
         public Slice(DateTime time, IEnumerable<BaseData> data, TradeBars tradeBars, QuoteBars quoteBars, Ticks ticks, OptionChains optionChains, FuturesChains futuresChains, Splits splits, Dividends dividends, Delistings delistings, SymbolChangedEvents symbolChanges, bool? hasData = null)
         {
             Time = time;
-            _rawDataList = data.ToList();
+            _rawDataList = data;
             // market data
             _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(data));
 
@@ -574,7 +574,7 @@ namespace QuantConnect.Data
                 }
             }
 
-            _rawDataList = inputSlice._rawDataList.Concat(_rawDataList).ToList(); 
+            _rawDataList = inputSlice._rawDataList.Concat(_rawDataList); 
             _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(_rawDataList));
         }
 
