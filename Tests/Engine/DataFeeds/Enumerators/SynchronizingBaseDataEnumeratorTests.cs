@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -26,7 +26,7 @@ using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 {
     [TestFixture]
-    public class SynchronizingEnumeratorTests
+    public class SynchronizingBaseDataEnumeratorTests
     {
         [Test]
         public void SynchronizesData()
