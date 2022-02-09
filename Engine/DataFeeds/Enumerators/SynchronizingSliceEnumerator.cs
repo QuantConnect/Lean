@@ -31,7 +31,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// Initializes a new instance of the <see cref="SynchronizingSliceEnumerator"/> class
         /// </summary>
         /// <param name="enumerators">The enumerators to be synchronized. NOTE: Assumes the same time zone for all data</param>
-        public SynchronizingSliceEnumerator(params IEnumerator[] enumerators)
+        public SynchronizingSliceEnumerator(params IEnumerator<Slice>[] enumerators)
             : this((IEnumerable<IEnumerator>)enumerators)
         {
         }

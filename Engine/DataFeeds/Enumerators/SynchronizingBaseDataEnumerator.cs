@@ -31,7 +31,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// Initializes a new instance of the <see cref="SynchronizingBaseDataEnumerator"/> class
         /// </summary>
         /// <param name="enumerators">The enumerators to be synchronized. NOTE: Assumes the same time zone for all data</param>
-        public SynchronizingBaseDataEnumerator(params IEnumerator[] enumerators)
+        public SynchronizingBaseDataEnumerator(params IEnumerator<BaseData>[] enumerators)
             : this((IEnumerable<IEnumerator>)enumerators)
         {
         }
