@@ -26,10 +26,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// Represents an enumerator capable of synchronizing other base data enumerators in time.
     /// This assumes that all enumerators have data time stamped in the same time zone
     /// </summary>
-    public class SynchronizingEnumerator : IEnumerator<BaseData>
+    public abstract class SynchronizingEnumerator<T> : IEnumerator<T>
     {
-        private IEnumerator<BaseData> _syncer;
-        private readonly IEnumerator<BaseData>[] _enumerators;
+        private IEnumerator<T> _syncer;
+        private readonly IEnumerator<T>[] _enumerators;
+        protected abstract DateTime GetInstanceTime<T>(T instance);
 
         /// <summary>
         /// Gets the element in the collection at the current position of the enumerator.
@@ -37,7 +38,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <returns>
         /// The element in the collection at the current position of the enumerator.
         /// </returns>
-        public BaseData Current
+        public T Current
         {
             get; private set;
         }
@@ -57,8 +58,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// Initializes a new instance of the <see cref="SynchronizingEnumerator"/> class
         /// </summary>
         /// <param name="enumerators">The enumerators to be synchronized. NOTE: Assumes the same time zone for all data</param>
-        public SynchronizingEnumerator(params IEnumerator<BaseData>[] enumerators)
-            : this ((IEnumerable<IEnumerator<BaseData>>)enumerators)
+        public SynchronizingEnumerator(params IEnumerator<T>[] enumerators)
+            : this ((IEnumerable<IEnumerator<T>>)enumerators)
         {
         }
 
@@ -66,7 +67,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// Initializes a new instance of the <see cref="SynchronizingEnumerator"/> class
         /// </summary>
         /// <param name="enumerators">The enumerators to be synchronized. NOTE: Assumes the same time zone for all data</param>
-        public SynchronizingEnumerator(IEnumerable<IEnumerator<BaseData>> enumerators)
+        public SynchronizingEnumerator(IEnumerable<IEnumerator<T>> enumerators)
         {
             _enumerators = enumerators.ToArray();
             _syncer = GetSynchronizedEnumerator(_enumerators);
@@ -82,7 +83,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         public bool MoveNext()
         {
             var moveNext =  _syncer.MoveNext();
-            Current = moveNext ? _syncer.Current : null;
+            Current = moveNext ? _syncer.Current : default(T);
             return moveNext;
         }
 
@@ -115,7 +116,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private struct SynchronizedEnumerator : IComparable<SynchronizedEnumerator>
         {
             public DateTime Time;
-            public IEnumerator<BaseData> Enumerator;
+            public IEnumerator<T> Enumerator;
             public int CompareTo(SynchronizedEnumerator other) { return this.Time.CompareTo(other.Time); }
         }
 
@@ -124,7 +125,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         /// <param name="enumerators"></param>
         /// <returns></returns>
-        private static IEnumerator<BaseData> GetSynchronizedEnumerator(IEnumerator<BaseData>[] enumerators)
+        private IEnumerator<T> GetSynchronizedEnumerator(IEnumerator<T>[] enumerators)
         {
             var streamCount = enumerators.Length;
             if (streamCount < 500)
@@ -141,7 +142,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         /// <param name="enumerators"></param>
         /// <returns></returns>
-        private static IEnumerator<BaseData> GetBinarySearchMethod(IEnumerator<BaseData>[] enumerators)
+        private IEnumerator<T> GetBinarySearchMethod(IEnumerator<T>[] enumerators)
         {
             //Create wrappers for the enumerator stack:
             var heads = new SynchronizedEnumerator[enumerators.Length];
@@ -152,7 +153,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 {
                     enumerators[i].MoveNext();
                 }
-                heads[i].Time = enumerators[i].Current.Time;
+                heads[i].Time = GetInstanceTime(enumerators[i].Current);
             }
 
             //Presort the stack for the first time.
@@ -166,7 +167,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 if (min.Enumerator.MoveNext())
                 {
                     var point = min.Enumerator.Current;
-                    min.Time = point.Time;
+                    min.Time = GetInstanceTime(point);
                     var index = Array.BinarySearch(heads, min);
                     if (index < 0) index = ~index;
                     ListInsert(heads, index - 1, min, headCount);
@@ -196,17 +197,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// Will remove enumerators returning false to the call to MoveNext.
         /// Will not remove enumerators with Current Null returning true to the call to MoveNext
         /// </summary>
-        private static IEnumerator<BaseData> GetBruteForceMethod(IEnumerator<BaseData>[] enumerators)
+        private IEnumerator<T> GetBruteForceMethod(IEnumerator<T>[] enumerators)
         {
             var ticks = DateTime.MaxValue.Ticks;
-            var collection = new HashSet<IEnumerator<BaseData>>();
+            var collection = new HashSet<IEnumerator<T>>();
             foreach (var enumerator in enumerators)
             {
                 if (enumerator.MoveNext())
                 {
                     if (enumerator.Current != null)
                     {
-                        ticks = Math.Min(ticks, enumerator.Current.EndTime.Ticks);
+                        ticks = Math.Min(ticks, GetInstanceTime(enumerator.Current).Ticks);
                     }
                     collection.Add(enumerator);
                 }
@@ -217,13 +218,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             }
 
             var frontier = new DateTime(ticks);
-            var toRemove = new List<IEnumerator<BaseData>>();
+            var toRemove = new List<IEnumerator<T>>();
             while (collection.Count > 0)
             {
                 var nextFrontierTicks = DateTime.MaxValue.Ticks;
                 foreach (var enumerator in collection)
                 {
-                    while (enumerator.Current == null || enumerator.Current.EndTime <= frontier)
+                    while (enumerator.Current == null || GetInstanceTime(enumerator.Current) <= frontier)
                     {
                         if (enumerator.Current != null)
                         {
@@ -242,7 +243,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
                     if (enumerator.Current != null)
                     {
-                        nextFrontierTicks = Math.Min(nextFrontierTicks, enumerator.Current.EndTime.Ticks);
+                        nextFrontierTicks = Math.Min(nextFrontierTicks, GetInstanceTime(enumerator.Current).Ticks);
                     }
                 }
 
