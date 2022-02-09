@@ -258,19 +258,19 @@ namespace QuantConnect.Securities
             /// Micro JPY/USD Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string MicroJPYUSD = "MJY";
+            public const string MicroJPY = "MJY";
 
             /// <summary>
             /// Micro CHF/USD Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string MicroCHFUSD = "MSF";
+            public const string MicroCHF = "MSF";
 
             /// <summary>
             /// Micro USD/JPY Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string MicroJPY = "M6J";
+            public const string MicroUSDJPY = "M6J";
 
             /// <summary>
             /// Micro INR/USD Futures
@@ -288,7 +288,7 @@ namespace QuantConnect.Securities
             /// Micro USD/CHF Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string MicroCHF = "M6S";
+            public const string MicroUSDCHF = "M6S";
 
             /// <summary>
             /// Micro USD/CNH Futures
