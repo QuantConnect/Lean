@@ -1073,9 +1073,7 @@ namespace QuantConnect.Securities.Future
                 {
                     // Monthly contracts listed for 6 consecutive months and 2 additional Dec contract months. If the 6 consecutive months includes Dec, list only 1 additional Dec contract month.
                     // Trading terminates at 4:00 p.m. London time on the last Friday of the contract month. If that day is not a business day in both the U.K. and the US, trading terminates on the preceding day that is a business day for both the U.K. and the U.S..
-                    var lastFriday = (from day in Enumerable.Range(1, DateTime.DaysInMonth(time.Year, time.Month))
-                                      where new DateTime(time.Year, time.Month, day).DayOfWeek == DayOfWeek.Friday
-                                      select new DateTime(time.Year, time.Month, day)).Last();
+                    var lastFriday =FuturesExpiryUtilityFunctions.LastFriday(time);
 
                     var holidays = MarketHoursDatabase.FromDataFolder()
                         .GetEntry(Market.CME, Futures.Currencies.BTC, SecurityType.Future)
@@ -2759,7 +2757,7 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Micro EUR/USD Futures (M6E): https://www.cmegroup.com/markets/fx/g10/e-micro-euro.contractSpecs.html
-            {Symbol.Create(Futures.Currencies.MicroEURUSD, SecurityType.Future, Market.CME), (time =>
+            {Symbol.Create(Futures.Currencies.MicroEUR, SecurityType.Future, Market.CME), (time =>
                 {
                     // Quarterly contracts (Mar, Jun, Sep, Dec) listed for 2 consecutive quarters
                     while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
@@ -2767,11 +2765,11 @@ namespace QuantConnect.Securities.Future
                         time = time.AddMonths(1);
                     }
 
-                    // Trading terMEminates at 9:16 a.m. CT 2 business day prior to the 3rd Wednesday of the contract quqrter.
+                    // Trading terminates at 9:16 a.m. CT 2 business day prior to the 3rd Wednesday of the contract quqrter.
                     var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
                     var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.CME, Futures.Currencies.MicroEURUSD, SecurityType.Future)
+                        .GetEntry(Market.CME, Futures.Currencies.MicroEUR, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -2784,7 +2782,7 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Micro AUD/USD Futures (M6A): https://www.cmegroup.com/markets/fx/g10/e-micro-australian-dollar.contractSpecs.html
-            {Symbol.Create(Futures.Currencies.MicroAUDUSD, SecurityType.Future, Market.CME), (time =>
+            {Symbol.Create(Futures.Currencies.MicroAUD, SecurityType.Future, Market.CME), (time =>
                 {
                     // Quarterly contracts (Mar, Jun, Sep, Dec) listed for 2 consecutive quarters
                     while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
@@ -2796,7 +2794,7 @@ namespace QuantConnect.Securities.Future
                     var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
                     var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.CME, Futures.Currencies.MicroAUDUSD, SecurityType.Future)
+                        .GetEntry(Market.CME, Futures.Currencies.MicroAUD, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -2809,7 +2807,7 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Micro GBP/USD Futures (M6B): https://www.cmegroup.com/markets/fx/g10/e-micro-british-pound.contractSpecs.html
-            {Symbol.Create(Futures.Currencies.MicroGBPUSD, SecurityType.Future, Market.CME), (time =>
+            {Symbol.Create(Futures.Currencies.MicroGBP, SecurityType.Future, Market.CME), (time =>
                 {
                     // Quarterly contracts (Mar, Jun, Sep, Dec) listed for 2 consecutive quarters
                     while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
@@ -2821,7 +2819,7 @@ namespace QuantConnect.Securities.Future
                     var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
                     var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.CME, Futures.Currencies.MicroGBPUSD, SecurityType.Future)
+                        .GetEntry(Market.CME, Futures.Currencies.MicroGBP, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -2909,7 +2907,7 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Micro USD/JPY Futures (M6J): https://www.cmegroup.com/markets/fx/g10/micro-usd-jpy.contractSpecs.html
-            {Symbol.Create(Futures.Currencies.MicroUSDJPY, SecurityType.Future, Market.CME), (time =>
+            {Symbol.Create(Futures.Currencies.MicroJPY, SecurityType.Future, Market.CME), (time =>
                 {
                     // Quarterly contracts (Mar, Jun, Sep, Dec) listed for 2 consecutive quarters
                     while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
@@ -2921,7 +2919,7 @@ namespace QuantConnect.Securities.Future
                     var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
                     var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.CME, Futures.Currencies.MicroUSDJPY, SecurityType.Future)
+                        .GetEntry(Market.CME, Futures.Currencies.MicroJPY, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -2957,7 +2955,7 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Micro USD/CAD Futures (M6C): https://www.cmegroup.com/markets/fx/g10/micro-usd-cad.contractSpecs.html
-            {Symbol.Create(Futures.Currencies.MicroUSDCAD, SecurityType.Future, Market.CME), (time =>
+            {Symbol.Create(Futures.Currencies.MicroCAD, SecurityType.Future, Market.CME), (time =>
                 {
                     // Two months in the March quarterly cycle (Mar, Jun, Sep, Dec)
                     while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
@@ -2969,7 +2967,7 @@ namespace QuantConnect.Securities.Future
                     var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
                     var firstBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.CME, Futures.Currencies.MicroUSDCAD, SecurityType.Future)
+                        .GetEntry(Market.CME, Futures.Currencies.MicroCAD, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -2982,7 +2980,7 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Micro USD/CHF Futures (M6S): https://www.cmegroup.com/markets/fx/g10/micro-usd-chf.contractSpecs.html
-            {Symbol.Create(Futures.Currencies.MicroUSDCHF, SecurityType.Future, Market.CME), (time =>
+            {Symbol.Create(Futures.Currencies.MicroCHF, SecurityType.Future, Market.CME), (time =>
                 {
                     // Two months in the March quarterly cycle (Mar, Jun, Sep, Dec)
                     while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
@@ -2994,7 +2992,7 @@ namespace QuantConnect.Securities.Future
                     var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
                     var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.CME, Futures.Currencies.MicroUSDCHF, SecurityType.Future)
+                        .GetEntry(Market.CME, Futures.Currencies.MicroCHF, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -3085,18 +3083,8 @@ namespace QuantConnect.Securities.Future
 
                     var previousMonth = time.AddMonths(-1);
                     var twentyFifthDay = new DateTime(previousMonth.Year, previousMonth.Month, 25);
-                    var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.NYMEX, Futures.Energies.MicroCrudeOilWTI, SecurityType.Future)
-                        .ExchangeHours
-                        .Holidays;
-
-                    while (holidays.Contains(twentyFifthDay))
-                    {
-                        twentyFifthDay = FuturesExpiryUtilityFunctions.AddBusinessDays(twentyFifthDay, -1);
-                    }
-
-                    twentyFifthDay = FuturesExpiryUtilityFunctions.AddBusinessDays(twentyFifthDay, -4);
-                    return twentyFifthDay;
+                    var twentyFifthDayLessFour = FuturesExpiryUtilityFunctions.AddBusinessDays(twentyFifthDay, -4);
+                    return twentyFifthDayLessFour;
                 })
             },
             // Micro Singapore FOB Marine Fuel 0.5% (Platts) Futures (S50): https://www.cmegroup.com/markets/energy/refined-products/micro-singapore-fob-marine-fuel-05-platts.contractSpecs.html
@@ -3217,9 +3205,7 @@ namespace QuantConnect.Securities.Future
                     // month unless such day is not an Exchange business day, in which case trading terminates on the
                     // Exchange business day immediately prior.
 
-                    var lastFriday = (from day in Enumerable.Range(1, DateTime.DaysInMonth(time.Year, time.Month))
-                                      where new DateTime(time.Year, time.Month, day).DayOfWeek == DayOfWeek.Friday
-                                      select new DateTime(time.Year, time.Month, day)).Last();
+                    var lastFriday = FuturesExpiryUtilityFunctions.LastFriday(time);
 
                     var holidays = MarketHoursDatabase.FromDataFolder()
                         .GetEntry(Market.NYMEX, Futures.Energies.MicroCoalAPIFivefobNewcastleArgusMcCloskey, SecurityType.Future)
@@ -3273,9 +3259,7 @@ namespace QuantConnect.Securities.Future
                     // is not a business day in both London and the U.S., trading terminates on the prior London or U.S.
                     // business day.
 
-                    var lastFriday = (from day in Enumerable.Range(1, DateTime.DaysInMonth(time.Year, time.Month))
-                                      where new DateTime(time.Year, time.Month, day).DayOfWeek == DayOfWeek.Friday
-                                      select new DateTime(time.Year, time.Month, day)).Last();
+                    var lastFriday = FuturesExpiryUtilityFunctions.LastFriday(time);
 
                     var holidays = MarketHoursDatabase.FromDataFolder()
                         .GetEntry(Market.CME, Futures.Currencies.MicroEther, SecurityType.Future)
@@ -3304,9 +3288,7 @@ namespace QuantConnect.Securities.Future
                     // month.If this is not both a London and U.S. business day, trading terminates on the prior
                     // London and the U.S. business day.
 
-                    var lastFriday = (from day in Enumerable.Range(1, DateTime.DaysInMonth(time.Year, time.Month))
-                                      where new DateTime(time.Year, time.Month, day).DayOfWeek == DayOfWeek.Friday
-                                      select new DateTime(time.Year, time.Month, day)).Last();
+                    var lastFriday = FuturesExpiryUtilityFunctions.LastFriday(time);
 
                     var holidays = MarketHoursDatabase.FromDataFolder()
                         .GetEntry(Market.CME, Futures.Currencies.MicroBTC, SecurityType.Future)

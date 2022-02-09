@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -257,11 +257,18 @@ namespace QuantConnect.Securities.Future
         }
 
         /// <summary>
-        /// Method to retrieve the last weekday of any month
+        /// Method to retrieve the last Thursday of any month
         /// </summary>
         /// <param name="time">Date from the given month</param>
-        /// <returns>Last day of the we</returns>
+        /// <returns>Last Thursday of the given month</returns>
         public static DateTime LastThursday(DateTime time) => LastWeekday(time, DayOfWeek.Thursday);
+
+        /// <summary>
+        /// Method to retrieve the last Friday of any month
+        /// </summary>
+        /// <param name="time">Date from the given month</param>
+        /// <returns>Last Friday of the given month</returns>
+        public static DateTime LastFriday(DateTime time) => LastWeekday(time, DayOfWeek.Friday);
 
         /// <summary>
         /// Method to check whether a given time is holiday or not

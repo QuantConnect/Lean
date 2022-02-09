@@ -152,7 +152,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase(QuantConnect.Securities.Futures.Currencies.EURCAD, NineSixteenCentralTime)]
         [TestCase(QuantConnect.Securities.Futures.Currencies.EURSEK, NineSixteenCentralTime)]
         [TestCase(QuantConnect.Securities.Futures.Currencies.JapaneseYenEmini, NineSixteenCentralTime)]
-        [TestCase(QuantConnect.Securities.Futures.Currencies.MicroEURUSD, NineSixteenCentralTime)]
+        [TestCase(QuantConnect.Securities.Futures.Currencies.MicroEUR, NineSixteenCentralTime)]
         [TestCase(QuantConnect.Securities.Futures.Currencies.MicroBTC, FourPMLondonTime)]
         public void CurrenciesExpiryDateFunction_WithDifferentDates_ShouldFollowContract(string symbol, string dayTime)
         {

@@ -234,19 +234,19 @@ namespace QuantConnect.Securities
             /// Micro EUR/USD Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string MicroEURUSD = "M6E";
+            public const string MicroEUR = "M6E";
 
             /// <summary>
             /// Micro AUD/USD Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string MicroAUDUSD = "M6A";
+            public const string MicroAUD = "M6A";
 
             /// <summary>
             /// Micro GBP/USD Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string MicroGBPUSD = "M6B";
+            public const string MicroGBP = "M6B";
 
             /// <summary>
             /// Micro CAD/USD Futures
@@ -270,7 +270,7 @@ namespace QuantConnect.Securities
             /// Micro USD/JPY Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string MicroUSDJPY = "M6J";
+            public const string MicroJPY = "M6J";
 
             /// <summary>
             /// Micro INR/USD Futures
@@ -282,13 +282,13 @@ namespace QuantConnect.Securities
             /// Micro USD/CAD Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string MicroUSDCAD = "M6C";
+            public const string MicroCAD = "M6C";
 
             /// <summary>
             /// Micro USD/CHF Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string MicroUSDCHF = "M6S";
+            public const string MicroCHF = "M6S";
 
             /// <summary>
             /// Micro USD/CNH Futures
@@ -761,7 +761,7 @@ namespace QuantConnect.Securities
             /// Micro Singapore FOB Marine Fuel 0.5% (Platts) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string MicroSingaporeFOBMarineFuelZeroPointFivePercetPlatts = "S50";
+            public const string MicroSingaporeFOBMarineFuelZeroPointFivePercetPlatts = "S5O";
 
             /// <summary>
             /// Micro Gasoil 0.1% Barges FOB ARA (Platts) Futures
@@ -773,7 +773,7 @@ namespace QuantConnect.Securities
             /// Micro European FOB Rdam Marine Fuel 0.5% Barges (Platts) Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string MicroEuropeanFOBRdamMarineFuelZeroPointFivePercentBargesPlatts = "R50";
+            public const string MicroEuropeanFOBRdamMarineFuelZeroPointFivePercentBargesPlatts = "R5O";
 
             /// <summary>
             /// Micro European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures
@@ -876,7 +876,7 @@ namespace QuantConnect.Securities
             public const string MicroY5TreasuryBond = "5YY";
         }
 
-        /// <summary>
+        /// <summary>   
         /// Indices group
         /// </summary>
         public static class Indices
@@ -990,7 +990,7 @@ namespace QuantConnect.Securities
             public const string HangSeng = "HSI";
 
             /// <summary>
-            /// Micro E-mini S&P 500 Index Futures
+            /// Micro E-mini S&amp;P 500 Index Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string MicroSP500EMini = "MES";
