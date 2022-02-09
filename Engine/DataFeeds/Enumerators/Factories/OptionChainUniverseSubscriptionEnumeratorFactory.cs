@@ -84,7 +84,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                     .Select(c => new SubscriptionRequest(request, configuration: c))
                     .Select(sr => _enumeratorConfigurator(sr));
 
-                var sync = new SynchronizingEnumerator(enumerators);
+                var sync = new SynchronizingBaseDataEnumerator(enumerators);
                 return new OptionChainUniverseDataCollectionEnumerator(sync, request.Security.Symbol);
             }
         }
