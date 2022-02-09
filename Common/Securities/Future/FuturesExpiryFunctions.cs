@@ -2857,56 +2857,6 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Micro JPY/USD Futures (MJY): https://www.cmegroup.com/markets/fx/g10/e-micro-japanese-yen-us-dollar.contractSpecs.html
-            {Symbol.Create(Futures.Currencies.MicroJPYUSD, SecurityType.Future, Market.CME), (time =>
-                {
-                    // Quarterly contracts (Mar, Jun, Sep, Dec) listed for 2 consecutive quarters
-                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
-                    {
-                        time = time.AddMonths(1);
-                    }
-
-                    // 9:16 a.m. Central Time (CT) on the second business day immediately preceding the third Wednesday of the contract month (usually Monday).
-                    var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
-                    var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
-                    var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.CME, Futures.Currencies.MicroJPYUSD, SecurityType.Future)
-                        .ExchangeHours
-                        .Holidays;
-
-                    while (holidays.Contains(secondBusinessDayPrecedingThirdWednesday))
-                    {
-                        secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(secondBusinessDayPrecedingThirdWednesday, -1);
-                    }
-
-                    return secondBusinessDayPrecedingThirdWednesday.Add(new TimeSpan(14, 16, 0));
-                })
-            },
-            // Micro CHF/USD Futures (MSF): https://www.cmegroup.com/markets/fx/g10/e-micro-swiss-franc-us-dollar.contractSpecs.html
-            {Symbol.Create(Futures.Currencies.MicroCHFUSD, SecurityType.Future, Market.CME), (time =>
-                {
-                    // Quarterly contracts (Mar, Jun, Sep, Dec) listed for 2 consecutive quarters
-                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
-                    {
-                        time = time.AddMonths(1);
-                    }
-
-                    // 9:16 a.m. Central Time (CT) on the second business day immediately preceding the third Wednesday of the contract month (usually Monday).
-                    var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
-                    var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
-                    var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.CME, Futures.Currencies.MicroCHFUSD, SecurityType.Future)
-                        .ExchangeHours
-                        .Holidays;
-
-                    while (holidays.Contains(secondBusinessDayPrecedingThirdWednesday))
-                    {
-                        secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(secondBusinessDayPrecedingThirdWednesday, -1);
-                    }
-
-                    return secondBusinessDayPrecedingThirdWednesday.Add(new TimeSpan(14, 16, 0));
-                })
-            },
-            // Micro USD/JPY Futures (M6J): https://www.cmegroup.com/markets/fx/g10/micro-usd-jpy.contractSpecs.html
             {Symbol.Create(Futures.Currencies.MicroJPY, SecurityType.Future, Market.CME), (time =>
                 {
                     // Quarterly contracts (Mar, Jun, Sep, Dec) listed for 2 consecutive quarters
@@ -2920,6 +2870,56 @@ namespace QuantConnect.Securities.Future
                     var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
                     var holidays = MarketHoursDatabase.FromDataFolder()
                         .GetEntry(Market.CME, Futures.Currencies.MicroJPY, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(secondBusinessDayPrecedingThirdWednesday))
+                    {
+                        secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(secondBusinessDayPrecedingThirdWednesday, -1);
+                    }
+
+                    return secondBusinessDayPrecedingThirdWednesday.Add(new TimeSpan(14, 16, 0));
+                })
+            },
+            // Micro CHF/USD Futures (MSF): https://www.cmegroup.com/markets/fx/g10/e-micro-swiss-franc-us-dollar.contractSpecs.html
+            {Symbol.Create(Futures.Currencies.MicroCHF, SecurityType.Future, Market.CME), (time =>
+                {
+                    // Quarterly contracts (Mar, Jun, Sep, Dec) listed for 2 consecutive quarters
+                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                    // 9:16 a.m. Central Time (CT) on the second business day immediately preceding the third Wednesday of the contract month (usually Monday).
+                    var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
+                    var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.CME, Futures.Currencies.MicroCHF, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(secondBusinessDayPrecedingThirdWednesday))
+                    {
+                        secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(secondBusinessDayPrecedingThirdWednesday, -1);
+                    }
+
+                    return secondBusinessDayPrecedingThirdWednesday.Add(new TimeSpan(14, 16, 0));
+                })
+            },
+            // Micro USD/JPY Futures (M6J): https://www.cmegroup.com/markets/fx/g10/micro-usd-jpy.contractSpecs.html
+            {Symbol.Create(Futures.Currencies.MicroUSDJPY, SecurityType.Future, Market.CME), (time =>
+                {
+                    // Quarterly contracts (Mar, Jun, Sep, Dec) listed for 2 consecutive quarters
+                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                    // 9:16 a.m. Central Time (CT) on the second business day immediately preceding the third Wednesday of the contract month (usually Monday).
+                    var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
+                    var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.CME, Futures.Currencies.MicroUSDJPY, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -2980,7 +2980,7 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Micro USD/CHF Futures (M6S): https://www.cmegroup.com/markets/fx/g10/micro-usd-chf.contractSpecs.html
-            {Symbol.Create(Futures.Currencies.MicroCHF, SecurityType.Future, Market.CME), (time =>
+            {Symbol.Create(Futures.Currencies.MicroUSDCHF, SecurityType.Future, Market.CME), (time =>
                 {
                     // Two months in the March quarterly cycle (Mar, Jun, Sep, Dec)
                     while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
@@ -2992,7 +2992,7 @@ namespace QuantConnect.Securities.Future
                     var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
                     var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.CME, Futures.Currencies.MicroCHF, SecurityType.Future)
+                        .GetEntry(Market.CME, Futures.Currencies.MicroUSDCHF, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
