@@ -17,6 +17,7 @@ using NodaTime;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Util;
 using System;
@@ -88,30 +89,51 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
         public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
         {
-            SortedDictionary<DateTime, Slice> mergedHistory = new();
+            List<IEnumerator<Slice>> historyEnumerators = new();
             foreach (var historyProvider in HistoryProviders)
             {
                 try
                 {
                     var history = historyProvider.GetHistory(requests, sliceTimeZone);
-                    foreach (var slice in history)
-                    {
-                        if (!mergedHistory.ContainsKey(slice.Time))
-                        {
-                            mergedHistory[slice.Time] = slice;
-                        }
-                        else
-                        {
-                            mergedHistory[slice.Time].MergeSlice(slice);
-                        }
-                    }
+                    historyEnumerators.Add(history.GetEnumerator());
                 }
                 catch (Exception e)
                 {
                     // ignore
                 }
             }
-            return mergedHistory.Values;
+            var synchronizer = new SynchronizingSliceEnumerator(historyEnumerators);
+            var previousTime = DateTime.MinValue;
+            Slice previousMergedSlice = null;
+            Slice latestMergeSlice = null;
+            var isFirst = true;
+            while (synchronizer.MoveNext())
+            {
+                var currentSlice = synchronizer.Current;
+                if (currentSlice.Time > previousTime)
+                {
+                    latestMergeSlice = currentSlice;
+                    previousTime = currentSlice.Time;
+                    if (isFirst)
+                    {
+                        isFirst = false;
+                        previousMergedSlice = latestMergeSlice;
+                        continue;
+                    }
+                    yield return previousMergedSlice;
+                }
+                else
+                {
+                    latestMergeSlice.MergeSlice(currentSlice);
+                }
+                previousMergedSlice = latestMergeSlice;
+            }
+            synchronizer.Dispose();
+            if (isFirst)
+            {
+                yield return null;
+            }
+            yield return previousMergedSlice;
         }
     }
 }
