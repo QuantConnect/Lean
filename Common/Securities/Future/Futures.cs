@@ -876,7 +876,7 @@ namespace QuantConnect.Securities
             public const string MicroY5TreasuryBond = "5YY";
         }
 
-        /// <summary>   
+        /// <summary>
         /// Indices group
         /// </summary>
         public static class Indices

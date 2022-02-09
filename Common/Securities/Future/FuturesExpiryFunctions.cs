@@ -2840,20 +2840,20 @@ namespace QuantConnect.Securities.Future
                         time = time.AddMonths(1);
                     }
 
-                    // 9:16 a.m. Central Time (CT) on the second business day immediately preceding the third Wednesday of the contract month (usually Monday).
+                    // Trading terminates 1 business day prior to the 3rd Wednesday of the contract quarter.
                     var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
-                    var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -1);
+                    var firstBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
                         .GetEntry(Market.CME, Futures.Currencies.MicroCADUSD, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
-                    while (holidays.Contains(secondBusinessDayPrecedingThirdWednesday))
+                    while (holidays.Contains(firstBusinessDayPrecedingThirdWednesday))
                     {
-                        secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(secondBusinessDayPrecedingThirdWednesday, -1);
+                        firstBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(firstBusinessDayPrecedingThirdWednesday, -1);
                     }
 
-                    return secondBusinessDayPrecedingThirdWednesday;
+                    return firstBusinessDayPrecedingThirdWednesday;
                 })
             },
             // Micro JPY/USD Futures (MJY): https://www.cmegroup.com/markets/fx/g10/e-micro-japanese-yen-us-dollar.contractSpecs.html
@@ -3316,9 +3316,7 @@ namespace QuantConnect.Securities.Future
                     // month.If this is not both a London and U.S. business day, trading terminates on the prior
                     // London and the U.S. business day.
 
-                    var lastThursday = (from day in Enumerable.Range(1, DateTime.DaysInMonth(time.Year, time.Month))
-                                      where new DateTime(time.Year, time.Month, day).DayOfWeek == DayOfWeek.Thursday
-                                      select new DateTime(time.Year, time.Month, day)).Last();
+                    var lastThursday = FuturesExpiryUtilityFunctions.LastThursday(time);
 
                     var holidays = MarketHoursDatabase.FromDataFolder()
                         .GetEntry(Market.CME, Futures.Currencies.BTICMicroEther, SecurityType.Future)
@@ -3347,9 +3345,7 @@ namespace QuantConnect.Securities.Future
                     // month.If this is not both a London and U.S. business day, trading terminates on the prior
                     // London and the U.S. business day.
 
-                    var lastThursday = (from day in Enumerable.Range(1, DateTime.DaysInMonth(time.Year, time.Month))
-                                      where new DateTime(time.Year, time.Month, day).DayOfWeek == DayOfWeek.Thursday
-                                      select new DateTime(time.Year, time.Month, day)).Last();
+                    var lastThursday = FuturesExpiryUtilityFunctions.LastThursday(time);
 
                     var holidays = MarketHoursDatabase.FromDataFolder()
                         .GetEntry(Market.CME, Futures.Currencies.BTICMicroBTC, SecurityType.Future)
