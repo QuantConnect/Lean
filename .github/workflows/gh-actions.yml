@@ -28,3 +28,5 @@ jobs:
           ./ci_build_stubs.sh -t -g -p
         env:
           PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+          ADDITIONAL_STUBS_REPOS: ${{ secrets.ADDITIONAL_STUBS_REPOS }}
+          QC_GIT_TOKEN: ${{ secrets.QC_GIT_TOKEN }}
