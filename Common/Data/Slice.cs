@@ -264,7 +264,7 @@ namespace QuantConnect.Data
             Time = time;
             _rawDataList = data;
             // market data
-            _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(data));
+            _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(_rawDataList));
 
             HasData = hasData ?? _data.Value.Count > 0;
 
@@ -468,12 +468,20 @@ namespace QuantConnect.Data
 
             if (inputSlice._rawDataList.Count != 0)
             {
-                // Should keep this._rawDataList last so that selected data points are not overriden
-                // while creating _data
-                var tempRawDataList = inputSlice._rawDataList;
-                tempRawDataList.AddRange(_rawDataList);
-                _rawDataList = tempRawDataList;
-                _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(_rawDataList));
+                if (_rawDataList.Count == 0)
+                {
+                    _rawDataList = inputSlice._rawDataList;
+                    _data = inputSlice._data;
+                }
+                else
+                {
+                    // Should keep this._rawDataList last so that selected data points are not overriden
+                    // while creating _data
+                    var tempRawDataList = inputSlice._rawDataList;
+                    tempRawDataList.AddRange(_rawDataList);
+                    _rawDataList = tempRawDataList;
+                    _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(_rawDataList));
+                }
             }
         }
 
