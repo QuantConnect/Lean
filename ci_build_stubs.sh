@@ -29,7 +29,7 @@ function prepare_additional_repos {
     fi
 
     cd $ADDITIONAL_REPOS_DIR
-    for REPO in ${ADDITIONAL_STUBS_REPOS[@]}; do
+    for repo in ${ADDITIONAL_STUBS_REPOS[@]}; do
         #Replace github.com with token from environment before checking it out
         git clone "${repo//github.com/"${QC_GIT_TOKEN}@github.com"}"
     done
