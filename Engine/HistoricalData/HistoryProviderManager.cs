@@ -18,13 +18,13 @@ using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
-using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
-namespace QuantConnect.Lean.Engine.DataFeeds
+namespace QuantConnect.Lean.Engine.HistoricalData
 {
     /// <summary>
     /// Provides an implementation of <see cref="IHistoryProvider"/> which
@@ -32,14 +32,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class HistoryProviderManager : SynchronizingHistoryProvider
     {
+        private IBrokerage _brokerage;
+        private bool _initialized;
+
         /// <summary>
         /// Collection of history providers being used
         /// </summary>
         /// <remarks>Protected for testing purposes</remarks>
         protected List<IHistoryProvider> HistoryProviders { get; } = new();
-
-        private IBrokerage _brokerage;
-        private bool _initialized;
 
         /// <summary>
         /// Sets the brokerage to be used for historical requests
@@ -89,12 +89,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
         public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
         {
-            List<IEnumerator<Slice>> historyEnumerators = new();
+            List<IEnumerator<Slice>> historyEnumerators = new(HistoryProviders.Count);
+            var historyRequets = requests.ToList();
             foreach (var historyProvider in HistoryProviders)
             {
                 try
                 {
-                    var history = historyProvider.GetHistory(requests, sliceTimeZone);
+                    var history = historyProvider.GetHistory(historyRequets, sliceTimeZone);
                     historyEnumerators.Add(history.GetEnumerator());
                 }
                 catch (Exception e)
@@ -109,6 +110,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             bool isFirstComplete = new();
             while (synchronizer.MoveNext())
             {
+                if (synchronizer.Current == null)
+                {
+                    continue;
+                }
                 if (synchronizer.Current.Time > previousTime)
                 {
                     latestMergeSlice = synchronizer.Current;

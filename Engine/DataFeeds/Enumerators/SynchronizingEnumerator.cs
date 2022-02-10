@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -23,13 +23,18 @@ using QuantConnect.Data;
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
     /// <summary>
-    /// Represents an enumerator capable of synchronizing other base data enumerators in time.
+    /// Represents an enumerator capable of synchronizing other enumerators of type T in time.
     /// This assumes that all enumerators have data time stamped in the same time zone
     /// </summary>
     public abstract class SynchronizingEnumerator<T> : IEnumerator<T>
     {
         private IEnumerator<T> _syncer;
         private readonly IEnumerator<T>[] _enumerators;
+
+        /// <summary>
+        /// Gets the Timestamp for the data
+        /// </summary>
+        /// <typeparam name="T">The type of data we want, for example, <see cref="BaseData"/> or <see cref="Slice"/>, ect...</typeparam>
         protected abstract DateTime GetInstanceTime<T>(T instance);
 
         /// <summary>
@@ -55,19 +60,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SynchronizingEnumerator"/> class
+        /// Initializes a new instance of the <see cref="SynchronizingEnumerator{T}"/> class
         /// </summary>
         /// <param name="enumerators">The enumerators to be synchronized. NOTE: Assumes the same time zone for all data</param>
-        public SynchronizingEnumerator(params IEnumerator<T>[] enumerators)
+        /// <typeparam name="T">The type of data we want, for example, <see cref="BaseData"/> or <see cref="Slice"/>, ect...</typeparam>
+        protected SynchronizingEnumerator(params IEnumerator<T>[] enumerators)
             : this ((IEnumerable<IEnumerator<T>>)enumerators)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SynchronizingEnumerator"/> class
+        /// Initializes a new instance of the <see cref="SynchronizingEnumerator{T}"/> class
         /// </summary>
         /// <param name="enumerators">The enumerators to be synchronized. NOTE: Assumes the same time zone for all data</param>
-        public SynchronizingEnumerator(IEnumerable<IEnumerator<T>> enumerators)
+        /// <typeparam name="T">The type of data we want, for example, <see cref="BaseData"/> or <see cref="Slice"/>, ect...</typeparam>
+        protected SynchronizingEnumerator(IEnumerable<IEnumerator<T>> enumerators)
         {
             _enumerators = enumerators.ToArray();
             _syncer = GetSynchronizedEnumerator(_enumerators);

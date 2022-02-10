@@ -22,7 +22,7 @@ using System.Collections.Generic;
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
     /// <summary>
-    /// Represents an enumerator capable of synchronizing other base data enumerators in time.
+    /// Represents an enumerator capable of synchronizing other slice enumerators in time.
     /// This assumes that all enumerators have data time stamped in the same time zone
     /// </summary>
     public class SynchronizingSliceEnumerator : SynchronizingEnumerator<Slice>
@@ -44,6 +44,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         {
         }
 
+        /// <summary>
+        /// Gets the Timestamp for the data
+        /// </summary>
+        /// <typeparam name="T">The type of data we want, for example, <see cref="BaseData"/> or <see cref="Slice"/>, ect...</typeparam>
         protected override DateTime GetInstanceTime<T>(T instance)
         {
             return (instance as Slice).Time;

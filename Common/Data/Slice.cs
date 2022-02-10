@@ -20,7 +20,6 @@ using System.Linq;
 using System.Reflection;
 using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Market;
-using QuantConnect.Logging;
 using QuantConnect.Python;
 
 namespace QuantConnect.Data
@@ -454,29 +453,36 @@ namespace QuantConnect.Data
         {
             if (Time != inputSlice.Time)
             {
-                throw new Exception($"Slice with time {Time} can't be merged with given slice with different {inputSlice.Time}");
+                throw new InvalidOperationException($"Slice with time {Time} can't be merged with given slice with different {inputSlice.Time}");
             }
 
-            _bars = (TradeBars)UpdateCollection<TradeBar>(_bars, inputSlice.Bars);
-            _quoteBars = (QuoteBars)UpdateCollection<QuoteBar>(_quoteBars, inputSlice.QuoteBars);
-            _ticks = (Ticks)UpdateCollection<List<Tick>>(_ticks, inputSlice.Ticks);
-            _optionChains = (OptionChains)UpdateCollection<OptionChain>(_optionChains, inputSlice.OptionChains);
-            _futuresChains = (FuturesChains)UpdateCollection<FuturesChain>(_futuresChains, inputSlice.FuturesChains);
-            _splits = (Splits)UpdateCollection<Split>(_splits, inputSlice.Splits);
-            _dividends = (Dividends)UpdateCollection<Dividend>(_dividends, inputSlice.Dividends);
-            _delistings = (Delistings)UpdateCollection<Delisting>(_delistings, inputSlice.Delistings);
-            _symbolChangedEvents = (SymbolChangedEvents)UpdateCollection<SymbolChangedEvent>(_symbolChangedEvents, inputSlice.SymbolChangedEvents);
+            _bars = (TradeBars)UpdateCollection(_bars, inputSlice.Bars);
+            _quoteBars = (QuoteBars)UpdateCollection(_quoteBars, inputSlice.QuoteBars);
+            _ticks = (Ticks)UpdateCollection(_ticks, inputSlice.Ticks);
+            _optionChains = (OptionChains)UpdateCollection(_optionChains, inputSlice.OptionChains);
+            _futuresChains = (FuturesChains)UpdateCollection(_futuresChains, inputSlice.FuturesChains);
+            _splits = (Splits)UpdateCollection(_splits, inputSlice.Splits);
+            _dividends = (Dividends)UpdateCollection(_dividends, inputSlice.Dividends);
+            _delistings = (Delistings)UpdateCollection(_delistings, inputSlice.Delistings);
+            _symbolChangedEvents = (SymbolChangedEvents)UpdateCollection(_symbolChangedEvents, inputSlice.SymbolChangedEvents);
 
-            // Should keep this._rawDataList last so that selected data points are not overriden
-            // while creating _data
-            var tempRawDataList = inputSlice._rawDataList;
-            tempRawDataList.AddRange(_rawDataList);
-            _rawDataList = tempRawDataList; 
-            _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(_rawDataList));
+            if (inputSlice._rawDataList.Count != 0)
+            {
+                // Should keep this._rawDataList last so that selected data points are not overriden
+                // while creating _data
+                var tempRawDataList = inputSlice._rawDataList;
+                tempRawDataList.AddRange(_rawDataList);
+                _rawDataList = tempRawDataList;
+                _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(_rawDataList));
+            }
         }
 
         private static DataDictionary<T> UpdateCollection<T>(DataDictionary<T> baseCollection, DataDictionary<T> inputCollection)
         {
+            if (baseCollection == null || baseCollection.Count == 0)
+            {
+                return inputCollection;
+            }
             if (inputCollection?.Count > 0)
             {
                 foreach (var kvp in inputCollection)

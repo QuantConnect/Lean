@@ -19,6 +19,7 @@ using QuantConnect.Brokerages.Binance;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;

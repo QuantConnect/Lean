@@ -14,14 +14,14 @@
  *
 */
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 {
@@ -43,7 +43,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 Assert.That(synchronizer.Current.Time, Is.GreaterThanOrEqualTo(previous));
                 previous = synchronizer.Current.Time;
             }
-
             synchronizer.Dispose();
         }
 
@@ -68,7 +67,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 previous = synchronizer.Current;
             }
             Assert.AreEqual(2, previous.Bars.Count);
-
             synchronizer.Dispose();
         }
 
@@ -87,7 +85,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsTrue(emitted);
             Assert.IsTrue(stream1.MoveNextWasCalled);
             Assert.AreEqual(1, stream1.MoveNextCallCount);
-
             synchronizer.Dispose();
         }
 
@@ -101,8 +98,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 Assert.Fail();
             }
             Assert.IsTrue(stream1.MoveNextWasCalled);
-            Assert.Pass();
-
             synchronizer.Dispose();
         }
 
@@ -116,8 +111,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 Assert.Fail();
             }
             Assert.IsTrue(stream1.MoveNextWasCalled);
-            Assert.Pass();
-
             synchronizer.Dispose();
         }
 
@@ -142,8 +135,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             public Slice Current { get; }
 
             object IEnumerator.Current => Current;
-            public void Dispose() { }
-            public void Reset() { }
+
+            public void Dispose()
+            { }
+
+            public void Reset()
+            { }
         }
     }
 }

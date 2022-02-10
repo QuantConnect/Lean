@@ -30,6 +30,8 @@ namespace QuantConnect.Tests.Common.Data
     [TestFixture]
     public class SliceTests
     {
+        private readonly DateTime _dataTime = DateTime.UtcNow;
+
         [Test]
         public void AccessesByDataType()
         {
@@ -210,28 +212,28 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void MergeSlice()
         {
-            TradeBar tradeBar1 = new TradeBar { Symbol = Symbols.SPY, Time = DateTime.Now };
-            TradeBar tradeBar2 = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now, Open = 23 };
-            var quoteBar1 = new QuoteBar { Symbol = Symbols.SPY, Time = DateTime.Now };
-            var tick1 = new Tick(DateTime.Now, Symbols.SPY, 1.1m, 2.1m) { TickType = TickType.Trade };
-            var split1 = new Split(Symbols.SPY, DateTime.Now, 1, 1, SplitType.SplitOccurred);
-            var dividend1 = new Dividend(Symbols.SPY, DateTime.Now, 1, 1);
-            var delisting1 = new Delisting(Symbols.SPY, DateTime.Now, 1, DelistingType.Delisted);
-            var symbolChangedEvent1 = new SymbolChangedEvent(Symbols.SPY, DateTime.Now, "SPY", "SP");
-            Slice slice1 = new Slice(DateTime.Today, new BaseData[] { tradeBar1, tradeBar2,
+            var tradeBar1 = new TradeBar { Symbol = Symbols.SPY, Time = _dataTime };
+            var tradeBar2 = new TradeBar { Symbol = Symbols.AAPL, Time = _dataTime, Open = 23 };
+            var quoteBar1 = new QuoteBar { Symbol = Symbols.SPY, Time = _dataTime };
+            var tick1 = new Tick(_dataTime, Symbols.SPY, 1.1m, 2.1m) { TickType = TickType.Trade };
+            var split1 = new Split(Symbols.SPY, _dataTime, 1, 1, SplitType.SplitOccurred);
+            var dividend1 = new Dividend(Symbols.SPY, _dataTime, 1, 1);
+            var delisting1 = new Delisting(Symbols.SPY, _dataTime, 1, DelistingType.Delisted);
+            var symbolChangedEvent1 = new SymbolChangedEvent(Symbols.SPY, _dataTime, "SPY", "SP");
+            var slice1 = new Slice(_dataTime, new BaseData[] { tradeBar1, tradeBar2,
                 quoteBar1, tick1, split1, dividend1, delisting1, symbolChangedEvent1
             });
 
-            TradeBar tradeBar3 = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now, Open = 24 };
-            TradeBar tradeBar4 = new TradeBar { Symbol = Symbols.SBIN, Time = DateTime.Now };
-            TradeBar tradeBar3_4 = new TradeBar { Symbol = Symbols.BTCEUR, Time = DateTime.Now };
-            var quoteBar2 = new QuoteBar { Symbol = Symbols.SBIN, Time = DateTime.Now };
-            var tick2 = new Tick(DateTime.Now, Symbols.SBIN, 1.1m, 2.1m) { TickType = TickType.Trade };
-            var split2 = new Split(Symbols.SBIN, DateTime.Now, 1, 1, SplitType.SplitOccurred);
-            var dividend2 = new Dividend(Symbols.SBIN, DateTime.Now, 1, 1);
-            var delisting2 = new Delisting(Symbols.SBIN, DateTime.Now, 1, DelistingType.Delisted);
-            var symbolChangedEvent2 = new SymbolChangedEvent(Symbols.SBIN, DateTime.Now, "SBIN", "BIN");
-            Slice slice2 = new Slice(DateTime.Today, new BaseData[] { tradeBar3, tradeBar4, tradeBar3_4,
+            var tradeBar3 = new TradeBar { Symbol = Symbols.AAPL, Time = _dataTime, Open = 24 };
+            var tradeBar4 = new TradeBar { Symbol = Symbols.SBIN, Time = _dataTime };
+            var tradeBar3_4 = new TradeBar { Symbol = Symbols.BTCEUR, Time = _dataTime };
+            var quoteBar2 = new QuoteBar { Symbol = Symbols.SBIN, Time = _dataTime };
+            var tick2 = new Tick(_dataTime, Symbols.SBIN, 1.1m, 2.1m) { TickType = TickType.Trade };
+            var split2 = new Split(Symbols.SBIN, _dataTime, 1, 1, SplitType.SplitOccurred);
+            var dividend2 = new Dividend(Symbols.SBIN, _dataTime, 1, 1);
+            var delisting2 = new Delisting(Symbols.SBIN, _dataTime, 1, DelistingType.Delisted);
+            var symbolChangedEvent2 = new SymbolChangedEvent(Symbols.SBIN, _dataTime, "SBIN", "BIN");
+            var slice2 = new Slice(_dataTime, new BaseData[] { tradeBar3, tradeBar4, tradeBar3_4,
                 quoteBar2, tick2, split2, dividend2, delisting2, symbolChangedEvent2
             });
 
@@ -248,14 +250,14 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void CheckMergeUpdatePrivateAttributes()
         {
-            TradeBar tradeBar1 = new TradeBar { Symbol = Symbols.SPY, Time = DateTime.Now };
-            TradeBar tradeBar2 = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now, Open = 23 };
-            Slice slice1 = new Slice(DateTime.Today, new BaseData[] { tradeBar1, tradeBar2 });
+            var tradeBar1 = new TradeBar { Symbol = Symbols.SPY, Time = _dataTime };
+            var tradeBar2 = new TradeBar { Symbol = Symbols.AAPL, Time = _dataTime, Open = 23 };
+            var slice1 = new Slice(_dataTime, new BaseData[] { tradeBar1, tradeBar2 });
 
-            TradeBar tradeBar3 = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now, Open = 24 };
-            TradeBar tradeBar4 = new TradeBar { Symbol = Symbols.SBIN, Time = DateTime.Now };
-            TradeBar tradeBar3_4 = new TradeBar { Symbol = Symbols.BTCEUR, Time = DateTime.Now };
-            Slice slice2 = new Slice(DateTime.Today, new BaseData[] { tradeBar3, tradeBar4, tradeBar3_4 });
+            var tradeBar3 = new TradeBar { Symbol = Symbols.AAPL, Time = _dataTime, Open = 24 };
+            var tradeBar4 = new TradeBar { Symbol = Symbols.SBIN, Time = _dataTime };
+            var tradeBar3_4 = new TradeBar { Symbol = Symbols.BTCEUR, Time = _dataTime };
+            var slice2 = new Slice(_dataTime, new BaseData[] { tradeBar3, tradeBar4, tradeBar3_4 });
 
             slice1.MergeSlice(slice2);
 
@@ -270,14 +272,20 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void MergeTicks()
         {
-            TradeBar tradeBar1 = new TradeBar { Symbol = Symbols.SPY, Time = DateTime.Now };
-            var tick1 = new Tick(DateTime.Now, Symbols.SPY, 1.1m, 2.1m) { TickType = TickType.Trade };
-            Slice slice1 = new Slice(DateTime.Today, new BaseData[] { tradeBar1, tick1 });
-            // Use List<tick>
+            var tradeBar1 = new TradeBar { Symbol = Symbols.SPY, Time = _dataTime };
+            var tick1 = new Tick(_dataTime, Symbols.SPY, 1.1m, 2.1m) { TickType = TickType.Trade };
+            var slice1 = new Slice(_dataTime, new BaseData[] { tradeBar1, tick1 });
+            //var Use List<tick>
             var ticks = new Ticks { { Symbols.MSFT, new List<Tick> { tick1 } } };
-            Slice slice3 = new Slice(DateTime.Today, new List<BaseData>(), null, null, ticks, null, null, null, null, null, null);
-            slice1.MergeSlice(slice3);
+            var slice2 = new Slice(_dataTime, new List<BaseData>(), null, null, ticks, null, null, null, null, null, null);
+            slice1.MergeSlice(slice2);
             Assert.AreEqual(2, slice1.Ticks.Count);
+
+            // Should merge only when different
+            var tick2 = new Tick(_dataTime, Symbols.MSFT, 1.1m, 2.1m) { TickType = TickType.Trade };
+            var slice3 = new Slice(_dataTime, new BaseData[] { tradeBar1, tick2 });
+            slice2.MergeSlice(slice3);
+            Assert.AreEqual(1, slice2.Ticks.Count);
         }
 
         [Test]
@@ -286,23 +294,23 @@ namespace QuantConnect.Tests.Common.Data
             // Merge optionChains and FutureChains
             var optionChain1 = new OptionChains();
             var optionChain2 = new OptionChains();
-            optionChain1.Add(Symbols.SPY, new OptionChain(Symbols.SPY, DateTime.Now));
-            optionChain2.Add(Symbols.AAPL, new OptionChain(Symbols.SPY, DateTime.Now));
+            optionChain1.Add(Symbols.SPY, new OptionChain(Symbols.SPY, _dataTime));
+            optionChain2.Add(Symbols.AAPL, new OptionChain(Symbols.SPY, _dataTime));
             var futuresChain1 = new FuturesChains();
             var futuresChain2 = new FuturesChains();
-            futuresChain1.Add(Symbols.SPY, new FuturesChain(Symbols.SPY, DateTime.Now));
-            futuresChain2.Add(Symbols.AAPL, new FuturesChain(Symbols.SPY, DateTime.Now));
-            var slice4 = new Slice(DateTime.Today, new List<BaseData>(),
-                                new TradeBars(DateTime.Today), new QuoteBars(),
+            futuresChain1.Add(Symbols.SPY, new FuturesChain(Symbols.SPY, _dataTime));
+            futuresChain2.Add(Symbols.AAPL, new FuturesChain(Symbols.SPY, _dataTime));
+            var slice4 = new Slice(_dataTime, new List<BaseData>(),
+                                new TradeBars(_dataTime), new QuoteBars(),
                                 new Ticks(), optionChain1,
                                 futuresChain1, new Splits(),
-                                new Dividends(DateTime.Today), new Delistings(),
+                                new Dividends(_dataTime), new Delistings(),
                                 new SymbolChangedEvents());
-            var slice5 = new Slice(DateTime.Today, new List<BaseData>(),
-                new TradeBars(DateTime.Today), new QuoteBars(),
+            var slice5 = new Slice(_dataTime, new List<BaseData>(),
+                new TradeBars(_dataTime), new QuoteBars(),
                 new Ticks(), optionChain2,
                 futuresChain2, new Splits(),
-                new Dividends(DateTime.Today), new Delistings(),
+                new Dividends(_dataTime), new Delistings(),
                 new SymbolChangedEvents());
             slice4.MergeSlice(slice5);
             Assert.AreEqual(2, slice4.OptionChains.Count);
@@ -312,12 +320,14 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void MergeCustomData()
         {
-            TradeBar tradeBar1 = new TradeBar { Symbol = Symbols.SPY, Time = DateTime.Now };
-            TradeBar tradeBar2 = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now, Open = 23 };
+            var tradeBar1 = new TradeBar { Symbol = Symbols.SPY, Time = _dataTime };
+            var tradeBar2 = new TradeBar { Symbol = Symbols.AAPL, Time = _dataTime, Open = 23 };
             var custom1 = new FxcmVolume { DataType = MarketDataType.Base, Symbol = Symbols.MSFT };
             var custom2 = new FxcmVolume { DataType = MarketDataType.Base, Symbol = Symbols.SBIN };
-            Slice slice6 = new Slice(DateTime.Today, new BaseData[] { custom1, custom2, tradeBar2 });
-            Slice slice5 = new Slice(DateTime.Today, new BaseData[] { tradeBar1 });
+            var custom3 = new FxcmVolume { DataType = MarketDataType.Base, Symbol = Symbols.MSFT };
+            var custom4 = new FxcmVolume { DataType = MarketDataType.Base, Symbol = Symbols.SBIN };
+            var slice6 = new Slice(_dataTime, new BaseData[] { custom1, custom2, custom3, tradeBar2 });
+            var slice5 = new Slice(_dataTime, new BaseData[] { tradeBar1, custom4 });
             slice5.MergeSlice(slice6);
             Assert.AreEqual(4, slice5.Values.Count);
             Assert.AreEqual(2, slice5.Values.Where(x => x.DataType == MarketDataType.Base).Count());
