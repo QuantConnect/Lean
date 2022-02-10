@@ -106,17 +106,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var previousTime = DateTime.MinValue;
             Slice previousMergedSlice = null;
             Slice latestMergeSlice = null;
-            var isFirst = true;
+            bool isFirstComplete = new();
             while (synchronizer.MoveNext())
             {
-                var currentSlice = synchronizer.Current;
-                if (currentSlice.Time > previousTime)
+                if (synchronizer.Current.Time > previousTime)
                 {
-                    latestMergeSlice = currentSlice;
-                    previousTime = currentSlice.Time;
-                    if (isFirst)
+                    latestMergeSlice = synchronizer.Current;
+                    previousTime = synchronizer.Current.Time;
+                    if (!isFirstComplete)
                     {
-                        isFirst = false;
+                        isFirstComplete = true;
                         previousMergedSlice = latestMergeSlice;
                         continue;
                     }
@@ -124,12 +123,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 else
                 {
-                    latestMergeSlice.MergeSlice(currentSlice);
+                    latestMergeSlice.MergeSlice(synchronizer.Current);
                 }
                 previousMergedSlice = latestMergeSlice;
             }
             synchronizer.Dispose();
-            if (isFirst)
+            if (!isFirstComplete)
             {
                 yield break;
             }
