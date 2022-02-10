@@ -12,6 +12,7 @@
 # limitations under the License.
 
 from AlgorithmImports import *
+from QuantConnect.Algorithm.CSharp import *
 
 ### <summary>
 ### Basic template algorithm simply initializes the date range and cash. This is a skeleton
