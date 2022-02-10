@@ -13,6 +13,7 @@
     <Name>QuantConnect.ApiPython</Name>
     <RootNamespace>ApiPython</RootNamespace>
     <InterpreterId>Global|VisualStudio|pyenv (Python 3.8 (64-bit))</InterpreterId>
+    <TestFramework>Pytest</TestFramework>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
