@@ -131,7 +131,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             synchronizer.Dispose();
             if (isFirst)
             {
-                yield return null;
+                yield break;
             }
             yield return previousMergedSlice;
         }
