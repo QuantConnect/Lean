@@ -19,6 +19,8 @@ STUBS_DIR="$LEAN_BIN_DIR/generated-stubs"
 PYPI_REPO="pypi"
 
 # For our all additional repos we want to include in our stubs
+# Passed in env secret of repos is one long string that needs to be split
+ADDITIONAL_REPOS=$(echo $ADDITIONAL_STUBS_REPOS | tr ";" "\n")
 ADDITIONAL_REPOS_DIR="$LEAN_DIR/ADDITIONAL_STUBS"
 
 # This function essentially loads in additional repo into our Lean directory
@@ -29,9 +31,9 @@ function prepare_additional_repos {
     fi
 
     cd $ADDITIONAL_REPOS_DIR
-    for repo in ${ADDITIONAL_STUBS_REPOS[@]}; do
+    for REPO in ${ADDITIONAL_REPOS}; do
         #Replace github.com with token from environment before checking it out
-        git clone "${repo//github.com/"${QC_GIT_TOKEN}@github.com"}"
+        git clone "${REPO//github.com/"${QC_GIT_TOKEN}@github.com"}"
     done
 
     # Return us back to previous directory
