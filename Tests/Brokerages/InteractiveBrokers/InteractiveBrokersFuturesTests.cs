@@ -81,6 +81,10 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                             "ZS",
                             "ZT",
                             "ZW",
+                            "2YY",
+                            "5YY",
+                            "10Y",
+                            "30Y"
                         }
                     },
                     {
@@ -88,21 +92,28 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                         new[]
                         {
                             "6A",
+                            "M6A",
                             "6B",
+                            "M6B",
                             "6C",
+                            "M6C",
                             "6E",
+                            "M6E",
                             "6J",
+                            "M6J",
                             "6L",
                             "6M",
                             "6N",
                             "6R",
                             "6S",
+                            "M6S",
                             "6Z",
                             //"ACD",
                             //"AJY",
                             //"ANE",
                             "BIO",
                             "BTC",
+                            "MicroBTC",
                             "CB",
                             //"CJY",
                             //"CNH",
@@ -115,6 +126,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                             //"EI",
                             "EMD",
                             "ES",
+                            "MES",
                             //"ESK",
                             "GD",
                             "GDK",
@@ -128,7 +140,9 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                             "LE",
                             "NKD",
                             "NQ",
+                            "MicroNQ",
                             "RTY",
+                            "M2K"
                         }
                     },
                     {
@@ -138,8 +152,10 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                             //"AUP",
                             //"EDP",
                             "GC",
+                            "MGC",
                             "HG",
                             "SI",
+                            "SIL"
                         }
                     },
                     {
@@ -232,6 +248,15 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                             "PL",
                             "RB",
                             //"YO",
+                            "M1B",
+                            "M35",
+                            "M5F",
+                            "MAF",
+                            "MCL",
+                            "MEF",
+                            "PAM",
+                            "R5O",
+                            "S5O"
                         }
                     }
                 };

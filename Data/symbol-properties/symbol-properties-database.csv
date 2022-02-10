@@ -89,12 +89,17 @@ usa,[*],indexoption,,USD,100,0.05,1
 
 # for backwards compatibility, order here is important for futures, since we could have the same symbol for more than 1 market in which case Lean will use the first
 cfe,VX,future,VIX futures ,USD,1000.0,0.05,1.0
+cbot,2YY,future,Micro 2-Year Yield Futures,USD,1000,0.001,1
+cbot,5YY,future,Micro 5-Year Yield Futures,USD,1000,0.001,1
+cbot,10Y,future,Micro 10-Year Yield Futures,USD,1000,0.001,1
+cbot,30Y,future,Micro 30-Year Yield Futures,USD,1000,0.001,1
 cbot,AW,future,Bloomberg Commodity Index Futures,USD,100.0,0.1,1.0
 cbot,BCF,future,Black Sea Corn Financially Settled (Platts) Futures,USD,50.0,0.25,1.0
 cbot,BWF,future,Black Sea Wheat Financially Settled (Platts) Futures,USD,50.0,0.25,1.0
 cbot,EH,future,Ethanol Futures,USD,29000.0,0.001,1.0
 cbot,F1U,future,5-Year USD MAC Swap Futures,USD,1000.0,0.0078125,1.0
 cbot,KE,future,KC HRW Wheat Futures,USD,5000.0,0.0025,1.0,,1,100
+cbot,MYM,future,Micro E-mini Dow Jones Industrial Average Index Futures,USD,0.5,1,1
 cbot,TN,future,Ultra 10-Year U.S. Treasury Note Futures,USD,1000.0,0.015625,1.0
 cbot,UB,future,Ultra U.S. Treasury Bond Futures,USD,1000.0,0.03125,1.0
 cbot,YM,future,E-mini Dow ($5) Futures,USD,5.0,1.0,1.0
@@ -106,7 +111,7 @@ cbot,ZM,future,Soybean Meal Futures,USD,100.0,0.1,1.0
 cbot,ZN,future,10-Year T-Note Futures,USD,1000.0,0.015625,1.0
 cbot,ZO,future,Oats Futures,USD,5000.0,0.25,1.0,,1,100
 cbot,ZS,future,Soybean Futures,USD,5000.0,0.0025,1.0,,1,100
-cbot,ZT,future,2-Year T-Note Futures,USD,2000.0,0.00390625,1.0
+cbot,ZT,future,2-Year T-Note Futures,USD,200000,0.00390625,1.0
 cbot,ZW,future,Chicago SRW Wheat Futures,USD,5000.0,0.0025,1.0,,1,100
 cme,6A,future,Australian Dollar Futures,USD,100000.0,0.0001,1.0
 cme,6B,future,British Pound Futures,USD,62500.0,0.0001,1.0
@@ -147,6 +152,24 @@ cme,IBV,future,USD-Denominated Ibovespa Index Futures,USD,1.0,5.0,1.0
 cme,J7,future,E-mini Japanese Yen Futures,USD,6250000.0,1e-06,1.0
 cme,LBS,future,Random Length Lumber Futures,USD,110.0,0.1,1.0
 cme,LE,future,Live Cattle Futures,USD,40000.0,0.025,1.0,,1,100
+cme,M2K,future,Micro E-mini Russell 2000 Index Futures,USD,5.0,0.1,1,,1
+cme,M6A,future,Micro Australian Dollar/U.S. Dollar (AUD/USD) Futures,USD,10000,0.0001,1,,1
+cme,M6B,future,Micro British Pound Sterling/U.S. Dollar (GBP/USD) Futures,USD,6250,0.0001,1,,1
+cme,M6C,future,Micro USD/CAD Futures,CAD,10000,0.0001,1
+cme,M6E,future,Micro Euro/U.S. Dollar (EUR/USD) Futures,USD,12500,0.0001,1,,1
+cme,M6J,future,Micro USD/JPY Futures,JPY,10000,0.01,1
+cme,M6S,future,Micro USD/CHF Futures,CHF,10000,0.0001,1
+cme,MBT,future,Micro Bitcoin Futures,USD,0.1,5,1,,1
+cme,MCD,future,Micro Canadian Dollar/U.S.Dollar(CAD/USD) Futures,USD,10000,0.0001,1,,1
+cme,MES,future,Micro E-mini Standard and Poor's 500 Stock Price Index Futures,USD,5,0.25,1,,1
+cme,MET,future,Micro Ether Futures,USD,0.1,0.5,1,,1
+cme,MIB,future,BTIC on Micro Bitcoin Futures,USD,0.1,5,1
+cme,MIR,future,Micro INR/USD Futures,USD,1000000,0.01,100,,1,100
+cme,MJY,future,Micro Japanese Yen/U.S. Dollar (JPY/USD) Futures,USD,1250000,1e-06,1,,1
+cme,MNH,future,Micro USD/CNH Futures,USD,10000,0.0001,1
+cme,MNQ,future,Micro E-mini Nasdaq-100 Index Futures,USD,2,0.25,1,,1
+cme,MRB,future,BTIC on Micro Ether Futures,USD,0.1,0.5,1
+cme,MSF,future,Micro Swiss Franc/U.S. Dollar (CHF/USD) Futures,USD,12500,0.0001,1,,1
 cme,NKD,future,Nikkei/USD Futures,USD,5.0,5.0,1.0
 cme,NQ,future,E-mini Nasdaq-100 Futures,USD,20.0,0.25,1.0
 cme,RTY,future,E-mini  Russell 2000 Index Futures,USD,50.0,0.1,1.0
@@ -154,7 +177,10 @@ comex,AUP,future,Aluminum MW U.S. Transaction Premium Platts (25MT) Futures,USD,
 comex,EDP,future,Aluminium European Premium Duty-Paid (Metal Bulletin) Futures,USD,25.0,0.01,1.0
 comex,GC,future,Gold Futures,USD,100.0,0.1,1.0
 comex,HG,future,Copper Futures,USD,25000.0,0.0005,1.0
+comex,MGC,future,Micro Gold Futures,USD,10,0.1,1,,1
+comex,MGT,future,Micro Gold TAS Futures,USD,10,0.1,1
 comex,SI,future,Silver Futures,USD,5000.0,0.005,1.0
+comex,SIL,future,Micro Silver Futures,USD,1000,0.005,1,,1
 ice,B,future,Brent Crude Futures,USD,1000.0,0.01,1.0
 ice,CC,future,Cocoa Futures,USD,10.0,1.0,1.0
 ice,CT,future,Cotton No. 2 Futures,USD,50000.0,0.0001,1.0
@@ -230,10 +256,19 @@ nymex,HO,future,NY Harbor ULSD Futures,USD,42000.0,0.0001,1.0
 nymex,HP,future,Natural Gas (Henry Hub) Penultimate Financial Futures,USD,10000.0,0.001,1.0
 nymex,HRC,future,U.S. Midwest Domestic Hot-Rolled Coil Steel (CRU) Index Futures,USD,20.0,1.0,1.0
 nymex,HTT,future,WTI Houston (Argus) vs. WTI Trade Month Futures,USD,1000.0,0.01,1.0
+nymex,M1B,future,Micro Gasoil 0.1% Barges FOB ARA (Platts) Futures,USD,10,0.001,1,,1
+nymex,M35,future,Micro European 3.5% Fuel Oil Cargoes FOB Med (Platts) Futures,USD,10,0.001,1,,1
+nymex,M5F,future,Micro Coal (API 5) fob Newcastle (Argus/McCloskey) Futures,USD,10,0.01,1,,1
+nymex,MAF,future,Micro Singapore Fuel Oil 380CST (Platts) Futures ,USD,10,0.001,1,,1
+nymex,MCL,future,Micro WTI Crude Oil Futures,USD,100,0.01,1,,1
+nymex,MEF,future,Micro European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures,USD,10,0.001,1,,1
 nymex,NG,future,Henry Hub Natural Gas Futures,USD,10000.0,0.001,1.0
-nymex,PA,future,Palladium Futures,USD,100.0,0.05,1.0
+nymex,PA,future,Palladium Futures,USD,100.0,0.5,1.0
+nymex,PAM,future,Micro Palladium Futures,USD,10,0.5,1,,1
 nymex,PL,future,Platinum Futures,USD,50.0,0.1,1.0
+nymex,R5O,future,Micro European FOB Rdam Marine Fuel 0.5% Barges (Platts) Futures,USD,10,0.001,1,,1
 nymex,RB,future,RBOB Gasoline Futures,USD,42000.0,0.0001,1.0
+nymex,S5O,future,Micro Singapore FOB Marine Fuel 0.5% (Platts) Futures,USD,10,0.001,1,,1
 nymex,YO,future,No. 11 Sugar Futures,USD,112000.0,0.0001,1.0
 sgx,NK,future,SGX Nikkei 225 Index Futures,JPY,500,5,5.0
 sgx,TW,future,MSCI Taiwan Index Futures,USD,100,0.1,50.0

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -152,6 +152,8 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase(QuantConnect.Securities.Futures.Currencies.EURCAD, NineSixteenCentralTime)]
         [TestCase(QuantConnect.Securities.Futures.Currencies.EURSEK, NineSixteenCentralTime)]
         [TestCase(QuantConnect.Securities.Futures.Currencies.JapaneseYenEmini, NineSixteenCentralTime)]
+        [TestCase(QuantConnect.Securities.Futures.Currencies.MicroEUR, NineSixteenCentralTime)]
+        [TestCase(QuantConnect.Securities.Futures.Currencies.MicroBTC, FourPMLondonTime)]
         public void CurrenciesExpiryDateFunction_WithDifferentDates_ShouldFollowContract(string symbol, string dayTime)
         {
             Assert.IsTrue(_data.ContainsKey(symbol), "Symbol " + symbol + " not present in Test Data");
@@ -241,6 +243,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase(QuantConnect.Securities.Futures.Energies.NaturalGas, Zero)]
         [TestCase(QuantConnect.Securities.Futures.Energies.BrentCrude, Zero)]
         [TestCase(QuantConnect.Securities.Futures.Energies.LowSulfurGasoil, TwelveOclock)]
+        [TestCase(QuantConnect.Securities.Futures.Energies.MicroCrudeOilWTI, Zero)]
         public void EnergiesExpiryDateFunction_WithDifferentDates_ShouldFollowContract(string symbol, string dayTime)
         {
             Assert.IsTrue(_data.ContainsKey(symbol), "Symbol " + symbol + " not present in Test Data");
@@ -267,6 +270,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase(QuantConnect.Securities.Futures.Financials.FiveYearUSDMACSwap, TwoPMCentralTime)]
         [TestCase(QuantConnect.Securities.Futures.Financials.UltraUSTreasuryBond, TwelveOne)]
         [TestCase(QuantConnect.Securities.Futures.Financials.UltraTenYearUSTreasuryNote, Zero)]
+        [TestCase(QuantConnect.Securities.Futures.Financials.MicroY10TreasuryNote, Zero)]
         public void FinancialsExpiryDateFunction_WithDifferentDates_ShouldFollowContract(string symbol, string dayTime)
         {
             Assert.IsTrue(_data.ContainsKey(symbol), "Symbol " + symbol + " not present in Test Data");
@@ -303,6 +307,8 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase(QuantConnect.Securities.Futures.Indices.BankNifty, ThreeThirtyPM)]
         [TestCase(QuantConnect.Securities.Futures.Indices.BseSensex, ThreeThirtyPM)]
         [TestCase(QuantConnect.Securities.Futures.Indices.HangSeng, FourPM)]
+        [TestCase(QuantConnect.Securities.Futures.Indices.MicroSP500EMini, NineThirtyEasternTime)]
+        [TestCase(QuantConnect.Securities.Futures.Indices.MicroDow30EMini, NineThirtyEasternTime)]
         public void IndicesExpiryDateFunction_WithDifferentDates_ShouldFollowContract(string symbol, string dayTime)
         {
             Assert.IsTrue(_data.ContainsKey(symbol), "Symbol " + symbol + " not present in Test Data");
@@ -369,6 +375,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase(QuantConnect.Securities.Futures.Metals.AluminiumEuropeanPremiumDutyPaidMetalBulletin, Zero)]
         [TestCase(QuantConnect.Securities.Futures.Metals.Copper, TwelvePMCentralTime)]
         [TestCase(QuantConnect.Securities.Futures.Metals.USMidwestDomesticHotRolledCoilSteelCRUIndex, Zero)]
+        [TestCase(QuantConnect.Securities.Futures.Metals.MicroGold, Zero)]
         public void MetalsExpiryDateFunction_WithDifferentDates_ShouldFollowContract(string symbol, string dayTime)
         {
             Assert.IsTrue(_data.ContainsKey(symbol), "Symbol " + symbol + " not present in Test Data");

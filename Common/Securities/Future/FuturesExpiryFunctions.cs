@@ -1073,12 +1073,10 @@ namespace QuantConnect.Securities.Future
                 {
                     // Monthly contracts listed for 6 consecutive months and 2 additional Dec contract months. If the 6 consecutive months includes Dec, list only 1 additional Dec contract month.
                     // Trading terminates at 4:00 p.m. London time on the last Friday of the contract month. If that day is not a business day in both the U.K. and the US, trading terminates on the preceding day that is a business day for both the U.K. and the U.S..
-                    var lastFriday = (from day in Enumerable.Range(1, DateTime.DaysInMonth(time.Year, time.Month))
-                                      where new DateTime(time.Year, time.Month, day).DayOfWeek == DayOfWeek.Friday
-                                      select new DateTime(time.Year, time.Month, day)).Last();
+                    var lastFriday =FuturesExpiryUtilityFunctions.LastFriday(time);
 
                     var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.CME, Futures.Currencies.AUDNZD, SecurityType.Future)
+                        .GetEntry(Market.CME, Futures.Currencies.BTC, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -2606,6 +2604,762 @@ namespace QuantConnect.Securities.Future
                     return FuturesExpiryUtilityFunctions.DairyLastTradeDate(time);
                 })
             },
+            // Micro Gold Futures (MGC): https://www.cmegroup.com/markets/metals/precious/e-micro-gold.contractSpecs.html
+            {Symbol.Create(Futures.Metals.MicroGold, SecurityType.Future, Market.COMEX), (time =>
+                {
+                    // Monthly contracts
+                    // Trading terminates on the third last business day of the contract month.
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 3);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.COMEX, Futures.Metals.MicroGold, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(lastBusinessDay))
+                    {
+                        lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastBusinessDay, -1);
+                    }
+
+                    return lastBusinessDay;
+                })
+            },
+            // Micro Silver Futures (SIL): https://www.cmegroup.com/markets/metals/precious/1000-oz-silver.contractSpecs.html
+            {Symbol.Create(Futures.Metals.MicroSilver, SecurityType.Future, Market.COMEX), (time =>
+                {
+                    // Monthly contracts
+                    // Trading terminates on the third last business day of the contract month.
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 3);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.COMEX, Futures.Metals.MicroSilver, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(lastBusinessDay))
+                    {
+                        lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastBusinessDay, -1);
+                    }
+
+                    return lastBusinessDay;
+                })
+            },
+            // Micro Gold TAS Futures (MGT): https://www.cmegroup.com/markets/metals/precious/e-micro-gold.contractSpecs.html
+            {Symbol.Create(Futures.Metals.MicroGoldTAS, SecurityType.Future, Market.COMEX), (time =>
+                {
+                    // Monthly contracts
+                    // Trading terminates on the third last business day of the contract month.
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 3);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.COMEX, Futures.Metals.MicroGoldTAS, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(lastBusinessDay))
+                    {
+                        lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastBusinessDay, -1);
+                    }
+
+                    return lastBusinessDay;
+                })
+            },
+            // Micro Palladium Futures (PAM): https://www.cmegroup.com/markets/metals/precious/e-micro-palladium.contractSpecs.html
+            {Symbol.Create(Futures.Metals.MicroPalladium, SecurityType.Future, Market.NYMEX), (time =>
+                {
+                    // Monthly contracts
+                    // Trading terminates on the third last business day of the contract month.
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 3);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.NYMEX, Futures.Metals.MicroPalladium, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(lastBusinessDay))
+                    {
+                        lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastBusinessDay, -1);
+                    }
+
+                    return lastBusinessDay;
+                })
+            },
+            // Micro 10-Year Yield Futures (10Y): https://www.cmegroup.com/markets/interest-rates/us-treasury/micro-10-year-yield.contractSpecs.html
+            {Symbol.Create(Futures.Financials.MicroY10TreasuryNote, SecurityType.Future, Market.CBOT), (time =>
+                {
+                    // Monthly contracts
+                    // Trading terminates on the last business day of the contract month.
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.CBOT, Futures.Financials.MicroY10TreasuryNote, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(lastBusinessDay))
+                    {
+                        lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastBusinessDay, -1);
+                    }
+
+                    return lastBusinessDay;
+                })
+            },
+            // Micro 30-Year Yield Futures (30Y): https://www.cmegroup.com/markets/interest-rates/us-treasury/micro-30-year-yield_contract_specifications.html
+            {Symbol.Create(Futures.Financials.MicroY30TreasuryBond, SecurityType.Future, Market.CBOT), (time =>
+                {
+                    // Monthly contracts
+                    // Trading terminates on the last business day of the contract month.
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.CBOT, Futures.Financials.MicroY30TreasuryBond, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(lastBusinessDay))
+                    {
+                        lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastBusinessDay, -1);
+                    }
+
+                    return lastBusinessDay;
+                })
+            },
+            // Micro 2-Year Yield Futures (2YY): https://www.cmegroup.com/markets/interest-rates/us-treasury/micro-2-year-yield.contractSpecs.html
+            {Symbol.Create(Futures.Financials.MicroY2TreasuryBond, SecurityType.Future, Market.CBOT), (time =>
+                {
+                    // Monthly contracts
+                    // Trading terminates on the last business day of the contract month.
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.CBOT, Futures.Financials.MicroY2TreasuryBond, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(lastBusinessDay))
+                    {
+                        lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastBusinessDay, -1);
+                    }
+
+                    return lastBusinessDay;
+                })
+            },
+            // Micro 5-Year Yield Futures (5YY): https://www.cmegroup.com/markets/interest-rates/us-treasury/micro-5-year-yield.contractSpecs.html
+            {Symbol.Create(Futures.Financials.MicroY5TreasuryBond, SecurityType.Future, Market.CBOT), (time =>
+                {
+                    // Monthly contracts
+                    // Trading terminates on the last business day of the contract month.
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.CBOT, Futures.Financials.MicroY5TreasuryBond, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(lastBusinessDay))
+                    {
+                        lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastBusinessDay, -1);
+                    }
+
+                    return lastBusinessDay;
+                })
+            },
+            // Micro EUR/USD Futures (M6E): https://www.cmegroup.com/markets/fx/g10/e-micro-euro.contractSpecs.html
+            {Symbol.Create(Futures.Currencies.MicroEUR, SecurityType.Future, Market.CME), (time =>
+                {
+                    // Quarterly contracts (Mar, Jun, Sep, Dec) listed for 2 consecutive quarters
+                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                    // Trading terminates at 9:16 a.m. CT 2 business day prior to the 3rd Wednesday of the contract quqrter.
+                    var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
+                    var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.CME, Futures.Currencies.MicroEUR, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(secondBusinessDayPrecedingThirdWednesday))
+                    {
+                        secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(secondBusinessDayPrecedingThirdWednesday, -1);
+                    }
+
+                    return secondBusinessDayPrecedingThirdWednesday.Add(new TimeSpan(14, 16, 0));
+                })
+            },
+            // Micro AUD/USD Futures (M6A): https://www.cmegroup.com/markets/fx/g10/e-micro-australian-dollar.contractSpecs.html
+            {Symbol.Create(Futures.Currencies.MicroAUD, SecurityType.Future, Market.CME), (time =>
+                {
+                    // Quarterly contracts (Mar, Jun, Sep, Dec) listed for 2 consecutive quarters
+                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                    // On the second business day immediately preceding the third Wednesday of the contract month (usually Monday).
+                    var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
+                    var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.CME, Futures.Currencies.MicroAUD, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(secondBusinessDayPrecedingThirdWednesday))
+                    {
+                        secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(secondBusinessDayPrecedingThirdWednesday, -1);
+                    }
+
+                    return secondBusinessDayPrecedingThirdWednesday;
+                })
+            },
+            // Micro GBP/USD Futures (M6B): https://www.cmegroup.com/markets/fx/g10/e-micro-british-pound.contractSpecs.html
+            {Symbol.Create(Futures.Currencies.MicroGBP, SecurityType.Future, Market.CME), (time =>
+                {
+                    // Quarterly contracts (Mar, Jun, Sep, Dec) listed for 2 consecutive quarters
+                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                    // 9:16 a.m. Central Time (CT) on the second business day immediately preceding the third Wednesday of the contract month (usually Monday).
+                    var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
+                    var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.CME, Futures.Currencies.MicroGBP, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(secondBusinessDayPrecedingThirdWednesday))
+                    {
+                        secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(secondBusinessDayPrecedingThirdWednesday, -1);
+                    }
+
+                    return secondBusinessDayPrecedingThirdWednesday.Add(new TimeSpan(14, 16, 0));
+                })
+            },
+            // Micro CAD/USD Futures (MCD): https://www.cmegroup.com/markets/fx/g10/e-micro-canadian-dollar-us-dollar.contractSpecs.html
+            {Symbol.Create(Futures.Currencies.MicroCADUSD, SecurityType.Future, Market.CME), (time =>
+                {
+                    // Quarterly contracts (Mar, Jun, Sep, Dec) listed for 2 consecutive quarters
+                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                    // Trading terminates 1 business day prior to the 3rd Wednesday of the contract quarter.
+                    var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
+                    var firstBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -1);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.CME, Futures.Currencies.MicroCADUSD, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(firstBusinessDayPrecedingThirdWednesday))
+                    {
+                        firstBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(firstBusinessDayPrecedingThirdWednesday, -1);
+                    }
+
+                    return firstBusinessDayPrecedingThirdWednesday;
+                })
+            },
+            // Micro JPY/USD Futures (MJY): https://www.cmegroup.com/markets/fx/g10/e-micro-japanese-yen-us-dollar.contractSpecs.html
+            {Symbol.Create(Futures.Currencies.MicroJPY, SecurityType.Future, Market.CME), (time =>
+                {
+                    // Quarterly contracts (Mar, Jun, Sep, Dec) listed for 2 consecutive quarters
+                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                    // 9:16 a.m. Central Time (CT) on the second business day immediately preceding the third Wednesday of the contract month (usually Monday).
+                    var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
+                    var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.CME, Futures.Currencies.MicroJPY, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(secondBusinessDayPrecedingThirdWednesday))
+                    {
+                        secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(secondBusinessDayPrecedingThirdWednesday, -1);
+                    }
+
+                    return secondBusinessDayPrecedingThirdWednesday.Add(new TimeSpan(14, 16, 0));
+                })
+            },
+            // Micro CHF/USD Futures (MSF): https://www.cmegroup.com/markets/fx/g10/e-micro-swiss-franc-us-dollar.contractSpecs.html
+            {Symbol.Create(Futures.Currencies.MicroCHF, SecurityType.Future, Market.CME), (time =>
+                {
+                    // Quarterly contracts (Mar, Jun, Sep, Dec) listed for 2 consecutive quarters
+                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                    // 9:16 a.m. Central Time (CT) on the second business day immediately preceding the third Wednesday of the contract month (usually Monday).
+                    var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
+                    var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.CME, Futures.Currencies.MicroCHF, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(secondBusinessDayPrecedingThirdWednesday))
+                    {
+                        secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(secondBusinessDayPrecedingThirdWednesday, -1);
+                    }
+
+                    return secondBusinessDayPrecedingThirdWednesday.Add(new TimeSpan(14, 16, 0));
+                })
+            },
+            // Micro USD/JPY Futures (M6J): https://www.cmegroup.com/markets/fx/g10/micro-usd-jpy.contractSpecs.html
+            {Symbol.Create(Futures.Currencies.MicroUSDJPY, SecurityType.Future, Market.CME), (time =>
+                {
+                    // Quarterly contracts (Mar, Jun, Sep, Dec) listed for 2 consecutive quarters
+                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                    // 9:16 a.m. Central Time (CT) on the second business day immediately preceding the third Wednesday of the contract month (usually Monday).
+                    var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
+                    var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.CME, Futures.Currencies.MicroUSDJPY, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(secondBusinessDayPrecedingThirdWednesday))
+                    {
+                        secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(secondBusinessDayPrecedingThirdWednesday, -1);
+                    }
+
+                    return secondBusinessDayPrecedingThirdWednesday.Add(new TimeSpan(14, 16, 0));
+                })
+            },
+            // Micro INR/USD Futures (MIR): https://www.cmegroup.com/markets/fx/g10/e-micro-indian-rupee.contractSpecs.html
+            {Symbol.Create(Futures.Currencies.MicroINRUSD, SecurityType.Future, Market.CME), (time =>
+                {
+                    // Monthly contracts listed for 12 consecutive months.
+
+                    // Trading terminates at 12:00 noon Mumbai time two Indian business days immediately preceding the last Indian
+                    // business day of the contract month.
+
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.CME, Futures.Currencies.MicroINRUSD, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(lastBusinessDay))
+                    {
+                        lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastBusinessDay, -1);
+                    }
+
+                    var secondBusinessDayPrecedingLastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastBusinessDay,-2);
+                    return secondBusinessDayPrecedingLastBusinessDay.Add(new TimeSpan(6,30,0));
+                })
+            },
+            // Micro USD/CAD Futures (M6C): https://www.cmegroup.com/markets/fx/g10/micro-usd-cad.contractSpecs.html
+            {Symbol.Create(Futures.Currencies.MicroCAD, SecurityType.Future, Market.CME), (time =>
+                {
+                    // Two months in the March quarterly cycle (Mar, Jun, Sep, Dec)
+                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                   // Trading terminates at 9:16 a.m. CT, 1 business day prior to the third Wednesday of the contract month.
+                    var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
+                    var firstBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -1);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.CME, Futures.Currencies.MicroCAD, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(firstBusinessDayPrecedingThirdWednesday))
+                    {
+                        firstBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(firstBusinessDayPrecedingThirdWednesday, -1);
+                    }
+
+                    return firstBusinessDayPrecedingThirdWednesday.Add(new TimeSpan(14, 16, 0));
+                })
+            },
+            // Micro USD/CHF Futures (M6S): https://www.cmegroup.com/markets/fx/g10/micro-usd-chf.contractSpecs.html
+            {Symbol.Create(Futures.Currencies.MicroUSDCHF, SecurityType.Future, Market.CME), (time =>
+                {
+                    // Two months in the March quarterly cycle (Mar, Jun, Sep, Dec)
+                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                   // Trading terminates at 9:16 a.m. CT, 2 business days prior to the third Wednesday of the contract month.
+                    var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
+                    var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.CME, Futures.Currencies.MicroUSDCHF, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(secondBusinessDayPrecedingThirdWednesday))
+                    {
+                        secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(secondBusinessDayPrecedingThirdWednesday, -1);
+                    }
+
+                    return secondBusinessDayPrecedingThirdWednesday.Add(new TimeSpan(14, 16, 0));
+                })
+            },
+            // Micro USD/CNH Futures (MNH): https://www.cmegroup.com/markets/fx/g10/e-micro-cnh.contractSpecs.html
+            {Symbol.Create(Futures.Currencies.MicroUSDCNH, SecurityType.Future, Market.CME), (time =>
+                {
+                    // Monthly contracts listed for 12 consecutive months.
+
+                    // Trading terminates at 11:00 a.m. Hong Kong time on the second Hong Kong business day prior
+                    // to the third Wednesday of the contract month.
+
+                    var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
+                    var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday,-2);
+                    return secondBusinessDayPrecedingThirdWednesday.Add(new TimeSpan(3,0,0));
+                })
+            },
+            // Micro E-mini S&P 500 Index Futures (MES): https://www.cmegroup.com/markets/equities/sp/micro-e-mini-sandp-500.contractSpecs.html
+            {Symbol.Create(Futures.Indices.MicroSP500EMini, SecurityType.Future, Market.CME), (time =>
+                {
+                    // Quarterly contracts (Mar, Jun, Sep, Dec) listed for 5 consecutive quarters
+                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                    // Trading terminates at 9:30 a.m. ET on the 3rd Friday of the contract month.
+                    var thirdFriday = FuturesExpiryUtilityFunctions.ThirdFriday(time);
+                    return thirdFriday.Add(new TimeSpan(13,30,0));
+                })
+            },
+            // Micro E-mini Nasdaq-100 Index Futures (MNQ): https://www.cmegroup.com/markets/equities/nasdaq/micro-e-mini-nasdaq-100.contractSpecs.html
+            {Symbol.Create(Futures.Indices.MicroNASDAQ100EMini, SecurityType.Future, Market.CME), (time =>
+                {
+                    // Quarterly contracts (Mar, Jun, Sep, Dec) listed for 5 consecutive quarters
+                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                    // Trading terminates at 9:30 a.m. ET on the 3rd Friday of the contract month.
+                    var thirdFriday = FuturesExpiryUtilityFunctions.ThirdFriday(time);
+                    return thirdFriday.Add(new TimeSpan(13,30,0));
+                })
+            },
+            // Micro E-mini Russell 2000 Index Futures (M2K): https://www.cmegroup.com/markets/equities/russell/micro-e-mini-russell-2000.contractSpecs.html
+            {Symbol.Create(Futures.Indices.MicroRussell2000EMini, SecurityType.Future, Market.CME), (time =>
+                {
+                    // Quarterly contracts (Mar, Jun, Sep, Dec) listed for 5 consecutive quarters
+                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                    // Trading terminates at 9:30 a.m. ET on the 3rd Friday of the contract month.
+                    var thirdFriday = FuturesExpiryUtilityFunctions.ThirdFriday(time);
+                    return thirdFriday.Add(new TimeSpan(13,30,0));
+                })
+            },
+            // Micro E-mini Dow Jones Industrial Average Index Futures (MYM): https://www.cmegroup.com/markets/equities/dow-jones/micro-e-mini-dow.contractSpecs.html
+            {Symbol.Create(Futures.Indices.MicroDow30EMini, SecurityType.Future, Market.CBOT), (time =>
+                {
+                    // Quarterly contracts (Mar, Jun, Sep, Dec) listed for 4 consecutive quarters
+                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                    // Trading can occur up to 9:30 a.m. Eastern Time (ET) on the 3rd Friday of the contract month
+                    var thirdFriday = FuturesExpiryUtilityFunctions.ThirdFriday(time);
+                    return thirdFriday.Add(new TimeSpan(13,30,0));
+                })
+            },
+            // Micro WTI Crude Oil Futures (MCL): https://www.cmegroup.com/markets/energy/crude-oil/micro-wti-crude-oil.contractSpecs.html
+            {Symbol.Create(Futures.Energies.MicroCrudeOilWTI, SecurityType.Future, Market.NYMEX), (time =>
+                {
+                    // Monthly contracts listed for 12 consecutive months and additional Jun and Dec contract months
+
+                    // Trading terminates 4 business days prior to the 25th calendar day of the month prior to the
+                    // contract month (1 business day prior to CL LTD)
+
+                    var previousMonth = time.AddMonths(-1);
+                    var twentyFifthDay = new DateTime(previousMonth.Year, previousMonth.Month, 25);
+                    var twentyFifthDayLessFour = FuturesExpiryUtilityFunctions.AddBusinessDays(twentyFifthDay, -4);
+                    return twentyFifthDayLessFour;
+                })
+            },
+            // Micro Singapore FOB Marine Fuel 0.5% (Platts) Futures (S50): https://www.cmegroup.com/markets/energy/refined-products/micro-singapore-fob-marine-fuel-05-platts.contractSpecs.html
+            {Symbol.Create(Futures.Energies.MicroSingaporeFOBMarineFuelZeroPointFivePercetPlatts, SecurityType.Future, Market.NYMEX), (time =>
+                {
+                    // Monthly contracts listed for the current year and next 3 calendar years
+                    // Add monthly contracts for a new calendar year following the termination of trading in the
+                    // December contract of the current year.
+
+                    // Trading terminates on the last business day of the contract month.
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.NYMEX, Futures.Energies.MicroSingaporeFOBMarineFuelZeroPointFivePercetPlatts, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(lastBusinessDay))
+                    {
+                        lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastBusinessDay, -1);
+                    }
+
+                    return lastBusinessDay;
+                })
+            },
+            // Micro Gasoil 0.1% Barges FOB ARA (Platts) Futures (M1B): https://www.cmegroup.com/markets/energy/refined-products/micro-gasoil-01-barges-fob-rdam-platts.contractSpecs.html
+            {Symbol.Create(Futures.Energies.MicroGasoilZeroPointOnePercentBargesFOBARAPlatts, SecurityType.Future, Market.NYMEX), (time =>
+                {
+                    // Monthly contracts listed for 36 consecutive months
+
+                    // Trading terminates on the last London business day of the contract month.
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.NYMEX, Futures.Energies.MicroGasoilZeroPointOnePercentBargesFOBARAPlatts, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(lastBusinessDay))
+                    {
+                        lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastBusinessDay, -1);
+                    }
+
+                    return lastBusinessDay;
+                })
+            },
+            // Micro European FOB Rdam Marine Fuel 0.5% Barges (Platts) Futures (R50): https://www.cmegroup.com/markets/energy/refined-products/micro-european-fob-rdam-marine-fuel-05-barges-platts.contractSpecs.html
+            {Symbol.Create(Futures.Energies.MicroEuropeanFOBRdamMarineFuelZeroPointFivePercentBargesPlatts, SecurityType.Future, Market.NYMEX), (time =>
+                {
+                    // Monthly contracts listed for the current year and next 3 calendar years.
+                    // Add monthly contracts for a new calendar year following the termination of trading
+                    // in the December contract of the current year.
+
+                    // Trading terminates on the last London business day of the contract month.
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.NYMEX, Futures.Energies.MicroEuropeanFOBRdamMarineFuelZeroPointFivePercentBargesPlatts, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(lastBusinessDay))
+                    {
+                        lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastBusinessDay, -1);
+                    }
+
+                    return lastBusinessDay;
+                })
+            },
+            // Micro European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures (MEF): https://www.cmegroup.com/markets/energy/refined-products/micro-european-35-fuel-oil-barges-fob-rdam-platts.contractSpecs.html
+            {Symbol.Create(Futures.Energies.MicroEuropeanThreePointFivePercentOilBargesFOBRdamPlatts, SecurityType.Future, Market.NYMEX), (time =>
+                {
+                    // Monthly contracts listed for the current year and 5 calendar years.Monthly contracts for a new calendar
+                    // year will be added following the termination of trading in  the December contract of the current year.
+
+                    // Trading terminates on the last business day of the contract month.
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.NYMEX, Futures.Energies.MicroEuropeanThreePointFivePercentOilBargesFOBRdamPlatts, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(lastBusinessDay))
+                    {
+                        lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastBusinessDay, -1);
+                    }
+
+                    return lastBusinessDay;
+                })
+            },
+            // Micro Singapore Fuel Oil 380CST (Platts) Futures (MAF): https://www.cmegroup.com/markets/energy/refined-products/micro-singapore-fuel-oil-380cst-platts.contractSpecs.html
+            {Symbol.Create(Futures.Energies.MicroSingaporeFuelOil380CSTPlatts, SecurityType.Future, Market.NYMEX), (time =>
+                {
+                    // Monthly contracts listed for the current year and 5 calendar years.Monthly contracts for a new calendar
+                    // year will be added following the termination of trading in  the December contract of the current year.
+
+                    // Trading terminates on the last business day of the contract month.
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.NYMEX, Futures.Energies.MicroSingaporeFuelOil380CSTPlatts, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(lastBusinessDay))
+                    {
+                        lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastBusinessDay, -1);
+                    }
+
+                    return lastBusinessDay;
+                })
+            },
+            // Micro Coal (API 5) fob Newcastle (Argus/McCloskey) Futures (M5F): https://www.cmegroup.com/markets/energy/coal/micro-coal-api-5-fob-newcastle-argus-mccloskey.contractSpecs.html
+            {Symbol.Create(Futures.Energies.MicroCoalAPIFivefobNewcastleArgusMcCloskey, SecurityType.Future, Market.NYMEX), (time =>
+                {
+                    // Monthly contracts listed for the current year and the next calendar year. Monthly contracts
+                    // for a new calendar year will be added following the termination of trading in the December
+                    // contract of the current year.
+
+                    // Trading terminates on the last Friday of the contract month. If such Friday is a UK holiday,
+                    // trading terminates on the UK business day immediately prior to the last Friday of the contract
+                    // month unless such day is not an Exchange business day, in which case trading terminates on the
+                    // Exchange business day immediately prior.
+
+                    var lastFriday = FuturesExpiryUtilityFunctions.LastFriday(time);
+
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.NYMEX, Futures.Energies.MicroCoalAPIFivefobNewcastleArgusMcCloskey, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(lastFriday))
+                    {
+                        lastFriday = FuturesExpiryUtilityFunctions.AddBusinessDays(lastFriday, -1);
+                        while (holidays.Contains(lastFriday))
+                        {
+                            lastFriday = FuturesExpiryUtilityFunctions.AddBusinessDays(lastFriday, -1);
+                        }
+                    }
+
+                    return lastFriday;
+                })
+            },
+            // Micro European 3.5% Fuel Oil Cargoes FOB Med (Platts) Futures (M35): https://www.cmegroup.com/markets/energy/refined-products/micro-european-35-fuel-oil-cargoes-fob-med-platts.contractSpecs.html
+            {Symbol.Create(Futures.Energies.MicroEuropeanThreePointFivePercentFuelOilCargoesFOBMedPlatts, SecurityType.Future, Market.NYMEX), (time =>
+                {
+                    // Monthly contracts listed for 36 consecutive months
+
+                    // Trading terminates on the last business day of the contract month.
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.NYMEX, Futures.Energies.MicroEuropeanThreePointFivePercentFuelOilCargoesFOBMedPlatts, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(lastBusinessDay))
+                    {
+                        lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastBusinessDay, -1);
+                    }
+
+                    return lastBusinessDay;
+                })
+            },
+            // Micro Ether Futures (MET): https://www.cmegroup.com/markets/cryptocurrencies/ether/micro-ether.contractSpecs.html
+            {Symbol.Create(Futures.Currencies.MicroEther, SecurityType.Future, Market.CME), (time =>
+                {
+                    // Monthly contracts listed for 6 consecutive months and 2 additional Dec contract months. 
+
+                    // Trading terminates at 4:00 p.m. London time on the last Friday of the contract month that
+                    // is either a London or U.S. business day. If the last Friday of the contract month day is
+                    // not a business day in both London and the U.S., trading terminates on the prior London or
+                    // U.S. business day.
+
+                    // BTIC: Trading terminates at 4:00 p.m. London time on the last Thursday of the contract month
+                    // that is either a London or U.S. business day. If the last Thursday of the contract month day
+                    // is not a business day in both London and the U.S., trading terminates on the prior London or U.S.
+                    // business day.
+
+                    var lastFriday = FuturesExpiryUtilityFunctions.LastFriday(time);
+
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.CME, Futures.Currencies.MicroEther, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(lastFriday))
+                    {
+                        lastFriday = FuturesExpiryUtilityFunctions.AddBusinessDays(lastFriday, -1);
+                    }
+
+                    return lastFriday.Add(new TimeSpan(15, 0, 0));
+                })
+            },
+            // Micro Bitcoin Futures (MBT): https://www.cmegroup.com/markets/cryptocurrencies/bitcoin/micro-bitcoin.contractSpecs.html
+            {Symbol.Create(Futures.Currencies.MicroBTC, SecurityType.Future, Market.CME), (time =>
+                {
+                    // Monthly contracts listed for 6 consecutive months and 2 additional Dec contract months.
+                    // If the 6 consecutive months includes Dec, list only 1 additional Dec contract month.
+
+                    // Trading terminates at 4:00 p.m. London time on the last Friday of the contract month.
+                    // If this is not both a London and U.S. business day, trading terminates on the prior
+                    // London and the U.S. business day.
+
+                    // BTIC: Trading terminates at 4:00 p.m. London time on the last Thursday of the contract
+                    // month.If this is not both a London and U.S. business day, trading terminates on the prior
+                    // London and the U.S. business day.
+
+                    var lastFriday = FuturesExpiryUtilityFunctions.LastFriday(time);
+
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.CME, Futures.Currencies.MicroBTC, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(lastFriday))
+                    {
+                        lastFriday = FuturesExpiryUtilityFunctions.AddBusinessDays(lastFriday, -1);
+                    }
+
+                    return lastFriday.Add(new TimeSpan(15, 0, 0));
+                })
+            },
+            // BTIC on Micro Ether Futures (MRB): https://www.cmegroup.com/markets/cryptocurrencies/ether/micro-ether.contractSpecs.html
+            {Symbol.Create(Futures.Currencies.BTICMicroEther, SecurityType.Future, Market.CME), (time =>
+                {
+                    // Monthly contracts listed for 6 consecutive months and 2 additional Dec contract months.
+
+                    // Trading terminates at 4:00 p.m. London time on the last Friday of the contract month.
+                    // If this is not both a London and U.S. business day, trading terminates on the prior
+                    // London and the U.S. business day.
+
+                    // BTIC: Trading terminates at 4:00 p.m. London time on the last Thursday of the contract
+                    // month.If this is not both a London and U.S. business day, trading terminates on the prior
+                    // London and the U.S. business day.
+
+                    var lastThursday = FuturesExpiryUtilityFunctions.LastThursday(time);
+
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.CME, Futures.Currencies.BTICMicroEther, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(lastThursday))
+                    {
+                        lastThursday = FuturesExpiryUtilityFunctions.AddBusinessDays(lastThursday, -1);
+                    }
+
+                    return lastThursday.Add(new TimeSpan(15, 0, 0));
+                })
+            },
+            // BTIC on Micro Bitcoin Futures (MIB): https://www.cmegroup.com/markets/cryptocurrencies/bitcoin/micro-bitcoin.contractSpecs.html
+            {Symbol.Create(Futures.Currencies.BTICMicroBTC, SecurityType.Future, Market.CME), (time =>
+                {
+                    // Monthly contracts listed for 6 consecutive months and 2 additional Dec contract months.
+                    // If the 6 consecutive months includes Dec, list only 1 additional Dec contract month.
+
+                    // Trading terminates at 4:00 p.m. London time on the last Friday of the contract month.
+                    // If this is not both a London and U.S. business day, trading terminates on the prior
+                    // London and the U.S. business day.
+
+                    // BTIC: Trading terminates at 4:00 p.m. London time on the last Thursday of the contract
+                    // month.If this is not both a London and U.S. business day, trading terminates on the prior
+                    // London and the U.S. business day.
+
+                    var lastThursday = FuturesExpiryUtilityFunctions.LastThursday(time);
+
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.CME, Futures.Currencies.BTICMicroBTC, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(lastThursday))
+                    {
+                        lastThursday = FuturesExpiryUtilityFunctions.AddBusinessDays(lastThursday, -1);
+                    }
+
+                    return lastThursday.Add(new TimeSpan(15, 0, 0));
+                })
+            }
         };
     }
 }
