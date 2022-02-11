@@ -51,5 +51,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         {
             return instance.EndTime;
         }
+
+        /// <summary>
+        /// Gets the Inital Timestamp for the data
+        /// </summary>
+        protected override DateTime GetInstanceInitialTime(BaseData instance)
+        {
+            return instance.Time;
+        }
     }
 }

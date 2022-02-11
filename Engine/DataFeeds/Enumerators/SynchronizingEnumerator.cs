@@ -37,6 +37,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         protected abstract DateTime GetInstanceTime(T instance);
 
         /// <summary>
+        /// Gets the Inital Timestamp for the data
+        /// </summary>
+        protected abstract DateTime GetInstanceInitialTime(T instance);
+
+        /// <summary>
         /// Gets the element in the collection at the current position of the enumerator.
         /// </summary>
         /// <returns>
@@ -159,7 +164,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 {
                     enumerators[i].MoveNext();
                 }
-                heads[i].Time = GetInstanceTime(enumerators[i].Current);
+                heads[i].Time = GetInstanceInitialTime(enumerators[i].Current);
             }
 
             //Presort the stack for the first time.
@@ -173,7 +178,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 if (min.Enumerator.MoveNext())
                 {
                     var point = min.Enumerator.Current;
-                    min.Time = GetInstanceTime(point);
+                    min.Time = GetInstanceInitialTime(point);
                     var index = Array.BinarySearch(heads, min);
                     if (index < 0) index = ~index;
                     ListInsert(heads, index - 1, min, headCount);
