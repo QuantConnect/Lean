@@ -47,10 +47,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <summary>
         /// Gets the Timestamp for the data
         /// </summary>
-        /// <typeparam name="T">The type of data we want, for example, <see cref="BaseData"/> or <see cref="Slice"/>, ect...</typeparam>
-        protected override DateTime GetInstanceTime<T>(T instance)
+        protected override DateTime GetInstanceTime(Slice instance)
         {
-            return (instance as Slice).Time;
+            return instance.Time;
         }
     }
 }

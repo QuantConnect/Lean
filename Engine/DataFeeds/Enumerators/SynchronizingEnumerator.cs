@@ -34,8 +34,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <summary>
         /// Gets the Timestamp for the data
         /// </summary>
-        /// <typeparam name="T">The type of data we want, for example, <see cref="BaseData"/> or <see cref="Slice"/>, ect...</typeparam>
-        protected abstract DateTime GetInstanceTime<T>(T instance);
+        protected abstract DateTime GetInstanceTime(T instance);
 
         /// <summary>
         /// Gets the element in the collection at the current position of the enumerator.
