@@ -30,7 +30,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
     /// Provides an implementation of <see cref="IHistoryProvider"/> which
     /// acts as a wrapper to use multiple history providers together
     /// </summary>
-    public class HistoryProviderManager : SynchronizingHistoryProvider
+    public class HistoryProviderManager : HistoryProviderBase
     {
         private IBrokerage _brokerage;
         private bool _initialized;
@@ -39,7 +39,12 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// Collection of history providers being used
         /// </summary>
         /// <remarks>Protected for testing purposes</remarks>
-        protected List<IHistoryProvider> HistoryProviders { get; } = new();
+        private List<IHistoryProvider> HistoryProviders { get; } = new();
+
+        /// <summary>
+        /// Gets the total number of data points emitted by this history provider
+        /// </summary>
+        public override int DataPointCount => dataPointCount();
 
         /// <summary>
         /// Sets the brokerage to be used for historical requests
@@ -77,6 +82,11 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                     (historyProvider as BrokerageHistoryProvider).SetBrokerage(_brokerage);
                 }
                 historyProvider.Initialize(parameters);
+                historyProvider.InvalidConfigurationDetected += (sender, args) => { OnInvalidConfigurationDetected(args); };
+                historyProvider.NumericalPrecisionLimited += (sender, args) => { OnNumericalPrecisionLimited(args); };
+                historyProvider.StartDateLimited += (sender, args) => { OnStartDateLimited(args); };
+                historyProvider.DownloadFailed += (sender, args) => { OnDownloadFailed(args); };
+                historyProvider.ReaderErrorDetected += (sender, args) => { OnReaderErrorDetected(args); };
                 HistoryProviders.Add(historyProvider);
             }
         }
@@ -103,41 +113,46 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                     // ignore
                 }
             }
-            var synchronizer = new SynchronizingSliceEnumerator(historyEnumerators);
-            var previousTime = DateTime.MinValue;
-            Slice previousMergedSlice = null;
+            using var synchronizer = new SynchronizingSliceEnumerator(historyEnumerators);
             Slice latestMergeSlice = null;
-            bool isFirstComplete = new();
             while (synchronizer.MoveNext())
             {
                 if (synchronizer.Current == null)
                 {
                     continue;
                 }
-                if (synchronizer.Current.Time > previousTime)
+                if (latestMergeSlice == null)
                 {
                     latestMergeSlice = synchronizer.Current;
-                    previousTime = synchronizer.Current.Time;
-                    if (!isFirstComplete)
-                    {
-                        isFirstComplete = true;
-                        previousMergedSlice = latestMergeSlice;
-                        continue;
-                    }
-                    yield return previousMergedSlice;
+                    continue;
+                }
+                if (synchronizer.Current.Time > latestMergeSlice.Time)
+                {
+                    // a newer slice we emit the old and keep a reference of the new
+                    // so in the next loop we merge if required
+                    yield return latestMergeSlice;
+                    latestMergeSlice = synchronizer.Current;
                 }
                 else
                 {
+                    // a new slice with same time we merge them into 'latestMergeSlice'
                     latestMergeSlice.MergeSlice(synchronizer.Current);
                 }
-                previousMergedSlice = latestMergeSlice;
             }
-            synchronizer.Dispose();
-            if (!isFirstComplete)
+            if (latestMergeSlice != null)
             {
-                yield break;
+                yield return latestMergeSlice;
             }
-            yield return previousMergedSlice;
+        }
+
+        private int dataPointCount()
+        {
+            var dataPointCount = 0;
+            foreach (var historyProvider in HistoryProviders)
+            {
+                dataPointCount += historyProvider.DataPointCount;
+            }
+            return dataPointCount;
         }
     }
 }
