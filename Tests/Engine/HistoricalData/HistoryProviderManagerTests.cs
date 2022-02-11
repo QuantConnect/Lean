@@ -18,6 +18,7 @@ using NUnit.Framework;
 using QuantConnect.Brokerages.Binance;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Packets;
@@ -63,6 +64,55 @@ namespace QuantConnect.Tests.Engine.HistoricalData
         }
 
         [Test]
+        public void DataPointCount()
+        {
+            var symbol = Symbol.Create("WM", SecurityType.Equity, Market.USA);
+
+            var result = _historyProviderWrapper.GetHistory(
+                new[]
+                {
+                    new HistoryRequest(new DateTime(2008, 01,01),
+                        new DateTime(2008, 01,05),
+                        typeof(TradeBar),
+                        symbol,
+                        Resolution.Daily,
+                        SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                        TimeZones.NewYork,
+                        null,
+                        false,
+                        false,
+                        DataNormalizationMode.Raw,
+                        TickType.Trade)
+                },
+                TimeZones.NewYork).ToList();
+
+            Assert.AreEqual(5, _historyProviderWrapper.DataPointCount);
+        }
+
+        [Test]
+        public void TestEvents()
+        {
+            bool invalidConfigurationDetected = new();
+            bool numericalPrecisionLimited = new();
+            bool startDateLimited = new();
+            bool downloadFailed = new();
+            bool readerErrorDetected = new();
+            _historyProviderWrapper.InvalidConfigurationDetected += (sender, args) => { invalidConfigurationDetected = true; };
+            _historyProviderWrapper.NumericalPrecisionLimited += (sender, args) => { numericalPrecisionLimited = true; };
+            _historyProviderWrapper.StartDateLimited += (sender, args) => { startDateLimited = true; };
+            _historyProviderWrapper.DownloadFailed += (sender, args) => { downloadFailed = true; };
+            _historyProviderWrapper.ReaderErrorDetected += (sender, args) => { readerErrorDetected = true; };
+
+            var historyProvider = Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>("FakeHistoryProvider");
+            (historyProvider as FakeHistoryProvider).TriggerEvents();
+            Assert.IsTrue(invalidConfigurationDetected);
+            Assert.IsTrue(numericalPrecisionLimited);
+            Assert.IsTrue(startDateLimited);
+            Assert.IsTrue(downloadFailed);
+            Assert.IsTrue(readerErrorDetected);
+        }
+
+        [Test]
         public void OptionsAreMappedCorrectly()
         {
             var symbol = Symbol.CreateOption(
@@ -102,6 +152,7 @@ namespace QuantConnect.Tests.Engine.HistoricalData
             Assert.IsTrue(lastBar.Symbol.Value.Contains("FOXA"));
             Assert.AreEqual(2, lastBar.Time.Date.Day);
             Assert.AreEqual(425, result.Count);
+            Assert.AreEqual(426, _historyProviderWrapper.DataPointCount);
         }
 
         [Test]
@@ -131,6 +182,7 @@ namespace QuantConnect.Tests.Engine.HistoricalData
             var firstBar = result.First().Values.Single();
             Assert.AreEqual("WMI", firstBar.Symbol.Value);
             Assert.AreEqual(4, result.Count);
+            Assert.AreEqual(5, _historyProviderWrapper.DataPointCount);
         }
 
         [Test]

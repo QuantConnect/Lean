@@ -17,7 +17,6 @@ using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.HistoricalData;
 using System;
 using System.Collections.Generic;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
@@ -27,9 +26,11 @@ namespace QuantConnect.Tests.Engine.HistoricalData
     /// <summary>
     /// Provides FAKE implementation of <see cref="IHistoryProvider"/>
     /// </summary>
-    internal class FakeHistoryProvider : SynchronizingHistoryProvider
+    public class FakeHistoryProvider : HistoryProviderBase
     {
         private IBrokerage _brokerage;
+
+        public override int DataPointCount => 2;
 
         /// <summary>
         /// Sets the brokerage to be used for historical requests
@@ -87,6 +88,15 @@ namespace QuantConnect.Tests.Engine.HistoricalData
             result.Add(slice1);
             result.Add(slice2);
             return result;
+        }
+
+        public void TriggerEvents()
+        {
+            OnInvalidConfigurationDetected(new InvalidConfigurationDetectedEventArgs(Symbols.SPY, "invalid config"));
+            OnNumericalPrecisionLimited(new NumericalPrecisionLimitedEventArgs(Symbols.SPY, "invalid config"));
+            OnStartDateLimited(new StartDateLimitedEventArgs(Symbols.SPY, "invalid config"));
+            OnDownloadFailed(new DownloadFailedEventArgs(Symbols.SPY, "invalid config"));
+            OnReaderErrorDetected(new ReaderErrorDetectedEventArgs(Symbols.SPY, "invalid config"));
         }
     }
 }
