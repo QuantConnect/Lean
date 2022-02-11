@@ -33,12 +33,13 @@ namespace QuantConnect.Tests.Engine.HistoricalData
     [TestFixture]
     public class HistoryProviderManagerTests
     {
-        private readonly HistoryProviderManager _historyProviderWrapper = new();
         private readonly ZipDataCacheProvider _zipCache = new(TestGlobals.DataProvider);
+        private HistoryProviderManager _historyProviderWrapper;
 
-        [OneTimeSetUp]
+        [SetUp]
         public void Setup()
         {
+            _historyProviderWrapper = new();
             var historyProviders = Newtonsoft.Json.JsonConvert.SerializeObject(new[] { "SubscriptionDataReaderHistoryProvider", "FakeHistoryProvider" });
             var jobWithArrayHistoryProviders = new LiveNodePacket
             {
@@ -57,10 +58,11 @@ namespace QuantConnect.Tests.Engine.HistoricalData
                 new DataPermissionManager()));
         }
 
-        [OneTimeTearDown]
+        [TearDown]
         public void TearDown()
         {
             _zipCache.DisposeSafely();
+            Composer.Instance.Reset();
         }
 
         [Test]
