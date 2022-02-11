@@ -479,7 +479,8 @@ namespace QuantConnect.Data
                     // Should keep this._rawDataList last so that selected data points are not overriden
                     // while creating _data
                     inputSlice._rawDataList.AddRange(_rawDataList);
-                    _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(inputSlice._rawDataList));
+                    _rawDataList = inputSlice._rawDataList;
+                    _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(_rawDataList));
                 }
             }
         }

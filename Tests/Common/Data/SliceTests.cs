@@ -250,23 +250,29 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void CheckMergeUpdatePrivateAttributes()
         {
+            var tradeBar0 = new TradeBar { Symbol = Symbols.BTCUSD, Time = _dataTime };
+            var slice1 = new Slice(_dataTime, new BaseData[] { tradeBar0 });
             var tradeBar1 = new TradeBar { Symbol = Symbols.SPY, Time = _dataTime };
             var tradeBar2 = new TradeBar { Symbol = Symbols.AAPL, Time = _dataTime, Open = 23 };
-            var slice1 = new Slice(_dataTime, new BaseData[] { tradeBar1, tradeBar2 });
+            var slice2 = new Slice(_dataTime, new BaseData[] { tradeBar1, tradeBar2 });
+
+            slice1.MergeSlice(slice2);
+            // Check private _data is updated
+            Assert.AreEqual(3, slice1.Values.Count);
 
             var tradeBar3 = new TradeBar { Symbol = Symbols.AAPL, Time = _dataTime, Open = 24 };
             var tradeBar4 = new TradeBar { Symbol = Symbols.SBIN, Time = _dataTime };
             var tradeBar3_4 = new TradeBar { Symbol = Symbols.BTCEUR, Time = _dataTime };
-            var slice2 = new Slice(_dataTime, new BaseData[] { tradeBar3, tradeBar4, tradeBar3_4 });
+            var slice3 = new Slice(_dataTime, new BaseData[] { tradeBar3, tradeBar4, tradeBar3_4 });
 
-            slice1.MergeSlice(slice2);
+            slice1.MergeSlice(slice3);
 
             // Should use first non Null value
             var testTradeBar = (TradeBar)slice1.Values.Where(datum => datum.DataType == MarketDataType.TradeBar && datum.Symbol.Value == "AAPL").Single();
             Assert.AreEqual(23, testTradeBar.Open);
 
-            // Check private _data is updated
-            Assert.AreEqual(4, slice1.Values.Count);
+            // Check private _rawDataList is updated
+            Assert.AreEqual(5, slice1.Values.Count);
         }
 
         [Test]
