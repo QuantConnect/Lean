@@ -449,6 +449,7 @@ namespace QuantConnect.Data
         /// Merge two slice with same Time
         /// </summary>
         /// <param name="inputSlice">slice instance</param>
+        /// <remarks> Will change the input collection for re-use</remarks>
         public void MergeSlice(Slice inputSlice)
         {
             if (Time != inputSlice.Time)
@@ -477,10 +478,8 @@ namespace QuantConnect.Data
                 {
                     // Should keep this._rawDataList last so that selected data points are not overriden
                     // while creating _data
-                    var tempRawDataList = inputSlice._rawDataList;
-                    tempRawDataList.AddRange(_rawDataList);
-                    _rawDataList = tempRawDataList;
-                    _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(_rawDataList));
+                    inputSlice._rawDataList.AddRange(_rawDataList);
+                    _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(inputSlice._rawDataList));
                 }
             }
         }
