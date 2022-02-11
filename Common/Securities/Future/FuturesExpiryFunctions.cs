@@ -1938,8 +1938,8 @@ namespace QuantConnect.Securities.Future
                     }
                     else
                     {
-                        var lastBuisnessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(twentyFifth,-1);
-                        return FuturesExpiryUtilityFunctions.AddBusinessDays(lastBuisnessDay,-3);
+                        var lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(twentyFifth,-1);
+                        return FuturesExpiryUtilityFunctions.AddBusinessDays(lastBusinessDay,-3);
                     }
                 })
             },
