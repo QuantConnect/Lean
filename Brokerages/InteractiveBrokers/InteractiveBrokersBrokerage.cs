@@ -121,7 +121,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             { Market.COMEX, "NYMEX" },
             { Market.CBOT, "ECBOT" },
             { Market.ICE, "NYBOT" },
-            { Market.CFE, "CFE" }
+            { Market.CFE, "CFE" },
+            { Market.NYSELIFFE, "NYSELIFFE" }
         };
 
         private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();

@@ -46,7 +46,8 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                     { Market.COMEX, "NYMEX" },
                     { Market.CBOT, "ECBOT" },
                     { Market.ICE, "NYBOT" },
-                    { Market.CFE, "CFE" }
+                    { Market.CFE, "CFE" },
+                    { Market.NYSELIFFE, "NYSELIFFE" }
                 };
 
                 var tickersByMarket = new Dictionary<string, string[]>
@@ -257,6 +258,22 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                             "PAM",
                             "R5O",
                             "S5O"
+                        }
+                    },
+                    {
+                        Market.NYSELIFFE,
+                        new[]
+                        {
+                            "MXEF",
+                            "MXEA",
+                            "M1EU",
+                            "M1JP",
+                            "M1MSA",
+                            "MXUS",
+                            "YG",
+                            "YI",
+                            "ZG",
+                            "ZI"
                         }
                     }
                 };
