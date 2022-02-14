@@ -38,7 +38,7 @@ namespace QuantConnect.Brokerages
             typeof(GoodTilDateTimeInForce)
         };
 
-        private const decimal _maxLeverage = 7m;
+        private const decimal _maxLeverage = 5m;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SamcoBrokerageModel"/> class
