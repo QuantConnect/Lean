@@ -141,7 +141,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <returns></returns>
         private IEnumerator<T> GetSynchronizedEnumerator(IEnumerator<T>[] enumerators)
         {
-            return GetBinarySearchMethod(enumerators);
             var streamCount = enumerators.Length;
             if (streamCount < 500)
             {
