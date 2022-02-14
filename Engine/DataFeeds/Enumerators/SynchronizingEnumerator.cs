@@ -141,6 +141,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <returns></returns>
         private IEnumerator<T> GetSynchronizedEnumerator(IEnumerator<T>[] enumerators)
         {
+            return GetBinarySearchMethod(enumerators);
             var streamCount = enumerators.Length;
             if (streamCount < 500)
             {
@@ -162,12 +163,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             var heads = new SynchronizedEnumerator[enumerators.Length];
             for (var i = 0; i < enumerators.Length; i++)
             {
-                heads[i] = new SynchronizedEnumerator() {Enumerator = enumerators[i]};
-                if (enumerators[i].Current == null)
+                while (enumerators[i].MoveNext())
                 {
-                    enumerators[i].MoveNext();
+                    if (enumerators[i].Current != null)
+                    {
+                        heads[i] = new SynchronizedEnumerator() { Enumerator = enumerators[i] };
+                        heads[i].Time = GetInstanceInitialTime(enumerators[i].Current);
+                        break;
+                    }
                 }
-                heads[i].Time = GetInstanceInitialTime(enumerators[i].Current);
             }
 
             //Presort the stack for the first time.
@@ -178,15 +182,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 var min = heads[0];
                 yield return min.Enumerator.Current;
 
-                if (min.Enumerator.MoveNext())
+                bool isEnumeratorUseable = new();
+                while (min.Enumerator.MoveNext())
                 {
+                    if (min.Enumerator.Current == null)
+                    {
+                        continue;
+                    }
                     var point = min.Enumerator.Current;
                     min.Time = GetInstanceInitialTime(point);
                     var index = Array.BinarySearch(heads, min);
                     if (index < 0) index = ~index;
                     ListInsert(heads, index - 1, min, headCount);
+                    isEnumeratorUseable = true;
+                    break;
                 }
-                else
+                // Move empty enumerator to last
+                if (!isEnumeratorUseable)
                 {
                     min.Time = DateTime.MaxValue;
                     ListInsert(heads, headCount - 1, min, headCount);
