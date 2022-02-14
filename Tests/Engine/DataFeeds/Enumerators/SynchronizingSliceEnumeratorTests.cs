@@ -71,37 +71,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         }
 
         [Test]
-        public void UseBinarySearchMethodForSync()
-        {
-            // Uses BinraySearch when stream count >= 500
-            var len = 500;
-            var time = new DateTime(2016, 03, 03, 12, 05, 00);
-            var tradeBar1 = new TradeBar { Symbol = Symbols.SPY, Time = time };
-            var tradeBar2 = new TradeBar { Symbol = Symbols.MSFT, Time = time };
-            var tradeBar3 = new TradeBar { Symbol = Symbols.AAPL, Time = time };
-            var stream1 = Enumerable.Range(0, 20)
-                // return null except the last value and check if its emitted
-                .Select(x => x == 19 ? new Slice(time.AddHours(x * 1), new BaseData[] { tradeBar1, tradeBar2, tradeBar3 }) : null
-            ).GetEnumerator();
-            IEnumerator<Slice>[] enumerators = new IEnumerator<Slice>[len];
-            enumerators[0] = stream1;
-            for (var i=1; i<len; i++)
-            {
-                var stream = Enumerable.Range(0, 5).Select(x => new Slice(time.AddSeconds(x * i), new List<BaseData>())).GetEnumerator();
-                enumerators[i] = stream;
-            }
-            var previous = new Slice(DateTime.MinValue, new List<BaseData>());
-            var synchronizer = new SynchronizingSliceEnumerator(enumerators);
-            while (synchronizer.MoveNext())
-            {
-                Assert.That(synchronizer.Current.Time, Is.GreaterThanOrEqualTo(previous.Time));
-                previous = synchronizer.Current;
-            }
-            Assert.AreEqual(3, previous.Bars.Count);
-            synchronizer.Dispose();
-        }
-
-        [Test]
         public void WillRemoveEnumeratorsReturningFalse()
         {
             var time = new DateTime(2016, 03, 03, 12, 05, 00);

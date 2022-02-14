@@ -127,13 +127,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             _syncer.Dispose();
         }
 
-        private struct SynchronizedEnumerator : IComparable<SynchronizedEnumerator>
-        {
-            public DateTime Time;
-            public IEnumerator<T> Enumerator;
-            public int CompareTo(SynchronizedEnumerator other) { return this.Time.CompareTo(other.Time); }
-        }
-
         /// <summary>
         /// Synchronization system for the enumerator:
         /// </summary>
@@ -141,80 +134,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <returns></returns>
         private IEnumerator<T> GetSynchronizedEnumerator(IEnumerator<T>[] enumerators)
         {
-            var streamCount = enumerators.Length;
-            if (streamCount < 500)
-            {
-                //Less than 500 streams use the brute force method:
-                return GetBruteForceMethod(enumerators);
-            }
-            //More than 500 streams sort the enumerators before pulling from each:
-            return GetBinarySearchMethod(enumerators);
-        }
-
-        /// <summary>
-        /// Binary search for the enumerator stack synchronization
-        /// </summary>
-        /// <param name="enumerators"></param>
-        /// <returns></returns>
-        private IEnumerator<T> GetBinarySearchMethod(IEnumerator<T>[] enumerators)
-        {
-            //Create wrappers for the enumerator stack:
-            var heads = new SynchronizedEnumerator[enumerators.Length];
-            for (var i = 0; i < enumerators.Length; i++)
-            {
-                while (enumerators[i].MoveNext())
-                {
-                    if (enumerators[i].Current != null)
-                    {
-                        heads[i] = new SynchronizedEnumerator() { Enumerator = enumerators[i] };
-                        heads[i].Time = GetInstanceInitialTime(enumerators[i].Current);
-                        break;
-                    }
-                }
-            }
-
-            //Presort the stack for the first time.
-            Array.Sort(heads);
-            var headCount = heads.Length;
-            while (headCount > 0)
-            {
-                var min = heads[0];
-                yield return min.Enumerator.Current;
-
-                bool isEnumeratorUseable = new();
-                while (min.Enumerator.MoveNext())
-                {
-                    if (min.Enumerator.Current == null)
-                    {
-                        continue;
-                    }
-                    var point = min.Enumerator.Current;
-                    min.Time = GetInstanceInitialTime(point);
-                    var index = Array.BinarySearch(heads, min);
-                    if (index < 0) index = ~index;
-                    ListInsert(heads, index - 1, min, headCount);
-                    isEnumeratorUseable = true;
-                    break;
-                }
-                // Move empty enumerator to last
-                if (!isEnumeratorUseable)
-                {
-                    min.Time = DateTime.MaxValue;
-                    ListInsert(heads, headCount - 1, min, headCount);
-                    headCount--;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Shuffle the enumerator position in the list.
-        /// </summary>
-        private static void ListInsert(SynchronizedEnumerator[] list, int index, SynchronizedEnumerator t, int headCount)
-        {
-            if (index >= headCount) index = headCount - 1;
-            if (index < 0) index = 0;
-            for (var j = 1; j <= index; j++) list[j - 1] = list[j];
-            list[index] = t;
+            return GetBruteForceMethod(enumerators);
         }
 
         /// <summary>
