@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -184,12 +185,8 @@ namespace QuantConnect.Lean.Engine
                     algorithm.Transactions.SetOrderProcessor(AlgorithmHandlers.Transactions);
 
                     // set the history provider before setting up the algorithm
-                    var historyProvider = GetHistoryProvider(job.HistoryProvider);
-                    if (historyProvider is BrokerageHistoryProvider)
-                    {
-                        (historyProvider as BrokerageHistoryProvider).SetBrokerage(brokerage);
-                    }
-
+                    var historyProvider = GetHistoryProvider();
+                    historyProvider.SetBrokerage(brokerage);
                     historyDataCacheProvider = new ZipDataCacheProvider(AlgorithmHandlers.DataProvider, isDataEphemeral:_liveMode);
                     historyProvider.Initialize(
                         new HistoryProviderInitializeParameters(
@@ -484,13 +481,9 @@ namespace QuantConnect.Lean.Engine
         /// <summary>
         /// Load the history provider from the Composer
         /// </summary>
-        private IHistoryProvider GetHistoryProvider(string historyProvider)
+        private HistoryProviderManager GetHistoryProvider()
         {
-            if (historyProvider.IsNullOrEmpty())
-            {
-                historyProvider = Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider");
-            }
-            var provider = Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>(historyProvider);
+            var provider = new HistoryProviderManager();
 
             provider.InvalidConfigurationDetected += (sender, args) => { AlgorithmHandlers.Results.ErrorMessage(args.Message); };
             provider.NumericalPrecisionLimited += (sender, args) =>

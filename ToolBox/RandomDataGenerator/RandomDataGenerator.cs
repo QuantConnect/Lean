@@ -107,7 +107,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         new List<Tick>());
                 }
 
-                using var sync = new SynchronizingEnumerator(tickGenerators);
+                using var sync = new SynchronizingBaseDataEnumerator(tickGenerators);
                 while (sync.MoveNext())
                 {
                     var dataPoint = sync.Current;

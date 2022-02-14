@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -26,7 +26,7 @@ using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 {
     [TestFixture]
-    public class SynchronizingEnumeratorTests
+    public class SynchronizingBaseDataEnumeratorTests
     {
         [Test]
         public void SynchronizesData()
@@ -37,7 +37,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var stream3 = Enumerable.Range(0, 20).Select(x => new Tick {Time = time.AddSeconds(x * 0.5)}).GetEnumerator();
 
             var previous = DateTime.MinValue;
-            var synchronizer = new SynchronizingEnumerator(stream1, stream2, stream3);
+            var synchronizer = new SynchronizingBaseDataEnumerator(stream1, stream2, stream3);
             while (synchronizer.MoveNext())
             {
                 Assert.That(synchronizer.Current.EndTime, Is.GreaterThanOrEqualTo(previous));
@@ -59,7 +59,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var stream3 = Enumerable.Range(0, 20).Select(x => new Tick { Time = time.AddSeconds(x * 0.5) }).GetEnumerator();
 
             var previous = new Tick { Time = DateTime.MinValue };
-            var synchronizer = new SynchronizingEnumerator(stream1, stream2, stream3);
+            var synchronizer = new SynchronizingBaseDataEnumerator(stream1, stream2, stream3);
             while (synchronizer.MoveNext())
             {
                 Assert.That(synchronizer.Current.EndTime, Is.GreaterThanOrEqualTo(previous.EndTime));
@@ -76,7 +76,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var time = new DateTime(2016, 03, 03, 12, 05, 00);
             var stream1 = new TestEnumerator { MoveNextReturnValue = false };
             var stream2 = Enumerable.Range(0, 10).Select(x => new Tick { Time = time.AddSeconds(x * 2) }).GetEnumerator();
-            var synchronizer = new SynchronizingEnumerator(stream1, stream2);
+            var synchronizer = new SynchronizingBaseDataEnumerator(stream1, stream2);
             var emitted = false;
             while (synchronizer.MoveNext())
             {
@@ -93,7 +93,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         public void WillStopIfAllEnumeratorsCurrentIsNullAndReturningTrue()
         {
             var stream1 = new TestEnumerator { MoveNextReturnValue = true };
-            var synchronizer = new SynchronizingEnumerator(stream1);
+            var synchronizer = new SynchronizingBaseDataEnumerator(stream1);
             while (synchronizer.MoveNext())
             {
                 Assert.Fail();
@@ -108,7 +108,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         public void WillStopIfAllEnumeratorsCurrentIsNullAndReturningFalse()
         {
             var stream1 = new TestEnumerator { MoveNextReturnValue = false };
-            var synchronizer = new SynchronizingEnumerator(stream1);
+            var synchronizer = new SynchronizingBaseDataEnumerator(stream1);
             while (synchronizer.MoveNext())
             {
                 Assert.Fail();

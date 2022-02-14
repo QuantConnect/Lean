@@ -20,6 +20,7 @@ using NodaTime;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Data;
+using QuantConnect.Data.Custom;
 using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
@@ -30,6 +31,8 @@ namespace QuantConnect.Tests.Common.Data
     [TestFixture]
     public class SliceTests
     {
+        private readonly DateTime _dataTime = DateTime.UtcNow;
+
         [Test]
         public void AccessesByDataType()
         {
@@ -205,6 +208,136 @@ namespace QuantConnect.Tests.Common.Data
 
             var unlinkedData = slice.Get<UnlinkedData>(Symbols.SPY);
             Assert.AreEqual(unlinkedDataSpy, unlinkedData);
+        }
+
+        [Test]
+        public void MergeSlice()
+        {
+            var tradeBar1 = new TradeBar { Symbol = Symbols.SPY, Time = _dataTime };
+            var tradeBar2 = new TradeBar { Symbol = Symbols.AAPL, Time = _dataTime, Open = 23 };
+            var quoteBar1 = new QuoteBar { Symbol = Symbols.SPY, Time = _dataTime };
+            var tick1 = new Tick(_dataTime, Symbols.SPY, 1.1m, 2.1m) { TickType = TickType.Trade };
+            var split1 = new Split(Symbols.SPY, _dataTime, 1, 1, SplitType.SplitOccurred);
+            var dividend1 = new Dividend(Symbols.SPY, _dataTime, 1, 1);
+            var delisting1 = new Delisting(Symbols.SPY, _dataTime, 1, DelistingType.Delisted);
+            var symbolChangedEvent1 = new SymbolChangedEvent(Symbols.SPY, _dataTime, "SPY", "SP");
+            var slice1 = new Slice(_dataTime, new BaseData[] { tradeBar1, tradeBar2,
+                quoteBar1, tick1, split1, dividend1, delisting1, symbolChangedEvent1
+            });
+
+            var tradeBar3 = new TradeBar { Symbol = Symbols.AAPL, Time = _dataTime, Open = 24 };
+            var tradeBar4 = new TradeBar { Symbol = Symbols.SBIN, Time = _dataTime };
+            var tradeBar3_4 = new TradeBar { Symbol = Symbols.BTCEUR, Time = _dataTime };
+            var quoteBar2 = new QuoteBar { Symbol = Symbols.SBIN, Time = _dataTime };
+            var tick2 = new Tick(_dataTime, Symbols.SBIN, 1.1m, 2.1m) { TickType = TickType.Trade };
+            var split2 = new Split(Symbols.SBIN, _dataTime, 1, 1, SplitType.SplitOccurred);
+            var dividend2 = new Dividend(Symbols.SBIN, _dataTime, 1, 1);
+            var delisting2 = new Delisting(Symbols.SBIN, _dataTime, 1, DelistingType.Delisted);
+            var symbolChangedEvent2 = new SymbolChangedEvent(Symbols.SBIN, _dataTime, "SBIN", "BIN");
+            var slice2 = new Slice(_dataTime, new BaseData[] { tradeBar3, tradeBar4, tradeBar3_4,
+                quoteBar2, tick2, split2, dividend2, delisting2, symbolChangedEvent2
+            });
+
+            slice1.MergeSlice(slice2);
+            Assert.AreEqual(4, slice1.Bars.Count);
+            Assert.AreEqual(2, slice1.QuoteBars.Count);
+            Assert.AreEqual(2, slice1.Ticks.Count);
+            Assert.AreEqual(2, slice1.Splits.Count);
+            Assert.AreEqual(2, slice1.Dividends.Count);
+            Assert.AreEqual(2, slice1.Delistings.Count);
+            Assert.AreEqual(2, slice1.SymbolChangedEvents.Count);
+        }
+
+        [Test]
+        public void CheckMergeUpdatePrivateAttributes()
+        {
+            var tradeBar0 = new TradeBar { Symbol = Symbols.BTCUSD, Time = _dataTime };
+            var slice1 = new Slice(_dataTime, new BaseData[] { tradeBar0 });
+            var tradeBar1 = new TradeBar { Symbol = Symbols.SPY, Time = _dataTime };
+            var tradeBar2 = new TradeBar { Symbol = Symbols.AAPL, Time = _dataTime, Open = 23 };
+            var slice2 = new Slice(_dataTime, new BaseData[] { tradeBar1, tradeBar2 });
+
+            slice1.MergeSlice(slice2);
+            // Check private _data is updated
+            Assert.AreEqual(3, slice1.Values.Count);
+
+            var tradeBar3 = new TradeBar { Symbol = Symbols.AAPL, Time = _dataTime, Open = 24 };
+            var tradeBar4 = new TradeBar { Symbol = Symbols.SBIN, Time = _dataTime };
+            var tradeBar3_4 = new TradeBar { Symbol = Symbols.BTCEUR, Time = _dataTime };
+            var slice3 = new Slice(_dataTime, new BaseData[] { tradeBar3, tradeBar4, tradeBar3_4 });
+
+            slice1.MergeSlice(slice3);
+
+            // Should use first non Null value
+            var testTradeBar = (TradeBar)slice1.Values.Where(datum => datum.DataType == MarketDataType.TradeBar && datum.Symbol.Value == "AAPL").Single();
+            Assert.AreEqual(23, testTradeBar.Open);
+
+            // Check private _rawDataList is updated
+            Assert.AreEqual(5, slice1.Values.Count);
+        }
+
+        [Test]
+        public void MergeTicks()
+        {
+            var tradeBar1 = new TradeBar { Symbol = Symbols.SPY, Time = _dataTime };
+            var tick1 = new Tick(_dataTime, Symbols.SPY, 1.1m, 2.1m) { TickType = TickType.Trade };
+            var slice1 = new Slice(_dataTime, new BaseData[] { tradeBar1, tick1 });
+            //var Use List<tick>
+            var ticks = new Ticks { { Symbols.MSFT, new List<Tick> { tick1 } } };
+            var slice2 = new Slice(_dataTime, new List<BaseData>(), null, null, ticks, null, null, null, null, null, null);
+            slice1.MergeSlice(slice2);
+            Assert.AreEqual(2, slice1.Ticks.Count);
+
+            // Should merge only when different
+            var tick2 = new Tick(_dataTime, Symbols.MSFT, 1.1m, 2.1m) { TickType = TickType.Trade };
+            var slice3 = new Slice(_dataTime, new BaseData[] { tradeBar1, tick2 });
+            slice2.MergeSlice(slice3);
+            Assert.AreEqual(1, slice2.Ticks.Count);
+        }
+
+        [Test]
+        public void MergeOptionsAndFuturesChain()
+        {
+            // Merge optionChains and FutureChains
+            var optionChain1 = new OptionChains();
+            var optionChain2 = new OptionChains();
+            optionChain1.Add(Symbols.SPY, new OptionChain(Symbols.SPY, _dataTime));
+            optionChain2.Add(Symbols.AAPL, new OptionChain(Symbols.SPY, _dataTime));
+            var futuresChain1 = new FuturesChains();
+            var futuresChain2 = new FuturesChains();
+            futuresChain1.Add(Symbols.SPY, new FuturesChain(Symbols.SPY, _dataTime));
+            futuresChain2.Add(Symbols.AAPL, new FuturesChain(Symbols.SPY, _dataTime));
+            var slice4 = new Slice(_dataTime, new List<BaseData>(),
+                                new TradeBars(_dataTime), new QuoteBars(),
+                                new Ticks(), optionChain1,
+                                futuresChain1, new Splits(),
+                                new Dividends(_dataTime), new Delistings(),
+                                new SymbolChangedEvents());
+            var slice5 = new Slice(_dataTime, new List<BaseData>(),
+                new TradeBars(_dataTime), new QuoteBars(),
+                new Ticks(), optionChain2,
+                futuresChain2, new Splits(),
+                new Dividends(_dataTime), new Delistings(),
+                new SymbolChangedEvents());
+            slice4.MergeSlice(slice5);
+            Assert.AreEqual(2, slice4.OptionChains.Count);
+            Assert.AreEqual(2, slice4.FutureChains.Count);
+        }
+
+        [Test]
+        public void MergeCustomData()
+        {
+            var tradeBar1 = new TradeBar { Symbol = Symbols.SPY, Time = _dataTime };
+            var tradeBar2 = new TradeBar { Symbol = Symbols.AAPL, Time = _dataTime, Open = 23 };
+            var custom1 = new FxcmVolume { DataType = MarketDataType.Base, Symbol = Symbols.MSFT };
+            var custom2 = new FxcmVolume { DataType = MarketDataType.Base, Symbol = Symbols.SBIN };
+            var custom3 = new FxcmVolume { DataType = MarketDataType.Base, Symbol = Symbols.MSFT };
+            var custom4 = new FxcmVolume { DataType = MarketDataType.Base, Symbol = Symbols.SBIN };
+            var slice6 = new Slice(_dataTime, new BaseData[] { custom1, custom2, custom3, tradeBar2 });
+            var slice5 = new Slice(_dataTime, new BaseData[] { tradeBar1, custom4 });
+            slice5.MergeSlice(slice6);
+            Assert.AreEqual(4, slice5.Values.Count);
+            Assert.AreEqual(2, slice5.Values.Where(x => x.DataType == MarketDataType.Base).Count());
         }
 
         [Test]
@@ -560,7 +693,7 @@ def Test(slice):
             var tradeBars = new TradeBars { { Symbols.BTCUSD, tradeBar } };
             var quoteBars = new QuoteBars { { Symbols.BTCUSD, quoteBar } };
 
-            var slice = new Slice(DateTime.Now, new BaseData[] { tradeBar, quoteBar }, tradeBars, quoteBars, null, null, null, null, null, null, null);
+            var slice = new Slice(DateTime.Now, new List<BaseData>(){ tradeBar, quoteBar }, tradeBars, quoteBars, null, null, null, null, null, null, null);
 
             var tradeBarData = slice.Get<TradeBar>();
             Assert.AreEqual(1, tradeBarData.Count);

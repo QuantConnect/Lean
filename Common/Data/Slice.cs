@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -29,23 +29,24 @@ namespace QuantConnect.Data
     /// </summary>
     public class Slice : ExtendedDictionary<dynamic>, IEnumerable<KeyValuePair<Symbol, BaseData>>
     {
-        private readonly Ticks _ticks;
-        private readonly TradeBars _bars;
-        private readonly QuoteBars _quoteBars;
-        private readonly OptionChains _optionChains;
-        private readonly FuturesChains _futuresChains;
+        private Ticks _ticks;
+        private TradeBars _bars;
+        private QuoteBars _quoteBars;
+        private OptionChains _optionChains;
+        private FuturesChains _futuresChains;
 
         // aux data
-        private readonly Splits _splits;
-        private readonly Dividends _dividends;
-        private readonly Delistings _delistings;
-        private readonly SymbolChangedEvents _symbolChangedEvents;
+        private Splits _splits;
+        private Dividends _dividends;
+        private Delistings _delistings;
+        private SymbolChangedEvents _symbolChangedEvents;
 
         // string -> data   for non-tick data
         // string -> list{data} for tick data
-        private readonly Lazy<DataDictionary<SymbolData>> _data;
+        private Lazy<DataDictionary<SymbolData>> _data;
         // UnlinkedData -> DataDictonary<UnlinkedData>
         private Dictionary<Type, object> _dataByType;
+        private List<BaseData> _rawDataList;
 
         /// <summary>
         /// Gets the timestamp for this slice of data
@@ -223,7 +224,7 @@ namespace QuantConnect.Data
         protected Slice(Slice slice)
         {
             Time = slice.Time;
-
+            _rawDataList = slice._rawDataList;
             _dataByType = slice._dataByType;
 
             _data = slice._data;
@@ -258,12 +259,12 @@ namespace QuantConnect.Data
         /// <param name="delistings">The delistings for this slice</param>
         /// <param name="symbolChanges">The symbol changed events for this slice</param>
         /// <param name="hasData">true if this slice contains data</param>
-        public Slice(DateTime time, IEnumerable<BaseData> data, TradeBars tradeBars, QuoteBars quoteBars, Ticks ticks, OptionChains optionChains, FuturesChains futuresChains, Splits splits, Dividends dividends, Delistings delistings, SymbolChangedEvents symbolChanges, bool? hasData = null)
+        public Slice(DateTime time, List<BaseData> data, TradeBars tradeBars, QuoteBars quoteBars, Ticks ticks, OptionChains optionChains, FuturesChains futuresChains, Splits splits, Dividends dividends, Delistings delistings, SymbolChangedEvents symbolChanges, bool? hasData = null)
         {
             Time = time;
-
+            _rawDataList = data;
             // market data
-            _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(data));
+            _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(_rawDataList));
 
             HasData = hasData ?? _data.Value.Count > 0;
 
@@ -455,6 +456,65 @@ namespace QuantConnect.Data
                 return data != null;
             }
             return false;
+        }
+
+        /// <summary>
+        /// Merge two slice with same Time
+        /// </summary>
+        /// <param name="inputSlice">slice instance</param>
+        /// <remarks> Will change the input collection for re-use</remarks>
+        public void MergeSlice(Slice inputSlice)
+        {
+            if (Time != inputSlice.Time)
+            {
+                throw new InvalidOperationException($"Slice with time {Time} can't be merged with given slice with different {inputSlice.Time}");
+            }
+
+            _bars = (TradeBars)UpdateCollection(_bars, inputSlice.Bars);
+            _quoteBars = (QuoteBars)UpdateCollection(_quoteBars, inputSlice.QuoteBars);
+            _ticks = (Ticks)UpdateCollection(_ticks, inputSlice.Ticks);
+            _optionChains = (OptionChains)UpdateCollection(_optionChains, inputSlice.OptionChains);
+            _futuresChains = (FuturesChains)UpdateCollection(_futuresChains, inputSlice.FuturesChains);
+            _splits = (Splits)UpdateCollection(_splits, inputSlice.Splits);
+            _dividends = (Dividends)UpdateCollection(_dividends, inputSlice.Dividends);
+            _delistings = (Delistings)UpdateCollection(_delistings, inputSlice.Delistings);
+            _symbolChangedEvents = (SymbolChangedEvents)UpdateCollection(_symbolChangedEvents, inputSlice.SymbolChangedEvents);
+
+            if (inputSlice._rawDataList.Count != 0)
+            {
+                if (_rawDataList.Count == 0)
+                {
+                    _rawDataList = inputSlice._rawDataList;
+                    _data = inputSlice._data;
+                }
+                else
+                {
+                    // Should keep this._rawDataList last so that selected data points are not overriden
+                    // while creating _data
+                    inputSlice._rawDataList.AddRange(_rawDataList);
+                    _rawDataList = inputSlice._rawDataList;
+                    _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(_rawDataList));
+                }
+            }
+        }
+
+        private static DataDictionary<T> UpdateCollection<T>(DataDictionary<T> baseCollection, DataDictionary<T> inputCollection)
+        {
+            if (baseCollection == null || baseCollection.Count == 0)
+            {
+                return inputCollection;
+            }
+            if (inputCollection?.Count > 0)
+            {
+                foreach (var kvp in inputCollection)
+                {
+                    if (!baseCollection.ContainsKey(kvp.Key))
+                    {
+                        baseCollection.Add(kvp.Key, kvp.Value);
+                    }
+                }
+            }
+            return baseCollection;
         }
 
         /// <summary>
