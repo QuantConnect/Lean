@@ -39,7 +39,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// Collection of history providers being used
         /// </summary>
         /// <remarks>Protected for testing purposes</remarks>
-        private List<IHistoryProvider> _historyProviders { get; } = new();
+        private List<IHistoryProvider> _historyProviders = new();
 
         /// <summary>
         /// Gets the total number of data points emitted by this history provider
