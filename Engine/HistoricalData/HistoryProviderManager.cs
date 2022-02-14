@@ -39,12 +39,12 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// Collection of history providers being used
         /// </summary>
         /// <remarks>Protected for testing purposes</remarks>
-        private List<IHistoryProvider> HistoryProviders { get; } = new();
+        private List<IHistoryProvider> _historyProviders { get; } = new();
 
         /// <summary>
         /// Gets the total number of data points emitted by this history provider
         /// </summary>
-        public override int DataPointCount => dataPointCount();
+        public override int DataPointCount => GetDataPointCount();
 
         /// <summary>
         /// Sets the brokerage to be used for historical requests
@@ -87,7 +87,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 historyProvider.StartDateLimited += (sender, args) => { OnStartDateLimited(args); };
                 historyProvider.DownloadFailed += (sender, args) => { OnDownloadFailed(args); };
                 historyProvider.ReaderErrorDetected += (sender, args) => { OnReaderErrorDetected(args); };
-                HistoryProviders.Add(historyProvider);
+                _historyProviders.Add(historyProvider);
             }
         }
 
@@ -99,9 +99,9 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
         public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
         {
-            List<IEnumerator<Slice>> historyEnumerators = new(HistoryProviders.Count);
+            List<IEnumerator<Slice>> historyEnumerators = new(_historyProviders.Count);
             var historyRequets = requests.ToList();
-            foreach (var historyProvider in HistoryProviders)
+            foreach (var historyProvider in _historyProviders)
             {
                 try
                 {
@@ -145,10 +145,10 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             }
         }
 
-        private int dataPointCount()
+        private int GetDataPointCount()
         {
             var dataPointCount = 0;
-            foreach (var historyProvider in HistoryProviders)
+            foreach (var historyProvider in _historyProviders)
             {
                 dataPointCount += historyProvider.DataPointCount;
             }
