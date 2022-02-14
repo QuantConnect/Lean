@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using static QuantConnect.StringExtensions;
 using NodaTime;
 using QuantConnect.Util;
 
@@ -35,6 +36,7 @@ namespace QuantConnect.Securities
         private readonly HashSet<long> _holidays;
         private readonly Dictionary<DateTime, TimeSpan> _earlyCloses;
         private readonly Dictionary<DateTime, TimeSpan> _lateOpens;
+        private DateTime? _startDate;
 
         // these are listed individually for speed
         private readonly LocalMarketHours _sunday;
@@ -257,9 +259,26 @@ namespace QuantConnect.Securities
                     if (marketOpenTimeOfDay.HasValue)
                     {
                         var marketOpen = time.Date + marketOpenTimeOfDay.Value;
+
                         if (localDateTime < marketOpen)
                         {
-                            return marketOpen;
+                            if ((time.DayOfWeek != DayOfWeek.Sunday) && (_startDate != null))
+                            {
+                                var oneDayBefore = time.Date.AddDays(-1);
+                                var oneDayBeforeMarketHours = GetMarketHours(oneDayBefore.DayOfWeek);
+                                var Segments = oneDayBeforeMarketHours.Segments.ToList();
+                                if (Segments.Last().End.Hours != marketHours.Segments.ToList().First().Start.Hours ||
+                                    Segments.Last().End.Minutes != marketHours.Segments.ToList().First().Start.Minutes ||
+                                    Segments.Last().End.Seconds != marketHours.Segments.ToList().First().Start.Seconds)
+                                {
+                                    return marketOpen;
+                                }
+                            }
+                            else
+                            {
+                                _startDate = time;
+                                return marketOpen;
+                            }
                         }
                     }
                 }
