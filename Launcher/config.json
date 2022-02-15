@@ -120,6 +120,12 @@
   "binance-api-url": "https://api.binance.com",
   "binance-websocket-url": "wss://stream.binance.com:9443/ws",
 
+  // binance.us configuration
+  "binanceus-api-secret": "",
+  "binanceus-api-key": "",
+  "binanceus-api-url": "https://api.binance.us",
+  "binanceus-websocket-url": "wss://stream.binance.us:9443/ws",
+
   // kraken configuration
   "kraken-api-secret": "",
   "kraken-api-key": "",
@@ -403,6 +409,20 @@
       "history-provider": [ "BrokerageHistoryProvider", "SubscriptionDataReaderHistoryProvider" ]
     },
 
+    "live-binanceus": {
+      "live-mode": true,
+
+      // real brokerage implementations require the BrokerageTransactionHandler
+      "live-mode-brokerage": "QuantConnect.BinanceBrokerage.BinanceUSBrokerage",
+      "data-queue-handler": [ "QuantConnect.BinanceBrokerage.BinanceUSBrokerage" ],
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+      "history-provider": [ "BrokerageHistoryProvider", "SubscriptionDataReaderHistoryProvider" ]
+    },
+
     // defines the 'live-atreyu' environment
     "live-atreyu": {
       "live-mode": true,
@@ -460,7 +480,7 @@
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
       "history-provider": [ "BrokerageHistoryProvider", "SubscriptionDataReaderHistoryProvider" ]
     },
-    
+
     "live-exante": {
       "live-mode": true,
 

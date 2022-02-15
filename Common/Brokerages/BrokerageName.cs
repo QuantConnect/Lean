@@ -115,5 +115,10 @@ namespace QuantConnect.Brokerages
         /// Transaction and submit/execution rules will use Exante models
         /// </summary>
         Exante,
+
+        /// <summary>
+        /// Transaction and submit/execution rules will use Binance.US models
+        /// </summary>
+        BinanceUS,
     }
 }
