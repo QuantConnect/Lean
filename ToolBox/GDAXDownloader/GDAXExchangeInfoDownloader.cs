@@ -51,17 +51,8 @@ namespace QuantConnect.ToolBox.GDAXDownloader
         public IEnumerable<string> Get()
         {
             const string url = "https://api.exchange.coinbase.com/products";
-
-            var request = (HttpWebRequest)WebRequest.Create(url);
-            request.AllowAutoRedirect = true;
-            request.Method = "GET";
-            request.ContentType = "application/json";
-            request.Headers["Accept"] = "application/json";
-            request.Headers["User-Agent"] = ".NET Framework Test Client";
-            using var response = (HttpWebResponse)request.GetResponse();
-            using var stream = response.GetResponseStream();
-            using var reader = new StreamReader(stream);
-            var json = reader.ReadToEnd();
+            Dictionary<string, string> headers = new() { {"User-Agent", ".NET Framework Test Client"} };
+            var json = url.DownloadData(headers);
             var exchangeInfo = JsonConvert.DeserializeObject<List<Product>>(json);
             foreach (var product in exchangeInfo)
             {
