@@ -32,8 +32,6 @@ namespace QuantConnect.Scheduling
 
         private readonly SecurityManager _securities;
 
-        private DateTime _lastDate;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="TimeRules"/> helper class
         /// </summary>
@@ -167,19 +165,16 @@ namespace QuantConnect.Scheduling
             var timeAfterOpen = TimeSpan.FromMinutes(minutesAfterOpen);
             Func<IEnumerable<DateTime>, IEnumerable<DateTime>> applicator = dates =>
                 from date in dates
-                where security.Exchange.DateIsOpen(date) && _lastDate < date
-                let marketOpen = GetNextMarketOpen(date, extendedMarketOpen, security)
+                let marketOpen = security.Exchange.Hours.GetNextMarketOpen(date, extendedMarketOpen)
+                where security.Exchange.DateIsOpen(date) && 
+                marketOpen.Day == date.Day &&
+                marketOpen.Month == date.Month &&
+                marketOpen.Year == date.Year
                 let localEventTime = marketOpen + timeAfterOpen
                 let utcEventTime = localEventTime.ConvertToUtc(security.Exchange.TimeZone)
                 select utcEventTime;
 
             return new FuncTimeRule(name, applicator);
-        }
-
-        public DateTime GetNextMarketOpen(DateTime date, bool extendedMarketOpen, Security security)
-        {
-            _lastDate = security.Exchange.Hours.GetNextMarketOpen(date, extendedMarketOpen);
-            return _lastDate;
         }
 
         /// <summary>

@@ -153,7 +153,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "3"},
             {"Average Win", "1.16%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "2.229%"},
+            {"Compounding Annual Return", "2.233%"},
             {"Drawdown", "1.600%"},
             {"Expectancy", "0"},
             {"Net Profit", "1.118%"},
@@ -170,13 +170,13 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0.076"},
             {"Treynor Ratio", "0.159"},
             {"Total Fees", "$5.55"},
-            {"Estimated Strategy Capacity", "$290000.00"},
+            {"Estimated Strategy Capacity", "$330000.00"},
             {"Lowest Capacity Asset", "ES 1S1"},
             {"Fitness Score", "0.009"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "0.498"},
-            {"Return Over Maximum Drawdown", "1.803"},
+            {"Sortino Ratio", "0.5"},
+            {"Return Over Maximum Drawdown", "1.811"},
             {"Portfolio Turnover", "0.014"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -191,7 +191,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "e669103cc598f59d85f5e8d5f0b8df30"}
+            {"OrderListHash", "6f78736cc72874e538c808e6216528e7"}
         };
     }
 }
