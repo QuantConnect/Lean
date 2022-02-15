@@ -14,7 +14,10 @@
 */
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using QuantConnect.Logging;
 using QuantConnect.ToolBox.GDAXDownloader.Models;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -26,10 +29,20 @@ namespace QuantConnect.ToolBox.GDAXDownloader
     /// </summary>
     public class GDAXExchangeInfoDownloader : IExchangeInfoDownloader
     {
+        private readonly Dictionary<string, string> _idNameMapping = new();
+
         /// <summary>
         /// Market name
         /// </summary>
         public string Market => QuantConnect.Market.GDAX;
+
+        /// <summary>
+        /// Creats an instance of the class
+        /// </summary>
+        public GDAXExchangeInfoDownloader()
+        {
+            _idNameMapping = GetCurrencyNameById();
+        }
 
         /// <summary>
         /// Pulling data from a remote source
@@ -45,25 +58,59 @@ namespace QuantConnect.ToolBox.GDAXDownloader
             request.ContentType = "application/json";
             request.Headers["Accept"] = "application/json";
             request.Headers["User-Agent"] = ".NET Framework Test Client";
-            using (var response = (HttpWebResponse)request.GetResponse())
-            using (var stream = response.GetResponseStream())
-            using (var reader = new StreamReader(stream))
+            using var response = (HttpWebResponse)request.GetResponse();
+            using var stream = response.GetResponseStream();
+            using var reader = new StreamReader(stream);
+            var json = reader.ReadToEnd();
+            var exchangeInfo = JsonConvert.DeserializeObject<List<Product>>(json);
+            foreach (var product in exchangeInfo)
             {
-                var json = reader.ReadToEnd();
-                var exchangeInfo = JsonConvert.DeserializeObject<List<Product>>(json);
-                foreach (var product in exchangeInfo)
+                // market,symbol,type,description,quote_currency,contract_multiplier,minimum_price_variation,lot_size,market_ticker,minimum_order_size,price_magnifier
+                var symbol = product.ID.Replace("-", string.Empty);
+                var description = $"{_idNameMapping[product.BaseCurrency]}-{_idNameMapping[product.QuoteCurrency]}";
+                var quoteCurrency = product.QuoteCurrency;
+                var contractMultiplier = 1;
+                var minimum_price_variation = product.QuoteIncrement;
+                var lot_size = product.BaseMinSize;
+                var marketTicker = product.ID;
+                var minimum_order_size = product.BaseMinSize;
+                yield return $"gdax,{symbol},crypto,{description},{quoteCurrency},{contractMultiplier},{minimum_price_variation},{lot_size},{marketTicker},{minimum_order_size}";
+            }
+        }
+
+        /// <summary>
+        /// Fetch currency details
+        /// </summary>
+        /// <returns>Enumerable of exchange info</returns>
+        private static Dictionary<string, string> GetCurrencyNameById()
+        {
+            Dictionary<string, string> idNameMapping = new();
+            var url = $"https://api.exchange.coinbase.com/currencies";
+
+            var request = (HttpWebRequest)WebRequest.Create(url);
+            request.AllowAutoRedirect = true;
+            request.Method = "GET";
+            request.ContentType = "application/json";
+            request.Headers["Accept"] = "application/json";
+            request.Headers["User-Agent"] = ".NET Framework Test Client";
+            using var response = (HttpWebResponse)request.GetResponse();
+            using var stream = response.GetResponseStream();
+            using var reader = new StreamReader(stream);
+            var json = reader.ReadToEnd();
+            var jObject = JToken.Parse(json);
+            foreach (var currency in jObject)
+            {
+                try
                 {
-                    // market,symbol,type,description,quote_currency,contract_multiplier,minimum_price_variation,lot_size,market_ticker,minimum_order_size,price_magnifier
-                    var symbol = product.ID.Replace("-", string.Empty);
-                    var quoteCurrency = product.QuoteCurrency;
-                    var contractMultiplier = 1;
-                    var minimum_price_variation = product.QuoteIncrement;
-                    var lot_size = product.BaseMinSize;
-                    var marketTicker = product.ID;
-                    var minimum_order_size = product.BaseMinSize;
-                    yield return $"gdax,{symbol},crypto,description,{quoteCurrency},{contractMultiplier},{minimum_price_variation},{lot_size},{marketTicker},{minimum_order_size}";
+                    var id = currency.SelectToken("id").ToString();
+                    idNameMapping[id] = currency.SelectToken("name").ToString();
+                }
+                catch (Exception e)
+                {
+                    Log.Trace($"GDAXExchangeInfoDownloader.GetCurrencyNameById(): {e}");
                 }
             }
+            return idNameMapping;
         }
     }
 }
