@@ -14,7 +14,6 @@
 */
 
 using NUnit.Framework;
-using QuantConnect.Logging;
 using QuantConnect.ToolBox.GDAXDownloader;
 using System;
 using System.Linq;
@@ -36,8 +35,6 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             {
                 Assert.IsTrue(t.StartsWith(Market.GDAX, StringComparison.OrdinalIgnoreCase));
             }
-
-            Log.Trace("Tickers retrieved: " + tickers.Count);
         }
     }
 }
