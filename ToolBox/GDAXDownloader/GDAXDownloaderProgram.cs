@@ -73,5 +73,14 @@ namespace QuantConnect.ToolBox.GDAXDownloader
             }
             Console.ReadLine();
         }
+
+        /// <summary>
+        /// Endpoint for downloading exchange info
+        /// </summary>
+        public static void ExchangeInfoDownloader()
+        {
+            new ExchangeInfoUpdater(new GDAXExchangeInfoDownloader())
+                .Run();
+        }
     }
 }
