@@ -15,7 +15,6 @@
 */
 
 using NUnit.Framework;
-using QuantConnect.Brokerages.Binance;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
@@ -26,6 +25,7 @@ using QuantConnect.Securities;
 using QuantConnect.Util;
 using System;
 using System.Linq;
+using QuantConnect.Brokerages.Paper;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Tests.Engine.HistoricalData
@@ -45,7 +45,7 @@ namespace QuantConnect.Tests.Engine.HistoricalData
             {
                 HistoryProvider = historyProviders
             };
-            _historyProviderWrapper.SetBrokerage(new BinanceBrokerage());
+            _historyProviderWrapper.SetBrokerage(new PaperBrokerage(null, null));
             _historyProviderWrapper.Initialize(new HistoryProviderInitializeParameters(
                 jobWithArrayHistoryProviders,
                 null,
