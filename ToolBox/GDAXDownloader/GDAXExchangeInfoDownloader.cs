@@ -56,7 +56,7 @@ namespace QuantConnect.ToolBox.GDAXDownloader
             var exchangeInfo = JsonConvert.DeserializeObject<List<Product>>(json);
             foreach (var product in exchangeInfo)
             {
-                // market,symbol,type,description,quote_currency,contract_multiplier,minimum_price_variation,lot_size,market_ticker,minimum_order_size,price_magnifier
+                // market,symbol,type,description,quote_currency,contract_multiplier,minimum_price_variation,lot_size,market_ticker,minimum_order_size
                 var symbol = product.ID.Replace("-", string.Empty);
                 var description = $"{_idNameMapping[product.BaseCurrency]}-{_idNameMapping[product.QuoteCurrency]}";
                 var quoteCurrency = product.QuoteCurrency;
@@ -77,17 +77,8 @@ namespace QuantConnect.ToolBox.GDAXDownloader
         {
             Dictionary<string, string> idNameMapping = new();
             var url = $"https://api.exchange.coinbase.com/currencies";
-
-            var request = (HttpWebRequest)WebRequest.Create(url);
-            request.AllowAutoRedirect = true;
-            request.Method = "GET";
-            request.ContentType = "application/json";
-            request.Headers["Accept"] = "application/json";
-            request.Headers["User-Agent"] = ".NET Framework Test Client";
-            using var response = (HttpWebResponse)request.GetResponse();
-            using var stream = response.GetResponseStream();
-            using var reader = new StreamReader(stream);
-            var json = reader.ReadToEnd();
+            Dictionary<string, string> headers = new() { { "User-Agent", ".NET Framework Test Client" } };
+            var json = url.DownloadData(headers);
             var jObject = JToken.Parse(json);
             foreach (var currency in jObject)
             {
