@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -21,8 +21,9 @@ using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using System;
+using QuantConnect.Tests.Brokerages;
 
-namespace QuantConnect.Tests.Brokerages.Binance
+namespace QuantConnect.Tests.Common.Orders.Fees
 {
     [TestFixture]
     public class BinanceFeeModelTests
@@ -192,7 +193,7 @@ namespace QuantConnect.Tests.Brokerages.Binance
             }
         }
 
-        private static OrderSubmissionData OrderSubmissionData => new OrderSubmissionData(Security.BidPrice, Security.AskPrice, (Security.BidPrice + Security.AskPrice) / 2);
+        private static OrderSubmissionData OrderSubmissionData => new(Security.BidPrice, Security.AskPrice, (Security.BidPrice + Security.AskPrice) / 2);
 
         private static decimal HighPrice => 1000m;
         private static decimal LowPrice => 100m;
@@ -202,9 +203,9 @@ namespace QuantConnect.Tests.Brokerages.Binance
         private static TestCaseData[] MakerOrders => new[]
         {
             new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)),
-            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice) { OrderSubmissionData = OrderSubmissionData}),
+            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, null, OrderSubmissionData)),
             new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new BinanceOrderProperties())),
-            new TestCaseData(new LimitOrderTestParameters(Symbol, LowPrice, HighPrice, new BinanceOrderProperties() { PostOnly = true }){ OrderSubmissionData = OrderSubmissionData}),
+            new TestCaseData(new LimitOrderTestParameters(Symbol, LowPrice, HighPrice, new BinanceOrderProperties() { PostOnly = true }, OrderSubmissionData)),
             new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new BinanceOrderProperties() { PostOnly = true }))
         };
 
@@ -212,15 +213,15 @@ namespace QuantConnect.Tests.Brokerages.Binance
         {
             new TestCaseData(new MarketOrderTestParameters(Symbol)),
             new TestCaseData(new MarketOrderTestParameters(Symbol, new BinanceOrderProperties() { PostOnly = true })),
-            new TestCaseData(new LimitOrderTestParameters(Symbol, LowPrice, HighPrice) { OrderSubmissionData = OrderSubmissionData})
+            new TestCaseData(new LimitOrderTestParameters(Symbol, LowPrice, HighPrice, null, OrderSubmissionData))
         };
 
         private static TestCaseData[] CustomMakerOrders => new[]
         {
             new TestCaseData(0.001m, 0.001m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)),
-            new TestCaseData(0.0009m, 0.001m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice) { OrderSubmissionData = OrderSubmissionData}),
+            new TestCaseData(0.0009m, 0.001m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, null, OrderSubmissionData)),
             new TestCaseData(0.0008m, 0.001m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new BinanceOrderProperties())),
-            new TestCaseData(0.0007m, 0.0009m, new LimitOrderTestParameters(Symbol, LowPrice, HighPrice, new BinanceOrderProperties() { PostOnly = true }){ OrderSubmissionData = OrderSubmissionData}),
+            new TestCaseData(0.0007m, 0.0009m, new LimitOrderTestParameters(Symbol, LowPrice, HighPrice, new BinanceOrderProperties() { PostOnly = true }, OrderSubmissionData)),
             new TestCaseData(0.0006m, 0.0008m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new BinanceOrderProperties() { PostOnly = true }))
         };
 
@@ -228,7 +229,7 @@ namespace QuantConnect.Tests.Brokerages.Binance
         {
             new TestCaseData(0.0007m, 0.0009m, new MarketOrderTestParameters(Symbol)),
             new TestCaseData(0.0006m, 0.0008m, new MarketOrderTestParameters(Symbol, new BinanceOrderProperties { PostOnly = true })),
-            new TestCaseData(0.0005m, 0.0006m, new LimitOrderTestParameters(Symbol, LowPrice, HighPrice) { OrderSubmissionData = OrderSubmissionData})
+            new TestCaseData(0.0005m, 0.0006m, new LimitOrderTestParameters(Symbol, LowPrice, HighPrice, null, OrderSubmissionData))
         };
     }
 }

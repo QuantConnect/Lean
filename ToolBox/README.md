@@ -34,7 +34,6 @@ Example: --app=YahooDownloader --tickers=SPY,AAPL --resolution=Daily --from-date
 	- YahooDownloader or YDL
 	- IEXDownloader or IEXDL
 	- BitfinexDownloader or BFXDL
-	- BinanceDownloader or MBXDL
 	- PolygonDownloader or PDL
 - **'--from-date=yyyyMMdd-HH:mm:ss'** required
 - **'--tickers=SPY,AAPL,etc'** required, except for QuandlBitfinexDownloader (QBDL)

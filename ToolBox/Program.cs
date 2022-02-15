@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 using QuantConnect.Configuration;
+using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.ToolBox.AlgoSeekFuturesConverter;
 using QuantConnect.ToolBox.AlgoSeekOptionsConverter;
 using QuantConnect.ToolBox.AlphaVantageDownloader;
-using QuantConnect.ToolBox.BinanceDownloader;
 using QuantConnect.ToolBox.BitfinexDownloader;
 using QuantConnect.ToolBox.CoarseUniverseGenerator;
 using QuantConnect.ToolBox.CoinApiDataConverter;
@@ -39,7 +39,6 @@ using QuantConnect.ToolBox.YahooDownloader;
 using QuantConnect.Util;
 using System;
 using System.IO;
-using QuantConnect.Interfaces;
 using static QuantConnect.Configuration.ApplicationParser;
 
 namespace QuantConnect.ToolBox
@@ -127,11 +126,6 @@ namespace QuantConnect.ToolBox
                     case "bitfinexdownloader":
                         BitfinexDownloaderProgram.BitfinexDownloader(tickers, resolution, fromDate, toDate);
                         break;
-                    case "mbxdl":
-                    case "binancedownloader":
-                        BinanceDownloaderProgram.DataDownloader(tickers, resolution, fromDate, toDate);
-                        break;
-
                     case "pdl":
                     case "polygondownloader":
                         PolygonDownloaderProgram.PolygonDownloader(
@@ -154,19 +148,6 @@ namespace QuantConnect.ToolBox
                         );
                         break;
 
-                    default:
-                        PrintMessageAndExit(1, "ERROR: Unrecognized --app value");
-                        break;
-                }
-            }
-            else if (targetApp.Contains("updater") || targetApp.EndsWith("spu"))
-            {
-                switch (targetApp)
-                {
-                    case "mbxspu":
-                    case "binancesymbolpropertiesupdater":
-                        BinanceDownloaderProgram.ExchangeInfoDownloader();
-                        break;
                     default:
                         PrintMessageAndExit(1, "ERROR: Unrecognized --app value");
                         break;
