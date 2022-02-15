@@ -243,7 +243,7 @@ namespace QuantConnect.Securities.Future
                 var marginRequirementsEntries = _dataProvider.ReadLines(file)
                     .Where(x => !x.StartsWith("#") && !string.IsNullOrWhiteSpace(x))
                     .Skip(1)
-                    .Select(FromCsvLine)
+                    .Select(MarginRequirementsEntry.Create)
                     .OrderBy(x => x.Date)
                     .ToArray();
 
@@ -260,88 +260,6 @@ namespace QuantConnect.Securities.Future
                 }
                 return marginRequirementsEntries;
             }
-        }
-
-        /// <summary>
-        /// Creates a new instance of <see cref="MarginRequirementsEntry"/> from the specified csv line
-        /// </summary>
-        /// <param name="csvLine">The csv line to be parsed</param>
-        /// <returns>A new <see cref="MarginRequirementsEntry"/> for the specified csv line</returns>
-        private MarginRequirementsEntry FromCsvLine(string csvLine)
-        {
-            var line = csvLine.Split(',');
-
-            DateTime date;
-            if (!DateTime.TryParseExact(line[0], DateFormat.EightCharacter, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
-            {
-                Log.Trace($"Couldn't parse date/time while reading future margin requirement file. Line: {csvLine}");
-            }
-
-            decimal initialOvernight;
-            if (!decimal.TryParse(line[1], out initialOvernight))
-            {
-                Log.Trace($"Couldn't parse Initial Overnight margin requirements while reading future margin requirement file. Line: {csvLine}");
-            }
-
-            decimal maintenanceOvernight;
-            if (!decimal.TryParse(line[2], out maintenanceOvernight))
-            {
-                Log.Trace($"Couldn't parse Maintenance Overnight margin requirements while reading future margin requirement file. Line: {csvLine}");
-            }
-
-            // default value, if present in file we try to parse
-            decimal initialIntraday = initialOvernight * 0.4m;
-            if (line.Length >= 4
-                && !decimal.TryParse(line[3], out initialIntraday))
-            {
-                Log.Trace($"Couldn't parse Initial Intraday margin requirements while reading future margin requirement file. Line: {csvLine}");
-            }
-
-            // default value, if present in file we try to parse
-            decimal maintenanceIntraday = maintenanceOvernight * 0.4m;
-            if (line.Length >= 5
-                && !decimal.TryParse(line[4], out maintenanceIntraday))
-            {
-                Log.Trace($"Couldn't parse Maintenance Intraday margin requirements while reading future margin requirement file. Line: {csvLine}");
-            }
-
-            return new MarginRequirementsEntry
-            {
-                Date = date,
-                InitialOvernight = initialOvernight,
-                MaintenanceOvernight = maintenanceOvernight,
-                InitialIntraday = initialIntraday,
-                MaintenanceIntraday = maintenanceIntraday
-            };
-        }
-
-        // Private POCO class for modeling margin requirements at given date
-        class MarginRequirementsEntry
-        {
-            /// <summary>
-            /// Date of margin requirements change
-            /// </summary>
-            public DateTime Date;
-
-            /// <summary>
-            /// Initial overnight margin for the contract effective from the date of change
-            /// </summary>
-            public decimal InitialOvernight;
-
-            /// <summary>
-            /// Maintenance overnight margin for the contract effective from the date of change
-            /// </summary>
-            public decimal MaintenanceOvernight;
-
-            /// <summary>
-            /// Initial intraday margin for the contract effective from the date of change
-            /// </summary>
-            public decimal InitialIntraday;
-
-            /// <summary>
-            /// Maintenance intraday margin for the contract effective from the date of change
-            /// </summary>
-            public decimal MaintenanceIntraday;
         }
     }
 }
