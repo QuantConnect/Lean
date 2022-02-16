@@ -36,7 +36,6 @@ namespace QuantConnect.Securities
         private readonly HashSet<long> _holidays;
         private readonly Dictionary<DateTime, TimeSpan> _earlyCloses;
         private readonly Dictionary<DateTime, TimeSpan> _lateOpens;
-        private DateTime? _startDate;
 
         // these are listed individually for speed
         private readonly LocalMarketHours _sunday;
@@ -223,8 +222,10 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="localDateTime">The time to begin searching for market open (non-inclusive)</param>
         /// <param name="extendedMarket">True to include extended market hours in the search</param>
+        /// <param name="isInclusive">True if the user wants GetNextMarketOpen() to be inclusive, this is,
+        /// return the same localDateTime</param>
         /// <returns>The next market opening date time following the specified local date time</returns>
-        public DateTime GetNextMarketOpen(DateTime localDateTime, bool extendedMarket)
+        public DateTime GetNextMarketOpen(DateTime localDateTime, bool extendedMarket, bool isInclusive = false)
         {
             var time = localDateTime;
             var oneWeekLater = localDateTime.Date.AddDays(15);
@@ -260,13 +261,13 @@ namespace QuantConnect.Securities
                     {
                         var marketOpen = time.Date + marketOpenTimeOfDay.Value;
 
-                        if (localDateTime < marketOpen)
+                        if (localDateTime < marketOpen || isInclusive)
                         {
-                            if ((time.DayOfWeek != DayOfWeek.Sunday) && (_startDate != null))
+                            var oneDayBefore = time.Date.AddDays(-1);
+                            var oneDayBeforeMarketHours = GetMarketHours(oneDayBefore.DayOfWeek);
+                            var Segments = oneDayBeforeMarketHours.Segments.ToList();
+                            if (!Segments.IsNullOrEmpty())
                             {
-                                var oneDayBefore = time.Date.AddDays(-1);
-                                var oneDayBeforeMarketHours = GetMarketHours(oneDayBefore.DayOfWeek);
-                                var Segments = oneDayBeforeMarketHours.Segments.ToList();
                                 if (Segments.Last().End.Hours != marketHours.Segments.ToList().First().Start.Hours ||
                                     Segments.Last().End.Minutes != marketHours.Segments.ToList().First().Start.Minutes ||
                                     Segments.Last().End.Seconds != marketHours.Segments.ToList().First().Start.Seconds)
@@ -276,7 +277,6 @@ namespace QuantConnect.Securities
                             }
                             else
                             {
-                                _startDate = time;
                                 return marketOpen;
                             }
                         }
