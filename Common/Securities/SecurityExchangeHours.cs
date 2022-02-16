@@ -261,7 +261,7 @@ namespace QuantConnect.Securities
                     {
                         var marketOpen = time.Date + marketOpenTimeOfDay.Value;
 
-                        if (localDateTime < marketOpen || isInclusive)
+                        if (localDateTime < marketOpen || (isInclusive && localDateTime == marketOpen))
                         {
                             var oneDayBefore = time.Date.AddDays(-1);
                             var oneDayBeforeMarketHours = GetMarketHours(oneDayBefore.DayOfWeek);

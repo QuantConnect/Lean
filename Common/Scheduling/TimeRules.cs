@@ -156,9 +156,8 @@ namespace QuantConnect.Scheduling
         /// <param name="symbol">The symbol whose market open we want an event for</param>
         /// <param name="minutesAfterOpen">The minutes after market open that the event should fire</param>
         /// <param name="extendedMarketOpen">True to use extended market open, false to use regular market open</param>
-        /// <param name="isInclusive">True if the user wants to fire an event at the same time the market opens</param>
         /// <returns>A time rule that fires the specified number of minutes after the symbol's market open</returns>
-        public ITimeRule AfterMarketOpen(Symbol symbol, double minutesAfterOpen = 0, bool extendedMarketOpen = false, bool isInclusive = false)
+        public ITimeRule AfterMarketOpen(Symbol symbol, double minutesAfterOpen = 0, bool extendedMarketOpen = false)
         {
             var security = GetSecurity(symbol);
 
@@ -168,7 +167,7 @@ namespace QuantConnect.Scheduling
             var timeAfterOpen = TimeSpan.FromMinutes(minutesAfterOpen);
             Func<IEnumerable<DateTime>, IEnumerable<DateTime>> applicator = dates =>
                 from date in dates
-                let marketOpen = security.Exchange.Hours.GetNextMarketOpen(date.AddTicks(-1), extendedMarketOpen)
+                let marketOpen = security.Exchange.Hours.GetNextMarketOpen(date.AddTicks(-1), extendedMarketOpen, true)
                 where security.Exchange.DateIsOpen(date) && marketOpen.Date == date.Date
                 let localEventTime = marketOpen + timeAfterOpen
                 let utcEventTime = localEventTime.ConvertToUtc(security.Exchange.TimeZone)
