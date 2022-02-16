@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -19,14 +19,14 @@ using System.Collections.Generic;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Binance cash account regression algorithm, reproduces issue https://github.com/QuantConnect/Lean/issues/6123
+    /// Binance margin account regression algorithm, reproduces issue https://github.com/QuantConnect/Lean/issues/6123
     /// </summary>
-    public class BinanceCashAccountFeeRegressionAlgorithm : CryptoBaseCurrencyFeeRegressionAlgorithm
+    public class BinanceMarginAccountFeeRegressionAlgorithm : CryptoBaseCurrencyFeeRegressionAlgorithm
     {
         /// <summary>
         /// The target account type
         /// </summary>
-        protected override AccountType AccountType { get; } = AccountType.Cash;
+        protected override AccountType AccountType { get; } = AccountType.Margin;
 
         public override void Initialize()
         {
@@ -63,7 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$45.62"},
-            {"Estimated Strategy Capacity", "$220000.00"},
+            {"Estimated Strategy Capacity", "$12000000.00"},
             {"Lowest Capacity Asset", "BTCUSDT 18N"},
             {"Fitness Score", "0.208"},
             {"Kelly Criterion Estimate", "0"},

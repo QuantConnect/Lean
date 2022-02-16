@@ -25,11 +25,16 @@ using System.Collections.Generic;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Base crypto cash account regression algorithm trading in and out
+    /// Base crypto account regression algorithm trading in and out
     /// </summary>
-    public abstract class CryptoCashAccountFeeRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public abstract class CryptoBaseCurrencyFeeRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _symbol;
+
+        /// <summary>
+        /// The target account type
+        /// </summary>
+        protected abstract  AccountType AccountType { get; }
 
         /// <summary>
         /// The target brokerage model name
@@ -46,7 +51,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetBrokerageModel(BrokerageName, AccountType.Cash);
+            SetBrokerageModel(BrokerageName, AccountType);
             _symbol = AddCrypto(Pair, Resolution.Hour).Symbol;
         }
 

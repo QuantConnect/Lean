@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -19,22 +19,21 @@ using System.Collections.Generic;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Binance cash account regression algorithm, reproduces issue https://github.com/QuantConnect/Lean/issues/6123
+    /// Bitfinex margin account regression algorithm, reproduces issue https://github.com/QuantConnect/Lean/issues/6123
     /// </summary>
-    public class BinanceCashAccountFeeRegressionAlgorithm : CryptoBaseCurrencyFeeRegressionAlgorithm
+    public class BitfinexMarginAccountFeeRegressionAlgorithm : CryptoBaseCurrencyFeeRegressionAlgorithm
     {
         /// <summary>
         /// The target account type
         /// </summary>
-        protected override AccountType AccountType { get; } = AccountType.Cash;
+        protected override AccountType AccountType { get; } = AccountType.Margin;
 
         public override void Initialize()
         {
-            SetAccountCurrency("USDT");
-            SetStartDate(2018, 05, 02);
-            SetEndDate(2018, 05, 03);
-            BrokerageName = BrokerageName.Binance;
-            Pair = "BTCUSDT";
+            SetStartDate(2013, 10, 02);
+            SetEndDate(2013, 10, 03);
+            BrokerageName = BrokerageName.Bitfinex;
+            Pair = "BTCUSD";
             base.Initialize();
         }
 
@@ -62,29 +61,29 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$45.62"},
-            {"Estimated Strategy Capacity", "$220000.00"},
-            {"Lowest Capacity Asset", "BTCUSDT 18N"},
-            {"Fitness Score", "0.208"},
+            {"Total Fees", "$1.13"},
+            {"Estimated Strategy Capacity", "$640000.00"},
+            {"Lowest Capacity Asset", "BTCUSD E3"},
+            {"Fitness Score", "0.002"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "26.189"},
-            {"Portfolio Turnover", "0.208"},
+            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
+            {"Portfolio Turnover", "0.002"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
             {"Long Insight Count", "0"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "USDT0"},
-            {"Total Accumulated Estimated Alpha Value", "USDT0"},
-            {"Mean Population Estimated Insight Value", "USDT0"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
             {"Mean Population Direction", "0%"},
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "7417649395922ff3791471b4f3b5c021"}
+            {"OrderListHash", "7f892f0c42d8826ff770ee602fe207a2"}
         };
     }
 }
