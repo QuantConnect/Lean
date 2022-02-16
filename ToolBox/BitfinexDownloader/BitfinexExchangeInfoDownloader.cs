@@ -86,8 +86,10 @@ namespace QuantConnect.ToolBox.BitfinexDownloader
                 }
                 var description = $"{baseLabel}-{quoteLabel}";
                 var contractMultiplier = 1;
-                var minimum_price_variation = "missing";
-                var lot_size = "missing";
+                // default value for minimum_price_variation
+                var minimum_price_variation = "0.00001";
+                // default value for lot_size
+                var lot_size = "0.00000001";
                 var marketTicker = "t" + tradingPair;
                 var minimum_order_size = pairsInfo[tradingPair][3];
                 yield return $"{Market},{symbol},crypto,{description},{quoteCurrency},{contractMultiplier},{minimum_price_variation},{lot_size},{marketTicker},{minimum_order_size}";
