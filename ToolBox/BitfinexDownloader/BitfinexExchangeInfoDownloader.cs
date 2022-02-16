@@ -74,15 +74,23 @@ namespace QuantConnect.ToolBox.BitfinexDownloader
                 var symbol = tradingPair.Replace(":", string.Empty);
                 var quoteCurrency = currencies.Where(x => tradingPair.EndsWith(x)).OrderByDescending(s => s.Length).First();
                 var baseCurrency = symbol.RemoveFromEnd(quoteCurrency);
-                if (!currencyLabel.TryGetValue(quoteCurrency, out string quoteLabel))
+                var quoteLabel = quoteCurrency;
+                var baseLabel = baseCurrency;
+                if (!currencyLabel.TryGetValue(quoteCurrency, out string quoteLabelValue))
                 {
-                    Log.Trace($"BitfinexExchangeInfoDownloader.Get(): missing label value for quote currency {quoteCurrency}");
-                    continue;
+                    Log.Trace($"BitfinexExchangeInfoDownloader.Get(): missing label value for currency {quoteCurrency} using {quoteLabel} instead");
                 }
-                if (!currencyLabel.TryGetValue(baseCurrency, out string baseLabel))
+                else
                 {
-                    Log.Trace($"BitfinexExchangeInfoDownloader.Get(): missing label value for base currency {baseCurrency}");
-                    continue;
+                    quoteLabel = quoteLabelValue;
+                }
+                if (!currencyLabel.TryGetValue(baseCurrency, out string baseLabelValue))
+                {
+                    Log.Trace($"BitfinexExchangeInfoDownloader.Get(): missing label value for currency {baseCurrency} using {baseLabel} instead");
+                }
+                else
+                {
+                    baseLabel = baseLabelValue;
                 }
                 var description = $"{baseLabel}-{quoteLabel}";
                 var contractMultiplier = 1;
