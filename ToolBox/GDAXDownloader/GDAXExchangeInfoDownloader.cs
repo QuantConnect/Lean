@@ -63,7 +63,7 @@ namespace QuantConnect.ToolBox.GDAXDownloader
                 var lot_size = product.BaseMinSize;
                 var marketTicker = product.ID;
                 var minimum_order_size = product.BaseMinSize;
-                yield return $"gdax,{symbol},crypto,{description},{quoteCurrency},{contractMultiplier},{minimum_price_variation},{lot_size},{marketTicker},{minimum_order_size}";
+                yield return $"{Market},{symbol},crypto,{description},{quoteCurrency},{contractMultiplier},{minimum_price_variation},{lot_size},{marketTicker},{minimum_order_size}";
             }
         }
 
