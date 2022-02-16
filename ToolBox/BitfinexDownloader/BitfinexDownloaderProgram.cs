@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-using System;
-using QuantConnect.Data;
-using QuantConnect.Util;
-using QuantConnect.Logging;
-using System.Collections.Generic;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
+using QuantConnect.Logging;
+using QuantConnect.Util;
+using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.ToolBox.BitfinexDownloader
 {
@@ -67,6 +67,15 @@ namespace QuantConnect.ToolBox.BitfinexDownloader
             {
                 Log.Error(err);
             }
+        }
+
+        /// <summary>
+        /// Endpoint for downloading exchange info
+        /// </summary>
+        public static void ExchangeInfoDownloader()
+        {
+            new ExchangeInfoUpdater(new BitfinexExchangeInfoDownloader())
+                .Run();
         }
     }
 }
