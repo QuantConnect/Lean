@@ -60,7 +60,7 @@ namespace QuantConnect.ToolBox.GDAXDownloader
                 var quoteCurrency = product.QuoteCurrency;
                 var contractMultiplier = 1;
                 var minimum_price_variation = product.QuoteIncrement;
-                var lot_size = product.BaseMinSize;
+                var lot_size = product.BaseIncrement;
                 var marketTicker = product.ID;
                 var minimum_order_size = product.BaseMinSize;
                 yield return $"{Market},{symbol},crypto,{description},{quoteCurrency},{contractMultiplier},{minimum_price_variation},{lot_size},{marketTicker},{minimum_order_size}";
