@@ -19,8 +19,6 @@ using QuantConnect.Logging;
 using QuantConnect.ToolBox.GDAXDownloader.Models;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Net;
 
 namespace QuantConnect.ToolBox.GDAXDownloader
 {
@@ -51,7 +49,7 @@ namespace QuantConnect.ToolBox.GDAXDownloader
         public IEnumerable<string> Get()
         {
             const string url = "https://api.exchange.coinbase.com/products";
-            Dictionary<string, string> headers = new() { {"User-Agent", ".NET Framework Test Client"} };
+            Dictionary<string, string> headers = new() { { "User-Agent", ".NET Framework Test Client" } };
             var json = url.DownloadData(headers);
             var exchangeInfo = JsonConvert.DeserializeObject<List<Product>>(json);
             foreach (var product in exchangeInfo)
