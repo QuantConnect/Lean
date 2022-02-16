@@ -39,7 +39,7 @@ namespace QuantConnect.ToolBox.GDAXDownloader
         /// </summary>
         public GDAXExchangeInfoDownloader()
         {
-            _idNameMapping = GetCurrencyNameById();
+            _idNameMapping = GetCurrencyDetails();
         }
 
         /// <summary>
@@ -71,7 +71,7 @@ namespace QuantConnect.ToolBox.GDAXDownloader
         /// Fetch currency details
         /// </summary>
         /// <returns>Enumerable of exchange info</returns>
-        private static Dictionary<string, string> GetCurrencyNameById()
+        private static Dictionary<string, string> GetCurrencyDetails()
         {
             Dictionary<string, string> idNameMapping = new();
             var url = $"https://api.exchange.coinbase.com/currencies";
