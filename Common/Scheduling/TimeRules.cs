@@ -156,6 +156,7 @@ namespace QuantConnect.Scheduling
         /// <param name="symbol">The symbol whose market open we want an event for</param>
         /// <param name="minutesAfterOpen">The minutes after market open that the event should fire</param>
         /// <param name="extendedMarketOpen">True to use extended market open, false to use regular market open</param>
+        /// <param name="isInclusive">True if the user wants to fire an event at the same time the market opens</param>
         /// <returns>A time rule that fires the specified number of minutes after the symbol's market open</returns>
         public ITimeRule AfterMarketOpen(Symbol symbol, double minutesAfterOpen = 0, bool extendedMarketOpen = false, bool isInclusive = false)
         {
