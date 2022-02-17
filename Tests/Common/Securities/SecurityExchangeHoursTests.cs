@@ -174,9 +174,9 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var exhangeHours = CreateUsFutureSecurityExchangeHours();
 
-            var startTime = new DateTime(2022,1,1);
+            var startTime = new DateTime(2022, 1, 1);
             var nextMarketOpen = exhangeHours.GetNextMarketOpen(startTime, false, true);
-            Assert.AreEqual(new DateTime(2022, 1, 2, 0, 0, 0), nextMarketOpen);
+            Assert.AreEqual(new DateTime(2022, 1, 2), nextMarketOpen);
         }
 
         [Test]
@@ -185,18 +185,18 @@ namespace QuantConnect.Tests.Common.Securities
             var exhangeHours = CreateUsFutureSecurityExchangeHours();
 
             var startTime = new DateTime(2022, 1, 3);
-            var nextMarketOpen = exhangeHours.GetNextMarketOpen(startTime, false, true);
-            Assert.AreEqual(new DateTime(2022, 1, 9, 0, 0, 0), nextMarketOpen);
+            var nextMarketOpen = exhangeHours.GetNextMarketOpen(startTime, false);
+            Assert.AreEqual(new DateTime(2022, 1, 3, 16, 30, 0), nextMarketOpen);
         }
 
         [Test]
-        public void GetNextMarketOpenForContinuousSchedulesIsInclusiveOfStartTime()
+        public void GetNextMarketOpenForContinuousSchedulesIsNotInclusiveOfStartTime()
         {
             var exhangeHours = CreateUsFutureSecurityExchangeHours();
 
             var startTime = new DateTime(2022, 1, 2);
-            var nextMarketOpen = exhangeHours.GetNextMarketOpen(startTime, false, true);
-            Assert.AreEqual(new DateTime(2022, 1, 2), nextMarketOpen);
+            var nextMarketOpen = exhangeHours.GetNextMarketOpen(startTime, false);
+            Assert.AreEqual(new DateTime(2022, 1, 3, 16, 30, 0), nextMarketOpen);
         }
 
         [Test]

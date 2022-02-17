@@ -222,8 +222,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="localDateTime">The time to begin searching for market open (non-inclusive)</param>
         /// <param name="extendedMarket">True to include extended market hours in the search</param>
-        /// <param name="isInclusive">True if the user wants GetNextMarketOpen() to be inclusive, this is,
-        /// return the same localDateTime</param>
+        /// <param name="isInclusive">True to accept as next market open date the same input data</param>
         /// <returns>The next market opening date time following the specified local date time</returns>
         public DateTime GetNextMarketOpen(DateTime localDateTime, bool extendedMarket, bool isInclusive = false)
         {
@@ -256,29 +255,13 @@ namespace QuantConnect.Securities
                         }
                     }
 
-                    var marketOpenTimeOfDay = marketHours.GetMarketOpen(time.TimeOfDay, extendedMarket);
+                    var marketOpenTimeOfDay = marketHours.GetMarketOpen(time.TimeOfDay, extendedMarket, isInclusive);
                     if (marketOpenTimeOfDay.HasValue)
                     {
                         var marketOpen = time.Date + marketOpenTimeOfDay.Value;
-
-                        if (localDateTime < marketOpen || (isInclusive && localDateTime == marketOpen))
+                        if ((localDateTime < marketOpen) || (isInclusive && localDateTime <= marketOpen))
                         {
-                            var oneDayBefore = time.Date.AddDays(-1);
-                            var oneDayBeforeMarketHours = GetMarketHours(oneDayBefore.DayOfWeek);
-                            var Segments = oneDayBeforeMarketHours.Segments.ToList();
-                            if (!Segments.IsNullOrEmpty())
-                            {
-                                if (Segments.Last().End.Hours != marketHours.Segments.ToList().First().Start.Hours ||
-                                    Segments.Last().End.Minutes != marketHours.Segments.ToList().First().Start.Minutes ||
-                                    Segments.Last().End.Seconds != marketHours.Segments.ToList().First().Start.Seconds)
-                                {
-                                    return marketOpen;
-                                }
-                            }
-                            else
-                            {
-                                return marketOpen;
-                            }
+                            return marketOpen;
                         }
                     }
                 }

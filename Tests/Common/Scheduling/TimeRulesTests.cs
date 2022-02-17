@@ -128,14 +128,22 @@ namespace QuantConnect.Tests.Common.Scheduling
                 new DateTime(2022, 01, 09)
             });
 
-            var expectedMarketOpenDates = new[] { new DateTime(2022, 01, 02, 23, 0, 0), new DateTime(2022, 01, 09, 23, 0, 0)};
+            var expectedMarketOpenDates = new[] { 
+                new DateTime(2022, 01, 02, 23, 0, 0), 
+                new DateTime(2022, 01, 03, 21, 30, 0),
+                new DateTime(2022, 01, 04, 21, 30, 0),
+                new DateTime(2022, 01, 05, 21, 30, 0),
+                new DateTime(2022, 01, 06, 21, 30, 0),
+                new DateTime(2022, 01, 07, 21, 30, 0),
+                new DateTime(2022, 01, 09, 23, 0, 0)
+            };
             int count = 0;
             foreach (var time in times)
             {
                 Assert.AreEqual(expectedMarketOpenDates[count], time);
                 count++;
             }
-            Assert.AreEqual(2, count);
+            Assert.AreEqual(7, count);
         }
 
         [Test]

@@ -134,7 +134,7 @@ namespace QuantConnect.Securities
         /// <param name="time">The reference time, the open returned will be the first open after the specified time if there are multiple market open segments</param>
         /// <param name="extendedMarket">True to include extended market hours, false for regular market hours</param>
         /// <returns>The market's opening time of day</returns>
-        public TimeSpan? GetMarketOpen(TimeSpan time, bool extendedMarket)
+        public TimeSpan? GetMarketOpen(TimeSpan time, bool extendedMarket, bool isInclusive = false)
         {
             foreach (var segment in _segments)
             {
@@ -150,7 +150,7 @@ namespace QuantConnect.Securities
                         return segment.Start;
                     }
                 }
-                else if (segment.State == MarketHoursState.Market)
+                else if (segment.State == MarketHoursState.Market && (segment.Start != time || isInclusive))
                 {
                     return segment.Start;
                 }
