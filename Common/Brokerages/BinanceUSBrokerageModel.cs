@@ -13,15 +13,9 @@
  * limitations under the License.
 */
 
-using System;
-using QuantConnect.Benchmarks;
-using QuantConnect.Orders;
-using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
-using QuantConnect.Util;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Brokerages
 {

@@ -20,6 +20,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Tests.Brokerages;
 using System;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Brokerages
@@ -28,9 +29,10 @@ namespace QuantConnect.Tests.Common.Brokerages
     [TestFixture, Parallelizable(ParallelScope.All)]
     public class BinanceBrokerageModelTests
     {
-        private readonly BinanceBrokerageModel _binanceBrokerageModel = new();
         private readonly Symbol _btceur = Symbol.Create("BTCEUR", SecurityType.Crypto, Market.Binance);
         private Security _security;
+
+        protected virtual BinanceBrokerageModel BinanceBrokerageModel => new();
 
         [SetUp]
         public void Init()
@@ -61,7 +63,7 @@ namespace QuantConnect.Tests.Common.Brokerages
                 BidSize = 1
             });
 
-            Assert.AreEqual(isValidOrderQuantity, _binanceBrokerageModel.CanSubmitOrder(_security, order.Object, out var message));
+            Assert.AreEqual(isValidOrderQuantity, BinanceBrokerageModel.CanSubmitOrder(_security, order.Object, out var message));
             Assert.AreEqual(isValidOrderQuantity, message == null);
         }
 
@@ -79,7 +81,7 @@ namespace QuantConnect.Tests.Common.Brokerages
                 }
             };
 
-            Assert.AreEqual(isValidOrderQuantity, _binanceBrokerageModel.CanSubmitOrder(_security, order.Object, out var message));
+            Assert.AreEqual(isValidOrderQuantity, BinanceBrokerageModel.CanSubmitOrder(_security, order.Object, out var message));
             Assert.AreEqual(isValidOrderQuantity, message == null);
         }
 
@@ -100,7 +102,7 @@ namespace QuantConnect.Tests.Common.Brokerages
                 }
             };
 
-            Assert.AreEqual(isValidOrderQuantity, _binanceBrokerageModel.CanSubmitOrder(_security, order.Object, out var message));
+            Assert.AreEqual(isValidOrderQuantity, BinanceBrokerageModel.CanSubmitOrder(_security, order.Object, out var message));
             Assert.AreEqual(isValidOrderQuantity, message == null);
         }
 
@@ -117,7 +119,7 @@ namespace QuantConnect.Tests.Common.Brokerages
 
             var security = TestsHelpers.GetSecurity(symbol: _btceur.Value, market: _btceur.ID.Market, quoteCurrency: "EUR");
 
-            Assert.AreEqual(false, _binanceBrokerageModel.CanSubmitOrder(security, order.Object, out var message));
+            Assert.AreEqual(false, BinanceBrokerageModel.CanSubmitOrder(security, order.Object, out var message));
             Assert.NotNull(message);
         }
 
@@ -135,7 +137,7 @@ namespace QuantConnect.Tests.Common.Brokerages
 
             var security = TestsHelpers.GetSecurity(symbol: _btceur.Value, market: _btceur.ID.Market, quoteCurrency: "EUR");
 
-            Assert.AreEqual(false, _binanceBrokerageModel.CanSubmitOrder(security, order.Object, out var message));
+            Assert.AreEqual(false, BinanceBrokerageModel.CanSubmitOrder(security, order.Object, out var message));
             Assert.NotNull(message);
         }
 
@@ -146,21 +148,49 @@ namespace QuantConnect.Tests.Common.Brokerages
         }
 
         [Test]
-        public void Returns3m_IfMarginAccount()
-        {
-            Assert.AreEqual(3m, new BinanceBrokerageModel(AccountType.Margin).GetLeverage(_security));
-        }
-
-        [Test]
         public void ReturnsCashBuyinPowerModel_ForCashAccount()
         {
             Assert.IsInstanceOf<CashBuyingPowerModel>(new BinanceBrokerageModel(AccountType.Cash).GetBuyingPowerModel(_security));
         }
 
         [Test]
-        public void ReturnsSecurityMarginModel_ForMarginAccount()
+        public void ReturnBinanceFeeModel()
         {
-            Assert.IsInstanceOf<SecurityMarginModel>(new BinanceBrokerageModel(AccountType.Margin).GetBuyingPowerModel(_security));
+            Assert.IsInstanceOf<BinanceFeeModel>(BinanceBrokerageModel.GetFeeModel(_security));
+        }
+
+        [Test]
+        public virtual void CryptoMapped()
+        {
+            var defaultMarkets = BinanceBrokerageModel.DefaultMarkets;
+            Assert.AreEqual(Market.Binance, defaultMarkets[SecurityType.Crypto]);
+        }
+
+        [TestFixture]
+        public class Margin
+        {
+
+            private readonly Symbol _btceur = Symbol.Create("BTCEUR", SecurityType.Crypto, Market.Binance);
+            private Security _security;
+            private BinanceBrokerageModel _binanceBrokerageModel = new(AccountType.Margin);
+
+            [SetUp]
+            public void Init()
+            {
+                _security = TestsHelpers.GetSecurity(symbol: _btceur.Value, market: _btceur.ID.Market, quoteCurrency: "EUR");
+            }
+
+            [Test]
+            public void ReturnsSecurityMarginModel_ForMarginAccount()
+            {
+                Assert.IsInstanceOf<SecurityMarginModel>(_binanceBrokerageModel.GetBuyingPowerModel(_security));
+            }
+
+            [Test]
+            public virtual void Returns3m_IfMarginAccount()
+            {
+                Assert.AreEqual(3m, _binanceBrokerageModel.GetLeverage(_security));
+            }
         }
     }
 }
