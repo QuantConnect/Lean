@@ -39,13 +39,14 @@ namespace QuantConnect.ToolBox
         {
             var directory = Path.Combine(Globals.DataFolder, "symbol-properties");
             var file = Path.Combine(directory, "symbol-properties-database.csv");
-            var tempOutputDirectory = Directory.CreateDirectory(Config.Get("temp-output-directory", "/temp-output-directory"));
+            var baseOutputDirectory = Config.Get("temp-output-directory", "/temp-output-directory");
+            var tempOutputDirectory = Directory.CreateDirectory(Path.Combine(baseOutputDirectory, "symbol-properties"));
             var tmp = Path.Combine(tempOutputDirectory.FullName, "symbol-properties-database.csv");
             if (File.Exists(tmp))
             {
                 file = tmp;
             }
-            if (!File.Exists(file))
+            else if (!File.Exists(file))
             {
                 throw new FileNotFoundException("Unable to locate symbol properties file: " + file);
             }
