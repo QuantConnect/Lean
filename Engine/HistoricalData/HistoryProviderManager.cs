@@ -68,10 +68,10 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             }
             _initialized = true;
 
-            var dataProvidersList = parameters.Job.HistoryProvider.DeserializeList();
+            var dataProvidersList = parameters.Job?.HistoryProvider.DeserializeList() ?? new List<string>();
             if (dataProvidersList.IsNullOrEmpty())
             {
-                dataProvidersList.Add(Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider"));
+                dataProvidersList.AddRange(Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider").DeserializeList());
             }
 
             foreach (var historyProviderName in dataProvidersList)
