@@ -1186,6 +1186,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(-3000m, actual);
 
             var btcusd = algo.AddCrypto("BTCUSD", market: Market.GDAX);
+            btcusd.BuyingPowerModel = new CashBuyingPowerModel();
             btcusd.FeeModel = new ConstantFeeModel(0);
             // Set Price to $26
             Update(btcusd, 26);

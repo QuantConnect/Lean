@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -34,7 +34,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultBrokerageModel"/> class
         /// </summary>
-        /// <param name="accountType">The type of account to be modelled, defaults to
+        /// <param name="accountType">The type of account to be modeled, defaults to
         /// <see cref="QuantConnect.AccountType.Margin"/></param>
         public TradierBrokerageModel(AccountType accountType = AccountType.Margin)
             : base(accountType)
@@ -102,7 +102,7 @@ namespace QuantConnect.Brokerages
             if (request.Quantity != null && request.Quantity != order.Quantity)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "UpdateRejected",
-                    "Traider does not support updating order quantities."
+                    "Tradier does not support updating order quantities."
                 );
 
                 return false;

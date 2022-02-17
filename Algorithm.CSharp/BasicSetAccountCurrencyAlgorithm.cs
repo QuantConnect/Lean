@@ -14,6 +14,7 @@
 */
 
 using System.Collections.Generic;
+using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 
@@ -33,6 +34,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2018, 04, 04);  //Set Start Date
             SetEndDate(2018, 04, 04);    //Set End Date
+            SetBrokerageModel(BrokerageName.GDAX, AccountType.Cash);
             //Before setting any cash or adding a Security call SetAccountCurrency
             SetAccountCurrency("EUR");
             SetCash(100000);             //Set Strategy Cash
@@ -87,14 +89,14 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
+            {"Total Fees", "$298.35"},
             {"Estimated Strategy Capacity", "$85000.00"},
             {"Lowest Capacity Asset", "BTCEUR XJ"},
             {"Fitness Score", "0.506"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-14.148"},
+            {"Return Over Maximum Drawdown", "-13.614"},
             {"Portfolio Turnover", "1.073"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -109,7 +111,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "18dc611407abec4ea47092e71f33f983"}
+            {"OrderListHash", "2ba443899dcccc79dc0f04441f797bf9"}
         };
     }
 }

@@ -351,33 +351,16 @@ namespace QuantConnect.Brokerages
         /// <returns>The buying power model for this brokerage/security</returns>
         public virtual IBuyingPowerModel GetBuyingPowerModel(Security security)
         {
-            var leverage = GetLeverage(security);
-            IBuyingPowerModel model;
-
-            switch (security.Type)
+            return security.Type switch
             {
-                case SecurityType.Crypto:
-                    model = new CashBuyingPowerModel();
-                    break;
-                case SecurityType.Forex:
-                case SecurityType.Cfd:
-                    model = new SecurityMarginModel(leverage, RequiredFreeBuyingPowerPercent);
-                    break;
-                case SecurityType.Option:
-                    model = new OptionMarginModel(RequiredFreeBuyingPowerPercent);
-                    break;
-                case SecurityType.FutureOption:
-                    model = new FuturesOptionsMarginModel(RequiredFreeBuyingPowerPercent, (Option)security);
-                    break;
-                case SecurityType.Future:
-                    model = new FutureMarginModel(RequiredFreeBuyingPowerPercent, security);
-                    break;
-                case SecurityType.Index:
-                default:
-                    model = new SecurityMarginModel(leverage, RequiredFreeBuyingPowerPercent);
-                    break;
-            }
-            return model;
+                SecurityType.Future => new FutureMarginModel(RequiredFreeBuyingPowerPercent, security),
+                SecurityType.FutureOption => new FuturesOptionsMarginModel(RequiredFreeBuyingPowerPercent, (Option)security),
+                SecurityType.IndexOption => new OptionMarginModel(RequiredFreeBuyingPowerPercent),
+                SecurityType.Option => new OptionMarginModel(RequiredFreeBuyingPowerPercent),
+                _ => AccountType == AccountType.Cash
+                    ? new CashBuyingPowerModel()
+                    : new SecurityMarginModel(GetLeverage(security), RequiredFreeBuyingPowerPercent)
+            };
         }
 
         /// <summary>
