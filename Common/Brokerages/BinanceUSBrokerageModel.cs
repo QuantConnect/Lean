@@ -74,15 +74,5 @@ namespace QuantConnect.Brokerages
             // margin trading is not currently supported by Binance.US
             return 1m;
         }
-
-        /// <summary>
-        /// Provides Binance fee model
-        /// </summary>
-        /// <param name="security"></param>
-        /// <returns></returns>
-        public override IFeeModel GetFeeModel(Security security)
-        {
-            return new BinanceFeeModel();
-        }
     }
 }
