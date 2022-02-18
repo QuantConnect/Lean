@@ -19,6 +19,7 @@ using QuantConnect.Logging;
 using QuantConnect.ToolBox.GDAXDownloader.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.ToolBox.GDAXDownloader
 {
@@ -52,7 +53,7 @@ namespace QuantConnect.ToolBox.GDAXDownloader
             Dictionary<string, string> headers = new() { { "User-Agent", ".NET Framework Test Client" } };
             var json = url.DownloadData(headers);
             var exchangeInfo = JsonConvert.DeserializeObject<List<Product>>(json);
-            foreach (var product in exchangeInfo)
+            foreach (var product in exchangeInfo.OrderBy(x => x.ID.Replace("-", string.Empty)))
             {
                 // market,symbol,type,description,quote_currency,contract_multiplier,minimum_price_variation,lot_size,market_ticker,minimum_order_size
                 var symbol = product.ID.Replace("-", string.Empty);
