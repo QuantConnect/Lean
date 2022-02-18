@@ -45,7 +45,7 @@ namespace QuantConnect.Tests.Common.Data
             var split = new Split(Symbols.SPY, now, 1, 1, SplitType.SplitOccurred);
             var delisting = new Delisting(Symbols.SPY, now, 1, DelistingType.Delisted);
 
-            var slice = new Slice(now, new BaseData[] {quoteBar, tradeBar, unlinkedData, tick, split, delisting, openInterest });
+            var slice = new Slice(now, new BaseData[] {quoteBar, tradeBar, unlinkedData, tick, split, delisting, openInterest }, now);
 
             Assert.AreEqual(slice.Get(typeof(TradeBar))[Symbols.SPY], tradeBar);
             Assert.AreEqual(slice.Get(typeof(UnlinkedData))[Symbols.SPY], unlinkedData);
@@ -60,7 +60,7 @@ namespace QuantConnect.Tests.Common.Data
         public void AccessesBaseBySymbol()
         {
             IndicatorDataPoint tick = new IndicatorDataPoint(Symbols.SPY, DateTime.Now, 1);
-            Slice slice = new Slice(DateTime.Now, new[] { tick });
+            Slice slice = new Slice(DateTime.Now, new[] { tick }, DateTime.Now);
 
             IndicatorDataPoint data = slice[tick.Symbol];
 
@@ -71,7 +71,7 @@ namespace QuantConnect.Tests.Common.Data
         public void AccessesTradeBarBySymbol()
         {
             TradeBar tradeBar = new TradeBar { Symbol = Symbols.SPY, Time = DateTime.Now };
-            Slice slice = new Slice(DateTime.Now, new[] { tradeBar });
+            Slice slice = new Slice(DateTime.Now, new[] { tradeBar }, DateTime.Now);
 
             TradeBar data = slice[tradeBar.Symbol];
 
@@ -82,7 +82,7 @@ namespace QuantConnect.Tests.Common.Data
         public void EquitiesIgnoreQuoteBars()
         {
             var quoteBar = new QuoteBar { Symbol = Symbols.SPY, Time = DateTime.Now };
-            var slice = new Slice(DateTime.Now, new[] { quoteBar });
+            var slice = new Slice(DateTime.Now, new[] { quoteBar }, DateTime.Now);
 
             Assert.IsFalse(slice.HasData);
             Assert.IsTrue(slice.ToList().Count == 0);
@@ -91,7 +91,7 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(0, slice.Count);
 
             var tickQuoteBar = new Tick { Symbol = Symbols.SPY, Time = DateTime.Now, TickType = TickType.Quote };
-            slice = new Slice(DateTime.Now, new[] { tickQuoteBar });
+            slice = new Slice(DateTime.Now, new[] { tickQuoteBar }, DateTime.Now);
 
             Assert.IsFalse(slice.HasData);
             Assert.IsTrue(slice.ToList().Count == 0);
@@ -105,7 +105,7 @@ namespace QuantConnect.Tests.Common.Data
         {
             TradeBar tradeBar1 = new TradeBar { Symbol = Symbols.SPY, Time = DateTime.Now };
             TradeBar tradeBar2 = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now };
-            Slice slice = new Slice(DateTime.Now, new[] { tradeBar1, tradeBar2 });
+            Slice slice = new Slice(DateTime.Now, new[] { tradeBar1, tradeBar2 }, DateTime.Now);
 
             TradeBars tradeBars = slice.Bars;
             Assert.AreEqual(2, tradeBars.Count);
@@ -116,7 +116,7 @@ namespace QuantConnect.Tests.Common.Data
         {
             Tick tick1 = new Tick { Time = DateTime.Now, Symbol = Symbols.SPY, Value = 1m, Quantity = 2m };
             Tick tick2 = new Tick { Time = DateTime.Now, Symbol = Symbols.SPY, Value = 1.1m, Quantity = 2.1m };
-            Slice slice = new Slice(DateTime.Now, new[] { tick1, tick2 });
+            Slice slice = new Slice(DateTime.Now, new[] { tick1, tick2 }, DateTime.Now);
 
             List<Tick> data = slice[tick1.Symbol];
             Assert.IsInstanceOf(typeof(List<Tick>), data);
@@ -130,7 +130,7 @@ namespace QuantConnect.Tests.Common.Data
             Tick tick2 = new Tick { Time = DateTime.Now, Symbol = Symbols.SPY, Value = 1.1m, Quantity = 2.1m };
             Tick tick3 = new Tick { Time = DateTime.Now, Symbol = Symbols.AAPL, Value = 1, Quantity = 2 };
             Tick tick4 = new Tick { Time = DateTime.Now, Symbol = Symbols.AAPL, Value = 1.1m, Quantity = 2.1m };
-            Slice slice = new Slice(DateTime.Now, new[] { tick1, tick2, tick3, tick4 });
+            Slice slice = new Slice(DateTime.Now, new[] { tick1, tick2, tick3, tick4 }, DateTime.Now);
 
             Ticks ticks = slice.Ticks;
             Assert.AreEqual(2, ticks.Count);
@@ -146,7 +146,7 @@ namespace QuantConnect.Tests.Common.Data
                 new Bar(3101, 3101, 3101, 3101), 0,
                 Time.OneMinute);
             var tradeBar = new TradeBar { Symbol = Symbols.SPY, Time = DateTime.Now };
-            var slice = new Slice(DateTime.Now, new BaseData[] { quoteBar, tradeBar });
+            var slice = new Slice(DateTime.Now, new BaseData[] { quoteBar, tradeBar }, DateTime.Now);
 
             Assert.AreEqual(1, slice.QuoteBars.Count);
             Assert.AreEqual(1, slice.Bars.Count);
@@ -160,7 +160,7 @@ namespace QuantConnect.Tests.Common.Data
         {
             var tradeBar = new TradeBar { Symbol = Symbols.SPY, Time = DateTime.Now };
             var unlinkedDataSpy = new UnlinkedData { Symbol = Symbols.SPY, Time = DateTime.Now };
-            var slice = new Slice(DateTime.Now, new BaseData[] { unlinkedDataSpy, tradeBar });
+            var slice = new Slice(DateTime.Now, new BaseData[] { unlinkedDataSpy, tradeBar }, DateTime.Now);
 
             var unlinkedData = slice.Get<UnlinkedData>();
             Assert.AreEqual(1, unlinkedData.Count);
@@ -171,7 +171,7 @@ namespace QuantConnect.Tests.Common.Data
         {
             var unlinkedDataSpy = new UnlinkedData { Symbol = Symbols.SPY, Time = DateTime.Now };
             var unlinkedDataAapl = new UnlinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now };
-            var slice = new Slice(DateTime.Now, new[] { unlinkedDataSpy, unlinkedDataAapl });
+            var slice = new Slice(DateTime.Now, new[] { unlinkedDataSpy, unlinkedDataAapl }, DateTime.Now);
 
             var unlinkedData = slice.Get<UnlinkedData>();
             Assert.AreEqual(2, unlinkedData.Count);
@@ -182,7 +182,7 @@ namespace QuantConnect.Tests.Common.Data
         {
             Tick TickSpy = new Tick { Symbol = Symbols.SPY, Time = DateTime.Now };
             Tick TickAapl = new Tick { Symbol = Symbols.AAPL, Time = DateTime.Now };
-            Slice slice = new Slice(DateTime.Now, new[] { TickSpy, TickAapl });
+            Slice slice = new Slice(DateTime.Now, new[] { TickSpy, TickAapl }, DateTime.Now);
 
             DataDictionary<Tick> TickData = slice.Get<Tick>();
             Assert.AreEqual(2, TickData.Count);
@@ -193,7 +193,7 @@ namespace QuantConnect.Tests.Common.Data
         {
             TradeBar TradeBarSpy = new TradeBar { Symbol = Symbols.SPY, Time = DateTime.Now };
             TradeBar TradeBarAapl = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now };
-            Slice slice = new Slice(DateTime.Now, new[] { TradeBarSpy, TradeBarAapl });
+            Slice slice = new Slice(DateTime.Now, new[] { TradeBarSpy, TradeBarAapl }, DateTime.Now);
 
             DataDictionary<TradeBar> TradeBarData = slice.Get<TradeBar>();
             Assert.AreEqual(2, TradeBarData.Count);
@@ -204,7 +204,7 @@ namespace QuantConnect.Tests.Common.Data
         {
             var unlinkedDataSpy = new UnlinkedData { Symbol = Symbols.SPY, Time = DateTime.Now };
             var unlinkedDataAapl = new UnlinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now };
-            var slice = new Slice(DateTime.Now, new[] { unlinkedDataSpy, unlinkedDataAapl });
+            var slice = new Slice(DateTime.Now, new[] { unlinkedDataSpy, unlinkedDataAapl }, DateTime.Now);
 
             var unlinkedData = slice.Get<UnlinkedData>(Symbols.SPY);
             Assert.AreEqual(unlinkedDataSpy, unlinkedData);
@@ -223,7 +223,7 @@ namespace QuantConnect.Tests.Common.Data
             var symbolChangedEvent1 = new SymbolChangedEvent(Symbols.SPY, _dataTime, "SPY", "SP");
             var slice1 = new Slice(_dataTime, new BaseData[] { tradeBar1, tradeBar2,
                 quoteBar1, tick1, split1, dividend1, delisting1, symbolChangedEvent1
-            });
+            }, _dataTime);
 
             var tradeBar3 = new TradeBar { Symbol = Symbols.AAPL, Time = _dataTime, Open = 24 };
             var tradeBar4 = new TradeBar { Symbol = Symbols.SBIN, Time = _dataTime };
@@ -236,7 +236,7 @@ namespace QuantConnect.Tests.Common.Data
             var symbolChangedEvent2 = new SymbolChangedEvent(Symbols.SBIN, _dataTime, "SBIN", "BIN");
             var slice2 = new Slice(_dataTime, new BaseData[] { tradeBar3, tradeBar4, tradeBar3_4,
                 quoteBar2, tick2, split2, dividend2, delisting2, symbolChangedEvent2
-            });
+            }, _dataTime);
 
             slice1.MergeSlice(slice2);
             Assert.AreEqual(4, slice1.Bars.Count);
@@ -252,10 +252,10 @@ namespace QuantConnect.Tests.Common.Data
         public void CheckMergeUpdatePrivateAttributes()
         {
             var tradeBar0 = new TradeBar { Symbol = Symbols.BTCUSD, Time = _dataTime };
-            var slice1 = new Slice(_dataTime, new BaseData[] { tradeBar0 });
+            var slice1 = new Slice(_dataTime, new BaseData[] { tradeBar0 }, _dataTime);
             var tradeBar1 = new TradeBar { Symbol = Symbols.SPY, Time = _dataTime };
             var tradeBar2 = new TradeBar { Symbol = Symbols.AAPL, Time = _dataTime, Open = 23 };
-            var slice2 = new Slice(_dataTime, new BaseData[] { tradeBar1, tradeBar2 });
+            var slice2 = new Slice(_dataTime, new BaseData[] { tradeBar1, tradeBar2 }, _dataTime);
 
             slice1.MergeSlice(slice2);
             // Check private _data is updated
@@ -264,7 +264,7 @@ namespace QuantConnect.Tests.Common.Data
             var tradeBar3 = new TradeBar { Symbol = Symbols.AAPL, Time = _dataTime, Open = 24 };
             var tradeBar4 = new TradeBar { Symbol = Symbols.SBIN, Time = _dataTime };
             var tradeBar3_4 = new TradeBar { Symbol = Symbols.BTCEUR, Time = _dataTime };
-            var slice3 = new Slice(_dataTime, new BaseData[] { tradeBar3, tradeBar4, tradeBar3_4 });
+            var slice3 = new Slice(_dataTime, new BaseData[] { tradeBar3, tradeBar4, tradeBar3_4 }, _dataTime);
 
             slice1.MergeSlice(slice3);
 
@@ -281,16 +281,16 @@ namespace QuantConnect.Tests.Common.Data
         {
             var tradeBar1 = new TradeBar { Symbol = Symbols.SPY, Time = _dataTime };
             var tick1 = new Tick(_dataTime, Symbols.SPY, 1.1m, 2.1m) { TickType = TickType.Trade };
-            var slice1 = new Slice(_dataTime, new BaseData[] { tradeBar1, tick1 });
+            var slice1 = new Slice(_dataTime, new BaseData[] { tradeBar1, tick1 }, _dataTime);
             //var Use List<tick>
             var ticks = new Ticks { { Symbols.MSFT, new List<Tick> { tick1 } } };
-            var slice2 = new Slice(_dataTime, new List<BaseData>(), null, null, ticks, null, null, null, null, null, null);
+            var slice2 = new Slice(_dataTime, new List<BaseData>(), null, null, ticks, null, null, null, null, null, null, _dataTime);
             slice1.MergeSlice(slice2);
             Assert.AreEqual(2, slice1.Ticks.Count);
 
             // Should merge only when different
             var tick2 = new Tick(_dataTime, Symbols.MSFT, 1.1m, 2.1m) { TickType = TickType.Trade };
-            var slice3 = new Slice(_dataTime, new BaseData[] { tradeBar1, tick2 });
+            var slice3 = new Slice(_dataTime, new BaseData[] { tradeBar1, tick2 }, _dataTime);
             slice2.MergeSlice(slice3);
             Assert.AreEqual(1, slice2.Ticks.Count);
         }
@@ -312,13 +312,13 @@ namespace QuantConnect.Tests.Common.Data
                                 new Ticks(), optionChain1,
                                 futuresChain1, new Splits(),
                                 new Dividends(_dataTime), new Delistings(),
-                                new SymbolChangedEvents());
+                                new SymbolChangedEvents(), _dataTime);
             var slice5 = new Slice(_dataTime, new List<BaseData>(),
                 new TradeBars(_dataTime), new QuoteBars(),
                 new Ticks(), optionChain2,
                 futuresChain2, new Splits(),
                 new Dividends(_dataTime), new Delistings(),
-                new SymbolChangedEvents());
+                new SymbolChangedEvents(), _dataTime);
             slice4.MergeSlice(slice5);
             Assert.AreEqual(2, slice4.OptionChains.Count);
             Assert.AreEqual(2, slice4.FutureChains.Count);
@@ -333,8 +333,8 @@ namespace QuantConnect.Tests.Common.Data
             var custom2 = new FxcmVolume { DataType = MarketDataType.Base, Symbol = Symbols.SBIN };
             var custom3 = new FxcmVolume { DataType = MarketDataType.Base, Symbol = Symbols.MSFT };
             var custom4 = new FxcmVolume { DataType = MarketDataType.Base, Symbol = Symbols.SBIN };
-            var slice6 = new Slice(_dataTime, new BaseData[] { custom1, custom2, custom3, tradeBar2 });
-            var slice5 = new Slice(_dataTime, new BaseData[] { tradeBar1, custom4 });
+            var slice6 = new Slice(_dataTime, new BaseData[] { custom1, custom2, custom3, tradeBar2 }, _dataTime);
+            var slice5 = new Slice(_dataTime, new BaseData[] { tradeBar1, custom4 }, _dataTime);
             slice5.MergeSlice(slice6);
             Assert.AreEqual(4, slice5.Values.Count);
             Assert.AreEqual(2, slice5.Values.Where(x => x.DataType == MarketDataType.Base).Count());
@@ -354,7 +354,7 @@ def Test(slice):
     return data").GetAttr("Test");
                 var unlinkedDataSpy = new UnlinkedData { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
                 var unlinkedDataAapl = new UnlinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
-                var slice = new Slice(DateTime.Now, new[] { unlinkedDataSpy, unlinkedDataAapl });
+                var slice = new Slice(DateTime.Now, new[] { unlinkedDataSpy, unlinkedDataAapl }, DateTime.Now);
 
                 var data = test(new PythonSlice(slice));
                 Assert.AreEqual(2, (int)data.Count);
@@ -407,7 +407,7 @@ def Test(slice):
                 var data2 = customDataTest2.Reader(config2, "something2", DateTime.UtcNow, false);
 
                 var unlinkedDataSpy = new UnlinkedData { Symbol = Symbols.SPY, Time = DateTime.UtcNow, Value = 10 };
-                var slice = new Slice(DateTime.UtcNow, new[] { unlinkedDataSpy, data2, data1 });
+                var slice = new Slice(DateTime.UtcNow, new[] { unlinkedDataSpy, data2, data1 }, DateTime.UtcNow);
 
                 var data = test(new PythonSlice(slice));
                 Assert.AreEqual(1, (int)data.Count);
@@ -428,7 +428,7 @@ def Test(slice):
     for dataPoint in slice:
         return dataPoint").GetAttr("Test");
                 var unlinkedDataAapl = new UnlinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
-                var slice = new Slice(DateTime.Now, new[] { unlinkedDataAapl });
+                var slice = new Slice(DateTime.Now, new[] { unlinkedDataAapl }, DateTime.Now);
 
                 var data = test(new PythonSlice(slice)) as PyObject;
                 var keyValuePair = data.As<KeyValuePair<Symbol, BaseData>>();
@@ -454,7 +454,7 @@ def Test(slice):
         raise Exception('Unexpected value')").GetAttr("Test");
                 var unlinkedDataSpy = new UnlinkedData { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
                 var unlinkedDataAapl = new UnlinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
-                var slice = new Slice(DateTime.Now, new[] { unlinkedDataSpy, unlinkedDataAapl });
+                var slice = new Slice(DateTime.Now, new[] { unlinkedDataSpy, unlinkedDataAapl }, DateTime.Now);
 
                 Assert.DoesNotThrow(() => test(new PythonSlice(slice)));
             }
@@ -477,7 +477,7 @@ def Test(slice):
         raise Exception('Unexpected value')").GetAttr("Test");
                 var unlinkedDataSpy = new UnlinkedData { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
                 var unlinkedDataAapl = new UnlinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
-                var slice = new Slice(DateTime.Now, new[] { unlinkedDataSpy, unlinkedDataAapl });
+                var slice = new Slice(DateTime.Now, new[] { unlinkedDataSpy, unlinkedDataAapl }, DateTime.Now);
 
                 Assert.DoesNotThrow(() => test(new PythonSlice(slice)));
             }
@@ -499,7 +499,7 @@ def Test(slice):
                 var TradeBarAapl = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 9 };
                 var unlinkedDataSpy = new UnlinkedData { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
                 var unlinkedDataAapl = new UnlinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
-                var slice = new Slice(DateTime.Now, new BaseData[] { unlinkedDataSpy, TradeBarAapl, unlinkedDataAapl, TradeBarSpy });
+                var slice = new Slice(DateTime.Now, new BaseData[] { unlinkedDataSpy, TradeBarAapl, unlinkedDataAapl, TradeBarSpy }, DateTime.Now);
 
                 var data = test(new PythonSlice(slice));
                 Assert.AreEqual(2, (int)data.Count);
@@ -529,7 +529,7 @@ def Test(slice):
                 var unlinkedDataSpy = new UnlinkedData { Symbol = Symbols.SPY, Time = now, Value = 10 };
                 var unlinkedDataAapl = new UnlinkedData { Symbol = Symbols.AAPL, Time = now, Value = 11 };
                 var openInterest = new OpenInterest(now, Symbols.AAPL, 33);
-                var slice = new Slice(now, new BaseData[] { unlinkedDataSpy, TradeBarAapl, unlinkedDataAapl, TradeBarSpy, openInterest });
+                var slice = new Slice(now, new BaseData[] { unlinkedDataSpy, TradeBarAapl, unlinkedDataAapl, TradeBarSpy, openInterest }, now);
 
                 Assert.DoesNotThrow(() => test(new PythonSlice(slice)));
             }
@@ -554,7 +554,7 @@ def Test(slice):
                 var TradeBarAapl = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 9 };
                 var unlinkedDataSpy = new UnlinkedData { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
                 var unlinkedDataAapl = new UnlinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
-                var slice = new Slice(DateTime.Now, new BaseData[] { unlinkedDataSpy, TradeBarAapl, unlinkedDataAapl, TradeBarSpy });
+                var slice = new Slice(DateTime.Now, new BaseData[] { unlinkedDataSpy, TradeBarAapl, unlinkedDataAapl, TradeBarSpy }, DateTime.Now);
 
                 Assert.DoesNotThrow(() => test(new PythonSlice(slice)));
             }
@@ -579,7 +579,7 @@ def Test(slice):
                 var TradeBarAapl = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 9 };
                 var unlinkedDataSpy = new UnlinkedData { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
                 var unlinkedDataAapl = new UnlinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
-                var slice = new Slice(DateTime.Now, new BaseData[] { unlinkedDataSpy, TradeBarAapl, unlinkedDataAapl, TradeBarSpy });
+                var slice = new Slice(DateTime.Now, new BaseData[] { unlinkedDataSpy, TradeBarAapl, unlinkedDataAapl, TradeBarSpy }, DateTime.Now);
 
                 Assert.DoesNotThrow(() => test(new PythonSlice(slice)));
             }
@@ -607,7 +607,7 @@ def Test(slice):
                 var indexedLinkedDataSpy = new IndexedLinkedData { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
                 var tradeBarAapl = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 9 };
                 var indexedLinkedDataAapl = new IndexedLinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
-                var slice = new Slice(DateTime.Now, new BaseData[] { indexedLinkedDataSpy, tradeBarAapl, indexedLinkedDataAapl });
+                var slice = new Slice(DateTime.Now, new BaseData[] { indexedLinkedDataSpy, tradeBarAapl, indexedLinkedDataAapl }, DateTime.Now);
 
                 Assert.DoesNotThrow(() => test(new PythonSlice(slice)));
             }
@@ -635,7 +635,7 @@ def Test(slice):
     for singleData in data.Values:
         raise Exception('Unexpected iteration')").GetAttr("Test");
                 var tradeBarAapl = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 9 };
-                var slice = new Slice(DateTime.Now, new List<BaseData> { tradeBarAapl });
+                var slice = new Slice(DateTime.Now, new List<BaseData> { tradeBarAapl }, DateTime.Now);
 
                 Assert.DoesNotThrow(() => test(new PythonSlice(slice)));
             }
@@ -659,7 +659,7 @@ def Test(slice):
         raise Exception('Unexpected value')").GetAttr("Test");
                 var unlinkedDataSpy = new UnlinkedData { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
                 var unlinkedDataAapl = new UnlinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
-                var slice = new Slice(DateTime.Now, new[] { unlinkedDataSpy, unlinkedDataAapl });
+                var slice = new Slice(DateTime.Now, new[] { unlinkedDataSpy, unlinkedDataAapl }, DateTime.Now);
 
                 Assert.DoesNotThrow(() => test(new PythonSlice(slice)));
             }
@@ -674,7 +674,7 @@ def Test(slice):
                 new Tick{Time = DateTime.Now, Symbol = Symbols.SPY, Value = 1.1m, Quantity = 2.1m},
                 new Tick{Time = DateTime.Now, Symbol = Symbols.AAPL, Value = 1, Quantity = 2},
                 new Tick{Time = DateTime.Now, Symbol = Symbols.AAPL, Value = 1.1m, Quantity = 2.1m}
-            });
+            }, DateTime.Now);
 
             Assert.AreEqual(4, slice.Count());
         }
@@ -693,7 +693,7 @@ def Test(slice):
             var tradeBars = new TradeBars { { Symbols.BTCUSD, tradeBar } };
             var quoteBars = new QuoteBars { { Symbols.BTCUSD, quoteBar } };
 
-            var slice = new Slice(DateTime.Now, new List<BaseData>(){ tradeBar, quoteBar }, tradeBars, quoteBars, null, null, null, null, null, null, null);
+            var slice = new Slice(DateTime.Now, new List<BaseData>(){ tradeBar, quoteBar }, tradeBars, quoteBars, null, null, null, null, null, null, null, DateTime.Now);
 
             var tradeBarData = slice.Get<TradeBar>();
             Assert.AreEqual(1, tradeBarData.Count);
@@ -704,7 +704,7 @@ def Test(slice):
             Assert.AreEqual(3100, quoteBarData[Symbols.BTCUSD].Bid.Close);
             Assert.AreEqual(3101, quoteBarData[Symbols.BTCUSD].Ask.Close);
 
-            slice = new Slice(DateTime.Now, new BaseData[] { tradeBar, quoteBar });
+            slice = new Slice(DateTime.Now, new BaseData[] { tradeBar, quoteBar }, DateTime.Now);
 
             tradeBarData = slice.Get<TradeBar>();
             Assert.AreEqual(1, tradeBarData.Count);
@@ -1249,7 +1249,7 @@ def Test(slice, symbol):
             var indexedLinkedDataSpy = new IndexedLinkedData { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
             var tradeBarAapl = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 9 };
             var indexedLinkedDataAapl = new IndexedLinkedData { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
-            return new Slice(DateTime.Now, new BaseData[] { indexedLinkedDataSpy, tradeBarAapl, indexedLinkedDataAapl });
+            return new Slice(DateTime.Now, new BaseData[] { indexedLinkedDataSpy, tradeBarAapl, indexedLinkedDataAapl }, DateTime.Now);
         }
 
         private PythonSlice GetPythonSlice() => new PythonSlice(GetSlice());

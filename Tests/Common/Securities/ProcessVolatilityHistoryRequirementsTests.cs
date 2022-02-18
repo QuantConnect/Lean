@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -94,7 +94,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var request = requests.First();
             return new List<Slice>{ new Slice(DateTime.UtcNow,
-                new List<BaseData> {new TradeBar(DateTime.MinValue, request.Symbol, 1, 2, 3, 4, 5) })};
+                new List<BaseData> {new TradeBar(DateTime.MinValue, request.Symbol, 1, 2, 3, 4, 5) }, DateTime.UtcNow)};
         }
     }
 }

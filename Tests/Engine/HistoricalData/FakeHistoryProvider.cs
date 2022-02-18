@@ -58,8 +58,8 @@ namespace QuantConnect.Tests.Engine.HistoricalData
         public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
         {
             List<Slice> result = new();
-            var slice1Date = new DateTime(2008, 01, 03);
-            var slice2Date = new DateTime(2013, 06, 28, 09, 32, 0);
+            var slice1Date = new DateTime(2008, 01, 03, 5, 0, 0);
+            var slice2Date = new DateTime(2013, 06, 28, 13, 32, 0);
 
             TradeBar tradeBar1 = new TradeBar { Symbol = Symbols.SPY, Time = DateTime.Now };
             TradeBar tradeBar2 = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now };
@@ -71,7 +71,7 @@ namespace QuantConnect.Tests.Engine.HistoricalData
             var symbolChangedEvent1 = new SymbolChangedEvent(Symbols.SPY, DateTime.Now, "SPY", "SP");
             Slice slice1 = new Slice(slice1Date, new BaseData[] { tradeBar1, tradeBar2,
                 quoteBar1, tick1, split1, dividend1, delisting1, symbolChangedEvent1
-            });
+            }, slice1Date);
 
             TradeBar tradeBar3 = new TradeBar { Symbol = Symbols.MSFT, Time = DateTime.Now };
             TradeBar tradeBar4 = new TradeBar { Symbol = Symbols.SBIN, Time = DateTime.Now };
@@ -83,7 +83,7 @@ namespace QuantConnect.Tests.Engine.HistoricalData
             var symbolChangedEvent2 = new SymbolChangedEvent(Symbols.SBIN, DateTime.Now, "SBIN", "BIN");
             Slice slice2 = new Slice(slice2Date, new BaseData[] { tradeBar3, tradeBar4,
                 quoteBar2, tick2, split2, dividend2, delisting2, symbolChangedEvent2
-            });
+            }, slice2Date);
 
             result.Add(slice1);
             result.Add(slice2);
