@@ -15,32 +15,46 @@
 
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using System;
 using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// The demonstration algorithm shows some of the most common order methods when working with Crypto assets.
+    /// Test algorithm to verify the corret working of <see cref="HistoryProviderManager"/>
     /// </summary>
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="using quantconnect" />
     /// <meta name="tag" content="trading and orders" />
     public class HistoryProviderManagerRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private bool _warmupComplete = new();
+
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            //var algorithmTime = utcDateTime.ConvertFromUtc(_timeZone);
             SetStartDate(2017, 12, 17);
             AddCrypto("BTCUSD");
             SetWarmup(1000000);
         }
 
+        /// <summary>
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        /// </summary>
+        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice data)
+        {
+            _warmupComplete = true;
+        }
+
         public override void OnEndOfAlgorithm()
         {
-            Log($"Successfully imported data");
+            if (!_warmupComplete)
+            {
+                throw new Exception("Warm up not complete");
+            }
         }
 
         /// <summary>
