@@ -210,11 +210,11 @@ namespace QuantConnect.Tests.Engine.HistoricalData
                 },
                 TimeZones.NewYork).ToList();
 
-            var initialTime = result[0].Time;
-            foreach (var slice in result.Skip(1))
+            var initialTime = DateTime.MinValue;
+            foreach (var slice in result)
             {
-                Assert.That(slice.Time, Is.GreaterThan(initialTime));
-                initialTime = slice.Time;
+                Assert.That(slice.UtcTime, Is.GreaterThan(initialTime));
+                initialTime = slice.UtcTime;
             }
         }
     }
