@@ -37,14 +37,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         protected abstract DateTime GetInstanceTime(T instance);
 
         /// <summary>
-        /// Gets the Inital Timestamp for the data
-        /// </summary>
-        protected virtual DateTime GetInstanceInitialTime(T instance)
-        {
-            return GetInstanceTime(instance);
-        }
-
-        /// <summary>
         /// Gets the element in the collection at the current position of the enumerator.
         /// </summary>
         /// <returns>
