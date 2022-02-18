@@ -126,7 +126,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                     latestMergeSlice = synchronizer.Current;
                     continue;
                 }
-                if (synchronizer.Current.Time > latestMergeSlice.Time)
+                if (synchronizer.Current.UtcTime > latestMergeSlice.UtcTime)
                 {
                     // a newer slice we emit the old and keep a reference of the new
                     // so in the next loop we merge if required
