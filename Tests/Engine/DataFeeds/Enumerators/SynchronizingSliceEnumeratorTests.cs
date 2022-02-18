@@ -40,8 +40,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var synchronizer = new SynchronizingSliceEnumerator(stream1, stream2, stream3);
             while (synchronizer.MoveNext())
             {
-                Assert.That(synchronizer.Current.Time, Is.GreaterThanOrEqualTo(previous));
-                previous = synchronizer.Current.Time;
+                Assert.That(synchronizer.Current.UtcTime, Is.GreaterThanOrEqualTo(previous));
+                previous = synchronizer.Current.UtcTime;
             }
             synchronizer.Dispose();
         }
@@ -63,7 +63,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var synchronizer = new SynchronizingSliceEnumerator(stream1, stream2, stream3);
             while (synchronizer.MoveNext())
             {
-                Assert.That(synchronizer.Current.Time, Is.GreaterThanOrEqualTo(previous.Time));
+                Assert.That(synchronizer.Current.UtcTime, Is.GreaterThanOrEqualTo(previous.UtcTime));
                 previous = synchronizer.Current;
             }
             Assert.AreEqual(2, previous.Bars.Count);
