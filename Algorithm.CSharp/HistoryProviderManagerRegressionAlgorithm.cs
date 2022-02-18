@@ -23,12 +23,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Test algorithm to verify the corret working of <see cref="HistoryProviderManager"/>
     /// </summary>
-    /// <meta name="tag" content="using data" />
-    /// <meta name="tag" content="using quantconnect" />
-    /// <meta name="tag" content="trading and orders" />
     public class HistoryProviderManagerRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private bool _warmupComplete = new();
+        private bool _onDataTriggered = new();
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -46,14 +43,18 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            _warmupComplete = true;
+            _onDataTriggered = true;
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (!_warmupComplete)
+            if (IsWarmingUp)
             {
                 throw new Exception("Warm up not complete");
+            }
+            if (!_onDataTriggered)
+            {
+                throw new Exception("No data received is OnData method");
             }
         }
 
