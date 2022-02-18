@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -192,7 +192,7 @@ namespace QuantConnect.Brokerages.Tradier
                     TickType = TickType.Trade,
                     Quantity = Convert.ToInt32(tick.Volume)
                 })
-                .Select(tradeBar => new Slice(tradeBar.EndTime, new[] { tradeBar }));
+                .Select(tradeBar => new Slice(tradeBar.EndTime, new[] { tradeBar }, tradeBar.EndTime.ConvertToUtc(TimeZones.NewYork)));
         }
 
         private IEnumerable<Slice> GetHistorySecond(Symbol symbol, DateTime start, DateTime end)
@@ -222,7 +222,7 @@ namespace QuantConnect.Brokerages.Tradier
                     g.Last().LastPrice,
                     g.Sum(t => t.Quantity),
                     Time.OneSecond))
-                .Select(tradeBar => new Slice(tradeBar.EndTime, new[] { tradeBar }))
+                .Select(tradeBar => new Slice(tradeBar.EndTime, new[] { tradeBar }, tradeBar.EndTime.ConvertToUtc(TimeZones.NewYork)))
                 .ToList();
 
             DataPointCount += result.Count;
@@ -241,7 +241,7 @@ namespace QuantConnect.Brokerages.Tradier
 
             return history
                 .Select(bar => new TradeBar(bar.Time, symbol, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume, Time.OneMinute))
-                .Select(tradeBar => new Slice(tradeBar.EndTime, new[] { tradeBar }));
+                .Select(tradeBar => new Slice(tradeBar.EndTime, new[] { tradeBar }, tradeBar.EndTime.ConvertToUtc(TimeZones.NewYork)));
         }
 
         private IEnumerable<Slice> GetHistoryHour(Symbol symbol, DateTime start, DateTime end)
@@ -264,7 +264,7 @@ namespace QuantConnect.Brokerages.Tradier
                     g.Last().Close,
                     g.Sum(t => t.Volume),
                     Time.OneHour))
-                .Select(tradeBar => new Slice(tradeBar.EndTime, new[] { tradeBar }))
+                .Select(tradeBar => new Slice(tradeBar.EndTime, new[] { tradeBar }, tradeBar.EndTime.ConvertToUtc(TimeZones.NewYork)))
                 .ToList();
 
             DataPointCount += result.Count;
@@ -280,7 +280,7 @@ namespace QuantConnect.Brokerages.Tradier
 
             return history
                 .Select(bar => new TradeBar(bar.Time, symbol, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume, Time.OneDay))
-                .Select(tradeBar => new Slice(tradeBar.EndTime, new[] { tradeBar }));
+                .Select(tradeBar => new Slice(tradeBar.EndTime, new[] { tradeBar }, tradeBar.EndTime.ConvertToUtc(TimeZones.NewYork)));
         }
 
         #endregion

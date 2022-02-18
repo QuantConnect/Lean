@@ -200,7 +200,7 @@ namespace QuantConnect.Data
         /// <param name="time">The timestamp for this slice of data</param>
         /// <param name="data">The raw data in this slice</param>
         /// <param name="utcTime">The timestamp for this slice of data in UTC</param>
-        public Slice(DateTime time, IEnumerable<BaseData> data, DateTime? utcTime = null)
+        public Slice(DateTime time, IEnumerable<BaseData> data, DateTime utcTime)
             : this(time, data.ToList(), utcTime: utcTime)
         {
         }
@@ -213,7 +213,7 @@ namespace QuantConnect.Data
         /// <param name="time">The timestamp for this slice of data</param>
         /// <param name="data">The raw data in this slice</param>
         /// <param name="utcTime">The timestamp for this slice of data in UTC</param>
-        public Slice(DateTime time, List<BaseData> data, DateTime? utcTime = null)
+        public Slice(DateTime time, List<BaseData> data, DateTime utcTime)
             : this(time, data, CreateCollection<TradeBars, TradeBar>(time, data),
                 CreateCollection<QuoteBars, QuoteBar>(time, data),
                 CreateTicksCollection(time, data),
@@ -270,15 +270,12 @@ namespace QuantConnect.Data
         /// <param name="dividends">The dividends for this slice</param>
         /// <param name="delistings">The delistings for this slice</param>
         /// <param name="symbolChanges">The symbol changed events for this slice</param>
-        /// <param name="hasData">true if this slice contains data</param>
         /// <param name="utcTime">The timestamp for this slice of data in UTC</param>
-        public Slice(DateTime time, List<BaseData> data, TradeBars tradeBars, QuoteBars quoteBars, Ticks ticks, OptionChains optionChains, FuturesChains futuresChains, Splits splits, Dividends dividends, Delistings delistings, SymbolChangedEvents symbolChanges, bool? hasData = null, DateTime? utcTime = null)
+        /// <param name="hasData">true if this slice contains data</param>
+        public Slice(DateTime time, List<BaseData> data, TradeBars tradeBars, QuoteBars quoteBars, Ticks ticks, OptionChains optionChains, FuturesChains futuresChains, Splits splits, Dividends dividends, Delistings delistings, SymbolChangedEvents symbolChanges, DateTime utcTime, bool? hasData = null)
         {
             Time = time;
-            if (utcTime != null)
-            {
-                UtcTime = (DateTime)utcTime;
-            }
+            UtcTime = utcTime;
             _rawDataList = data;
             // market data
             _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(_rawDataList));
