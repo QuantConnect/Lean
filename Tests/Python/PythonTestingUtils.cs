@@ -43,7 +43,7 @@ namespace QuantConnect.Tests.Python
                                     Quantity = 1 + i * 10,
                                     Exchange = "T"
                                 }
-                            }
+                            }, time
                         );
                     }
                 );

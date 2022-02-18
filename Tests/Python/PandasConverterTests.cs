@@ -3563,7 +3563,7 @@ def Test(dataFrame, symbol):
                                     Quantity = 1 + i * 10,
                                     Exchange = "T"
                                 }
-                            )
+                            ), time
                         );
                     }
                 );

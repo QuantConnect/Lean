@@ -59,7 +59,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var stream2 = Enumerable.Range(0, 5).Select(x => new Slice(time.AddSeconds(x * 2), new List<BaseData>(), utcTime: time.AddSeconds(x * 2))).GetEnumerator();
             var stream3 = Enumerable.Range(0, 20).Select(x => new Slice(time.AddSeconds(x * 0.5), new List<BaseData>(), utcTime: time.AddSeconds(x * 0.5))).GetEnumerator();
 
-            var previous = new Slice(DateTime.MinValue, new List<BaseData>());
+            var previous = new Slice(DateTime.MinValue, new List<BaseData>(), DateTime.MinValue);
             var synchronizer = new SynchronizingSliceEnumerator(stream1, stream2, stream3);
             while (synchronizer.MoveNext())
             {
