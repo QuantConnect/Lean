@@ -32,9 +32,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         public void SynchronizesData()
         {
             var time = new DateTime(2016, 03, 03, 12, 05, 00);
-            var stream1 = Enumerable.Range(0, 10).Select(x => new Slice(time.AddSeconds(x * 1), new List<BaseData>())).GetEnumerator();
-            var stream2 = Enumerable.Range(0, 5).Select(x => new Slice(time.AddSeconds(x * 2), new List<BaseData>())).GetEnumerator();
-            var stream3 = Enumerable.Range(0, 20).Select(x => new Slice(time.AddSeconds(x * 0.5), new List<BaseData>())).GetEnumerator();
+            var stream1 = Enumerable.Range(0, 10).Select(x => new Slice(time.AddSeconds(x * 1), new List<BaseData>(), utcTime: time.AddSeconds(x * 1))).GetEnumerator();
+            var stream2 = Enumerable.Range(0, 5).Select(x => new Slice(time.AddSeconds(x * 2), new List<BaseData>(), utcTime: time.AddSeconds(x * 2))).GetEnumerator();
+            var stream3 = Enumerable.Range(0, 20).Select(x => new Slice(time.AddSeconds(x * 0.5), new List<BaseData>(), utcTime: time.AddSeconds(x * 0.5))).GetEnumerator();
 
             var previous = DateTime.MinValue;
             var synchronizer = new SynchronizingSliceEnumerator(stream1, stream2, stream3);
@@ -54,10 +54,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var tradeBar2 = new TradeBar { Symbol = Symbols.AAPL, Time = time, Open = 23 };
             var stream1 = Enumerable.Range(0, 20)
                 // return null except the last value and check if its emitted
-                .Select(x => x == 19 ? new Slice(time.AddSeconds(x * 1), new BaseData[] { tradeBar1, tradeBar2 }) : null
+                .Select(x => x == 19 ? new Slice(time.AddSeconds(x * 1), new BaseData[] { tradeBar1, tradeBar2 }, utcTime: time.AddSeconds(x * 1)) : null
             ).GetEnumerator();
-            var stream2 = Enumerable.Range(0, 5).Select(x => new Slice(time.AddSeconds(x * 2), new List<BaseData>())).GetEnumerator();
-            var stream3 = Enumerable.Range(0, 20).Select(x => new Slice(time.AddSeconds(x * 0.5), new List<BaseData>())).GetEnumerator();
+            var stream2 = Enumerable.Range(0, 5).Select(x => new Slice(time.AddSeconds(x * 2), new List<BaseData>(), utcTime: time.AddSeconds(x * 2))).GetEnumerator();
+            var stream3 = Enumerable.Range(0, 20).Select(x => new Slice(time.AddSeconds(x * 0.5), new List<BaseData>(), utcTime: time.AddSeconds(x * 0.5))).GetEnumerator();
 
             var previous = new Slice(DateTime.MinValue, new List<BaseData>());
             var synchronizer = new SynchronizingSliceEnumerator(stream1, stream2, stream3);
@@ -75,7 +75,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         {
             var time = new DateTime(2016, 03, 03, 12, 05, 00);
             var stream1 = new TestEnumerator { MoveNextReturnValue = false };
-            var stream2 = Enumerable.Range(0, 10).Select(x => new Slice(time.AddSeconds(x * 0.5), new List<BaseData>())).GetEnumerator();
+            var stream2 = Enumerable.Range(0, 10).Select(x => new Slice(time.AddSeconds(x * 0.5), new List<BaseData>(), utcTime: time.AddSeconds(x * 0.5))).GetEnumerator();
             var synchronizer = new SynchronizingSliceEnumerator(stream1, stream2);
             var emitted = false;
             while (synchronizer.MoveNext())
