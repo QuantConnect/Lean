@@ -68,7 +68,7 @@ namespace QuantConnect.ToolBox.BitfinexDownloader
                 currencyLabel[kvp[0].ToString()] = kvp[1].ToString();
             }
 
-            foreach (var tradingPair in tradingPairs)
+            foreach (var tradingPair in tradingPairs.OrderBy(x => x.Replace(":", string.Empty)))
             {
                 // market,symbol,type,description,quote_currency,contract_multiplier,minimum_price_variation,lot_size,market_ticker,minimum_order_size
                 var symbol = tradingPair.Replace(":", string.Empty);
@@ -98,6 +98,7 @@ namespace QuantConnect.ToolBox.BitfinexDownloader
                 var minimum_price_variation = "0.00001";
                 // default value for lot_size
                 var lot_size = "0.00000001";
+                // follow exchange reference format
                 var marketTicker = "t" + tradingPair;
                 var minimum_order_size = pairsInfo[tradingPair][3];
                 yield return $"{Market},{symbol},crypto,{description},{quoteCurrency},{contractMultiplier},{minimum_price_variation},{lot_size},{marketTicker},{minimum_order_size}";
