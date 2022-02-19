@@ -315,5 +315,27 @@ namespace QuantConnect.Tests.Common.Securities.Futures
 
             Assert.AreEqual(expected, calculated);
         }
+
+        //source: https://www.timeanddate.com/holidays/us/good-friday
+        [TestCase(2017, 4, 14)]
+        [TestCase(2018, 3, 30)]
+        [TestCase(2019, 4, 19)]
+        [TestCase(2020, 4, 10)]
+        [TestCase(2021, 4, 2)]
+        [TestCase(2022, 4, 15)]
+        [TestCase(2023, 4, 7)]
+        [TestCase(2024, 3, 29)]
+        [TestCase(2025, 4, 18)]
+        public void GetGoodFriday_ForYear_ShouldReturnGoodFridayDate(int year, int expectedMonth, int expectedDay)
+        {
+            // Arrange
+            var expected = new DateTime(year, expectedMonth, expectedDay);
+
+            // Act
+            var actual = FuturesExpiryUtilityFunctions.GetGoodFriday(year);
+
+            // Assert
+            Assert.AreEqual(expected, actual);
+        }
     }
 }

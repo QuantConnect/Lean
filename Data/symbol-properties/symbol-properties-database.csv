@@ -3436,5 +3436,6 @@ nyseliffe,YG,future,Mini Sized NY Gold Futures,USD,32.15,0.1,1
 nyseliffe,YI,future,Mini Sized NY Silver Future,USD,1000,0.001,1
 nyseliffe,ZG,future,Gold 100 Troy Oz,USD,100,0.1,1
 nyseliffe,ZI,future,CBOT 5000 Oz Silver Futures,USD,5000,0.001,1
-nyseliffe,[*],option,,USD,100,0.01,1
-nyseliffe,[*],index,,USD,1,0.01,1
+nyseliffe,YG,futureoption,,USD,32.15,0.1,1
+nyseliffe,ZG,futureoption,,USD,100,0.1,1
+nyseliffe,ZI,futureoption,,USD,5000,0.001,1

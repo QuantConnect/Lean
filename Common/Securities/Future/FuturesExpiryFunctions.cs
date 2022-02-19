@@ -670,6 +670,120 @@ namespace QuantConnect.Securities.Future
                     return priorBusinessDay.Add(new TimeSpan(16, 0, 0));
                 })
             },
+            // MSCI Europe Net Total Return (USD) Futures: https://www.theice.com/products/71512951/MSCI-Europe-NTR-Index-Future-USD & https://www.theice.com/publicdocs/futures_us/exchange_notices/ICE_Futures_US_2022_TRADING_HOLIDAY_CALENDAR_20211118.pdf
+            {Symbol.Create(Futures.Indices.MSCIEuropeNTR, SecurityType.Future, Market.NYSELIFFE), (time =>
+                {
+                    // Trading terminates on the third Friday of the contract month @16:15.
+                    var lastTradingDay = FuturesExpiryUtilityFunctions.ThirdFriday(time);
+
+                    var holidays = new HashSet<DateTime> {
+                        // Good Friday
+                        FuturesExpiryUtilityFunctions.GetGoodFriday(time.Year)
+                    };
+
+                    while (holidays.Contains(lastTradingDay))
+                    {
+                        lastTradingDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastTradingDay, -1);
+                    }
+
+                    return lastTradingDay.Add(new TimeSpan(16, 15, 0));
+                })
+            },
+            // MSCI Japan Net Total Return Futures: https://www.theice.com/products/75392111/MSCI-Japan-NTR-Index-Future & https://www.theice.com/publicdocs/futures_us/exchange_notices/ICE_Futures_US_2022_TRADING_HOLIDAY_CALENDAR_20211118.pdf
+            {Symbol.Create(Futures.Indices.MSCIJapanNTR, SecurityType.Future, Market.NYSELIFFE), (time =>
+                {
+                    // Trading terminates on the third Friday of the contract month @16:15.
+                    var lastTradingDay = FuturesExpiryUtilityFunctions.ThirdFriday(time);
+
+                    var holidays = new HashSet<DateTime> {
+                        // Good Friday
+                        FuturesExpiryUtilityFunctions.GetGoodFriday(time.Year)
+                    };
+
+                    while (holidays.Contains(lastTradingDay))
+                    {
+                        lastTradingDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastTradingDay, -1);
+                    }
+
+                    return lastTradingDay.Add(new TimeSpan(16, 15, 0));
+                })
+            },
+            // MSCI Emerging Markets Asia Net Total Return Futures: https://www.theice.com/products/32375861/MSCI-Emerging-Markets-Asia-NTR-Index-Future & https://www.theice.com/publicdocs/futures_us/exchange_notices/ICE_Futures_US_2022_TRADING_HOLIDAY_CALENDAR_20211118.pdf
+            {Symbol.Create(Futures.Indices.MSCIEmergingMarketsAsiaNTR, SecurityType.Future, Market.NYSELIFFE), (time =>
+                {
+                    // Trading terminates on the third Friday of the contract month @16:15.
+                    var lastTradingDay = FuturesExpiryUtilityFunctions.ThirdFriday(time);
+
+                    var holidays = new HashSet<DateTime> {
+                        // Good Friday
+                        FuturesExpiryUtilityFunctions.GetGoodFriday(time.Year)
+                    };
+
+                    while (holidays.Contains(lastTradingDay))
+                    {
+                        lastTradingDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastTradingDay, -1);
+                    }
+
+                    return lastTradingDay.Add(new TimeSpan(16, 15, 0));
+                })
+            },
+            // MSCI EAFE Index Futures: https://www.theice.com/products/31196848/MSCI-EAFE-Index-Future & https://www.theice.com/publicdocs/futures_us/exchange_notices/ICE_Futures_US_2022_TRADING_HOLIDAY_CALENDAR_20211118.pdf
+            {Symbol.Create(Futures.Indices.MSCIEafeIndex, SecurityType.Future, Market.NYSELIFFE), (time =>
+                {
+                    // Trading terminates on the third Friday of the contract month @16:15.
+                    var lastTradingDay = FuturesExpiryUtilityFunctions.ThirdFriday(time);
+
+                    var holidays = new HashSet<DateTime> {
+                        // Good Friday
+                        FuturesExpiryUtilityFunctions.GetGoodFriday(time.Year)
+                    };
+
+                    while (holidays.Contains(lastTradingDay))
+                    {
+                        lastTradingDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastTradingDay, -1);
+                    }
+
+                    return lastTradingDay.Add(new TimeSpan(16, 15, 0));
+                })
+            },
+            // MSCI Emerging Markets Index Futures: https://www.theice.com/products/31196851/MSCI-Emerging-Markets-Index-Future & https://www.theice.com/publicdocs/futures_us/exchange_notices/ICE_Futures_US_2022_TRADING_HOLIDAY_CALENDAR_20211118.pdf
+            {Symbol.Create(Futures.Indices.MSCIEmergingMarketsIndex, SecurityType.Future, Market.NYSELIFFE), (time =>
+                {
+                    // Trading terminates on the third Friday of the contract month @16:15.
+                    var lastTradingDay = FuturesExpiryUtilityFunctions.ThirdFriday(time);
+
+                    var holidays = new HashSet<DateTime> {
+                        // Good Friday
+                        FuturesExpiryUtilityFunctions.GetGoodFriday(time.Year)
+                    };
+
+                    while (holidays.Contains(lastTradingDay))
+                    {
+                        lastTradingDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastTradingDay, -1);
+                    }
+
+                    return lastTradingDay.Add(new TimeSpan(16, 15, 0));
+                })
+            },
+            // MSCI USA Index Futures: https://www.theice.com/products/32375866/MSCI-USA-Index-Future & https://www.theice.com/publicdocs/futures_us/exchange_notices/ICE_Futures_US_2022_TRADING_HOLIDAY_CALENDAR_20211118.pdf
+            {Symbol.Create(Futures.Indices.MSCIUsaIndex, SecurityType.Future, Market.NYSELIFFE), (time =>
+                {
+                    // Trading terminates on the third Friday of the contract month @16:15.
+                    var lastTradingDay = FuturesExpiryUtilityFunctions.ThirdFriday(time);
+
+                    var holidays = new HashSet<DateTime> {
+                        // Good Friday
+                        FuturesExpiryUtilityFunctions.GetGoodFriday(time.Year)
+                    };
+
+                    while (holidays.Contains(lastTradingDay))
+                    {
+                        lastTradingDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastTradingDay, -1);
+                    }
+
+                    return lastTradingDay.Add(new TimeSpan(16, 15, 0));
+                })
+            },
             // Forestry Group
             // Random Length Lumber (LBS): https://www.cmegroup.com/trading/agricultural/lumber-and-pulp/random-length-lumber_contract_specifications.html
             {Symbol.Create(Futures.Forestry.RandomLengthLumber, SecurityType.Future, Market.CME), (time =>
@@ -2678,6 +2792,62 @@ namespace QuantConnect.Securities.Future
                     }
 
                     return lastBusinessDay;
+                })
+            },
+            // Mini Sized NY Gold Futures: https://www.theice.com/products/31500921/Mini-Gold-Future & https://www.theice.com/publicdocs/futures_us/exchange_notices/ICE_Futures_US_2022_TRADING_HOLIDAY_CALENDAR_20211118.pdf
+            {Symbol.Create(Futures.Metals.MiniNYGold, SecurityType.Future, Market.NYSELIFFE), (time =>
+                {
+                    // Trading terminates on the third last business day of the contract month @13:30
+                    var holidays = new HashSet<DateTime> {
+                        // Good Friday
+                        FuturesExpiryUtilityFunctions.GetGoodFriday(time.Year)
+                    };
+
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 3, holidays);
+
+                    return lastBusinessDay.Add(new TimeSpan(13, 30, 0));
+                })
+            },
+            // Mini Sized NY Silver Futures: https://www.theice.com/products/31500921/Mini-Silver-Future & https://www.theice.com/publicdocs/futures_us/exchange_notices/ICE_Futures_US_2022_TRADING_HOLIDAY_CALENDAR_20211118.pdf
+            {Symbol.Create(Futures.Metals.MiniNYSilver, SecurityType.Future, Market.NYSELIFFE), (time =>
+                {
+                    // Trading terminates on the third last business day of the contract month @13:25
+                    var holidays = new HashSet<DateTime> {
+                        // Good Friday
+                        FuturesExpiryUtilityFunctions.GetGoodFriday(time.Year)
+                    };
+
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 3, holidays);
+
+                    return lastBusinessDay.Add(new TimeSpan(13, 25, 0));
+                })
+            },
+            // Gold 100 Oz Futures: https://www.theice.com/products/31499002/100-oz-Gold-Future & https://www.theice.com/publicdocs/futures_us/exchange_notices/ICE_Futures_US_2022_TRADING_HOLIDAY_CALENDAR_20211118.pdf
+            {Symbol.Create(Futures.Metals.Gold100Oz, SecurityType.Future, Market.NYSELIFFE), (time =>
+                {
+                    // Trading terminates on the third last business day of the contract month @13:30
+                    var holidays = new HashSet<DateTime> {
+                        // Good Friday
+                        FuturesExpiryUtilityFunctions.GetGoodFriday(time.Year)
+                    };
+
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 3, holidays);
+
+                    return lastBusinessDay.Add(new TimeSpan(13, 30, 0));
+                })
+            },
+            // Silver 5000 Oz Futures: https://www.theice.com/products/31500922/5000-oz-Silver-Future & https://www.theice.com/publicdocs/futures_us/exchange_notices/ICE_Futures_US_2022_TRADING_HOLIDAY_CALENDAR_20211118.pdf
+            {Symbol.Create(Futures.Metals.Silver5000Oz, SecurityType.Future, Market.NYSELIFFE), (time =>
+                {
+                    // Trading terminates on the third last business day of the contract month @13:25
+                    var holidays = new HashSet<DateTime> {
+                        // Good Friday
+                        FuturesExpiryUtilityFunctions.GetGoodFriday(time.Year)
+                    };
+                   
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 3, holidays);
+
+                    return lastBusinessDay.Add(new TimeSpan(13, 25, 0));
                 })
             },
             // Micro 10-Year Yield Futures (10Y): https://www.cmegroup.com/markets/interest-rates/us-treasury/micro-10-year-yield.contractSpecs.html
