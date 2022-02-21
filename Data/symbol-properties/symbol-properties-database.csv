@@ -847,116 +847,116 @@ gdax,ZRXEUR,crypto,0x-Euro,EUR,1,0.000001,0.00001,ZRX-EUR,0.79
 gdax,ZRXUSD,crypto,0x-United States Dollar,USD,1,0.000001,0.00001,ZRX-USD,0.82
 
 bitfinex,1INCHUSD,crypto,1INCH-US Dollar,USD,1,0.00001,0.00000001,t1INCH:USD,0.6
-bitfinex,1INCHUST,crypto,1INCH-Tether USDt,UST,1,0.00001,0.00000001,t1INCH:UST,0.6
+bitfinex,1INCHUSDT,crypto,1INCH-Tether USDt,USDT,1,0.00001,0.00000001,t1INCH:UST,0.6
 bitfinex,AAABBB,crypto,AAA-BBB,BBB,1,0.00001,0.00000001,tAAABBB,2.0
 bitfinex,AAVEUSD,crypto,AAVE-US Dollar,USD,1,0.00001,0.00000001,tAAVE:USD,0.006
-bitfinex,AAVEUST,crypto,AAVE-Tether USDt,UST,1,0.00001,0.00000001,tAAVE:UST,0.006
+bitfinex,AAVEUSDT,crypto,AAVE-Tether USDt,USDT,1,0.00001,0.00000001,tAAVE:UST,0.006
 bitfinex,ADABTC,crypto,Cardano ADA-Bitcoin,BTC,1,0.00001,0.00000001,tADABTC,2.0
 bitfinex,ADAUSD,crypto,Cardano ADA-US Dollar,USD,1,0.00001,0.00000001,tADAUSD,2.0
-bitfinex,ADAUST,crypto,Cardano ADA-Tether USDt,UST,1,0.00001,0.00000001,tADAUST,2.0
+bitfinex,ADAUSDT,crypto,Cardano ADA-Tether USDt,USDT,1,0.00001,0.00000001,tADAUST,2.0
 bitfinex,AIXUSD,crypto,Multiverse (AI)-US Dollar,USD,1,0.00001,0.00000001,tAIXUSD,0.001
-bitfinex,AIXUST,crypto,Multiverse (AI)-Tether USDt,UST,1,0.00001,0.00000001,tAIXUST,0.001
+bitfinex,AIXUSDT,crypto,Multiverse (AI)-Tether USDt,USDT,1,0.00001,0.00000001,tAIXUST,0.001
 bitfinex,ALBTUSD,crypto,AllianceBlock-US Dollar,USD,1,0.00001,0.00000001,tALBT:USD,2.0
-bitfinex,ALBTUST,crypto,AllianceBlock-Tether USDt,UST,1,0.00001,0.00000001,tALBT:UST,2.0
-bitfinex,ALGBTC,crypto,Algorand-Bitcoin,BTC,1,0.00001,0.00000001,tALGBTC,2.0
-bitfinex,ALGUSD,crypto,Algorand-US Dollar,USD,1,0.00001,0.00000001,tALGUSD,2.0
-bitfinex,ALGUST,crypto,Algorand-Tether USDt,UST,1,0.00001,0.00000001,tALGUST,2.0
-bitfinex,AMPBTC,crypto,Ampleforth-Bitcoin,BTC,1,0.00001,0.00000001,tAMPBTC,2.0
-bitfinex,AMPUSD,crypto,Ampleforth-US Dollar,USD,1,0.00001,0.00000001,tAMPUSD,2.0
-bitfinex,AMPUST,crypto,Ampleforth-Tether USDt,UST,1,0.00001,0.00000001,tAMPUST,2.0
+bitfinex,ALBTUSDT,crypto,AllianceBlock-Tether USDt,USDT,1,0.00001,0.00000001,tALBT:UST,2.0
+bitfinex,ALGOBTC,crypto,Algorand-Bitcoin,BTC,1,0.00001,0.00000001,tALGBTC,2.0
+bitfinex,ALGOUSD,crypto,Algorand-US Dollar,USD,1,0.00001,0.00000001,tALGUSD,2.0
+bitfinex,ALGOUSDT,crypto,Algorand-Tether USDt,USDT,1,0.00001,0.00000001,tALGUST,2.0
+bitfinex,AMPLBTC,crypto,Ampleforth-Bitcoin,BTC,1,0.00001,0.00000001,tAMPBTC,2.0
+bitfinex,AMPLUSD,crypto,Ampleforth-US Dollar,USD,1,0.00001,0.00000001,tAMPUSD,2.0
+bitfinex,AMPLUSDT,crypto,Ampleforth-Tether USDt,USDT,1,0.00001,0.00000001,tAMPUST,2.0
 bitfinex,ANCUSD,crypto,Anchor-US Dollar,USD,1,0.00001,0.00000001,tANCUSD,0.001
-bitfinex,ANCUST,crypto,Anchor-Tether USDt,UST,1,0.00001,0.00000001,tANCUST,0.001
+bitfinex,ANCUSDT,crypto,Anchor-Tether USDt,USDT,1,0.00001,0.00000001,tANCUST,0.001
 bitfinex,ANTBTC,crypto,Aragon-Bitcoin,BTC,1,0.00001,0.00000001,tANTBTC,0.6
 bitfinex,ANTETH,crypto,Aragon-Ethereum,ETH,1,0.00001,0.00000001,tANTETH,0.6
 bitfinex,ANTUSD,crypto,Aragon-US Dollar,USD,1,0.00001,0.00000001,tANTUSD,0.6
-bitfinex,ATOBTC,crypto,Cosmos-Atom-Bitcoin,BTC,1,0.00001,0.00000001,tATOBTC,0.2
-bitfinex,ATOETH,crypto,Cosmos-Atom-Ethereum,ETH,1,0.00001,0.00000001,tATOETH,0.2
-bitfinex,ATOUSD,crypto,Cosmos-Atom-US Dollar,USD,1,0.00001,0.00000001,tATOUSD,0.2
-bitfinex,ATOUST,crypto,Cosmos-Atom-Tether USDt,UST,1,0.00001,0.00000001,tATOUST,0.001
+bitfinex,ATOMBTC,crypto,Cosmos-Atom-Bitcoin,BTC,1,0.00001,0.00000001,tATOBTC,0.2
+bitfinex,ATOMETH,crypto,Cosmos-Atom-Ethereum,ETH,1,0.00001,0.00000001,tATOETH,0.2
+bitfinex,ATOMUSD,crypto,Cosmos-Atom-US Dollar,USD,1,0.00001,0.00000001,tATOUSD,0.2
+bitfinex,ATOMUSDT,crypto,Cosmos-Atom-Tether USDt,USDT,1,0.00001,0.00000001,tATOUST,0.001
 bitfinex,AVAXBTC,crypto,Avalanche-Bitcoin,BTC,1,0.00001,0.00000001,tAVAX:BTC,0.001
 bitfinex,AVAXUSD,crypto,Avalanche-US Dollar,USD,1,0.00001,0.00000001,tAVAX:USD,0.08
-bitfinex,AVAXUST,crypto,Avalanche-Tether USDt,UST,1,0.00001,0.00000001,tAVAX:UST,0.08
+bitfinex,AVAXUSDT,crypto,Avalanche-Tether USDt,USDT,1,0.00001,0.00000001,tAVAX:UST,0.08
 bitfinex,AXSUSD,crypto,Axie Infinity-US Dollar,USD,1,0.00001,0.00000001,tAXSUSD,0.001
-bitfinex,AXSUST,crypto,Axie Infinity-Tether USDt,UST,1,0.00001,0.00000001,tAXSUST,0.001
-bitfinex,B21XUSD,crypto,B21-US Dollar,USD,1,0.00001,0.00000001,tB21X:USD,24.0
-bitfinex,B21XUST,crypto,B21-Tether USDt,UST,1,0.00001,0.00000001,tB21X:UST,24.0
+bitfinex,AXSUSDT,crypto,Axie Infinity-Tether USDt,USDT,1,0.00001,0.00000001,tAXSUST,0.001
+bitfinex,B21USD,crypto,B21-US Dollar,USD,1,0.00001,0.00000001,tB21X:USD,24.0
+bitfinex,B21USDT,crypto,B21-Tether USDt,USDT,1,0.00001,0.00000001,tB21X:UST,24.0
 bitfinex,BALUSD,crypto,Balancer-US Dollar,USD,1,0.00001,0.00000001,tBALUSD,0.08
-bitfinex,BALUST,crypto,Balancer-Tether USDt,UST,1,0.00001,0.00000001,tBALUST,0.08
+bitfinex,BALUSDT,crypto,Balancer-Tether USDt,USDT,1,0.00001,0.00000001,tBALUST,0.08
 bitfinex,BANDUSD,crypto,Band-US Dollar,USD,1,0.00001,0.00000001,tBAND:USD,0.2
-bitfinex,BANDUST,crypto,Band-Tether USDt,UST,1,0.00001,0.00000001,tBAND:UST,0.2
+bitfinex,BANDUSDT,crypto,Band-Tether USDt,USDT,1,0.00001,0.00000001,tBAND:UST,0.2
 bitfinex,BATUSD,crypto,Basic Attention Token-US Dollar,USD,1,0.00001,0.00000001,tBATUSD,4.0
-bitfinex,BATUST,crypto,Basic Attention Token-Tether USDt,UST,1,0.00001,0.00000001,tBATUST,0.001
+bitfinex,BATUSDT,crypto,Basic Attention Token-Tether USDt,USDT,1,0.00001,0.00000001,tBATUST,0.001
 bitfinex,BCHABCUSD,crypto,XEC-US Dollar,USD,1,0.00001,0.00000001,tBCHABC:USD,17936.0
 bitfinex,BCHNUSD,crypto,Bitcoin Cash-US Dollar,USD,1,0.00001,0.00000001,tBCHN:USD,0.004
 bitfinex,BESTUSD,crypto,Bitpanda-US Dollar,USD,1,0.00001,0.00000001,tBEST:USD,2.0
 bitfinex,BFTUSD,crypto,BnkToTheFuture-US Dollar,USD,1,0.00001,0.00000001,tBFTUSD,124.0
 bitfinex,BMIUSD,crypto,BridgeMutual-US Dollar,USD,1,0.00001,0.00000001,tBMIUSD,4.0
-bitfinex,BMIUST,crypto,BridgeMutual-Tether USDt,UST,1,0.00001,0.00000001,tBMIUST,4.0
+bitfinex,BMIUSDT,crypto,BridgeMutual-Tether USDt,USDT,1,0.00001,0.00000001,tBMIUST,4.0
 bitfinex,BNTUSD,crypto,Bancor-US Dollar,USD,1,0.00001,0.00000001,tBNTUSD,0.6
 bitfinex,BOBAUSD,crypto,BOBA-US Dollar,USD,1,0.00001,0.00000001,tBOBA:USD,0.001
-bitfinex,BOBAUST,crypto,BOBA-Tether USDt,UST,1,0.00001,0.00000001,tBOBA:UST,0.001
+bitfinex,BOBAUSDT,crypto,BOBA-Tether USDt,USDT,1,0.00001,0.00000001,tBOBA:UST,0.001
 bitfinex,BOSONUSD,crypto,Boson Token-US Dollar,USD,1,0.00001,0.00000001,tBOSON:USD,2.0
-bitfinex,BOSONUST,crypto,Boson Token-Tether USDt,UST,1,0.00001,0.00000001,tBOSON:UST,2.0
+bitfinex,BOSONUSDT,crypto,Boson Token-Tether USDt,USDT,1,0.00001,0.00000001,tBOSON:UST,2.0
 bitfinex,BSVBTC,crypto,Bitcoin SV-Bitcoin,BTC,1,0.00001,0.00000001,tBSVBTC,0.02
 bitfinex,BSVUSD,crypto,Bitcoin SV-US Dollar,USD,1,0.00001,0.00000001,tBSVUSD,0.02
 bitfinex,BTCCNHT,crypto,Bitcoin-Tether CNHt,CNHT,1,0.00001,0.00000001,tBTC:CNHT,0.00006
 bitfinex,BTCEUR,crypto,Bitcoin-Euro,EUR,1,0.00001,0.00000001,tBTCEUR,0.00006
-bitfinex,BTCEUT,crypto,Bitcoin-Tether EURt,EUT,1,0.00001,0.00000001,tBTCEUT,0.00006
+bitfinex,BTCEURT,crypto,Bitcoin-Tether EURt,EURT,1,0.00001,0.00000001,tBTCEUT,0.00006
 bitfinex,BTCGBP,crypto,Bitcoin-Pound Sterling,GBP,1,0.00001,0.00000001,tBTCGBP,0.00006
 bitfinex,BTCJPY,crypto,Bitcoin-Japanese Yen,JPY,1,0.00001,0.00000001,tBTCJPY,0.00006
 bitfinex,BTCMIM,crypto,Bitcoin-Magic Internet Money,MIM,1,0.00001,0.00000001,tBTCMIM,0.001
 bitfinex,BTCUSD,crypto,Bitcoin-US Dollar,USD,1,0.00001,0.00000001,tBTCUSD,0.00006
-bitfinex,BTCUST,crypto,Bitcoin-Tether USDt,UST,1,0.00001,0.00000001,tBTCUST,0.00006
+bitfinex,BTCUSDT,crypto,Bitcoin-Tether USDt,USDT,1,0.00001,0.00000001,tBTCUST,0.00006
 bitfinex,BTCXAUT,crypto,Bitcoin-Tether XAUt,XAUT,1,0.00001,0.00000001,tBTC:XAUT,0.001
-bitfinex,BTCXCH,crypto,Bitcoin-CryptoFranc,XCH,1,0.00001,0.00000001,tBTCXCH,0.00006
+bitfinex,BTCXCHF,crypto,Bitcoin-CryptoFranc,XCHF,1,0.00001,0.00000001,tBTCXCH,0.00006
 bitfinex,BTGBTC,crypto,Bitcoin Gold-Bitcoin,BTC,1,0.00001,0.00000001,tBTGBTC,0.04
 bitfinex,BTGUSD,crypto,Bitcoin Gold-US Dollar,USD,1,0.00001,0.00000001,tBTGUSD,0.04
 bitfinex,BTSEUSD,crypto,BTSE-US Dollar,USD,1,0.00001,0.00000001,tBTSE:USD,0.4
 bitfinex,BTTUSD,crypto,BitTorrent-US Dollar,USD,1,0.00001,0.00000001,tBTTUSD,716.0
 bitfinex,CCDBTC,crypto,Concordium-Bitcoin,BTC,1,0.00001,0.00000001,tCCDBTC,0.001
 bitfinex,CCDUSD,crypto,Concordium-US Dollar,USD,1,0.00001,0.00000001,tCCDUSD,0.001
-bitfinex,CCDUST,crypto,Concordium-Tether USDt,UST,1,0.00001,0.00000001,tCCDUST,0.001
+bitfinex,CCDUSDT,crypto,Concordium-Tether USDt,USDT,1,0.00001,0.00000001,tCCDUST,0.001
 bitfinex,CELUSD,crypto,Celsius-US Dollar,USD,1,0.00001,0.00000001,tCELUSD,0.4
-bitfinex,CELUST,crypto,Celsius-Tether USDt,UST,1,0.00001,0.00000001,tCELUST,0.4
+bitfinex,CELUSDT,crypto,Celsius-Tether USDt,USDT,1,0.00001,0.00000001,tCELUST,0.4
 bitfinex,CHEXUSD,crypto,CHEX-US Dollar,USD,1,0.00001,0.00000001,tCHEX:USD,52.0
 bitfinex,CHSBBTC,crypto,SwissBorg-Bitcoin,BTC,1,0.00001,0.00000001,tCHSB:BTC,2.0
 bitfinex,CHSBUSD,crypto,SwissBorg-US Dollar,USD,1,0.00001,0.00000001,tCHSB:USD,2.0
-bitfinex,CHSBUST,crypto,SwissBorg-Tether USDt,UST,1,0.00001,0.00000001,tCHSB:UST,2.0
+bitfinex,CHSBUSDT,crypto,SwissBorg-Tether USDt,USDT,1,0.00001,0.00000001,tCHSB:UST,2.0
 bitfinex,CHZUSD,crypto,socios.com Chiliz-US Dollar,USD,1,0.00001,0.00000001,tCHZUSD,8.0
-bitfinex,CHZUST,crypto,socios.com Chiliz-Tether USDt,UST,1,0.00001,0.00000001,tCHZUST,8.0
+bitfinex,CHZUSDT,crypto,socios.com Chiliz-Tether USDt,USDT,1,0.00001,0.00000001,tCHZUST,8.0
 bitfinex,CLOUSD,crypto,Callisto-US Dollar,USD,1,0.00001,0.00000001,tCLOUSD,294.0
 bitfinex,CNHCNHT,crypto,CNH-Tether CNHt,CNHT,1,0.00001,0.00000001,tCNH:CNHT,12.0
 bitfinex,COMPUSD,crypto,Compound-US Dollar,USD,1,0.00001,0.00000001,tCOMP:USD,0.006
-bitfinex,COMPUST,crypto,Compound-Tether USDt,UST,1,0.00001,0.00000001,tCOMP:UST,0.006
+bitfinex,COMPUSDT,crypto,Compound-Tether USDt,USDT,1,0.00001,0.00000001,tCOMP:UST,0.006
 bitfinex,CRVUSD,crypto,Curve-US Dollar,USD,1,0.00001,0.00000001,tCRVUSD,0.001
-bitfinex,CRVUST,crypto,Curve-Tether USDt,UST,1,0.00001,0.00000001,tCRVUST,0.001
+bitfinex,CRVUSDT,crypto,Curve-Tether USDt,USDT,1,0.00001,0.00000001,tCRVUST,0.001
 bitfinex,CTKUSD,crypto,CERTIK-US Dollar,USD,1,0.00001,0.00000001,tCTKUSD,0.8
-bitfinex,CTKUST,crypto,CERTIK-Tether USDt,UST,1,0.00001,0.00000001,tCTKUST,0.8
+bitfinex,CTKUSDT,crypto,CERTIK-Tether USDt,USDT,1,0.00001,0.00000001,tCTKUST,0.8
 bitfinex,DAIBTC,crypto,Dai Stablecoin-Bitcoin,BTC,1,0.00001,0.00000001,tDAIBTC,2.0
 bitfinex,DAIETH,crypto,Dai Stablecoin-Ethereum,ETH,1,0.00001,0.00000001,tDAIETH,2.0
 bitfinex,DAIUSD,crypto,Dai Stablecoin-US Dollar,USD,1,0.00001,0.00000001,tDAIUSD,2.0
-bitfinex,DATUSD,crypto,Streamr-US Dollar,USD,1,0.00001,0.00000001,tDATUSD,20.0
+bitfinex,DATAUSD,crypto,Streamr-US Dollar,USD,1,0.00001,0.00000001,tDATUSD,20.0
 bitfinex,DCRUSD,crypto,Decred-US Dollar,USD,1,0.00001,0.00000001,tDCRUSD,0.02
 bitfinex,DGBUSD,crypto,Digibyte-US Dollar,USD,1,0.00001,0.00000001,tDGBUSD,44.0
-bitfinex,DOGBTC,crypto,MegaDOGE-Bitcoin,BTC,1,0.00001,0.00000001,tDOGBTC,0.00002
+bitfinex,MDOGBTC,crypto,MegaDOGE-Bitcoin,BTC,1,0.00001,0.00000001,tDOGBTC,0.00002
 bitfinex,DOGEBTC,crypto,DOGE-Bitcoin,BTC,1,0.00001,0.00000001,tDOGE:BTC,0.001
 bitfinex,DOGEUSD,crypto,DOGE-US Dollar,USD,1,0.00001,0.00000001,tDOGE:USD,8.0
-bitfinex,DOGEUST,crypto,DOGE-Tether USDt,UST,1,0.00001,0.00000001,tDOGE:UST,8.0
-bitfinex,DOGUSD,crypto,MegaDOGE-US Dollar,USD,1,0.00001,0.00000001,tDOGUSD,0.00002
-bitfinex,DOGUST,crypto,MegaDOGE-Tether USDt,UST,1,0.00001,0.00000001,tDOGUST,0.00002
+bitfinex,DOGEUSDT,crypto,DOGE-Tether USDt,USDT,1,0.00001,0.00000001,tDOGE:UST,8.0
+bitfinex,MDOGUSD,crypto,MegaDOGE-US Dollar,USD,1,0.00001,0.00000001,tDOGUSD,0.00002
+bitfinex,MDOGUSDT,crypto,MegaDOGE-Tether USDt,USDT,1,0.00001,0.00000001,tDOGUST,0.00002
 bitfinex,DORAUSD,crypto,Dora-US Dollar,USD,1,0.00001,0.00000001,tDORA:USD,0.001
-bitfinex,DORAUST,crypto,Dora-Tether USDt,UST,1,0.00001,0.00000001,tDORA:UST,0.001
+bitfinex,DORAUSDT,crypto,Dora-Tether USDt,USDT,1,0.00001,0.00000001,tDORA:UST,0.001
 bitfinex,DOTBTC,crypto,Polkadot-Bitcoin,BTC,1,0.00001,0.00000001,tDOTBTC,0.2
 bitfinex,DOTUSD,crypto,Polkadot-US Dollar,USD,1,0.00001,0.00000001,tDOTUSD,0.2
-bitfinex,DOTUST,crypto,Polkadot-Tether USDt,UST,1,0.00001,0.00000001,tDOTUST,0.2
-bitfinex,DSHBTC,crypto,Dash-Bitcoin,BTC,1,0.00001,0.00000001,tDSHBTC,0.02
-bitfinex,DSHUSD,crypto,Dash-US Dollar,USD,1,0.00001,0.00000001,tDSHUSD,0.02
+bitfinex,DOTUSDT,crypto,Polkadot-Tether USDt,USDT,1,0.00001,0.00000001,tDOTUST,0.2
+bitfinex,DASHBTC,crypto,Dash-Bitcoin,BTC,1,0.00001,0.00000001,tDSHBTC,0.02
+bitfinex,DASHUSD,crypto,Dash-US Dollar,USD,1,0.00001,0.00000001,tDSHUSD,0.02
 bitfinex,DUSKBTC,crypto,Dusk Network-Bitcoin,BTC,1,0.00001,0.00000001,tDUSK:BTC,18.0
 bitfinex,DUSKUSD,crypto,Dusk Network-US Dollar,USD,1,0.00001,0.00000001,tDUSK:USD,18.0
 bitfinex,DVFUSD,crypto,Deversifi Token-US Dollar,USD,1,0.00001,0.00000001,tDVFUSD,0.001
 bitfinex,EDOUSD,crypto,pNetwork-US Dollar,USD,1,0.00001,0.00000001,tEDOUSD,2.0
 bitfinex,EGLDUSD,crypto,Elrond-US Dollar,USD,1,0.00001,0.00000001,tEGLD:USD,0.02
-bitfinex,EGLDUST,crypto,Elrond-Tether USDt,UST,1,0.00001,0.00000001,tEGLD:UST,0.02
+bitfinex,EGLDUSDT,crypto,Elrond-Tether USDt,USDT,1,0.00001,0.00000001,tEGLD:UST,0.02
 bitfinex,ENJUSD,crypto,Enjin-US Dollar,USD,1,0.00001,0.00000001,tENJUSD,2.0
 bitfinex,EOSBTC,crypto,EOS-Bitcoin,BTC,1,0.00001,0.00000001,tEOSBTC,0.6
 bitfinex,EOSETH,crypto,EOS-Ethereum,ETH,1,0.00001,0.00000001,tEOSETH,0.6
@@ -964,127 +964,127 @@ bitfinex,EOSEUR,crypto,EOS-Euro,EUR,1,0.00001,0.00000001,tEOSEUR,0.6
 bitfinex,EOSGBP,crypto,EOS-Pound Sterling,GBP,1,0.00001,0.00000001,tEOSGBP,0.6
 bitfinex,EOSJPY,crypto,EOS-Japanese Yen,JPY,1,0.00001,0.00000001,tEOSJPY,0.6
 bitfinex,EOSUSD,crypto,EOS-US Dollar,USD,1,0.00001,0.00000001,tEOSUSD,0.6
-bitfinex,EOSUST,crypto,EOS-Tether USDt,UST,1,0.00001,0.00000001,tEOSUST,0.6
+bitfinex,EOSUSDT,crypto,EOS-Tether USDt,USDT,1,0.00001,0.00000001,tEOSUST,0.6
 bitfinex,ESSUSD,crypto,Essentia-US Dollar,USD,1,0.00001,0.00000001,tESSUSD,1088.0
 bitfinex,ETCBTC,crypto,Ethereum Classic-Bitcoin,BTC,1,0.00001,0.00000001,tETCBTC,0.04
 bitfinex,ETCUSD,crypto,Ethereum Classic-US Dollar,USD,1,0.00001,0.00000001,tETCUSD,0.04
-bitfinex,ETCUST,crypto,Ethereum Classic-Tether USDt,UST,1,0.00001,0.00000001,tETCUST,0.001
-bitfinex,ETH2XETH,crypto,ETH2X-Ethereum,ETH,1,0.00001,0.00000001,tETH2X:ETH,0.0008
-bitfinex,ETH2XUSD,crypto,ETH2X-US Dollar,USD,1,0.00001,0.00000001,tETH2X:USD,0.0008
-bitfinex,ETH2XUST,crypto,ETH2X-Tether USDt,UST,1,0.00001,0.00000001,tETH2X:UST,0.0008
+bitfinex,ETCUSDT,crypto,Ethereum Classic-Tether USDt,USDT,1,0.00001,0.00000001,tETCUST,0.001
+bitfinex,ETH2ETH,crypto,ETH2X-Ethereum,ETH,1,0.00001,0.00000001,tETH2X:ETH,0.0008
+bitfinex,ETH2USD,crypto,ETH2X-US Dollar,USD,1,0.00001,0.00000001,tETH2X:USD,0.0008
+bitfinex,ETH2USDT,crypto,ETH2X-Tether USDt,USDT,1,0.00001,0.00000001,tETH2X:UST,0.0008
 bitfinex,ETHBTC,crypto,Ethereum-Bitcoin,BTC,1,0.00001,0.00000001,tETHBTC,0.0008
 bitfinex,ETHEUR,crypto,Ethereum-Euro,EUR,1,0.00001,0.00000001,tETHEUR,0.0008
-bitfinex,ETHEUT,crypto,Ethereum-Tether EURt,EUT,1,0.00001,0.00000001,tETHEUT,0.001
+bitfinex,ETHEURT,crypto,Ethereum-Tether EURt,EURT,1,0.00001,0.00000001,tETHEUT,0.001
 bitfinex,ETHGBP,crypto,Ethereum-Pound Sterling,GBP,1,0.00001,0.00000001,tETHGBP,0.0008
 bitfinex,ETHJPY,crypto,Ethereum-Japanese Yen,JPY,1,0.00001,0.00000001,tETHJPY,0.0008
 bitfinex,ETHUSD,crypto,Ethereum-US Dollar,USD,1,0.00001,0.00000001,tETHUSD,0.0008
-bitfinex,ETHUST,crypto,Ethereum-Tether USDt,UST,1,0.00001,0.00000001,tETHUST,0.0008
+bitfinex,ETHUSDT,crypto,Ethereum-Tether USDt,USDT,1,0.00001,0.00000001,tETHUST,0.0008
 bitfinex,ETHXAUT,crypto,Ethereum-Tether XAUt,XAUT,1,0.00001,0.00000001,tETH:XAUT,0.001
 bitfinex,ETPBTC,crypto,ETP-Bitcoin,BTC,1,0.00001,0.00000001,tETPBTC,12.0
 bitfinex,ETPUSD,crypto,ETP-US Dollar,USD,1,0.00001,0.00000001,tETPUSD,12.0
-bitfinex,EURUST,crypto,Euro-Tether USDt,UST,1,0.00001,0.00000001,tEURUST,0.001
-bitfinex,EUSUSD,crypto,EURS-US Dollar,USD,1,0.00001,0.00000001,tEUSUSD,2.0
-bitfinex,EUTEUR,crypto,Tether EURt-Euro,EUR,1,0.00001,0.00000001,tEUTEUR,2.0
-bitfinex,EUTUSD,crypto,Tether EURt-US Dollar,USD,1,0.00001,0.00000001,tEUTUSD,2.0
-bitfinex,EUTUST,crypto,Tether EURt-Tether USDt,UST,1,0.00001,0.00000001,tEUTUST,2.0
+bitfinex,EURUSDT,crypto,Euro-Tether USDt,USDT,1,0.00001,0.00000001,tEURUST,0.001
+bitfinex,EURSUSD,crypto,EURS-US Dollar,USD,1,0.00001,0.00000001,tEUSUSD,2.0
+bitfinex,EURTEUR,crypto,Tether EURt-Euro,EUR,1,0.00001,0.00000001,tEUTEUR,2.0
+bitfinex,EURTUSD,crypto,Tether EURt-US Dollar,USD,1,0.00001,0.00000001,tEUTUSD,2.0
+bitfinex,EURTUSDT,crypto,Tether EURt-Tether USDt,USDT,1,0.00001,0.00000001,tEUTUST,2.0
 bitfinex,EXOUSD,crypto,Exordium-US Dollar,USD,1,0.00001,0.00000001,tEXOUSD,0.001
 bitfinex,FCLUSD,crypto,Fractal-US Dollar,USD,1,0.00001,0.00000001,tFCLUSD,8.0
-bitfinex,FCLUST,crypto,Fractal-Tether USDt,UST,1,0.00001,0.00000001,tFCLUST,8.0
+bitfinex,FCLUSDT,crypto,Fractal-Tether USDt,USDT,1,0.00001,0.00000001,tFCLUST,8.0
 bitfinex,FETUSD,crypto,Fetch.AI-US Dollar,USD,1,0.00001,0.00000001,tFETUSD,4.0
-bitfinex,FETUST,crypto,Fetch.AI-Tether USDt,UST,1,0.00001,0.00000001,tFETUST,4.0
+bitfinex,FETUSDT,crypto,Fetch.AI-Tether USDt,USDT,1,0.00001,0.00000001,tFETUST,4.0
 bitfinex,FILUSD,crypto,Filecoin-US Dollar,USD,1,0.00001,0.00000001,tFILUSD,0.02
-bitfinex,FILUST,crypto,Filecoin-Tether USDt,UST,1,0.00001,0.00000001,tFILUST,0.02
+bitfinex,FILUSDT,crypto,Filecoin-Tether USDt,USDT,1,0.00001,0.00000001,tFILUST,0.02
 bitfinex,FORTHUSD,crypto,FORTH-US Dollar,USD,1,0.00001,0.00000001,tFORTH:USD,0.2
-bitfinex,FORTHUST,crypto,FORTH-Tether USDt,UST,1,0.00001,0.00000001,tFORTH:UST,0.2
+bitfinex,FORTHUSDT,crypto,FORTH-Tether USDt,USDT,1,0.00001,0.00000001,tFORTH:UST,0.2
 bitfinex,FTMUSD,crypto,Fantom-US Dollar,USD,1,0.00001,0.00000001,tFTMUSD,2.0
-bitfinex,FTMUST,crypto,Fantom-Tether USDt,UST,1,0.00001,0.00000001,tFTMUST,2.0
+bitfinex,FTMUSDT,crypto,Fantom-Tether USDt,USDT,1,0.00001,0.00000001,tFTMUST,2.0
 bitfinex,FTTUSD,crypto,FTX.com-US Dollar,USD,1,0.00001,0.00000001,tFTTUSD,0.06
-bitfinex,FTTUST,crypto,FTX.com-Tether USDt,UST,1,0.00001,0.00000001,tFTTUST,0.06
+bitfinex,FTTUSDT,crypto,FTX.com-Tether USDt,USDT,1,0.00001,0.00000001,tFTTUST,0.06
 bitfinex,FUNUSD,crypto,FunFair-US Dollar,USD,1,0.00001,0.00000001,tFUNUSD,98.0
-bitfinex,GBPEUT,crypto,Pound Sterling-Tether EURt,EUT,1,0.00001,0.00000001,tGBPEUT,0.001
-bitfinex,GBPUST,crypto,Pound Sterling-Tether USDt,UST,1,0.00001,0.00000001,tGBPUST,0.001
+bitfinex,GBPEURT,crypto,Pound Sterling-Tether EURt,EURT,1,0.00001,0.00000001,tGBPEUT,0.001
+bitfinex,GBPUSDT,crypto,Pound Sterling-Tether USDt,USDT,1,0.00001,0.00000001,tGBPUST,0.001
 bitfinex,GNOUSD,crypto,Gnosis-US Dollar,USD,1,0.00001,0.00000001,tGNOUSD,0.01
-bitfinex,GNTUSD,crypto,Golem-US Dollar,USD,1,0.00001,0.00000001,tGNTUSD,6.0
+bitfinex,GLMUSD,crypto,Golem-US Dollar,USD,1,0.00001,0.00000001,tGNTUSD,6.0
 bitfinex,GOTEUR,crypto,ParkinGO-Euro,EUR,1,0.00001,0.00000001,tGOTEUR,32.0
 bitfinex,GOTUSD,crypto,ParkinGO-US Dollar,USD,1,0.00001,0.00000001,tGOTUSD,32.0
 bitfinex,GRTUSD,crypto,The Graph-US Dollar,USD,1,0.00001,0.00000001,tGRTUSD,2.0
-bitfinex,GRTUST,crypto,The Graph-Tether USDt,UST,1,0.00001,0.00000001,tGRTUST,2.0
+bitfinex,GRTUSDT,crypto,The Graph-Tether USDt,USDT,1,0.00001,0.00000001,tGRTUST,2.0
 bitfinex,GTXUSD,crypto,Gate.IO-US Dollar,USD,1,0.00001,0.00000001,tGTXUSD,0.6
-bitfinex,GTXUST,crypto,Gate.IO-Tether USDt,UST,1,0.00001,0.00000001,tGTXUST,0.6
+bitfinex,GTXUSDT,crypto,Gate.IO-Tether USDt,USDT,1,0.00001,0.00000001,tGTXUST,0.6
 bitfinex,HMTUSD,crypto,Human-US Dollar,USD,1,0.00001,0.00000001,tHMTUSD,0.001
-bitfinex,HMTUST,crypto,Human-Tether USDt,UST,1,0.00001,0.00000001,tHMTUST,0.001
+bitfinex,HMTUSDT,crypto,Human-Tether USDt,USDT,1,0.00001,0.00000001,tHMTUST,0.001
 bitfinex,ICEUSD,crypto,ICE-US Dollar,USD,1,0.00001,0.00000001,tICEUSD,2.0
 bitfinex,ICPBTC,crypto,Dfinity-Bitcoin,BTC,1,0.00001,0.00000001,tICPBTC,0.04
 bitfinex,ICPUSD,crypto,Dfinity-US Dollar,USD,1,0.00001,0.00000001,tICPUSD,0.04
-bitfinex,ICPUST,crypto,Dfinity-Tether USDt,UST,1,0.00001,0.00000001,tICPUST,0.04
-bitfinex,IDXUSD,crypto,Everest (ID)-US Dollar,USD,1,0.00001,0.00000001,tIDXUSD,6.0
-bitfinex,IDXUST,crypto,Everest (ID)-Tether USDt,UST,1,0.00001,0.00000001,tIDXUST,6.0
-bitfinex,IOTBTC,crypto,Iota-Bitcoin,BTC,1,0.00001,0.00000001,tIOTBTC,4.0
-bitfinex,IOTETH,crypto,Iota-Ethereum,ETH,1,0.00001,0.00000001,tIOTETH,4.0
-bitfinex,IOTEUR,crypto,Iota-Euro,EUR,1,0.00001,0.00000001,tIOTEUR,4.0
-bitfinex,IOTGBP,crypto,Iota-Pound Sterling,GBP,1,0.00001,0.00000001,tIOTGBP,4.0
-bitfinex,IOTJPY,crypto,Iota-Japanese Yen,JPY,1,0.00001,0.00000001,tIOTJPY,4.0
-bitfinex,IOTUSD,crypto,Iota-US Dollar,USD,1,0.00001,0.00000001,tIOTUSD,4.0
+bitfinex,ICPUSDT,crypto,Dfinity-Tether USDt,USDT,1,0.00001,0.00000001,tICPUST,0.04
+bitfinex,IDUSD,crypto,Everest (ID)-US Dollar,USD,1,0.00001,0.00000001,tIDXUSD,6.0
+bitfinex,IDUSDT,crypto,Everest (ID)-Tether USDt,USDT,1,0.00001,0.00000001,tIDXUST,6.0
+bitfinex,IOTABTC,crypto,Iota-Bitcoin,BTC,1,0.00001,0.00000001,tIOTBTC,4.0
+bitfinex,IOTAETH,crypto,Iota-Ethereum,ETH,1,0.00001,0.00000001,tIOTETH,4.0
+bitfinex,IOTAEUR,crypto,Iota-Euro,EUR,1,0.00001,0.00000001,tIOTEUR,4.0
+bitfinex,IOTAGBP,crypto,Iota-Pound Sterling,GBP,1,0.00001,0.00000001,tIOTGBP,4.0
+bitfinex,IOTAJPY,crypto,Iota-Japanese Yen,JPY,1,0.00001,0.00000001,tIOTJPY,4.0
+bitfinex,IOTAUSD,crypto,Iota-US Dollar,USD,1,0.00001,0.00000001,tIOTUSD,4.0
 bitfinex,IQXUSD,crypto,Everipedia-US Dollar,USD,1,0.00001,0.00000001,tIQXUSD,188.0
-bitfinex,IQXUST,crypto,Everipedia-Tether USDt,UST,1,0.00001,0.00000001,tIQXUST,188.0
+bitfinex,IQXUSDT,crypto,Everipedia-Tether USDt,USDT,1,0.00001,0.00000001,tIQXUST,188.0
 bitfinex,JASMYUSD,crypto,Jasmy-US Dollar,USD,1,0.00001,0.00000001,tJASMY:USD,0.001
-bitfinex,JASMYUST,crypto,Jasmy-Tether USDt,UST,1,0.00001,0.00000001,tJASMY:UST,0.001
-bitfinex,JPYUST,crypto,Japanese Yen-Tether USDt,UST,1,0.00001,0.00000001,tJPYUST,0.001
+bitfinex,JASMYUSDT,crypto,Jasmy-Tether USDt,USDT,1,0.00001,0.00000001,tJASMY:UST,0.001
+bitfinex,JPYUSDT,crypto,Japanese Yen-Tether USDt,USDT,1,0.00001,0.00000001,tJPYUST,0.001
 bitfinex,JSTBTC,crypto,JST-Bitcoin,BTC,1,0.00001,0.00000001,tJSTBTC,28.0
 bitfinex,JSTUSD,crypto,JST-US Dollar,USD,1,0.00001,0.00000001,tJSTUSD,28.0
-bitfinex,JSTUST,crypto,JST-Tether USDt,UST,1,0.00001,0.00000001,tJSTUST,28.0
+bitfinex,JSTUSDT,crypto,JST-Tether USDt,USDT,1,0.00001,0.00000001,tJSTUST,28.0
 bitfinex,KAIUSD,crypto,KardiaChain-US Dollar,USD,1,0.00001,0.00000001,tKAIUSD,0.001
-bitfinex,KAIUST,crypto,KardiaChain-Tether USDt,UST,1,0.00001,0.00000001,tKAIUST,0.001
+bitfinex,KAIUSDT,crypto,KardiaChain-Tether USDt,USDT,1,0.00001,0.00000001,tKAIUST,0.001
 bitfinex,KANUSD,crypto,BitKan-US Dollar,USD,1,0.00001,0.00000001,tKANUSD,430.0
-bitfinex,KANUST,crypto,BitKan-Tether USDt,UST,1,0.00001,0.00000001,tKANUST,430.0
+bitfinex,KANUSDT,crypto,BitKan-Tether USDt,USDT,1,0.00001,0.00000001,tKANUST,430.0
 bitfinex,KNCBTC,crypto,Kyber-Bitcoin,BTC,1,0.00001,0.00000001,tKNCBTC,2.0
 bitfinex,KNCUSD,crypto,Kyber-US Dollar,USD,1,0.00001,0.00000001,tKNCUSD,2.0
 bitfinex,KSMUSD,crypto,Kusama-US Dollar,USD,1,0.00001,0.00000001,tKSMUSD,0.008
-bitfinex,KSMUST,crypto,Kusama-Tether USDt,UST,1,0.00001,0.00000001,tKSMUST,0.008
+bitfinex,KSMUSDT,crypto,Kusama-Tether USDt,USDT,1,0.00001,0.00000001,tKSMUST,0.008
 bitfinex,LEOBTC,crypto,Unus Sed LEO-Bitcoin,BTC,1,0.00001,0.00000001,tLEOBTC,2.0
 bitfinex,LEOEOS,crypto,Unus Sed LEO-EOS,EOS,1,0.00001,0.00000001,tLEOEOS,2.0
 bitfinex,LEOETH,crypto,Unus Sed LEO-Ethereum,ETH,1,0.00001,0.00000001,tLEOETH,2.0
 bitfinex,LEOUSD,crypto,Unus Sed LEO-US Dollar,USD,1,0.00001,0.00000001,tLEOUSD,2.0
-bitfinex,LEOUST,crypto,Unus Sed LEO-Tether USDt,UST,1,0.00001,0.00000001,tLEOUST,2.0
+bitfinex,LEOUSDT,crypto,Unus Sed LEO-Tether USDt,USDT,1,0.00001,0.00000001,tLEOUST,2.0
 bitfinex,LINKUSD,crypto,ChainLink-US Dollar,USD,1,0.00001,0.00000001,tLINK:USD,0.2
-bitfinex,LINKUST,crypto,ChainLink-Tether USDt,UST,1,0.00001,0.00000001,tLINK:UST,0.2
+bitfinex,LINKUSDT,crypto,ChainLink-Tether USDt,USDT,1,0.00001,0.00000001,tLINK:UST,0.2
 bitfinex,LRCUSD,crypto,Loopring-US Dollar,USD,1,0.00001,0.00000001,tLRCUSD,6.0
 bitfinex,LTCBTC,crypto,Litecoin-Bitcoin,BTC,1,0.00001,0.00000001,tLTCBTC,0.02
 bitfinex,LTCUSD,crypto,Litecoin-US Dollar,USD,1,0.00001,0.00000001,tLTCUSD,0.02
-bitfinex,LTCUST,crypto,Litecoin-Tether USDt,UST,1,0.00001,0.00000001,tLTCUST,0.02
+bitfinex,LTCUSDT,crypto,Litecoin-Tether USDt,USDT,1,0.00001,0.00000001,tLTCUST,0.02
 bitfinex,LUNABTC,crypto,LUNA-Bitcoin,BTC,1,0.00001,0.00000001,tLUNA:BTC,0.06
 bitfinex,LUNAETH,crypto,LUNA-Ethereum,ETH,1,0.00001,0.00000001,tLUNA:ETH,0.001
 bitfinex,LUNAUSD,crypto,LUNA-US Dollar,USD,1,0.00001,0.00000001,tLUNA:USD,0.06
-bitfinex,LUNAUST,crypto,LUNA-Tether USDt,UST,1,0.00001,0.00000001,tLUNA:UST,0.06
+bitfinex,LUNAUSDT,crypto,LUNA-Tether USDt,USDT,1,0.00001,0.00000001,tLUNA:UST,0.06
 bitfinex,LYMUSD,crypto,Lympo-US Dollar,USD,1,0.00001,0.00000001,tLYMUSD,168.0
 bitfinex,MATICBTC,crypto,MATIC (Ethereum)-Bitcoin,BTC,1,0.00001,0.00000001,tMATIC:BTC,0.001
 bitfinex,MATICUSD,crypto,MATIC (Ethereum)-US Dollar,USD,1,0.00001,0.00000001,tMATIC:USD,0.001
-bitfinex,MATICUST,crypto,MATIC (Ethereum)-Tether USDt,UST,1,0.00001,0.00000001,tMATIC:UST,0.001
+bitfinex,MATICUSDT,crypto,MATIC (Ethereum)-Tether USDt,USDT,1,0.00001,0.00000001,tMATIC:UST,0.001
 bitfinex,MIMUSD,crypto,Magic Internet Money-US Dollar,USD,1,0.00001,0.00000001,tMIMUSD,0.001
-bitfinex,MIMUST,crypto,Magic Internet Money-Tether USDt,UST,1,0.00001,0.00000001,tMIMUST,0.001
+bitfinex,MIMUSDT,crypto,Magic Internet Money-Tether USDt,USDT,1,0.00001,0.00000001,tMIMUST,0.001
 bitfinex,MIRUSD,crypto,Mirror Protocol-US Dollar,USD,1,0.00001,0.00000001,tMIRUSD,0.6
-bitfinex,MIRUST,crypto,Mirror Protocol-Tether USDt,UST,1,0.00001,0.00000001,tMIRUST,0.6
+bitfinex,MIRUSDT,crypto,Mirror Protocol-Tether USDt,USDT,1,0.00001,0.00000001,tMIRUST,0.6
 bitfinex,MKRUSD,crypto,Maker-US Dollar,USD,1,0.00001,0.00000001,tMKRUSD,0.0008
-bitfinex,MKRUST,crypto,Maker-Tether USDt,UST,1,0.00001,0.00000001,tMKRUST,0.001
+bitfinex,MKRUSDT,crypto,Maker-Tether USDt,USDT,1,0.00001,0.00000001,tMKRUST,0.001
 bitfinex,MLNUSD,crypto,Melon-US Dollar,USD,1,0.00001,0.00000001,tMLNUSD,0.02
 bitfinex,MNABTC,crypto,Decentraland-Bitcoin,BTC,1,0.00001,0.00000001,tMNABTC,4.0
 bitfinex,MNAUSD,crypto,Decentraland-US Dollar,USD,1,0.00001,0.00000001,tMNAUSD,4.0
 bitfinex,MOBUSD,crypto,Mobilecoin-US Dollar,USD,1,0.00001,0.00000001,tMOBUSD,0.2
-bitfinex,MOBUST,crypto,Mobilecoin-Tether USDt,UST,1,0.00001,0.00000001,tMOBUST,0.2
+bitfinex,MOBUSDT,crypto,Mobilecoin-Tether USDt,USDT,1,0.00001,0.00000001,tMOBUST,0.2
 bitfinex,NEARUSD,crypto,Near-US Dollar,USD,1,0.00001,0.00000001,tNEAR:USD,0.4
-bitfinex,NEARUST,crypto,Near-Tether USDt,UST,1,0.00001,0.00000001,tNEAR:UST,0.4
+bitfinex,NEARUSDT,crypto,Near-Tether USDt,USDT,1,0.00001,0.00000001,tNEAR:UST,0.4
 bitfinex,NEOBTC,crypto,NEO-Bitcoin,BTC,1,0.00001,0.00000001,tNEOBTC,0.06
 bitfinex,NEOETH,crypto,NEO-Ethereum,ETH,1,0.00001,0.00000001,tNEOETH,0.06
 bitfinex,NEOEUR,crypto,NEO-Euro,EUR,1,0.00001,0.00000001,tNEOEUR,0.06
 bitfinex,NEOGBP,crypto,NEO-Pound Sterling,GBP,1,0.00001,0.00000001,tNEOGBP,0.06
 bitfinex,NEOJPY,crypto,NEO-Japanese Yen,JPY,1,0.00001,0.00000001,tNEOJPY,0.06
 bitfinex,NEOUSD,crypto,NEO-US Dollar,USD,1,0.00001,0.00000001,tNEOUSD,0.06
-bitfinex,NEOUST,crypto,NEO-Tether USDt,UST,1,0.00001,0.00000001,tNEOUST,0.001
+bitfinex,NEOUSDT,crypto,NEO-Tether USDt,USDT,1,0.00001,0.00000001,tNEOUST,0.001
 bitfinex,NEXOBTC,crypto,NEXO-Bitcoin,BTC,1,0.00001,0.00000001,tNEXO:BTC,2.0
 bitfinex,NEXOUSD,crypto,NEXO-US Dollar,USD,1,0.00001,0.00000001,tNEXO:USD,2.0
-bitfinex,NEXOUST,crypto,NEXO-Tether USDt,UST,1,0.00001,0.00000001,tNEXO:UST,2.0
+bitfinex,NEXOUSDT,crypto,NEXO-Tether USDt,USDT,1,0.00001,0.00000001,tNEXO:UST,2.0
 bitfinex,OCEANUSD,crypto,OCEAN protocol-US Dollar,USD,1,0.00001,0.00000001,tOCEAN:USD,2.0
-bitfinex,OCEANUST,crypto,OCEAN protocol-Tether USDt,UST,1,0.00001,0.00000001,tOCEAN:UST,2.0
+bitfinex,OCEANUSDT,crypto,OCEAN protocol-Tether USDt,USDT,1,0.00001,0.00000001,tOCEAN:UST,2.0
 bitfinex,ODEUSD,crypto,Odem-US Dollar,USD,1,0.00001,0.00000001,tODEUSD,122.0
 bitfinex,OMGBTC,crypto,OmiseGO-Bitcoin,BTC,1,0.00001,0.00000001,tOMGBTC,0.4
 bitfinex,OMGETH,crypto,OmiseGO-Ethereum,ETH,1,0.00001,0.00000001,tOMGETH,0.4
@@ -1092,140 +1092,140 @@ bitfinex,OMGUSD,crypto,OmiseGO-US Dollar,USD,1,0.00001,0.00000001,tOMGUSD,0.4
 bitfinex,OMNUSD,crypto,Omni-US Dollar,USD,1,0.00001,0.00000001,tOMNUSD,0.6
 bitfinex,ORSUSD,crypto,ORS-US Dollar,USD,1,0.00001,0.00000001,tORSUSD,396.0
 bitfinex,OXYUSD,crypto,Oxygen-US Dollar,USD,1,0.00001,0.00000001,tOXYUSD,1.0
-bitfinex,OXYUST,crypto,Oxygen-Tether USDt,UST,1,0.00001,0.00000001,tOXYUST,1.0
-bitfinex,PASUSD,crypto,Blockpass-US Dollar,USD,1,0.00001,0.00000001,tPASUSD,1006.0
+bitfinex,OXYUSDT,crypto,Oxygen-Tether USDt,USDT,1,0.00001,0.00000001,tOXYUST,1.0
+bitfinex,PASSUSD,crypto,Blockpass-US Dollar,USD,1,0.00001,0.00000001,tPASUSD,1006.0
 bitfinex,PAXUSD,crypto,Paxos-US Dollar,USD,1,0.00001,0.00000001,tPAXUSD,2.0
-bitfinex,PAXUST,crypto,Paxos-Tether USDt,UST,1,0.00001,0.00000001,tPAXUST,2.0
+bitfinex,PAXUSDT,crypto,Paxos-Tether USDt,USDT,1,0.00001,0.00000001,tPAXUST,2.0
 bitfinex,PLANETSUSD,crypto,PLANETS-US Dollar,USD,1,0.00001,0.00000001,tPLANETS:USD,14.0
-bitfinex,PLANETSUST,crypto,PLANETS-Tether USDt,UST,1,0.00001,0.00000001,tPLANETS:UST,14.0
+bitfinex,PLANETSUSDT,crypto,PLANETS-Tether USDt,USDT,1,0.00001,0.00000001,tPLANETS:UST,14.0
 bitfinex,PLUUSD,crypto,Pluton-US Dollar,USD,1,0.00001,0.00000001,tPLUUSD,0.4
 bitfinex,PNGUSD,crypto,Pangolin-US Dollar,USD,1,0.00001,0.00000001,tPNGUSD,0.001
-bitfinex,PNGUST,crypto,Pangolin-Tether USDt,UST,1,0.00001,0.00000001,tPNGUST,0.001
+bitfinex,PNGUSDT,crypto,Pangolin-Tether USDt,USDT,1,0.00001,0.00000001,tPNGUST,0.001
 bitfinex,PNKETH,crypto,Kleros-Ethereum,ETH,1,0.00001,0.00000001,tPNKETH,20.0
 bitfinex,PNKUSD,crypto,Kleros-US Dollar,USD,1,0.00001,0.00000001,tPNKUSD,20.0
 bitfinex,QRDOUSD,crypto,QRDO-US Dollar,USD,1,0.00001,0.00000001,tQRDO:USD,0.001
-bitfinex,QRDOUST,crypto,QRDO-Tether USDt,UST,1,0.00001,0.00000001,tQRDO:UST,0.001
+bitfinex,QRDOUSDT,crypto,QRDO-Tether USDt,USDT,1,0.00001,0.00000001,tQRDO:UST,0.001
 bitfinex,QSHUSD,crypto,QASH-US Dollar,USD,1,0.00001,0.00000001,tQSHUSD,40.0
 bitfinex,QTFBTC,crypto,Quantfury-Bitcoin,BTC,1,0.00001,0.00000001,tQTFBTC,0.2
 bitfinex,QTFUSD,crypto,Quantfury-US Dollar,USD,1,0.00001,0.00000001,tQTFUSD,0.2
-bitfinex,QTMBTC,crypto,Qtum-Bitcoin,BTC,1,0.00001,0.00000001,tQTMBTC,0.2
-bitfinex,QTMUSD,crypto,Qtum-US Dollar,USD,1,0.00001,0.00000001,tQTMUSD,0.2
-bitfinex,RBTBTC,crypto,RBTC-Bitcoin,BTC,1,0.00001,0.00000001,tRBTBTC,0.00006
-bitfinex,RBTUSD,crypto,RBTC-US Dollar,USD,1,0.00001,0.00000001,tRBTUSD,0.00006
+bitfinex,QTUMBTC,crypto,Qtum-Bitcoin,BTC,1,0.00001,0.00000001,tQTMBTC,0.2
+bitfinex,QTUMUSD,crypto,Qtum-US Dollar,USD,1,0.00001,0.00000001,tQTMUSD,0.2
+bitfinex,RBTCBTC,crypto,RBTC-Bitcoin,BTC,1,0.00001,0.00000001,tRBTBTC,0.00006
+bitfinex,RBTCUSD,crypto,RBTC-US Dollar,USD,1,0.00001,0.00000001,tRBTUSD,0.00006
 bitfinex,REEFUSD,crypto,REEF-US Dollar,USD,1,0.00001,0.00000001,tREEF:USD,86.0
-bitfinex,REEFUST,crypto,REEF-Tether USDt,UST,1,0.00001,0.00000001,tREEF:UST,86.0
-bitfinex,REPBTC,crypto,Augur-Bitcoin,BTC,1,0.00001,0.00000001,tREPBTC,0.2
-bitfinex,REPUSD,crypto,Augur-US Dollar,USD,1,0.00001,0.00000001,tREPUSD,0.2
+bitfinex,REEFUSDT,crypto,REEF-Tether USDt,USDT,1,0.00001,0.00000001,tREEF:UST,86.0
+bitfinex,REP2BTC,crypto,Augur-Bitcoin,BTC,1,0.00001,0.00000001,tREPBTC,0.2
+bitfinex,REP2USD,crypto,Augur-US Dollar,USD,1,0.00001,0.00000001,tREPUSD,0.2
 bitfinex,REQUSD,crypto,Request Network-US Dollar,USD,1,0.00001,0.00000001,tREQUSD,12.0
 bitfinex,ROSEUSD,crypto,Oasis (Rose)-US Dollar,USD,1,0.00001,0.00000001,tROSE:USD,0.001
-bitfinex,ROSEUST,crypto,Oasis (Rose)-Tether USDt,UST,1,0.00001,0.00000001,tROSE:UST,0.001
+bitfinex,ROSEUSDT,crypto,Oasis (Rose)-Tether USDt,USDT,1,0.00001,0.00000001,tROSE:UST,0.001
 bitfinex,RRTUSD,crypto,Recovery Right Tokens-US Dollar,USD,1,0.00001,0.00000001,tRRTUSD,58.0
 bitfinex,SANBTC,crypto,Santiment-Bitcoin,BTC,1,0.00001,0.00000001,tSANBTC,14.0
 bitfinex,SANETH,crypto,Santiment-Ethereum,ETH,1,0.00001,0.00000001,tSANETH,14.0
 bitfinex,SANUSD,crypto,Santiment-US Dollar,USD,1,0.00001,0.00000001,tSANUSD,14.0
 bitfinex,SGBUSD,crypto,Songbird-US Dollar,USD,1,0.00001,0.00000001,tSGBUSD,0.001
-bitfinex,SGBUST,crypto,Songbird-Tether USDt,UST,1,0.00001,0.00000001,tSGBUST,0.001
+bitfinex,SGBUSDT,crypto,Songbird-Tether USDt,USDT,1,0.00001,0.00000001,tSGBUST,0.001
 bitfinex,SHIBUSD,crypto,SHIB-US Dollar,USD,1,0.00001,0.00000001,tSHIB:USD,0.001
-bitfinex,SHIBUST,crypto,SHIB-Tether USDt,UST,1,0.00001,0.00000001,tSHIB:UST,0.001
+bitfinex,SHIBUSDT,crypto,SHIB-Tether USDt,USDT,1,0.00001,0.00000001,tSHIB:UST,0.001
 bitfinex,SNTUSD,crypto,Status-US Dollar,USD,1,0.00001,0.00000001,tSNTUSD,32.0
 bitfinex,SNXUSD,crypto,Synthetix Network-US Dollar,USD,1,0.00001,0.00000001,tSNXUSD,0.2
-bitfinex,SNXUST,crypto,Synthetix Network-Tether USDt,UST,1,0.00001,0.00000001,tSNXUST,0.2
+bitfinex,SNXUSDT,crypto,Synthetix Network-Tether USDt,USDT,1,0.00001,0.00000001,tSNXUST,0.2
 bitfinex,SOLBTC,crypto,Solana-Bitcoin,BTC,1,0.00001,0.00000001,tSOLBTC,0.001
 bitfinex,SOLUSD,crypto,Solana-US Dollar,USD,1,0.00001,0.00000001,tSOLUSD,0.02
-bitfinex,SOLUST,crypto,Solana-Tether USDt,UST,1,0.00001,0.00000001,tSOLUST,0.02
+bitfinex,SOLUSDT,crypto,Solana-Tether USDt,USDT,1,0.00001,0.00000001,tSOLUST,0.02
 bitfinex,SPELLMIM,crypto,SPELL-Magic Internet Money,MIM,1,0.00001,0.00000001,tSPELL:MIM,0.001
 bitfinex,SPELLUSD,crypto,SPELL-US Dollar,USD,1,0.00001,0.00000001,tSPELL:USD,0.001
-bitfinex,SPELLUST,crypto,SPELL-Tether USDt,UST,1,0.00001,0.00000001,tSPELL:UST,0.001
+bitfinex,SPELLUSDT,crypto,SPELL-Tether USDt,USDT,1,0.00001,0.00000001,tSPELL:UST,0.001
 bitfinex,SRMUSD,crypto,SERUM-US Dollar,USD,1,0.00001,0.00000001,tSRMUSD,0.001
-bitfinex,SRMUST,crypto,SERUM-Tether USDt,UST,1,0.00001,0.00000001,tSRMUST,0.001
-bitfinex,STJUSD,crypto,Storj-US Dollar,USD,1,0.00001,0.00000001,tSTJUSD,2.0
+bitfinex,SRMUSDT,crypto,SERUM-Tether USDt,USDT,1,0.00001,0.00000001,tSRMUST,0.001
+bitfinex,STORJUSD,crypto,Storj-US Dollar,USD,1,0.00001,0.00000001,tSTJUSD,2.0
 bitfinex,SUKUUSD,crypto,SUKU-US Dollar,USD,1,0.00001,0.00000001,tSUKU:USD,2.0
-bitfinex,SUKUUST,crypto,SUKU-Tether USDt,UST,1,0.00001,0.00000001,tSUKU:UST,2.0
+bitfinex,SUKUUSDT,crypto,SUKU-Tether USDt,USDT,1,0.00001,0.00000001,tSUKU:UST,2.0
 bitfinex,SUNUSD,crypto,SUN-US Dollar,USD,1,0.00001,0.00000001,tSUNUSD,62.0
-bitfinex,SUNUST,crypto,SUN-Tether USDt,UST,1,0.00001,0.00000001,tSUNUST,62.0
+bitfinex,SUNUSDT,crypto,SUN-Tether USDt,USDT,1,0.00001,0.00000001,tSUNUST,62.0
 bitfinex,SUSHIUSD,crypto,SUSHI-US Dollar,USD,1,0.00001,0.00000001,tSUSHI:USD,0.2
-bitfinex,SUSHIUST,crypto,SUSHI-Tether USDt,UST,1,0.00001,0.00000001,tSUSHI:UST,0.2
+bitfinex,SUSHIUSDT,crypto,SUSHI-Tether USDt,USDT,1,0.00001,0.00000001,tSUSHI:UST,0.2
 bitfinex,SXXUSD,crypto,SX Network-US Dollar,USD,1,0.00001,0.00000001,tSXXUSD,0.001
-bitfinex,SXXUST,crypto,SX Network-Tether USDt,UST,1,0.00001,0.00000001,tSXXUST,0.001
+bitfinex,SXXUSDT,crypto,SX Network-Tether USDt,USDT,1,0.00001,0.00000001,tSXXUST,0.001
 bitfinex,TERRAUSTUSD,crypto,TerraUST-US Dollar,USD,1,0.00001,0.00000001,tTERRAUST:USD,2.0
-bitfinex,TERRAUSTUST,crypto,TerraUST-Tether USDt,UST,1,0.00001,0.00000001,tTERRAUST:UST,2.0
+bitfinex,TERRAUSTUSDT,crypto,TerraUST-Tether USDt,USDT,1,0.00001,0.00000001,tTERRAUST:UST,2.0
 bitfinex,TESTBTCTESTUSD,crypto,TESTBTC-TESTUSD,TESTUSD,1,0.00001,0.00000001,tTESTBTC:TESTUSD,0.00006
 bitfinex,TESTBTCTESTUSDT,crypto,TESTBTC-TESTUSDT,TESTUSDT,1,0.00001,0.00000001,tTESTBTC:TESTUSDT,0.00006
 bitfinex,THETAUSD,crypto,Theta-US Dollar,USD,1,0.00001,0.00000001,tTHETA:USD,0.001
-bitfinex,THETAUST,crypto,Theta-Tether USDt,UST,1,0.00001,0.00000001,tTHETA:UST,0.001
+bitfinex,THETAUSDT,crypto,Theta-Tether USDt,USDT,1,0.00001,0.00000001,tTHETA:UST,0.001
 bitfinex,TLOSUSD,crypto,TELOS-US Dollar,USD,1,0.00001,0.00000001,tTLOS:USD,0.001
-bitfinex,TLOSUST,crypto,TELOS-Tether USDt,UST,1,0.00001,0.00000001,tTLOS:UST,0.001
+bitfinex,TLOSUSDT,crypto,TELOS-Tether USDt,USDT,1,0.00001,0.00000001,tTLOS:UST,0.001
 bitfinex,TRADEUSD,crypto,Polytrade-US Dollar,USD,1,0.00001,0.00000001,tTRADE:USD,0.001
-bitfinex,TRADEUST,crypto,Polytrade-Tether USDt,UST,1,0.00001,0.00000001,tTRADE:UST,0.001
+bitfinex,TRADEUSDT,crypto,Polytrade-Tether USDt,USDT,1,0.00001,0.00000001,tTRADE:UST,0.001
 bitfinex,TRXBTC,crypto,TRON-Bitcoin,BTC,1,0.00001,0.00000001,tTRXBTC,34.0
 bitfinex,TRXETH,crypto,TRON-Ethereum,ETH,1,0.00001,0.00000001,tTRXETH,34.0
 bitfinex,TRXEUR,crypto,TRON-Euro,EUR,1,0.00001,0.00000001,tTRXEUR,34.0
 bitfinex,TRXUSD,crypto,TRON-US Dollar,USD,1,0.00001,0.00000001,tTRXUSD,34.0
-bitfinex,TRXUST,crypto,TRON-Tether USDt,UST,1,0.00001,0.00000001,tTRXUST,0.001
-bitfinex,TSDUSD,crypto,TrueUSD-US Dollar,USD,1,0.00001,0.00000001,tTSDUSD,2.0
-bitfinex,TSDUST,crypto,TrueUSD-Tether USDt,UST,1,0.00001,0.00000001,tTSDUST,2.0
-bitfinex,UDCUSD,crypto,USDc-US Dollar,USD,1,0.00001,0.00000001,tUDCUSD,2.0
-bitfinex,UDCUST,crypto,USDc-Tether USDt,UST,1,0.00001,0.00000001,tUDCUST,2.0
+bitfinex,TRXUSDT,crypto,TRON-Tether USDt,USDT,1,0.00001,0.00000001,tTRXUST,0.001
+bitfinex,TUSDUSD,crypto,TrueUSD-US Dollar,USD,1,0.00001,0.00000001,tTSDUSD,2.0
+bitfinex,TUSDUSDT,crypto,TrueUSD-Tether USDt,USDT,1,0.00001,0.00000001,tTSDUST,2.0
+bitfinex,USDCUSD,crypto,USDc-US Dollar,USD,1,0.00001,0.00000001,tUDCUSD,2.0
+bitfinex,USDCUSDT,crypto,USDc-Tether USDt,USDT,1,0.00001,0.00000001,tUDCUST,2.0
 bitfinex,UNIUSD,crypto,Uniswap-US Dollar,USD,1,0.00001,0.00000001,tUNIUSD,0.2
-bitfinex,UNIUST,crypto,Uniswap-Tether USDt,UST,1,0.00001,0.00000001,tUNIUST,0.2
+bitfinex,UNIUSDT,crypto,Uniswap-Tether USDt,USDT,1,0.00001,0.00000001,tUNIUST,0.2
 bitfinex,UOPUSD,crypto,Utopia-US Dollar,USD,1,0.00001,0.00000001,tUOPUSD,12.0
-bitfinex,UOPUST,crypto,Utopia-Tether USDt,UST,1,0.00001,0.00000001,tUOPUST,12.0
+bitfinex,UOPUSDT,crypto,Utopia-Tether USDt,USDT,1,0.00001,0.00000001,tUOPUST,12.0
 bitfinex,UOSBTC,crypto,Ultra-Bitcoin,BTC,1,0.00001,0.00000001,tUOSBTC,4.0
 bitfinex,UOSUSD,crypto,Ultra-US Dollar,USD,1,0.00001,0.00000001,tUOSUSD,4.0
-bitfinex,USTCNHT,crypto,Tether USDt-Tether CNHt,CNHT,1,0.00001,0.00000001,tUST:CNHT,2.0
-bitfinex,USTUSD,crypto,Tether USDt-US Dollar,USD,1,0.00001,0.00000001,tUSTUSD,2.0
+bitfinex,USDTCNHT,crypto,Tether USDt-Tether CNHt,CNHT,1,0.00001,0.00000001,tUST:CNHT,2.0
+bitfinex,USDTUSD,crypto,Tether USDt-US Dollar,USD,1,0.00001,0.00000001,tUSTUSD,2.0
 bitfinex,UTKUSD,crypto,UTRUST-US Dollar,USD,1,0.00001,0.00000001,tUTKUSD,6.0
 bitfinex,VEEUSD,crypto,BLOCKv-US Dollar,USD,1,0.00001,0.00000001,tVEEUSD,324.0
 bitfinex,VELOUSD,crypto,VELO-US Dollar,USD,1,0.00001,0.00000001,tVELO:USD,4.0
-bitfinex,VELOUST,crypto,VELO-Tether USDt,UST,1,0.00001,0.00000001,tVELO:UST,4.0
+bitfinex,VELOUSDT,crypto,VELO-Tether USDt,USDT,1,0.00001,0.00000001,tVELO:UST,4.0
 bitfinex,VETBTC,crypto,VeChain-Bitcoin,BTC,1,0.00001,0.00000001,tVETBTC,24.0
 bitfinex,VETUSD,crypto,VeChain-US Dollar,USD,1,0.00001,0.00000001,tVETUSD,24.0
-bitfinex,VETUST,crypto,VeChain-Tether USDt,UST,1,0.00001,0.00000001,tVETUST,0.001
+bitfinex,VETUSDT,crypto,VeChain-Tether USDt,USDT,1,0.00001,0.00000001,tVETUST,0.001
 bitfinex,VSYBTC,crypto,v.systems-Bitcoin,BTC,1,0.00001,0.00000001,tVSYBTC,100.0
 bitfinex,VSYUSD,crypto,v.systems-US Dollar,USD,1,0.00001,0.00000001,tVSYUSD,100.0
 bitfinex,WAVESUSD,crypto,WAVES-US Dollar,USD,1,0.00001,0.00000001,tWAVES:USD,0.08
-bitfinex,WAVESUST,crypto,WAVES-Tether USDt,UST,1,0.00001,0.00000001,tWAVES:UST,0.08
+bitfinex,WAVESUSDT,crypto,WAVES-Tether USDt,USDT,1,0.00001,0.00000001,tWAVES:UST,0.08
 bitfinex,WAXUSD,crypto,WAX-US Dollar,USD,1,0.00001,0.00000001,tWAXUSD,8.0
-bitfinex,WBTUSD,crypto,Wrapped Bitcoin-US Dollar,USD,1,0.00001,0.00000001,tWBTUSD,0.00006
+bitfinex,WBTCUSD,crypto,Wrapped Bitcoin-US Dollar,USD,1,0.00001,0.00000001,tWBTUSD,0.00006
 bitfinex,WILDUSD,crypto,Wilder World-US Dollar,USD,1,0.00001,0.00000001,tWILD:USD,0.001
-bitfinex,WILDUST,crypto,Wilder World-Tether USDt,UST,1,0.00001,0.00000001,tWILD:UST,0.001
+bitfinex,WILDUSDT,crypto,Wilder World-Tether USDt,USDT,1,0.00001,0.00000001,tWILD:UST,0.001
 bitfinex,WNCGUSD,crypto,WNCG-US Dollar,USD,1,0.00001,0.00000001,tWNCG:USD,0.001
-bitfinex,WNCGUST,crypto,WNCG-Tether USDt,UST,1,0.00001,0.00000001,tWNCG:UST,0.001
+bitfinex,WNCGUSDT,crypto,WNCG-Tether USDt,USDT,1,0.00001,0.00000001,tWNCG:UST,0.001
 bitfinex,WOOUSD,crypto,WOO-US Dollar,USD,1,0.00001,0.00000001,tWOOUSD,0.001
-bitfinex,WOOUST,crypto,WOO-Tether USDt,UST,1,0.00001,0.00000001,tWOOUST,0.001
+bitfinex,WOOUSDT,crypto,WOO-Tether USDt,USDT,1,0.00001,0.00000001,tWOOUST,0.001
 bitfinex,XAUTBTC,crypto,Tether XAUt-Bitcoin,BTC,1,0.00001,0.00000001,tXAUT:BTC,0.002
 bitfinex,XAUTUSD,crypto,Tether XAUt-US Dollar,USD,1,0.00001,0.00000001,tXAUT:USD,0.002
-bitfinex,XAUTUST,crypto,Tether XAUt-Tether USDt,UST,1,0.00001,0.00000001,tXAUT:UST,0.002
-bitfinex,XCHUSD,crypto,CryptoFranc-US Dollar,USD,1,0.00001,0.00000001,tXCHUSD,2.0
+bitfinex,XAUTUSDT,crypto,Tether XAUt-Tether USDt,USDT,1,0.00001,0.00000001,tXAUT:UST,0.002
+bitfinex,XCHFUSD,crypto,CryptoFranc-US Dollar,USD,1,0.00001,0.00000001,tXCHUSD,2.0
 bitfinex,XDCUSD,crypto,XinFin-US Dollar,USD,1,0.00001,0.00000001,tXDCUSD,16.0
-bitfinex,XDCUST,crypto,XinFin-Tether USDt,UST,1,0.00001,0.00000001,tXDCUST,16.0
+bitfinex,XDCUSDT,crypto,XinFin-Tether USDt,USDT,1,0.00001,0.00000001,tXDCUST,16.0
 bitfinex,XLMBTC,crypto,Stellar Lumen-Bitcoin,BTC,1,0.00001,0.00000001,tXLMBTC,8.0
 bitfinex,XLMETH,crypto,Stellar Lumen-Ethereum,ETH,1,0.00001,0.00000001,tXLMETH,8.0
 bitfinex,XLMUSD,crypto,Stellar Lumen-US Dollar,USD,1,0.00001,0.00000001,tXLMUSD,8.0
-bitfinex,XLMUST,crypto,Stellar Lumen-Tether USDt,UST,1,0.00001,0.00000001,tXLMUST,8.0
+bitfinex,XLMUSDT,crypto,Stellar Lumen-Tether USDt,USDT,1,0.00001,0.00000001,tXLMUST,8.0
 bitfinex,XMRBTC,crypto,Monero-Bitcoin,BTC,1,0.00001,0.00000001,tXMRBTC,0.02
 bitfinex,XMRUSD,crypto,Monero-US Dollar,USD,1,0.00001,0.00000001,tXMRUSD,0.02
-bitfinex,XMRUST,crypto,Monero-Tether USDt,UST,1,0.00001,0.00000001,tXMRUST,0.008
+bitfinex,XMRUSDT,crypto,Monero-Tether USDt,USDT,1,0.00001,0.00000001,tXMRUST,0.008
 bitfinex,XRAUSD,crypto,Xriba-US Dollar,USD,1,0.00001,0.00000001,tXRAUSD,196.0
 bitfinex,XRDBTC,crypto,RADIX-Bitcoin,BTC,1,0.00001,0.00000001,tXRDBTC,20.0
 bitfinex,XRDUSD,crypto,RADIX-US Dollar,USD,1,0.00001,0.00000001,tXRDUSD,20.0
 bitfinex,XRPBTC,crypto,Ripple-Bitcoin,BTC,1,0.00001,0.00000001,tXRPBTC,2.0
 bitfinex,XRPUSD,crypto,Ripple-US Dollar,USD,1,0.00001,0.00000001,tXRPUSD,2.0
-bitfinex,XRPUST,crypto,Ripple-Tether USDt,UST,1,0.00001,0.00000001,tXRPUST,2.0
+bitfinex,XRPUSDT,crypto,Ripple-Tether USDt,USDT,1,0.00001,0.00000001,tXRPUST,2.0
 bitfinex,XSNUSD,crypto,Stakenet-US Dollar,USD,1,0.00001,0.00000001,tXSNUSD,10.0
 bitfinex,XTZBTC,crypto,Tezos-Bitcoin,BTC,1,0.00001,0.00000001,tXTZBTC,0.6
 bitfinex,XTZUSD,crypto,Tezos-US Dollar,USD,1,0.00001,0.00000001,tXTZUSD,0.6
-bitfinex,XTZUST,crypto,Tezos-Tether USDt,UST,1,0.00001,0.00000001,tXTZUST,0.001
+bitfinex,XTZUSDT,crypto,Tezos-Tether USDt,USDT,1,0.00001,0.00000001,tXTZUST,0.001
 bitfinex,XVGUSD,crypto,Verge-US Dollar,USD,1,0.00001,0.00000001,tXVGUSD,112.0
 bitfinex,YFIUSD,crypto,Yearn.Finance-US Dollar,USD,1,0.00001,0.00000001,tYFIUSD,0.00008
-bitfinex,YFIUST,crypto,Yearn.Finance-Tether USDt,UST,1,0.00001,0.00000001,tYFIUST,0.00008
+bitfinex,YFIUSDT,crypto,Yearn.Finance-Tether USDt,USDT,1,0.00001,0.00000001,tYFIUST,0.00008
 bitfinex,ZCNUSD,crypto,0Chain-US Dollar,USD,1,0.00001,0.00000001,tZCNUSD,6.0
 bitfinex,ZECBTC,crypto,Zcash-Bitcoin,BTC,1,0.00001,0.00000001,tZECBTC,0.02
 bitfinex,ZECUSD,crypto,Zcash-US Dollar,USD,1,0.00001,0.00000001,tZECUSD,0.02
 bitfinex,ZILBTC,crypto,Zilliqa-Bitcoin,BTC,1,0.00001,0.00000001,tZILBTC,28.0
 bitfinex,ZILUSD,crypto,Zilliqa-US Dollar,USD,1,0.00001,0.00000001,tZILUSD,28.0
 bitfinex,ZMTUSD,crypto,Zipmex Token-US Dollar,USD,1,0.00001,0.00000001,tZMTUSD,0.001
-bitfinex,ZMTUST,crypto,Zipmex Token-Tether USDt,UST,1,0.00001,0.00000001,tZMTUST,0.001
+bitfinex,ZMTUSDT,crypto,Zipmex Token-Tether USDt,USDT,1,0.00001,0.00000001,tZMTUST,0.001
 bitfinex,ZRXBTC,crypto,0x-Bitcoin,BTC,1,0.00001,0.00000001,tZRXBTC,2.0
 bitfinex,ZRXETH,crypto,0x-Ethereum,ETH,1,0.00001,0.00000001,tZRXETH,2.0
 bitfinex,ZRXUSD,crypto,0x-US Dollar,USD,1,0.00001,0.00000001,tZRXUSD,2.0
