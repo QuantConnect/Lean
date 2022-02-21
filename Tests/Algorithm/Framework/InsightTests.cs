@@ -260,7 +260,7 @@ namespace QuantConnect.Tests.Algorithm.Framework
 
         [Test]
         [TestCase("SPY", SecurityType.Equity, Market.USA, 2019, 1, 2, 9, 30)]
-        [TestCase("EURUSD", SecurityType.Forex, Market.FXCM, 2019, 1, 2, 0, 0)]
+        [TestCase("EURUSD", SecurityType.Forex, Market.FXCM, 2019, 1, 6, 17, 0)]
         public void SetPeriodAndCloseTimeUsingExpiryEndOfMonth(string ticker, SecurityType securityType, string market, int year, int month, int day, int hour, int minute)
         {
             var symbol = Symbol.Create(ticker, securityType, market);

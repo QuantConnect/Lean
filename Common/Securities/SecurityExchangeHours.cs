@@ -222,9 +222,8 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="localDateTime">The time to begin searching for market open (non-inclusive)</param>
         /// <param name="extendedMarket">True to include extended market hours in the search</param>
-        /// <param name="isInclusive">True to accept as next market open date the same input data</param>
         /// <returns>The next market opening date time following the specified local date time</returns>
-        public DateTime GetNextMarketOpen(DateTime localDateTime, bool extendedMarket, bool isInclusive = false)
+        public DateTime GetNextMarketOpen(DateTime localDateTime, bool extendedMarket)
         {
             var time = localDateTime;
             var oneWeekLater = localDateTime.Date.AddDays(15);
@@ -255,14 +254,39 @@ namespace QuantConnect.Securities
                         }
                     }
 
-                    var marketOpenTimeOfDay = marketHours.GetMarketOpen(time.TimeOfDay, extendedMarket, isInclusive);
-                    if (marketOpenTimeOfDay.HasValue)
+                    // Consider all the possible segments in the day
+                    var thereIsASegment = true;
+                    while (thereIsASegment)
                     {
-                        var marketOpen = time.Date + marketOpenTimeOfDay.Value;
-                        if ((localDateTime < marketOpen) || (isInclusive && localDateTime <= marketOpen))
+                        var marketOpenTimeOfDay = marketHours.GetMarketOpen(time.TimeOfDay, extendedMarket);
+                        if (marketOpenTimeOfDay.HasValue)
                         {
-                            return marketOpen;
+                            var marketOpen = time.Date + marketOpenTimeOfDay.Value;
+                            if (localDateTime < marketOpen)
+                            {
+                                // Check marketOpen is not part of the last market open segment
+                                if (!IsContinuousOpenMarket(marketHours, time, marketOpen, extendedMarket))
+                                {
+                                    return marketOpen;
+                                }
+                            }
+
+                            if (localDateTime <= marketOpen)
+                            {
+                                // Try to find the next segment
+                                var index = marketHours.Segments.ToList().FindIndex(x => x.Start == marketOpenTimeOfDay);
+                                if (index < marketHours.Segments.Count() - 1)
+                                {
+                                    // If there's still a segment in the day, try with that one. Otherwise, jump to the next
+                                    // day
+                                    marketOpenTimeOfDay = marketHours.Segments.ElementAt(index + 1).Start;
+                                    time = time.Date + marketOpenTimeOfDay.Value;
+                                    continue;
+                                }
+                            }
                         }
+
+                        thereIsASegment = false;
                     }
                 }
 
@@ -271,6 +295,57 @@ namespace QuantConnect.Securities
             while (time < oneWeekLater);
 
             throw new ArgumentException("Unable to locate next market open within two weeks.");
+        }
+
+        /// <summary>
+        /// Checks whether the current marketOpen time is part of the last market open segment
+        /// </summary>
+        /// <param name="marketHours">Trading segments of the current time</param>
+        /// <param name="time">The current time</param>
+        /// <param name="marketOpen">Current next market open time</param>
+        /// <param name="extendedMarket">Flag to indicate whether PreMarket time is considered as open market or not</param>
+        /// <returns>True if the current next market open time is part of the last market open segment. False otherwise.</returns>
+        public bool IsContinuousOpenMarket(LocalMarketHours marketHours, DateTime time, DateTime marketOpen, bool extendedMarket)
+        {
+            var index = marketHours.Segments.ToList().FindIndex(x => x.Start == marketOpen.TimeOfDay);
+            DateTime lastMarketOpen = new DateTime();
+            TimeSpan? lastSegment;
+            if (index != 0)
+            {
+                // There's still one segment before the current one in the day
+                lastSegment = marketHours.Segments.ElementAt(index - 1).End;
+
+                if (marketHours.Segments.ElementAt(index - 1).State == MarketHoursState.Market || 
+                    (marketHours.Segments.ElementAt(index - 1).State == MarketHoursState.PreMarket && extendedMarket))
+                {
+                    lastMarketOpen = time.Date + lastSegment.Value;
+                }
+            }
+            else
+            {
+                // There's no segment before the current one in the day, then take the yesterday's last segment
+                var oneDayBefore = time.Date.AddDays(-1);
+                var oneDayBeforeMarketHours = GetMarketHours(oneDayBefore.DayOfWeek);
+                lastSegment = oneDayBeforeMarketHours.Segments.Any() ?
+                    oneDayBeforeMarketHours.Segments.Last().End : null;
+
+                if (lastSegment.HasValue)
+                {
+                    if (oneDayBeforeMarketHours.Segments.Last().State == MarketHoursState.Market ||
+                    (marketHours.Segments.Last().State == MarketHoursState.PreMarket && extendedMarket))
+                    {
+                        lastMarketOpen = time.Date.AddDays(-1) + lastSegment.Value;
+                    }
+                }
+            }
+
+            // Check the current market open time is not part or continuation of the last market open segment
+            if (marketOpen - lastMarketOpen != new TimeSpan())
+            {
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>

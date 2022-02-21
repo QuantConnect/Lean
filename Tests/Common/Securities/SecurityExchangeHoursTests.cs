@@ -175,7 +175,7 @@ namespace QuantConnect.Tests.Common.Securities
             var exhangeHours = CreateUsFutureSecurityExchangeHours();
 
             var startTime = new DateTime(2022, 1, 1);
-            var nextMarketOpen = exhangeHours.GetNextMarketOpen(startTime, false, true);
+            var nextMarketOpen = exhangeHours.GetNextMarketOpen(startTime, false);
             Assert.AreEqual(new DateTime(2022, 1, 2), nextMarketOpen);
         }
 
