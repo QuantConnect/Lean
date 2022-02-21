@@ -26,6 +26,36 @@ namespace QuantConnect.ToolBox.BitfinexDownloader
     public class BitfinexExchangeInfoDownloader : IExchangeInfoDownloader
     {
         /// <summary>
+        /// Currency mapping
+        /// </summary>
+        private readonly Dictionary<string, string> _oldWithNewCurrencies = new()
+        {
+            { "UST", "USDT" },
+            { "ALG", "ALGO" },
+            { "AMP", "AMPL" },
+            { "ATO", "ATOM" },
+            { "B21X", "B21" },
+            { "XCH", "XCHF" },
+            { "DAT", "DATA" },
+            { "DOG", "MDOG" },
+            { "DSH", "DASH" },
+            { "ETH2X", "ETH2" },
+            { "EUS", "EURS" },
+            { "EUT", "EURT" },
+            { "GNT", "GLM" },
+            { "IDX", "ID" },
+            { "IOT", "IOTA" },
+            { "PAS", "PASS" },
+            { "QTM", "QTUM" },
+            { "RBT", "RBTC" },
+            { "REP", "REP2" },
+            { "STJ", "STORJ" },
+            { "TSD", "TUSD" },
+            { "UDC", "USDC" },
+            { "WBT", "WBTC" },
+        };
+
+        /// <summary>
         /// Market name
         /// </summary>
         public string Market => QuantConnect.Market.Bitfinex;
@@ -76,6 +106,18 @@ namespace QuantConnect.ToolBox.BitfinexDownloader
                 var baseCurrency = symbol.RemoveFromEnd(quoteCurrency);
                 var quoteLabel = quoteCurrency;
                 var baseLabel = baseCurrency;
+
+                // Use old currency symbols registered with LEAN
+                if (_oldWithNewCurrencies.TryGetValue(quoteCurrency, out string oldQuoteCurrency))
+                {
+                    symbol = baseCurrency + oldQuoteCurrency;
+                }
+                if (_oldWithNewCurrencies.TryGetValue(baseCurrency, out string oldBaseCurrency))
+                {
+                    symbol = oldBaseCurrency + (oldQuoteCurrency ?? quoteCurrency);
+                }
+
+                // Get Full Name of the currency
                 if (!currencyLabel.TryGetValue(quoteCurrency, out string quoteLabelValue))
                 {
                     Log.Trace($"BitfinexExchangeInfoDownloader.Get(): missing label value for currency {quoteCurrency} using {quoteLabel} instead");
@@ -92,6 +134,7 @@ namespace QuantConnect.ToolBox.BitfinexDownloader
                 {
                     baseLabel = baseLabelValue;
                 }
+
                 var description = $"{baseLabel}-{quoteLabel}";
                 var contractMultiplier = 1;
                 // default value for minimum_price_variation
@@ -101,7 +144,7 @@ namespace QuantConnect.ToolBox.BitfinexDownloader
                 // follow exchange reference format
                 var marketTicker = "t" + tradingPair;
                 var minimum_order_size = pairsInfo[tradingPair][3];
-                yield return $"{Market},{symbol},crypto,{description},{quoteCurrency},{contractMultiplier},{minimum_price_variation},{lot_size},{marketTicker},{minimum_order_size}";
+                yield return $"{Market},{symbol},crypto,{description},{oldQuoteCurrency ?? quoteCurrency},{contractMultiplier},{minimum_price_variation},{lot_size},{marketTicker},{minimum_order_size}";
             }
         }
     }
