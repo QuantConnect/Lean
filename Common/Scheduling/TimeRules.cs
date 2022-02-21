@@ -32,8 +32,6 @@ namespace QuantConnect.Scheduling
 
         private readonly SecurityManager _securities;
 
-        private DateTime _lastDate;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="TimeRules"/> helper class
         /// </summary>
