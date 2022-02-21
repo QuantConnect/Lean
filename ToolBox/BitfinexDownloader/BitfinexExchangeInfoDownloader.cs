@@ -53,6 +53,8 @@ namespace QuantConnect.ToolBox.BitfinexDownloader
             { "TSD", "TUSD" },
             { "UDC", "USDC" },
             { "WBT", "WBTC" },
+            { "OMN", "OMNI" },
+            { "MNA", "MANA" },
         };
 
         /// <summary>
