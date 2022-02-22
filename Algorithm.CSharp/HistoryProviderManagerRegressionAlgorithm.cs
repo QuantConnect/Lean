@@ -89,7 +89,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-0.561"},
+            {"Information Ratio", "-0.56"},
             {"Tracking Error", "0.164"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},

@@ -153,7 +153,24 @@ namespace QuantConnect.ToolBox
                         break;
                 }
             }
-            else
+            else if (targetApp.Contains("updater") || targetApp.EndsWith("spu"))
+            {
+                switch (targetApp)
+                {
+                    case "gdaxspu":
+                    case "gdaxsymbolpropertiesupdater":
+                        GDAXDownloaderProgram.ExchangeInfoDownloader();
+                        break;
+                    case "bfxspu":
+                    case "bitfinexsymbolpropertiesupdater":
+                        BitfinexDownloaderProgram.ExchangeInfoDownloader();
+                        break;
+                    default:
+                        PrintMessageAndExit(1, "ERROR: Unrecognized --app value");
+                        break;
+                }
+            }
+            else     
             {
                 switch (targetApp)
                 {
