@@ -50,7 +50,7 @@ namespace QuantConnect.ToolBox.GDAXDownloader
         public IEnumerable<string> Get()
         {
             const string url = "https://api.exchange.coinbase.com/products";
-            Dictionary<string, string> headers = new() { { "User-Agent", ".NET Framework Test Client" } };
+            Dictionary<string, string> headers = new() { { "User-Agent", ".NET Client" } };
             var json = url.DownloadData(headers);
             var exchangeInfo = JsonConvert.DeserializeObject<List<Product>>(json);
             foreach (var product in exchangeInfo.OrderBy(x => x.ID.Replace("-", string.Empty)))

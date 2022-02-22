@@ -72,7 +72,7 @@ namespace QuantConnect.ToolBox.BitfinexDownloader
             const string currenciesUrl = "https://api-pub.bitfinex.com/v2/conf/pub:list:currency";
             const string pairInfosUrl = "https://api-pub.bitfinex.com/v2/conf/pub:info:pair";
             const string pairLabelUrl = "https://api-pub.bitfinex.com/v2/conf/pub:map:currency:label";
-            Dictionary<string, string> headers = new() { { "User-Agent", ".NET Framework Test Client" } };
+            Dictionary<string, string> headers = new() { { "User-Agent", ".NET Client" } };
 
             // Fetch trading pairs
             var json = tradingPairsUrl.DownloadData(headers);
