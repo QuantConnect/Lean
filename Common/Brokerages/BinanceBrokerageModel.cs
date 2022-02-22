@@ -32,9 +32,14 @@ namespace QuantConnect.Brokerages
         private const decimal _defaultLeverage = 3;
 
         /// <summary>
+        /// Market name
+        /// </summary>
+        protected virtual string MarketName => Market.Binance;
+
+        /// <summary>
         /// Gets a map of the default markets to be used for each security type
         /// </summary>
-        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets();
+        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets(Market.Binance);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BinanceBrokerageModel"/> class
@@ -66,7 +71,7 @@ namespace QuantConnect.Brokerages
         /// <returns>The benchmark for this brokerage</returns>
         public override IBenchmark GetBenchmark(SecurityManager securities)
         {
-            var symbol = Symbol.Create("BTCUSDC", SecurityType.Crypto, Market.Binance);
+            var symbol = Symbol.Create("BTCUSDC", SecurityType.Crypto, MarketName);
             return SecurityBenchmark.CreateInstance(securities, symbol);
         }
 
@@ -176,10 +181,10 @@ namespace QuantConnect.Brokerages
                 order.AbsoluteQuantity * price > security.SymbolProperties.MinimumOrderSize;
         }
 
-        private static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets()
+        protected static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets(string marketName)
         {
             var map = DefaultMarketMap.ToDictionary();
-            map[SecurityType.Crypto] = Market.Binance;
+            map[SecurityType.Crypto] = marketName;
             return map.ToReadOnlyDictionary();
         }
     }
