@@ -43,7 +43,7 @@ namespace QuantConnect
             Tuple.Create(CBOT, 8),
             Tuple.Create(ICE, 9),
             Tuple.Create(CBOE, 10),
-            Tuple.Create(India, 11),          
+            Tuple.Create(India, 11),
 
             Tuple.Create(GDAX, 12),
             Tuple.Create(Kraken, 13),
