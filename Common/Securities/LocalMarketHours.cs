@@ -134,30 +134,56 @@ namespace QuantConnect.Securities
         /// <param name="time">The reference time, the open returned will be the first open after the specified time if there are multiple market open segments</param>
         /// <param name="extendedMarket">True to include extended market hours, false for regular market hours</param>
         /// <returns>The market's opening time of day</returns>
-        public TimeSpan? GetMarketOpen(TimeSpan time, bool extendedMarket)
+        public TimeSpan? GetMarketOpen(TimeSpan time, bool extendedMarket, TimeSpan? lastDaySegment = null)
         {
+            var lastSegment = lastDaySegment;
             foreach (var segment in _segments)
             {
                 if (segment.State == MarketHoursState.Closed || segment.End <= time)
                 {
+                    lastSegment = segment.End;
                     continue;
                 }
 
                 if (extendedMarket && _hasPreMarket)
                 {
-                    if (segment.State == MarketHoursState.PreMarket)
+                    if (segment.State == MarketHoursState.PreMarket && !IsContinuousMarketOpen(lastSegment, segment))
                     {
                         return segment.Start;
                     }
+
+                    lastSegment = segment.End;
                 }
                 else if (segment.State == MarketHoursState.Market)
                 {
-                    return segment.Start;
+                    if (!IsContinuousMarketOpen(lastSegment, segment))
+                    {
+                        return segment.Start;
+                    }
+
+                    lastSegment = segment.End;
                 }
             }
 
             // we couldn't locate an open segment after the specified time
             return null;
+        }
+
+        public bool IsContinuousMarketOpen(TimeSpan? lastSegment, MarketHoursSegment segment)
+        {
+            if (lastSegment != null)
+            {
+                if (segment.Start - lastSegment == new TimeSpan())
+                {
+                    return true;
+                }
+                else if (segment.Start == new TimeSpan() && lastSegment.Value == new TimeSpan(24,0,0))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
