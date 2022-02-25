@@ -43,9 +43,6 @@ namespace QuantConnect.Algorithm.CSharp
 
             DefaultOrderProperties = new AtreyuOrderProperties
             {
-                // Can specify the default exchange to execute an order on.
-                // If not specified will default to the primary exchange
-                Exchange = Exchange.BATS,
                 // Currently only support order for the day
                 TimeInForce = TimeInForce.Day
             };
@@ -59,10 +56,8 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
-                // will set 25% of our buying power with a market order that will be routed to exchange set in the default order properties (BATS)
+                // will set 25% of our buying power with a market order
                 SetHoldings("SPY", 0.25m);
-                // will increase our SPY holdings to 50% of our buying power with a market order that will be routed to ARCA
-                SetHoldings("SPY", 0.50m, orderProperties: new AtreyuOrderProperties { Exchange = Exchange.ARCA });
 
                 Debug("Purchased SPY!");
             }
@@ -83,34 +78,34 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "2"},
+            {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "93.340%"},
-            {"Drawdown", "1.100%"},
+            {"Compounding Annual Return", "39.143%"},
+            {"Drawdown", "0.500%"},
             {"Expectancy", "0"},
-            {"Net Profit", "0.846%"},
-            {"Sharpe Ratio", "6.515"},
-            {"Probabilistic Sharpe Ratio", "67.535%"},
+            {"Net Profit", "0.423%"},
+            {"Sharpe Ratio", "5.634"},
+            {"Probabilistic Sharpe Ratio", "67.498%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
             {"Alpha", "0"},
             {"Beta", "0"},
-            {"Annual Standard Deviation", "0.11"},
-            {"Annual Variance", "0.012"},
-            {"Information Ratio", "6.515"},
-            {"Tracking Error", "0.11"},
+            {"Annual Standard Deviation", "0.055"},
+            {"Annual Variance", "0.003"},
+            {"Information Ratio", "5.634"},
+            {"Tracking Error", "0.055"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$1.20"},
-            {"Estimated Strategy Capacity", "$8600000.00"},
+            {"Total Fees", "$0.60"},
+            {"Estimated Strategy Capacity", "$150000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Fitness Score", "0.124"},
+            {"Fitness Score", "0.062"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "78.222"},
-            {"Portfolio Turnover", "0.124"},
+            {"Return Over Maximum Drawdown", "71.634"},
+            {"Portfolio Turnover", "0.062"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -124,7 +119,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "01a751a837beafd90015b2fd82edf994"}
+            {"OrderListHash", "d549c64ee7f5e3866712b3c7dbd64caa"}
         };
     }
 }
