@@ -262,7 +262,9 @@ namespace QuantConnect.Securities
                     // in GetMarketOpen() by the last segment in the same day prior to the next market open
                     var oneDayBefore = time.Date.AddDays(-1);
                     var oneDayBeforeMarketHours = GetMarketHours(oneDayBefore.DayOfWeek);
-                    TimeSpan? lastSegment = oneDayBeforeMarketHours.Segments.Any() ?
+                    TimeSpan lastEarlyCloseTime;
+                    var wasEarlyClose = _earlyCloses.TryGetValue(time.Date, out lastEarlyCloseTime);
+                    TimeSpan? lastSegment = oneDayBeforeMarketHours.Segments.Any() && !wasEarlyClose ?
                         oneDayBeforeMarketHours.Segments.Last().End : null;
 
                     var marketOpenTimeOfDay = marketHours.GetMarketOpen(time.TimeOfDay, extendedMarket, lastSegment);

@@ -213,7 +213,7 @@ namespace QuantConnect.Tests.Common.Securities
             // Thanksgiving day
             var startTime = new DateTime(2013, 11, 28);
             var nextMarketOpen = exhangeHours.GetNextMarketOpen(startTime, false);
-            Assert.AreEqual(new DateTime(2013, 12, 1, 0, 0, 0), nextMarketOpen);
+            Assert.AreEqual(new DateTime(2013, 11, 29), nextMarketOpen);
         }
 
         [Test]

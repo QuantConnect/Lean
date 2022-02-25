@@ -49,14 +49,14 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "1976"},
+            {"Total Trades", "1988"},
             {"Average Win", "0.01%"},
             {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "-4.096%"},
-            {"Drawdown", "4.100%"},
-            {"Expectancy", "-0.869"},
-            {"Net Profit", "-4.125%"},
-            {"Sharpe Ratio", "-6.024"},
+            {"Compounding Annual Return", "-4.120%"},
+            {"Drawdown", "4.200%"},
+            {"Expectancy", "-0.870"},
+            {"Net Profit", "-4.150%"},
+            {"Sharpe Ratio", "-6.061"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "97%"},
             {"Win Rate", "3%"},
@@ -65,18 +65,18 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "-0.006"},
             {"Annual Standard Deviation", "0.005"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-1.658"},
+            {"Information Ratio", "-1.66"},
             {"Tracking Error", "0.089"},
-            {"Treynor Ratio", "4.859"},
-            {"Total Fees", "$3655.60"},
+            {"Treynor Ratio", "4.919"},
+            {"Total Fees", "$3677.80"},
             {"Estimated Strategy Capacity", "$2000.00"},
             {"Lowest Capacity Asset", "ES VP274HSU1AF5"},
-            {"Fitness Score", "0.127"},
+            {"Fitness Score", "0.128"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-6.832"},
+            {"Sortino Ratio", "-6.856"},
             {"Return Over Maximum Drawdown", "-0.995"},
-            {"Portfolio Turnover", "0.645"},
+            {"Portfolio Turnover", "0.648"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -90,7 +90,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "501155c97b04116f257f329d19df9ab4"}
+            {"OrderListHash", "87d2b127c9859cad9d2c65ac9d76deb5"}
         };
     }
 }
