@@ -268,7 +268,6 @@ namespace QuantConnect.Securities
                     var marketOpenTimeOfDay = marketHours.GetMarketOpen(time.TimeOfDay, extendedMarket, lastSegment);
                     if (marketOpenTimeOfDay.HasValue)
                     {
-                        Logging.Log.Debug($"localDateTime: {localDateTime} time: {time} marketOpen: {marketOpenTimeOfDay}");
                         var marketOpen = time.Date + marketOpenTimeOfDay.Value;
 
                         // Check the market open is before the close time in case of an early close
