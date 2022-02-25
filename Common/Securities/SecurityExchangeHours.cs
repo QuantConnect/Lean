@@ -282,7 +282,6 @@ namespace QuantConnect.Securities
 
                         if (localDateTime < marketOpen)
                         {
-                            Logging.Log.Debug($"localDateTime: {localDateTime} time {time} marketOpen {marketOpen}");
                             return marketOpen;
                         }
                     }
