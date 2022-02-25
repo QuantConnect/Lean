@@ -133,6 +133,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="time">The reference time, the open returned will be the first open after the specified time if there are multiple market open segments</param>
         /// <param name="extendedMarket">True to include extended market hours, false for regular market hours</param>
+        /// <param name="lastDaySegment">Last day last segment</param>
         /// <returns>The market's opening time of day</returns>
         public TimeSpan? GetMarketOpen(TimeSpan time, bool extendedMarket, TimeSpan? lastDaySegment = null)
         {
@@ -169,15 +170,23 @@ namespace QuantConnect.Securities
             return null;
         }
 
-        public bool IsContinuousMarketOpen(TimeSpan? lastSegment, MarketHoursSegment segment)
+        /// <summary>
+        /// Check the given segment is not part of the current last segment
+        /// </summary>
+        /// <param name="lastSegment">Last segment before the current segment</param>
+        /// <param name="segment">Current segment</param>
+        /// <returns>True if indeed the given segment is part of the last segment. False otherwise</returns>
+        private bool IsContinuousMarketOpen(TimeSpan? lastSegment, MarketHoursSegment segment)
         {
             if (lastSegment != null)
             {
-                if (segment.Start - lastSegment == new TimeSpan())
-                {
-                    return true;
-                }
-                else if (segment.Start == new TimeSpan() && lastSegment.Value == new TimeSpan(24,0,0))
+                // If the difference is 0 it means lastSegment and segment are consecutives TimeSpans
+                // in the same day
+                // If the difference is equal to lastSegment's total seconds it means lastSegment and
+                // segment are consecutive TimeSpans but in different days, this is, lastSegment is at 24
+                // hours and segment at 0 hours
+                var difference = Math.Abs((segment.Start - lastSegment).Value.TotalSeconds);
+                if (difference == 0 || difference == lastSegment.Value.TotalSeconds)
                 {
                     return true;
                 }

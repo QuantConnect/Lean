@@ -169,6 +169,12 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(new DateTime(2015, 6, 29, 9, 30, 0), nextMarketOpen);
         }
 
+        // The purpose of define explicitly the exchange market hours for futures,
+        // which is pretty similar to exchange market hours for ES, was to consider
+        // the case when the market opens at 00 hours on Sunday but the input date
+        // was the Saturday. In that case when GetNextMarketOpen() processed the Sunday
+        // it should behave as an inclusive  method because for Sunday at 00 it should
+        // return Sunday at 00
         [Test]
         public void GetNextMarketOpenForContinuousSchedulesOverWeekends()
         {
@@ -197,6 +203,17 @@ namespace QuantConnect.Tests.Common.Securities
             var startTime = new DateTime(2022, 1, 2);
             var nextMarketOpen = exhangeHours.GetNextMarketOpen(startTime, false);
             Assert.AreEqual(new DateTime(2022, 1, 3, 16, 30, 0), nextMarketOpen);
+        }
+
+        [Test]
+        public void GetNextMarketOpenForEarlyCloses()
+        {
+            var exhangeHours = CreateUsFutureSecurityExchangeHours();
+
+            // Thanksgiving day
+            var startTime = new DateTime(2013, 11, 28);
+            var nextMarketOpen = exhangeHours.GetNextMarketOpen(startTime, false);
+            Assert.AreEqual(new DateTime(2013, 12, 1, 0, 0, 0), nextMarketOpen);
         }
 
         [Test]
@@ -463,7 +480,8 @@ namespace QuantConnect.Tests.Common.Securities
             );
             var saturday = LocalMarketHours.ClosedAllDay(DayOfWeek.Saturday);
 
-            var earlyCloses = new Dictionary<DateTime, TimeSpan> { { new DateTime(2022, 1, 5), new TimeSpan(2022, 2, 1) } };
+            var earlyCloses = new Dictionary<DateTime, TimeSpan> { { new DateTime(2013, 11, 28), new TimeSpan(10, 30, 0) },
+                { new DateTime(2013, 11, 29), new TimeSpan(12, 15, 0)} };
             var lateOpens = new Dictionary<DateTime, TimeSpan>();
             var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, USHoliday.Dates.Select(x => x.Date), new[]
             {

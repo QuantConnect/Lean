@@ -229,6 +229,8 @@ namespace QuantConnect.Securities
             do
             {
                 var marketHours = GetMarketHours(time.DayOfWeek);
+                var isEarlyCloseDay = false;
+                var earlyCloseDateTime = new DateTime();
                 if (!marketHours.IsClosedAllDay && !_holidays.Contains(time.Date.Ticks))
                 {
                     TimeSpan lateOpenTime;
@@ -245,7 +247,8 @@ namespace QuantConnect.Securities
                     TimeSpan earlyCloseTime;
                     if (_earlyCloses.TryGetValue(time.Date, out earlyCloseTime))
                     {
-                        var earlyCloseDateTime = time.Date.Add(earlyCloseTime);
+                        earlyCloseDateTime = time.Date.Add(earlyCloseTime);
+                        isEarlyCloseDay = true;
                         if (time > earlyCloseDateTime)
                         {
                             time = time.Date + Time.OneDay;
@@ -253,7 +256,10 @@ namespace QuantConnect.Securities
                         }
                     }
 
-                    // Get last day last segment
+                    // Get last day last segment. This is made for the case in which the next market open
+                    // is the first segment in the day so in order to see if it's part of the last market
+                    // open we need to compare with the last day last segment. Otherwise, it will be replaced
+                    // in GetMarketOpen() by the last segment in the same day prior to the next market open
                     var oneDayBefore = time.Date.AddDays(-1);
                     var oneDayBeforeMarketHours = GetMarketHours(oneDayBefore.DayOfWeek);
                     TimeSpan? lastSegment = oneDayBeforeMarketHours.Segments.Any() ?
@@ -262,9 +268,22 @@ namespace QuantConnect.Securities
                     var marketOpenTimeOfDay = marketHours.GetMarketOpen(time.TimeOfDay, extendedMarket, lastSegment);
                     if (marketOpenTimeOfDay.HasValue)
                     {
+                        Logging.Log.Debug($"localDateTime: {localDateTime} time: {time} marketOpen: {marketOpenTimeOfDay}");
                         var marketOpen = time.Date + marketOpenTimeOfDay.Value;
+
+                        // Check the market open is before the close time in case of an early close
+                        if (isEarlyCloseDay)
+                        {
+                            if (earlyCloseDateTime < marketOpen)
+                            {
+                                time = time.Date + Time.OneDay;
+                                continue;
+                            }
+                        }
+
                         if (localDateTime < marketOpen)
                         {
+                            Logging.Log.Debug($"localDateTime: {localDateTime} time {time} marketOpen {marketOpen}");
                             return marketOpen;
                         }
                     }
