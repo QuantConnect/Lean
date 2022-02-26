@@ -118,6 +118,54 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
+        /// Gets _currentBasicUpperBand
+        /// </summary>
+        public decimal GetCurrentBasicUpperBand()
+        {
+            return _currentBasicUpperBand;
+        }
+
+        /// <summary>
+        /// Gets _currentBasicLowerBand
+        /// </summary>
+        public decimal GetCurrentBasicLowerBand()
+        {
+            return _currentBasicLowerBand;
+        }
+
+        /// <summary>
+        /// Gets _currentTrailingUpperBand
+        /// </summary>
+        public decimal GetCurrentTrailingUpperBand()
+        {
+            return _currentTrailingUpperBand;
+        }
+
+        /// <summary>
+        /// Gets _currentTrailingLowerBand
+        /// </summary>
+        public decimal GetCurrentTrailingLowerBand()
+        {
+            return _currentTrailingLowerBand;
+        }
+
+        /// <summary>
+        /// Gets _previousTrailingUpperBand
+        /// </summary>
+        public decimal GetPreviousTrailingUpperBand()
+        {
+            return _previousTrailingUpperBand;
+        }
+
+        /// <summary>
+        /// Gets _previousTrailingLowerBand
+        /// </summary>
+        public decimal GetPreviousTrailingLowerBand()
+        {
+            return _previousTrailingLowerBand;
+        }
+
+        /// <summary>
         /// Resets this indicator to its initial state
         /// </summary>
         public override void Reset()
