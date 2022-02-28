@@ -263,8 +263,9 @@ namespace QuantConnect.Securities
                     var oneDayBefore = time.Date.AddDays(-1);
                     var oneDayBeforeMarketHours = GetMarketHours(oneDayBefore.DayOfWeek);
                     TimeSpan lastEarlyCloseTime;
-                    var wasEarlyClose = _earlyCloses.TryGetValue(time.Date, out lastEarlyCloseTime);
-                    TimeSpan? lastSegment = oneDayBeforeMarketHours.Segments.Any() && !wasEarlyClose ?
+                    var wasEarlyClose = _earlyCloses.TryGetValue(oneDayBefore.Date, out lastEarlyCloseTime);
+                    var wasAHoliday = _holidays.Contains(oneDayBefore.Date.Ticks);
+                    TimeSpan? lastSegment = oneDayBeforeMarketHours.Segments.Any() && !wasEarlyClose && !wasAHoliday ?
                         oneDayBeforeMarketHours.Segments.Last().End : null;
 
                     var marketOpenTimeOfDay = marketHours.GetMarketOpen(time.TimeOfDay, extendedMarket, lastSegment);

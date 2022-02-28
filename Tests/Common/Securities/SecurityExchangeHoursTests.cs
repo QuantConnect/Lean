@@ -448,7 +448,7 @@ namespace QuantConnect.Tests.Common.Securities
 
         public static SecurityExchangeHours CreateUsFutureSecurityExchangeHours()
         {
-            var sunday = new LocalMarketHours(DayOfWeek.Sunday, new TimeSpan(0, 0, 0), new TimeSpan(24, 0, 0));
+            var sunday = LocalMarketHours.OpenAllDay(DayOfWeek.Sunday);
             var monday = new LocalMarketHours(
                 DayOfWeek.Monday,
                 new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(0, 0, 0), new TimeSpan(16, 15, 0)),
