@@ -21,6 +21,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace QuantConnect.Tests
 {
@@ -51,6 +52,7 @@ namespace QuantConnect.Tests
             process.BeginErrorReadLine();
             process.BeginOutputReadLine();
             process.WaitForExit();
+            process.Dispose();
             var actualOutput = File.ReadAllText(parameters.NotebookOutputPath);
             var actualCells = JToken.Parse(actualOutput)["cells"];
             var expeectedCells = JToken.Parse(parameters.ExpectedOutput)["cells"];
@@ -60,7 +62,6 @@ namespace QuantConnect.Tests
                 Assert.AreEqual(item.Expected["source"], item.Actual["source"]);
                 Assert.AreEqual(item.Expected["outputs"], item.Actual["outputs"]);
             }
-            process.Dispose();
         }
 
         public class ResearchRegressionTestParameters
