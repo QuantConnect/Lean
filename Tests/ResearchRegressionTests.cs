@@ -39,8 +39,8 @@ namespace QuantConnect.Tests
         {
             var actualOutput = RunResearchNotebookAndGetOutput(parameters.NotebookPath, parameters.NotebookOutputPath, Directory.GetCurrentDirectory());
             var actualCells = JToken.Parse(actualOutput)["cells"];
-            var expeectedCells = JToken.Parse(parameters.ExpectedOutput)["cells"];
-            var expectedAndActualCells = expeectedCells.Zip(actualCells, (e, a) => new { Expected = e, Actual = a });
+            var expectedCells = JToken.Parse(parameters.ExpectedOutput)["cells"];
+            var expectedAndActualCells = expectedCells.Zip(actualCells, (e, a) => new { Expected = e, Actual = a });
             foreach (var cell in expectedAndActualCells)
             {
                 // Assert Notebook Cell Input
