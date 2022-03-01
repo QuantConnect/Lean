@@ -15,11 +15,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -36,7 +34,6 @@ namespace QuantConnect.Messaging
     public class Messaging : IMessagingHandler
     {
         private static readonly bool UpdateRegressionStatistics = Config.GetBool("regression-update-statistics", false);
-        private static readonly bool UpdateResearchRegressionOutput = Config.GetBool("research-regression-update-output", false);
 
         private AlgorithmNodePacket _job;
         private OrderEventJsonConverter _orderEventJsonConverter;
@@ -131,10 +128,6 @@ namespace QuantConnect.Messaging
                         {
                             UpdateRegressionStatisticsInSourceFile(result);
                         }
-                        else if (UpdateResearchRegressionOutput)
-                        {
-                            UpdateResearchRegressionOutputInSourceFile();
-                        }
 
                         var statisticsStr = $"{Environment.NewLine}" +
                             $"{string.Join(Environment.NewLine,result.Results.Statistics.Select(x => $"STATISTICS:: {x.Key} {x.Value}"))}";
@@ -218,83 +211,6 @@ namespace QuantConnect.Messaging
 
             file.DisposeSafely();
             File.WriteAllLines(algorithmSource, lines);
-        }
-
-        private void UpdateResearchRegressionOutputInSourceFile()
-        {
-            var algorithmSource = Directory.EnumerateFiles("../../../Algorithm.CSharp", $"{_job.AlgorithmId}.cs", SearchOption.AllDirectories).Single();
-            var file = File.ReadAllLines(algorithmSource).ToList().GetEnumerator();
-            var lines = new List<string>();
-            while (file.MoveNext())
-            {
-                var line = file.Current;
-                if (line == null)
-                {
-                    continue;
-                }
-
-                if (line.Contains("public string ExpectedOutput =>"))
-                {
-                    lines.Add(line);
-                    var expectedOutput = GetResearchOutput(Path.Combine(Directory.GetCurrentDirectory(), $"{_job.AlgorithmId}.ipynb"));
-                    expectedOutput = expectedOutput
-                        .Replace("\\\\", "\\\\\\\\")
-                        .Replace("\\\"", string.Empty)
-                        .Replace("\"", string.Empty)
-                        .Replace("\\n", string.Empty)
-                        .Replace("\n", string.Empty)
-                        .Replace("\t", string.Empty)
-                        .Replace("\r", string.Empty);
-                    lines.Add($"            \"{expectedOutput}\";");
-
-                    // now we skip existing expected statistics in file
-                    while (file.MoveNext())
-                    {
-                        line = file.Current;
-                        if (line != null && line.StartsWith("    }"))
-                        {
-                            lines.Add(line);
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    lines.Add(line);
-                }
-            }
-
-            file.DisposeSafely();
-            File.WriteAllLines(algorithmSource, lines);
-        }
-
-        private string GetResearchOutput(string notebookPath)
-        {
-            var inputPath = notebookPath;
-            var outputPath = notebookPath.Split(".")[0] + "-output" + ".ipynb";
-            var args = $"\"{inputPath}\" \"{outputPath}\" --log-output --cwd {Directory.GetCurrentDirectory()}";
-
-            // Use ProcessStartInfo class
-            var startInfo = new ProcessStartInfo("papermill", args)
-            {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                WindowStyle = ProcessWindowStyle.Hidden,
-                CreateNoWindow = true,
-                WorkingDirectory = Directory.GetCurrentDirectory()
-            };
-
-            var process = new Process
-            {
-                StartInfo = startInfo,
-            };
-            process.Start();
-            process.BeginErrorReadLine();
-            process.BeginOutputReadLine();
-            process.WaitForExit();
-            process.Dispose();
-            return File.ReadAllText(outputPath);
         }
 
         /// <summary>
