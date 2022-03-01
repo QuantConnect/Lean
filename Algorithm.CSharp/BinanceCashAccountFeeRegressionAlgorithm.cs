@@ -21,8 +21,13 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Binance cash account regression algorithm, reproduces issue https://github.com/QuantConnect/Lean/issues/6123
     /// </summary>
-    public class BinanceCashAccountFeeRegressionAlgorithm : CryptoCashAccountFeeRegressionAlgorithm
+    public class BinanceCashAccountFeeRegressionAlgorithm : CryptoBaseCurrencyFeeRegressionAlgorithm
     {
+        /// <summary>
+        /// The target account type
+        /// </summary>
+        protected override AccountType AccountType { get; } = AccountType.Cash;
+
         public override void Initialize()
         {
             SetAccountCurrency("USDT");

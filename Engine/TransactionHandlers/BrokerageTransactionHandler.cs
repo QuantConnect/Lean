@@ -1057,8 +1057,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     // check if the fill currency and the order currency match the symbol currency
                     var security = _algorithm.Securities[orderEvent.Symbol];
 
-                    if (_algorithm.BrokerageModel.AccountType == AccountType.Cash
-                        && order.Direction == OrderDirection.Buy
+                    if (order.Direction == OrderDirection.Buy
                         && CurrencyPairUtil.TryDecomposeCurrencyPair(orderEvent.Symbol, out var baseCurrency, out var quoteCurrency)
                         && orderEvent.OrderFee.Value.Currency == baseCurrency)
                     {

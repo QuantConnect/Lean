@@ -57,6 +57,14 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
+        /// Gets the timestamp for this slice of data in UTC
+        /// </summary>
+        public DateTime UtcTime
+        {
+            get; private set;
+        }
+
+        /// <summary>
         /// Gets whether or not this slice has data
         /// </summary>
         public bool HasData
@@ -191,8 +199,9 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="time">The timestamp for this slice of data</param>
         /// <param name="data">The raw data in this slice</param>
-        public Slice(DateTime time, IEnumerable<BaseData> data)
-            : this(time, data.ToList())
+        /// <param name="utcTime">The timestamp for this slice of data in UTC</param>
+        public Slice(DateTime time, IEnumerable<BaseData> data, DateTime utcTime)
+            : this(time, data.ToList(), utcTime: utcTime)
         {
         }
 
@@ -203,7 +212,8 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="time">The timestamp for this slice of data</param>
         /// <param name="data">The raw data in this slice</param>
-        public Slice(DateTime time, List<BaseData> data)
+        /// <param name="utcTime">The timestamp for this slice of data in UTC</param>
+        public Slice(DateTime time, List<BaseData> data, DateTime utcTime)
             : this(time, data, CreateCollection<TradeBars, TradeBar>(time, data),
                 CreateCollection<QuoteBars, QuoteBar>(time, data),
                 CreateTicksCollection(time, data),
@@ -212,7 +222,8 @@ namespace QuantConnect.Data
                 CreateCollection<Splits, Split>(time, data),
                 CreateCollection<Dividends, Dividend>(time, data),
                 CreateCollection<Delistings, Delisting>(time, data),
-                CreateCollection<SymbolChangedEvents, SymbolChangedEvent>(time, data))
+                CreateCollection<SymbolChangedEvents, SymbolChangedEvent>(time, data),
+                utcTime: utcTime)
         {
         }
 
@@ -224,6 +235,7 @@ namespace QuantConnect.Data
         protected Slice(Slice slice)
         {
             Time = slice.Time;
+            UtcTime = slice.UtcTime;
             _rawDataList = slice._rawDataList;
             _dataByType = slice._dataByType;
 
@@ -258,10 +270,12 @@ namespace QuantConnect.Data
         /// <param name="dividends">The dividends for this slice</param>
         /// <param name="delistings">The delistings for this slice</param>
         /// <param name="symbolChanges">The symbol changed events for this slice</param>
+        /// <param name="utcTime">The timestamp for this slice of data in UTC</param>
         /// <param name="hasData">true if this slice contains data</param>
-        public Slice(DateTime time, List<BaseData> data, TradeBars tradeBars, QuoteBars quoteBars, Ticks ticks, OptionChains optionChains, FuturesChains futuresChains, Splits splits, Dividends dividends, Delistings delistings, SymbolChangedEvents symbolChanges, bool? hasData = null)
+        public Slice(DateTime time, List<BaseData> data, TradeBars tradeBars, QuoteBars quoteBars, Ticks ticks, OptionChains optionChains, FuturesChains futuresChains, Splits splits, Dividends dividends, Delistings delistings, SymbolChangedEvents symbolChanges, DateTime utcTime, bool? hasData = null)
         {
             Time = time;
+            UtcTime = utcTime;
             _rawDataList = data;
             // market data
             _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(_rawDataList));
@@ -465,9 +479,9 @@ namespace QuantConnect.Data
         /// <remarks> Will change the input collection for re-use</remarks>
         public void MergeSlice(Slice inputSlice)
         {
-            if (Time != inputSlice.Time)
+            if (UtcTime != inputSlice.UtcTime)
             {
-                throw new InvalidOperationException($"Slice with time {Time} can't be merged with given slice with different {inputSlice.Time}");
+                throw new InvalidOperationException($"Slice with time {UtcTime} can't be merged with given slice with different {inputSlice.UtcTime}");
             }
 
             _bars = (TradeBars)UpdateCollection(_bars, inputSlice.Bars);

@@ -64,7 +64,8 @@ namespace QuantConnect
 
             Tuple.Create(CFE, 33),
             Tuple.Create(FTX, 34),
-            Tuple.Create(FTXUS, 35)
+            Tuple.Create(FTXUS, 35),
+            Tuple.Create(BinanceUS, 36)
         };
 
         static Market()
@@ -224,6 +225,10 @@ namespace QuantConnect
         /// </summary>
         public const string FTXUS = "ftxus";
 
+        /// <summary>
+        /// Binance.US
+        /// </summary>
+        public const string BinanceUS = "binanceus";
 
         /// <summary>
         /// Adds the specified market to the map of available markets with the specified identifier.

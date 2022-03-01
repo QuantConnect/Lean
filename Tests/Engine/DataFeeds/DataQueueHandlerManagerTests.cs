@@ -35,8 +35,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [TestCase("QuantConnect.Brokerages.InteractiveBrokers.InteractiveBrokersBrokerage")]
         [TestCase("OandaBrokerage")]
         [TestCase("GDAXDataQueueHandler")]
-        [TestCase("BitfinexBrokerage")] 
-        [TestCase("BinanceBrokerage")]
+        [TestCase("BitfinexBrokerage")]
         public void GetFactoryFromDataQueueHandler(string dataQueueHandler)
         {
             var factory = JobQueue.GetFactoryFromDataQueueHandler(dataQueueHandler);

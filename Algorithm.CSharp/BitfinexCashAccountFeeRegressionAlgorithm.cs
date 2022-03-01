@@ -21,8 +21,13 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Bitfinex cash account regression algorithm, reproduces issue https://github.com/QuantConnect/Lean/issues/6123
     /// </summary>
-    public class BitfinexCashAccountFeeRegressionAlgorithm : CryptoCashAccountFeeRegressionAlgorithm
+    public class BitfinexCashAccountFeeRegressionAlgorithm : CryptoBaseCurrencyFeeRegressionAlgorithm
     {
+        /// <summary>
+        /// The target account type
+        /// </summary>
+        protected override AccountType AccountType { get; } = AccountType.Cash;
+
         public override void Initialize()
         {
             SetStartDate(2013, 10, 02);

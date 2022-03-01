@@ -49,7 +49,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         protected override DateTime GetInstanceTime(Slice instance)
         {
-            return instance.Time;
+            return instance.UtcTime;
         }
     }
 }

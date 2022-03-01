@@ -15,7 +15,6 @@
 */
 
 using NUnit.Framework;
-using QuantConnect.Brokerages.Binance;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
@@ -26,6 +25,7 @@ using QuantConnect.Securities;
 using QuantConnect.Util;
 using System;
 using System.Linq;
+using QuantConnect.Brokerages.Paper;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Tests.Engine.HistoricalData
@@ -45,7 +45,7 @@ namespace QuantConnect.Tests.Engine.HistoricalData
             {
                 HistoryProvider = historyProviders
             };
-            _historyProviderWrapper.SetBrokerage(new BinanceBrokerage());
+            _historyProviderWrapper.SetBrokerage(new PaperBrokerage(null, null));
             _historyProviderWrapper.Initialize(new HistoryProviderInitializeParameters(
                 jobWithArrayHistoryProviders,
                 null,
@@ -210,11 +210,11 @@ namespace QuantConnect.Tests.Engine.HistoricalData
                 },
                 TimeZones.NewYork).ToList();
 
-            var initialTime = result[0].Time;
-            foreach (var slice in result.Skip(1))
+            var initialTime = DateTime.MinValue;
+            foreach (var slice in result)
             {
-                Assert.That(slice.Time, Is.GreaterThan(initialTime));
-                initialTime = slice.Time;
+                Assert.That(slice.UtcTime, Is.GreaterThan(initialTime));
+                initialTime = slice.UtcTime;
             }
         }
     }
