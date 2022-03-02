@@ -37,9 +37,17 @@ namespace QuantConnect.Tests
         public void ResearchRegression(ResearchRegressionTestParameters parameters)
         {
             var actualOutput = RunResearchNotebookAndGetOutput(parameters.NotebookPath, parameters.NotebookOutputPath, Directory.GetCurrentDirectory());
+            
+            // Update expected result if required.
+            if (UpdateResearchRegressionOutput)
+            {
+                UpdateResearchRegressionOutputInSourceFile(parameters.NotebookName, actualOutput);
+            }
+            
             var actualCells = JToken.Parse(actualOutput)["cells"];
             var expectedCells = JToken.Parse(parameters.ExpectedOutput)["cells"];
             var expectedAndActualCells = expectedCells.Zip(actualCells, (e, a) => new { Expected = e, Actual = a });
+            
             foreach (var cell in expectedAndActualCells)
             {
                 // Assert Notebook Cell Input
@@ -91,7 +99,7 @@ namespace QuantConnect.Tests
             }
         }
 
-        private static void UpdateResearchRegressionOutputInSourceFile(string templateName, string notebookPath, string notebookoutputPath, string workingDirectoryForNotebook)
+        private static void UpdateResearchRegressionOutputInSourceFile(string templateName, string expectedOutput)
         {
             var templatePath = Directory.EnumerateFiles("../../Research/RegressionTemplates", $"*{templateName}.cs", SearchOption.AllDirectories).Single();
             var file = File.ReadAllLines(templatePath).ToList().GetEnumerator();
@@ -107,7 +115,6 @@ namespace QuantConnect.Tests
                 if (line.Contains("public string ExpectedOutput =>"))
                 {
                     lines.Add(line);
-                    var expectedOutput = RunResearchNotebookAndGetOutput(notebookPath, notebookoutputPath, workingDirectoryForNotebook);
                     expectedOutput = expectedOutput
                         .Replace("\\\\", "\\\\\\\\")
                         .Replace("\\\"", "\\\\\"")
@@ -222,15 +229,6 @@ namespace QuantConnect.Tests
 
         private static TestCaseData[] GetResearchRegressionTestParameters()
         {
-            if (UpdateResearchRegressionOutput)
-            {
-                var templates = GetResearchTemplates();
-                foreach (var template in templates)
-                {
-                    UpdateResearchRegressionOutputInSourceFile(template.NotebookName, template.NotebookPath, template.NotebookOutputPath, Directory.GetCurrentDirectory());
-                }
-            }
-
             TestGlobals.Initialize();
 
             // since these are static test cases, they are executed before test setup
