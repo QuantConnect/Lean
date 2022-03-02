@@ -21,7 +21,7 @@ jobs:
           pip install --pre pythonnet
 
       - name: install kernel
-        run: dotnet tool install --global Microsoft.dotnet-interactive --version 1.0.215503
+        run: dotnet tool install --global Microsoft.dotnet-interactive --version 1.0.255902
 
       - name: Add dotnet tools to Path
         run: echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
