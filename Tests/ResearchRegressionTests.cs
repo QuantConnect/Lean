@@ -17,7 +17,6 @@ using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
-using QuantConnect.Tests.Research.RegressionTemplates;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
@@ -207,19 +206,18 @@ namespace QuantConnect.Tests
 
         private static ResearchRegressionTestParameters[] GetResearchTemplates()
         {
-            var result =
-            (
-                from type in typeof(BasicTemplateResearchPython).Assembly.GetTypes()
-                where typeof(IRegressionResearchDefinition).IsAssignableFrom(type)
-                where !type.IsAbstract                          // non-abstract
-                where type.GetConstructor(Array.Empty<Type>()) != null  // has default ctor
-                let instance = (IRegressionResearchDefinition)Activator.CreateInstance(type)
-                let path = Path.GetFullPath(Path.Combine(Path.Combine(type.Assembly.Location, @"../"), type.Name + ".ipynb"))
-                select new ResearchRegressionTestParameters(type.Name, path, instance.ExpectedOutput)
-            )
-            .Select(x => x)
-            .ToArray();
-            return result;
+            return Composer.Instance.GetExportedTypes<IRegressionResearchDefinition>()
+                .Where(type =>
+                    !type.IsAbstract &&
+                    type.GetConstructor(Array.Empty<Type>()) != null)
+                .Select(type => new
+                {
+                    instance = (IRegressionResearchDefinition)Activator.CreateInstance(type),
+                    name = type.Name,
+                    path = Path.GetFullPath(Path.Combine(Path.Combine(type.Assembly.Location, @"../"), type.Name + ".ipynb"))
+                })
+                .Select(tempObj => new ResearchRegressionTestParameters(tempObj.name, tempObj.path, tempObj.instance.ExpectedOutput))
+                .ToArray();
         }
 
         private static TestCaseData[] GetResearchRegressionTestParameters()
