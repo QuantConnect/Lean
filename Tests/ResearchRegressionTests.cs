@@ -17,7 +17,7 @@ using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
-using QuantConnect.Tests.Research.RegressionDefinitions;
+using QuantConnect.Tests.Research.RegressionTemplates;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;

@@ -15,7 +15,7 @@
 
 using QuantConnect.Interfaces;
 
-namespace QuantConnect.Tests.Research.RegressionDefinitions
+namespace QuantConnect.Tests.Research.RegressionTemplates
 {
     public class BasicTemplateResearchCSharp : IRegressionResearchDefinition
     {
