@@ -112,4 +112,6 @@ class SymbolData(object):
     # Returns true if the most recent trade bar time matches the current time minus the bar's period, this
     # indicates that update was just called on this instance
     def WasJustUpdated(self, current):
-        return self.Bars.Count > 0 and self.Bars[0].Time == current - self.BarPeriod                                               
+        return self.Bars.Count > 0 and self.Bars[0].Time == current - self.BarPeriod  
+    
+# just a line at the bottome so the last line of code does not get cut off when viewing.
