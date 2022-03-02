@@ -25,6 +25,8 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// This is used by the research regression test system to validate the output
         /// </summary>
+        /// <remarks>Requires to be implemented last in the file <see cref="ResearchRegressionTests.UpdateResearchRegressionOutputInSourceFile"/>
+        /// get should start from next line</remarks>
         string ExpectedOutput { get; }
     }
 }
