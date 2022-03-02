@@ -43,15 +43,14 @@ namespace QuantConnect.Tests
             {
                 UpdateResearchRegressionOutputInSourceFile(parameters.NotebookName, actualOutput);
             }
-            
-            var actualCells = JToken.Parse(actualOutput)["cells"];
+            var actualCells = JToken.Parse(CleanDispensableEscapeCharacters(actualOutput))["cells"];
             var expectedCells = JToken.Parse(parameters.ExpectedOutput)["cells"];
             var expectedAndActualCells = expectedCells.Zip(actualCells, (e, a) => new { Expected = e, Actual = a });
             
             foreach (var cell in expectedAndActualCells)
             {
                 // Assert Notebook Cell Input
-                Assert.AreEqual(CleanEscapeCharacters(cell.Expected["source"].ToString()), CleanEscapeCharacters(cell.Actual["source"].ToString()));
+                Assert.AreEqual(cell.Expected["source"].ToString(), cell.Actual["source"].ToString());
 
                 // Assert Notebook Cell Output
                 var expectedCellOutputs = cell.Expected["outputs"];
@@ -77,7 +76,7 @@ namespace QuantConnect.Tests
                                 continue;
                             }
                         }
-                        Assert.AreEqual(CleanEscapeCharacters(cellOutputsItem.Expected.ToString()), CleanEscapeCharacters(cellOutputsItem.Actual.ToString()));
+                        Assert.AreEqual(cellOutputsItem.Expected.ToString(), cellOutputsItem.Actual.ToString());
                     }
                 }
             }
@@ -115,16 +114,14 @@ namespace QuantConnect.Tests
                 if (line.Contains("public string ExpectedOutput =>"))
                 {
                     lines.Add(line);
+
+                    // Escape the "escape" sequence for correct parse back
                     expectedOutput = expectedOutput
                         .Replace("\\\\", "\\\\\\\\")
                         .Replace("\\\"", "\\\\\"")
-                        .Replace("\"", "\\\"")
-                        .Replace("\\n", "\\\n")
-                        .Replace("\n", "\\n")
-                        .Replace("\\r", "\\\r")
-                        .Replace("\r", "\\r")
-                        .Replace("\\t", "\\\t")
-                        .Replace("\t", "\\t");
+                        .Replace("\"", "\\\"");
+                    expectedOutput = CleanDispensableEscapeCharacters(expectedOutput);
+                    
                     lines.Add($"            \"{expectedOutput}\";");
 
                     // now we skip existing expected statistics in file
@@ -148,11 +145,9 @@ namespace QuantConnect.Tests
             File.WriteAllLines(templatePath, lines);
         }
 
-        private static string CleanEscapeCharacters(string json)
+        private static string CleanDispensableEscapeCharacters(string json)
         {
             json = json
-                .Replace("\\\"", string.Empty)
-                .Replace("\"", string.Empty)
                 .Replace("\\n", string.Empty)
                 .Replace("\n", string.Empty)
                 .Replace("\\r", string.Empty)
