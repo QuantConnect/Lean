@@ -44,7 +44,7 @@ namespace QuantConnect.Tests
             foreach (var cell in expectedAndActualCells)
             {
                 // Assert Notebook Cell Input
-                Assert.AreEqual(cell.Expected["source"], cell.Actual["source"]);
+                Assert.AreEqual(CleanEscapeCharacters(cell.Expected["source"].ToString()), CleanEscapeCharacters(cell.Actual["source"].ToString()));
 
                 // Assert Notebook Cell Output
                 var expectedCellOutputs = cell.Expected["outputs"];
@@ -70,7 +70,7 @@ namespace QuantConnect.Tests
                                 continue;
                             }
                         }
-                        Assert.AreEqual(cellOutputsItem.Expected, cellOutputsItem.Actual);
+                        Assert.AreEqual(CleanEscapeCharacters(cellOutputsItem.Expected.ToString()), CleanEscapeCharacters(cellOutputsItem.Actual.ToString()));
                     }
                 }
             }
@@ -115,8 +115,10 @@ namespace QuantConnect.Tests
                         .Replace("\"", "\\\"")
                         .Replace("\\n", "\\\n")
                         .Replace("\n", "\\n")
-                        .Replace("\t", "\\t")
-                        .Replace("\r", "\\r");
+                        .Replace("\\r", "\\\r")
+                        .Replace("\r", "\\r")
+                        .Replace("\\t", "\\\t")
+                        .Replace("\t", "\\t");
                     lines.Add($"            \"{expectedOutput}\";");
 
                     // now we skip existing expected statistics in file
@@ -138,6 +140,20 @@ namespace QuantConnect.Tests
 
             file.DisposeSafely();
             File.WriteAllLines(templatePath, lines);
+        }
+
+        private static string CleanEscapeCharacters(string json)
+        {
+            json = json
+                .Replace("\\\"", string.Empty)
+                .Replace("\"", string.Empty)
+                .Replace("\\n", string.Empty)
+                .Replace("\n", string.Empty)
+                .Replace("\\r", string.Empty)
+                .Replace("\r", string.Empty)
+                .Replace("\\t", string.Empty)
+                .Replace("\t", string.Empty);
+            return json;
         }
 
         private static string RunResearchNotebookAndGetOutput(string notebookPath, string notebookoutputPath, string workingDirectoryForNotebook)
