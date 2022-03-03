@@ -121,6 +121,7 @@ namespace QuantConnect.Tests
 
                 if (line.Contains("public string ExpectedOutput =>"))
                 {
+                    // Add the line as it assumes the expected output starts from next line 
                     lines.Add(line);
 
                     // Escape the "escape" sequence for correct parse back
@@ -129,10 +130,21 @@ namespace QuantConnect.Tests
                         .Replace("\\\"", "\\\\\"")
                         .Replace("\"", "\\\"");
                     expectedOutput = CleanDispensableEscapeCharacters(expectedOutput);
-                    
-                    lines.Add($"            \"{expectedOutput}\";");
 
-                    // now we skip the old  expected ouptut in file
+                    // Split string in multiple lines
+                    List<string> expectedOutputLines = new();
+                    if (!expectedOutput.IsNullOrEmpty())
+                    {
+                        expectedOutputLines = SplitIntoMultipleLines(expectedOutput, 150);
+                    }
+                    else
+                    {
+                        expectedOutputLines.Add("\"\";");
+                    }
+
+                    lines.AddRange(expectedOutputLines);
+
+                    // now we skip the old expected ouptut in file
                     while (file.MoveNext())
                     {
                         line = file.Current;
@@ -151,6 +163,30 @@ namespace QuantConnect.Tests
 
             file.DisposeSafely();
             File.WriteAllLines(templatePath, lines);
+        }
+
+        /// <summary>
+        /// Split long string into multiple lines
+        /// </summary>
+        /// <remarks>Doesn't break a line if it ends with "\"</remarks>
+        private static List<string> SplitIntoMultipleLines(string longInput, int maxChunkSize)
+        {
+            List<string> resultLines = new();
+            for (int i = 0; i < longInput.Length;)
+            {
+                var chunk = longInput.Substring(i, Math.Min(maxChunkSize, longInput.Length - i));
+                i += maxChunkSize;
+                while (chunk.EndsWith("\\") && i < longInput.Length)
+                {
+                    chunk += longInput[i];
+                    i++;
+                }
+                resultLines.Add($"            \"{chunk}\" +");
+            }
+            // use ; for endline
+            var lastLine = resultLines.Last();
+            resultLines[resultLines.Count - 1] = lastLine.Remove(lastLine.Length - 2) + ";";
+            return resultLines;
         }
 
         private static string CleanDispensableEscapeCharacters(string json)
