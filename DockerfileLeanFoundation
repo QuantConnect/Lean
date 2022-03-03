@@ -83,7 +83,7 @@ RUN pip install --no-cache-dir      \
     setuptools-git==1.2             \
     xarray==0.15.1                  \
     plotly==4.7.1                   \
-    jupyterlab==2.1.2               \
+    jupyterlab==3.2.6               \
     tensorflow==1.15.2              \
     docutils==0.14                  \
     cvxopt==1.2.0                   \

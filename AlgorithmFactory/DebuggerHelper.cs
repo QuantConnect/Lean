@@ -98,6 +98,10 @@ while not sys.gettrace():
                             break;
 
                         case DebuggingMethod.PTVSD:
+                            Log.Trace("DebuggerHelper.Initialize(): waiting for PTVSD debugger to attach at localhost:5678...");
+                            PythonEngine.RunSimpleString("import ptvsd; ptvsd.enable_attach(); ptvsd.wait_for_attach()");
+                            break;
+
                         case DebuggingMethod.DebugPy:
                             Log.Trace("DebuggerHelper.Initialize(): debugpy waiting for attach at port 5678...");
                             PythonEngine.RunSimpleString("import debugpy; debugpy.listen(('0.0.0.0', 5678)); debugpy.wait_for_client()");

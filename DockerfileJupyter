@@ -21,8 +21,6 @@ RUN if [ "$(uname -m)" = "aarch64" ]; then \
     mv tini /usr/local/bin/tini && \
     chmod +x /usr/local/bin/tini
 
-RUN conda install -y -c conda-forge notebook=6.0.3 && conda clean -y --all
-
 # Install clr-loader for PythonNet
 RUN pip install --no-cache-dir clr-loader==0.1.6
 
