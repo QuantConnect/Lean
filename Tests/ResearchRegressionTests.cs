@@ -27,6 +27,14 @@ using System.Text.RegularExpressions;
 
 namespace QuantConnect.Tests
 {
+    /// <summary>
+    /// Regression testing of C# and python notebooks via the research regression templates implemented from
+    /// <see cref="IRegressionResearchDefinition"/>
+    /// </summary>
+    /// <remarks>Papermill assumes the notebook are present in output directory</remarks>
+    /// <remarks>Assumes C# templates are in Tests/Research/RegressionTemplates to update the expected output</remarks>
+    /// <remarks>Requires "research-regression-update-output" to be true in config to update results in C# templates</remarks>
+    /// <remarks>Run in the GH CI through<see cref=".github/workflows/research-regression-tests.yml"/></remarks>
     [TestFixture, Category("ResearchRegressionTests")]
     public class ResearchRegressionTests
     {
