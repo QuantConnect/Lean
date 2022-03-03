@@ -16,9 +16,7 @@
 namespace QuantConnect.Interfaces
 {
     /// <summary>
-    /// Defines a C# algorithm as a regression algorithm to be run as part of the test suite.
-    /// This interface also allows the algorithm to declare that it has versions in other languages
-    /// that should yield identical results.
+    /// Defines interface for research notebooks to be run as part of the research test suite.
     /// </summary>
     public interface IRegressionResearchDefinition
     {
