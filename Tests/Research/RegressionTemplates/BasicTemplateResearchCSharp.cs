@@ -17,8 +17,14 @@ using QuantConnect.Interfaces;
 
 namespace QuantConnect.Tests.Research.RegressionTemplates
 {
+    /// <summary>
+    /// Basic template framework for regression testing of research notebooks
+    /// </summary>
     public class BasicTemplateResearchCSharp : IRegressionResearchDefinition
     {
+        /// <summary>
+        /// Expected output from the reading the raw notebook file
+        /// </summary>
         /// <remarks>Requires to be implemented last in the file <see cref="ResearchRegressionTests.UpdateResearchRegressionOutputInSourceFile"/>
         /// get should start from next line</remarks>
         public string ExpectedOutput =>

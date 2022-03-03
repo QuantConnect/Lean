@@ -124,7 +124,7 @@ namespace QuantConnect.Tests
                     
                     lines.Add($"            \"{expectedOutput}\";");
 
-                    // now we skip existing expected statistics in file
+                    // now we skip the old  expected ouptut in file
                     while (file.MoveNext())
                     {
                         line = file.Current;
