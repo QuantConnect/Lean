@@ -260,7 +260,7 @@ namespace QuantConnect.Tests
                 {
                     instance = (IRegressionResearchDefinition)Activator.CreateInstance(type),
                     name = type.Name,
-                    path = Path.GetFullPath(Path.Combine(Path.Combine(type.Assembly.Location, @"../"), type.Name + ".ipynb"))
+                    path = Path.GetFullPath(Path.Combine(Path.Combine(type.Assembly.Location, @"../Research/RegressionTemplates"), type.Name + ".ipynb"))
                 })
                 .Select(tempObj => new ResearchRegressionTestParameters(tempObj.name, tempObj.path, tempObj.instance.ExpectedOutput))
                 .ToArray();
