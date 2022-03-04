@@ -112,7 +112,6 @@ namespace QuantConnect.Securities.Option
                 .GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
 
             var currentTime = currentTimeUtc.ConvertFromUtc(exchangeHours.TimeZone);
-            var oldexpiryTime = exchangeHours.GetNextMarketClose(symbol.ID.Date, false);
 
             // Ideally we can calculate expiry on the date of the symbol ID, but if that exchange is not open on that day we 
             // will consider expired on the last trading day close before this; Example in AddOptionContractExpiresRegressionAlgorithm
@@ -122,7 +121,7 @@ namespace QuantConnect.Securities.Option
 
             var expiryTime = exchangeHours.GetNextMarketClose(expiryDay, false);
 
-            return currentTime >= expiryTime;
+            return currentTime.Date >= expiryTime.Date;
         }
 
     }

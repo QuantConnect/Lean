@@ -206,6 +206,16 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void GetNextMarketCloseForContinuousSchedulesOverWeekends()
+        {
+            var exhangeHours = CreateUsFutureSecurityExchangeHours();
+
+            var startTime = new DateTime(2022, 1, 1);
+            var nextMarketOpen = exhangeHours.GetNextMarketClose(startTime, false);
+            Assert.AreEqual(new DateTime(2022, 1, 3, 16, 15, 0), nextMarketOpen);
+        }
+
+        [Test]
         public void GetNextMarketOpenForEarlyCloses()
         {
             var exhangeHours = CreateUsFutureSecurityExchangeHours();

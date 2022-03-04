@@ -112,10 +112,10 @@ namespace QuantConnect.Tests.Common.Scheduling
         }
 
         [Test]
-        public void ExtendedMarketOpenNoDeltaForContinuousSchedules()
+        public void RegularMarketOpenNoDeltaForContinuousSchedules()
         {
             var rules = GetFutureTimeRules(TimeZones.Utc);
-            var rule = rules.AfterMarketOpen(Symbols.ES_Future_Chain, 0, true);
+            var rule = rules.AfterMarketOpen(Symbols.ES_Future_Chain, 0);
             var times = rule.CreateUtcEventTimes(new[] {
                 new DateTime(2022, 01, 01),
                 new DateTime(2022, 01, 02),
@@ -144,6 +144,39 @@ namespace QuantConnect.Tests.Common.Scheduling
                 count++;
             }
             Assert.AreEqual(7, count);
+        }
+
+        [Test]
+        public void ExtendedMarketCloseNoDeltaForContinuousSchedules()
+        {
+            var rules = GetTimeRules(TimeZones.Utc);
+            var rule = rules.BeforeMarketClose(Symbols.SPY, 0, true);
+            var times = rule.CreateUtcEventTimes(new[] {
+                new DateTime(2022, 01, 01),
+                new DateTime(2022, 01, 02),
+                new DateTime(2022, 01, 03),
+                new DateTime(2022, 01, 04),
+                new DateTime(2022, 01, 05),
+                new DateTime(2022, 01, 06),
+                new DateTime(2022, 01, 07),
+                new DateTime(2022, 01, 08),
+                new DateTime(2022, 01, 09)
+            });
+
+            var expectedMarketOpenDates = new[] {
+                new DateTime(2022, 01, 04, 01, 00, 00),
+                new DateTime(2022, 01, 05, 01, 00, 00),
+                new DateTime(2022, 01, 06, 01, 00, 00),
+                new DateTime(2022, 01, 07, 01, 00, 00),
+                new DateTime(2022, 01, 08, 01, 00, 00)
+            };
+            int count = 0;
+            foreach (var time in times)
+            {
+                Assert.AreEqual(expectedMarketOpenDates[count], time);
+                count++;
+            }
+            Assert.AreEqual(5, count);
         }
 
         [Test]

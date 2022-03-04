@@ -120,15 +120,20 @@ namespace QuantConnect.Lean.Engine.RealTime
                 throw new ArgumentException("Delta must be less than a day", "endOfDayDelta");
             }
 
+            var isMarketAlwaysOpen = security.Exchange.Hours.IsMarketAlwaysOpen;
+            var midnight = new TimeSpan(24, 0, 0);
+
             // define all the times we want this event to be fired, every tradeable day for the securtiy
             // at the delta time before market close expressed in UTC
             var times =
                 // for every date the exchange is open for this security
                 from date in Time.EachTradeableDay(security, start, end)
-                // get the next market close for the specified date
-                let marketClose = security.Exchange.Hours.GetNextMarketClose(date, security.IsExtendedMarketHours)
+                // get the next market close for the specified date if the market closes at some point.
+                // Otherwise, use the given date at midnight
+                let marketClose = isMarketAlwaysOpen ?
+                date.Date + midnight : security.Exchange.Hours.GetNextMarketClose(date, security.IsExtendedMarketHours)
                 // define the time of day we want the event to fire before marketclose
-                let eventTime = marketClose.Subtract(endOfDayDelta)
+                let eventTime = isMarketAlwaysOpen ? marketClose : marketClose.Subtract(endOfDayDelta)
                 // convert the event time into UTC
                 let eventUtcTime = eventTime.ConvertToUtc(security.Exchange.TimeZone)
                 // perform filter to verify it's not before the current time
