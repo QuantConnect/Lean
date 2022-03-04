@@ -41,7 +41,7 @@ namespace QuantConnect.Tests
         // Update in config.json when template expected result needs to be updated
         private static readonly bool _updateResearchRegressionOutput = Config.GetBool("research-regression-update-output", false);
 
-        // Update in config.json to specify the alternate path to run papermill module for notebook
+        // Update in config.json to specify the alternate path to python.exe to run papermill module for notebook
         private static string _pythonLocation = Config.Get("python-location", "python");
 
         [Test, TestCaseSource(nameof(GetResearchRegressionTestParameters))]
