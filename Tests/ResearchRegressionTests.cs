@@ -227,9 +227,13 @@ namespace QuantConnect.Tests
             process.BeginErrorReadLine();
             process.BeginOutputReadLine();
             process.WaitForExit();
+
+            var output = File.ReadAllText(notebookoutputPath);
+            
             Assert.AreEqual(0, process.ExitCode);
+            
             process.Dispose();
-            return File.ReadAllText(notebookoutputPath);
+            return output;
         }
 
         private static bool IsDeterministic(string input)
