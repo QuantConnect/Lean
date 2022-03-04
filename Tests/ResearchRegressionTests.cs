@@ -39,7 +39,10 @@ namespace QuantConnect.Tests
     public class ResearchRegressionTests
     {
         // Update in config.json when template expected result needs to be updated
-        private static readonly bool UpdateResearchRegressionOutput = Config.GetBool("research-regression-update-output", false);
+        private static readonly bool _updateResearchRegressionOutput = Config.GetBool("research-regression-update-output", false);
+
+        // Update in config.json to specify the alternate path to run papermill module for notebook
+        private static string _pythonLocation = Config.Get("python-location", "python");
 
         [Test, TestCaseSource(nameof(GetResearchRegressionTestParameters))]
         public void ResearchRegression(ResearchRegressionTestParameters parameters)
@@ -47,7 +50,7 @@ namespace QuantConnect.Tests
             var actualOutput = RunResearchNotebookAndGetOutput(parameters.NotebookPath, parameters.NotebookOutputPath, Directory.GetCurrentDirectory());
             
             // Update expected result if required.
-            if (UpdateResearchRegressionOutput)
+            if (_updateResearchRegressionOutput)
             {
                 UpdateResearchRegressionOutputInSourceFile(parameters.NotebookName, actualOutput);
             }
@@ -203,10 +206,10 @@ namespace QuantConnect.Tests
 
         private static string RunResearchNotebookAndGetOutput(string notebookPath, string notebookoutputPath, string workingDirectoryForNotebook)
         {
-            var args = $"\"{notebookPath}\" \"{notebookoutputPath}\" --log-output --cwd {workingDirectoryForNotebook}";
+            var args = $"-m papermill \"{notebookPath}\" \"{notebookoutputPath}\" --log-output --cwd {workingDirectoryForNotebook}";
 
             // Use ProcessStartInfo class
-            var startInfo = new ProcessStartInfo("papermill", args)
+            var startInfo = new ProcessStartInfo(_pythonLocation, args)
             {
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
