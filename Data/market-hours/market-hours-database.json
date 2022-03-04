@@ -50238,6 +50238,63 @@
         "11/24/2022": "13:30:00",
         "11/25/2022": "12:45:00"
       }
+    },
+    "Future-nyseliffe-[*]": {
+      "dataTimeZone": "UTC",
+      "exchangeTimeZone": "America/New_York",
+      "sunday": [
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "18:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": [
+		"4/15/2022",
+		"12/26/2022",
+		"1/2/2023",
+		"4/7/2023",
+		"12/25/2023",
+		"1/1/2024"
+	  ],
+      "earlyCloses": {},
+      "lateOpens": {}
     }
   }
 }

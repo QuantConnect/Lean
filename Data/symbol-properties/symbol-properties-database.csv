@@ -4264,3 +4264,18 @@ binanceus,ZILBUSD,crypto,ZILBUSD,BUSD,1,0.00001,0.1,ZILBUSD,10
 binanceus,ZILUSD,crypto,ZILUSD,USD,1,0.0001,0.1,ZILUSD,10
 binanceus,ZRXUSD,crypto,ZRXUSD,USD,1,0.0001,0.01,ZRXUSD,10
 binanceus,ZRXUSDT,crypto,ZRXUSDT,USDT,1,0.0001,0.01,ZRXUSDT,10
+
+# source https://www.interactivebrokers.com/en/index.php?f=2222&exch=nyseliffe&showcategories=FUTGRP#
+nyseliffe,MXEF,future,MSCI EMERGING MARKETS INDEX,USD,50,0.1,1
+nyseliffe,MXEA,future,MSCI EAFE Index,USD,50,0.1,1
+nyseliffe,M1EU,future,MSCI Europe NTR,USD,10,1,1
+nyseliffe,M1JP,future,The MSCI Japan NTR,USD,10,0.1,1
+nyseliffe,M1MSA,future,MSCI Emerging Markets Asia Net Total Return,USD,100,0.05,1
+nyseliffe,MXUS,future,MSCI USA Index,USD,50,0.1,1
+nyseliffe,YG,future,Mini Sized NY Gold Futures,USD,32.15,0.1,1
+nyseliffe,YI,future,Mini Sized NY Silver Future,USD,1000,0.001,1
+nyseliffe,ZG,future,Gold 100 Troy Oz,USD,100,0.1,1
+nyseliffe,ZI,future,CBOT 5000 Oz Silver Futures,USD,5000,0.001,1
+nyseliffe,OYG,futureoption,Mini Sized NY Gold Futures Options,USD,32.15,0.1,1
+nyseliffe,OZG,futureoption,Mini Sized NY Silver Future Options,USD,100,0.1,1
+nyseliffe,OZI,futureoption,Gold 100 Troy Oz Future Options,USD,5000,0.001,1

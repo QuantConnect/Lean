@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -218,6 +218,12 @@ namespace QuantConnect
         /// </summary>
         public static Exchange NYMEX { get; }
             = new("NYMEX", "NYMEX", "New York Mercantile Exchange", QuantConnect.Market.NYMEX, SecurityType.Future, SecurityType.FutureOption);
+
+        /// <summary>
+        /// London International Financial Futures and Options Exchange
+        /// </summary>
+        public static Exchange NYSELIFFE { get; }
+            = new("NYSELIFFE", "NYSELIFFE", "London International Financial Futures and Options Exchange", QuantConnect.Market.NYSELIFFE, SecurityType.Future, SecurityType.FutureOption);
 
         /// <summary>
         /// Exchange description

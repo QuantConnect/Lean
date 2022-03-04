@@ -1012,6 +1012,36 @@ namespace QuantConnect.Securities
             /// </summary>
             /// <returns>The symbol</returns>
             public const string MicroDow30EMini = "MYM";
+
+            /// <summary>
+            /// MSCI Europe Net Total Return (USD) Futures
+            /// </summary>
+            public const string MSCIEuropeNTR = "M1EU";
+
+            /// <summary>
+            /// MSCI Japan Net Total Return Futures
+            /// </summary>
+            public const string MSCIJapanNTR = "M1JP";
+
+            /// <summary>
+            /// MSCI Emerging Markets Asia Net Total Return Futures
+            /// </summary>
+            public const string MSCIEmergingMarketsAsiaNTR = "M1MSA";
+
+            /// <summary>
+            /// MSCI EAFE Index Futures
+            /// </summary>
+            public const string MSCIEafeIndex = "MXEA";
+
+            /// <summary>
+            /// MSCI Emerging Markets Index Futures
+            /// </summary>
+            public const string MSCIEmergingMarketsIndex = "MXEF";
+
+            /// <summary>
+            /// MSCI USA Index Futures
+            /// </summary>
+            public const string MSCIUsaIndex = "MXUS";
         }
 
         /// <summary>
@@ -1126,6 +1156,26 @@ namespace QuantConnect.Securities
             /// </summary>
             /// <returns>The symbol</returns>
             public const string MicroPalladium = "PAM";
+
+            /// <summary>
+            /// Mini Sized NY Gold Futures
+            /// </summary>
+            public const string MiniNYGold = "YG";
+
+            /// <summary>
+            /// Mini Sized NY Silver Futures
+            /// </summary>
+            public const string MiniNYSilver = "YI";
+
+            /// <summary>
+            /// Gold 100 Oz Futures
+            /// </summary>
+            public const string Gold100Oz = "ZG";
+
+            /// <summary>
+            /// Silver 5000 Oz Futures
+            /// </summary>
+            public const string Silver5000Oz = "ZI";
         }
 
         /// <summary>
