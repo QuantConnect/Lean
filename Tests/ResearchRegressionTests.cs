@@ -227,6 +227,7 @@ namespace QuantConnect.Tests
             process.BeginErrorReadLine();
             process.BeginOutputReadLine();
             process.WaitForExit();
+            Assert.AreEqual(0, process.ExitCode);
             process.Dispose();
             return File.ReadAllText(notebookoutputPath);
         }
