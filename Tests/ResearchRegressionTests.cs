@@ -183,6 +183,7 @@ namespace QuantConnect.Tests
             {
                 var chunk = longInput.Substring(i, Math.Min(maxChunkSize, longInput.Length - i));
                 i += maxChunkSize;
+                // Can't split if last charcter is "\"
                 while (chunk.EndsWith("\\") && i < longInput.Length)
                 {
                     chunk += longInput[i];
