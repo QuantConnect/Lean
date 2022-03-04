@@ -47,7 +47,7 @@ namespace QuantConnect.Tests
         [Test, TestCaseSource(nameof(GetResearchRegressionTestParameters))]
         public void ResearchRegression(ResearchRegressionTestParameters parameters)
         {
-            var actualOutput = RunResearchNotebookAndGetOutput(parameters.NotebookPath, parameters.NotebookOutputPath, Directory.GetCurrentDirectory());
+            var actualOutput = RunResearchNotebookAndGetOutput(parameters.NotebookPath, parameters.NotebookOutputPath, Directory.GetCurrentDirectory(), out Process process);
             
             // Update expected result if required.
             if (_updateResearchRegressionOutput)
@@ -91,6 +91,10 @@ namespace QuantConnect.Tests
                     }
                 }
             }
+
+            // Assert if the notebook was run by papermill
+            Assert.AreEqual(0, process.ExitCode);
+            process.Dispose();
         }
 
         public class ResearchRegressionTestParameters
@@ -204,7 +208,7 @@ namespace QuantConnect.Tests
             return json;
         }
 
-        private static string RunResearchNotebookAndGetOutput(string notebookPath, string notebookoutputPath, string workingDirectoryForNotebook)
+        private static string RunResearchNotebookAndGetOutput(string notebookPath, string notebookoutputPath, string workingDirectoryForNotebook, out Process process)
         {
             var args = $"-m papermill \"{notebookPath}\" \"{notebookoutputPath}\" --log-output --cwd {workingDirectoryForNotebook}";
 
@@ -219,7 +223,7 @@ namespace QuantConnect.Tests
                 WorkingDirectory = Directory.GetCurrentDirectory()
             };
 
-            var process = new Process
+            process = new Process
             {
                 StartInfo = startInfo,
             };
@@ -227,13 +231,7 @@ namespace QuantConnect.Tests
             process.BeginErrorReadLine();
             process.BeginOutputReadLine();
             process.WaitForExit();
-
-            var output = File.ReadAllText(notebookoutputPath);
-            
-            Assert.AreEqual(0, process.ExitCode);
-            
-            process.Dispose();
-            return output;
+            return File.ReadAllText(notebookoutputPath);
         }
 
         private static bool IsDeterministic(string input)
