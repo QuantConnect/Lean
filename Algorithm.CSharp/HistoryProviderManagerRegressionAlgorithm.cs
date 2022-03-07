@@ -33,6 +33,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             SetStartDate(2017, 12, 17);
+            SetEndDate(2018, 1, 1);
             AddCrypto("BTCUSD");
             SetWarmup(1000000);
         }
@@ -89,8 +90,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-0.56"},
-            {"Tracking Error", "0.164"},
+            {"Information Ratio", "3.529"},
+            {"Tracking Error", "0.031"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
