@@ -21,12 +21,15 @@ using Newtonsoft.Json.Linq;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
+using System.IO;
 
 namespace QuantConnect.Tests
 {
     [TestFixture, Category("TravisExclude"), Category("RegressionTests")]
     public class RegressionTests
     {
+        private static readonly bool _updateRegressionDataCounts = Config.GetBool("regression-update-statistics", false);
+
         [Test, TestCaseSource(nameof(GetRegressionTestParameters))]
         public void AlgorithmStatisticsRegression(AlgorithmStatisticsTestParameters parameters)
         {
@@ -61,11 +64,19 @@ namespace QuantConnect.Tests
                 parameters.ExpectedFinalStatus
             ).AlgorithmManager;
 
+            if (_updateRegressionDataCounts)
+            {
+                UpdateRegressionDataCountInSourceFile(parameters.Algorithm, algorithmManager.DataPoints, algorithmManager.AlgorithmHistoryDataPoints);
+            }
+
             if (parameters.Algorithm == "TrainingOnDataRegressionAlgorithm")
             {
                 // this training algorithm should have consumed the only minute available in the bucket
                 Assert.AreEqual(0, algorithmManager.TimeLimit.AdditionalTimeBucket.AvailableTokens);
             }
+
+            Assert.AreEqual(parameters.DataPoints, algorithmManager.DataPoints);
+            Assert.AreEqual(parameters.AlgorithmHistoryDataPoints, algorithmManager.AlgorithmHistoryDataPoints);
         }
 
         private static TestCaseData[] GetRegressionTestParameters()
@@ -96,12 +107,40 @@ namespace QuantConnect.Tests
                 let status = nonDefaultStatuses.GetValueOrDefault(type.Name, AlgorithmStatus.Completed)
                 where instance.CanRunLocally                   // open source has data to run this algorithm
                 from language in instance.Languages.Where(languages.Contains)
-                select new AlgorithmStatisticsTestParameters(type.Name, instance.ExpectedStatistics, language, status)
+                select new AlgorithmStatisticsTestParameters(type.Name, instance.ExpectedStatistics, language, status, instance.DataPoints, instance.AlgorithmHistoryDataPoints)
             )
             .OrderBy(x => x.Language).ThenBy(x => x.Algorithm)
             // generate test cases from test parameters
             .Select(x => new TestCaseData(x).SetName(x.Language + "/" + x.Algorithm))
             .ToArray();
+        }
+
+        private void UpdateRegressionDataCountInSourceFile(string algorithmId, long dataPoints, int algorithmHistoryDataPoints)
+        {
+            var algorithmSource = Directory.EnumerateFiles("../../../Algorithm.CSharp", $"{algorithmId}.cs", SearchOption.AllDirectories).Single();
+            var file = File.ReadAllLines(algorithmSource).ToList();
+            var lines = new List<string>();
+            foreach (var line in file)
+            {
+                if (line == null)
+                {
+                    continue;
+                }
+
+                if (line.Contains($"public long DataPoints =>"))
+                {
+                    lines.Add($"        public long DataPoints => {dataPoints};");
+                }
+                else if (line.Contains($"public int AlgorithmHistoryDataPoints =>"))
+                {
+                    lines.Add($"        public int AlgorithmHistoryDataPoints => {algorithmHistoryDataPoints};");
+                }
+                else
+                {
+                    lines.Add(line);
+                }
+            }
+            File.WriteAllLines(algorithmSource, lines);
         }
 
         public class AlgorithmStatisticsTestParameters
@@ -111,18 +150,24 @@ namespace QuantConnect.Tests
             public readonly AlphaRuntimeStatistics AlphaStatistics;
             public readonly Language Language;
             public readonly AlgorithmStatus ExpectedFinalStatus;
+            public readonly long DataPoints;
+            public readonly int AlgorithmHistoryDataPoints;
 
             public AlgorithmStatisticsTestParameters(
                 string algorithm,
                 Dictionary<string, string> statistics,
                 Language language,
-                AlgorithmStatus expectedFinalStatus
+                AlgorithmStatus expectedFinalStatus,
+                long dataPoints = 0,
+                int algorithmHistoryDataPoints = 0
                 )
             {
                 Algorithm = algorithm;
                 Statistics = statistics;
                 Language = language;
                 ExpectedFinalStatus = expectedFinalStatus;
+                DataPoints = dataPoints;
+                AlgorithmHistoryDataPoints = algorithmHistoryDataPoints;
             }
         }
     }
