@@ -209,18 +209,17 @@ namespace QuantConnect.Securities
         public TimeSpan? GetMarketClose(TimeSpan time, bool extendedMarket, TimeSpan? nextDaySegment = null)
         {
             TimeSpan? nextSegment;
-            foreach (var segment in _segments)
+            for (var i = 0; i < _segments.Length; i++)
             {
+                var segment = _segments[i];
                 if (segment.State == MarketHoursState.Closed || segment.End <= time)
                 {
                     continue;
                 }
 
-                // Get the next segment if possible, otherwise take the one given in the parameters
-                var segmentIndex = Array.FindIndex(_segments, item => item == segment);
-                if (segmentIndex != _segments.Count() - 1)
+                if (i != _segments.Length - 1)
                 {
-                    var potentialNextSegment = _segments.ElementAt(segmentIndex + 1);
+                    var potentialNextSegment = _segments.ElementAt(i + 1);
 
                     // Check whether we can consider PostMarket or not
                     if (potentialNextSegment.State == MarketHoursState.PostMarket && !extendedMarket)
@@ -229,7 +228,7 @@ namespace QuantConnect.Securities
                     }
                     else
                     {
-                        nextSegment = _segments.ElementAt(segmentIndex + 1).Start;
+                        nextSegment = _segments.ElementAt(i + 1).Start;
                     }                   
                 }
                 else

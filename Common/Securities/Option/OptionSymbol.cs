@@ -120,8 +120,12 @@ namespace QuantConnect.Securities.Option
                 : exchangeHours.GetPreviousTradingDay(symbol.ID.Date);
 
             var expiryTime = exchangeHours.GetNextMarketClose(expiryDay, false);
+            // Once bug 6189 was solved in ´GetNextMarketClose()´ there was found 
+            // possible bugs on some futures symbol.ID.Date, then it was needed to
+            // consider the current time at midnight
+            var midnight = new TimeSpan(24, 0, 0);
 
-            return currentTime.Date >= expiryTime.Date;
+            return currentTime + midnight >= expiryTime;
         }
 
     }

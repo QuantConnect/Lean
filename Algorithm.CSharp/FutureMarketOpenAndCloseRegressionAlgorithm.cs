@@ -5,6 +5,10 @@ using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// Regression algorithm to check we are getting the correct market open and close
+    /// times
+    /// </summary>
     public class FutureMarketOpenAndCloseRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _es;
@@ -14,7 +18,8 @@ namespace QuantConnect.Algorithm.CSharp
             new DateTime(2022, 02, 03, 16, 30, 0),
             new DateTime(2022, 02, 04, 16, 30, 0),
             new DateTime(2022, 02, 06, 18, 0, 0),
-            new DateTime(2022, 02, 07, 16, 30, 0)
+            new DateTime(2022, 02, 07, 16, 30, 0),
+            new DateTime(2022, 02, 08, 16, 30, 0)
         };
         private static List<DateTime> _beforeMarketClose = new List<DateTime>()
         {
@@ -22,7 +27,8 @@ namespace QuantConnect.Algorithm.CSharp
             new DateTime(2022, 02, 02, 16, 15, 0),
             new DateTime(2022, 02, 03, 16, 15, 0),
             new DateTime(2022, 02, 04, 16, 15, 0),
-            new DateTime(2022, 02, 07, 16, 15, 0)
+            new DateTime(2022, 02, 07, 16, 15, 0),
+            new DateTime(2022, 02, 08, 16, 15, 0)
         };
         private Queue<DateTime> _afterMarketOpenQueue = new Queue<DateTime>(_afterMarketOpen);
         private Queue<DateTime> _beforeMarketCloseQueue = new Queue<DateTime>(_beforeMarketClose);
@@ -30,7 +36,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             SetStartDate(2022, 02, 01);
-            SetEndDate(2022, 02, 07);
+            SetEndDate(2022, 02, 08);
             _es = AddFuture("ES").Symbol;
 
             Schedule.On(DateRules.EveryDay(_es),
