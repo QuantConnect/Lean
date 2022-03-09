@@ -661,21 +661,18 @@ namespace QuantConnect.Algorithm
         public void WarmUpIndicator(Symbol symbol, PyObject indicator, Resolution? resolution = null, PyObject selector = null)
         {
             // TODO: to be removed when https://github.com/QuantConnect/pythonnet/issues/62 is solved
-            IndicatorBase<IndicatorDataPoint> indicatorDataPoint;
-            IndicatorBase<IBaseDataBar> indicatorDataBar;
-            IndicatorBase<TradeBar> indicatorTradeBar;
 
-            if (indicator.TryConvert(out indicatorDataPoint))
+            if (indicator.TryConvert(out IndicatorBase<IndicatorDataPoint> indicatorDataPoint))
             {
                 WarmUpIndicator(symbol, indicatorDataPoint, resolution, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
                 return;
             }
-            else if (indicator.TryConvert(out indicatorDataBar))
+            if (indicator.TryConvert(out IndicatorBase<IBaseDataBar> indicatorDataBar))
             {
                 WarmUpIndicator(symbol, indicatorDataBar, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
                 return;
             }
-            else if (indicator.TryConvert(out indicatorTradeBar))
+            if (indicator.TryConvert(out IndicatorBase<TradeBar> indicatorTradeBar))
             {
                 WarmUpIndicator(symbol, indicatorTradeBar, resolution, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
                 return;
