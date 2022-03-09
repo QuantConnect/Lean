@@ -127,13 +127,13 @@ namespace QuantConnect.Tests
                     continue;
                 }
 
-                if (line.Contains($"public long DataPoints =>"))
+                if (line.Contains($"long DataPoints =>"))
                 {
-                    lines.Add($"        public long DataPoints => {dataPoints};");
+                    lines.Add(GetDataPointLine(line, dataPoints.ToString()));
                 }
-                else if (line.Contains($"public int AlgorithmHistoryDataPoints =>"))
+                else if (line.Contains($"int AlgorithmHistoryDataPoints =>"))
                 {
-                    lines.Add($"        public int AlgorithmHistoryDataPoints => {algorithmHistoryDataPoints};");
+                    lines.Add(GetDataPointLine(line, algorithmHistoryDataPoints.ToString()));
                 }
                 else
                 {
@@ -141,6 +141,13 @@ namespace QuantConnect.Tests
                 }
             }
             File.WriteAllLines(algorithmSource, lines);
+        }
+
+        private string GetDataPointLine(string currentLine, string count)
+        {
+            var dataParts = currentLine.Split(" ");
+            dataParts[^1] = count + ";";
+            return string.Join(" ", dataParts);
         }
 
         public class AlgorithmStatisticsTestParameters
