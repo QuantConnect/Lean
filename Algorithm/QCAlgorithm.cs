@@ -1664,8 +1664,6 @@ namespace QuantConnect.Algorithm
                     }
                     else
                     {
-                        security.IsTradable = true;
-
                         // add the expected configurations of the canonical symbol, will allow it to warmup and indicators register to them
                         var dataTypes = SubscriptionManager.LookupSubscriptionConfigDataTypes(SecurityType.Future,
                             GetResolution(symbol, resolution), isCanonical: false);
