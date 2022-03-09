@@ -176,6 +176,12 @@ namespace QuantConnect.Tests
                 if (line.Contains("Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>")
                     || line.Contains("Dictionary<string, string> ExpectedStatistics => new()"))
                 {
+                    if (!result.Results.Statistics.Any())
+                    {
+                        lines.Add(line);
+                        continue;
+                    }
+
                     lines.Add(line);
                     lines.Add("        {");
 
@@ -201,11 +207,11 @@ namespace QuantConnect.Tests
                 }
                 else if (line.Contains($"long DataPoints =>"))
                 {
-                    lines.Add(GetDataPointLine(line, _algorithmManager.DataPoints.ToString()));
+                    lines.Add(GetDataPointLine(line, _algorithmManager?.DataPoints.ToString()));
                 }
                 else if (line.Contains($"int AlgorithmHistoryDataPoints =>"))
                 {
-                    lines.Add(GetDataPointLine(line, _algorithmManager.AlgorithmHistoryDataPoints.ToString()));
+                    lines.Add(GetDataPointLine(line, _algorithmManager?.AlgorithmHistoryDataPoints.ToString()));
                 }
                 else
                 {
