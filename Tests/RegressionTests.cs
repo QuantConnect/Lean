@@ -28,8 +28,6 @@ namespace QuantConnect.Tests
     [TestFixture, Category("TravisExclude"), Category("RegressionTests")]
     public class RegressionTests
     {
-        private static readonly bool _updateRegressionDataCounts = Config.GetBool("regression-update-statistics", false);
-
         [Test, TestCaseSource(nameof(GetRegressionTestParameters))]
         public void AlgorithmStatisticsRegression(AlgorithmStatisticsTestParameters parameters)
         {
@@ -63,11 +61,6 @@ namespace QuantConnect.Tests
                 parameters.Language,
                 parameters.ExpectedFinalStatus
             ).AlgorithmManager;
-
-            if (_updateRegressionDataCounts)
-            {
-                UpdateRegressionDataCountInSourceFile(parameters.Algorithm, algorithmManager.DataPoints, algorithmManager.AlgorithmHistoryDataPoints);
-            }
 
             if (parameters.Algorithm == "TrainingOnDataRegressionAlgorithm")
             {
@@ -113,41 +106,6 @@ namespace QuantConnect.Tests
             // generate test cases from test parameters
             .Select(x => new TestCaseData(x).SetName(x.Language + "/" + x.Algorithm))
             .ToArray();
-        }
-
-        private void UpdateRegressionDataCountInSourceFile(string algorithmId, long dataPoints, int algorithmHistoryDataPoints)
-        {
-            var algorithmSource = Directory.EnumerateFiles("../../../Algorithm.CSharp", $"{algorithmId}.cs", SearchOption.AllDirectories).Single();
-            var file = File.ReadAllLines(algorithmSource).ToList();
-            var lines = new List<string>();
-            foreach (var line in file)
-            {
-                if (line == null)
-                {
-                    continue;
-                }
-
-                if (line.Contains($"long DataPoints =>"))
-                {
-                    lines.Add(GetDataPointLine(line, dataPoints.ToString()));
-                }
-                else if (line.Contains($"int AlgorithmHistoryDataPoints =>"))
-                {
-                    lines.Add(GetDataPointLine(line, algorithmHistoryDataPoints.ToString()));
-                }
-                else
-                {
-                    lines.Add(line);
-                }
-            }
-            File.WriteAllLines(algorithmSource, lines);
-        }
-
-        private string GetDataPointLine(string currentLine, string count)
-        {
-            var dataParts = currentLine.Split(" ");
-            dataParts[^1] = count + ";";
-            return string.Join(" ", dataParts);
         }
 
         public class AlgorithmStatisticsTestParameters
