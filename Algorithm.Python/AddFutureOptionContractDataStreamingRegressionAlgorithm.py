@@ -37,7 +37,7 @@ class AddFutureOptionContractDataStreamingRegressionAlgorithm(QCAlgorithm):
             Resolution.Minute).Symbol
 
         optionChains = self.OptionChainProvider.GetOptionContractList(self.es20h20, self.Time + timedelta(days=1))
-        optionChains += self.OptionChainProvider.GetOptionContractList(self.es19m20, self.Time + timedelta(days=1))
+        optionChains += self.OptionChainProvider.GetOptionContractList(self.es19m20, self.Time)
 
         for optionContract in optionChains:
             self.expectedSymbolsReceived.append(self.AddFutureOptionContract(optionContract, Resolution.Minute).Symbol)
