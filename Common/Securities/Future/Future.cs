@@ -31,6 +31,12 @@ namespace QuantConnect.Securities.Future
     public class Future : Security, IDerivativeSecurity, IContinuousSecurity
     {
         /// <summary>
+        /// Gets or sets whether or not this security should be considered tradable
+        /// </summary>
+        /// <remarks>Canonical futures are not tradable</remarks>
+        public override bool IsTradable => !Symbol.IsCanonical();
+
+        /// <summary>
         /// The default number of days required to settle a futures sale
         /// </summary>
         public const int DefaultSettlementDays = 1;
