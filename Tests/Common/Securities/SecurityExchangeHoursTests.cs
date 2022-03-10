@@ -27,6 +27,18 @@ namespace QuantConnect.Tests.Common.Securities
     [TestFixture]
     public class SecurityExchangeHoursTests
     {
+
+        public void IsAlwaysOpen()
+        {
+            var cryptoMarketHourDbEntry = MarketHoursDatabase.FromDataFolder().GetEntry(Market.GDAX, (string)null, SecurityType.Crypto);
+            var cryptoExchangeHours = cryptoMarketHourDbEntry.ExchangeHours;
+
+            var futureExchangeHours = CreateUsFutureSecurityExchangeHours();
+
+            Assert.IsTrue(cryptoExchangeHours.IsMarketAlwaysOpen);
+            Assert.IsFalse(futureExchangeHours.IsMarketAlwaysOpen);
+        }
+
         [Test]
         public void StartIsOpen()
         {
