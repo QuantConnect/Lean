@@ -2553,14 +2553,13 @@ namespace QuantConnect.Algorithm
         /// <param name="indicator">The indicator we want to warm up</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
-        /// <returns>The given indicator</returns>
         [DocumentationAttribute(HistoricalData)]
         [DocumentationAttribute(Indicators)]
-        public IndicatorBase<IndicatorDataPoint> WarmUpIndicator(Symbol symbol, IndicatorBase<IndicatorDataPoint> indicator, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        public void WarmUpIndicator(Symbol symbol, IndicatorBase<IndicatorDataPoint> indicator, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
             resolution = GetResolution(symbol, resolution);
             var period = resolution.Value.ToTimeSpan();
-            return WarmUpIndicator(symbol, indicator, period, selector);
+            WarmUpIndicator(symbol, indicator, period, selector);
         }
 
         /// <summary>
@@ -2570,16 +2569,15 @@ namespace QuantConnect.Algorithm
         /// <param name="indicator">The indicator we want to warm up</param>
         /// <param name="period">The necessary period to warm up the indicator</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
-        /// <returns>The given indicator</returns>
         [DocumentationAttribute(HistoricalData)]
         [DocumentationAttribute(Indicators)]
-        public IndicatorBase<IndicatorDataPoint> WarmUpIndicator(Symbol symbol, IndicatorBase<IndicatorDataPoint> indicator, TimeSpan period, Func<IBaseData, decimal> selector = null)
+        public void WarmUpIndicator(Symbol symbol, IndicatorBase<IndicatorDataPoint> indicator, TimeSpan period, Func<IBaseData, decimal> selector = null)
         {
             var history = GetIndicatorWarmUpHistory(symbol, indicator, period);
-            if (history == Enumerable.Empty<Slice>()) return indicator;
+            if (history == Enumerable.Empty<Slice>()) return;
 
             // assign default using cast
-            selector = selector ?? (x => x.Value);
+            selector ??= (x => x.Value);
 
             Action<IBaseData> onDataConsolidated = bar =>
             {
@@ -2588,7 +2586,6 @@ namespace QuantConnect.Algorithm
             };
 
             WarmUpIndicatorImpl(symbol, period, onDataConsolidated, history);
-            return indicator;
         }
 
         /// <summary>
@@ -2598,15 +2595,14 @@ namespace QuantConnect.Algorithm
         /// <param name="indicator">The indicator we want to warm up</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
-        /// <returns>The given indicator</returns>
         [DocumentationAttribute(HistoricalData)]
         [DocumentationAttribute(Indicators)]
-        public IndicatorBase<T> WarmUpIndicator<T>(Symbol symbol, IndicatorBase<T> indicator, Resolution? resolution = null, Func<IBaseData, T> selector = null)
+        public void WarmUpIndicator<T>(Symbol symbol, IndicatorBase<T> indicator, Resolution? resolution = null, Func<IBaseData, T> selector = null)
             where T : class, IBaseData
         {
             resolution = GetResolution(symbol, resolution);
             var period = resolution.Value.ToTimeSpan();
-            return WarmUpIndicator(symbol, indicator, period, selector);
+            WarmUpIndicator(symbol, indicator, period, selector);
         }
 
         /// <summary>
@@ -2616,17 +2612,16 @@ namespace QuantConnect.Algorithm
         /// <param name="indicator">The indicator we want to warm up</param>
         /// <param name="period">The necessary period to warm up the indicator</param>
         /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
-        /// <returns>The given indicator</returns>
         [DocumentationAttribute(HistoricalData)]
         [DocumentationAttribute(Indicators)]
-        public IndicatorBase<T> WarmUpIndicator<T>(Symbol symbol, IndicatorBase<T> indicator, TimeSpan period, Func<IBaseData, T> selector = null)
+        public void WarmUpIndicator<T>(Symbol symbol, IndicatorBase<T> indicator, TimeSpan period, Func<IBaseData, T> selector = null)
             where T : class, IBaseData
         {
             var history = GetIndicatorWarmUpHistory(symbol, indicator, period);
-            if (history == Enumerable.Empty<Slice>()) return indicator;
+            if (history == Enumerable.Empty<Slice>()) return;
 
             // assign default using cast
-            selector = selector ?? (x => (T)x);
+            selector ??= (x => (T)x);
 
             // we expect T type as input
             Action<T> onDataConsolidated = bar =>
@@ -2635,7 +2630,6 @@ namespace QuantConnect.Algorithm
             };
 
             WarmUpIndicatorImpl(symbol, period, onDataConsolidated, history);
-            return indicator;
         }
 
         private IEnumerable<Slice> GetIndicatorWarmUpHistory(Symbol symbol, IIndicator indicator, TimeSpan timeSpan)
