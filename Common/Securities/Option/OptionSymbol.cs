@@ -124,8 +124,18 @@ namespace QuantConnect.Securities.Option
             // possible bugs on some futures symbol.ID.Date, then it was needed to
             // consider the current time at midnight
             var midnight = new TimeSpan(24, 0, 0);
-
-            return currentTime + midnight >= expiryTime;
+            if (currentTime >= expiryTime)
+            {
+                return true;
+            }
+            else if (currentTime + midnight >= expiryTime)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
     }

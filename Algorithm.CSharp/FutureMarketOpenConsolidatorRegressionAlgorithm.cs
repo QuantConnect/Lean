@@ -15,85 +15,53 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Interfaces;
+using QuantConnect.Data;
+using QuantConnect.Data.Consolidators;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm to check we are getting the correct market open and close
-    /// times
+    /// Regression algorithm to check the behavior of the changes in GetNextMarketClose()
+    /// and GetNextMarketOpen() using a consolidator
     /// </summary>
-    public class FutureMarketOpenAndCloseRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class FutureMarketOpenConsolidatorRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _es;
-        private static List<DateTime> _afterMarketOpen = new List<DateTime>() {
-            new DateTime(2022, 02, 01, 16, 30, 0),
-            new DateTime(2022, 02, 02, 16, 30, 0),
-            new DateTime(2022, 02, 03, 16, 30, 0),
-            new DateTime(2022, 02, 04, 16, 30, 0),
-            new DateTime(2022, 02, 06, 18, 0, 0),
-            new DateTime(2022, 02, 07, 16, 30, 0),
-            new DateTime(2022, 02, 08, 16, 30, 0)
-        };
-        private static List<DateTime> _beforeMarketClose = new List<DateTime>()
-        {
-            new DateTime(2022, 02, 01, 16, 15, 0),
-            new DateTime(2022, 02, 02, 16, 15, 0),
-            new DateTime(2022, 02, 03, 16, 15, 0),
-            new DateTime(2022, 02, 04, 16, 15, 0),
-            new DateTime(2022, 02, 07, 16, 15, 0),
-            new DateTime(2022, 02, 08, 16, 15, 0)
-        };
-        private Queue<DateTime> _afterMarketOpenQueue = new Queue<DateTime>(_afterMarketOpen);
-        private Queue<DateTime> _beforeMarketCloseQueue = new Queue<DateTime>(_beforeMarketClose);
-
         public override void Initialize()
         {
-            SetStartDate(2022, 02, 01);
-            SetEndDate(2022, 02, 08);
-            _es = AddFuture("ES").Symbol;
+            SetStartDate(2013, 10, 06);
+            SetEndDate(2013, 10, 20);
 
-            Schedule.On(DateRules.EveryDay(_es),
-                TimeRules.AfterMarketOpen(_es),
-                EveryDayAfterMarketOpen);
+            var es = AddSecurity(SecurityType.Future, "ES");
+            _es = es.Symbol;
 
-            Schedule.On(DateRules.EveryDay(_es),
-                TimeRules.BeforeMarketClose(_es),
-                EveryDayBeforeMarketClose);
-        }
-
-        public void EveryDayBeforeMarketClose()
-        {
-            var expectedMarketClose = _beforeMarketCloseQueue.Dequeue();
-            if (Time != expectedMarketClose)
+            Consolidate<BaseData>(_es, time =>
             {
-                throw new Exception($"Expected market close date was {expectedMarketClose} but received {Time}");
-            }
+                var date = time;
+                if (time >= new DateTime(2013, 10, 21))
+                {
+                    date = Time;
+                }
+
+                var start = es.Exchange.Hours.GetNextMarketOpen(date, false);
+                var end = es.Exchange.Hours.GetNextMarketClose(start, false);
+                var period = (end - start);
+                return new CalendarInfo(start, period);
+            }, bar => Assert(bar));
         }
 
-        public void EveryDayAfterMarketOpen()
+        public void Assert(BaseData bar)
         {
-            var expectedMarketOpen = _afterMarketOpenQueue.Dequeue();
-            if (Time != expectedMarketOpen)
-            {
-                throw new Exception($"Expected market open date was {expectedMarketOpen} but received {Time}");
-            }
+            Logging.Log.Debug($"Consolidator Event span. Start {bar.Time} End : {bar.EndTime}");
         }
 
-        public override void OnEndOfAlgorithm()
-        {
-            if (!_afterMarketOpenQueue.Any() || !_beforeMarketCloseQueue.Any())
-            {
-                throw new Exception($"_afterMarketOpenQueue and _beforeMarketCloseQueue should be empty");
-            }
-        }
         public bool CanRunLocally { get; } = true;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp};
+        public Language[] Languages { get; } = { Language.CSharp };
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -116,8 +84,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
+            {"Information Ratio", "-5.619"},
+            {"Tracking Error", "0.141"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},

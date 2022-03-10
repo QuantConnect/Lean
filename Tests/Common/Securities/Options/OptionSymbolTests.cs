@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -54,6 +54,34 @@ namespace QuantConnect.Tests.Common.Securities.Options
                 new DateTime(2019, 9, 20));
 
             Assert.IsFalse(OptionSymbol.IsOptionContractExpired(symbol, new DateTime(2019, 1, 1)));
+        }
+
+        [Test]
+        public void IsOptionContractExpiredForSameExpiryTimeAndTime()
+        {
+            var symbol = Symbol.CreateOption(
+                "BHP",
+                Market.USA,
+                OptionStyle.American,
+                OptionRight.Call,
+                55m,
+                new DateTime(2019, 9, 20));
+
+            Assert.IsFalse(OptionSymbol.IsOptionContractExpired(symbol, new DateTime(2012, 04, 02)));
+        }
+
+        [Test]
+        public void IsOptionContractExpiredReturnsFalseForOneDayBeyond()
+        {
+            var symbol = Symbol.CreateOption(
+                "BHP",
+                Market.USA,
+                OptionStyle.American,
+                OptionRight.Call,
+                55m,
+                new DateTime(2019, 9, 20));
+
+            Assert.IsFalse(OptionSymbol.IsOptionContractExpired(symbol, new DateTime(2012, 04, 03)));
         }
     }
 }
