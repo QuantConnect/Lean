@@ -39,8 +39,8 @@ class BasicTemplateIndiaIndexAlgorithm(QCAlgorithm):
         self.DefaultOrderProperties = IndiaOrderProperties(Exchange.NSE)
 
         # Define indicator
-        self._emaSlow = self.EMA(self.Nifty, 80);
-        self._emaFast = self.EMA(self.Nifty, 200);
+        self._emaSlow = self.EMA(self.Nifty, 80)
+        self._emaFast = self.EMA(self.Nifty, 200)
 
         self.Debug("numpy test >>> print numpy.pi: " + str(np.pi))
 

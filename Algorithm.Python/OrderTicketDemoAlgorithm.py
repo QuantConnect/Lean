@@ -343,13 +343,13 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
         return self.Time.day == day and self.Time.hour == hour and self.Time.minute == minute
 
     def OnEndOfAlgorithm(self):
-        basicOrderTicketFilter = lambda x: x.Symbol == self.spy;
+        basicOrderTicketFilter = lambda x: x.Symbol == self.spy
 
-        filledOrders = self.Transactions.GetOrders(lambda x: x.Status == OrderStatus.Filled);
-        orderTickets = self.Transactions.GetOrderTickets(basicOrderTicketFilter);
-        openOrders = self.Transactions.GetOpenOrders(lambda x: x.Symbol == self.spy);
-        openOrderTickets = self.Transactions.GetOpenOrderTickets(basicOrderTicketFilter);
-        remainingOpenOrders = self.Transactions.GetOpenOrdersRemainingQuantity(basicOrderTicketFilter);
+        filledOrders = self.Transactions.GetOrders(lambda x: x.Status == OrderStatus.Filled)
+        orderTickets = self.Transactions.GetOrderTickets(basicOrderTicketFilter)
+        openOrders = self.Transactions.GetOpenOrders(lambda x: x.Symbol == self.spy)
+        openOrderTickets = self.Transactions.GetOpenOrderTickets(basicOrderTicketFilter)
+        remainingOpenOrders = self.Transactions.GetOpenOrdersRemainingQuantity(basicOrderTicketFilter)
 
         # The type returned by self.Transactions.GetOrders() is iterable and not a list
         # that's why we use sum() to get the size of the iterable object type
@@ -369,11 +369,11 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
         assert(not (len(spyOpenOrders) or spyOpenOrderTicketsSize)), "No open orders or tickets were expected"
         assert(not spyOpenOrdersRemainingQuantity), "No remaining quantiy to be filled from open orders was expected"
 
-        defaultOrders = self.Transactions.GetOrders();
-        defaultOrderTickets = self.Transactions.GetOrderTickets();
-        defaultOpenOrders = self.Transactions.GetOpenOrders();
-        defaultOpenOrderTickets = self.Transactions.GetOpenOrderTickets();
-        defaultOpenOrdersRemaining = self.Transactions.GetOpenOrdersRemainingQuantity();
+        defaultOrders = self.Transactions.GetOrders()
+        defaultOrderTickets = self.Transactions.GetOrderTickets()
+        defaultOpenOrders = self.Transactions.GetOpenOrders()
+        defaultOpenOrderTickets = self.Transactions.GetOpenOrderTickets()
+        defaultOpenOrdersRemaining = self.Transactions.GetOpenOrdersRemainingQuantity()
 
         defaultOrdersSize = sum(1 for order in defaultOrders)
         defaultOrderTicketsSize = sum(1 for ticket in defaultOrderTickets)
