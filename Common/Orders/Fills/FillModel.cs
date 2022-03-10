@@ -540,7 +540,16 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             var localOrderTime = order.Time.ConvertFromUtc(asset.Exchange.TimeZone);
-            var nextMarketClose = asset.Exchange.Hours.GetNextMarketClose(localOrderTime, false);
+
+            DateTime nextMarketClose;
+            if (asset.Exchange.Hours.IsMarketAlwaysOpen)
+            {
+                nextMarketClose = localOrderTime + new TimeSpan(24, 0, 0);
+            }
+            else
+            {
+                nextMarketClose = asset.Exchange.Hours.GetNextMarketClose(localOrderTime, false);
+            }
 
             // wait until market closes after the order time
             if (asset.LocalTime < nextMarketClose)
