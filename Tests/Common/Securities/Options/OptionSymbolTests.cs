@@ -55,33 +55,5 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
             Assert.IsFalse(OptionSymbol.IsOptionContractExpired(symbol, new DateTime(2019, 1, 1)));
         }
-
-        [Test]
-        public void IsOptionContractExpiredForSameExpiryTimeAndTime()
-        {
-            var symbol = Symbol.CreateOption(
-                "BHP",
-                Market.USA,
-                OptionStyle.American,
-                OptionRight.Call,
-                55m,
-                new DateTime(2012, 04, 02));
-
-            Assert.IsTrue(OptionSymbol.IsOptionContractExpired(symbol, new DateTime(2012, 04, 02)));
-        }
-
-        [Test]
-        public void IsOptionContractExpiredReturnsFalseForOneDayBeyond()
-        {
-            var symbol = Symbol.CreateOption(
-                "BHP",
-                Market.USA,
-                OptionStyle.American,
-                OptionRight.Call,
-                55m,
-                new DateTime(2012, 04, 02));
-
-            Assert.IsFalse(OptionSymbol.IsOptionContractExpired(symbol, new DateTime(2012, 04, 01)));
-        }
     }
 }

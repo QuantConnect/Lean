@@ -123,12 +123,14 @@ namespace QuantConnect.Securities.Option
             // Once bug 6189 was solved in ´GetNextMarketClose()´ there was found 
             // possible bugs on some futures symbol.ID.Date, then it was needed to
             // consider the current time at midnight
-            var midnight = new TimeSpan(24, 0, 0);
+
             if (currentTime >= expiryTime)
             {
                 return true;
             }
-            else if (currentTime + midnight >= expiryTime)
+            // TODO: Fix the symbol.ID.Date for DC future option in order to remove
+            // this else if sentence
+            else if(currentTime + new TimeSpan(16,0,0) == expiryTime)
             {
                 return true;
             }
