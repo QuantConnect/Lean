@@ -286,7 +286,7 @@ namespace QuantConnect.Securities
                     }
                     
 
-                    var marketOpenTimeOfDay = marketHours.GetMarketOpen(time.TimeOfDay, extendedMarket, lastDaySegment.End);
+                    var marketOpenTimeOfDay = marketHours.GetMarketOpen(time.TimeOfDay, extendedMarket, lastDaySegment?.End);
                     if (marketOpenTimeOfDay.HasValue)
                     {
                         var marketOpen = time.Date + marketOpenTimeOfDay.Value;
@@ -364,7 +364,7 @@ namespace QuantConnect.Securities
                     // the next day first segment for the case in which the next market close is the last segment
                     // of the current day
                     var nextSegment = GetNextOrPreviousSegment(time, true);
-                    var marketCloseTimeOfDay = marketHours.GetMarketClose(time.TimeOfDay, extendedMarket, nextSegment.Start);
+                    var marketCloseTimeOfDay = marketHours.GetMarketClose(time.TimeOfDay, extendedMarket, nextSegment?.Start);
                     if (marketCloseTimeOfDay.HasValue)
                     {
                         var marketClose = time.Date + marketCloseTimeOfDay.Value;

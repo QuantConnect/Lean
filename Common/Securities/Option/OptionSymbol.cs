@@ -121,23 +121,16 @@ namespace QuantConnect.Securities.Option
 
             var expiryTime = exchangeHours.GetNextMarketClose(expiryDay, false);
             // Once bug 6189 was solved in ´GetNextMarketClose()´ there was found 
-            // possible bugs on some futures symbol.ID.Date, then it was needed to
-            // consider the current time at midnight
+            // possible bugs on some futures symbol.ID.Date or delisting/liquidation
+            // handle event.
+            // Maybe related to #6062 and #5487
 
-            if (currentTime >= expiryTime)
+            if (expiryTime >= symbol.ID.Date.AddDays(1).Date)
             {
-                return true;
+                expiryTime = symbol.ID.Date.AddDays(1).Date;
             }
-            // TODO: Fix the symbol.ID.Date for DC future option in order to remove
-            // this else if sentence
-            else if(currentTime + new TimeSpan(16,0,0) == expiryTime)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+
+            return currentTime >= expiryTime;
         }
 
     }
