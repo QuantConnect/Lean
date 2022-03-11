@@ -22,21 +22,39 @@ using QuantConnect.Data.Consolidators;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm to check the behavior of the changes in GetNextMarketClose()
-    /// and GetNextMarketOpen() using a consolidator
+    /// Regression algorithm using a consolidator to check GetNextMarketClose() and GetNextMarketOpen()
+    /// are returning the correct market close and open times
     /// </summary>
     public class FutureMarketOpenConsolidatorRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _es;
+        private static List<DateTime> _expectedOpens = new List<DateTime>(){
+            new DateTime(2013, 10, 07, 16, 30, 0),
+            new DateTime(2013, 10, 08, 16, 30, 0),
+            new DateTime(2013, 10, 09, 16, 30, 0),
+            new DateTime(2013, 10, 10, 16, 30, 0),
+            new DateTime(2013, 10, 11, 16, 30, 0),
+            new DateTime(2013, 10, 14, 16, 30, 0)
+        };
+        private static List<DateTime> _expectedCloses = new List<DateTime>(){
+            new DateTime(2013, 10, 07, 17, 00, 0),
+            new DateTime(2013, 10, 08, 17, 00, 0),
+            new DateTime(2013, 10, 09, 17, 00, 0),
+            new DateTime(2013, 10, 10, 17, 00, 0),
+            new DateTime(2013, 10, 11, 17, 00, 0),
+            new DateTime(2013, 10, 14, 17, 00, 0)
+        };
+        private Queue<DateTime> _expectedOpensQueue = new Queue<DateTime>(_expectedOpens);
+        private Queue<DateTime> _expectedClosesQueue = new Queue<DateTime>(_expectedCloses);
+
         public override void Initialize()
         {
             SetStartDate(2013, 10, 06);
-            SetEndDate(2013, 10, 20);
+            SetEndDate(2013, 10, 14);
 
             var es = AddSecurity(SecurityType.Future, "ES");
-            _es = es.Symbol;
 
-            Consolidate<BaseData>(_es, time =>
+            Consolidate<BaseData>(es.Symbol, time =>
             {
                 var date = time;
                 if (time >= new DateTime(2013, 10, 21))
@@ -53,6 +71,15 @@ namespace QuantConnect.Algorithm.CSharp
 
         public void Assert(BaseData bar)
         {
+            var open = _expectedOpensQueue.Dequeue();
+            var close = _expectedClosesQueue.Dequeue();
+
+            if (open != bar.Time || close != bar.EndTime)
+            {
+                throw new Exception($"Bar span was expected to be from {open} to {close}. " +
+                    $"\n But was from {bar.Time} to {bar.EndTime}.");
+            }
+
             Logging.Log.Debug($"Consolidator Event span. Start {bar.Time} End : {bar.EndTime}");
         }
 
@@ -84,8 +111,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-5.619"},
-            {"Tracking Error", "0.141"},
+            {"Information Ratio", "-3.108"},
+            {"Tracking Error", "0.163"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},

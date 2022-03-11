@@ -65,9 +65,9 @@ namespace QuantConnect.Tests.Common.Securities.Options
                 OptionStyle.American,
                 OptionRight.Call,
                 55m,
-                new DateTime(2019, 9, 20));
+                new DateTime(2012, 04, 02));
 
-            Assert.IsFalse(OptionSymbol.IsOptionContractExpired(symbol, new DateTime(2012, 04, 02)));
+            Assert.IsTrue(OptionSymbol.IsOptionContractExpired(symbol, new DateTime(2012, 04, 02)));
         }
 
         [Test]
@@ -79,9 +79,9 @@ namespace QuantConnect.Tests.Common.Securities.Options
                 OptionStyle.American,
                 OptionRight.Call,
                 55m,
-                new DateTime(2019, 9, 20));
+                new DateTime(2012, 04, 02));
 
-            Assert.IsFalse(OptionSymbol.IsOptionContractExpired(symbol, new DateTime(2012, 04, 03)));
+            Assert.IsFalse(OptionSymbol.IsOptionContractExpired(symbol, new DateTime(2012, 04, 01)));
         }
     }
 }
