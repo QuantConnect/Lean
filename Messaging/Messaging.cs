@@ -13,18 +13,14 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Notifications;
-using QuantConnect.Orders.Serialization;
 using QuantConnect.Packets;
 using QuantConnect.Util;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Messaging
 {
@@ -66,7 +62,7 @@ namespace QuantConnect.Messaging
             switch (packet.Type)
             {
                 case PacketType.Debug:
-                    var debug = (DebugPacket) packet;
+                    var debug = (DebugPacket)packet;
                     Log.Trace("Debug: " + debug.Message);
                     break;
 
@@ -76,18 +72,18 @@ namespace QuantConnect.Messaging
                     break;
 
                 case PacketType.Log:
-                    var log = (LogPacket) packet;
+                    var log = (LogPacket)packet;
                     Log.Trace("Log: " + log.Message);
                     break;
 
                 case PacketType.RuntimeError:
-                    var runtime = (RuntimeErrorPacket) packet;
+                    var runtime = (RuntimeErrorPacket)packet;
                     var rstack = (!string.IsNullOrEmpty(runtime.StackTrace) ? (Environment.NewLine + " " + runtime.StackTrace) : string.Empty);
                     Log.Error(runtime.Message + rstack);
                     break;
 
                 case PacketType.HandledError:
-                    var handled = (HandledErrorPacket) packet;
+                    var handled = (HandledErrorPacket)packet;
                     var hstack = (!string.IsNullOrEmpty(handled.StackTrace) ? (Environment.NewLine + " " + handled.StackTrace) : string.Empty);
                     Log.Error(handled.Message + hstack);
                     break;
@@ -96,7 +92,7 @@ namespace QuantConnect.Messaging
                     break;
 
                 case PacketType.BacktestResult:
-                    var result = (BacktestResultPacket) packet;
+                    var result = (BacktestResultPacket)packet;
 
                     if (result.Progress == 1)
                     {
@@ -112,7 +108,7 @@ namespace QuantConnect.Messaging
                         result.Results.Statistics.Add("OrderListHash", orderHash);
 
                         var statisticsStr = $"{Environment.NewLine}" +
-                            $"{string.Join(Environment.NewLine,result.Results.Statistics.Select(x => $"STATISTICS:: {x.Key} {x.Value}"))}";
+                            $"{string.Join(Environment.NewLine, result.Results.Statistics.Select(x => $"STATISTICS:: {x.Key} {x.Value}"))}";
                         Log.Trace(statisticsStr);
                     }
                     break;
@@ -125,9 +121,9 @@ namespace QuantConnect.Messaging
         public void SendNotification(Notification notification)
         {
             var type = notification.GetType();
-            if (type == typeof (NotificationEmail)
-             || type == typeof (NotificationWeb)
-             || type == typeof (NotificationSms)
+            if (type == typeof(NotificationEmail)
+             || type == typeof(NotificationWeb)
+             || type == typeof(NotificationSms)
              || type == typeof(NotificationTelegram))
             {
                 Log.Error("Messaging.SendNotification(): Send not implemented for notification of type: " + type.Name);

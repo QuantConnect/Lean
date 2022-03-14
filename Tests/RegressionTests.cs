@@ -13,15 +13,14 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using NUnit.Framework;
-using System.Linq;
 using Newtonsoft.Json.Linq;
+using NUnit.Framework;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
-using System.IO;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Tests
 {
@@ -86,7 +85,7 @@ namespace QuantConnect.Tests
                 {"WarmUpAfterInitializeRegression", AlgorithmStatus.RuntimeError }
             };
 
-            var languages = Config.GetValue("regression-test-languages", JArray.FromObject(new[] {"CSharp", "Python"}))
+            var languages = Config.GetValue("regression-test-languages", JArray.FromObject(new[] { "CSharp", "Python" }))
                 .Select(str => Parse.Enum<Language>(str.Value<string>()))
                 .ToHashSet();
 
@@ -96,7 +95,7 @@ namespace QuantConnect.Tests
                 where typeof(IRegressionAlgorithmDefinition).IsAssignableFrom(type)
                 where !type.IsAbstract                          // non-abstract
                 where type.GetConstructor(Array.Empty<Type>()) != null  // has default ctor
-                let instance = (IRegressionAlgorithmDefinition) Activator.CreateInstance(type)
+                let instance = (IRegressionAlgorithmDefinition)Activator.CreateInstance(type)
                 let status = nonDefaultStatuses.GetValueOrDefault(type.Name, AlgorithmStatus.Completed)
                 where instance.CanRunLocally                   // open source has data to run this algorithm
                 from language in instance.Languages.Where(languages.Contains)
