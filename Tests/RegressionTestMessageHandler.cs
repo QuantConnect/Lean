@@ -16,11 +16,9 @@
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine;
-using QuantConnect.Logging;
 using QuantConnect.Notifications;
 using QuantConnect.Packets;
 using QuantConnect.Util;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -32,8 +30,7 @@ namespace QuantConnect.Tests
     /// </summary>
     public class RegressionTestMessageHandler : IMessagingHandler
     {
-        private static readonly bool UpdateRegressionStatistics = Config.GetBool("regression-update-statistics", false);
-
+        private static readonly bool _updateRegressionStatistics = Config.GetBool("regression-update-statistics", false);
         private AlgorithmNodePacket _job;
         private AlgorithmManager _algorithmManager;
 
@@ -52,7 +49,6 @@ namespace QuantConnect.Tests
         /// </summary>
         public void Initialize()
         {
-            //
         }
 
         /// <summary>
@@ -78,42 +74,6 @@ namespace QuantConnect.Tests
         {
             switch (packet.Type)
             {
-                case PacketType.Debug:
-                    var debug = (DebugPacket)packet;
-                    Log.Trace("Debug: " + debug.Message);
-                    break;
-
-                case PacketType.SystemDebug:
-                    var systemDebug = (SystemDebugPacket)packet;
-                    Log.Trace("Debug: " + systemDebug.Message);
-                    break;
-
-                case PacketType.Log:
-                    var log = (LogPacket)packet;
-                    Log.Trace("Log: " + log.Message);
-                    break;
-
-                case PacketType.RuntimeError:
-                    var runtime = (RuntimeErrorPacket)packet;
-                    var rstack = (!string.IsNullOrEmpty(runtime.StackTrace) ? (Environment.NewLine + " " + runtime.StackTrace) : string.Empty);
-                    Log.Error(runtime.Message + rstack);
-                    break;
-
-                case PacketType.HandledError:
-                    var handled = (HandledErrorPacket)packet;
-                    var hstack = (!string.IsNullOrEmpty(handled.StackTrace) ? (Environment.NewLine + " " + handled.StackTrace) : string.Empty);
-                    Log.Error(handled.Message + hstack);
-                    break;
-
-                case PacketType.AlphaResult:
-                    // spams the logs
-                    //var insights = ((AlphaResultPacket) packet).Insights;
-                    //foreach (var insight in insights)
-                    //{
-                    //    Log.Trace("Insight: " + insight);
-                    //}
-                    break;
-
                 case PacketType.BacktestResult:
                     var result = (BacktestResultPacket)packet;
 
@@ -130,15 +90,14 @@ namespace QuantConnect.Tests
                         var orderHash = result.Results.Orders.GetHash();
                         result.Results.Statistics.Add("OrderListHash", orderHash);
 
-                        if (UpdateRegressionStatistics && _job.Language == Language.CSharp)
+                        if (_updateRegressionStatistics && _job.Language == Language.CSharp)
                         {
                             UpdateRegressionStatisticsInSourceFile(result);
                         }
-
-                        var statisticsStr = $"{Environment.NewLine}" +
-                            $"{string.Join(Environment.NewLine, result.Results.Statistics.Select(x => $"STATISTICS:: {x.Key} {x.Value}"))}";
-                        Log.Trace(statisticsStr);
                     }
+                    break;
+
+                default:
                     break;
             }
         }
@@ -148,16 +107,6 @@ namespace QuantConnect.Tests
         /// </summary>
         public void SendNotification(Notification notification)
         {
-            var type = notification.GetType();
-            if (type == typeof(NotificationEmail)
-             || type == typeof(NotificationWeb)
-             || type == typeof(NotificationSms)
-             || type == typeof(NotificationTelegram))
-            {
-                Log.Error("Messaging.SendNotification(): Send not implemented for notification of type: " + type.Name);
-                return;
-            }
-            notification.Send();
         }
 
         private void UpdateRegressionStatisticsInSourceFile(BacktestResultPacket result)
@@ -223,7 +172,7 @@ namespace QuantConnect.Tests
             File.WriteAllLines(algorithmSource, lines);
         }
 
-        private string GetDataPointLine(string currentLine, string count)
+        private static string GetDataPointLine(string currentLine, string count)
         {
             var dataParts = currentLine.Split(" ");
             dataParts[^1] = count + ";";
