@@ -67,8 +67,16 @@ namespace QuantConnect.Tests
                 Assert.AreEqual(0, algorithmManager.TimeLimit.AdditionalTimeBucket.AvailableTokens);
             }
 
-            Assert.AreEqual(parameters.DataPoints, algorithmManager.DataPoints);
-            Assert.AreEqual(parameters.AlgorithmHistoryDataPoints, algorithmManager.AlgorithmHistoryDataPoints);
+            // Skip non-deterministic data points regression algorithms
+            if (parameters.DataPoints != -1)
+            {
+                Assert.AreEqual(parameters.DataPoints, algorithmManager.DataPoints);
+            }
+            // Skip non-deterministic history data points regression algorithms
+            if (parameters.AlgorithmHistoryDataPoints != -1)
+            {
+                Assert.AreEqual(parameters.AlgorithmHistoryDataPoints, algorithmManager.AlgorithmHistoryDataPoints);
+            }
         }
 
         private static TestCaseData[] GetRegressionTestParameters()
