@@ -21,18 +21,20 @@ from AlgorithmImports import *
 ### <meta name="tag" content="options" />
 class OptionExerciseAssignRegressionAlgorithm(QCAlgorithm):
 
-    def Initialize(self):
+    UnderlyingTicker = "GOOG"
 
+    def Initialize(self):
         self.SetCash(100000)
         self.SetStartDate(2015,12,24)
         self.SetEndDate(2015,12,28)
 
-        option = self.AddOption("GOOG")
+        self.equity = self.AddEquity(self.UnderlyingTicker);
+        self.option = self.AddOption(self.UnderlyingTicker);
 
         # set our strike/expiry filter for this option chain
-        option.SetFilter(self.UniverseFunc)
+        self.option.SetFilter(self.UniverseFunc)
 
-        self.SetBenchmark("GOOG")
+        self.SetBenchmark(self.equity.Symbol)
         self._assignedOption = False
 
     def OnData(self, slice):
@@ -43,7 +45,7 @@ class OptionExerciseAssignRegressionAlgorithm(QCAlgorithm):
             contracts = filter(lambda x:
                                x.Expiry.date() == self.Time.date() and
                                x.Strike < chain.Underlying.Price and
-                               x.Right ==  OptionRight.Call, chain)
+                               x.Right == OptionRight.Call, chain)
             
             # sorted the contracts by their strikes, find the second strike under market price 
             sorted_contracts = sorted(contracts, key = lambda x: x.Strike, reverse = True)[:2]
