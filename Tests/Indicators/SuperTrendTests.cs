@@ -54,12 +54,8 @@ namespace QuantConnect.Tests.Indicators
                 STR.Update(tradeBar);
             }
             Assert.IsTrue(STR.IsReady);
-            Assert.AreEqual(typeof(decimal), STR.GetCurrentBasicUpperBand().GetType());
-            Assert.AreEqual(typeof(decimal), STR.GetCurrentBasicLowerBand().GetType());
-            Assert.AreEqual(typeof(decimal), STR.GetCurrentTrailingUpperBand().GetType());
-            Assert.AreEqual(typeof(decimal), STR.GetCurrentTrailingLowerBand().GetType());
-            Assert.AreEqual(typeof(decimal), STR.GetPreviousTrailingUpperBand().GetType());
-            Assert.AreEqual(typeof(decimal), STR.GetPreviousTrailingLowerBand().GetType());
+            Assert.AreEqual(typeof(decimal), STR.BasicUpperBand.GetType());
+            Assert.AreEqual(typeof(decimal), STR.BasicLowerBand.GetType());
         }
 
         [Test]
