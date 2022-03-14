@@ -38,6 +38,7 @@ namespace QuantConnect.Interfaces
         /// Data Points count of all timeslices of algorithm
         /// </summary>
         long DataPoints { get; }
+
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
