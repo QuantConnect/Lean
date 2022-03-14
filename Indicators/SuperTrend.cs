@@ -27,8 +27,6 @@ namespace QuantConnect.Indicators
         private readonly decimal _multiplier;
         private decimal _superTrend;
         private decimal _currentClose;
-        private decimal _currentBasicUpperBand;
-        private decimal _currentBasicLowerBand;
         private decimal _currentTrailingUpperBand;
         private decimal _currentTrailingLowerBand;
         private decimal _previousTrailingUpperBand;
@@ -41,6 +39,16 @@ namespace QuantConnect.Indicators
         /// Average true range indicator used to calculate super trend's basic upper and lower bands
         /// </summary>
         private readonly AverageTrueRange _averageTrueRange;
+
+        /// <summary>
+        /// Basic Upper Band
+        /// </summary>
+        public decimal BasicUpperBand { get; private set; }
+
+        /// <summary>
+        /// Basic Lower band
+        /// </summary>
+        public decimal BasicLowerBand { get; private set; }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -93,11 +101,11 @@ namespace QuantConnect.Indicators
             }
 
             _currentClose = input.Close;
-            _currentBasicLowerBand = ((input.High + input.Low) / 2) - (_multiplier * _averageTrueRange.Current.Value);
-            _currentBasicUpperBand = ((input.High + input.Low) / 2) + (_multiplier * _averageTrueRange.Current.Value);
+            BasicLowerBand = ((input.High + input.Low) / 2) - (_multiplier * _averageTrueRange.Current.Value);
+            BasicUpperBand = ((input.High + input.Low) / 2) + (_multiplier * _averageTrueRange.Current.Value);
 
-            _currentTrailingLowerBand = ((_currentBasicLowerBand > _previousTrailingLowerBand) || (_previousClose < _previousTrailingLowerBand)) ? _currentBasicLowerBand : _previousTrailingLowerBand;
-            _currentTrailingUpperBand = ((_currentBasicUpperBand < _previousTrailingUpperBand) || (_previousClose > _previousTrailingUpperBand)) ? _currentBasicUpperBand : _previousTrailingUpperBand;
+            _currentTrailingLowerBand = ((BasicLowerBand > _previousTrailingLowerBand) || (_previousClose < _previousTrailingLowerBand)) ? BasicLowerBand : _previousTrailingLowerBand;
+            _currentTrailingUpperBand = ((BasicUpperBand < _previousTrailingUpperBand) || (_previousClose > _previousTrailingUpperBand)) ? BasicUpperBand : _previousTrailingUpperBand;
 
             if ((_prevSuper == -1) || (_prevSuper == _previousTrailingUpperBand))
             {
