@@ -38,7 +38,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void TestGetters()
+        public void Getters()
         {
             var STR = new SuperTrend(10, 3);
             foreach (var data in TestHelper.GetDataStream(100))
@@ -54,8 +54,8 @@ namespace QuantConnect.Tests.Indicators
                 STR.Update(tradeBar);
             }
             Assert.IsTrue(STR.IsReady);
-            Assert.AreEqual(typeof(decimal), STR.BasicUpperBand.GetType());
-            Assert.AreEqual(typeof(decimal), STR.BasicLowerBand.GetType());
+            Assert.AreNotEqual(0, STR.BasicUpperBand);
+            Assert.AreNotEqual(0, STR.BasicLowerBand);
         }
 
         [Test]

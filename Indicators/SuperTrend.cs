@@ -43,14 +43,12 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Basic Upper Band
         /// </summary>
-        public decimal BasicUpperBand
-        { get; set; }
+        public decimal BasicUpperBand { get; private set; }
 
         /// <summary>
         /// Basic Lower band
         /// </summary>
-        public decimal BasicLowerBand
-        { get; set; }
+        public decimal BasicLowerBand { get; private set; }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
