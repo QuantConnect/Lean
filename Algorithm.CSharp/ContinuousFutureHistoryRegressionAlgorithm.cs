@@ -77,9 +77,9 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception($"We are getting data for more than one symbols! {string.Join(",", data.Keys.Select(symbol => symbol))}");
             }
 
-            if (!Portfolio.Invested)
+            if (!Portfolio.Invested && !IsWarmingUp)
             {
-                Buy(_continuousContract.Symbol, 1);
+                Buy(_continuousContract.Mapped, 1);
             }
         }
 
@@ -136,14 +136,14 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$1.85"},
-            {"Estimated Strategy Capacity", "$42000000.00"},
-            {"Lowest Capacity Asset", "ES 1S1"},
-            {"Fitness Score", "0.76"},
+            {"Estimated Strategy Capacity", "$400000000.00"},
+            {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
+            {"Fitness Score", "0.816"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
             {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
-            {"Portfolio Turnover", "0.76"},
+            {"Portfolio Turnover", "0.816"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -157,7 +157,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "4de9344671d542e30066338e2bf9d400"}
+            {"OrderListHash", "f3bf9e78fa238cf98344d12839b36705"}
         };
     }
 }
