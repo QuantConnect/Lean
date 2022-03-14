@@ -14,9 +14,7 @@
 */
 
 using QuantConnect.Configuration;
-using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine;
-using QuantConnect.Notifications;
 using QuantConnect.Packets;
 using QuantConnect.Util;
 using System.Collections.Generic;
@@ -28,28 +26,11 @@ namespace QuantConnect.Tests
     /// <summary>
     /// Local/desktop implementation of messaging system for Lean Engine.
     /// </summary>
-    public class RegressionTestMessageHandler : IMessagingHandler
+    public class RegressionTestMessageHandler : QuantConnect.Messaging.Messaging
     {
         private static readonly bool _updateRegressionStatistics = Config.GetBool("regression-update-statistics", false);
         private AlgorithmNodePacket _job;
         private AlgorithmManager _algorithmManager;
-
-        /// <summary>
-        /// This implementation ignores the <seealso cref="HasSubscribers"/> flag and
-        /// instead will always write to the log.
-        /// </summary>
-        public bool HasSubscribers
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Initialize the messaging system
-        /// </summary>
-        public void Initialize()
-        {
-        }
 
         /// <summary>
         /// Initialize the messaging system
@@ -62,15 +43,16 @@ namespace QuantConnect.Tests
         /// <summary>
         /// Set the messaging channel
         /// </summary>
-        public void SetAuthentication(AlgorithmNodePacket job)
+        public override void SetAuthentication(AlgorithmNodePacket job)
         {
+            base.SetAuthentication(job);
             _job = job;
         }
 
         /// <summary>
         /// Send a generic base packet without processing
         /// </summary>
-        public void Send(Packet packet)
+        public override void Send(Packet packet)
         {
             switch (packet.Type)
             {
@@ -100,13 +82,6 @@ namespace QuantConnect.Tests
                 default:
                     break;
             }
-        }
-
-        /// <summary>
-        /// Send any notification with a base type of Notification.
-        /// </summary>
-        public void SendNotification(Notification notification)
-        {
         }
 
         private void UpdateRegressionStatisticsInSourceFile(BacktestResultPacket result)
@@ -177,13 +152,6 @@ namespace QuantConnect.Tests
             var dataParts = currentLine.Split(" ");
             dataParts[^1] = count + ";";
             return string.Join(" ", dataParts);
-        }
-
-        /// <summary>
-        /// Dispose of any resources
-        /// </summary>
-        public void Dispose()
-        {
         }
     }
 }

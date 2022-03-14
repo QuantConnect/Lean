@@ -50,14 +50,14 @@ namespace QuantConnect.Messaging
         /// <summary>
         /// Set the messaging channel
         /// </summary>
-        public void SetAuthentication(AlgorithmNodePacket job)
+        public virtual void SetAuthentication(AlgorithmNodePacket job)
         {
         }
 
         /// <summary>
         /// Send a generic base packet without processing
         /// </summary>
-        public void Send(Packet packet)
+        public virtual void Send(Packet packet)
         {
             switch (packet.Type)
             {
