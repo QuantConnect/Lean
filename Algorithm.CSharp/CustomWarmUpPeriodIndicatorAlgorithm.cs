@@ -31,6 +31,7 @@ namespace QuantConnect.Algorithm.CSharp
         private CSMANotWarmUp _customNotWarmUp;
         private CSMAWithWarmUp _customWarmUp;
         private SimpleMovingAverage _customNotInherit;
+        private SimpleMovingAverage _duplicateSMA;
 
         public override void Initialize()
         {
@@ -42,11 +43,15 @@ namespace QuantConnect.Algorithm.CSharp
             _customNotWarmUp = new CSMANotWarmUp("_customNotWarmUp", 60);
             _customWarmUp = new CSMAWithWarmUp("_customWarmUp", 60);
             _customNotInherit = new SimpleMovingAverage("_customNotInherit", 60);
+            // using 2nd SMA to match counterpart python algorithm ( CustomSMA + csharpIndicator )
+            // so that AlgorithmHistoryDataPoints are the same in both
+            _duplicateSMA = new SimpleMovingAverage("_duplicateSMA", 60);
 
             // Register the daily data of "SPY" to automatically update both indicators
             RegisterIndicator("SPY", _customWarmUp, Resolution.Minute);
             RegisterIndicator("SPY", _customNotWarmUp, Resolution.Minute);
             RegisterIndicator("SPY", _customNotInherit, Resolution.Minute);
+            RegisterIndicator("SPY", _duplicateSMA, Resolution.Minute);
 
             // Warm up _customWarmUp indicator
             WarmUpIndicator("SPY", _customWarmUp, Resolution.Minute);
@@ -75,11 +80,22 @@ namespace QuantConnect.Algorithm.CSharp
             // Check _customWarmUp indicator has already been warmed up with the requested data
             if (!_customNotInherit.IsReady)
             {
-                throw new Exception("_customWarmUp indicator was expected to be ready");
+                throw new Exception("_customNotInherit indicator was expected to be ready");
             }
             if (_customNotInherit.Samples != 60)
             {
-                throw new Exception("_customWarmUp indicator was expected to have processed 60 datapoints already");
+                throw new Exception("_customNotInherit indicator was expected to have processed 60 datapoints already");
+            }
+
+            WarmUpIndicator("SPY", _duplicateSMA, Resolution.Minute);
+            // Check _customWarmUp indicator has already been warmed up with the requested data
+            if (!_duplicateSMA.IsReady)
+            {
+                throw new Exception("_duplicateSMA indicator was expected to be ready");
+            }
+            if (_duplicateSMA.Samples != 60)
+            {
+                throw new Exception("_duplicateSMA indicator was expected to have processed 60 datapoints already");
             }
         }
 
@@ -96,6 +112,9 @@ namespace QuantConnect.Algorithm.CSharp
                 var diff = Math.Abs(_customNotWarmUp.Current.Value - _customWarmUp.Current.Value);
                 diff += Math.Abs(_customNotInherit.Current.Value - _customNotWarmUp.Current.Value);
                 diff += Math.Abs(_customNotInherit.Current.Value - _customWarmUp.Current.Value);
+                diff += Math.Abs(_duplicateSMA.Current.Value - _customWarmUp.Current.Value);
+                diff += Math.Abs(_duplicateSMA.Current.Value - _customNotWarmUp.Current.Value);
+                diff += Math.Abs(_duplicateSMA.Current.Value - _customNotInherit.Current.Value);
 
                 // Check _customNotWarmUp indicator is ready when the number of samples is bigger than its period
                 if (_customNotWarmUp.IsReady != (_customNotWarmUp.Samples >= 60))
@@ -174,7 +193,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 240;
+        public int AlgorithmHistoryDataPoints => 360;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
