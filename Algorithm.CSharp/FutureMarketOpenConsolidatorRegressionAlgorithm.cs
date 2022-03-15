@@ -29,21 +29,24 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private Symbol _es;
         private static List<DateTime> _expectedOpens = new List<DateTime>(){
+            new DateTime(2013, 10, 06, 18, 00, 0),
             new DateTime(2013, 10, 07, 16, 30, 0),
+            new DateTime(2013, 10, 08, 16, 30, 0),
             new DateTime(2013, 10, 09, 16, 30, 0),
+            new DateTime(2013, 10, 10, 16, 30, 0),
             new DateTime(2013, 10, 11, 16, 30, 0),
-            new DateTime(2013, 10, 15, 16, 30, 0),
-            new DateTime(2013, 10, 17, 16, 30, 0),
-            new DateTime(2013, 10, 19, 16, 30, 0)
+            new DateTime(2013, 10, 13, 18, 00, 0),
         };
         private static List<DateTime> _expectedCloses = new List<DateTime>(){
+            new DateTime(2013, 10, 07, 16, 15, 0),
             new DateTime(2013, 10, 08, 16, 15, 0),
+            new DateTime(2013, 10, 09, 16, 15, 0),
             new DateTime(2013, 10, 10, 16, 15, 0),
+            new DateTime(2013, 10, 11, 16, 15, 0),
             new DateTime(2013, 10, 14, 16, 15, 0),
-            new DateTime(2013, 10, 16, 16, 15, 0),
-            new DateTime(2013, 10, 18, 16, 15, 0),
-            new DateTime(2013, 10, 20, 16, 15, 0)
+            new DateTime(2013, 10, 14, 16, 15, 0),
         };
+
         private Queue<DateTime> _expectedOpensQueue = new Queue<DateTime>(_expectedOpens);
         private Queue<DateTime> _expectedClosesQueue = new Queue<DateTime>(_expectedCloses);
 
@@ -56,13 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             Consolidate<BaseData>(es.Symbol, time =>
             {
-                var date = time;
-                if (time >= new DateTime(2013, 10, 21))
-                {
-                    date = Time;
-                }
-
-                var start = es.Exchange.Hours.GetNextMarketOpen(date, false);
+                var start = es.Exchange.Hours.GetLastMarketOpen(time, false);
                 var end = es.Exchange.Hours.GetNextMarketClose(start, false);
                 while (end.Date == start.Date)
                 {

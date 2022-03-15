@@ -233,6 +233,48 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets the local date time corresponding to the last market open previous to the specified time
+        /// </summary>
+        /// <param name="localDateTime">The time to begin searching for the last market open (non-inclusive)</param>
+        /// <param name="extendedMarket">True to include extended market hours in the search</param>
+        /// <returns>The last market opening date time previous to the specified local date time</returns>
+        public DateTime GetLastMarketOpen(DateTime localDateTime, bool extendedMarket)
+        {
+            var time = localDateTime;
+            var lastMarketOpenFound = false;
+            var marketHours = GetMarketHours(time.DayOfWeek);
+            var lastSegment = GetNextOrPreviousSegment(time, false)?.End;
+            var nextMarketOpen = marketHours.GetMarketOpen(time.TimeOfDay, extendedMarket, lastSegment);
+
+            if (localDateTime == time.Date + nextMarketOpen)
+            {
+                return localDateTime;
+            }
+
+            while (!lastMarketOpenFound)
+            {
+                foreach(var segment in marketHours.Segments.Reverse())
+                {
+                    if ((time.Date + segment.End <= localDateTime.Date + nextMarketOpen) &&
+                        (segment.State == MarketHoursState.Market || extendedMarket))
+                    {
+                        if (marketHours.GetMarketOpen(segment.Start, extendedMarket, lastSegment) == segment.Start)
+                        {
+                            lastSegment = segment.Start;
+                            return time.Date + lastSegment.Value;
+                        }
+                    }
+                }
+
+                time = time.AddDays(-1);
+                lastSegment = GetNextOrPreviousSegment(time, false)?.End;
+                marketHours = GetMarketHours(time.DayOfWeek);
+            }
+
+            throw new Exception($"There was not found the last market open local date time.");
+        }
+
+        /// <summary>
         /// Gets the local date time corresponding to the next market open following the specified time
         /// </summary>
         /// <param name="localDateTime">The time to begin searching for market open (non-inclusive)</param>
@@ -247,8 +289,7 @@ namespace QuantConnect.Securities
             do
             {
                 var marketHours = GetMarketHours(time.DayOfWeek);
-                var isEarlyCloseDay = false;
-                var earlyCloseDateTime = new DateTime();
+                var earlyCloseDateTime = time.Date + new TimeSpan(24, 0, 0);
                 if (!marketHours.IsClosedAllDay && !_holidays.Contains(time.Date.Ticks))
                 {
                     TimeSpan lateOpenTime;
@@ -258,7 +299,7 @@ namespace QuantConnect.Securities
                         if (time < lateOpenDateTime)
                             return lateOpenDateTime;
 
-                        lastDaySegment = marketHours.Segments.Any() ? marketHours.Segments.Last() : null;
+                        lastDaySegment = marketHours.Segments.LastOrDefault();
                         time = time.Date + Time.OneDay;
                         continue;
                     }
@@ -267,7 +308,6 @@ namespace QuantConnect.Securities
                     if (_earlyCloses.TryGetValue(time.Date, out earlyCloseTime))
                     {
                         earlyCloseDateTime = time.Date.Add(earlyCloseTime);
-                        isEarlyCloseDay = true;
                         if (time > earlyCloseDateTime)
                         {
                             lastDaySegment = null;
@@ -292,14 +332,11 @@ namespace QuantConnect.Securities
                         var marketOpen = time.Date + marketOpenTimeOfDay.Value;
 
                         // Check the market open is before the close time in case of an early close
-                        if (isEarlyCloseDay)
+                        if (earlyCloseDateTime < marketOpen)
                         {
-                            if (earlyCloseDateTime < marketOpen)
-                            {
-                                lastDaySegment = marketHours.Segments.Any() ? marketHours.Segments.Last() : null;
-                                time = time.Date + Time.OneDay;
-                                continue;
-                            }
+                            lastDaySegment = marketHours.Segments.Any() ? marketHours.Segments.Last() : null;
+                            time = time.Date + Time.OneDay;
+                            continue;
                         }
 
                         if (localDateTime < marketOpen)
@@ -308,7 +345,7 @@ namespace QuantConnect.Securities
                         }
                     }
 
-                    lastDaySegment = marketHours.Segments.Any() ? marketHours.Segments.Last() : null;
+                    lastDaySegment = marketHours.Segments.LastOrDefault();
                 }
                 else
                 {

@@ -541,15 +541,12 @@ namespace QuantConnect.Orders.Fills
 
             var localOrderTime = order.Time.ConvertFromUtc(asset.Exchange.TimeZone);
 
-            DateTime nextMarketClose;
             if (asset.Exchange.Hours.IsMarketAlwaysOpen)
             {
-                nextMarketClose = localOrderTime + new TimeSpan(24, 0, 0);
+                throw new Exception($"Market never closes for this symbol {asset.Symbol}. Please, use another symbol");
             }
-            else
-            {
-                nextMarketClose = asset.Exchange.Hours.GetNextMarketClose(localOrderTime, false);
-            }
+
+            var nextMarketClose = asset.Exchange.Hours.GetNextMarketClose(localOrderTime, false);
 
             // wait until market closes after the order time
             if (asset.LocalTime < nextMarketClose)

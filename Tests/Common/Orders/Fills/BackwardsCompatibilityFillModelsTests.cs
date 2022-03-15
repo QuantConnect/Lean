@@ -267,9 +267,15 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         public void OldBaseFillModel_MarketOnCloseFill()
         {
             var model = new TestFillModelInheritBaseClass();
+            var security = SecurityTests.GetSecurity(false);
+            var reference = DateTime.Now;
+            var referenceUtc = reference.ConvertToUtc(TimeZones.NewYork);
+            var timeKeeper = new TimeKeeper(referenceUtc);
+            security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+
             var result = model.Fill(
-                new FillModelParameters(_security,
-                    new MarketOnCloseOrder(_security.Symbol, 1, orderDateTime),
+                new FillModelParameters(security,
+                    new MarketOnCloseOrder(security.Symbol, 1, orderDateTime),
                     new MockSubscriptionDataConfigProvider(_config),
                     Time.OneHour));
 

@@ -937,16 +937,12 @@ namespace QuantConnect.Algorithm
 
             if (request.OrderType == OrderType.MarketOnClose)
             {
-                DateTime nextMarketClose;
-
                 if (security.Exchange.Hours.IsMarketAlwaysOpen)
                 {
-                    nextMarketClose = security.LocalTime + new TimeSpan(24, 0, 0);
+                    throw new Exception($"Market never closes for this symbol {security.Symbol}. Please, use another symbol");
                 }
-                else
-                {
-                    nextMarketClose = security.Exchange.Hours.GetNextMarketClose(security.LocalTime, false);
-                }
+
+                var nextMarketClose = security.Exchange.Hours.GetNextMarketClose(security.LocalTime, false);
 
                 // Enforce MarketOnClose submission buffer
                 var latestSubmissionTime = nextMarketClose.Subtract(Orders.MarketOnCloseOrder.SubmissionTimeBuffer);
