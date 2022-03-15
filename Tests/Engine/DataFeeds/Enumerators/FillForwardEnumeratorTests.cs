@@ -2177,6 +2177,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             public bool CanRunLocally { get; } = true;
             public Language[] Languages { get; } = { Language.CSharp };
+
+            /// <summary>
+            /// Data Points count of all timeslices of algorithm
+            /// </summary>
+            public long DataPoints => 0;
+
+            /// </summary>
+            /// Data Points count of the algorithm history
+            /// </summary>
+            public int AlgorithmHistoryDataPoints => 0;
+
             public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>();
         }
 
