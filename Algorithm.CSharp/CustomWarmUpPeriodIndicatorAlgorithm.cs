@@ -28,8 +28,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class CustomWarmUpPeriodIndicatorAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private CustomSMA _customNotWarmUp;
+        private CSMANotWarmUp _customNotWarmUp;
         private CSMAWithWarmUp _customWarmUp;
+        private SimpleMovingAverage _customNotInherit;
 
         public override void Initialize()
         {
@@ -38,12 +39,14 @@ namespace QuantConnect.Algorithm.CSharp
             AddEquity("SPY", Resolution.Second);
 
             // Create two custom indicators, where one of them defines WarmUpPeriod parameter
-            _customNotWarmUp = new CustomSMA("_customNotWarmUp", 60);
+            _customNotWarmUp = new CSMANotWarmUp("_customNotWarmUp", 60);
             _customWarmUp = new CSMAWithWarmUp("_customWarmUp", 60);
+            _customNotInherit = new SimpleMovingAverage("_customNotInherit", 60);
 
             // Register the daily data of "SPY" to automatically update both indicators
             RegisterIndicator("SPY", _customWarmUp, Resolution.Minute);
             RegisterIndicator("SPY", _customNotWarmUp, Resolution.Minute);
+            RegisterIndicator("SPY", _customNotInherit, Resolution.Minute);
 
             // Warm up _customWarmUp indicator
             WarmUpIndicator("SPY", _customWarmUp, Resolution.Minute);
@@ -67,6 +70,17 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception("_customNotWarmUp indicator wasn't expected to be warmed up");
             }
+
+            WarmUpIndicator("SPY", _customNotInherit, Resolution.Minute);
+            // Check _customWarmUp indicator has already been warmed up with the requested data
+            if (!_customNotInherit.IsReady)
+            {
+                throw new Exception("_customWarmUp indicator was expected to be ready");
+            }
+            if (_customNotInherit.Samples != 60)
+            {
+                throw new Exception("_customWarmUp indicator was expected to have processed 60 datapoints already");
+            }
         }
 
         public void OnData(TradeBars data)
@@ -80,6 +94,8 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 // Compute the difference between the indicators values
                 var diff = Math.Abs(_customNotWarmUp.Current.Value - _customWarmUp.Current.Value);
+                diff += Math.Abs(_customNotInherit.Current.Value - _customNotWarmUp.Current.Value);
+                diff += Math.Abs(_customNotInherit.Current.Value - _customWarmUp.Current.Value);
 
                 // Check _customNotWarmUp indicator is ready when the number of samples is bigger than its period
                 if (_customNotWarmUp.IsReady != (_customNotWarmUp.Samples >= 60))
@@ -99,11 +115,11 @@ namespace QuantConnect.Algorithm.CSharp
         /// Custom implementation of SimpleMovingAverage.
         /// Represents the traditional simple moving average indicator (SMA) without WarmUpPeriod parameter defined
         /// </summary>
-        private class CustomSMA : IndicatorBase<IBaseData>
+        private class CSMANotWarmUp : IndicatorBase<IBaseData>
         {
             private Queue<IBaseData> _queue;
             private int _period;
-            public CustomSMA(string name, int period)
+            public CSMANotWarmUp(string name, int period)
                 : base(name)
             {
                 _queue = new Queue<IBaseData>();
@@ -130,7 +146,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// Custom implementation of SimpleMovingAverage.
         /// Represents the traditional simple moving average indicator (SMA) with WarmUpPeriod defined
         /// </summary>
-        private class CSMAWithWarmUp : CustomSMA, IIndicatorWarmUpPeriodProvider
+        private class CSMAWithWarmUp : CSMANotWarmUp, IIndicatorWarmUpPeriodProvider
         {
             public CSMAWithWarmUp(string name, int period)
                 : base(name, period)
@@ -158,7 +174,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 120;
+        public int AlgorithmHistoryDataPoints => 240;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
