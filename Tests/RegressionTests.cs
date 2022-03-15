@@ -70,12 +70,12 @@ namespace QuantConnect.Tests
             // Skip non-deterministic data points regression algorithms
             if (parameters.DataPoints != -1)
             {
-                Assert.AreEqual(parameters.DataPoints, algorithmManager.DataPoints);
+                Assert.AreEqual(parameters.DataPoints, algorithmManager.DataPoints, "Failed on DataPoints");
             }
             // Skip non-deterministic history data points regression algorithms
             if (parameters.AlgorithmHistoryDataPoints != -1)
             {
-                Assert.AreEqual(parameters.AlgorithmHistoryDataPoints, algorithmManager.AlgorithmHistoryDataPoints);
+                Assert.AreEqual(parameters.AlgorithmHistoryDataPoints, algorithmManager.AlgorithmHistoryDataPoints, "Failed on AlgorithmHistoryDataPoints");
             }
         }
 
