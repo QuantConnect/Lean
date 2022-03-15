@@ -28,12 +28,13 @@ using static QuantConnect.StringExtensions;
 namespace QuantConnect.Brokerages
 {
     /// <summary>
-    /// 
+    /// Provides an implementation of <see cref="IBrokerageModel"/> that allows all orders and uses
+    /// the TD Ameritrade transaction models
     /// </summary>
     public class TDAmeritradeBrokerageModel : DefaultBrokerageModel
     {
         /// <summary>
-        /// The default markets for the IB brokerage
+        /// The default markets for the brokerage api
         /// </summary>
         public new static readonly IReadOnlyDictionary<SecurityType, string> DefaultMarketMap = new Dictionary<SecurityType, string>
         {
@@ -42,11 +43,11 @@ namespace QuantConnect.Brokerages
             {SecurityType.Index, Market.USA},
             {SecurityType.Option, Market.USA},
             {SecurityType.IndexOption, Market.USA},
-           // {SecurityType.Future, Market.CME},
-            //{SecurityType.FutureOption, Market.CME}, //TODO: Needs testing
-            //{SecurityType.Forex, Market.Oanda},
         }.ToReadOnlyDictionary();
 
+        /// <summary>
+        /// Supported time for trade execution
+        /// </summary>
         private readonly Type[] _supportedTimeInForces =
         {
             typeof(GoodTilCanceledTimeInForce),
@@ -76,8 +77,8 @@ namespace QuantConnect.Brokerages
         /// <returns>The benchmark for this brokerage</returns>
         public override IBenchmark GetBenchmark(SecurityManager securities)
         {
-            // Equivalent to no benchmark
-            return new FuncBenchmark(x => 0);
+            var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+            return SecurityBenchmark.CreateInstance(securities, symbol);
         }
 
         /// <summary>
@@ -87,7 +88,7 @@ namespace QuantConnect.Brokerages
         /// <returns>The new fee model for this brokerage</returns>
         public override IFeeModel GetFeeModel(Security security)
         {
-            return new TdAmeritradeBrokerageFeeModel();
+            return new TDAmeritradeBrokerageFeeModel();
         }
 
         /// <summary>
@@ -131,26 +132,6 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Returns true if the brokerage would allow updating the order as specified by the request
-        /// </summary>
-        /// <param name="security">The security of the order</param>
-        /// <param name="order">The order to be updated</param>
-        /// <param name="request">The requested update to be made to the order</param>
-        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be updated</param>
-        /// <returns>True if the brokerage would allow updating the order, false otherwise</returns>
-        public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
-        {
-            message = null;
-
-            //if (order.SecurityType == SecurityType.Forex && request.Quantity != null)
-            //{
-            //    return IsForexWithinOrderSizeLimits(order.Symbol.Value, request.Quantity.Value, out message);
-            //}
-
-            return true;
-        }
-
-        /// <summary>
         /// Returns true if the brokerage would be able to execute this order at this time assuming
         /// market prices are sufficient for the fill to take place. This is used to emulate the
         /// brokerage fills in backtesting and paper trading. For example some brokerages may not perform
@@ -162,7 +143,10 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the brokerage would be able to perform the execution, false otherwise</returns>
         public override bool CanExecuteOrder(Security security, Order order)
         {
-            return order.SecurityType != SecurityType.Base;
+            return order.SecurityType == SecurityType.Equity ||
+                order.SecurityType == SecurityType.Option ||
+                order.SecurityType == SecurityType.Index ||
+                order.SecurityType == SecurityType.IndexOption;
         }
     }
 }

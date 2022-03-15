@@ -195,9 +195,11 @@
 
   // td ameritrade configuration
   "tda-account-id": "",
-  "tda-client-id": "",
-  "tda-redirect-uri": "",
+  "tda-consumer-key": "",
+  "tda-callback-url": "",
+  "tda-paper-trading": false,
   "tda-credentials-provider": "QuantConnect.Brokerages.TDAmeritrade.TDCliCredentialProvider",
+  "tda-saved-token-directory": "./data",
 
   // parameters to set in the algorithm (the below are just samples)
   "parameters": {

@@ -23,17 +23,17 @@ using static QuantConnect.StringExtensions;
 namespace QuantConnect.Orders.Fees
 {
     /// <summary>
-    /// Provides the default implementation of <see cref="IFeeModel"/>
+    /// Provides the TD Ameritrade implementation of <see cref="IFeeModel"/>
     /// </summary>
-    public class TdAmeritradeBrokerageFeeModel : FeeModel
+    public class TDAmeritradeBrokerageFeeModel : FeeModel
     {
-        private readonly decimal optionFeeRate = 0.65m;
-        private readonly decimal futuresFeeRate = 2.25m + 1 + 0.02m; //(plus exchange & regulatory fees)
+        private readonly decimal _optionFeeRate = 0.65m;
+        private readonly decimal _futuresFeeRate = 2.25m + 1 + 0.02m; //(plus exchange & regulatory fees)
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ImmediateFillModel"/>
+        /// Initializes a new instance of the <see cref="TDAmeritradeBrokerageFeeModel"/>
         /// </summary>
-        public TdAmeritradeBrokerageFeeModel()
+        public TDAmeritradeBrokerageFeeModel()
         {
         }
 
@@ -72,14 +72,14 @@ namespace QuantConnect.Orders.Fees
                 case SecurityType.IndexOption:
 
                     // applying commission to the order
-                    feeResult = order.AbsoluteQuantity * optionFeeRate;
+                    feeResult = order.AbsoluteQuantity * _optionFeeRate;
                     feeCurrency = Currencies.USD;
                     break;
 
                 case SecurityType.Future:
                 case SecurityType.FutureOption:
                     // applying commission to the order
-                    feeResult = order.AbsoluteQuantity * futuresFeeRate;
+                    feeResult = order.AbsoluteQuantity * _futuresFeeRate;
                     feeCurrency = Currencies.USD;
                     break;
 
