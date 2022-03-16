@@ -24,7 +24,6 @@ using QuantConnect.ToolBox.CoinApiDataConverter;
 using QuantConnect.ToolBox.CryptoiqDownloader;
 using QuantConnect.ToolBox.DukascopyDownloader;
 using QuantConnect.ToolBox.GDAXDownloader;
-using QuantConnect.ToolBox.IBDownloader;
 using QuantConnect.ToolBox.IEX;
 using QuantConnect.ToolBox.IQFeedDownloader;
 using QuantConnect.ToolBox.IVolatilityEquityConverter;
@@ -96,10 +95,6 @@ namespace QuantConnect.ToolBox
                     case "ddl":
                     case "dukascopydownloader":
                         DukascopyDownloaderProgram.DukascopyDownloader(tickers, resolution, fromDate, toDate);
-                        break;
-                    case "ibdl":
-                    case "ibdownloader":
-                        IBDownloaderProgram.IBDownloader(tickers, resolution, fromDate, toDate);
                         break;
                     case "iexdl":
                     case "iexdownloader":
