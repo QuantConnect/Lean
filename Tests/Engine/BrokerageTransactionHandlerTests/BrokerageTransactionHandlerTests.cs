@@ -1741,7 +1741,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             }
         }
 
-        internal class TestBrokerageTransactionHandler : BrokerageTransactionHandler
+        public class TestBrokerageTransactionHandler : BrokerageTransactionHandler
         {
             private IBrokerageCashSynchronizer _brokerage;
 
