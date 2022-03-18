@@ -117,14 +117,21 @@ namespace QuantConnect
         {
             // Binance StableCoins Missing 1-1 Pairs
             Symbol.Create("USDCUSD", SecurityType.Crypto, Market.Binance), // USD -> USDC
-            Symbol.Create("BGBPGBP", SecurityType.Crypto, Market.Binance), // GBP -> BGBP
+            Symbol.Create("USDTUSD", SecurityType.Crypto, Market.Binance), // USD -> USDT
+            Symbol.Create("USDPUSD", SecurityType.Crypto, Market.Binance), // USD -> USDP
+            Symbol.Create("BUSDUSD", SecurityType.Crypto, Market.Binance), // USD -> BUSD
+            Symbol.Create("USTUSD", SecurityType.Crypto, Market.Binance), // USD -> UST
+            Symbol.Create("TUSDUSD", SecurityType.Crypto, Market.Binance), // USD -> TUSD
+            Symbol.Create("DAIUSD", SecurityType.Crypto, Market.Binance), // USD -> DAI
 
             // Coinbase StableCoins Missing 1-1 Pairs
             Symbol.Create("USDCUSD", SecurityType.Crypto, Market.GDAX), // USD -> USDC
 
             // Bitfinex StableCoins Missing 1-1 Pairs
             Symbol.Create("EURSEUR", SecurityType.Crypto, Market.Bitfinex), // EUR -> EURS
-        };
+            Symbol.Create("XCHFCHF", SecurityType.Crypto, Market.Bitfinex), // CHF -> XCHF
+            Symbol.Create("MIMUSD", SecurityType.Crypto, Market.Bitfinex), // USD -> MIM
+        };  
 
         /// <summary>
         /// Gets the currency symbol for the specified currency code
