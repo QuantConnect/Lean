@@ -130,7 +130,6 @@ namespace QuantConnect
             // Bitfinex StableCoins Missing 1-1 Pairs
             Symbol.Create("EURSEUR", SecurityType.Crypto, Market.Bitfinex), // EUR -> EURS
             Symbol.Create("XCHFCHF", SecurityType.Crypto, Market.Bitfinex), // CHF -> XCHF
-            Symbol.Create("MIMUSD", SecurityType.Crypto, Market.Bitfinex), // USD -> MIM
         };  
 
         /// <summary>
