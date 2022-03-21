@@ -725,6 +725,16 @@ namespace QuantConnect.Tests.Common.Securities
             new object[] { new BinanceBrokerageModel(), Currencies.EUR, "DAI", false, new[] { Symbol.Create("BNBDAI", SecurityType.Crypto, Market.Binance), Symbol.Create("BNBEUR", SecurityType.Crypto, Market.Binance) } }, // No DAIEUR, but indirect conversion exists
             new object[] { new BinanceBrokerageModel(), Currencies.GBP, "DAI", false, new[] { Symbol.Create("BNBDAI", SecurityType.Crypto, Market.Binance), Symbol.Create("BNBGBP", SecurityType.Crypto, Market.Binance) } }, // No DAIGBP, but indirect conversion exists
 
+            // USDS Cases
+            new object[] { new BinanceBrokerageModel(), Currencies.USD, "SUSD", false, null }, // No SUSDUSD, but does not throw! Conversion 1-1
+            new object[] { new BinanceBrokerageModel(), Currencies.EUR, "SUSD", false, new[] { Symbol.Create("SUSDBTC", SecurityType.Crypto, Market.Binance), Symbol.Create("BTCEUR", SecurityType.Crypto, Market.Binance) } }, // No SUSDEUR, but indirect conversion exists
+            new object[] { new BinanceBrokerageModel(), Currencies.GBP, "SUSD", false, new[] { Symbol.Create("SUSDBTC", SecurityType.Crypto, Market.Binance), Symbol.Create("BTCGBP", SecurityType.Crypto, Market.Binance) } }, // No SUSDGBP, but indirect conversion exists
+
+            // IDRT Cases
+            new object[] { new BinanceBrokerageModel(), "IDR", "IDRT", false, null }, // No IDRTIDR, but does not throw! Conversion 1-1
+            new object[] { new BinanceBrokerageModel(), Currencies.EUR, "IDRT", false, new[] { Symbol.Create("BNBIDRT", SecurityType.Crypto, Market.Binance), Symbol.Create("BNBEUR", SecurityType.Crypto, Market.Binance) } }, // No IDRTEUR, but indirect conversion exists
+            new object[] { new BinanceBrokerageModel(), Currencies.GBP, "IDRT", false, new[] { Symbol.Create("BNBIDRT", SecurityType.Crypto, Market.Binance), Symbol.Create("BNBGBP", SecurityType.Crypto, Market.Binance) } }, // No IDRTGBP, but indirect conversion exists
+
             new object[] { new OandaBrokerageModel(), Currencies.EUR, "INR", false, new[] { Symbol.Create("USDINR", SecurityType.Forex, Market.Oanda), Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda) } }, // No INREUR, but indirect conversion exists
         };
     }
