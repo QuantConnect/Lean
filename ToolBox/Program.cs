@@ -18,7 +18,6 @@ using QuantConnect.Logging;
 using QuantConnect.ToolBox.AlgoSeekFuturesConverter;
 using QuantConnect.ToolBox.AlgoSeekOptionsConverter;
 using QuantConnect.ToolBox.AlphaVantageDownloader;
-using QuantConnect.ToolBox.BitfinexDownloader;
 using QuantConnect.ToolBox.CoarseUniverseGenerator;
 using QuantConnect.ToolBox.CoinApiDataConverter;
 using QuantConnect.ToolBox.CryptoiqDownloader;
@@ -117,10 +116,6 @@ namespace QuantConnect.ToolBox
                     case "yahoodownloader":
                         YahooDownloaderProgram.YahooDownloader(tickers, resolution, fromDate, toDate);
                         break;
-                    case "bfxdl":
-                    case "bitfinexdownloader":
-                        BitfinexDownloaderProgram.BitfinexDownloader(tickers, resolution, fromDate, toDate);
-                        break;
                     case "pdl":
                     case "polygondownloader":
                         PolygonDownloaderProgram.PolygonDownloader(
@@ -155,10 +150,6 @@ namespace QuantConnect.ToolBox
                     case "gdaxspu":
                     case "gdaxsymbolpropertiesupdater":
                         GDAXDownloaderProgram.ExchangeInfoDownloader();
-                        break;
-                    case "bfxspu":
-                    case "bitfinexsymbolpropertiesupdater":
-                        BitfinexDownloaderProgram.ExchangeInfoDownloader();
                         break;
                     default:
                         PrintMessageAndExit(1, "ERROR: Unrecognized --app value");
