@@ -1,3 +1,4 @@
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -122,6 +123,8 @@ namespace QuantConnect
             Symbol.Create("USTUSD", SecurityType.Crypto, Market.Binance), // USD -> UST
             Symbol.Create("TUSDUSD", SecurityType.Crypto, Market.Binance), // USD -> TUSD
             Symbol.Create("DAIUSD", SecurityType.Crypto, Market.Binance), // USD -> DAI
+            Symbol.Create("SUSDUSD", SecurityType.Crypto, Market.Binance), // USD -> SUSD
+            Symbol.Create("IDRTIDR", SecurityType.Crypto, Market.Binance), // IDR -> IDRT
 
             // Coinbase StableCoins Missing 1-1 Pairs
             Symbol.Create("USDCUSD", SecurityType.Crypto, Market.GDAX), // USD -> USDC
