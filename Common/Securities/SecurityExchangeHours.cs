@@ -243,10 +243,9 @@ namespace QuantConnect.Securities
             var time = localDateTime;
             var lastMarketOpenFound = false;
             var marketHours = GetMarketHours(time.DayOfWeek);
-            var lastSegment = GetNextOrPreviousSegment(time, false)?.End;
-            var nextMarketOpen = marketHours.GetMarketOpen(time.TimeOfDay, extendedMarket, lastSegment);
+            var nextMarketOpen = GetNextMarketOpen(time, extendedMarket);
 
-            if (localDateTime == time.Date + nextMarketOpen)
+            if (localDateTime == nextMarketOpen)
             {
                 return localDateTime;
             }
@@ -255,19 +254,19 @@ namespace QuantConnect.Securities
             {
                 foreach(var segment in marketHours.Segments.Reverse())
                 {
-                    if ((time.Date + segment.End <= localDateTime.Date + nextMarketOpen) &&
+                    if ((time.Date + segment.Start <= localDateTime) &&
                         (segment.State == MarketHoursState.Market || extendedMarket))
                     {
-                        if (marketHours.GetMarketOpen(segment.Start, extendedMarket, lastSegment) == segment.Start)
+                        // Check the current segment is not part of another segment before
+                        var timeOfDay = time.Date + segment.Start;
+                        if (GetNextMarketOpen(timeOfDay.AddTicks(-1), extendedMarket) == timeOfDay)
                         {
-                            lastSegment = segment.Start;
-                            return time.Date + lastSegment.Value;
+                            return timeOfDay;
                         }
                     }
                 }
 
                 time = time.AddDays(-1);
-                lastSegment = GetNextOrPreviousSegment(time, false)?.End;
                 marketHours = GetMarketHours(time.DayOfWeek);
             }
 

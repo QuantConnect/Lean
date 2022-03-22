@@ -154,10 +154,10 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void GetNextMarketOpenIsNonInclusiveOfStartTime()
         {
-            var exhangeHours = CreateUsEquitySecurityExchangeHours();
+            var exchangeHours = CreateUsEquitySecurityExchangeHours();
 
             var startTime = new DateTime(2015, 6, 30, 9, 30, 0);
-            var nextMarketOpen = exhangeHours.GetNextMarketOpen(startTime, false);
+            var nextMarketOpen = exchangeHours.GetNextMarketOpen(startTime, false);
             Assert.AreEqual(startTime.AddDays(1), nextMarketOpen);
         }
 
@@ -174,10 +174,10 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void GetNextMarketOpenWorksOverWeekends()
         {
-            var exhangeHours = CreateUsEquitySecurityExchangeHours();
+            var exchangeHours = CreateUsEquitySecurityExchangeHours();
 
             var startTime = new DateTime(2015, 6, 26, 9, 30, 1);
-            var nextMarketOpen = exhangeHours.GetNextMarketOpen(startTime, false);
+            var nextMarketOpen = exchangeHours.GetNextMarketOpen(startTime, false);
             Assert.AreEqual(new DateTime(2015, 6, 29, 9, 30, 0), nextMarketOpen);
         }
 
@@ -190,61 +190,82 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void GetNextMarketOpenForContinuousSchedulesOverWeekends()
         {
-            var exhangeHours = CreateUsFutureSecurityExchangeHours();
+            var exchangeHours = CreateUsFutureSecurityExchangeHours();
 
             var startTime = new DateTime(2022, 1, 1);
-            var nextMarketOpen = exhangeHours.GetNextMarketOpen(startTime, false);
+            var nextMarketOpen = exchangeHours.GetNextMarketOpen(startTime, false);
             Assert.AreEqual(new DateTime(2022, 1, 2), nextMarketOpen);
         }
 
         [Test]
         public void GetNextMarketOpenForContinuousSchedules()
         {
-            var exhangeHours = CreateUsFutureSecurityExchangeHours();
+            var exchangeHours = CreateUsFutureSecurityExchangeHours();
 
             var startTime = new DateTime(2022, 1, 3);
-            var nextMarketOpen = exhangeHours.GetNextMarketOpen(startTime, false);
+            var nextMarketOpen = exchangeHours.GetNextMarketOpen(startTime, false);
             Assert.AreEqual(new DateTime(2022, 1, 3, 16, 30, 0), nextMarketOpen);
         }
 
         [Test]
         public void GetNextMarketOpenForContinuousSchedulesIsNotInclusiveOfStartTime()
         {
-            var exhangeHours = CreateUsFutureSecurityExchangeHours();
+            var exchangeHours = CreateUsFutureSecurityExchangeHours();
 
             var startTime = new DateTime(2022, 1, 2);
-            var nextMarketOpen = exhangeHours.GetNextMarketOpen(startTime, false);
+            var nextMarketOpen = exchangeHours.GetNextMarketOpen(startTime, false);
             Assert.AreEqual(new DateTime(2022, 1, 3, 16, 30, 0), nextMarketOpen);
         }
 
         [Test]
         public void GetNextMarketCloseForContinuousSchedulesOverWeekends()
         {
-            var exhangeHours = CreateUsFutureSecurityExchangeHours();
+            var exchangeHours = CreateUsFutureSecurityExchangeHours();
 
             var startTime = new DateTime(2022, 1, 1);
-            var nextMarketOpen = exhangeHours.GetNextMarketClose(startTime, false);
+            var nextMarketOpen = exchangeHours.GetNextMarketClose(startTime, false);
             Assert.AreEqual(new DateTime(2022, 1, 3, 16, 15, 0), nextMarketOpen);
         }
 
         [Test]
         public void GetNextMarketOpenForEarlyCloses()
         {
-            var exhangeHours = CreateUsFutureSecurityExchangeHours();
+            var exchangeHours = CreateUsFutureSecurityExchangeHours();
 
             // Thanksgiving day
             var startTime = new DateTime(2013, 11, 28);
-            var nextMarketOpen = exhangeHours.GetNextMarketOpen(startTime, false);
+            var nextMarketOpen = exchangeHours.GetNextMarketOpen(startTime, false);
             Assert.AreEqual(new DateTime(2013, 11, 29), nextMarketOpen);
+        }
+
+        [Test]
+        public void GetLastMarketOpenForContinuousSchedules()
+        {
+            var exchangeHours = CreateUsFutureSecurityExchangeHours();
+
+            var startTime = new DateTime(2022, 03, 18, 5, 0, 0);
+            var nextMarketOpen = exchangeHours.GetLastMarketOpen(startTime, false);
+            Assert.AreEqual(new DateTime(2022, 03, 17, 18, 0, 0), nextMarketOpen);
+        }
+
+        [Test]
+        public void GetLastMarketOpenWithExtendedMarket()
+        {
+            var marketHourDbEntry = MarketHoursDatabase.FromDataFolder().GetEntry(Market.USA, (string)null, SecurityType.Equity);
+            var exchangeHours = marketHourDbEntry.ExchangeHours;
+
+            var startTime = new DateTime(2022, 03, 18, 9, 29, 0);
+            var nextMarketOpen = exchangeHours.GetLastMarketOpen(startTime, true);
+            Assert.AreEqual(new DateTime(2022, 03, 18, 4, 0, 0), nextMarketOpen);
         }
 
         [Test]
         public void GetNextMarketCloseIsNonInclusiveOfStartTime()
         {
-            var exhangeHours = CreateUsEquitySecurityExchangeHours();
+            var exchangeHours = CreateUsEquitySecurityExchangeHours();
 
             var startTime = new DateTime(2015, 6, 30, 16, 0, 0);
-            var nextMarketOpen = exhangeHours.GetNextMarketClose(startTime, false);
+            var nextMarketOpen = exchangeHours.GetNextMarketClose(startTime, false);
             Assert.AreEqual(startTime.AddDays(1), nextMarketOpen);
         }
 
@@ -261,10 +282,10 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void GetNextMarketCloseWorksOverWeekends()
         {
-            var exhangeHours = CreateUsEquitySecurityExchangeHours();
+            var exchangeHours = CreateUsEquitySecurityExchangeHours();
 
             var startTime = new DateTime(2015, 6, 26, 16, 0, 1);
-            var nextMarketClose = exhangeHours.GetNextMarketClose(startTime, false);
+            var nextMarketClose = exchangeHours.GetNextMarketClose(startTime, false);
             Assert.AreEqual(new DateTime(2015, 6, 29, 16, 0, 0), nextMarketClose);
         }
 

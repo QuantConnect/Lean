@@ -29,7 +29,7 @@ using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm
 {
-    [TestFixture, Parallelizable(ParallelScope.All)]
+    [TestFixture]
     public class CashModelAlgorithmTradingTests
     {
         private static readonly Symbol _symbol = Symbols.BTCUSD;
@@ -663,24 +663,21 @@ namespace QuantConnect.Tests.Algorithm
             algo.MarketOrder(symbol, 1.0m);
             algo.MarketOrder(symbol, 1.0f);
 
+            algo.MarketOnOpenOrder(symbol, 1);
+            algo.MarketOnOpenOrder(symbol, 1.0);
+            algo.MarketOnOpenOrder(symbol, 1.0m);
+
             int expected = 32;
             if (securityType == SecurityType.Crypto)
             {
-                expected -= 6;
-                Assert.Throws<ArgumentException>(() => algo.MarketOnOpenOrder(symbol, 1));
-                Assert.Throws<ArgumentException>(() => algo.MarketOnOpenOrder(symbol, 1.0));
-                Assert.Throws<ArgumentException>(() => algo.MarketOnOpenOrder(symbol, 1.0m));
+                expected -= 3;
 
-                Assert.Throws<ArgumentException>(() => algo.MarketOnCloseOrder(symbol, 1));
-                Assert.Throws<ArgumentException>(() => algo.MarketOnCloseOrder(symbol, 1.0));
-                Assert.Throws<ArgumentException>(() => algo.MarketOnCloseOrder(symbol, 1.0m));
+                Assert.Throws<Exception>(() => algo.MarketOnCloseOrder(symbol, 1));
+                Assert.Throws<Exception>(() => algo.MarketOnCloseOrder(symbol, 1.0));
+                Assert.Throws<Exception>(() => algo.MarketOnCloseOrder(symbol, 1.0m));
             }
             else
-            {
-                algo.MarketOnOpenOrder(symbol, 1);
-                algo.MarketOnOpenOrder(symbol, 1.0);
-                algo.MarketOnOpenOrder(symbol, 1.0m);
-
+            { 
                 algo.MarketOnCloseOrder(symbol, 1);
                 algo.MarketOnCloseOrder(symbol, 1.0);
                 algo.MarketOnCloseOrder(symbol, 1.0m);
