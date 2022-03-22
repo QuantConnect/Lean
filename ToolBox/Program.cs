@@ -22,7 +22,6 @@ using QuantConnect.ToolBox.CoarseUniverseGenerator;
 using QuantConnect.ToolBox.CoinApiDataConverter;
 using QuantConnect.ToolBox.CryptoiqDownloader;
 using QuantConnect.ToolBox.DukascopyDownloader;
-using QuantConnect.ToolBox.GDAXDownloader;
 using QuantConnect.ToolBox.IEX;
 using QuantConnect.ToolBox.IQFeedDownloader;
 using QuantConnect.ToolBox.IVolatilityEquityConverter;
@@ -82,10 +81,6 @@ namespace QuantConnect.ToolBox
                     : DateTime.UtcNow;
                 switch (targetApp)
                 {
-                    case "gdaxdl":
-                    case "gdaxdownloader":
-                        GDAXDownloaderProgram.GDAXDownloader(tickers, resolution, fromDate, toDate);
-                        break;
                     case "cdl":
                     case "cryptoiqdownloader":
                         CryptoiqDownloaderProgram.CryptoiqDownloader(tickers, GetParameterOrExit(optionsObject, "exchange"), fromDate, toDate);
@@ -133,19 +128,6 @@ namespace QuantConnect.ToolBox
                         );
                         break;
 
-                    default:
-                        PrintMessageAndExit(1, "ERROR: Unrecognized --app value");
-                        break;
-                }
-            }
-            else if (targetApp.Contains("updater") || targetApp.EndsWith("spu"))
-            {
-                switch (targetApp)
-                {
-                    case "gdaxspu":
-                    case "gdaxsymbolpropertiesupdater":
-                        GDAXDownloaderProgram.ExchangeInfoDownloader();
-                        break;
                     default:
                         PrintMessageAndExit(1, "ERROR: Unrecognized --app value");
                         break;
