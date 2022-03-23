@@ -52,6 +52,10 @@ class HistoryAlgorithm(QCAlgorithm):
         tradeBarHistory = self.History(["SPY"], 14, Resolution.Minute)
         self.AssertHistoryCount("History([\"SPY\"], 14, Resolution.Minute)", tradeBarHistory, 14)
 
+        # get the historical data from last current day to this current day in minute resolution
+        intervalBarHistory = self.History(["SPY"], self.Time - timedelta(1), self.Time, Resolution.Minute, True, True)
+        self.AssertHistoryCount("History([\"SPY\"], self.Time - timedelta(1), self.Time, Resolution.Minute, True, True)", intervalBarHistory, 960)
+
         # we can loop over the return value from these functions and we get TradeBars
         # we can use these TradeBars to initialize indicators or perform other math
         for index, tradeBar in tradeBarHistory.loc["SPY"].iterrows():

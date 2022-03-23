@@ -861,6 +861,23 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Gets the historical data for the specified symbols between the specified dates. The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="symbols">The symbols to retrieve historical data for</param>
+        /// <param name="start">The start time in the algorithm's time zone</param>
+        /// <param name="end">The end time in the algorithm's time zone</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
+        /// <returns>A python dictionary with a pandas DataFrame containing the requested historical data</returns>
+        [DocumentationAttribute(HistoricalData)]
+        public PyObject History(PyObject tickers, DateTime start, DateTime end, Resolution? resolution = null, bool? fillForward = null, bool? extendedMarket = null)
+        {
+            var symbols = tickers.ConvertToSymbolEnumerable();
+            return PandasConverter.GetDataFrame(History(symbols, start, end, resolution, fillForward, extendedMarket));
+        }
+
+        /// <summary>
         /// Gets the historical data for the specified symbol between the specified dates. The symbol must exist in the Securities collection.
         /// </summary>
         /// <param name="tickers">The symbols to retrieve historical data for</param>
