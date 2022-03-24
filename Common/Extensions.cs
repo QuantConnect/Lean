@@ -48,6 +48,7 @@ using QuantConnect.Python;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using QuantConnect.Util;
+using HistoryRequest = QuantConnect.Data.HistoryRequest;
 using Timer = System.Timers.Timer;
 using static QuantConnect.StringExtensions;
 using Microsoft.IO;
@@ -2840,6 +2841,41 @@ namespace QuantConnect
 
                         yield return symbol;
                     }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets Enumerable of <see cref="HistoryRequest"/> from a PyObject
+        /// </summary>
+        /// <param name="pyObject">PyObject containing Symbol or Array of HistoryRequest</param>
+        /// <returns>Enumerable of HistoryRequest</returns>
+        public static IEnumerable<HistoryRequest> ConvertToHistoryRequestEnumerable(this PyObject pyObject)
+        {
+            using (Py.GIL())
+            {
+                if (!PyList.IsListType(pyObject))
+                {
+                    pyObject = new PyList(new[] { pyObject });
+                }
+
+                foreach (PyObject item in pyObject)
+                {
+                    HistoryRequest historyRequest;
+                    try
+                    {
+                        historyRequest = item.GetAndDispose<HistoryRequest>();
+                    }
+                    catch (Exception e)
+                    {
+                        throw new ArgumentException(
+                            "Argument type should be a HistoryRequest or a list of HistoryRequest. " +
+                            $"Object: {item}. Type: {item.GetPythonType()}",
+                            e
+                        );
+                    }
+
+                    yield return historyRequest;
                 }
             }
         }
