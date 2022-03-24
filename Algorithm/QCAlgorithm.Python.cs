@@ -885,11 +885,13 @@ namespace QuantConnect.Algorithm
         /// <param name="end">The end time in the algorithm's time zone</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>A python dictionary with pandas DataFrame containing the requested historical data</returns>
+        [DocumentationAttribute(HistoricalData)]
         public PyObject History(PyObject tickers, DateTime start, DateTime end, Resolution? resolution = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
             return PandasConverter.GetDataFrame(History(symbols, start, end, resolution));
         }
+
         /// <summary>
         /// Gets the historical data for the specified symbols between the specified dates. The symbols must exist in the Securities collection.
         /// </summary>
