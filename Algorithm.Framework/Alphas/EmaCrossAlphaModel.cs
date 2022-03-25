@@ -30,7 +30,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         private readonly int _slowPeriod;
         private readonly Resolution _resolution;
         private readonly int _predictionInterval;
-        private readonly Dictionary<Symbol, SymbolData> _symbolDataBySymbol;
+        protected readonly Dictionary<Symbol, SymbolData> _symbolDataBySymbol;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EmaCrossAlphaModel"/> class
@@ -104,6 +104,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     // create fast/slow EMAs
                     var fast = algorithm.EMA(added.Symbol, _fastPeriod, _resolution);
                     var slow = algorithm.EMA(added.Symbol, _slowPeriod, _resolution);
+                    algorithm.WarmUpIndicator(added.Symbol, fast, _resolution);
+                    algorithm.WarmUpIndicator(added.Symbol, slow, _resolution);
                     _symbolDataBySymbol[added.Symbol] = new SymbolData
                     {
                         Security = added,
@@ -123,7 +125,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <summary>
         /// Contains data specific to a symbol required by this model
         /// </summary>
-        private class SymbolData
+        public class SymbolData
         {
             public Security Security { get; set; }
             public Symbol Symbol => Security.Symbol;

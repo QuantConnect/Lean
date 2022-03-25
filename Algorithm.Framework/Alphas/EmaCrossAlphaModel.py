@@ -70,6 +70,8 @@ class EmaCrossAlphaModel(AlphaModel):
                 symbolData = SymbolData(added)
                 symbolData.Fast = algorithm.EMA(added.Symbol, self.fastPeriod, self.resolution)
                 symbolData.Slow = algorithm.EMA(added.Symbol, self.slowPeriod, self.resolution)
+                algorithm.WarmUpIndicator(added.Symbol, symbolData.Fast, self.resolution)
+                algorithm.WarmUpIndicator(added.Symbol, symbolData.Slow, self.resolution)
                 self.symbolDataBySymbol[added.Symbol] = symbolData
             else:
                 # a security that was already initialized was re-added, reset the indicators
