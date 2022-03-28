@@ -29,7 +29,6 @@ using QuantConnect.ToolBox.IVolatilityEquityConverter;
 using QuantConnect.ToolBox.KaikoDataConverter;
 using QuantConnect.ToolBox.KrakenDownloader;
 using QuantConnect.ToolBox.NseMarketDataConverter;
-using QuantConnect.ToolBox.OandaDownloader;
 using QuantConnect.ToolBox.Polygon;
 using QuantConnect.ToolBox.QuantQuoteConverter;
 using QuantConnect.ToolBox.RandomDataGenerator;
@@ -106,10 +105,6 @@ namespace QuantConnect.ToolBox
                     case "kdl":
                     case "krakendownloader":
                         KrakenDownloaderProgram.KrakenDownloader(tickers, resolution, fromDate, toDate);
-                        break;
-                    case "odl":
-                    case "oandadownloader":
-                        OandaDownloaderProgram.OandaDownloader(tickers, resolution, fromDate, toDate);
                         break;
                     case "qbdl":
                     case "ydl":
