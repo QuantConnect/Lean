@@ -207,7 +207,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 Assert.Ignore($"Ignore {GetType().Name}: Could not create {language} model.");
             }
 
-            var changes = SecurityChangesTests.CreateNonInternal(RemovedSecurities, AddedSecurities);
+            var changes = SecurityChangesTests.CreateNonInternal(AddedSecurities, AddedSecurities);
 
             Assert.DoesNotThrow(() => model.OnSecuritiesChanged(Algorithm, changes));
         }
