@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +12,7 @@
 # limitations under the License.
 
 from AlgorithmImports import *
+from AlgorithmImports import ExponentialMovingAverage
 
 class EmaCrossAlphaModel(AlphaModel):
     '''Alpha model that uses an EMA cross to create insights'''
@@ -66,26 +67,42 @@ class EmaCrossAlphaModel(AlphaModel):
         for added in changes.AddedSecurities:
             symbolData = self.symbolDataBySymbol.get(added.Symbol)
             if symbolData is None:
-                # create fast/slow EMAs
-                symbolData = SymbolData(added)
-                symbolData.Fast = algorithm.EMA(added.Symbol, self.fastPeriod, self.resolution)
-                symbolData.Slow = algorithm.EMA(added.Symbol, self.slowPeriod, self.resolution)
-                algorithm.WarmUpIndicator(added.Symbol, symbolData.Fast, self.resolution)
-                algorithm.WarmUpIndicator(added.Symbol, symbolData.Slow, self.resolution)
+                symbolData = SymbolData(added, self.fastPeriod, self.slowPeriod, algorithm, self.resolution)
                 self.symbolDataBySymbol[added.Symbol] = symbolData
             else:
                 # a security that was already initialized was re-added, reset the indicators
                 symbolData.Fast.Reset()
                 symbolData.Slow.Reset()
 
+        for removed in changes.RemovedSecurities:
+            data = self.symbolDataBySymbol.pop(removed.Symbol, None)
+            if data is not None:
+                # clean up our consolidators
+                algorithm.SubscriptionManager.RemoveConsolidator(removed.Symbol, data.FastConsolidator)
+                algorithm.SubscriptionManager.RemoveConsolidator(removed.Symbol, data.SlowConsolidator)
+
 
 class SymbolData:
     '''Contains data specific to a symbol required by this model'''
-    def __init__(self, security):
+    def __init__(self, security, fastPeriod, slowPeriod, algorithm, resolution):
         self.Security = security
         self.Symbol = security.Symbol
-        self.Fast = None
-        self.Slow = None
+
+        self.FastConsolidator = algorithm.ResolveConsolidator(security.Symbol, resolution)
+        self.SlowConsolidator = algorithm.ResolveConsolidator(security.Symbol, resolution)
+
+        algorithm.SubscriptionManager.AddConsolidator(security.Symbol, self.FastConsolidator)
+        algorithm.SubscriptionManager.AddConsolidator(security.Symbol, self.SlowConsolidator)
+
+        # create fast/slow EMAs
+        self.Fast = ExponentialMovingAverage(security.Symbol, fastPeriod, ExponentialMovingAverage.SmoothingFactorDefault(fastPeriod))
+        self.Slow = ExponentialMovingAverage(security.Symbol, slowPeriod, ExponentialMovingAverage.SmoothingFactorDefault(slowPeriod))
+
+        algorithm.RegisterIndicator(security.Symbol, self.Fast, self.FastConsolidator);
+        algorithm.RegisterIndicator(security.Symbol, self.Slow, self.SlowConsolidator);
+
+        algorithm.WarmUpIndicator(security.Symbol, self.Fast, resolution);
+        algorithm.WarmUpIndicator(security.Symbol, self.Slow, resolution);
 
         # True if the fast is above the slow, otherwise false.
         # This is used to prevent emitting the same signal repeatedly

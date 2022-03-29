@@ -117,7 +117,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 SymbolData data;
                 if (_symbolDataBySymbol.TryGetValue(removed.Symbol, out data))
                 {
-                    // clean up our consolidator
+                    // clean up our consolidators
                     algorithm.SubscriptionManager.RemoveConsolidator(data.Security.Symbol, data.FastConsolidator);
                     algorithm.SubscriptionManager.RemoveConsolidator(data.Security.Symbol, data.SlowConsolidator);
                     _symbolDataBySymbol.Remove(removed.Symbol);
@@ -165,6 +165,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
                 algorithm.RegisterIndicator(Security.Symbol, Fast, FastConsolidator);
                 algorithm.RegisterIndicator(Security.Symbol, Slow, SlowConsolidator);
+                algorithm.RegisterIndicator(security.Symbol, Fast, FastConsolidator);
+                algorithm.RegisterIndicator(security.Symbol, Slow, SlowConsolidator);
 
                 algorithm.WarmUpIndicator(security.Symbol, Fast, resolution);
                 algorithm.WarmUpIndicator(security.Symbol, Slow, resolution);
