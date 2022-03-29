@@ -163,8 +163,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 Fast = new ExponentialMovingAverage(security.Symbol, fastPeriod, ExponentialMovingAverage.SmoothingFactorDefault(fastPeriod));
                 Slow = new ExponentialMovingAverage(security.Symbol, slowPeriod, ExponentialMovingAverage.SmoothingFactorDefault(slowPeriod));
 
-                algorithm.RegisterIndicator(Security.Symbol, Fast, FastConsolidator);
-                algorithm.RegisterIndicator(Security.Symbol, Slow, SlowConsolidator);
                 algorithm.RegisterIndicator(security.Symbol, Fast, FastConsolidator);
                 algorithm.RegisterIndicator(security.Symbol, Slow, SlowConsolidator);
 
