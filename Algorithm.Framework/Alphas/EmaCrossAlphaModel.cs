@@ -16,6 +16,7 @@
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Data.Consolidators;
 using QuantConnect.Indicators;
 using QuantConnect.Securities;
 
@@ -101,23 +102,25 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 SymbolData symbolData;
                 if (!_symbolDataBySymbol.TryGetValue(added.Symbol, out symbolData))
                 {
-                    // create fast/slow EMAs
-                    var fast = algorithm.EMA(added.Symbol, _fastPeriod, _resolution);
-                    var slow = algorithm.EMA(added.Symbol, _slowPeriod, _resolution);
-                    algorithm.WarmUpIndicator(added.Symbol, fast, _resolution);
-                    algorithm.WarmUpIndicator(added.Symbol, slow, _resolution);
-                    _symbolDataBySymbol[added.Symbol] = new SymbolData
-                    {
-                        Security = added,
-                        Fast = fast,
-                        Slow = slow
-                    };
+                    _symbolDataBySymbol[added.Symbol] = new SymbolData(added, _fastPeriod, _slowPeriod, algorithm, _resolution);
                 }
                 else
                 {
                     // a security that was already initialized was re-added, reset the indicators
                     symbolData.Fast.Reset();
                     symbolData.Slow.Reset();
+                }
+            }
+
+            foreach (var removed in changes.RemovedSecurities)
+            {
+                SymbolData data;
+                if (_symbolDataBySymbol.TryGetValue(removed.Symbol, out data))
+                {
+                    // clean up our consolidator
+                    algorithm.SubscriptionManager.RemoveConsolidator(data.Security.Symbol, data.FastConsolidator);
+                    algorithm.SubscriptionManager.RemoveConsolidator(data.Security.Symbol, data.SlowConsolidator);
+                    _symbolDataBySymbol.Remove(removed.Symbol);
                 }
             }
         }
@@ -127,10 +130,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         public class SymbolData
         {
-            public Security Security { get; set; }
+            public readonly Security Security;
+            public readonly IDataConsolidator FastConsolidator;
+            public readonly IDataConsolidator SlowConsolidator;
             public Symbol Symbol => Security.Symbol;
-            public ExponentialMovingAverage Fast { get; set; }
-            public ExponentialMovingAverage Slow { get; set; }
+            public ExponentialMovingAverage Fast;
+            public ExponentialMovingAverage Slow;
 
             /// <summary>
             /// True if the fast is above the slow, otherwise false.
@@ -138,6 +143,32 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             /// </summary>
             public bool FastIsOverSlow { get; set; }
             public bool SlowIsOverFast => !FastIsOverSlow;
+
+            public SymbolData(
+                Security security,
+                int fastPeriod,
+                int slowPeriod,
+                QCAlgorithm algorithm,
+                Resolution resolution)
+            {
+                Security = security;
+
+                FastConsolidator = algorithm.ResolveConsolidator(security.Symbol, resolution);
+                SlowConsolidator = algorithm.ResolveConsolidator(security.Symbol, resolution);
+
+                algorithm.SubscriptionManager.AddConsolidator(security.Symbol, FastConsolidator);
+                algorithm.SubscriptionManager.AddConsolidator(security.Symbol, SlowConsolidator);
+
+                // create fast/slow EMAs
+                Fast = new ExponentialMovingAverage(security.Symbol, fastPeriod, ExponentialMovingAverage.SmoothingFactorDefault(fastPeriod));
+                Slow = new ExponentialMovingAverage(security.Symbol, slowPeriod, ExponentialMovingAverage.SmoothingFactorDefault(slowPeriod));
+
+                algorithm.RegisterIndicator(Security.Symbol, Fast, FastConsolidator);
+                algorithm.RegisterIndicator(Security.Symbol, Slow, SlowConsolidator);
+
+                algorithm.WarmUpIndicator(security.Symbol, Fast, resolution);
+                algorithm.WarmUpIndicator(security.Symbol, Slow, resolution);
+            }
         }
     }
 }
