@@ -52,6 +52,25 @@ class HistoryAlgorithm(QCAlgorithm):
         tradeBarHistory = self.History(["SPY"], 14, Resolution.Minute)
         self.AssertHistoryCount("History([\"SPY\"], 14, Resolution.Minute)", tradeBarHistory, 14)
 
+        # get the historical data from last current day to this current day in minute resolution
+        # with Fill Forward and Extended Market options
+        intervalBarHistory = self.History(["SPY"], self.Time - timedelta(1), self.Time, Resolution.Minute, True, True)
+        self.AssertHistoryCount("History([\"SPY\"], self.Time - timedelta(1), self.Time, Resolution.Minute, True, True)", intervalBarHistory, 960)
+
+        # get the historical data from last current day to this current day in minute resolution
+        # with Extended Market option
+        intervalBarHistory = self.History(["SPY"], self.Time - timedelta(1), self.Time, Resolution.Minute, False, True)
+        self.AssertHistoryCount("History([\"SPY\"], self.Time - timedelta(1), self.Time, Resolution.Minute, False, True)", intervalBarHistory, 828)
+
+        # get the historical data from last current day to this current day in minute resolution
+        # with Fill Forward option
+        intervalBarHistory = self.History(["SPY"], self.Time - timedelta(1), self.Time, Resolution.Minute, True, False)
+        self.AssertHistoryCount("History([\"SPY\"], self.Time - timedelta(1), self.Time, Resolution.Minute, True, False)", intervalBarHistory, 390)
+
+        # get the historical data from last current day to this current day in minute resolution
+        intervalBarHistory = self.History(["SPY"], self.Time - timedelta(1), self.Time, Resolution.Minute, False, False)
+        self.AssertHistoryCount("History([\"SPY\"], self.Time - timedelta(1), self.Time, Resolution.Minute, False, False)", intervalBarHistory, 390)
+
         # we can loop over the return value from these functions and we get TradeBars
         # we can use these TradeBars to initialize indicators or perform other math
         for index, tradeBar in tradeBarHistory.loc["SPY"].iterrows():
