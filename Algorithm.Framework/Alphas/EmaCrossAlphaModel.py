@@ -12,7 +12,6 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from AlgorithmImports import ExponentialMovingAverage
 
 class EmaCrossAlphaModel(AlphaModel):
     '''Alpha model that uses an EMA cross to create insights'''

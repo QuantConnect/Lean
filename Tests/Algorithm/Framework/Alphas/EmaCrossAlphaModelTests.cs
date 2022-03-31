@@ -57,7 +57,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
         }
 
         [Test]
-        public void TestEmaCrossAlphaModelWarmsUpProperly()
+        public void WarmsUpProperly()
         {
             SetUpHistoryProvider();
 
@@ -98,7 +98,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
         }
 
         [Test]
-        public void PythonEmaCrossAlphaModelWarmsUpProperly()
+        public void PythonVersionWarmsUpProperly()
         {
             using (Py.GIL())
             {

@@ -26,7 +26,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
         /// <returns>_symbolDataBySymbol dictionary from EmaCrossAlphaModel</returns>
         public Dictionary<Symbol, SymbolData> GetSymbolData()
         {
-            return _symbolDataBySymbol;
+            return SymbolDataBySymbol;
         }
     }
 }

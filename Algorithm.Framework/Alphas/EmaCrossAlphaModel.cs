@@ -31,7 +31,11 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         private readonly int _slowPeriod;
         private readonly Resolution _resolution;
         private readonly int _predictionInterval;
-        protected readonly Dictionary<Symbol, SymbolData> _symbolDataBySymbol;
+
+        /// <summary>
+        /// This is made protected for testing purposes
+        /// </summary>
+        protected readonly Dictionary<Symbol, SymbolData> SymbolDataBySymbol;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EmaCrossAlphaModel"/> class
@@ -49,7 +53,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             _slowPeriod = slowPeriod;
             _resolution = resolution;
             _predictionInterval = fastPeriod;
-            _symbolDataBySymbol = new Dictionary<Symbol, SymbolData>();
+            SymbolDataBySymbol = new Dictionary<Symbol, SymbolData>();
             Name = $"{nameof(EmaCrossAlphaModel)}({fastPeriod},{slowPeriod},{resolution})";
         }
 
@@ -63,7 +67,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
         {
             var insights = new List<Insight>();
-            foreach (var symbolData in _symbolDataBySymbol.Values)
+            foreach (var symbolData in SymbolDataBySymbol.Values)
             {
                 if (symbolData.Fast.IsReady && symbolData.Slow.IsReady)
                 {
@@ -100,9 +104,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             foreach (var added in changes.AddedSecurities)
             {
                 SymbolData symbolData;
-                if (!_symbolDataBySymbol.TryGetValue(added.Symbol, out symbolData))
+                if (!SymbolDataBySymbol.TryGetValue(added.Symbol, out symbolData))
                 {
-                    _symbolDataBySymbol[added.Symbol] = new SymbolData(added, _fastPeriod, _slowPeriod, algorithm, _resolution);
+                    SymbolDataBySymbol[added.Symbol] = new SymbolData(added, _fastPeriod, _slowPeriod, algorithm, _resolution);
                 }
                 else
                 {
@@ -114,13 +118,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
             foreach (var removed in changes.RemovedSecurities)
             {
-                SymbolData data;
-                if (_symbolDataBySymbol.TryGetValue(removed.Symbol, out data))
+                SymbolData symbolData;
+                if (SymbolDataBySymbol.TryGetValue(removed.Symbol, out symbolData))
                 {
                     // clean up our consolidators
-                    algorithm.SubscriptionManager.RemoveConsolidator(data.Security.Symbol, data.FastConsolidator);
-                    algorithm.SubscriptionManager.RemoveConsolidator(data.Security.Symbol, data.SlowConsolidator);
-                    _symbolDataBySymbol.Remove(removed.Symbol);
+                    symbolData.RemoveConsolidators();
+                    SymbolDataBySymbol.Remove(removed.Symbol);
                 }
             }
         }
@@ -130,12 +133,16 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         public class SymbolData
         {
-            public readonly Security Security;
-            public readonly IDataConsolidator FastConsolidator;
-            public readonly IDataConsolidator SlowConsolidator;
-            public Symbol Symbol => Security.Symbol;
-            public ExponentialMovingAverage Fast;
-            public ExponentialMovingAverage Slow;
+            private readonly QCAlgorithm _algorithm;
+            private readonly IDataConsolidator _fastConsolidator;
+            private readonly IDataConsolidator _slowConsolidator;
+            private readonly ExponentialMovingAverage _fast;
+            private readonly ExponentialMovingAverage _slow;
+            private readonly Security _security;
+
+            public Symbol Symbol => _security.Symbol;
+            public ExponentialMovingAverage Fast => _fast;
+            public ExponentialMovingAverage Slow => _slow;
 
             /// <summary>
             /// True if the fast is above the slow, otherwise false.
@@ -151,23 +158,33 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 QCAlgorithm algorithm,
                 Resolution resolution)
             {
-                Security = security;
+                _algorithm = algorithm;
+                _security = security;
 
-                FastConsolidator = algorithm.ResolveConsolidator(security.Symbol, resolution);
-                SlowConsolidator = algorithm.ResolveConsolidator(security.Symbol, resolution);
+                _fastConsolidator = algorithm.ResolveConsolidator(security.Symbol, resolution);
+                _slowConsolidator = algorithm.ResolveConsolidator(security.Symbol, resolution);
 
-                algorithm.SubscriptionManager.AddConsolidator(security.Symbol, FastConsolidator);
-                algorithm.SubscriptionManager.AddConsolidator(security.Symbol, SlowConsolidator);
+                algorithm.SubscriptionManager.AddConsolidator(security.Symbol, _fastConsolidator);
+                algorithm.SubscriptionManager.AddConsolidator(security.Symbol, _slowConsolidator);
 
                 // create fast/slow EMAs
-                Fast = new ExponentialMovingAverage(security.Symbol, fastPeriod, ExponentialMovingAverage.SmoothingFactorDefault(fastPeriod));
-                Slow = new ExponentialMovingAverage(security.Symbol, slowPeriod, ExponentialMovingAverage.SmoothingFactorDefault(slowPeriod));
+                _fast = new ExponentialMovingAverage(security.Symbol, fastPeriod, ExponentialMovingAverage.SmoothingFactorDefault(fastPeriod));
+                _slow = new ExponentialMovingAverage(security.Symbol, slowPeriod, ExponentialMovingAverage.SmoothingFactorDefault(slowPeriod));
 
-                algorithm.RegisterIndicator(security.Symbol, Fast, FastConsolidator);
-                algorithm.RegisterIndicator(security.Symbol, Slow, SlowConsolidator);
+                algorithm.RegisterIndicator(security.Symbol, _fast, _fastConsolidator);
+                algorithm.RegisterIndicator(security.Symbol, _slow, _slowConsolidator);
 
-                algorithm.WarmUpIndicator(security.Symbol, Fast, resolution);
-                algorithm.WarmUpIndicator(security.Symbol, Slow, resolution);
+                algorithm.WarmUpIndicator(security.Symbol, _fast, resolution);
+                algorithm.WarmUpIndicator(security.Symbol, _slow, resolution);
+            }
+
+            /// <summary>
+            /// Remove Fast and Slow consolidators
+            /// </summary>
+            public void RemoveConsolidators()
+            {
+                _algorithm.SubscriptionManager.RemoveConsolidator(Symbol, _fastConsolidator);
+                _algorithm.SubscriptionManager.RemoveConsolidator(Symbol, _slowConsolidator);
             }
         }
     }
