@@ -843,7 +843,7 @@ namespace QuantConnect.Orders.Fills
                 return bestEffortAskPrice;
             }
 
-            throw new InvalidOperationException($"Cannot get ask price to perform fill for {asset.Symbol} because no market data subscription were found.");
+            throw new InvalidOperationException($"Cannot get ask price to perform fill for {asset.Symbol} because no market data was found. SubscribedTypes: [{string.Join(",", subscribedTypes.Select(type => type.Name))}]");
         }
 
         /// <summary>
@@ -942,7 +942,7 @@ namespace QuantConnect.Orders.Fills
                 return bestEffortBidPrice;
             }
 
-            throw new InvalidOperationException($"Cannot get ask price to perform fill for {asset.Symbol} because no market data subscription were found.");
+            throw new InvalidOperationException($"Cannot get bid price to perform fill for {asset.Symbol} because no market data was found. SubscribedTypes: [{string.Join(",", subscribedTypes.Select(type => type.Name))}]");
         }
 
         /// <summary>
