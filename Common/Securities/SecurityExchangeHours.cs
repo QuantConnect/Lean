@@ -365,6 +365,8 @@ namespace QuantConnect.Securities
             
             TimeSpan earlyCloseTime;
             List<MarketHoursSegment> newSegments = new List<MarketHoursSegment>();
+            // Add all the segments prior to the earlyCloseTime. If this time is between
+            // a segment, change the end time for the earlyCloseTime
             if (_earlyCloses.TryGetValue(day.Date, out earlyCloseTime))
             {
                 foreach (var segment in marketHours.Segments)
@@ -372,7 +374,6 @@ namespace QuantConnect.Securities
                     if (earlyCloseTime >= segment.End)
                     {
                         newSegments.Add(segment);
-                        continue;
                     }
                     else if (segment.Start < earlyCloseTime)
                     {
@@ -384,9 +385,11 @@ namespace QuantConnect.Securities
 
                 marketHours = new LocalMarketHours(day.DayOfWeek, newSegments);
             }
-
-            newSegments = new List<MarketHoursSegment>();
+            
             TimeSpan lateOpenTime;
+            newSegments = new List<MarketHoursSegment>();
+            // Add all the segments posterior to the lateOpenTime. If this time is between
+            // a segment, change the start time for the lateOpenTime
             if (_lateOpens.TryGetValue(day.Date, out lateOpenTime))
             {
                 foreach (var segment in marketHours.Segments.Reverse())
