@@ -147,7 +147,7 @@ namespace QuantConnect.Securities
                 return false;
             }
 
-            return GetMarketHours(localDateTime.DayOfWeek).IsOpen(localDateTime.TimeOfDay, extendedMarket);
+            return GetMarketHours(localDateTime).IsOpen(localDateTime.TimeOfDay, extendedMarket);
         }
 
         /// <summary>
@@ -174,7 +174,7 @@ namespace QuantConnect.Securities
                 if (!_holidays.Contains(start.Date.Ticks) && !IsTimeAfterEarlyClose(start) && !IsTimeBeforeLateOpen(start))
                 {
                     // check to see if the market is open
-                    var marketHours = GetMarketHours(start.DayOfWeek);
+                    var marketHours = GetMarketHours(start);
                     if (marketHours.IsOpen(start.TimeOfDay, end.TimeOfDay, extendedMarket))
                     {
                         return true;
@@ -196,7 +196,7 @@ namespace QuantConnect.Securities
         /// <returns>True if the exchange will be open on the specified date, false otherwise</returns>
         public bool IsDateOpen(DateTime localDateTime)
         {
-            var marketHours = GetMarketHours(localDateTime.DayOfWeek);
+            var marketHours = GetMarketHours(localDateTime);
             if (marketHours.IsClosedAllDay)
             {
                 // if we don't have hours for this day then we're not open
@@ -205,15 +205,6 @@ namespace QuantConnect.Securities
 
             // if we don't have a holiday then we're open
             return !_holidays.Contains(localDateTime.Date.Ticks);
-        }
-
-        /// <summary>
-        /// Helper to access the market hours field based on the day of week
-        /// </summary>
-        /// <param name="localDateTime">The local date time to retrieve market hours for</param>
-        public LocalMarketHours GetMarketHours(DateTime localDateTime)
-        {
-            return GetMarketHours(localDateTime.DayOfWeek);
         }
 
         /// <summary>
@@ -228,7 +219,7 @@ namespace QuantConnect.Securities
             var oneWeekLater = localDateTime.Date.AddDays(15);
             do
             {
-                var marketHours = GetMarketHours(time.DayOfWeek);
+                var marketHours = GetMarketHours(time);
                 if (!marketHours.IsClosedAllDay && !_holidays.Contains(time.Date.Ticks))
                 {
                     TimeSpan lateOpenTime;
@@ -283,7 +274,7 @@ namespace QuantConnect.Securities
             var oneWeekLater = localDateTime.Date.AddDays(15);
             do
             {
-                var marketHours = GetMarketHours(time.DayOfWeek);
+                var marketHours = GetMarketHours(time);
                 if (!marketHours.IsClosedAllDay && !_holidays.Contains(time.Date.Ticks))
                 {
                     TimeSpan earlyCloseTime;
@@ -342,27 +333,81 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Helper to access the market hours field based on the day of week
         /// </summary>
-        private LocalMarketHours GetMarketHours(DayOfWeek day)
+        public LocalMarketHours GetMarketHours(DateTime day)
         {
-            switch (day)
+            LocalMarketHours marketHours;
+            switch (day.DayOfWeek)
             {
                 case DayOfWeek.Sunday:
-                    return _sunday;
+                    marketHours = _sunday;
+                    break;
                 case DayOfWeek.Monday:
-                    return _monday;
+                    marketHours = _monday;
+                    break;
                 case DayOfWeek.Tuesday:
-                    return _tuesday;
+                    marketHours = _tuesday;
+                    break;
                 case DayOfWeek.Wednesday:
-                    return _wednesday;
+                    marketHours = _wednesday;
+                    break;
                 case DayOfWeek.Thursday:
-                    return _thursday;
+                    marketHours = _thursday;
+                    break;
                 case DayOfWeek.Friday:
-                    return _friday;
+                    marketHours = _friday;
+                    break;
                 case DayOfWeek.Saturday:
-                    return _saturday;
+                    marketHours = _saturday;
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(day), day, null);
             }
+            
+            TimeSpan earlyCloseTime;
+            List<MarketHoursSegment> newSegments = new List<MarketHoursSegment>();
+            if (_earlyCloses.TryGetValue(day.Date, out earlyCloseTime))
+            {
+                foreach (var segment in marketHours.Segments)
+                {
+                    if (earlyCloseTime >= segment.End)
+                    {
+                        newSegments.Add(segment);
+                        continue;
+                    }
+                    else if (segment.Start < earlyCloseTime)
+                    {
+                        MarketHoursSegment newSegment = new MarketHoursSegment(segment.State, segment.Start, earlyCloseTime);
+                        newSegments.Add(newSegment);
+                        break;
+                    }
+                }
+
+                marketHours = new LocalMarketHours(day.DayOfWeek, newSegments);
+            }
+
+            newSegments = new List<MarketHoursSegment>();
+            TimeSpan lateOpenTime;
+            if (_lateOpens.TryGetValue(day.Date, out lateOpenTime))
+            {
+                foreach (var segment in marketHours.Segments.Reverse())
+                {
+                    if (segment.End >= lateOpenTime)
+                    {
+                        newSegments.Add(segment);
+                    } 
+                    else if (segment.Start <= lateOpenTime && lateOpenTime <= segment.End)
+                    {
+                        MarketHoursSegment newSegment = new MarketHoursSegment(segment.State, lateOpenTime, segment.End);
+                        newSegments.Add(newSegment);
+                        break;
+                    }
+                }
+
+                newSegments.Reverse();
+                marketHours = new LocalMarketHours(day.DayOfWeek, newSegments);
+            }
+
+            return marketHours;
         }
 
         /// <summary>
