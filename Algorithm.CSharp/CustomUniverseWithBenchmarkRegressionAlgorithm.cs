@@ -103,7 +103,8 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new Exception($"Security Price error. Price should change every new hour");
                 }
                 if (data.Time.Minute != 0
-                    && _previousSecurityValue != security.Price)
+                    && _previousSecurityValue != security.Price
+                    && security.IsTradable)
                 {
                     throw new Exception($"Security Price error. Price should not change every minute");
                 }

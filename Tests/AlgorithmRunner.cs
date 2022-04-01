@@ -30,6 +30,7 @@ using QuantConnect.Lean.Engine.Alphas;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.Setup;
+using QuantConnect.Lean.Engine.Storage;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
@@ -65,6 +66,12 @@ namespace QuantConnect.Tests
             Composer.Instance.Reset();
             SymbolCache.Clear();
             MarketOnCloseOrder.SubmissionTimeBuffer = MarketOnCloseOrder.DefaultSubmissionTimeBuffer;
+
+            // clean up object storage
+            if (Directory.Exists(LocalObjectStore.DefaultObjectStore))
+            {
+                Directory.Delete(LocalObjectStore.DefaultObjectStore, true);
+            }
 
             var ordersLogFile = string.Empty;
             var logFile = $"./regression/{algorithm}.{language.ToLower()}.log";

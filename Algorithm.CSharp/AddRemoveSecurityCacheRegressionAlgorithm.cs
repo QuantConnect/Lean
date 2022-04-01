@@ -14,42 +14,28 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using System.Collections.Generic;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This regression algorithm has two different Universe using the same SubscriptionDataConfig.
-    /// Reproduces GH issue 3877: 1- universe 'TestUniverse' selects and deselects SPY. 2- UserDefinedUniverse
-    /// reselects SPY, which should be marked as tradable.
+    /// Regression algorithm making sure the securities cache is reset correctly once it's removed from the algorithm
     /// </summary>
-    /// <meta name="tag" content="regression test" />
-    public class UniverseSharingSubscriptionTradableRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class AddRemoveSecurityCacheRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _spy;
-        private int _reselectedSpy = -1;
-        private DateTime lastDataTime = DateTime.MinValue;
-
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 01);
-            SetEndDate(2013, 10, 30);
-            AddEquity("AAPL", Resolution.Daily);
+            SetStartDate(2013, 10, 07);  //Set Start Date
+            SetEndDate(2013, 10, 11);    //Set End Date
+            SetCash(100000);             //Set Strategy Cash
 
-            UniverseSettings.Resolution = Resolution.Daily;
-            AddUniverse(SecurityType.Equity,
-                "TestUniverse",
-                Resolution.Daily,
-                Market.USA,
-                UniverseSettings,
-                time => time.Day == 1 ? new[] {"SPY"} : Enumerable.Empty<string>());
+            AddEquity("SPY", Resolution.Minute, extendedMarketHours: true);
         }
 
         /// <summary>
@@ -58,46 +44,29 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            if (lastDataTime == data.Time)
+            if (!Portfolio.Invested)
             {
-                throw new Exception("Duplicate time for current data and last data slice");
+                SetHoldings("SPY", 1);
             }
 
-            lastDataTime = data.Time;
-
-            if (_reselectedSpy == 0)
+            if (Time.Day == 11)
             {
-                if (!Securities[_spy].IsTradable)
-                {
-                    throw new Exception($"{_spy} should be tradable");
-                }
+                return;
+            }
+            if (!ActiveSecurities.ContainsKey("AIG"))
+            {
+                var aig = AddEquity("AIG", Resolution.Minute);
 
-                if (!Portfolio.Invested)
+                var ticket = MarketOrder("AIG", 1);
+
+                if (ticket.Status != OrderStatus.Invalid)
                 {
-                    SetHoldings(_spy, 1);
+                    throw new Exception("Expected order to always be invalid because there is no data yet!");
                 }
             }
-
-            if (_reselectedSpy == 1)
+            else
             {
-                // SPY should be re added in the next loop
-                _reselectedSpy = 0;
-            }
-        }
-
-        public override void OnSecuritiesChanged(SecurityChanges changes)
-        {
-            if (changes.RemovedSecurities.Any())
-            {
-                // OnSecuritiesChanged is called before OnData, so SPY will still not be
-                // present
-                _reselectedSpy = 1;
-                _spy = AddEquity("SPY", Resolution.Daily).Symbol;
-
-                if (!Securities[_spy].IsTradable)
-                {
-                    throw new Exception($"{_spy} should be tradable");
-                }
+                RemoveSecurity("AIG");
             }
         }
 
@@ -114,7 +83,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 229;
+        public long DataPoints => 11202;
 
         /// </summary>
         /// Data Points count of the algorithm history
@@ -126,34 +95,34 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "1"},
+            {"Total Trades", "19"},
             {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "69.935%"},
-            {"Drawdown", "2.000%"},
-            {"Expectancy", "0"},
-            {"Net Profit", "4.455%"},
-            {"Sharpe Ratio", "4.41"},
-            {"Probabilistic Sharpe Ratio", "82.955%"},
-            {"Loss Rate", "0%"},
+            {"Average Loss", "0.00%"},
+            {"Compounding Annual Return", "271.720%"},
+            {"Drawdown", "2.500%"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "1.754%"},
+            {"Sharpe Ratio", "11.994"},
+            {"Probabilistic Sharpe Ratio", "74.160%"},
+            {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.054"},
-            {"Beta", "0.976"},
-            {"Annual Standard Deviation", "0.106"},
-            {"Annual Variance", "0.011"},
-            {"Information Ratio", "5.672"},
-            {"Tracking Error", "0.008"},
-            {"Treynor Ratio", "0.48"},
-            {"Total Fees", "$3.41"},
-            {"Estimated Strategy Capacity", "$780000000.00"},
+            {"Alpha", "0.618"},
+            {"Beta", "0.81"},
+            {"Annual Standard Deviation", "0.185"},
+            {"Annual Variance", "0.034"},
+            {"Information Ratio", "3.961"},
+            {"Tracking Error", "0.061"},
+            {"Treynor Ratio", "2.746"},
+            {"Total Fees", "$21.45"},
+            {"Estimated Strategy Capacity", "$830000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Fitness Score", "0.038"},
+            {"Fitness Score", "0.204"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "16.556"},
-            {"Return Over Maximum Drawdown", "34.803"},
-            {"Portfolio Turnover", "0.038"},
+            {"Sortino Ratio", "43.135"},
+            {"Return Over Maximum Drawdown", "261.238"},
+            {"Portfolio Turnover", "0.204"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -167,7 +136,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "f24baeb2d21ac305bc86e4ba4e9d4ece"}
+            {"OrderListHash", "6ee62edf1ac883882b0fcef8cb3e9bae"}
         };
     }
 }

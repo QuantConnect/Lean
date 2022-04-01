@@ -52,13 +52,18 @@ namespace QuantConnect.Lean.Engine.Storage
         public event EventHandler<ObjectStoreErrorRaisedEventArgs> ErrorRaised;
 
         /// <summary>
+        /// Gets the default object store location
+        /// </summary>
+        public static string DefaultObjectStore => Path.GetFullPath(Config.Get("object-store-root", "./storage"));
+
+        /// <summary>
         /// Flag indicating the state of this object storage has changed since the last <seealso cref="Persist"/> invocation
         /// </summary>
         private volatile bool _dirty;
 
         private Timer _persistenceTimer;
         private TimeSpan _persistenceInterval;
-        private readonly string _storageRoot = Path.GetFullPath(Config.Get("object-store-root", "./storage"));
+        private readonly string _storageRoot = DefaultObjectStore;
         private readonly ConcurrentDictionary<string, byte[]> _storage = new ConcurrentDictionary<string, byte[]>();
         private readonly object _persistLock = new object();
 
