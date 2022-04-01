@@ -179,6 +179,20 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void GetMarketHoursWithEarlyCloseAndLateOpen()
+        {
+            var exchangeHours = CreateUsEquitySecurityExchangeHours();
+
+            var startTime = new DateTime(2016, 11, 25);
+            var marketHoursSegment = exchangeHours.GetMarketHours(startTime).Segments.FirstOrDefault();
+            var expectedMarketHoursSegment = new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(10, 0, 0), new TimeSpan(13, 0, 0));
+            Assert.AreEqual(expectedMarketHoursSegment.Start, marketHoursSegment.Start);
+            Assert.AreEqual(expectedMarketHoursSegment.End, marketHoursSegment.End);
+            Assert.AreEqual(expectedMarketHoursSegment.State, marketHoursSegment.State);
+
+        }
+
+        [Test]
         public void GetNextMarketOpenIsNonInclusiveOfStartTime()
         {
             var exhangeHours = CreateUsEquitySecurityExchangeHours();
@@ -430,7 +444,7 @@ namespace QuantConnect.Tests.Common.Securities
             var saturday = LocalMarketHours.ClosedAllDay(DayOfWeek.Saturday);
 
             var earlyCloses = new Dictionary<DateTime, TimeSpan> { { new DateTime(2016, 11, 25), new TimeSpan(13, 0, 0) } };
-            var lateOpens = new Dictionary<DateTime, TimeSpan>();
+            var lateOpens = new Dictionary<DateTime, TimeSpan>() { { new DateTime(2016, 11, 25), new TimeSpan(10, 0, 0) } };
             var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, USHoliday.Dates.Select(x => x.Date), new[]
             {
                 sunday, monday, tuesday, wednesday, thursday, friday, saturday
