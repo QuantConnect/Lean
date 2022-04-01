@@ -377,8 +377,6 @@ namespace QuantConnect.Brokerages.Oanda
                         // of a partiall fill, or didn't inform the user, so we need to do it now
                         if (order.Type != OrderType.Market || PendingFilledMarketOrders.TryRemove(order.Id, out status))
                         {
-                            order.PriceCurrency = SecurityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
-
                             OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "Oanda Fill Event")
                             {
                                 Status = OrderStatus.Filled,

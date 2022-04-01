@@ -471,7 +471,7 @@ namespace QuantConnect.Lean.Engine.Setup
             return true;
         }
 
-        private void AddUnrequestedSecurity(IAlgorithm algorithm, Symbol symbol)
+        private Security AddUnrequestedSecurity(IAlgorithm algorithm, Symbol symbol)
         {
             if (!algorithm.Portfolio.ContainsKey(symbol))
             {
@@ -505,7 +505,9 @@ namespace QuantConnect.Lean.Engine.Setup
                     // for items not directly requested set leverage to 1 and at the min resolution
                     algorithm.AddSecurity(symbol.SecurityType, symbol.Value, resolution, symbol.ID.Market, fillForward, leverage, extendedHours);
                 }
+                return algorithm.Securities[symbol];
             }
+            return null;
         }
 
         /// <summary>
@@ -544,7 +546,11 @@ namespace QuantConnect.Lean.Engine.Setup
                     continue;
                 }
 
-                AddUnrequestedSecurity(algorithm, order.Symbol);
+                var security = AddUnrequestedSecurity(algorithm, order.Symbol);
+                if (security != null)
+                {
+                    order.PriceCurrency = security.SymbolProperties.QuoteCurrency;
+                }
             }
         }
 

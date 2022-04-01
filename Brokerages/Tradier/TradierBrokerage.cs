@@ -1205,7 +1205,6 @@ namespace QuantConnect.Brokerages.Tradier
                     throw new Exception($"Lean order not found for brokerage id: {updatedOrder.Id}");
                 }
 
-                qcOrder.PriceCurrency = Currencies.USD;
                 var orderFee = OrderFee.Zero;
                 var fill = new OrderEvent(qcOrder, DateTime.UtcNow, orderFee, "Tradier Fill Event")
                 {
