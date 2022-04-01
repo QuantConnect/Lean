@@ -262,10 +262,10 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
             var dollarVolume = Math.Truncate(tradeBar.Close * tradeBar.Volume);
             var priceFactor = factorFileRow?.PriceFactor.Normalize() ?? 1m;
             var splitFactor = factorFileRow?.SplitFactor.Normalize() ?? 1m;
-            bool hasFundamentalData = CheckFundamentalData(date, sidContext.MapFile, fineAvailableDates, fineFundamentalFolder);
+            var hasFundamentalData = CheckFundamentalData(date, sidContext.MapFile, fineAvailableDates, fineFundamentalFolder);
 
             // sid,symbol,close,volume,dollar volume,has fundamental data,price factor,split factor
-            var coarseFileLine = $"{sidContext.SID},{ticker.ToUpperInvariant()},{tradeBar.Close.Normalize()},{tradeBar.Volume.Normalize()},{Math.Truncate(dollarVolume)},{hasFundamentalData},{priceFactor},{splitFactor}";
+            var coarseFileLine = $"{sidContext.SID},{ticker.ToUpperInvariant()},{tradeBar.Close.Normalize().ToStringInvariant()},{tradeBar.Volume.Normalize().ToStringInvariant()},{Math.Truncate(dollarVolume)},{hasFundamentalData},{priceFactor.ToStringInvariant()},{splitFactor.ToStringInvariant()}";
             return coarseFileLine;
         }
 
