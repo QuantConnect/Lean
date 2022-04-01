@@ -606,6 +606,16 @@ namespace QuantConnect.Brokerages.Oanda
             var type = order["type"].ToString();
 
             Order qcOrder;
+
+            var instrument = order["instrument"].ToString();
+            var id = order["id"].ToString();
+            var units = order["units"].ConvertInvariant<decimal>();
+            var createTime = order["createTime"].ToString();
+            var securityType = SymbolMapper.GetBrokerageSecurityType(instrument);
+            var symbol = SymbolMapper.GetLeanSymbol(instrument, securityType, Market.Oanda);
+            var time = GetTickDateTimeFromString(createTime);
+            var quantity = units;
+
             switch (type)
             {
                 case "MARKET_IF_TOUCHED":
@@ -618,19 +628,14 @@ namespace QuantConnect.Brokerages.Oanda
 
                 case "LIMIT":
                     var limitOrder = order.ToObject<OandaLimitOrder>();
-                    qcOrder = new LimitOrder
-                    {
-                        LimitPrice = limitOrder.Price.ToDecimal()
-                    };
+                    qcOrder = new LimitOrder(symbol, quantity, limitOrder.Price.ToDecimal(), time);
                     break;
 
                 case "STOP":
                     var stopLimitOrder = order.ToObject<StopOrder>();
-                    qcOrder = new StopLimitOrder
-                    {
-                        Price = stopLimitOrder.Price.ConvertInvariant<decimal>(),
-                        LimitPrice = stopLimitOrder.PriceBound.ConvertInvariant<decimal>()
-                    };
+                    var price = stopLimitOrder.Price.ConvertInvariant<decimal>();
+                    var limitPrice = stopLimitOrder.PriceBound.ConvertInvariant<decimal>();
+                    qcOrder = new StopLimitOrder(symbol, quantity, price, limitPrice, time);
                     break;
 
                 case "MARKET":
@@ -642,15 +647,6 @@ namespace QuantConnect.Brokerages.Oanda
                         "An existing " + type + " working order was found and is currently unsupported. Please manually cancel the order before restarting the algorithm.");
             }
 
-            var instrument = order["instrument"].ToString();
-            var id = order["id"].ToString();
-            var units = order["units"].ConvertInvariant<decimal>();
-            var createTime = order["createTime"].ToString();
-
-            var securityType = SymbolMapper.GetBrokerageSecurityType(instrument);
-            qcOrder.Symbol = SymbolMapper.GetLeanSymbol(instrument, securityType, Market.Oanda);
-            qcOrder.Time = GetTickDateTimeFromString(createTime);
-            qcOrder.Quantity = units;
             qcOrder.Status = OrderStatus.None;
             qcOrder.BrokerId.Add(id);
 
