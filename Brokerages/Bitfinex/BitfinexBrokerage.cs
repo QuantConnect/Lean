@@ -193,7 +193,7 @@ namespace QuantConnect.Brokerages.Bitfinex
 
                 if (item.Type.Replace("EXCHANGE", "").Trim() == "MARKET")
                 {
-                    order = new MarketOrder(symbol, quantity, time);
+                    order = new MarketOrder(symbol, quantity, time, price);
                 }
                 else if (item.Type.Replace("EXCHANGE", "").Trim() == "LIMIT")
                 {

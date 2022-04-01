@@ -244,7 +244,7 @@ namespace QuantConnect.Brokerages.GDAX
 
                 if (item.Type == "market")
                 {
-                    order = new MarketOrder(symbol, quantity, time);
+                    order = new MarketOrder(symbol, quantity, time, item.Price);
                 }
                 else if (!string.IsNullOrEmpty(item.Stop))
                 {
