@@ -77,8 +77,7 @@ class EmaCrossAlphaModel(AlphaModel):
             data = self.symbolDataBySymbol.pop(removed.Symbol, None)
             if data is not None:
                 # clean up our consolidators
-                algorithm.SubscriptionManager.RemoveConsolidator(removed.Symbol, data.FastConsolidator)
-                algorithm.SubscriptionManager.RemoveConsolidator(removed.Symbol, data.SlowConsolidator)
+                data.RemoveConsolidators()
 
 
 class SymbolData:
@@ -86,6 +85,7 @@ class SymbolData:
     def __init__(self, security, fastPeriod, slowPeriod, algorithm, resolution):
         self.Security = security
         self.Symbol = security.Symbol
+        self.algorithm = algorithm
 
         self.FastConsolidator = algorithm.ResolveConsolidator(security.Symbol, resolution)
         self.SlowConsolidator = algorithm.ResolveConsolidator(security.Symbol, resolution)
@@ -106,6 +106,10 @@ class SymbolData:
         # True if the fast is above the slow, otherwise false.
         # This is used to prevent emitting the same signal repeatedly
         self.FastIsOverSlow = False
+        
+    def RemoveConsolidators(self):
+        self.algorithm.SubscriptionManager.RemoveConsolidator(self.Security.Symbol, self.FastConsolidator)
+        self.algorithm.SubscriptionManager.RemoveConsolidator(self.Security.Symbol, self.SlowConsolidator)
 
     @property
     def SlowIsOverFast(self):
