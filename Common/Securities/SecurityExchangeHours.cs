@@ -357,7 +357,7 @@ namespace QuantConnect.Securities
             // Otherwise, just take the segments previous to the lateOpenTime
             if (_lateOpens.TryGetValue(localDateTime.Date, out var lateOpenTime))
             {
-                var index = marketHours.Segments.Count;
+                var index = 0;
                 var newSegments = new List<MarketHoursSegment>();
                 for(var i = 0; i < marketHours.Segments.Count; i++)
                 {
