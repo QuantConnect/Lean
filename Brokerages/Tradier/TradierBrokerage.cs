@@ -962,7 +962,6 @@ namespace QuantConnect.Brokerages.Tradier
                 Log.Trace($"TradierBrokerage.TradierPlaceOrder(): order submitted successfully: {response.Order.Id}");
 
                 // send the submitted event
-                order.QCOrder.PriceCurrency = Currencies.USD;
                 OnOrderEvent(new OrderEvent(order.QCOrder, DateTime.UtcNow, OrderFee.Zero) { Status = OrderStatus.Submitted });
 
                 // mark this in our open orders before we submit so it's gauranteed to be there when we poll for updates

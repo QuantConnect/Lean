@@ -171,7 +171,6 @@ namespace QuantConnect.Brokerages.Oanda
             var marketOrderRemainingQuantity = 0m;
             var marketOrderStatus = OrderStatus.Filled;
             var request = GenerateOrderRequest(order);
-            order.PriceCurrency = SecurityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
 
             lock (Locker)
             {
