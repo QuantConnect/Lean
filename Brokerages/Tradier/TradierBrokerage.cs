@@ -1411,11 +1411,6 @@ namespace QuantConnect.Brokerages.Tradier
             qcOrder.BrokerId.Add(order.Id.ToStringInvariant());
             //qcOrder.ContingentId =
             qcOrder.Properties.TimeInForce = ConvertTimeInForce(order.Duration);
-            var orderByBrokerageId = _orderProvider.GetOrderByBrokerageId(order.Id);
-            if (orderByBrokerageId != null)
-            {
-                qcOrder.Id = orderByBrokerageId.Id;
-            }
             qcOrder.Time = order.TransactionDate;
             return qcOrder;
         }

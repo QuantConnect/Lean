@@ -654,12 +654,6 @@ namespace QuantConnect.Brokerages.Oanda
             qcOrder.Status = OrderStatus.None;
             qcOrder.BrokerId.Add(id);
 
-            var orderByBrokerageId = OrderProvider.GetOrderByBrokerageId(id);
-            if (orderByBrokerageId != null)
-            {
-                qcOrder.Id = orderByBrokerageId.Id;
-            }
-
             var gtdTime = order["gtdTime"];
             if (gtdTime != null)
             {
