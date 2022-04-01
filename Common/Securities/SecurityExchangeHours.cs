@@ -331,7 +331,7 @@ namespace QuantConnect.Securities
             var marketSegmentHasBeenModified = false;
             if (_earlyCloses.TryGetValue(localDateTime.Date, out earlyCloseTime))
             {
-                for (int i = 0; i <= count; i++)
+                for (int i = 0; i < count; i++)
                 {
                     var segment = marketHours.Segments.ElementAt(i);
                     if (segment.Start <= earlyCloseTime && earlyCloseTime <= segment.End)
