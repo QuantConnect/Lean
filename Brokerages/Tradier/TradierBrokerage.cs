@@ -1000,7 +1000,8 @@ namespace QuantConnect.Brokerages.Tradier
                     message = "Order " + order.QCOrder.Id + ": " + string.Join(Environment.NewLine, response.Errors.Errors);
                     if (string.IsNullOrEmpty(order.QCOrder.Tag))
                     {
-                        order.QCOrder.Tag = message;
+                        var request = new UpdateOrderRequest(DateTime.UtcNow, order.QCOrder.Id, new UpdateOrderFields { Tag = message });
+                        order.QCOrder.ApplyUpdateOrderRequest(request);
                     }
                 }
 
