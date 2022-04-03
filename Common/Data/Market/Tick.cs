@@ -495,9 +495,9 @@ namespace QuantConnect.Data.Market
                         var index = 0;
                         TickType = config.TickType;
                         var csv = line.ToCsv(TickType == TickType.Trade ? 6 : 8);
-                        Time = date.Date.AddMilliseconds(csv[index++].ToInt64()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+                        Time = date.Date.AddMilliseconds((double)csv[0].ToDecimal()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
 
-                        if (TickType == TickType.Trade)
+                            if (TickType == TickType.Trade)
                         {
                             Value = csv[index++].ToDecimal() / scaleFactor;
                             Quantity = csv[index++].ToDecimal();
