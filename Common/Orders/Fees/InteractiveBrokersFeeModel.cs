@@ -116,7 +116,7 @@ namespace QuantConnect.Orders.Fees
                     if (market == Market.Globex || market == Market.NYMEX
                         || market == Market.CBOT || market == Market.ICE
                         || market == Market.CFE || market == Market.COMEX
-                        || market == Market.CME)
+                        || market == Market.CME || market == Market.NYSELIFFE)
                     {
                         // just in case...
                         market = Market.USA;

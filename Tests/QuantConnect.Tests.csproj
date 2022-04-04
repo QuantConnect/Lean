@@ -90,6 +90,12 @@
     <Content Include="Research\RegressionScripts\Test_QuantBookHistory.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Research\RegressionTemplates\BasicTemplateResearchCSharp.ipynb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Research\RegressionTemplates\BasicTemplateResearchPython.ipynb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Python\Indicators\IndicatorExtensionsTests.py" />
     <Content Include="Python\PandasTests\PandasMapperTests.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

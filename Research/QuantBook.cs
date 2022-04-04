@@ -23,6 +23,7 @@ using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
@@ -172,7 +173,7 @@ namespace QuantConnect.Research
                         algorithmHandlers.DataPermissionsManager));
 
                 var mapFileProvider = algorithmHandlers.MapFileProvider;
-                HistoryProvider = composer.GetExportedValueByTypeName<IHistoryProvider>(Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider"));
+                HistoryProvider = new HistoryProviderManager();
                 HistoryProvider.Initialize(
                     new HistoryProviderInitializeParameters(
                         null,

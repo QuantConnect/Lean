@@ -207,6 +207,9 @@ namespace QuantConnect.Brokerages
                 case BrokerageName.Binance:
                     return new BinanceBrokerageModel(accountType);
 
+                case BrokerageName.BinanceUS:
+                    return new BinanceUSBrokerageModel(accountType);
+
                 case BrokerageName.GDAX:
                     return new GDAXBrokerageModel(accountType);
 

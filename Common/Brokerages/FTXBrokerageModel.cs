@@ -48,20 +48,6 @@ namespace QuantConnect.Brokerages
         }
         
         /// <summary>
-        /// Gets a new buying power model for the security, returning the default model with the security's configured leverage.
-        /// For cash accounts, leverage = 1 is used.
-        /// For margin trading, FTX supports up to 20x leverage, default is 3xs 
-        /// </summary>
-        /// <param name="security">The security to get a buying power model for</param>
-        /// <returns>The buying power model for this brokerage/security</returns>
-        public override IBuyingPowerModel GetBuyingPowerModel(Security security)
-        {
-            return AccountType == AccountType.Margin
-                ? new SecurityMarginModel(GetLeverage(security))
-                : new CashBuyingPowerModel();
-        }
-
-        /// <summary>
         /// Gets the brokerage's leverage for the specified security
         /// </summary>
         /// <param name="security">The security's whose leverage we seek</param>

@@ -79,6 +79,11 @@ namespace QuantConnect.Lean.Engine
         public long DataPoints { get; private set; }
 
         /// <summary>
+        /// Gets the number of data points of algorithm history provider
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => _algorithm?.HistoryProvider?.DataPointCount ?? 0;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="AlgorithmManager"/> class
         /// </summary>
         /// <param name="liveMode">True if we're running in live mode, false for backtest mode</param>

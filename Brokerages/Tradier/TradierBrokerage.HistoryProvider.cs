@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -105,29 +105,29 @@ namespace QuantConnect.Brokerages.Tradier
 
                 var start = request.StartTimeUtc.ConvertTo(DateTimeZone.Utc, TimeZones.NewYork);
                 var end = request.EndTimeUtc.ConvertTo(DateTimeZone.Utc, TimeZones.NewYork);
-
+                
                 var history = Enumerable.Empty<Slice>();
 
                 switch (request.Resolution)
                 {
                     case Resolution.Tick:
-                        history = GetHistoryTick(request.Symbol, start, end);
+                        history = GetHistoryTick(request, start, end);
                         break;
 
                     case Resolution.Second:
-                        history = GetHistorySecond(request.Symbol, start, end);
+                        history = GetHistorySecond(request, start, end);
                         break;
 
                     case Resolution.Minute:
-                        history = GetHistoryMinute(request.Symbol, start, end);
+                        history = GetHistoryMinute(request, start, end);
                         break;
 
                     case Resolution.Hour:
-                        history = GetHistoryHour(request.Symbol, start, end);
+                        history = GetHistoryHour(request, start, end);
                         break;
 
                     case Resolution.Daily:
-                        history = GetHistoryDaily(request.Symbol, start, end);
+                        history = GetHistoryDaily(request, start, end);
                         break;
                 }
 
@@ -174,8 +174,10 @@ namespace QuantConnect.Brokerages.Tradier
             ReaderErrorDetected?.Invoke(this, e);
         }
 
-        private IEnumerable<Slice> GetHistoryTick(Symbol symbol, DateTime start, DateTime end)
+        private IEnumerable<Slice> GetHistoryTick(HistoryRequest request, DateTime start, DateTime end)
         {
+            var symbol = request.Symbol;
+            var exchangeTz = request.ExchangeHours.TimeZone;
             var history = GetTimeSeries(symbol, start, end, TradierTimeSeriesIntervals.Tick);
 
             if (history == null)
@@ -192,11 +194,13 @@ namespace QuantConnect.Brokerages.Tradier
                     TickType = TickType.Trade,
                     Quantity = Convert.ToInt32(tick.Volume)
                 })
-                .Select(tradeBar => new Slice(tradeBar.EndTime, new[] { tradeBar }));
+                .Select(tradeBar => new Slice(tradeBar.EndTime, new[] { tradeBar }, tradeBar.EndTime.ConvertToUtc(exchangeTz)));
         }
 
-        private IEnumerable<Slice> GetHistorySecond(Symbol symbol, DateTime start, DateTime end)
+        private IEnumerable<Slice> GetHistorySecond(HistoryRequest request, DateTime start, DateTime end)
         {
+            var symbol = request.Symbol;
+            var exchangeTz = request.ExchangeHours.TimeZone;
             var history = GetTimeSeries(symbol, start, end, TradierTimeSeriesIntervals.Tick);
 
             if (history == null)
@@ -222,7 +226,7 @@ namespace QuantConnect.Brokerages.Tradier
                     g.Last().LastPrice,
                     g.Sum(t => t.Quantity),
                     Time.OneSecond))
-                .Select(tradeBar => new Slice(tradeBar.EndTime, new[] { tradeBar }))
+                .Select(tradeBar => new Slice(tradeBar.EndTime, new[] { tradeBar }, tradeBar.EndTime.ConvertToUtc(exchangeTz)))
                 .ToList();
 
             DataPointCount += result.Count;
@@ -230,8 +234,10 @@ namespace QuantConnect.Brokerages.Tradier
             return result;
         }
 
-        private IEnumerable<Slice> GetHistoryMinute(Symbol symbol, DateTime start, DateTime end)
+        private IEnumerable<Slice> GetHistoryMinute(HistoryRequest request, DateTime start, DateTime end)
         {
+            var symbol = request.Symbol;
+            var exchangeTz = request.ExchangeHours.TimeZone;
             var history = GetTimeSeries(symbol, start, end, TradierTimeSeriesIntervals.OneMinute);
 
             if (history == null)
@@ -241,11 +247,13 @@ namespace QuantConnect.Brokerages.Tradier
 
             return history
                 .Select(bar => new TradeBar(bar.Time, symbol, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume, Time.OneMinute))
-                .Select(tradeBar => new Slice(tradeBar.EndTime, new[] { tradeBar }));
+                .Select(tradeBar => new Slice(tradeBar.EndTime, new[] { tradeBar }, tradeBar.EndTime.ConvertToUtc(exchangeTz)));
         }
 
-        private IEnumerable<Slice> GetHistoryHour(Symbol symbol, DateTime start, DateTime end)
+        private IEnumerable<Slice> GetHistoryHour(HistoryRequest request, DateTime start, DateTime end)
         {
+            var symbol = request.Symbol;
+            var exchangeTz = request.ExchangeHours.TimeZone;
             var history = GetTimeSeries(symbol, start, end, TradierTimeSeriesIntervals.FifteenMinutes);
 
             if (history == null)
@@ -264,7 +272,7 @@ namespace QuantConnect.Brokerages.Tradier
                     g.Last().Close,
                     g.Sum(t => t.Volume),
                     Time.OneHour))
-                .Select(tradeBar => new Slice(tradeBar.EndTime, new[] { tradeBar }))
+                .Select(tradeBar => new Slice(tradeBar.EndTime, new[] { tradeBar }, tradeBar.EndTime.ConvertToUtc(exchangeTz)))
                 .ToList();
 
             DataPointCount += result.Count;
@@ -272,15 +280,17 @@ namespace QuantConnect.Brokerages.Tradier
             return result;
         }
 
-        private IEnumerable<Slice> GetHistoryDaily(Symbol symbol, DateTime start, DateTime end)
+        private IEnumerable<Slice> GetHistoryDaily(HistoryRequest request, DateTime start, DateTime end)
         {
+            var symbol = request.Symbol;
+            var exchangeTz = request.ExchangeHours.TimeZone;
             var history = GetHistoricalData(symbol, start, end);
 
             DataPointCount += history.Count;
 
             return history
                 .Select(bar => new TradeBar(bar.Time, symbol, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume, Time.OneDay))
-                .Select(tradeBar => new Slice(tradeBar.EndTime, new[] { tradeBar }));
+                .Select(tradeBar => new Slice(tradeBar.EndTime, new[] { tradeBar }, tradeBar.EndTime.ConvertToUtc(exchangeTz)));
         }
 
         #endregion

@@ -30,6 +30,7 @@ using QuantConnect.Algorithm;
 using QuantConnect.Python;
 using QuantConnect.Tests.Common.Data.UniverseSelection;
 using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 {
@@ -207,7 +208,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 Assert.Ignore($"Ignore {GetType().Name}: Could not create {language} model.");
             }
 
-            var changes = SecurityChangesTests.CreateNonInternal(RemovedSecurities, AddedSecurities);
+            var removedSecurities = Algorithm.Securities.Values;
+
+            // We have to add some security if we then want to remove it, that's why we cannot use here
+            // RemovedSecurities, because it doesn't contain any security
+            var changes = SecurityChangesTests.CreateNonInternal(removedSecurities, AddedSecurities);
 
             Assert.DoesNotThrow(() => model.OnSecuritiesChanged(Algorithm, changes));
         }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -94,7 +94,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
                                 Close = Convert.ToDecimal(x),
                                 Volume = 100m
                             }
-                        })));
+                        }, time.AddMinutes(i))));
 
             var algorithm = new QCAlgorithm();
             algorithm.SetPandasConverter();
@@ -163,7 +163,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
             var historyProvider = new Mock<IHistoryProvider>();
             historyProvider.Setup(m => m.GetHistory(It.IsAny<IEnumerable<HistoryRequest>>(), It.IsAny<DateTimeZone>()))
-                .Returns(historicalPrices.Select((x, i) => new Slice(time.AddMinutes(i), new List<BaseData> { func(x, i) })));
+                .Returns(historicalPrices.Select((x, i) => new Slice(time.AddMinutes(i), new List<BaseData> { func(x, i) }, time.AddMinutes(i))));
 
             var algorithm = new QCAlgorithm();
             algorithm.SetPandasConverter();

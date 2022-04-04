@@ -233,7 +233,7 @@ namespace QuantConnect.Tests.Algorithm
             var barTime = new DateTime(2014, 6, 6, 15, 0, 0, 0);
             _testHistoryProvider.Slices = new[] 
             { 
-                new Slice(barTime, new[] { new TradeBar(barTime, optionSymbol, 100, 100, 100, 100, 1) })
+                new Slice(barTime, new[] { new TradeBar(barTime, optionSymbol, 100, 100, 100, 100, 1) }, barTime)
             }.ToList();
 
             var lastKnownPrice = _algorithm.GetLastKnownPrice(option);

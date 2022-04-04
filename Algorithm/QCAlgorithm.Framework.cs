@@ -260,7 +260,7 @@ namespace QuantConnect.Algorithm
         {
             if (DebugMode)
             {
-                Log($"{Time}: {changes}");
+                Debug($"{Time}: {changes}");
             }
 
             Alpha.OnSecuritiesChanged(this, changes);

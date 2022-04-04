@@ -21,8 +21,13 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Binance cash account regression algorithm, reproduces issue https://github.com/QuantConnect/Lean/issues/6123
     /// </summary>
-    public class BinanceCashAccountFeeRegressionAlgorithm : CryptoCashAccountFeeRegressionAlgorithm
+    public class BinanceCashAccountFeeRegressionAlgorithm : CryptoBaseCurrencyFeeRegressionAlgorithm
     {
+        /// <summary>
+        /// The target account type
+        /// </summary>
+        protected override AccountType AccountType { get; } = AccountType.Cash;
+
         public override void Initialize()
         {
             SetAccountCurrency("USDT");
@@ -32,6 +37,16 @@ namespace QuantConnect.Algorithm.CSharp
             Pair = "BTCUSDT";
             base.Initialize();
         }
+
+        /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public override long DataPoints => 50;
+
+        /// </summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public override int AlgorithmHistoryDataPoints => 28;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm

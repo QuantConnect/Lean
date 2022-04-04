@@ -377,7 +377,7 @@ namespace QuantConnect.Tests.Engine
                 var changes = SecurityChanges.None;
                 do
                 {
-                    var slice = new Slice(default(DateTime), _data, bars, quotes, ticks, options, futures, splits, dividends, delistings, symbolChanges);
+                    var slice = new Slice(default(DateTime), _data, bars, quotes, ticks, options, futures, splits, dividends, delistings, symbolChanges, default(DateTime));
                     var timeSlice = new TimeSlice(_frontierUtc, _data.Count, slice, dataFeedPackets, _securitiesUpdateData, _consolidatorUpdateData, customData, changes, new Dictionary<Universe, BaseDataCollection>());
                     yield return timeSlice;
                     _frontierUtc += _frontierStepSize;

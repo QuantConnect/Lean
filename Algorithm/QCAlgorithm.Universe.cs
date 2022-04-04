@@ -549,8 +549,7 @@ namespace QuantConnect.Algorithm
         {
             var subscription = configurations.First();
             // if we are adding a non-internal security which already has an internal feed, we remove it first
-            Security existingSecurity;
-            if (Securities.TryGetValue(security.Symbol, out existingSecurity))
+            if (Securities.TryGetValue(security.Symbol, out var existingSecurity))
             {
                 if (!subscription.IsInternalFeed && existingSecurity.IsInternalFeed())
                 {
@@ -562,8 +561,11 @@ namespace QuantConnect.Algorithm
                 }
                 else
                 {
-                    // we will reuse existing so we return it to the user
+                    var isTradable = security.IsTradable;
+                    // We will reuse existing so we return it to the user.
+                    // We will use the IsTradable flag of the new security, since existing could of been set to false when removed
                     security = existingSecurity;
+                    security.IsTradable = isTradable;
                 }
             }
             else

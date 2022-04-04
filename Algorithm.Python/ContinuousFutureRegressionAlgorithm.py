@@ -31,7 +31,7 @@ class ContinuousFutureRegressionAlgorithm(QCAlgorithm):
                                                   dataNormalizationMode = DataNormalizationMode.BackwardsRatio,
                                                   dataMappingMode = DataMappingMode.LastTradingDay,
                                                   contractDepthOffset= 0)
-        self._currentMappedSymbol = self._continuousContract.Symbol;
+        self._currentMappedSymbol = self._continuousContract.Symbol
 
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.

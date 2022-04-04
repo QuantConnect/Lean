@@ -38,6 +38,29 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
+        public void Getters()
+        {
+            var STR = new SuperTrend(10, 3);
+            foreach (var data in TestHelper.GetDataStream(100))
+            {
+                var tradeBar = new TradeBar
+                {
+                    Open = data.Value,
+                    Close = data.Value,
+                    High = data.Value,
+                    Low = data.Value,
+                    Volume = data.Value
+                };
+                STR.Update(tradeBar);
+            }
+            Assert.IsTrue(STR.IsReady);
+            Assert.AreNotEqual(0, STR.BasicUpperBand);
+            Assert.AreNotEqual(0, STR.BasicLowerBand);
+            Assert.AreNotEqual(0, STR.CurrentTrailingUpperBand);
+            Assert.AreNotEqual(0, STR.CurrentTrailingLowerBand);
+        }
+
+        [Test]
         public override void ResetsProperly()
         {
             var STR = new SuperTrend(10, 3);

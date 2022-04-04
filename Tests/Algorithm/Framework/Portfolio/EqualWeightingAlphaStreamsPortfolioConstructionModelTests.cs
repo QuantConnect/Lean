@@ -85,7 +85,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var alpha = _algorithm.AddData<AlphaStreamsPortfolioState>("9fc8ef73792331b11dbd5429a").Symbol;
             var data = _algorithm.History<AlphaStreamsPortfolioState>(alpha, TimeSpan.FromDays(2)).Last();
             AddSecurities(_algorithm, data);
-            _algorithm.SetCurrentSlice(new Slice(_algorithm.UtcTime, new List<BaseData> { data }));
+            _algorithm.SetCurrentSlice(new Slice(_algorithm.UtcTime, new List<BaseData> { data }, _algorithm.UtcTime));
 
             var targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, Array.Empty<Insight>()).ToList();
             Assert.AreEqual(1, targets.Count);
@@ -102,7 +102,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var alpha = _algorithm.AddData<AlphaStreamsPortfolioState>("9fc8ef73792331b11dbd5429a").Symbol;
             var data = _algorithm.History<AlphaStreamsPortfolioState>(alpha, TimeSpan.FromDays(1)).ToList()[0];
             AddSecurities(_algorithm, data);
-            _algorithm.SetCurrentSlice(new Slice(_algorithm.UtcTime, new List<BaseData> { data }));
+            _algorithm.SetCurrentSlice(new Slice(_algorithm.UtcTime, new List<BaseData> { data }, _algorithm.UtcTime));
 
             var targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, Array.Empty<Insight>()).ToList();
 
@@ -122,7 +122,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var data = _algorithm.History<AlphaStreamsPortfolioState>(alpha, TimeSpan.FromDays(2)).Last();
             AddSecurities(_algorithm, data);
             var position = data.PositionGroups.Single().Positions.Single();
-            _algorithm.SetCurrentSlice(new Slice(_algorithm.UtcTime, new List<BaseData> { data }));
+            _algorithm.SetCurrentSlice(new Slice(_algorithm.UtcTime, new List<BaseData> { data }, _algorithm.UtcTime));
 
             var targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, Array.Empty<Insight>()).ToList();
             Assert.AreEqual(1, targets.Count);
@@ -130,7 +130,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             Assert.AreEqual(position.Quantity, targets.Single().Quantity);
 
 
-            _algorithm.SetCurrentSlice(new Slice(_algorithm.UtcTime, new List<BaseData> { new AlphaStreamsPortfolioState { Symbol = alpha } }));
+            _algorithm.SetCurrentSlice(new Slice(_algorithm.UtcTime, new List<BaseData> { new AlphaStreamsPortfolioState { Symbol = alpha } }, _algorithm.UtcTime));
             targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, Array.Empty<Insight>()).ToList();
             Assert.AreEqual(1, targets.Count);
             Assert.AreEqual(position.Symbol, targets.Single().Symbol);
@@ -184,7 +184,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                         }}
                 };
 
-            _algorithm.SetCurrentSlice(new Slice(_algorithm.UtcTime, new List<BaseData> { data, data2 }));
+            _algorithm.SetCurrentSlice(new Slice(_algorithm.UtcTime, new List<BaseData> { data, data2 }, _algorithm.UtcTime));
 
             var targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, Array.Empty<Insight>()).ToList();
             Assert.AreEqual(1, targets.Count);
