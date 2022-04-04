@@ -1439,7 +1439,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Converts the tradier order duration into a qc order time in force
         /// </summary>
-        protected TimeInForce ConvertTimeInForce(TradierOrderDuration duration)
+        private static TimeInForce ConvertTimeInForce(TradierOrderDuration duration)
         {
             switch (duration)
             {
@@ -1450,7 +1450,7 @@ namespace QuantConnect.Brokerages.Tradier
                     return TimeInForce.Day;
 
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(duration), $"Unsupported order duration: {duration}");
             }
         }
 
