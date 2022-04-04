@@ -998,11 +998,6 @@ namespace QuantConnect.Brokerages.Tradier
                 if (response != null && response.Errors != null && !response.Errors.Errors.IsNullOrEmpty())
                 {
                     message = "Order " + order.QCOrder.Id + ": " + string.Join(Environment.NewLine, response.Errors.Errors);
-                    if (string.IsNullOrEmpty(order.QCOrder.Tag))
-                    {
-                        var request = new UpdateOrderRequest(DateTime.UtcNow, order.QCOrder.Id, new UpdateOrderFields { Tag = message });
-                        order.QCOrder.ApplyUpdateOrderRequest(request);
-                    }
                 }
 
                 // send this error through to the console
