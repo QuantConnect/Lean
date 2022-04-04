@@ -471,9 +471,9 @@ namespace QuantConnect.Lean.Engine.Setup
             return true;
         }
 
-        private void AddUnrequestedSecurity(IAlgorithm algorithm, Symbol symbol)
+        private Security AddUnrequestedSecurity(IAlgorithm algorithm, Symbol symbol)
         {
-            if (!algorithm.Portfolio.ContainsKey(symbol))
+            if (!algorithm.Securities.TryGetValue(symbol, out Security security))
             {
                 var resolution = algorithm.UniverseSettings.Resolution;
                 var fillForward = algorithm.UniverseSettings.FillForward;
@@ -493,19 +493,20 @@ namespace QuantConnect.Lean.Engine.Setup
                 if (symbol.SecurityType.IsOption())
                 {
                     // add current option contract to the system
-                    algorithm.AddOptionContract(symbol, resolution, fillForward, leverage);
+                    security = algorithm.AddOptionContract(symbol, resolution, fillForward, leverage);
                 }
                 else if (symbol.SecurityType == SecurityType.Future)
                 {
                     // add current future contract to the system
-                    algorithm.AddFutureContract(symbol, resolution, fillForward, leverage);
+                    security = algorithm.AddFutureContract(symbol, resolution, fillForward, leverage);
                 }
                 else
                 {
                     // for items not directly requested set leverage to 1 and at the min resolution
-                    algorithm.AddSecurity(symbol.SecurityType, symbol.Value, resolution, symbol.ID.Market, fillForward, leverage, extendedHours);
+                    security = algorithm.AddSecurity(symbol.SecurityType, symbol.Value, resolution, symbol.ID.Market, fillForward, leverage, extendedHours);
                 }
             }
+            return security;
         }
 
         /// <summary>
@@ -543,8 +544,8 @@ namespace QuantConnect.Lean.Engine.Setup
                     // keep aggregating these errors
                     continue;
                 }
-
-                AddUnrequestedSecurity(algorithm, order.Symbol);
+                var security = AddUnrequestedSecurity(algorithm, order.Symbol);
+                order.PriceCurrency = security?.SymbolProperties.QuoteCurrency;
             }
         }
 

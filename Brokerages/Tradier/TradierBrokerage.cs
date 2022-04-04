@@ -962,7 +962,6 @@ namespace QuantConnect.Brokerages.Tradier
                 Log.Trace($"TradierBrokerage.TradierPlaceOrder(): order submitted successfully: {response.Order.Id}");
 
                 // send the submitted event
-                order.QCOrder.PriceCurrency = Currencies.USD;
                 OnOrderEvent(new OrderEvent(order.QCOrder, DateTime.UtcNow, OrderFee.Zero) { Status = OrderStatus.Submitted });
 
                 // mark this in our open orders before we submit so it's gauranteed to be there when we poll for updates
@@ -999,10 +998,6 @@ namespace QuantConnect.Brokerages.Tradier
                 if (response != null && response.Errors != null && !response.Errors.Errors.IsNullOrEmpty())
                 {
                     message = "Order " + order.QCOrder.Id + ": " + string.Join(Environment.NewLine, response.Errors.Errors);
-                    if (string.IsNullOrEmpty(order.QCOrder.Tag))
-                    {
-                        order.QCOrder.Tag = message;
-                    }
                 }
 
                 // send this error through to the console
@@ -1205,7 +1200,6 @@ namespace QuantConnect.Brokerages.Tradier
                     throw new Exception($"Lean order not found for brokerage id: {updatedOrder.Id}");
                 }
 
-                qcOrder.PriceCurrency = Currencies.USD;
                 var orderFee = OrderFee.Zero;
                 var fill = new OrderEvent(qcOrder, DateTime.UtcNow, orderFee, "Tradier Fill Event")
                 {
@@ -1381,22 +1375,27 @@ namespace QuantConnect.Brokerages.Tradier
         protected Order ConvertOrder(TradierOrder order)
         {
             Order qcOrder;
+
+            var symbol = _symbolMapper.GetLeanSymbol(order.Class == TradierOrderClass.Option ? order.OptionSymbol : order.Symbol);
+            var quantity = ConvertQuantity(order);
+            var time = order.TransactionDate;
+
             switch (order.Type)
             {
                 case TradierOrderType.Limit:
-                    qcOrder = new LimitOrder { LimitPrice = order.Price };
+                    qcOrder = new LimitOrder(symbol, quantity, order.Price, time);
                     break;
 
                 case TradierOrderType.Market:
-                    qcOrder = new MarketOrder();
+                    qcOrder = new MarketOrder(symbol, quantity, time);
                     break;
 
                 case TradierOrderType.StopMarket:
-                    qcOrder = new StopMarketOrder { StopPrice = GetOrder(order.Id).StopPrice };
+                    qcOrder = new StopMarketOrder(symbol, quantity, GetOrder(order.Id).StopPrice, time);
                     break;
 
                 case TradierOrderType.StopLimit:
-                    qcOrder = new StopLimitOrder { LimitPrice = order.Price, StopPrice = GetOrder(order.Id).StopPrice };
+                    qcOrder = new StopLimitOrder(symbol, quantity, GetOrder(order.Id).StopPrice, order.Price, time);
                     break;
 
                 //case TradierOrderType.Credit:
@@ -1406,19 +1405,10 @@ namespace QuantConnect.Brokerages.Tradier
                     throw new NotImplementedException("The Tradier order type " + order.Type + " is not implemented.");
             }
 
-            qcOrder.Symbol = _symbolMapper.GetLeanSymbol(order.Class == TradierOrderClass.Option ? order.OptionSymbol : order.Symbol);
-
-            qcOrder.Quantity = ConvertQuantity(order);
             qcOrder.Status = ConvertStatus(order.Status);
             qcOrder.BrokerId.Add(order.Id.ToStringInvariant());
             //qcOrder.ContingentId =
             qcOrder.Properties.TimeInForce = ConvertTimeInForce(order.Duration);
-            var orderByBrokerageId = _orderProvider.GetOrderByBrokerageId(order.Id);
-            if (orderByBrokerageId != null)
-            {
-                qcOrder.Id = orderByBrokerageId.Id;
-            }
-            qcOrder.Time = order.TransactionDate;
             return qcOrder;
         }
 

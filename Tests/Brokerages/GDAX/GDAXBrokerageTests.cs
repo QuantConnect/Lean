@@ -275,12 +275,11 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             Assert.AreEqual(2, actual.Count);
             Assert.AreEqual(0.01, actual.First().Quantity);
             Assert.AreEqual(OrderDirection.Buy, actual.First().Direction);
-            Assert.AreEqual(0.1, actual.First().Price);
+            Assert.AreEqual(0.1, (actual.First() as LimitOrder).LimitPrice);
 
             Assert.AreEqual(-1, actual.Last().Quantity);
             Assert.AreEqual(OrderDirection.Sell, actual.Last().Direction);
-            Assert.AreEqual(1, actual.Last().Price);
-
+            Assert.AreEqual(1, (actual.Last() as LimitOrder).LimitPrice);
         }
 
         [Test]

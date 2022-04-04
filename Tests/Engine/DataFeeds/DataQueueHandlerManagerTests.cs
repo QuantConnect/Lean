@@ -31,11 +31,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     [TestFixture]
     public class DataQueueHandlerManagerTests
     {
-        [TestCase("TradierBrokerage")]
-        [TestCase("QuantConnect.Brokerages.InteractiveBrokers.InteractiveBrokersBrokerage")]
-        [TestCase("OandaBrokerage")]
-        [TestCase("GDAXDataQueueHandler")]
-        [TestCase("BitfinexBrokerage")]
+        [TestCase("BacktestingBrokerage")]
         public void GetFactoryFromDataQueueHandler(string dataQueueHandler)
         {
             var factory = JobQueue.GetFactoryFromDataQueueHandler(dataQueueHandler);
@@ -49,7 +45,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var dataHandlers = Newtonsoft.Json.JsonConvert.SerializeObject(new[] { "FakeDataQueue" });
             var jobWithArrayIDQH = new LiveNodePacket
             {
-                Brokerage = "OandaBrokerage",
                 DataQueueHandler = dataHandlers
             };
             var compositeDataQueueHandler = new DataQueueHandlerManager();
@@ -72,7 +67,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var dataHandlers = Newtonsoft.Json.JsonConvert.SerializeObject(new[] { "FakeDataQueue" });
             var job = new LiveNodePacket
             {
-                Brokerage = "OandaBrokerage",
                 DataQueueHandler = dataHandlers
             };
             var compositeDataQueueHandler = new DataQueueHandlerManager();
@@ -105,7 +99,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void DoubleSubscribe()
         {
             var compositeDataQueueHandler = new DataQueueHandlerManager();
-            compositeDataQueueHandler.SetJob(new LiveNodePacket { Brokerage = "OandaBrokerage", DataQueueHandler = "[ \"TestDataHandler\" ]" });
+            compositeDataQueueHandler.SetJob(new LiveNodePacket { DataQueueHandler = "[ \"TestDataHandler\" ]" });
 
             var dataConfig = GetConfig();
             var enumerator = compositeDataQueueHandler.Subscribe(dataConfig, (_, _) => {});
@@ -119,7 +113,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             TestDataHandler.UnsubscribeCounter = 0;
             var compositeDataQueueHandler = new DataQueueHandlerManager();
-            compositeDataQueueHandler.SetJob(new LiveNodePacket { Brokerage = "OandaBrokerage", DataQueueHandler = "[ \"TestDataHandler\" ]" });
+            compositeDataQueueHandler.SetJob(new LiveNodePacket { DataQueueHandler = "[ \"TestDataHandler\" ]" });
 
             var dataConfig = GetConfig();
             var enumerator = compositeDataQueueHandler.Subscribe(dataConfig, (_, _) => {});
@@ -140,7 +134,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             TestDataHandler.UnsubscribeCounter = 0;
             TestDataHandler.SubscribeCounter = 0;
             var compositeDataQueueHandler = new DataQueueHandlerManager();
-            compositeDataQueueHandler.SetJob(new LiveNodePacket { Brokerage = "OandaBrokerage", DataQueueHandler = "[ \"TestDataHandler\" ]" });
+            compositeDataQueueHandler.SetJob(new LiveNodePacket { DataQueueHandler = "[ \"TestDataHandler\" ]" });
 
             var canonicalSymbol = Symbols.ES_Future_Chain.UpdateMappedSymbol(Symbols.Future_ESZ18_Dec2018.ID.ToString());
             var canonicalConfig = GetConfig(canonicalSymbol);
