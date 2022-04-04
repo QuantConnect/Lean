@@ -1336,16 +1336,18 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var emittedTradeBars = false;
 
-            ConsumeBridge(feed, TimeSpan.FromSeconds(1), true, ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(3), true, ts =>
             {
                 if (ts.Slice.HasData)
                 {
                     if (ts.Slice.Bars.ContainsKey(symbol))
                     {
                         emittedTradeBars = true;
+                        // we got what we wanted shortcut unit test
+                        _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                     }
                 }
-            });
+            }, endDate: _startDate.AddDays(1));
 
             Assert.IsTrue(emittedTradeBars);
         }
