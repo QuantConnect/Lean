@@ -293,6 +293,11 @@ namespace QuantConnect.Securities
                         }
                     }
 
+                    // earlyCloseTime isn't used because GetMarketHours() already handles early
+                    // closes but we only need to know if there's an early close in the current
+                    // day in order to not consider lastDaySegment for next day process.
+                    // If there was an early close the market opens until next day first segment,
+                    // so we don't take into account continuous segments between days
                     if (_earlyCloses.TryGetValue(time.Date, out var earlyCloseTime))
                     {
                         lastDaySegment = null;
