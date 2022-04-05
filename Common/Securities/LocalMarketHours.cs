@@ -219,9 +219,9 @@ namespace QuantConnect.Securities
                     continue;
                 }
 
-                if (i != _segments.Length - 1)
+                if (i != Segments.Count - 1)
                 {
-                    var potentialNextSegment = _segments.ElementAt(i + 1);
+                    var potentialNextSegment = Segments.ElementAt(i + 1);
 
                     // Check whether we can consider PostMarket or not
                     if (potentialNextSegment.State == MarketHoursState.PostMarket && !extendedMarket)
@@ -230,7 +230,7 @@ namespace QuantConnect.Securities
                     }
                     else
                     {
-                        nextSegment = _segments.ElementAt(i + 1).Start;
+                        nextSegment = Segments.ElementAt(i + 1).Start;
                     }                   
                 }
                 else
