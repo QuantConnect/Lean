@@ -293,7 +293,14 @@ namespace QuantConnect.Securities
                         }
                     }
 
-                    lastDaySegment = marketHours.Segments.LastOrDefault();
+                    if (_earlyCloses.TryGetValue(time.Date, out var earlyCloseTime))
+                    {
+                        lastDaySegment = null;
+                    }
+                    else
+                    {
+                        lastDaySegment = marketHours.Segments.LastOrDefault();
+                    }
                 }
                 else
                 {

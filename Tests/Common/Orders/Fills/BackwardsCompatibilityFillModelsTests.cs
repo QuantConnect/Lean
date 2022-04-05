@@ -268,7 +268,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             var model = new TestFillModelInheritBaseClass();
             var security = SecurityTests.GetSecurity(false);
-            var reference = DateTime.Now;
+            var reference = new DateTime(2022, 4, 5, 10, 0, 0);
             var referenceUtc = reference.ConvertToUtc(TimeZones.NewYork);
             var timeKeeper = new TimeKeeper(referenceUtc);
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
