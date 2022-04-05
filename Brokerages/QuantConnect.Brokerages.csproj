@@ -56,19 +56,4 @@
     <ProjectReference Include="..\Configuration\QuantConnect.Configuration.csproj" />
     <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Reference Include="CSharpAPI">
-      <HintPath>CSharpAPI.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Update="CSharpAPI.dll" Pack="True">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <PackageCopyToOutput>true</PackageCopyToOutput>
-    </None>
-    <None Update="CSharpAPI.deps.json" Pack="True">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <PackageCopyToOutput>true</PackageCopyToOutput>
-    </None>
-  </ItemGroup>
 </Project>
