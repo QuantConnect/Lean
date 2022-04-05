@@ -79,6 +79,12 @@ namespace QuantConnect.Tests.Engine.Setup
 
             Assert.AreEqual(_transactionHandler.OrderTickets.Count, 4);
 
+            // Check Price Currency is not null
+            foreach (var order in _transactionHandler.Orders.Values)
+            {
+                Assert.IsFalse(string.IsNullOrEmpty(order.PriceCurrency));
+            }
+
             // Warn the user about each open order
             Assert.AreEqual(_resultHandler.PersistentMessages.Count, 4);
 
