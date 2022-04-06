@@ -135,7 +135,6 @@ namespace QuantConnect.Lean.Engine
 
             //Initialize Properties:
             AlgorithmId = job.AlgorithmId;
-            _algorithm.Status = AlgorithmStatus.Running;
 
             //Create the method accessors to push generic types into algorithm: Find all OnData events:
 

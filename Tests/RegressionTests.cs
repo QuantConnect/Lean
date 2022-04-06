@@ -88,9 +88,9 @@ namespace QuantConnect.Tests
 
             var nonDefaultStatuses = new Dictionary<string, AlgorithmStatus>
             {
-                {"TrainingInitializeRegressionAlgorithm", AlgorithmStatus.RuntimeError},
-                {"OnOrderEventExceptionRegression", AlgorithmStatus.RuntimeError},
-                {"WarmUpAfterInitializeRegression", AlgorithmStatus.RuntimeError }
+                { "TrainingInitializeRegressionAlgorithm", AlgorithmStatus.RuntimeError },
+                { "OnOrderEventExceptionRegression", AlgorithmStatus.RuntimeError },
+                { "WarmUpAfterInitializeRegression", AlgorithmStatus.RuntimeError }
             };
 
             var languages = Config.GetValue("regression-test-languages", JArray.FromObject(new[] { "CSharp", "Python" }))
