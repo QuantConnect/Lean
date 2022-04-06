@@ -90,8 +90,7 @@ namespace QuantConnect.Tests
             {
                 { "TrainingInitializeRegressionAlgorithm", AlgorithmStatus.RuntimeError },
                 { "OnOrderEventExceptionRegression", AlgorithmStatus.RuntimeError },
-                { "WarmUpAfterInitializeRegression", AlgorithmStatus.RuntimeError },
-                { "QuitInInitializationRegressionAlgorithm", AlgorithmStatus.Stopped }
+                { "WarmUpAfterInitializeRegression", AlgorithmStatus.RuntimeError }
             };
 
             var languages = Config.GetValue("regression-test-languages", JArray.FromObject(new[] { "CSharp", "Python" }))

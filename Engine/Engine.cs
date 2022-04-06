@@ -251,17 +251,6 @@ namespace QuantConnect.Lean.Engine
                         AlgorithmHandlers.Results.RuntimeError(errorMessage);
                         SystemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, errorMessage);
                     }
-
-                    // If there was call Quit in the Initialize method
-                    if (initializeComplete && algorithm.Status == AlgorithmStatus.Stopped)
-                    {
-                        initializeComplete = false;
-                        var message = "Algorithm.Initialize() Algorithm stopped by calling Quit method";
-                        Log.Trace(message);
-                        AlgorithmHandlers.Results.SendStatusUpdate(AlgorithmStatus.Stopped, message);
-                        SystemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.Stopped, message);
-                        algorithmManager?.SetAlgorithm(algorithm);
-                    }
                 }
                 catch (Exception err)
                 {

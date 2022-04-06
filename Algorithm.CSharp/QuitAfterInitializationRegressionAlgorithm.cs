@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -23,16 +23,15 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// This regression algorithm is expected to stop executing after Initialization. Related to GH 6168 issue
     /// </summary>
-    public class QuitInInitializationRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class QuitAfterInitializationRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private bool _stopped;
         public override void Initialize()
         {
             SetStartDate(2013, 10, 7);
             SetEndDate(2013, 10, 11);
 
             AddEquity("SPY", Resolution.Daily);
-
-            Quit();
         }
 
         /// <summary>
@@ -41,7 +40,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            throw new Exception("Algorithm should of stopped!");
+            if (_stopped)
+            {
+                throw new Exception("Algorithm should of stopped!");
+            }
+            _stopped = true;
+            Quit();
         }
 
         /// <summary>
@@ -57,7 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 0;
+        public long DataPoints => 16;
 
         /// <summary>
         /// Data Points count of the algorithm history
