@@ -75,8 +75,6 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception("Was expecting resolution to be set to Minute");
             }
-
-            Quit();
         }
 
         private class DailyUnlinkedData : UnlinkedData

@@ -120,7 +120,7 @@ namespace QuantConnect.Lean.Engine
         {
             //Initialize:
             DataPoints = 0;
-            _algorithm = algorithm;
+            SetAlgorithm(algorithm);
 
             var backtestMode = (job.Type == PacketType.BacktestNode);
             var methodInvokers = new Dictionary<Type, MethodInvoker>();
@@ -715,6 +715,15 @@ namespace QuantConnect.Lean.Engine
                     _algorithm.SetStatus(state);
                 }
             }
+        }
+
+        /// <summary>
+        /// Set the IAlgorithm instance
+        /// </summary>
+        /// <param name="algorithm">Algorithm instance</param>
+        public void SetAlgorithm(IAlgorithm algorithm)
+        {
+            _algorithm = algorithm;
         }
 
         private IEnumerable<TimeSlice> Stream(IAlgorithm algorithm, ISynchronizer synchronizer, IResultHandler results, CancellationToken cancellationToken)
