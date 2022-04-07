@@ -13,12 +13,9 @@
  * limitations under the License.
 */
 
-using System;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
-using QuantConnect.Logging;
-using static System.FormattableString;
 
 namespace QuantConnect
 {
@@ -27,11 +24,8 @@ namespace QuantConnect
     /// </summary>
     public class ZipStreamWriter : TextWriter
     {
-        private readonly string _filename;
-        private readonly string _zipEntry;
-        private readonly string _tempFilename;
-        private ZipArchive _archive;
-        private StreamWriter _writer;
+        private readonly ZipArchive _archive;
+        private readonly StreamWriter _writer;
 
         /// <summary>
         /// When overridden in a derived class, returns the character encoding in which the output is written.
@@ -40,10 +34,7 @@ namespace QuantConnect
         /// The character encoding in which the output is written.
         /// </returns>
         /// <filterpriority>1</filterpriority>
-        public override Encoding Encoding
-        {
-            get { return Encoding.Default; }
-        }
+        public override Encoding Encoding => Encoding.Default;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ZipStreamWriter"/> class
@@ -52,22 +43,28 @@ namespace QuantConnect
         /// <param name="zipEntry">The file name in the zip file</param>
         public ZipStreamWriter(string filename, string zipEntry)
         {
-            _filename = filename;
-            _zipEntry = zipEntry;
-            _tempFilename = $"{_filename}.tmp";
-            File.Delete(_tempFilename);
-            if (!File.Exists(filename))
+            if(!File.Exists(filename))
             {
-                _archive = ZipFile.Open(_tempFilename, ZipArchiveMode.Create);
-                _writer = new StreamWriter(_archive.CreateEntry(zipEntry).Open());
+                _archive = ZipFile.Open(filename, ZipArchiveMode.Create);
+                var entry = _archive.CreateEntry(zipEntry);
+                _writer = new StreamWriter(entry.Open());
             }
             else
             {
-                File.Copy(filename, _tempFilename);
-                _archive = ZipFile.Open(_tempFilename, ZipArchiveMode.Update);
-                var entry = _archive.GetEntry(zipEntry) ?? _archive.CreateEntry(zipEntry);
+                _archive = ZipFile.Open(filename, ZipArchiveMode.Update);
+                 var entry = _archive.GetEntry(zipEntry);
+                 var nonExisting = entry == null;
+                 if (nonExisting)
+                 {
+                     entry = _archive.CreateEntry(zipEntry);
+                 }
                 _writer = new StreamWriter(entry.Open());
-                _writer.BaseStream.Seek(0L, SeekOrigin.End);
+
+                if (!nonExisting)
+                {
+                    // can only seek when it already existed
+                    _writer.BaseStream.Seek(0L, SeekOrigin.End);
+                }
             }
         }
 
@@ -101,15 +98,6 @@ namespace QuantConnect
         public override void Flush()
         {
             _writer.Flush();
-            _writer.Dispose();
-            _archive.Dispose();
-
-            CopyTempFile(5, throwOnFailure: false);
-
-            _archive = ZipFile.Open(_tempFilename, ZipArchiveMode.Update);
-            var entry = _archive.GetEntry(_zipEntry) ?? _archive.CreateEntry(_zipEntry);
-            _writer = new StreamWriter(entry.Open());
-            _writer.BaseStream.Seek(0L, SeekOrigin.End);
         }
 
         /// <summary>
@@ -124,36 +112,6 @@ namespace QuantConnect
             _writer.Close();
             _writer.Dispose();
             _archive.Dispose();
-
-            CopyTempFile(50, throwOnFailure: true);
-            if (File.Exists(_tempFilename))
-            {
-                File.Delete(_tempFilename);
-            }
-        }
-
-        private void CopyTempFile(int attempts, bool throwOnFailure)
-        {
-            if (!File.Exists(_tempFilename)) return;
-
-            do
-            {
-                try
-                {
-                    File.Copy(_tempFilename, _filename, true);
-                    return;
-                }
-                catch (Exception err)
-                {
-                    Log.Error(err);
-                }
-            }
-            while (--attempts > 0);
-
-            if (throwOnFailure)
-            {
-                throw new InvalidOperationException(Invariant($"Unable to save file: {_filename} after {attempts} attempts."));
-            }
         }
     }
 }

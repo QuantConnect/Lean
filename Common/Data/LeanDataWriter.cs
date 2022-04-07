@@ -15,7 +15,6 @@
 
 using System;
 using System.IO;
-using Ionic.Zip;
 using System.Linq;
 using System.Text;
 using QuantConnect.Util;
@@ -23,7 +22,6 @@ using QuantConnect.Logging;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Globalization;
 using System.Threading.Tasks;
 
@@ -39,6 +37,7 @@ namespace QuantConnect.Data
         private readonly TickType _tickType;
         private readonly Resolution _resolution;
         private readonly SecurityType _securityType;
+        private readonly bool _mergeHighResolutionData;
         private readonly IDataCacheProvider _dataCacheProvider;
 
         /// <summary>
@@ -48,12 +47,16 @@ namespace QuantConnect.Data
         /// <param name="dataDirectory">Base data directory</param>
         /// <param name="resolution">Resolution of the desired output data</param>
         /// <param name="tickType">The tick type</param>
-        public LeanDataWriter(Resolution resolution, Symbol symbol, string dataDirectory, TickType tickType = TickType.Trade, IDataCacheProvider dataCacheProvider = null) : this(
+        /// <param name="dataCacheProvider">The data cache provider to use</param>
+        /// <param name="mergeHighResolutionData">True will merge new data with existing high resolution data, tick, second, minute</param>
+        public LeanDataWriter(Resolution resolution, Symbol symbol, string dataDirectory, TickType tickType = TickType.Trade,
+            IDataCacheProvider dataCacheProvider = null, bool mergeHighResolutionData = false) : this(
             dataDirectory,
             resolution,
             symbol.ID.SecurityType,
             tickType,
-            dataCacheProvider
+            dataCacheProvider,
+            mergeHighResolutionData
         )
         {
             _symbol = symbol;
@@ -65,7 +68,7 @@ namespace QuantConnect.Data
 
             if (_securityType != SecurityType.Equity && _securityType != SecurityType.Forex && _securityType != SecurityType.Cfd && _securityType != SecurityType.Crypto && _securityType != SecurityType.Future && _securityType != SecurityType.Option && _securityType != SecurityType.FutureOption && _securityType != SecurityType.Index && _securityType != SecurityType.IndexOption)
             {
-                throw new Exception("Sorry this security type is not yet supported by the LEAN data writer: " + _securityType);
+                throw new NotImplementedException("Sorry this security type is not yet supported by the LEAN data writer: " + _securityType);
             }
         }
 
@@ -76,12 +79,16 @@ namespace QuantConnect.Data
         /// <param name="resolution">Resolution of the desired output data</param>
         /// <param name="securityType">The security type</param>
         /// <param name="tickType">The tick type</param>
-        public LeanDataWriter(string dataDirectory, Resolution resolution, SecurityType securityType, TickType tickType, IDataCacheProvider dataCacheProvider = null)
+        /// <param name="dataCacheProvider">The data cache provider to use</param>
+        /// <param name="mergeHighResolutionData">True will merge new data with existing high resolution data, tick, second, minute</param>
+        public LeanDataWriter(string dataDirectory, Resolution resolution, SecurityType securityType, TickType tickType,
+            IDataCacheProvider dataCacheProvider = null, bool mergeHighResolutionData = false)
         {
             _dataDirectory = dataDirectory;
             _resolution = resolution;
             _securityType = securityType;
             _tickType = tickType;
+            _mergeHighResolutionData = mergeHighResolutionData;
             _dataCacheProvider = dataCacheProvider ?? new DiskDataCacheProvider();
         }
 
@@ -93,7 +100,7 @@ namespace QuantConnect.Data
         {
             var lastTime = DateTime.MinValue;
             var outputFile = string.Empty;
-            var currentFileData = new List<(DateTime, string)>();
+            var currentFileData = new List<TimedLine>();
             var writeTasks = new Queue<Task>();
 
             foreach (var data in source)
@@ -121,14 +128,14 @@ namespace QuantConnect.Data
                         }
 
                         // Reset our dictionary and store new output file
-                        currentFileData = new List<(DateTime, string)>();
+                        currentFileData = new List<TimedLine>();
                         outputFile = latestOutputFile;
                     }
                 }
 
                 // Add data to our current dictionary
                 var line = LeanData.GenerateLine(data, _securityType, _resolution);
-                currentFileData.Add((data.Time, line));
+                currentFileData.Add(new TimedLine(data.Time, line));
 
                 // Update our time
                 lastTime = data.Time;
@@ -137,10 +144,8 @@ namespace QuantConnect.Data
             // Finish off my processing the last file as well
             if (!currentFileData.IsNullOrEmpty())
             {
-                writeTasks.Enqueue(Task.Run(() =>
-                {
-                    WriteFile(outputFile, currentFileData);
-                }));
+                // we want to finish ASAP so let's do it ourselves
+                WriteFile(outputFile, currentFileData);
             }
 
             // Wait for all our write tasks to finish
@@ -263,27 +268,42 @@ namespace QuantConnect.Data
         /// date of the data to correctly merge the two. In order to support writing ticks I need to allow
         /// two data points to have the same time. Thus I cannot use a single list of just strings nor
         /// a sorted dictionary of DateTimes and strings. </remarks>
-        private void WriteFile(string filePath, List<(DateTime, string)> data)
+        private void WriteFile(string filePath, List<TimedLine> data)
         {
             if (data == null || data.Count == 0)
             {
                 return;
             }
             // Generate this csv entry name
-            var entryName = LeanData.GenerateZipEntryName(_symbol, data[0].Item1, _resolution, _tickType);
+            var entryName = LeanData.GenerateZipEntryName(_symbol, data[0].Time, _resolution, _tickType);
             
             // Check disk once for this file ahead of time, reuse where possible
             var fileExists = File.Exists(filePath);
 
+            // If our file doesn't exist its possible the directory doesn't exist, make sure at least the directory exists
+            if (!fileExists)
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+            }
+
             // Handle merging of files
             // Only merge on files with hour/daily resolution, that exist, and can be loaded
-            string finalData;
-            if (_resolution >= Resolution.Hour && fileExists && TryLoadFile(filePath, entryName, out var rows))
+            string finalData = null;
+            if (_resolution < Resolution.Hour && _mergeHighResolutionData)
+            {
+                var streamWriter = new ZipStreamWriter(filePath, entryName);
+                foreach (var tuple in data)
+                {
+                    streamWriter.WriteLine(tuple.Line);
+                }
+                streamWriter.DisposeSafely();
+            }
+            else if (_resolution >= Resolution.Hour && fileExists && TryLoadFile(filePath, entryName, out var rows))
             {
                 // Preform merge on loaded rows
-                foreach (var (time, line) in data)
+                foreach (var timedLine in data)
                 {
-                    rows[time] = line;
+                    rows[timedLine.Time] = timedLine.Line;
                 }
 
                 // Final merged data product
@@ -292,17 +312,14 @@ namespace QuantConnect.Data
             else
             {
                 // Otherwise just extract the data from the given list.
-                finalData = string.Join("\n", data.Select(x => x.Item2));
+                finalData = string.Join("\n", data.Select(x => x.Line));
             }
 
-            // If our file doesn't exist its possible the directory doesn't exist, make sure at least the directory exists
-            if (!fileExists)
+            if (finalData != null)
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+                var bytes = Encoding.UTF8.GetBytes(finalData);
+                _dataCacheProvider.Store($"{filePath}#{entryName}", bytes);
             }
-
-            var bytes = Encoding.UTF8.GetBytes(finalData);
-            _dataCacheProvider.Store($"{filePath}#{entryName}", bytes);
 
             Log.Debug($"LeanDataWriter.Write(): Appended: {filePath} @ {entryName}");
         }
@@ -318,5 +335,15 @@ namespace QuantConnect.Data
             return LeanData.GenerateZipFilePath(baseDirectory, _symbol, time, _resolution, _tickType);
         }
 
+        private class TimedLine
+        {
+            public string Line { get; }
+            public DateTime Time { get; }
+            public TimedLine(DateTime time, string line)
+            {
+                Line = line;
+                Time = time;
+            }
+        }
     }
 }
