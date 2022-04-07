@@ -139,7 +139,7 @@ namespace QuantConnect.Tests
         {
             return Symbol.Create(symbol, SecurityType.Equity, market);
         }
-        internal static Symbol CreateFutureSymbol(string symbol, DateTime expiry)
+        public static Symbol CreateFutureSymbol(string symbol, DateTime expiry)
         {
             string market;
             if (!SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(symbol, SecurityType.Future, out market))
@@ -148,7 +148,7 @@ namespace QuantConnect.Tests
             }
             return Symbol.CreateFuture(symbol, market, expiry);
         }
-        internal static Symbol CreateFutureOptionSymbol(Symbol underlying, OptionRight right, decimal strike, DateTime expiry)
+        public static Symbol CreateFutureOptionSymbol(Symbol underlying, OptionRight right, decimal strike, DateTime expiry)
         {
             return Symbol.CreateOption(underlying, underlying.ID.Market, OptionStyle.American, right, strike, expiry);
         }
@@ -173,7 +173,7 @@ namespace QuantConnect.Tests
             return Symbol.Create(underlying, SecurityType.Option, Market.USA, "?" + underlying);
         }
 
-        internal static Symbol CreateFuturesCanonicalSymbol(string ticker)
+        public static Symbol CreateFuturesCanonicalSymbol(string ticker)
         {
             string market;
             if (!SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(ticker, SecurityType.Future, out market))
