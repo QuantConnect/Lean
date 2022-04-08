@@ -23,6 +23,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO.Compression;
 using System.Threading.Tasks;
 
 namespace QuantConnect.Data
@@ -36,8 +37,8 @@ namespace QuantConnect.Data
         private readonly string _dataDirectory;
         private readonly TickType _tickType;
         private readonly Resolution _resolution;
+        private readonly WritePolicy _writePolicy;
         private readonly SecurityType _securityType;
-        private readonly bool _mergeHighResolutionData;
         private readonly IDataCacheProvider _dataCacheProvider;
 
         /// <summary>
@@ -48,15 +49,15 @@ namespace QuantConnect.Data
         /// <param name="resolution">Resolution of the desired output data</param>
         /// <param name="tickType">The tick type</param>
         /// <param name="dataCacheProvider">The data cache provider to use</param>
-        /// <param name="mergeHighResolutionData">True will merge new data with existing high resolution data, tick, second, minute</param>
+        /// <param name="writePolicy">The file write policy to use</param>
         public LeanDataWriter(Resolution resolution, Symbol symbol, string dataDirectory, TickType tickType = TickType.Trade,
-            IDataCacheProvider dataCacheProvider = null, bool mergeHighResolutionData = false) : this(
+            IDataCacheProvider dataCacheProvider = null, WritePolicy? writePolicy = null) : this(
             dataDirectory,
             resolution,
             symbol.ID.SecurityType,
             tickType,
             dataCacheProvider,
-            mergeHighResolutionData
+            writePolicy
         )
         {
             _symbol = symbol;
@@ -80,15 +81,22 @@ namespace QuantConnect.Data
         /// <param name="securityType">The security type</param>
         /// <param name="tickType">The tick type</param>
         /// <param name="dataCacheProvider">The data cache provider to use</param>
-        /// <param name="mergeHighResolutionData">True will merge new data with existing high resolution data, tick, second, minute</param>
+        /// <param name="writePolicy">The file write policy to use</param>
         public LeanDataWriter(string dataDirectory, Resolution resolution, SecurityType securityType, TickType tickType,
-            IDataCacheProvider dataCacheProvider = null, bool mergeHighResolutionData = false)
+            IDataCacheProvider dataCacheProvider = null, WritePolicy? writePolicy = null)
         {
             _dataDirectory = dataDirectory;
             _resolution = resolution;
             _securityType = securityType;
             _tickType = tickType;
-            _mergeHighResolutionData = mergeHighResolutionData;
+            if (writePolicy == null)
+            {
+                _writePolicy = resolution >= Resolution.Hour ? WritePolicy.Merge : WritePolicy.Overwrite;
+            }
+            else
+            {
+                _writePolicy = writePolicy.Value;
+            }
             _dataCacheProvider = dataCacheProvider ?? new DiskDataCacheProvider();
         }
 
@@ -231,9 +239,9 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Loads an existing hourly or daily Lean zip file into a SortedDictionary
+        /// Loads an existing Lean zip file into a SortedDictionary
         /// </summary>
-        protected virtual bool TryLoadFile(string fileName, string entryName, out SortedDictionary<DateTime, string> rows)
+        private bool TryLoadFile(string fileName, string entryName, DateTime date, out SortedDictionary<DateTime, string> rows)
         {
             rows = new SortedDictionary<DateTime, string>();
 
@@ -249,8 +257,7 @@ namespace QuantConnect.Data
                     string line;
                     while ((line = reader.ReadLine()) != null)
                     {
-                        var time = DateTime.ParseExact(line.AsSpan(0, DateFormat.TwelveCharacter.Length), DateFormat.TwelveCharacter, CultureInfo.InvariantCulture);
-                        rows[time] = line;
+                        rows[LeanData.ParseTime(line, date, _resolution)] = line;
                     }
                 }
 
@@ -274,8 +281,10 @@ namespace QuantConnect.Data
             {
                 return;
             }
+
+            var date = data[0].Time;
             // Generate this csv entry name
-            var entryName = LeanData.GenerateZipEntryName(_symbol, data[0].Time, _resolution, _tickType);
+            var entryName = LeanData.GenerateZipEntryName(_symbol, date, _resolution, _tickType);
             
             // Check disk once for this file ahead of time, reuse where possible
             var fileExists = File.Exists(filePath);
@@ -289,7 +298,7 @@ namespace QuantConnect.Data
             // Handle merging of files
             // Only merge on files with hour/daily resolution, that exist, and can be loaded
             string finalData = null;
-            if (_resolution < Resolution.Hour && _mergeHighResolutionData)
+            if (_writePolicy == WritePolicy.Append)
             {
                 var streamWriter = new ZipStreamWriter(filePath, entryName);
                 foreach (var tuple in data)
@@ -298,7 +307,7 @@ namespace QuantConnect.Data
                 }
                 streamWriter.DisposeSafely();
             }
-            else if (_resolution >= Resolution.Hour && fileExists && TryLoadFile(filePath, entryName, out var rows))
+            else if (_writePolicy == WritePolicy.Merge && fileExists && TryLoadFile(filePath, entryName, date, out var rows))
             {
                 // Preform merge on loaded rows
                 foreach (var timedLine in data)

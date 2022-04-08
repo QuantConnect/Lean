@@ -55,6 +55,26 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Helper method that will parse a given data line in search of an associated date time
+        /// </summary>
+        public static DateTime ParseTime(string line, DateTime date, Resolution resolution)
+        {
+            switch (resolution)
+            {
+                case Resolution.Tick:
+                case Resolution.Second:
+                case Resolution.Minute:
+                    var index = line.IndexOf(',', StringComparison.InvariantCulture);
+                    return date.AddTicks(Convert.ToInt64(10000 * decimal.Parse(line.AsSpan(0, index))));
+                case Resolution.Hour:
+                case Resolution.Daily:
+                    return DateTime.ParseExact(line.AsSpan(0, DateFormat.TwelveCharacter.Length), DateFormat.TwelveCharacter, CultureInfo.InvariantCulture);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(resolution), resolution, null);
+            }
+        }
+
+        /// <summary>
         /// Converts the specified base data instance into a lean data file csv line
         /// </summary>
         public static string GenerateLine(IBaseData data, SecurityType securityType, Resolution resolution)

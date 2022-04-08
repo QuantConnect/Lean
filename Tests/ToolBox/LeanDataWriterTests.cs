@@ -195,6 +195,66 @@ namespace QuantConnect.Tests.ToolBox
             Assert.AreEqual(data.First().Value.Count(), 3);
         }
 
+        [TestCase(null, Resolution.Daily)]
+        [TestCase(null, Resolution.Second)]
+        [TestCase(WritePolicy.Merge, Resolution.Second)]
+        [TestCase(WritePolicy.Merge, Resolution.Daily)]
+        [TestCase(WritePolicy.Append, Resolution.Second)]
+        [TestCase(WritePolicy.Overwrite, Resolution.Second)]
+        public void RespectsWritePolicy(WritePolicy? writePolicy, Resolution resolution)
+        {
+            var filePath = LeanData.GenerateZipFilePath(_dataDirectory, _crypto, _date, resolution, TickType.Quote);
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+            }
+
+            var loopCount = 3;
+            var dataPointsPerLoop = 2;
+            for (var i = 0; i < loopCount; i++)
+            {
+                var leanDataWriter = new LeanDataWriter(resolution, _crypto, _dataDirectory, TickType.Quote, writePolicy: writePolicy);
+                var quoteBar = new QuoteBar(Parse.DateTime("3/16/2017 12:00:00 PM").AddHours(i), _crypto, new Bar(1m, 2m, 3m, 4m), 1,
+                    new Bar(5m, 6m, 7m, 8m), 2);
+
+                // same quote twice! it has the same time, so it will be dropped when merging
+                leanDataWriter.Write(Enumerable.Repeat(quoteBar, dataPointsPerLoop));
+
+                Assert.IsTrue(File.Exists(filePath));
+                Assert.IsFalse(File.Exists(filePath + ".tmp"));
+            }
+
+            var data = QuantConnect.Compression.Unzip(filePath).First().Value;
+
+
+            switch (writePolicy)
+            {
+                case WritePolicy.Overwrite:
+                    Assert.AreEqual(dataPointsPerLoop, data.Count);
+                    break;
+                case WritePolicy.Merge:
+                    Assert.AreEqual(loopCount, data.Count);
+                    break;
+                case WritePolicy.Append:
+                    Assert.AreEqual(dataPointsPerLoop * loopCount, data.Count);
+                    break;
+                case null:
+                    if (resolution >= Resolution.Hour)
+                    {
+                        // will merge by default
+                        Assert.AreEqual(loopCount, data.Count);
+                    }
+                    else
+                    {
+                        // overwrite
+                        Assert.AreEqual(dataPointsPerLoop, data.Count);
+                    }
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(writePolicy), writePolicy, null);
+            }
+        }
+
         [Test]
         public void LeanDataWriter_CanWriteCrypto()
         {
