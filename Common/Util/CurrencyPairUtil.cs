@@ -194,9 +194,11 @@ namespace QuantConnect.Util
         {
             bool isThereAnyStableCoin = false;
             // Check for a stablecoin between quote currencies
+            // First, make sure the pair A contains B base currency
             if (pairA.Value.Contains(baseCurrencyB))
             {
                 var pairAQuoteCurrency = pairA.Value.Substring(pairA.Value.IndexOf(baseCurrencyB) + baseCurrencyB.Length);
+
                 var potentialStabelCoin = Symbol.Create(pairAQuoteCurrency + quoteCurrencyB, SecurityType.Crypto, pairA.ID.Market);
                 var inversePotentialStableCoin = Symbol.Create(quoteCurrencyB + pairAQuoteCurrency, SecurityType.Crypto, pairA.ID.Market);
                 isThereAnyStableCoin = Currencies.StableCoinsWithoutPairs.Contains(potentialStabelCoin)
@@ -208,9 +210,11 @@ namespace QuantConnect.Util
             }
 
             // Check for a stablecoin between base currencies
+            // First check, the pair A contains B quote currency
             if (pairA.Value.Contains(quoteCurrencyB))
             {
                 var pairABaseCurrency = pairA.Value.Substring(0, pairA.Value.IndexOf(quoteCurrencyB));
+
                 var potentialStabelCoin = Symbol.Create(pairABaseCurrency + baseCurrencyB, SecurityType.Crypto, pairA.ID.Market);
                 var inversePotentialStableCoin = Symbol.Create(baseCurrencyB + pairABaseCurrency, SecurityType.Crypto, pairA.ID.Market);
                 isThereAnyStableCoin = Currencies.StableCoinsWithoutPairs.Contains(potentialStabelCoin)

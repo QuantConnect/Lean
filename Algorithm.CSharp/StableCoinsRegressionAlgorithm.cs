@@ -19,6 +19,10 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// A demostration algorithm to check there can be placed an order of a pair not present
+    /// in the brokerage using the conversion between stablecoins
+    /// </summary>
     public class StableCoinsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
