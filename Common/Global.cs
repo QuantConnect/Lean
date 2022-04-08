@@ -615,6 +615,27 @@ namespace QuantConnect
     }
 
     /// <summary>
+    /// Used by the <see cref="Data.LeanDataWriter"/> to determine which merge write policy should be applied
+    /// </summary>
+    public enum WritePolicy
+    {
+        /// <summary>
+        /// Will overwrite any existing file or zip entry with the new content
+        /// </summary>
+        Overwrite = 0,
+
+        /// <summary>
+        /// Will inject and merge new content with the existings file content
+        /// </summary>
+        Merge,
+
+        /// <summary>
+        /// Will append new data to the end of the file or zip entry
+        /// </summary>
+        Append
+    }
+
+    /// <summary>
     /// enum Period - Enum of all the analysis periods, AS integers. Reference "Period" Array to access the values
     /// </summary>
     public enum Period
