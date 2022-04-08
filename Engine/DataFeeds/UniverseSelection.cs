@@ -470,10 +470,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // safe to remove the member from the universe
                 universe.RemoveMember(dateTimeUtc, member);
 
-                // we need to mark this security as untradeable while it has no data subscription
-                // it is expected that this function is called while in sync with the algo thread,
-                // so we can make direct edits to the security here
-                member.Cache.Reset();
                 foreach (var subscription in universe.GetSubscriptionRequests(member, dateTimeUtc, algorithmEndDateUtc,
                                                                               _algorithm.SubscriptionManager.SubscriptionDataConfigService))
                 {
@@ -481,6 +477,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         _internalSubscriptionManager.RemovedSubscriptionRequest(subscription);
                         member.IsTradable = false;
+
+                        // We need to mark this security as untradeable while it has no data subscription
+                        // it is expected that this function is called while in sync with the algo thread,
+                        // so we can make direct edits to the security here.
+                        // We only clear the cache once the subscription is removed from the data stack
+                        member.Cache.Reset();
                     }
                 }
             }

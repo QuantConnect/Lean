@@ -56,6 +56,8 @@ namespace QuantConnect.Tests.Indicators
             Assert.IsTrue(STR.IsReady);
             Assert.AreNotEqual(0, STR.BasicUpperBand);
             Assert.AreNotEqual(0, STR.BasicLowerBand);
+            Assert.AreNotEqual(0, STR.CurrentTrailingUpperBand);
+            Assert.AreNotEqual(0, STR.CurrentTrailingLowerBand);
         }
 
         [Test]

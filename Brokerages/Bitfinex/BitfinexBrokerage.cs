@@ -185,17 +185,23 @@ namespace QuantConnect.Brokerages.Bitfinex
             foreach (var item in orders)
             {
                 Order order;
+
+                var quantity = item.Amount;
+                var price = item.Price;
+                var symbol = _symbolMapper.GetLeanSymbol(item.Symbol, SecurityType.Crypto, Market.Bitfinex);
+                var time = Time.UnixMillisecondTimeStampToDateTime(item.MtsCreate);
+
                 if (item.Type.Replace("EXCHANGE", "").Trim() == "MARKET")
                 {
-                    order = new MarketOrder { Price = item.Price };
+                    order = new MarketOrder(symbol, quantity, time, price);
                 }
                 else if (item.Type.Replace("EXCHANGE", "").Trim() == "LIMIT")
                 {
-                    order = new LimitOrder { LimitPrice = item.Price };
+                    order = new LimitOrder(symbol, quantity, price, time);
                 }
                 else if (item.Type.Replace("EXCHANGE", "").Trim() == "STOP")
                 {
-                    order = new StopMarketOrder { StopPrice = item.Price };
+                    order = new StopMarketOrder(symbol, quantity, price, time);
                 }
                 else
                 {
@@ -204,12 +210,8 @@ namespace QuantConnect.Brokerages.Bitfinex
                     continue;
                 }
 
-                order.Quantity = item.Amount;
-                order.BrokerId = new List<string> { item.Id.ToStringInvariant() };
-                order.Symbol = _symbolMapper.GetLeanSymbol(item.Symbol, SecurityType.Crypto, Market.Bitfinex);
-                order.Time = Time.UnixMillisecondTimeStampToDateTime(item.MtsCreate);
+                order.BrokerId.Add(item.Id.ToStringInvariant());
                 order.Status = ConvertOrderStatus(item);
-                order.Price = item.Price;
                 list.Add(order);
             }
 

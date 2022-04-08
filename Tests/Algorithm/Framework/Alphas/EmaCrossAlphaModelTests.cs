@@ -18,6 +18,10 @@ using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Alphas;
 using System;
 using System.Collections.Generic;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Algorithm.Framework.Selection;
+using QuantConnect.Util;
+using QuantConnect.Tests.Common.Data.UniverseSelection;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 {
@@ -50,6 +54,88 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
         protected override string GetExpectedModelName(IAlphaModel model)
         {
             return $"{nameof(EmaCrossAlphaModel)}(12,26,Daily)";
+        }
+
+        [Test]
+        public void WarmsUpProperly()
+        {
+            SetUpHistoryProvider();
+
+            Algorithm.SetStartDate(2013, 10, 08);
+            Algorithm.SetUniverseSelection(new ManualUniverseSelectionModel());
+
+            // Create a EmaCrossAlphaModel for the test
+            var model = new TestEmaCrossAlphaModel();
+
+            // Set the alpha model
+            Algorithm.SetAlpha(model);
+            Algorithm.SetUniverseSelection(new ManualUniverseSelectionModel());
+
+            var changes = SecurityChangesTests.CreateNonInternal(AddedSecurities, RemovedSecurities);
+            Algorithm.OnFrameworkSecuritiesChanged(changes);
+
+            // Get the dictionary of macd indicators
+            var symbolData = model.GetSymbolData();
+
+            // Check the symbolData dictionary is not empty
+            Assert.NotZero(symbolData.Count);
+
+            // Check all EmaCross indicators from the alpha are ready and have at least
+            // one datapoint
+            foreach (var item in symbolData)
+            {
+                var fast = item.Value.Fast;
+                var slow = item.Value.Slow;
+
+                Assert.IsTrue(fast.IsReady);
+                Assert.NotZero(fast.Samples);
+
+                Assert.IsTrue(slow.IsReady);
+                Assert.NotZero(slow.Samples);
+            }
+
+            ZipCacheProvider.DisposeSafely();
+        }
+
+        [Test]
+        public void PythonVersionWarmsUpProperly()
+        {
+            using (Py.GIL())
+            {
+                SetUpHistoryProvider();
+                Algorithm.SetStartDate(2013, 10, 08);
+                Algorithm.SetUniverseSelection(new ManualUniverseSelectionModel());
+
+                // Create and set alpha model
+                dynamic model = Py.Import("EmaCrossAlphaModel").GetAttr("EmaCrossAlphaModel");
+                var instance = model();
+                Algorithm.SetAlpha(instance);
+
+                var changes = SecurityChangesTests.CreateNonInternal(AddedSecurities, RemovedSecurities);
+                Algorithm.OnFrameworkSecuritiesChanged(changes);
+
+                // Get the dictionary of ema cross indicators
+                var symbolData = instance.symbolDataBySymbol;
+
+                // Check the dictionary is not empty
+                Assert.NotZero(symbolData.Length());
+
+                // Check all Ema Cross indicators from the alpha are ready and have at least
+                // one datapoint
+                foreach (var item in symbolData)
+                {
+                    var fast = symbolData[item].Fast;
+                    var slow = symbolData[item].Slow;
+
+                    Assert.IsTrue(fast.IsReady.IsTrue());
+                    Assert.NotZero(((PyObject)fast.Samples).GetAndDispose<int>());
+
+                    Assert.IsTrue(slow.IsReady.IsTrue());
+                    Assert.NotZero(((PyObject)slow.Samples).GetAndDispose<int>());
+                }
+
+                ZipCacheProvider.DisposeSafely();
+            }
         }
     }
 }

@@ -58,12 +58,6 @@
     <PackageReference Include="RestSharp" Version="106.12.0" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="CSharpAPI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\Brokerages\CSharpAPI.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
     <Content Include="Research\RegressionScripts\Test_QuantBookIndicator.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

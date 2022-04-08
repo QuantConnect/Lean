@@ -36,7 +36,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class LiveOptionChainProvider : IOptionChainProvider
     {
-        private static readonly HttpClient _client = new HttpClient();
+        private static readonly HttpClient _client;
         private static readonly DateTime _epoch = new DateTime(1970, 1, 1);
 
         private readonly RateGate _rateGate = new RateGate(1, TimeSpan.FromSeconds(0.5));
@@ -61,6 +61,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // The OCC website now requires at least TLS 1.1 for API requests.
             // NET 4.5.2 and below does not enable these more secure protocols by default, so we add them in here
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+
+            _client = new HttpClient(new HttpClientHandler() { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate });
+            _client.DefaultRequestHeaders.Connection.Add("keep-alive");
         }
 
         /// <summary>

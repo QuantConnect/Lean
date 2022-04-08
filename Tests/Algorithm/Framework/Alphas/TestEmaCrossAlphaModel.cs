@@ -13,25 +13,20 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Brokerages.InteractiveBrokers.Client
+using QuantConnect.Algorithm.Framework.Alphas;
+using System.Collections.Generic;
+
+namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 {
-    /// <summary>
-    /// Event arguments class for the <see cref="InteractiveBrokersClient.TickSize"/> event
-    /// </summary>
-    public sealed class TickSizeEventArgs : TickEventArgs
+    class TestEmaCrossAlphaModel : EmaCrossAlphaModel
     {
         /// <summary>
-        /// The actual size.
+        /// Get the _symbolDataBySymbol dictionary from EmaCrossAlphaModel
         /// </summary>
-        public int Size { get; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="TickSizeEventArgs"/> class
-        /// </summary>
-        public TickSizeEventArgs(int tickerId, int field, int size)
-            : base(tickerId, field)
+        /// <returns>_symbolDataBySymbol dictionary from EmaCrossAlphaModel</returns>
+        public Dictionary<Symbol, SymbolData> GetSymbolData()
         {
-            Size = size;
+            return SymbolDataBySymbol;
         }
     }
 }
