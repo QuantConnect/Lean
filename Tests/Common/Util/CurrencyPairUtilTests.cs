@@ -105,6 +105,18 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(CurrencyPairUtil.Match.NoMatch, ethusd.ComparePair("BTC", "USD"));
         }
 
+        [Test]
+        public void ComparePairWorksCorrectlyWithStableCoins()
+        {
+            var btcusdt = Symbol.Create("BTCUSDT", SecurityType.Crypto, Market.Binance);
+            var usdtbtc = Symbol.Create("USDTBTC", SecurityType.Crypto, Market.Binance);
+            var btcusd = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Binance);
+
+            Assert.AreEqual(CurrencyPairUtil.Match.ExactMatch, btcusdt.ComparePair("BTC", "USD"));
+            Assert.AreEqual(CurrencyPairUtil.Match.InverseMatch, usdtbtc.ComparePair("USD", "BTC"));
+            Assert.AreEqual(CurrencyPairUtil.Match.NoMatch, btcusd.ComparePair("BTC", "EUR"));
+        }
+
         /// <summary>
         /// DecomposeCurrencyPair test cases with successful results:
         /// symbol, expectedBaseCurrency, expectedQuoteCurrency

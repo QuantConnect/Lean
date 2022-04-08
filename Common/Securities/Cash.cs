@@ -245,7 +245,9 @@ namespace QuantConnect.Securities
             // This allows us to add cash for "StableCoins" that are 1-1 with our account currency without needing a conversion security.
             // Check out the StableCoinsWithoutPairs static var for those that are missing their 1-1 conversion pairs
             if (marketMap.ContainsKey(SecurityType.Crypto)
-                && Currencies.StableCoinsWithoutPairs.Contains(QuantConnect.Symbol.Create(Symbol + accountCurrency, SecurityType.Crypto, marketMap[SecurityType.Crypto])))
+                && 
+                (Currencies.StableCoinsWithoutPairs.Contains(QuantConnect.Symbol.Create(Symbol + accountCurrency, SecurityType.Crypto, marketMap[SecurityType.Crypto]))
+                || Currencies.StableCoinsWithoutPairs.Contains(QuantConnect.Symbol.Create(accountCurrency + Symbol, SecurityType.Crypto, marketMap[SecurityType.Crypto]))))
             {
                 CurrencyConversion = null;
                 ConversionRate = 1.0m;

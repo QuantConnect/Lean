@@ -192,12 +192,33 @@ namespace QuantConnect.Util
         /// <returns>The <see cref="Match"/> member that represents the relation between the two pairs</returns>
         public static Match ComparePair(this Symbol pairA, string baseCurrencyB, string quoteCurrencyB)
         {
-            if (pairA.Value == baseCurrencyB + quoteCurrencyB)
+            bool isThereAnyStableCoin = false;
+            // Check for a stablecoin between quote currencies
+            if (pairA.Value.Contains(baseCurrencyB))
+            {
+                var pairAQuoteCurrency = pairA.Value.Substring(pairA.Value.IndexOf(baseCurrencyB) + baseCurrencyB.Length);
+                var potentialStabelCoin = Symbol.Create(pairAQuoteCurrency + quoteCurrencyB, SecurityType.Crypto, pairA.ID.Market);
+                var inversePotentialStableCoin = Symbol.Create(quoteCurrencyB + pairAQuoteCurrency, SecurityType.Crypto, pairA.ID.Market);
+                isThereAnyStableCoin = Currencies.StableCoinsWithoutPairs.Contains(potentialStabelCoin)
+                || Currencies.StableCoinsWithoutPairs.Contains(inversePotentialStableCoin);
+            }
+            if ((pairA.Value == baseCurrencyB + quoteCurrencyB) || isThereAnyStableCoin)
             {
                 return Match.ExactMatch;
             }
 
-            if (pairA.Value == quoteCurrencyB + baseCurrencyB)
+            // Check for a stablecoin between base currencies
+            if (pairA.Value.Contains(quoteCurrencyB))
+            {
+                var pairABaseCurrency = pairA.Value.Substring(0, pairA.Value.IndexOf(quoteCurrencyB));
+                var potentialStabelCoin = Symbol.Create(pairABaseCurrency + baseCurrencyB, SecurityType.Crypto, pairA.ID.Market);
+                var inversePotentialStableCoin = Symbol.Create(baseCurrencyB + pairABaseCurrency, SecurityType.Crypto, pairA.ID.Market);
+                isThereAnyStableCoin = Currencies.StableCoinsWithoutPairs.Contains(potentialStabelCoin)
+                || Currencies.StableCoinsWithoutPairs.Contains(inversePotentialStableCoin);
+            }
+            
+            if ((pairA.Value == quoteCurrencyB + baseCurrencyB)
+                || isThereAnyStableCoin)
             {
                 return Match.InverseMatch;
             }
