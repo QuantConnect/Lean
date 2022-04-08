@@ -116,7 +116,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <remarks>Using -1 to skip regression test, issue to be determined</remarks>
         public long DataPoints => -1;
 
-        /// </summary>
+        /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
         public int AlgorithmHistoryDataPoints => 0;
