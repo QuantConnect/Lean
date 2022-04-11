@@ -20,7 +20,7 @@ using System.Collections.Generic;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// A demostration algorithm to check there can be placed an order of a pair not present
+    /// A demonstration algorithm to check there can be placed an order of a pair not present
     /// in the brokerage using the conversion between stablecoins
     /// </summary>
     public class StableCoinsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
@@ -29,7 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2018, 5, 1);
             SetEndDate(2018, 5, 2);
-            SetCash("USDT", 200000000, 1);
+            SetCash("USDT", 200000000);
             SetBrokerageModel(Brokerages.BrokerageName.Binance, AccountType.Cash);
             AddCrypto("BTCUSDT", Resolution.Hour, Market.Binance);
         }

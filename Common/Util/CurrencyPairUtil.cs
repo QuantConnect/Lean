@@ -192,37 +192,40 @@ namespace QuantConnect.Util
         /// <returns>The <see cref="Match"/> member that represents the relation between the two pairs</returns>
         public static Match ComparePair(this Symbol pairA, string baseCurrencyB, string quoteCurrencyB)
         {
-            bool isThereAnyStableCoin = false;
+            string baseCurrencyA;
+            string quoteCurrencyA;
             // Check for a stablecoin between quote currencies
             // First, make sure the pair A contains B base currency
-            if (pairA.Value.Contains(baseCurrencyB))
-            {
-                var pairAQuoteCurrency = pairA.Value.Substring(pairA.Value.IndexOf(baseCurrencyB) + baseCurrencyB.Length);
 
-                var potentialStabelCoin = Symbol.Create(pairAQuoteCurrency + quoteCurrencyB, SecurityType.Crypto, pairA.ID.Market);
-                var inversePotentialStableCoin = Symbol.Create(quoteCurrencyB + pairAQuoteCurrency, SecurityType.Crypto, pairA.ID.Market);
-                isThereAnyStableCoin = Currencies.StableCoinsWithoutPairs.Contains(potentialStabelCoin)
-                || Currencies.StableCoinsWithoutPairs.Contains(inversePotentialStableCoin);
+            if (TryDecomposeCurrencyPair(pairA, out baseCurrencyA, out quoteCurrencyA))
+            {
+                var currencies = new string[] { baseCurrencyA, quoteCurrencyA, baseCurrencyB, quoteCurrencyB};
+                var potentialStableCoins = new int[][] 
+                {
+                    new int[]{ 1, 3 },
+                    new int[]{ 1, 2 },
+                    new int[]{ 0, 3 },
+                    new int[]{ 0, 2 }
+                };
+
+                foreach(var pair in potentialStableCoins)
+                {
+                    if (Currencies.StableCoinsWithoutPairs.Contains(Symbol.Create(currencies[pair[0]] + currencies[pair[1]], SecurityType.Crypto, pairA.ID.Market))
+                        || Currencies.StableCoinsWithoutPairs.Contains(Symbol.Create(currencies[pair[1]] + currencies[pair[0]], SecurityType.Crypto, pairA.ID.Market)))
+                    {
+                        currencies[pair[0]] = currencies[pair[1]];
+                    }
+                }
+
+                pairA = currencies[0] + currencies[1];
             }
-            if ((pairA.Value == baseCurrencyB + quoteCurrencyB) || isThereAnyStableCoin)
+
+            if (pairA.Value == baseCurrencyB + quoteCurrencyB)
             {
                 return Match.ExactMatch;
             }
-
-            // Check for a stablecoin between base currencies
-            // First check, the pair A contains B quote currency
-            if (pairA.Value.Contains(quoteCurrencyB))
-            {
-                var pairABaseCurrency = pairA.Value.Substring(0, pairA.Value.IndexOf(quoteCurrencyB));
-
-                var potentialStabelCoin = Symbol.Create(pairABaseCurrency + baseCurrencyB, SecurityType.Crypto, pairA.ID.Market);
-                var inversePotentialStableCoin = Symbol.Create(baseCurrencyB + pairABaseCurrency, SecurityType.Crypto, pairA.ID.Market);
-                isThereAnyStableCoin = Currencies.StableCoinsWithoutPairs.Contains(potentialStabelCoin)
-                || Currencies.StableCoinsWithoutPairs.Contains(inversePotentialStableCoin);
-            }
             
-            if ((pairA.Value == quoteCurrencyB + baseCurrencyB)
-                || isThereAnyStableCoin)
+            if (pairA.Value == quoteCurrencyB + baseCurrencyB)
             {
                 return Match.InverseMatch;
             }

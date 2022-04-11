@@ -109,19 +109,17 @@ namespace QuantConnect.Tests.Common.Util
         public void ComparePairWorksCorrectlyWithStableCoins()
         {
             var btcusdt = Symbol.Create("BTCUSDT", SecurityType.Crypto, Market.Binance);
-            var usdtbtc = Symbol.Create("USDTBTC", SecurityType.Crypto, Market.Binance);
-            var btcusd = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Binance);
+            var btceur = Symbol.Create("BTCEUR", SecurityType.Crypto, Market.Binance);
 
             Assert.AreEqual(CurrencyPairUtil.Match.ExactMatch, btcusdt.ComparePair("BTC", "USD"));
-            Assert.AreEqual(CurrencyPairUtil.Match.InverseMatch, usdtbtc.ComparePair("USD", "BTC"));
-            Assert.AreEqual(CurrencyPairUtil.Match.NoMatch, btcusd.ComparePair("BTC", "EUR"));
+            Assert.AreEqual(CurrencyPairUtil.Match.InverseMatch, btcusdt.ComparePair("USD", "BTC"));
+            Assert.AreEqual(CurrencyPairUtil.Match.NoMatch, btceur.ComparePair("BTC", "USD"));
 
             var btcidrt = Symbol.Create("BTCIDRT", SecurityType.Crypto, Market.Binance);
-            var idrbtc = Symbol.Create("IDRBTC", SecurityType.Crypto, Market.Binance);
             var btcidr = Symbol.Create("BTCIDR", SecurityType.Crypto, Market.Binance);
 
             Assert.AreEqual(CurrencyPairUtil.Match.ExactMatch, btcidrt.ComparePair("BTC", "IDR"));
-            Assert.AreEqual(CurrencyPairUtil.Match.InverseMatch, idrbtc.ComparePair("IDRT", "BTC"));
+            Assert.AreEqual(CurrencyPairUtil.Match.InverseMatch, btcidrt.ComparePair("IDR", "BTC"));
             Assert.AreEqual(CurrencyPairUtil.Match.NoMatch, btcidr.ComparePair("BTC", "EUR"));
         }
 
