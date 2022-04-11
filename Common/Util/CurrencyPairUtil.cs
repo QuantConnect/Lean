@@ -192,14 +192,12 @@ namespace QuantConnect.Util
         /// <returns>The <see cref="Match"/> member that represents the relation between the two pairs</returns>
         public static Match ComparePair(this Symbol pairA, string baseCurrencyB, string quoteCurrencyB)
         {
-            string baseCurrencyA;
-            string quoteCurrencyA;
-            // Check for a stablecoin between quote currencies
-            // First, make sure the pair A contains B base currency
-
-            if (TryDecomposeCurrencyPair(pairA, out baseCurrencyA, out quoteCurrencyA))
+            // Check for a stablecoin between the currencies
+            if (TryDecomposeCurrencyPair(pairA, out var baseCurrencyA, out  var quoteCurrencyA))
             {
                 var currencies = new string[] { baseCurrencyA, quoteCurrencyA, baseCurrencyB, quoteCurrencyB};
+
+                // Compute all the potential stablecoins
                 var potentialStableCoins = new int[][] 
                 {
                     new int[]{ 1, 3 },
@@ -213,10 +211,13 @@ namespace QuantConnect.Util
                     if (Currencies.StableCoinsWithoutPairs.Contains(Symbol.Create(currencies[pair[0]] + currencies[pair[1]], SecurityType.Crypto, pairA.ID.Market))
                         || Currencies.StableCoinsWithoutPairs.Contains(Symbol.Create(currencies[pair[1]] + currencies[pair[0]], SecurityType.Crypto, pairA.ID.Market)))
                     {
+                        // If there's a stablecoin between them, assign to currency in pair A the value
+                        // of the currency in pair B 
                         currencies[pair[0]] = currencies[pair[1]];
                     }
                 }
 
+                // Update the value of pairA
                 pairA = currencies[0] + currencies[1];
             }
 
