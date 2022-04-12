@@ -664,7 +664,7 @@ namespace QuantConnect.Tests.Common.Securities
         private static object[] cryptoBrokerageStableCoinCases =
         {
             // *** Bitfinex ***
-            // Trades USDC, EURS, and USDT
+            // Trades USDC, EURS, USDT y XCHF
             // USDC Cases
             new object[] { new BitfinexBrokerageModel(), Currencies.USD, "USDC", false, new[] { Symbol.Create("USDCUSD", SecurityType.Crypto, Market.Bitfinex) } },
             new object[] { new BitfinexBrokerageModel(), Currencies.EUR, "USDC", false, new[] { Symbol.Create("USDCUSD", SecurityType.Crypto, Market.Bitfinex), Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda) } }, // No USDCEUR, but indirect conversion exists
@@ -678,8 +678,13 @@ namespace QuantConnect.Tests.Common.Securities
             // USDT (Tether) Cases
             new object[] { new BitfinexBrokerageModel(), Currencies.CNH, "USDT", false, new[] { Symbol.Create("USDTCNHT", SecurityType.Crypto, Market.Bitfinex), Symbol.Create("CNHCNHT", SecurityType.Crypto, Market.Bitfinex) } }, // No USDTCNH, but indirect conversion exists
             new object[] { new BitfinexBrokerageModel(), Currencies.USD, "USDT", false, new[] { Symbol.Create("USDTUSD", SecurityType.Crypto, Market.Bitfinex) } },
-            new object[] { new BitfinexBrokerageModel(), Currencies.EUR, "USDT", false, new[] { Symbol.Create("EURUSDT", SecurityType.Crypto, Market.Bitfinex) } }, 
-            new object[] { new BitfinexBrokerageModel(), Currencies.GBP, "USDT", false, new[] { Symbol.Create("GBPUSDT", SecurityType.Crypto, Market.Bitfinex) } }, 
+            new object[] { new BitfinexBrokerageModel(), Currencies.EUR, "USDT", false, new[] { Symbol.Create("EURUSDT", SecurityType.Crypto, Market.Bitfinex) } },
+            new object[] { new BitfinexBrokerageModel(), Currencies.GBP, "USDT", false, new[] { Symbol.Create("GBPUSDT", SecurityType.Crypto, Market.Bitfinex) } },
+
+            // XCHF Cases
+            new object[] { new BitfinexBrokerageModel(), "CHF", "XCHF", false, null }, // No XCHFCHF, but does not throw! Conversion 1-1
+            new object[] { new BitfinexBrokerageModel(), Currencies.EUR, "XCHF", false, new[] { Symbol.Create("BTCXCHF", SecurityType.Crypto, Market.Bitfinex), Symbol.Create("BTCEUR", SecurityType.Crypto, Market.Bitfinex) } }, // No XCHFEUR, but indirect conversion exists
+            new object[] { new BitfinexBrokerageModel(), Currencies.GBP, "XCHF", false, new[] { Symbol.Create("BTCXCHF", SecurityType.Crypto, Market.Bitfinex), Symbol.Create("BTCGBP", SecurityType.Crypto, Market.Bitfinex) } }, // No XCHFGBP, but indirect conversion exists
 
             // *** GDAX ***
             // Trades USDC and USDT* (*Not yet trading live, but expected soon)
@@ -694,10 +699,41 @@ namespace QuantConnect.Tests.Common.Securities
             new object[] { new BinanceBrokerageModel(), Currencies.EUR, "USDC", false, new[] { Symbol.Create("ADAUSDC", SecurityType.Crypto, Market.Binance), Symbol.Create("ADAEUR", SecurityType.Crypto, Market.Binance) } }, // No USDCEUR, but indirect conversion exists
             new object[] { new BinanceBrokerageModel(), Currencies.GBP, "USDC", false, new[] { Symbol.Create("ADAUSDC", SecurityType.Crypto, Market.Binance), Symbol.Create("ADAGBP", SecurityType.Crypto, Market.Binance) } }, // No USDCGBP, but indirect conversion exists
 
-            // BGBP Cases
-            new object[] { new BinanceBrokerageModel(), Currencies.USD, "BGBP", true, null }, // No BGBPUSD and no indirect conversion, does throw!
-            new object[] { new BinanceBrokerageModel(), Currencies.EUR, "BGBP", true, null }, // No BGBPEUR and no indirect conversion, does throw!
-            new object[] { new BinanceBrokerageModel(), Currencies.GBP, "BGBP", false, null }, // No BGBPGBP, but does not throw! Conversion 1-1
+            // USDT Cases
+            new object[] { new BinanceBrokerageModel(), Currencies.USD, "USDT", false, null }, // No USDTUSD, but does not throw! Conversion 1-1
+            new object[] { new BinanceBrokerageModel(), "VAI", "USDT", false, new[] { Symbol.Create("BTCUSDT", SecurityType.Crypto, Market.Binance), Symbol.Create("BTCVAI", SecurityType.Crypto, Market.Binance) } }, // No USDTVAI, but indirect conversion exists
+
+            // USDP Cases
+            new object[] { new BinanceBrokerageModel(), Currencies.USD, "USDP", false, null }, // No USDPUSD, but does not throw! Conversion 1-1
+            new object[] { new BinanceBrokerageModel(), "VAI", "USDP", false, new[] { Symbol.Create("BTCUSDP", SecurityType.Crypto, Market.Binance), Symbol.Create("BTCVAI", SecurityType.Crypto, Market.Binance) } }, // No USDPVAI, but indirect conversion exists
+
+            // BUSD Cases
+            new object[] { new BinanceBrokerageModel(), Currencies.USD, "BUSD", false, null }, // No BUSDUSD, but does not throw! Conversion 1-1
+            new object[] { new BinanceBrokerageModel(), Currencies.EUR, "BUSD", false, new[] { Symbol.Create("EURBUSD", SecurityType.Crypto, Market.Binance) } },
+            new object[] { new BinanceBrokerageModel(), Currencies.GBP, "BUSD", false, new[] { Symbol.Create("GBPBUSD", SecurityType.Crypto, Market.Binance) } },
+
+            // UST Cases
+            new object[] { new BinanceBrokerageModel(), Currencies.USD, "UST", false, null }, // No USTUSD, but does not throw! Conversion 1-1
+            new object[] { new BinanceBrokerageModel(), "VAI", "UST", false, new[] { Symbol.Create("USTBTC", SecurityType.Crypto, Market.Binance), Symbol.Create("BTCVAI", SecurityType.Crypto, Market.Binance) } }, // No USTVAI, but indirect conversion exists
+
+            // TUSD Cases
+            new object[] { new BinanceBrokerageModel(), Currencies.USD, "TUSD", false, null }, // No TUSDUSD, but does not throw! Conversion 1-1
+            new object[] { new BinanceBrokerageModel(), "VAI", "TUSD", false, new[] { Symbol.Create("BTCTUSD", SecurityType.Crypto, Market.Binance), Symbol.Create("BTCVAI", SecurityType.Crypto, Market.Binance) } }, // No TUSDVAI, but indirect conversion exists
+
+            // DAI Cases
+            new object[] { new BinanceBrokerageModel(), Currencies.USD, "DAI", false, null }, // No DAIUSD, but does not throw! Conversion 1-1
+            new object[] { new BinanceBrokerageModel(), Currencies.EUR, "DAI", false, new[] { Symbol.Create("BNBDAI", SecurityType.Crypto, Market.Binance), Symbol.Create("BNBEUR", SecurityType.Crypto, Market.Binance) } }, // No DAIEUR, but indirect conversion exists
+            new object[] { new BinanceBrokerageModel(), Currencies.GBP, "DAI", false, new[] { Symbol.Create("BNBDAI", SecurityType.Crypto, Market.Binance), Symbol.Create("BNBGBP", SecurityType.Crypto, Market.Binance) } }, // No DAIGBP, but indirect conversion exists
+
+            // USDS Cases
+            new object[] { new BinanceBrokerageModel(), Currencies.USD, "SUSD", false, null }, // No SUSDUSD, but does not throw! Conversion 1-1
+            new object[] { new BinanceBrokerageModel(), Currencies.EUR, "SUSD", false, new[] { Symbol.Create("SUSDBTC", SecurityType.Crypto, Market.Binance), Symbol.Create("BTCEUR", SecurityType.Crypto, Market.Binance) } }, // No SUSDEUR, but indirect conversion exists
+            new object[] { new BinanceBrokerageModel(), Currencies.GBP, "SUSD", false, new[] { Symbol.Create("SUSDBTC", SecurityType.Crypto, Market.Binance), Symbol.Create("BTCGBP", SecurityType.Crypto, Market.Binance) } }, // No SUSDGBP, but indirect conversion exists
+
+            // IDRT Cases
+            new object[] { new BinanceBrokerageModel(), "IDR", "IDRT", false, null }, // No IDRTIDR, but does not throw! Conversion 1-1
+            new object[] { new BinanceBrokerageModel(), Currencies.EUR, "IDRT", false, new[] { Symbol.Create("BNBIDRT", SecurityType.Crypto, Market.Binance), Symbol.Create("BNBEUR", SecurityType.Crypto, Market.Binance) } }, // No IDRTEUR, but indirect conversion exists
+            new object[] { new BinanceBrokerageModel(), Currencies.GBP, "IDRT", false, new[] { Symbol.Create("BNBIDRT", SecurityType.Crypto, Market.Binance), Symbol.Create("BNBGBP", SecurityType.Crypto, Market.Binance) } }, // No IDRTGBP, but indirect conversion exists
 
             new object[] { new OandaBrokerageModel(), Currencies.EUR, "INR", false, new[] { Symbol.Create("USDINR", SecurityType.Forex, Market.Oanda), Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda) } }, // No INREUR, but indirect conversion exists
         };

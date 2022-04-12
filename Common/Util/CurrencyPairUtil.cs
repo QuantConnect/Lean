@@ -192,12 +192,48 @@ namespace QuantConnect.Util
         /// <returns>The <see cref="Match"/> member that represents the relation between the two pairs</returns>
         public static Match ComparePair(this Symbol pairA, string baseCurrencyB, string quoteCurrencyB)
         {
-            if (pairA.Value == baseCurrencyB + quoteCurrencyB)
+            var pairAValue = pairA.ID.Symbol;
+
+            // Check for a stablecoin between the currencies
+            if (TryDecomposeCurrencyPair(pairA, out var baseCurrencyA, out  var quoteCurrencyA))
+            {
+                var currencies = new string[] { baseCurrencyA, quoteCurrencyA, baseCurrencyB, quoteCurrencyB};
+                var isThereAnyMatch = false;
+
+                // Compute all the potential stablecoins
+                var potentialStableCoins = new int[][] 
+                {
+                    new int[]{ 1, 3 },
+                    new int[]{ 1, 2 },
+                    new int[]{ 0, 3 },
+                    new int[]{ 0, 2 }
+                };
+
+                foreach(var pair in potentialStableCoins)
+                {
+                    if (Currencies.StableCoinsWithoutPairs.Contains(Symbol.Create(currencies[pair[0]] + currencies[pair[1]], SecurityType.Crypto, pairA.ID.Market))
+                        || Currencies.StableCoinsWithoutPairs.Contains(Symbol.Create(currencies[pair[1]] + currencies[pair[0]], SecurityType.Crypto, pairA.ID.Market)))
+                    {
+                        // If there's a stablecoin between them, assign to currency in pair A the value
+                        // of the currency in pair B 
+                        currencies[pair[0]] = currencies[pair[1]];
+                        isThereAnyMatch = true;
+                    }
+                }
+
+                // Update the value of pairAValue if there was a match
+                if (isThereAnyMatch)
+                {
+                    pairAValue = currencies[0] + currencies[1];
+                }
+            }
+
+            if (pairAValue == baseCurrencyB + quoteCurrencyB)
             {
                 return Match.ExactMatch;
             }
-
-            if (pairA.Value == quoteCurrencyB + baseCurrencyB)
+            
+            if (pairAValue == quoteCurrencyB + baseCurrencyB)
             {
                 return Match.InverseMatch;
             }
