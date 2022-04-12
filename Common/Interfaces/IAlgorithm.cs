@@ -208,6 +208,15 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
+        /// Algorithm warmup start date
+        /// </summary>
+        DateTime WarmupStartDate
+        {
+            get;
+        }
+
+
+        /// <summary>
         /// Get Requested Backtest End Date
         /// </summary>
         DateTime EndDate
@@ -632,12 +641,6 @@ namespace QuantConnect.Interfaces
         /// Sets <see cref="IsWarmingUp"/> to false to indicate this algorithm has finished its warm up
         /// </summary>
         void SetFinishedWarmingUp();
-
-        /// <summary>
-        /// Gets the date/time warmup should begin
-        /// </summary>
-        /// <returns></returns>
-        IEnumerable<HistoryRequest> GetWarmupHistoryRequests();
 
         /// <summary>
         /// Set the maximum number of orders the algortihm is allowed to process.

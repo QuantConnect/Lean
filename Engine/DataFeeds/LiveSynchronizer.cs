@@ -31,6 +31,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class LiveSynchronizer : Synchronizer
     {
         private ITimeProvider _timeProvider;
+        private TimeProviderWithWarmup _frontierTimeProvider;
         private RealTimeScheduleEventService _realTimeScheduleEventService;
         private readonly int _batchingDelay = Config.GetInt("consumer-batching-timeout-ms");
         private readonly ManualResetEventSlim _newLiveDataEmitted = new ManualResetEventSlim(false);
@@ -50,7 +51,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             base.Initialize(algorithm, dataFeedSubscriptionManager);
 
             _timeProvider = GetTimeProvider();
-            SubscriptionSynchronizer.SetTimeProvider(TimeProvider);
+            _frontierTimeProvider = new TimeProviderWithWarmup(live: _timeProvider);
+            SubscriptionSynchronizer.SetTimeProvider(_frontierTimeProvider);
 
             // attach event handlers to subscriptions
             dataFeedSubscriptionManager.SubscriptionAdded += (sender, subscription) =>
@@ -74,6 +76,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public override IEnumerable<TimeSlice> StreamData(CancellationToken cancellationToken)
         {
             PostInitialize();
+            _frontierTimeProvider.Initialize(warmup: base.GetTimeProvider());
 
             var shouldSendExtraEmptyPacket = false;
             var nextEmit = DateTime.MinValue;
@@ -84,12 +87,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 .GetEnumerator();
 
             var previousWasTimePulse = false;
+            TimeSlice timeSlice = null;
             while (!cancellationToken.IsCancellationRequested)
             {
                 var now = DateTime.UtcNow;
                 if (!previousWasTimePulse)
                 {
-                    if (!_newLiveDataEmitted.IsSet)
+                    if (!_newLiveDataEmitted.IsSet
+                        // we warmup as fast as we can even if no new data point is available
+                        && !Algorithm.IsWarmingUp)
                     {
                         // if we just crossed into the next second let's loop again, we will flush any consolidator bar
                         // else we will wait to be notified by the subscriptions or our scheduled event service every second
@@ -104,7 +110,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 lastLoopStart = now;
 
-                TimeSlice timeSlice;
                 try
                 {
                     if (!enumerator.MoveNext())
@@ -112,6 +117,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // the enumerator ended
                         break;
                     }
+
+                    if (Algorithm.IsWarmingUp
+                        && timeSlice is { IsTimePulse: false }
+                        && enumerator.Current != null
+                        && timeSlice.Time == enumerator.Current.Time)
+                    {
+                        // if we are warming up and there is no more data we switch to the live time provider
+                        _frontierTimeProvider.EnableLiveMode();
+                        continue;
+                    }
+
+                    if (timeSlice != null && enumerator.Current != null
+                        && timeSlice.Time > enumerator.Current.Time)
+                    {
+                        throw new Exception("Time going backwards!");
+                    }
+
                     timeSlice = enumerator.Current;
                 }
                 catch (Exception err)
@@ -149,7 +171,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 nextEmit = FrontierTimeProvider.GetUtcNow().RoundDown(Time.OneSecond);
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    var timeSlice = TimeSliceFactory.Create(
+                    timeSlice = TimeSliceFactory.Create(
                         nextEmit,
                         new List<DataFeedPacket>(),
                         SecurityChanges.None,
@@ -199,6 +221,37 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         protected virtual void OnSubscriptionNewDataAvailable(object sender, EventArgs args)
         {
             _newLiveDataEmitted.Set();
+        }
+
+        private class TimeProviderWithWarmup : ITimeProvider
+        {
+            private ITimeProvider _provider;
+            private ITimeProvider _live;
+
+            public TimeProviderWithWarmup(ITimeProvider live)
+            {
+                _live = live;
+            }
+
+            public void Initialize(ITimeProvider warmup)
+            {
+                _provider = warmup;
+            }
+
+            public void EnableLiveMode()
+            {
+                _provider = _live;
+            }
+
+            public DateTime GetUtcNow()
+            {
+                if (_provider == null)
+                {
+                    // don't let any live data point through until we are fully initialized
+                    return DateTime.MinValue;
+                }
+                return _provider.GetUtcNow();
+            }
         }
     }
 }

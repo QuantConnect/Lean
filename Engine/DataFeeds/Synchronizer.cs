@@ -206,7 +206,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             if (frontier == DateTime.MaxValue)
             {
-                frontier = Algorithm.StartDate.ConvertToUtc(_dateTimeZone);
+                frontier = Algorithm.Time.ConvertToUtc(_dateTimeZone);
             }
             return frontier;
         }

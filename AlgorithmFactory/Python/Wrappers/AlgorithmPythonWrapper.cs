@@ -327,6 +327,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// </summary>
         public DateTime StartDate => _baseAlgorithm.StartDate;
 
+        public DateTime WarmupStartDate => _baseAlgorithm.WarmupStartDate;
+
         /// <summary>
         /// Gets or sets the current status of the algorithm
         /// </summary>
@@ -514,12 +516,6 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="name">The name of the parameter to get</param>
         /// <returns>The value of the specified parameter, or null if not found</returns>
         public string GetParameter(string name) => _baseAlgorithm.GetParameter(name);
-
-        /// <summary>
-        /// Gets the history requests required for provide warm up data for the algorithm
-        /// </summary>
-        /// <returns></returns>
-        public IEnumerable<HistoryRequest> GetWarmupHistoryRequests() => _baseAlgorithm.GetWarmupHistoryRequests();
 
         /// <summary>
         /// Initialise the Algorithm and Prepare Required Data:

@@ -176,20 +176,21 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <returns></returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<HistoryRequest> GetWarmupHistoryRequests()
+        private DateTime GetWarmupHistoryStartTime()
         {
             if (_warmupBarCount.HasValue)
             {
-                return CreateBarCountHistoryRequests(Securities.Keys, _warmupBarCount.Value, _warmupResolution);
+                var startTimeUtc = CreateBarCountHistoryRequests(Securities.Keys, _warmupBarCount.Value, _warmupResolution)
+                        .Min(request => request.StartTimeUtc);
+
+                return startTimeUtc.ConvertFromUtc(TimeZone);
             }
             if (_warmupTimeSpan.HasValue)
             {
-                var end = UtcTime.ConvertFromUtc(TimeZone);
-                return CreateDateRangeHistoryRequests(Securities.Keys, end - _warmupTimeSpan.Value, end, _warmupResolution);
+                return Time - _warmupTimeSpan.Value;
             }
 
-            // if not warmup requested return nothing
-            return Enumerable.Empty<HistoryRequest>();
+            return Time;
         }
 
         /// <summary>

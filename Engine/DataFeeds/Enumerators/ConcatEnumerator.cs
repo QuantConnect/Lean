@@ -19,6 +19,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Logging;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
@@ -28,10 +29,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// </summary>
     public class ConcatEnumerator : IEnumerator<BaseData>
     {
-        private readonly IEnumerator<BaseData> _concatEnumerator;
         private readonly List<IEnumerator<BaseData>> _enumerators;
         private readonly bool _skipDuplicateEndTimes;
         private DateTime? _lastEnumeratorEndTime;
+        private int _lastEnumerator;
 
         /// <summary>
         /// The current BaseData object
@@ -48,9 +49,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             params IEnumerator<BaseData>[] enumerators
             )
         {
-            _enumerators = enumerators.ToList();
+            _enumerators = enumerators.Where(enumerator => enumerator != null).ToList();
             _skipDuplicateEndTimes = skipDuplicateEndTimes;
-            _concatEnumerator = GetConcatEnumerator();
         }
 
         /// <summary>
@@ -59,9 +59,39 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <returns>True if the enumerator was successfully advanced to the next element; false if the enumerator has passed the end of the collection.</returns>
         public bool MoveNext()
         {
-            var moveNext = _concatEnumerator.MoveNext();
-            Current = moveNext ? _concatEnumerator.Current : null;
-            return moveNext;
+            for (; _lastEnumerator < _enumerators.Count; _lastEnumerator++)
+            {
+                var enumerator = _enumerators[_lastEnumerator];
+                while (enumerator.MoveNext())
+                {
+                    if (enumerator.Current == null && _lastEnumerator < _enumerators.Count - 1)
+                    {
+                        break;
+                    }
+
+                    if (_skipDuplicateEndTimes
+                        && _lastEnumeratorEndTime.HasValue
+                        && enumerator.Current != null
+                        && enumerator.Current.EndTime <= _lastEnumeratorEndTime)
+                    {
+                        continue;
+                    }
+
+                    Current = enumerator.Current;
+                    return true;
+                }
+
+                _lastEnumeratorEndTime = Current?.EndTime;
+
+                Log.Trace($"ConcatEnumerator.MoveNext(): disposing enumerator at position: {_lastEnumerator} Name: {enumerator.GetType().Name}");
+
+                // we wont be using this enumerator again, dispose of it and clear reference
+                enumerator.DisposeSafely();
+                _enumerators[_lastEnumerator] = null;
+            }
+
+            Current = null;
+            return false;
         }
 
         /// <summary>
@@ -69,11 +99,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         public void Reset()
         {
-            foreach (var enumerator in _enumerators)
-            {
-                enumerator.Reset();
-            }
-            _concatEnumerator.Reset();
+            throw new InvalidOperationException($"Can not reset {nameof(ConcatEnumerator)}");
         }
 
         /// <summary>
@@ -84,28 +110,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             foreach (var enumerator in _enumerators)
             {
                 enumerator.DisposeSafely();
-            }
-            _concatEnumerator.DisposeSafely();
-        }
-
-        private IEnumerator<BaseData> GetConcatEnumerator()
-        {
-            foreach (var enumerator in _enumerators)
-            {
-                while (enumerator.MoveNext())
-                {
-                    if (_skipDuplicateEndTimes
-                        && _lastEnumeratorEndTime.HasValue
-                        && enumerator.Current != null
-                        && enumerator.Current.EndTime < _lastEnumeratorEndTime)
-                    {
-                        continue;
-                    }
-
-                    Current = enumerator.Current;
-                    yield return Current;
-                }
-                _lastEnumeratorEndTime = Current?.EndTime;
             }
         }
     }

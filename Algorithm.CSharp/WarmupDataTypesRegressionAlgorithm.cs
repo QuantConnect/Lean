@@ -25,8 +25,10 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class WarmupDataTypesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private bool _gotTradeBars;
-        private bool _gotQuoteBars;
+        private bool _equityGotTradeBars;
+        private bool _equityGotQuoteBars;
+
+        private bool _cryptoGotTradeBars;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -36,7 +38,9 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 08);
             SetEndDate(2013, 10, 10);
 
-            AddEquity("SPY", Resolution.Minute);
+            AddEquity("SPY", Resolution.Minute, fillDataForward: false);
+            AddCrypto("BTCUSD", Resolution.Hour, market: Market.Bitfinex, fillDataForward: false);
+
             SetWarmUp(24, Resolution.Hour);
         }
 
@@ -48,26 +52,29 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (IsWarmingUp)
             {
-                _gotTradeBars |= data.Bars.ContainsKey("SPY");
-                _gotQuoteBars |= data.QuoteBars.ContainsKey("SPY");
+                Debug($"[{Time}] Warmup up. SPY: {Securities["SPY"].Price}. BTCUSD: {Securities["BTCUSD"].Price}");
+                _equityGotTradeBars |= data.Bars.ContainsKey("SPY");
+                _equityGotQuoteBars |= data.QuoteBars.ContainsKey("SPY");
+
+                _cryptoGotTradeBars |= data.Bars.ContainsKey("BTCUSD");
             }
             else
             {
                 if (!Portfolio.Invested)
                 {
+                    Debug($"[{Time}] Buying stock. SPY: {Securities["SPY"].Price}. BTCUSD: {Securities["BTCUSD"].Price}");
                     SetHoldings("SPY", 1);
-                    Debug("Purchased Stock");
                 }
             }
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (!_gotTradeBars)
+            if (!_equityGotTradeBars || !_cryptoGotTradeBars)
             {
                 throw new Exception("Did not get any TradeBar during warmup");
             }
-            if (!_gotQuoteBars)
+            if (!_equityGotQuoteBars)
             {
                 throw new Exception("Did not get any QuoteBar during warmup");
             }

@@ -111,30 +111,6 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
-        public void WarmUpInternalSubscriptionsHistoryRequest()
-        {
-            var algo = new AlgorithmStub(new MockDataFeed())
-            {
-                HistoryProvider = new SubscriptionDataReaderHistoryProvider()
-            };
-
-            algo.SetStartDate(2013, 10, 08);
-            algo.AddCfd("DE30EUR", Resolution.Second, Market.Oanda);
-            algo.SetWarmup(10);
-            algo.PostInitialize();
-            algo.OnEndOfTimeStep();
-            algo.DataManager.UniverseSelection.EnsureCurrencyDataFeeds(SecurityChanges.None);
-
-            var result = algo.GetWarmupHistoryRequests();
-
-            foreach (var historyRequest in result)
-            {
-                Assert.AreEqual(Resolution.Second, historyRequest.Resolution);
-                Assert.AreEqual(TimeSpan.FromSeconds(10), historyRequest.EndTimeUtc - historyRequest.StartTimeUtc);
-            }
-        }
-
-        [Test]
         public void WarmUpPythonIndicatorProperly()
         {
             var algo = new AlgorithmStub
