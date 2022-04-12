@@ -192,7 +192,7 @@ namespace QuantConnect.Util
         /// <returns>The <see cref="Match"/> member that represents the relation between the two pairs</returns>
         public static Match ComparePair(this Symbol pairA, string baseCurrencyB, string quoteCurrencyB)
         {
-            var pairAValue = pairA.Value;
+            var pairAValue = pairA.ID.Symbol;
 
             // Check for a stablecoin between the currencies
             if (TryDecomposeCurrencyPair(pairA, out var baseCurrencyA, out  var quoteCurrencyA))
