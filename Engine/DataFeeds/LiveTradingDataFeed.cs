@@ -128,7 +128,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (!_channelProvider.ShouldStreamSubscription(subscription.Configuration))
             {
                 _customExchange.RemoveEnumerator(symbol);
-                _customExchange.RemoveDataHandler(symbol);
             }
             else
             {
@@ -202,15 +201,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var factory = new LiveCustomDataSubscriptionEnumeratorFactory(_timeProvider);
                     var enumeratorStack = factory.CreateEnumerator(request, _dataProvider);
 
-                    _customExchange.AddEnumerator(request.Configuration.Symbol, enumeratorStack);
-
                     var enqueable = new EnqueueableEnumerator<BaseData>();
-                    _customExchange.SetDataHandler(request.Configuration.Symbol, data =>
+                    _customExchange.AddEnumerator(request.Configuration.Symbol, enumeratorStack, handleData: data =>
                     {
                         enqueable.Enqueue(data);
 
                         subscription.OnNewDataAvailable();
                     });
+
                     enumerator = enqueable;
                 }
                 else
@@ -330,14 +328,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 // aggregates each coarse data point into a single BaseDataCollection
                 var aggregator = new BaseDataCollectionAggregatorEnumerator(enumeratorStack, config.Symbol, true);
-                _customExchange.AddEnumerator(config.Symbol, aggregator);
-
                 var enqueable = new EnqueueableEnumerator<BaseData>();
-                _customExchange.SetDataHandler(config.Symbol, data =>
+                _customExchange.AddEnumerator(config.Symbol, aggregator, handleData: data =>
                 {
                     enqueable.Enqueue(data);
                     subscription.OnNewDataAvailable();
                 });
+
                 enumerator = GetConfiguredFrontierAwareEnumerator(enqueable, tzOffsetProvider,
                     // advance time if before 23pm or after 5am and not on Saturdays
                     time => time.Hour < 23 && time.Hour > 5 && time.DayOfWeek != DayOfWeek.Saturday);
@@ -399,6 +396,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return subscription;
         }
 
+        /// <summary>
+        /// Build and apply the warmup enumerators when required
+        /// </summary>
         private IEnumerator<BaseData> GetWarmupEnumerator(SubscriptionRequest request, IEnumerator<BaseData> liveEnumerator)
         {
             if (_algorithm.IsWarmingUp)
@@ -406,19 +406,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var warmup = new SubscriptionRequest(request, endTimeUtc: _timeProvider.GetUtcNow());
                 if (warmup.TradableDays.Any())
                 {
-                    liveEnumerator = new ConcatEnumerator(true, GetFileBasedWarmupEnumerator(warmup),
+                    liveEnumerator = new ConcatEnumerator(true,  GetFileBasedWarmupEnumerator(warmup),
                         GetHistoryWarmupEnumerator(warmup), liveEnumerator);
                 }
             }
             return liveEnumerator;
         }
 
+        /// <summary>
+        /// File based warmup enumerator
+        /// </summary>
         private IEnumerator<BaseData> GetFileBasedWarmupEnumerator(SubscriptionRequest warmup)
         {
             IEnumerator<BaseData> result = null;
             try
             {
-                result = base.CreateEnumerator(warmup);
+                result = new FilterEnumerator<BaseData>(CreateEnumerator(warmup),data => data.EndTime < warmup.EndTimeLocal);
             }
             catch
             {
@@ -426,6 +429,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return result;
         }
 
+        /// <summary>
+        /// History based warmup enumerator
+        /// </summary>
         private IEnumerator<BaseData> GetHistoryWarmupEnumerator(SubscriptionRequest warmup)
         {
             IEnumerator<BaseData> result = null;
@@ -441,12 +447,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                     catch
                     {
+                        // just in case
                     }
                     return null;
                 }).Where(data => data != null).GetEnumerator();
+
+                result = new FilterEnumerator<BaseData>(result,data => data.EndTime < warmup.EndTimeLocal);
             }
             catch
             {
+                // some history providers could throw if they do not support a type
             }
             return result;
         }
@@ -483,33 +493,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         private class EnumeratorHandler : BaseDataExchange.EnumeratorHandler
         {
-            private readonly EnqueueableEnumerator<BaseData> _enqueueable;
-
             public EnumeratorHandler(Symbol symbol, IEnumerator<BaseData> enumerator, EnqueueableEnumerator<BaseData> enqueueable)
-                : base(symbol, enumerator, true)
+                : base(symbol, enumerator, handleData: enqueueable.Enqueue)
             {
-                _enqueueable = enqueueable;
-            }
-
-            /// <summary>
-            /// Returns true if this enumerator should move next
-            /// </summary>
-            public override bool ShouldMoveNext()
-            { return true; }
-
-            /// <summary>
-            /// Calls stop on the internal enqueueable enumerator
-            /// </summary>
-            public override void OnEnumeratorFinished()
-            { _enqueueable.Stop(); }
-
-            /// <summary>
-            /// Enqueues the data
-            /// </summary>
-            /// <param name="data">The data to be handled</param>
-            public override void HandleData(BaseData data)
-            {
-                _enqueueable.Enqueue(data);
+                EnumeratorFinished += (_, _) => enqueueable.Stop();
             }
         }
     }

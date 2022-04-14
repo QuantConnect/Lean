@@ -25,6 +25,7 @@ using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.RealTime
@@ -36,6 +37,8 @@ namespace QuantConnect.Lean.Engine.RealTime
     {
         private Thread _realTimeThread;
         private TimeMonitor _timeMonitor;
+        private AutoResetEvent _newTimeEvent;
+        private ManualTimeProvider _manualTimeProvider;
         private static MarketHoursDatabase _marketHoursDatabase;
 
         private IIsolatorLimitResultProvider _isolatorLimitProvider;
@@ -54,7 +57,9 @@ namespace QuantConnect.Lean.Engine.RealTime
             //Initialize:
             Algorithm = algorithm;
             ResultHandler = resultHandler;
+            _newTimeEvent = new AutoResetEvent(false);
             _isolatorLimitProvider = isolatorLimitProvider;
+            _manualTimeProvider = new ManualTimeProvider(Algorithm.UtcTime);
             _cancellationTokenSource = new CancellationTokenSource();
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
 
@@ -74,7 +79,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                 RefreshMarketHoursToday(triggerTime.ConvertFromUtc(Algorithm.TimeZone).Date);
             }));
 
-            base.Setup(todayInAlgorithmTimeZone, Time.EndOfTime, job.Language, DateTime.UtcNow);
+            base.Setup(algorithm.Time, Time.EndOfTime, job.Language, algorithm.UtcTime);
 
             foreach (var scheduledEvent in ScheduledEvents)
             {
@@ -101,12 +106,16 @@ namespace QuantConnect.Lean.Engine.RealTime
             // continue thread until cancellation is requested
             while (!_cancellationTokenSource.IsCancellationRequested)
             {
-                var time = DateTime.UtcNow;
-
-                // pause until the next second
-                var nextSecond = time.RoundUp(TimeSpan.FromSeconds(1));
-                var delay = Convert.ToInt32((nextSecond - time).TotalMilliseconds);
-                Thread.Sleep(delay < 0 ? 1 : delay);
+                try
+                {
+                    _newTimeEvent.WaitOne(_cancellationTokenSource.Token);
+                }
+                catch
+                {
+                    // cancelled
+                    continue;
+                }
+                var time = _manualTimeProvider.GetUtcNow();
 
                 // poke each event to see if it should fire, we order by unique id to be deterministic
                 foreach (var kvp in ScheduledEvents.OrderBySafe(pair => pair.Value))
@@ -178,6 +187,8 @@ namespace QuantConnect.Lean.Engine.RealTime
         {
             // in live mode we use current time for our time keeping
             // this method is used by backtesting to set time based on the data
+            _manualTimeProvider.SetCurrentTimeUtc(time);
+            _newTimeEvent.Set();
         }
 
         /// <summary>

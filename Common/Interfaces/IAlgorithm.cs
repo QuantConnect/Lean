@@ -208,15 +208,6 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
-        /// Algorithm warmup start date
-        /// </summary>
-        DateTime WarmupStartDate
-        {
-            get;
-        }
-
-
-        /// <summary>
         /// Get Requested Backtest End Date
         /// </summary>
         DateTime EndDate

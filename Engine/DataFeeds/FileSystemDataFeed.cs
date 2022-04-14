@@ -86,15 +86,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        ///
+        /// Creates a file based data enumerator for the given subscription request
         /// </summary>
-        /// <param name="request"></param>
-        /// <returns></returns>
+        /// <remarks>Protected so it can be used by the <see cref="LiveTradingDataFeed"/> to warmup requests</remarks>
         protected IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request)
         {
-            return request.IsUniverseSubscription
-                ? CreateUniverseEnumerator(request)
-                : CreateDataEnumerator(request);
+            return request.IsUniverseSubscription ? CreateUniverseEnumerator(request) : CreateDataEnumerator(request);
         }
 
         private IEnumerator<BaseData> CreateDataEnumerator(SubscriptionRequest request)

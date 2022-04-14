@@ -442,9 +442,6 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(HandlingData)]
         public DateTime StartDate => _startDate;
 
-        [DocumentationAttribute(HandlingData)]
-        public DateTime WarmupStartDate { get; private set; }
-
         /// <summary>
         /// Value of the user set start-date from the backtest. Controls the period of the backtest.
         /// </summary>
@@ -630,9 +627,9 @@ namespace QuantConnect.Algorithm
                 }
             }
 
-            WarmupStartDate = GetWarmupHistoryStartTime();
-            if(Time != WarmupStartDate) {
-                SetDateTime(WarmupStartDate.ConvertToUtc(TimeZone));
+            if(TryGetWarmupHistoryStartTime(out var result))
+            {
+                SetDateTime(result.ConvertToUtc(TimeZone));
             }
             else
             {

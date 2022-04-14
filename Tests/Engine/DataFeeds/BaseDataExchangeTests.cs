@@ -23,6 +23,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -46,117 +47,34 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [Test]
-        public void FiresCorrectHandlerBySymbol()
-        {
-            var dataQueue = new ConcurrentQueue<BaseData>();
-            var exchange = CreateExchange(dataQueue);
-            exchange.SleepInterval = 1;
-
-            var firedHandler = new AutoResetEvent(false);
-            var firedWrongHandler = new AutoResetEvent(false);
-
-            exchange.SetDataHandler(Symbols.SPY, spy =>
-            {
-                firedHandler.Set();
-            });
-            exchange.SetDataHandler(Symbols.EURUSD, eurusd =>
-            {
-                firedWrongHandler.Set();
-            });
-
-            dataQueue.Enqueue(new Tick{Symbol = Symbols.SPY});
-
-            Task.Run(() => exchange.Start());
-
-            Assert.AreEqual(0, WaitHandle.WaitAny(new[] { firedHandler, firedWrongHandler }, DefaultTimeout));
-            exchange.Stop();
-        }
-
-        [Test]
-        public void Fires2CorrectHandlersBySymbol()
-        {
-            var dataQueue = new ConcurrentQueue<BaseData>();
-            var exchange = CreateExchange(dataQueue);
-            exchange.SleepInterval = 1;
-
-            var firedHandler1 = new AutoResetEvent(false);
-            var firedHandler2 = new AutoResetEvent(false);
-            var firedWrongHandler = new AutoResetEvent(false);
-
-            exchange.AddDataHandler(Symbols.SPY, spy =>
-            {
-                firedHandler1.Set();
-            });
-            exchange.AddDataHandler(Symbols.SPY, spy =>
-            {
-                firedHandler2.Set();
-            });
-            exchange.SetDataHandler(Symbols.EURUSD, eurusd =>
-            {
-                firedWrongHandler.Set();
-            });
-
-            dataQueue.Enqueue(new Tick { Symbol = Symbols.SPY });
-
-            Task.Run(() => exchange.Start());
-
-            Assert.IsTrue(WaitHandle.WaitAll(new[] { firedHandler1, firedHandler2 }, DefaultTimeout));
-            Assert.IsFalse(firedWrongHandler.WaitOne(DefaultTimeout));
-            exchange.Stop();
-        }
-
-        [Test]
-        public void RemovesHandlerBySymbol()
-        {
-            var dataQueue = new ConcurrentQueue<BaseData>();
-            var exchange = CreateExchange(dataQueue);
-
-            var touchedHandler = new AutoResetEvent(false);
-
-            exchange.SetDataHandler(Symbols.SPY, spy =>
-            {
-                touchedHandler.Set();
-            });
-            exchange.RemoveDataHandler(Symbols.SPY);
-
-            dataQueue.Enqueue(new Tick {Symbol = Symbols.SPY});
-
-            Task.Run(() => exchange.Start());
-
-            Assert.IsFalse(touchedHandler.WaitOne(DefaultTimeout));
-            exchange.Stop();
-        }
-
-        [Test]
         public void EndsQueueConsumption()
         {
-            var dataQueue = new ConcurrentQueue<BaseData>();
-            var exchange = CreateExchange(dataQueue);
+            var enqueable = new EnqueueableEnumerator<BaseData>();
+            var exchange = new BaseDataExchange("test");
 
             var cancellationToken = new CancellationTokenSource();
             Task.Run(() =>
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    Thread.Sleep(1);
-                    dataQueue.Enqueue(new Tick {Symbol = Symbols.SPY, Time = DateTime.UtcNow});
+                    Thread.Sleep(10);
+                    enqueable.Enqueue(new Tick {Symbol = Symbols.SPY, Time = DateTime.UtcNow});
                 }
             });
 
             BaseData last = null;
             var lastUpdated = new AutoResetEvent(false);
-            exchange.SetDataHandler(Symbols.SPY, spy =>
+            exchange.AddEnumerator(Symbols.SPY, enqueable, handleData: spy =>
             {
                 last = spy;
                 lastUpdated.Set();
             });
 
             var finishedRunning = new AutoResetEvent(false);
-            Task.Run(() => { exchange.Start(); finishedRunning.Set(); } );
+            Task.Run(() => { exchange.Start(cancellationToken.Token); finishedRunning.Set(); } );
 
             Assert.IsTrue(lastUpdated.WaitOne(DefaultTimeout));
 
-            exchange.Stop();
             cancellationToken.Cancel();
 
             Assert.IsTrue(finishedRunning.WaitOne(DefaultTimeout));
@@ -164,28 +82,29 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var endTime = DateTime.UtcNow;
             Assert.IsNotNull(last);
             Assert.IsTrue(last.Time <= endTime);
+            enqueable.Dispose();
         }
 
         [Test]
         public void DefaultErrorHandlerDoesNotStopQueueConsumption()
         {
-            var dataQueue = new ConcurrentQueue<BaseData>();
-            var exchange = CreateExchange(dataQueue);
+            var enqueable = new EnqueueableEnumerator<BaseData>();
+            var exchange = new BaseDataExchange("test");
 
             var cancellationToken = new CancellationTokenSource();
             Task.Run(() =>
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    Thread.Sleep(1);
-                    dataQueue.Enqueue(new Tick { Symbol = Symbols.SPY, Time = DateTime.UtcNow });
+                    Thread.Sleep(10);
+                    enqueable.Enqueue(new Tick { Symbol = Symbols.SPY, Time = DateTime.UtcNow });
                 }
             });
 
             var first = true;
             BaseData last = null;
             var lastUpdated = new AutoResetEvent(false);
-            exchange.SetDataHandler(Symbols.SPY, spy =>
+            exchange.AddEnumerator(Symbols.SPY, enqueable, handleData: spy =>
             {
                 if (first)
                 {
@@ -196,27 +115,27 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 lastUpdated.Set();
             });
 
-            Task.Run(() => exchange.Start());
+            Task.Run(() => exchange.Start(cancellationToken.Token));
 
             Assert.IsTrue(lastUpdated.WaitOne(DefaultTimeout));
 
-            exchange.Stop();
             cancellationToken.Cancel();
+            enqueable.Dispose();
         }
 
         [Test]
         public void SetErrorHandlerExitsOnTrueReturn()
         {
-            var dataQueue = new ConcurrentQueue<BaseData>();
-            var exchange = CreateExchange(dataQueue);
+            var enqueable = new EnqueueableEnumerator<BaseData>();
+            var exchange = new BaseDataExchange("test");
 
             var cancellationToken = new CancellationTokenSource();
             Task.Factory.StartNew(() =>
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    Thread.Sleep(1);
-                    dataQueue.Enqueue(new Tick { Symbol = Symbols.SPY, Time = DateTime.UtcNow });
+                    Thread.Sleep(10);
+                    enqueable.Enqueue(new Tick { Symbol = Symbols.SPY, Time = DateTime.UtcNow });
                 }
             });
 
@@ -230,7 +149,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 return true;
             });
 
-            exchange.SetDataHandler(Symbols.SPY, spy =>
+            exchange.AddEnumerator(Symbols.SPY, enqueable, handleData: spy =>
             {
                 if (first)
                 {
@@ -240,14 +159,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 last = spy;
             });
 
-            Task.Run(() => exchange.Start());
+            Task.Run(() => exchange.Start(cancellationToken.Token));
 
             Assert.IsTrue(errorCaught.WaitOne(DefaultTimeout));
 
-            exchange.Stop();
-
             Assert.IsNull(last);
 
+            enqueable.Dispose();
             cancellationToken.Cancel();
         }
 
@@ -268,8 +186,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             isCompletedEvent.WaitOne();
             Assert.IsFalse(isFaultedEvent.WaitOne(0));
-
-            exchange.Stop();
         }
 
         [Test]
@@ -283,7 +199,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Task.Run(() => exchange.Start());
 
             isCompletedEvent.WaitOne();
-            exchange.Stop();
         }
 
         [Test]
@@ -296,29 +211,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsNull(removed);
             removed = exchange.RemoveEnumerator(Symbols.SPY);
             Assert.AreEqual(Symbols.SPY, removed.Symbol);
-        }
-
-        private BaseDataExchange CreateExchange(ConcurrentQueue<BaseData> dataQueue)
-        {
-            var exchange = new BaseDataExchange("test");
-            IEnumerator<BaseData> enumerator = GetNextTicksEnumerator(dataQueue);
-            var sym = Symbol.Create("data-queue-handler-symbol", SecurityType.Base, Market.USA);
-            exchange.AddEnumerator(sym, enumerator, null, null);
-            return exchange;
-        }
-
-        private IEnumerator<BaseData> GetNextTicksEnumerator(ConcurrentQueue<BaseData> dataQueue)
-        {
-            while (!_cancellationTokenSource.IsCancellationRequested)
-            {
-                BaseData data;
-                var count = 0;
-                while (++count < 10 && dataQueue.TryDequeue(out data))
-                {
-                    yield return data;
-                }
-                if (count == 0) Thread.Sleep(1);
-            }
         }
     }
 }

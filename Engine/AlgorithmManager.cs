@@ -176,7 +176,7 @@ namespace QuantConnect.Lean.Engine
                 });
 
             //Loop over the queues: get a data collection, then pass them all into relevent methods in the algorithm.
-            Log.Trace($"AlgorithmManager.Run(): Begin DataStream - Warmup {algorithm.WarmupStartDate} Start: {algorithm.StartDate} Stop: {algorithm.EndDate}");
+            Log.Trace($"AlgorithmManager.Run(): Begin DataStream - Start: {algorithm.StartDate} Stop: {algorithm.EndDate} Time: {algorithm.Time} Warmup: {algorithm.IsWarmingUp}");
             foreach (var timeSlice in Stream(algorithm, synchronizer, results, token))
             {
                 // reset our timer on each loop
@@ -723,36 +723,19 @@ namespace QuantConnect.Lean.Engine
                 ProcessVolatilityHistoryRequirements(algorithm);
             }
 
-            var warmUpStartTicks = algorithm.WarmupStartDate.Ticks;
-            var nextStatusTime = DateTime.UtcNow.AddSeconds(1);
-            var minimumIncrement = algorithm.UniverseManager
-                .Select(x => x.Value.UniverseSettings?.Resolution.ToTimeSpan() ?? algorithm.UniverseSettings.Resolution.ToTimeSpan())
-                .DefaultIfEmpty(Time.OneSecond)
-                .Min();
-
+            var nextWarmupStatusTime = DateTime.MinValue;
+            var startTimeTicks = algorithm.Time.Ticks;
             foreach (var timeSlice in synchronizer.StreamData(cancellationToken))
             {
                 if (algorithm.LiveMode && algorithm.IsWarmingUp)
                 {
-                    if (timeSlice.IsTimePulse)
-                    {
-                        continue;
-                    }
-
-                    // in live mode wait to mark us as finished warming up when
-                    // the data feed has caught up to now within the min increment
-                    if (timeSlice.Time > DateTime.UtcNow.Subtract(minimumIncrement))
-                    {
-                        algorithm.SetFinishedWarmingUp();
-                        algorithm.Debug("Algorithm finished warming up.");
-                        Log.Trace("AlgorithmManager.Stream(): Finished warmup");
-                    }
-                    else if (DateTime.UtcNow > nextStatusTime)
+                    var now = DateTime.UtcNow;
+                    if (now > nextWarmupStatusTime)
                     {
                         // send some status to the user letting them know we're done history, but still warming up,
                         // catching up to real time data
-                        nextStatusTime = DateTime.UtcNow.AddSeconds(1);
-                        var percent = (int) (100*(timeSlice.Time.Ticks - warmUpStartTicks)/(double) (DateTime.UtcNow.Ticks - warmUpStartTicks));
+                        nextWarmupStatusTime = now.AddSeconds(1);
+                        var percent = (int) (100*(timeSlice.Time.Ticks - startTimeTicks)/(double) (now.Ticks - startTimeTicks));
                         results.SendStatusUpdate(AlgorithmStatus.History, $"Catching up to realtime {percent}%...");
                     }
                 }

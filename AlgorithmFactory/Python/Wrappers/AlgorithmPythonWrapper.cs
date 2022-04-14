@@ -327,8 +327,6 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// </summary>
         public DateTime StartDate => _baseAlgorithm.StartDate;
 
-        public DateTime WarmupStartDate => _baseAlgorithm.WarmupStartDate;
-
         /// <summary>
         /// Gets or sets the current status of the algorithm
         /// </summary>

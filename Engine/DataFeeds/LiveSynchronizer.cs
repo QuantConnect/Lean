@@ -76,7 +76,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public override IEnumerable<TimeSlice> StreamData(CancellationToken cancellationToken)
         {
             PostInitialize();
-            _frontierTimeProvider.Initialize(warmup: base.GetTimeProvider());
 
             var shouldSendExtraEmptyPacket = false;
             var nextEmit = DateTime.MinValue;
@@ -189,6 +188,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
+        /// Performs additional initialization steps after algorithm initialization
+        /// </summary>
+        protected override void PostInitialize()
+        {
+            base.PostInitialize();
+            _frontierTimeProvider.Initialize(base.GetTimeProvider());
+        }
+
+        /// <summary>
         /// Will return the amount of milliseconds that are missing for the next time pulse
         /// </summary>
         protected virtual int GetPulseDueTime(DateTime now)
@@ -209,38 +217,40 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private class TimeProviderWithWarmup : ITimeProvider
         {
+            private readonly DateTime _liveStart;
             private DateTime _previous;
-            private ITimeProvider _provider;
+            private ITimeProvider _initialTimeProvider;
             private ITimeProvider _live;
 
             public TimeProviderWithWarmup(ITimeProvider live)
             {
                 _live = live;
+                _liveStart = _live.GetUtcNow();
             }
 
-            public void Initialize(ITimeProvider warmup)
+            public void Initialize(ITimeProvider initialTimeProvider)
             {
-                _provider = warmup;
+                _initialTimeProvider = initialTimeProvider;
             }
 
             public DateTime GetUtcNow()
             {
-                if(ReferenceEquals(_live, _provider))
+                if(ReferenceEquals(_live, _initialTimeProvider))
                 {
-                    return _provider.GetUtcNow();
+                    return _live.GetUtcNow();
                 }
 
-                if (_provider == null)
+                if (_initialTimeProvider == null)
                 {
                     // don't let any live data point through until we are fully initialized
                     return Time.BeginningOfTime;
                 }
 
-                var newTime = _provider.GetUtcNow();
-                if (_previous == newTime)
+                var newTime = _initialTimeProvider.GetUtcNow();
+                if (_previous == newTime || newTime >= _liveStart)
                 {
-                    // warmup time provider swap ended
-                    _provider = _live;
+                    // subscription time provider swap ended, start using live
+                    _initialTimeProvider = _live;
                     return GetUtcNow();
                 }
                 _previous = newTime;

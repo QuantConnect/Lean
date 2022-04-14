@@ -176,8 +176,10 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <returns></returns>
         [DocumentationAttribute(HistoricalData)]
-        private DateTime GetWarmupHistoryStartTime()
+        private bool TryGetWarmupHistoryStartTime(out DateTime result)
         {
+            result = Time;
+
             if (_warmupBarCount.HasValue)
             {
                 var symbols = Securities.Keys;
@@ -185,10 +187,14 @@ namespace QuantConnect.Algorithm
                 {
                     var startTimeUtc = CreateBarCountHistoryRequests(symbols, _warmupBarCount.Value, _warmupResolution)
                         .Min(request => request.StartTimeUtc);
-                    return startTimeUtc.ConvertFromUtc(TimeZone);
+                    result = startTimeUtc.ConvertFromUtc(TimeZone);
+                    return true;
                 }
 
-                var result = Time;
+                // if the algorithm has no added security, let's take a look at the universes to determine
+                // what the start date should be used. Defaulting to always open
+                result = Time - _warmupBarCount.Value * UniverseSettings.Resolution.ToTimeSpan();
+
                 foreach (var universe in _pendingUniverseAdditions.Concat(UniverseManager.Values))
                 {
                     var config = universe.Configuration;
@@ -199,16 +205,18 @@ namespace QuantConnect.Algorithm
                     }
                     var exchange = MarketHoursDatabase.GetExchangeHours(config);
                     var start = _historyRequestFactory.GetStartTimeAlgoTz(config.Symbol, _warmupBarCount.Value, resolution, exchange, config.DataTimeZone);
+                    // we choose the min start
                     result = result < start ? result : start;
                 }
-                return result;
+                return true;
             }
             if (_warmupTimeSpan.HasValue)
             {
-                return Time - _warmupTimeSpan.Value;
+                result = Time - _warmupTimeSpan.Value;
+                return true;
             }
 
-            return Time;
+            return false;
         }
 
         /// <summary>

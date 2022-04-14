@@ -15,12 +15,13 @@
 */
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using QuantConnect.Data;
-using QuantConnect.Logging;
 using QuantConnect.Util;
+using System.Collections;
+using QuantConnect.Logging;
+using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -32,7 +33,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private readonly List<IEnumerator<BaseData>> _enumerators;
         private readonly bool _skipDuplicateEndTimes;
         private DateTime? _lastEnumeratorEndTime;
-        private int _lastEnumerator;
+        private int _currentIndex;
 
         /// <summary>
         /// The current BaseData object
@@ -59,13 +60,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <returns>True if the enumerator was successfully advanced to the next element; false if the enumerator has passed the end of the collection.</returns>
         public bool MoveNext()
         {
-            for (; _lastEnumerator < _enumerators.Count; _lastEnumerator++)
+            for (; _currentIndex < _enumerators.Count; Interlocked.Increment(ref _currentIndex))
             {
-                var enumerator = _enumerators[_lastEnumerator];
+                var enumerator = _enumerators[_currentIndex];
                 while (enumerator.MoveNext())
                 {
-                    if (enumerator.Current == null && _lastEnumerator < _enumerators.Count - 1)
+                    if (enumerator.Current == null && _currentIndex < _enumerators.Count - 1)
                     {
+                        // if there are more enumerators and the current stopped providing data drop it
                         break;
                     }
 
@@ -83,11 +85,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
                 _lastEnumeratorEndTime = Current?.EndTime;
 
-                Log.Trace($"ConcatEnumerator.MoveNext(): disposing enumerator at position: {_lastEnumerator} Name: {enumerator.GetType().Name}");
+                if (Log.DebuggingEnabled)
+                {
+                    Log.Debug($"ConcatEnumerator.MoveNext(): disposing enumerator at position: {_currentIndex} Name: {enumerator.GetType().Name}");
+                }
 
                 // we wont be using this enumerator again, dispose of it and clear reference
                 enumerator.DisposeSafely();
-                _enumerators[_lastEnumerator] = null;
+                _enumerators[_currentIndex] = null;
             }
 
             Current = null;

@@ -15,10 +15,10 @@
 */
 
 using System;
-using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using System.Collections.Generic;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
@@ -60,7 +60,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
         [TestCase(true)]
         [TestCase(false)]
-        public void EmptyEnumerators(bool skipsBasedOnEndTime)
+        public void EmptyNullEnumerators(bool skipsBasedOnEndTime)
         {
             var time = new DateTime(2020, 1, 1);
             // empty enumerators
@@ -74,7 +74,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 new Tick(time.AddSeconds(1), Symbols.SPY, 30 , 30)
             }.GetEnumerator();
 
-            var concat = new ConcatEnumerator(skipsBasedOnEndTime, enumerator1, enumerator2, enumerator3);
+            var concat = new ConcatEnumerator(skipsBasedOnEndTime, enumerator1, null, enumerator2, enumerator3);
 
             Assert.IsTrue(concat.MoveNext());
             Assert.AreEqual(10, (concat.Current as Tick).AskPrice);

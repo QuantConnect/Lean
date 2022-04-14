@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Orders;
@@ -28,6 +29,22 @@ namespace QuantConnect.Algorithm.CSharp
     public class WarmupSelectionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const int NumberOfSymbols = 3;
+        private Queue<DateTime> _selection = new Queue<DateTime>(new[]
+        {
+            new DateTime(2014, 03, 24),
+
+            new DateTime(2014, 03, 25),
+            new DateTime(2014, 03, 26),
+            new DateTime(2014, 03, 27),
+            new DateTime(2014, 03, 28),
+            new DateTime(2014, 03, 29),
+
+            new DateTime(2014, 04, 01),
+            new DateTime(2014, 04, 02),
+            new DateTime(2014, 04, 03),
+            new DateTime(2014, 04, 04),
+            new DateTime(2014, 04, 05),
+        });
 
         // initialize our changes to nothing
         private SecurityChanges _changes = SecurityChanges.None;
@@ -44,8 +61,15 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         // sort the data by daily dollar volume and take the top 'NumberOfSymbols'
-        public static IEnumerable<Symbol> CoarseSelectionFunction(IEnumerable<CoarseFundamental> coarse)
+        private IEnumerable<Symbol> CoarseSelectionFunction(IEnumerable<CoarseFundamental> coarse)
         {
+            Debug($"Coarse selection happening at {Time}");
+            var expected = _selection.Dequeue();
+            if (expected != Time)
+            {
+                throw new Exception($"Unexpected selection time: {Time}. Expected {expected}");
+            }
+
             // sort descending by daily dollar volume
             var sortedByDollarVolume = coarse.OrderByDescending(x => x.DollarVolume);
 
@@ -62,10 +86,13 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            Log($"OnData({UtcTime:o}): Keys: {string.Join(", ", data.Keys.OrderBy(x => x))}");
+            Debug($"OnData({UtcTime:o}): {IsWarmingUp}. {string.Join(", ", data.Values.OrderBy(x => x.Symbol))}");
 
             // if we have no changes, do nothing
-            if (_changes == SecurityChanges.None) return;
+            if (_changes == SecurityChanges.None || IsWarmingUp)
+            {
+                return;
+            }
 
             // liquidate removed securities
             foreach (var security in _changes.RemovedSecurities)
@@ -89,12 +116,12 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
             _changes = changes;
-            Log($"OnSecuritiesChanged({UtcTime:o}):: {changes}");
+            Debug($"OnSecuritiesChanged({UtcTime:o}):: {changes}");
         }
 
         public override void OnOrderEvent(OrderEvent fill)
         {
-            Log($"OnOrderEvent({UtcTime:o}):: {fill}");
+            Debug($"OnOrderEvent({UtcTime:o}):: {fill}");
         }
 
         /// <summary>
@@ -110,7 +137,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 78091;
+        public long DataPoints => 78088;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -122,34 +149,34 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "12"},
-            {"Average Win", "0.55%"},
+            {"Total Trades", "8"},
+            {"Average Win", "1.51%"},
             {"Average Loss", "-0.26%"},
-            {"Compounding Annual Return", "16.717%"},
-            {"Drawdown", "1.700%"},
-            {"Expectancy", "0.850"},
-            {"Net Profit", "0.637%"},
-            {"Sharpe Ratio", "1.088"},
-            {"Probabilistic Sharpe Ratio", "50.223%"},
-            {"Loss Rate", "40%"},
-            {"Win Rate", "60%"},
-            {"Profit-Loss Ratio", "2.08"},
-            {"Alpha", "0.198"},
-            {"Beta", "0.741"},
-            {"Annual Standard Deviation", "0.118"},
-            {"Annual Variance", "0.014"},
-            {"Information Ratio", "2.294"},
-            {"Tracking Error", "0.097"},
-            {"Treynor Ratio", "0.173"},
-            {"Total Fees", "$27.94"},
-            {"Estimated Strategy Capacity", "$200000000.00"},
+            {"Compounding Annual Return", "15.928%"},
+            {"Drawdown", "0.700%"},
+            {"Expectancy", "1.231"},
+            {"Net Profit", "0.528%"},
+            {"Sharpe Ratio", "3.2"},
+            {"Probabilistic Sharpe Ratio", "67.783%"},
+            {"Loss Rate", "67%"},
+            {"Win Rate", "33%"},
+            {"Profit-Loss Ratio", "5.69"},
+            {"Alpha", "0.253"},
+            {"Beta", "0.31"},
+            {"Annual Standard Deviation", "0.073"},
+            {"Annual Variance", "0.005"},
+            {"Information Ratio", "3.163"},
+            {"Tracking Error", "0.094"},
+            {"Treynor Ratio", "0.75"},
+            {"Total Fees", "$47.52"},
+            {"Estimated Strategy Capacity", "$150000000.00"},
             {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Fitness Score", "0.28"},
+            {"Fitness Score", "0.193"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "3"},
-            {"Return Over Maximum Drawdown", "9.559"},
-            {"Portfolio Turnover", "0.308"},
+            {"Sortino Ratio", "4.119"},
+            {"Return Over Maximum Drawdown", "18.637"},
+            {"Portfolio Turnover", "0.205"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -163,7 +190,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "de456413f89396bd6f920686219ed0a5"}
+            {"OrderListHash", "ef8537b7c868336e3d4e28fe7a28b83a"}
         };
     }
 }
