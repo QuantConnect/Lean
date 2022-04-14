@@ -87,7 +87,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 .GetEnumerator();
 
             var previousWasTimePulse = false;
-            TimeSlice timeSlice = null;
             while (!cancellationToken.IsCancellationRequested)
             {
                 var now = DateTime.UtcNow;
@@ -110,28 +109,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 lastLoopStart = now;
 
+                TimeSlice timeSlice;
                 try
                 {
                     if (!enumerator.MoveNext())
                     {
                         // the enumerator ended
                         break;
-                    }
-
-                    if (Algorithm.IsWarmingUp
-                        && timeSlice is { IsTimePulse: false }
-                        && enumerator.Current != null
-                        && timeSlice.Time == enumerator.Current.Time)
-                    {
-                        // if we are warming up and there is no more data we switch to the live time provider
-                        _frontierTimeProvider.EnableLiveMode();
-                        continue;
-                    }
-
-                    if (timeSlice != null && enumerator.Current != null
-                        && timeSlice.Time > enumerator.Current.Time)
-                    {
-                        throw new Exception("Time going backwards!");
                     }
 
                     timeSlice = enumerator.Current;
@@ -171,7 +155,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 nextEmit = FrontierTimeProvider.GetUtcNow().RoundDown(Time.OneSecond);
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    timeSlice = TimeSliceFactory.Create(
+                    var timeSlice = TimeSliceFactory.Create(
                         nextEmit,
                         new List<DataFeedPacket>(),
                         SecurityChanges.None,
@@ -225,6 +209,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private class TimeProviderWithWarmup : ITimeProvider
         {
+            private DateTime _previous;
             private ITimeProvider _provider;
             private ITimeProvider _live;
 
@@ -238,19 +223,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _provider = warmup;
             }
 
-            public void EnableLiveMode()
-            {
-                _provider = _live;
-            }
-
             public DateTime GetUtcNow()
             {
+                if(ReferenceEquals(_live, _provider))
+                {
+                    return _provider.GetUtcNow();
+                }
+
                 if (_provider == null)
                 {
                     // don't let any live data point through until we are fully initialized
-                    return DateTime.MinValue;
+                    return Time.BeginningOfTime;
                 }
-                return _provider.GetUtcNow();
+
+                var newTime = _provider.GetUtcNow();
+                if (_previous == newTime)
+                {
+                    // warmup time provider swap ended
+                    _provider = _live;
+                    return GetUtcNow();
+                }
+                _previous = newTime;
+                return newTime;
             }
         }
     }

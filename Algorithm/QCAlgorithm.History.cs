@@ -180,10 +180,28 @@ namespace QuantConnect.Algorithm
         {
             if (_warmupBarCount.HasValue)
             {
-                var startTimeUtc = CreateBarCountHistoryRequests(Securities.Keys, _warmupBarCount.Value, _warmupResolution)
+                var symbols = Securities.Keys;
+                if (symbols.Count != 0)
+                {
+                    var startTimeUtc = CreateBarCountHistoryRequests(symbols, _warmupBarCount.Value, _warmupResolution)
                         .Min(request => request.StartTimeUtc);
+                    return startTimeUtc.ConvertFromUtc(TimeZone);
+                }
 
-                return startTimeUtc.ConvertFromUtc(TimeZone);
+                var result = Time;
+                foreach (var universe in _pendingUniverseAdditions.Concat(UniverseManager.Values))
+                {
+                    var config = universe.Configuration;
+                    var resolution = universe.Configuration.Resolution;
+                    if (_warmupResolution.HasValue)
+                    {
+                        resolution = _warmupResolution.Value;
+                    }
+                    var exchange = MarketHoursDatabase.GetExchangeHours(config);
+                    var start = _historyRequestFactory.GetStartTimeAlgoTz(config.Symbol, _warmupBarCount.Value, resolution, exchange, config.DataTimeZone);
+                    result = result < start ? result : start;
+                }
+                return result;
             }
             if (_warmupTimeSpan.HasValue)
             {
