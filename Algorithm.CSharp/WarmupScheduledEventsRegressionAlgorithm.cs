@@ -14,22 +14,35 @@
 */
 
 using System;
-using System.Linq;
-using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm reproducing GH issue 6263. Where some data types would get dropped from the warmup feed
+    /// Regression algorithm reproducing GH issue 1046. Where scheduled events wouldn't work during warmup
     /// </summary>
-    public class WarmupDataTypesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class WarmupScheduledEventsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private bool _equityGotTradeBars;
-        private bool _equityGotQuoteBars;
+        private Queue<DateTime> _scheduledEvents = new (new[]
+        {
+            new DateTime(2013, 10, 07, 12, 0, 0),
+            new DateTime(2013, 10, 07, 14, 0, 0),
+            new DateTime(2013, 10, 07, 16, 0, 0),
+            new DateTime(2013, 10, 07, 18, 0, 0),
+            new DateTime(2013, 10, 07, 20, 0, 0),
+            new DateTime(2013, 10, 07, 22, 0, 0),
 
-        private bool _cryptoGotTradeBars;
+            new DateTime(2013, 10, 08, 0, 0, 0),
+            new DateTime(2013, 10, 08, 2, 0, 0),
+            new DateTime(2013, 10, 08, 4, 0, 0),
+            new DateTime(2013, 10, 08, 6, 0, 0),
+            new DateTime(2013, 10, 08, 8, 0, 0),
+            new DateTime(2013, 10, 08, 10, 0, 0),
+            new DateTime(2013, 10, 08, 12, 0, 0),
+            new DateTime(2013, 10, 08, 14, 0, 0),
+            new DateTime(2013, 10, 08, 16, 0, 0)
+        });
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -37,51 +50,36 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             SetStartDate(2013, 10, 08);
-            SetEndDate(2013, 10, 10);
+            SetEndDate(2013, 10, 08);
 
             AddEquity("SPY", Resolution.Minute, fillDataForward: false);
-            AddCrypto("BTCUSD", Resolution.Hour, market: Market.Bitfinex, fillDataForward: false);
 
-            SetWarmUp(24, Resolution.Hour);
-        }
-
-        /// <summary>
-        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
-        {
-            Debug($"[{Time}] Warmup: {IsWarmingUp}. Invested: {Portfolio.Invested} {string.Join(",", Securities.Select(pair => $"{pair.Key.Value}:{pair.Value.Price}"))}");
-            if (IsWarmingUp)
+            Schedule.On(DateRules.EveryDay(), TimeRules.Every(TimeSpan.FromHours(2)), () =>
             {
-                _equityGotTradeBars |= data.Bars.ContainsKey("SPY");
-                _equityGotQuoteBars |= data.QuoteBars.ContainsKey("SPY");
-
-                _cryptoGotTradeBars |= data.Bars.ContainsKey("BTCUSD");
-            }
-            else
-            {
-                if (!Portfolio.Invested)
+                Debug($"Scheduled event happening at {Time}. IsWarmingUp: {IsWarmingUp}");
+                if (!LiveMode)
                 {
-                    AddEquity("AAPL", Resolution.Hour);
-                    SetHoldings("BTCUSD", 0.3);
+                    var expected = _scheduledEvents.Dequeue();
+                    if (expected != Time)
+                    {
+                        throw new Exception($"Unexpected scheduled event time: {Time}. Expected {expected}");
+                    }
+
+                    if (expected.Day == 7 && !IsWarmingUp)
+                    {
+                        throw new Exception("Algorithm should be warming up on the 7th!");
+                    }
                 }
-            }
+            });
+
+            SetWarmUp(5, Resolution.Hour);
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (!_equityGotTradeBars || !_cryptoGotTradeBars)
+            if (_scheduledEvents.Count != 0)
             {
-                throw new Exception("Did not get any TradeBar during warmup");
-            }
-            if (!_equityGotQuoteBars)
-            {
-                throw new Exception("Did not get any QuoteBar during warmup");
-            }
-            if (Securities["AAPL"].Price == 0)
-            {
-                throw new Exception("Security added after warmup didn't get any data!");
+                throw new Exception("Some scheduled event was not fired!");
             }
         }
 
@@ -98,46 +96,46 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 5298;
+        public long DataPoints => 1404;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 41;
+        public int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "1"},
+            {"Total Trades", "0"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "106.090%"},
-            {"Drawdown", "0.600%"},
+            {"Compounding Annual Return", "0%"},
+            {"Drawdown", "0%"},
             {"Expectancy", "0"},
-            {"Net Profit", "0.596%"},
-            {"Sharpe Ratio", "124.4"},
+            {"Net Profit", "0%"},
+            {"Sharpe Ratio", "0"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.402"},
-            {"Beta", "0.029"},
-            {"Annual Standard Deviation", "0.007"},
+            {"Alpha", "0"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-65.071"},
-            {"Tracking Error", "0.236"},
-            {"Treynor Ratio", "30.193"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
+            {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$3000.00"},
-            {"Lowest Capacity Asset", "BTCUSD E3"},
-            {"Fitness Score", "0.033"},
+            {"Estimated Strategy Capacity", "$0"},
+            {"Lowest Capacity Asset", ""},
+            {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
             {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
-            {"Portfolio Turnover", "0.033"},
+            {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -151,7 +149,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "68470054afda2c86f2fdd4b88cd95074"}
+            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
         };
     }
 }

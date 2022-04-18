@@ -63,9 +63,9 @@ namespace QuantConnect.Algorithm.CSharp
         // sort the data by daily dollar volume and take the top 'NumberOfSymbols'
         private IEnumerable<Symbol> CoarseSelectionFunction(IEnumerable<CoarseFundamental> coarse)
         {
-            Debug($"Coarse selection happening at {Time}");
+            Debug($"Coarse selection happening at {Time} {IsWarmingUp}");
             var expected = _selection.Dequeue();
-            if (expected != Time)
+            if (expected != Time && !LiveMode)
             {
                 throw new Exception($"Unexpected selection time: {Time}. Expected {expected}");
             }

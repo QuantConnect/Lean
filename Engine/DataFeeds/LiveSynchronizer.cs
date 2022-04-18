@@ -31,7 +31,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class LiveSynchronizer : Synchronizer
     {
         private ITimeProvider _timeProvider;
-        private TimeProviderWithWarmup _frontierTimeProvider;
+        private LiveTimeProvider _frontierTimeProvider;
         private RealTimeScheduleEventService _realTimeScheduleEventService;
         private readonly int _batchingDelay = Config.GetInt("consumer-batching-timeout-ms");
         private readonly ManualResetEventSlim _newLiveDataEmitted = new ManualResetEventSlim(false);
@@ -51,7 +51,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             base.Initialize(algorithm, dataFeedSubscriptionManager);
 
             _timeProvider = GetTimeProvider();
-            _frontierTimeProvider = new TimeProviderWithWarmup(live: _timeProvider);
+            _frontierTimeProvider = new LiveTimeProvider(realTime: _timeProvider);
             SubscriptionSynchronizer.SetTimeProvider(_frontierTimeProvider);
 
             // attach event handlers to subscriptions
@@ -140,9 +140,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     previousWasTimePulse = timeSlice.IsTimePulse;
                     yield return timeSlice;
 
-                    // force emitting every second since the data feed is
-                    // the heartbeat of the application
-                    nextEmit = frontierUtc.RoundDown(Time.OneSecond).Add(Time.OneSecond);
+                    // ignore if time pulse because we will emit a slice with the same time just after this one
+                    if (!timeSlice.IsTimePulse)
+                    {
+                        // force emitting every second since the data feed is
+                        // the heartbeat of the application
+                        nextEmit = frontierUtc.RoundDown(Time.OneSecond).Add(Time.OneSecond);
+                    }
                 }
             }
 
@@ -213,49 +217,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         protected virtual void OnSubscriptionNewDataAvailable(object sender, EventArgs args)
         {
             _newLiveDataEmitted.Set();
-        }
-
-        private class TimeProviderWithWarmup : ITimeProvider
-        {
-            private readonly DateTime _liveStart;
-            private DateTime _previous;
-            private ITimeProvider _initialTimeProvider;
-            private ITimeProvider _live;
-
-            public TimeProviderWithWarmup(ITimeProvider live)
-            {
-                _live = live;
-                _liveStart = _live.GetUtcNow();
-            }
-
-            public void Initialize(ITimeProvider initialTimeProvider)
-            {
-                _initialTimeProvider = initialTimeProvider;
-            }
-
-            public DateTime GetUtcNow()
-            {
-                if(ReferenceEquals(_live, _initialTimeProvider))
-                {
-                    return _live.GetUtcNow();
-                }
-
-                if (_initialTimeProvider == null)
-                {
-                    // don't let any live data point through until we are fully initialized
-                    return Time.BeginningOfTime;
-                }
-
-                var newTime = _initialTimeProvider.GetUtcNow();
-                if (_previous == newTime || newTime >= _liveStart)
-                {
-                    // subscription time provider swap ended, start using live
-                    _initialTimeProvider = _live;
-                    return GetUtcNow();
-                }
-                _previous = newTime;
-                return newTime;
-            }
         }
     }
 }

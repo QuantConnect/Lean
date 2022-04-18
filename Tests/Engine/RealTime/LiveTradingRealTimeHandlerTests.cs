@@ -34,6 +34,7 @@ namespace QuantConnect.Tests.Engine.RealTime
             var realTimeHandler = new LiveTradingRealTimeHandler();
             var algo = new AlgorithmStub();
             algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
+            algo.SetFinishedWarmingUp();
 
             realTimeHandler.Setup(algo,
                 new AlgorithmNodePacket(PacketType.AlgorithmNode),
@@ -41,6 +42,7 @@ namespace QuantConnect.Tests.Engine.RealTime
                 null,
                 new TestTimeLimitManager());
 
+            realTimeHandler.SetTime(DateTime.UtcNow);
             // wait for the internal thread to start
             Thread.Sleep(500);
             var scheduledEvent = new ScheduledEvent("1", new []{ Time.EndOfTime }, (_, _) => { });

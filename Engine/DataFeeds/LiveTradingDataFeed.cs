@@ -421,10 +421,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IEnumerator<BaseData> result = null;
             try
             {
-                result = new FilterEnumerator<BaseData>(CreateEnumerator(warmup),data => data.EndTime < warmup.EndTimeLocal);
+                result = new FilterEnumerator<BaseData>(CreateEnumerator(warmup),data => data == null || data.EndTime < warmup.EndTimeLocal);
             }
-            catch
+            catch (Exception e)
             {
+                Log.Error(e, $"File based warmup: {warmup.Configuration}");
             }
             return result;
         }
@@ -445,14 +446,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         var data = slice.Get(historyRequest.DataType);
                         return (BaseData)data[warmup.Configuration.Symbol];
                     }
-                    catch
+                    catch (Exception e)
                     {
-                        // just in case
+                        Log.Error(e, $"History warmup: {warmup.Configuration}");
                     }
                     return null;
-                }).Where(data => data != null).GetEnumerator();
+                }).GetEnumerator();
 
-                result = new FilterEnumerator<BaseData>(result,data => data.EndTime < warmup.EndTimeLocal);
+                result = new FilterEnumerator<BaseData>(result,data => data == null || data.EndTime < warmup.EndTimeLocal);
             }
             catch
             {

@@ -83,6 +83,40 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [Test]
+        public void Warmup()
+        {
+            _startDate = new DateTime(2014, 5, 8);
+            CustomMockedFileBaseData.StartDate = _startDate;
+            _manualTimeProvider.SetCurrentTimeUtc(_startDate);
+
+            var endDate = _startDate.AddDays(10);
+            _algorithm.SetWarmup(1, Resolution.Daily);
+            var feed = RunDataFeed(forex: new List<string> { Symbols.EURUSD.ToString() }, resolution: Resolution.Minute);
+
+            var emittedData = false;
+            var emittedDataDuringWarmup = false;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
+            {
+                if (ts.Slice.HasData)
+                {
+                    if (_algorithm.IsWarmingUp)
+                    {
+                        emittedDataDuringWarmup = true;
+                    }
+                    else
+                    {
+                        emittedData = true;
+                        // we got what we wanted shortcut unit test
+                        _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                    }
+                }
+            }, endDate: endDate);
+
+            Assert.IsTrue(emittedData);
+            Assert.IsTrue(emittedDataDuringWarmup);
+        }
+
+        [Test]
         public void EmitsData()
         {
             var endDate = _startDate.AddDays(10);
@@ -969,6 +1003,65 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsTrue(fineWasCalled);
         }
 
+        [Test]
+        public void FineCoarseFundamentalDataGetsPipedCorrectlyWarmup()
+        {
+            _startDate = new DateTime(2014, 3, 27);
+            CustomMockedFileBaseData.StartDate = _startDate;
+            _manualTimeProvider.SetCurrentTimeUtc(_startDate);
+            _algorithm.SetWarmup(1, Resolution.Daily);
+
+            var fineWasCalled = false;
+            var fineWasCalledDuringWarmup = false;
+            _algorithm.UniverseSettings.Resolution = Resolution.Second;
+            _algorithm.AddUniverse(coarse => coarse
+                    .Where(x => x.Symbol.ID.Symbol.Contains("AAPL")).Select((fundamental, _) => fundamental.Symbol),
+                fine =>
+                {
+                    var symbol = fine.FirstOrDefault()?.Symbol;
+                    if (symbol == Symbols.AAPL)
+                    {
+                        if (_algorithm.IsWarmingUp)
+                        {
+                            fineWasCalledDuringWarmup = true;
+                        }
+                        else
+                        {
+                            fineWasCalled = true;
+                        }
+                        return new[] { symbol };
+                    }
+                    return Enumerable.Empty<Symbol>();
+                });
+
+            var feed = RunDataFeed(getNextTicksFunction: fdqh => Enumerable.Empty<BaseData>());
+
+            var receivedFundamentalsData = false;
+            var receivedFundamentalsDataDuringWarmup = false;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
+            {
+                if (ts.UniverseData.Count > 0 &&
+                    ts.UniverseData.First().Value.Data.First() is Fundamentals)
+                {
+                    if (_algorithm.IsWarmingUp)
+                    {
+                        receivedFundamentalsDataDuringWarmup = true;
+                    }
+                    else
+                    {
+                        receivedFundamentalsData = true;
+                        // we got what we wanted shortcut unit test
+                        _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                    }
+                }
+            }, sendUniverseData: true, alwaysInvoke: true, secondsTimeStep: 3600, endDate: _startDate.AddDays(10));
+
+            Assert.IsTrue(fineWasCalledDuringWarmup);
+            Assert.IsTrue(fineWasCalled);
+            Assert.IsTrue(receivedFundamentalsData);
+            Assert.IsTrue(receivedFundamentalsDataDuringWarmup);
+        }
+
         [TestCase(1)]
         [TestCase(2)]
         public void FineCoarseFundamentalDataGetsPipedCorrectly(int numberOfUniverses)
@@ -1477,8 +1570,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var endTime = DateTime.UtcNow.Add(timeout);
             bool startedReceivingata = false;
             var cancellationTokenSource = new CancellationTokenSource();
+            _algorithm.SetLocked();
             foreach (var timeSlice in _synchronizer.StreamData(cancellationTokenSource.Token))
             {
+                _algorithm.SetDateTime(timeSlice.Time);
                 if (!noOutput)
                 {
                     ConsoleWriteLine("\r\n" + $"Now (EDT): {DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork):o}" +
@@ -1501,7 +1596,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
                 _algorithm.OnEndOfTimeStep();
                 _manualTimeProvider.AdvanceSeconds(secondsTimeStep);
-                Thread.Sleep(10);
+                if (!_algorithm.IsWarmingUp)
+                {
+                    Thread.Sleep(10);
+                }
                 if (endDate != default(DateTime) && _manualTimeProvider.GetUtcNow() > endDate
                     || endTime <= DateTime.UtcNow)
                 {
