@@ -106,7 +106,7 @@ namespace QuantConnect.Python
         /// these modules must be reloaded by reload() from importlib library</remarks>
         public static void ActivatePythonVirtualEnvironment(string pathToVirtualEnv)
         {
-            if (pathToVirtualEnv == null)
+            if (string.IsNullOrEmpty(pathToVirtualEnv))
             {
                 return;
             }
@@ -118,7 +118,7 @@ namespace QuantConnect.Python
 
             pathToVirtualEnv = pathToVirtualEnv.TrimEnd('/').TrimEnd('\\');
             var pathsToPrepend = new List<string>();
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 // For linux we need to know the python version to determine the lib folder containing our packages
                 // Compare our PyDLL to the directory names under the lib directory and get a match
@@ -137,6 +137,7 @@ namespace QuantConnect.Python
                 pathsToPrepend.Add($"{pathToVirtualEnv}\\Lib\\site-packages");
             }
 
+            Log.Error($"PythonIntializer.ActivatePythonVirtualEnvironment(): Adding the following locations to Python Path: {string.Join(",", pathsToPrepend)}");
             AddPythonPaths(pathsToPrepend);
         }
     }

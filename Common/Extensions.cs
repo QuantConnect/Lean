@@ -3038,7 +3038,7 @@ namespace QuantConnect
         /// <returns>Substring with start removed</returns>
         public static string RemoveFromStart(this string s, string start)
         {
-            if (!s.IsNullOrEmpty() && !start.IsNullOrEmpty() && s.StartsWith(start, StringComparison.InvariantCulture))
+            if (!string.IsNullOrEmpty(s) && !string.IsNullOrEmpty(start) && s.StartsWith(start, StringComparison.InvariantCulture))
             {
                 return s.Substring(start.Length);
             }
