@@ -15,11 +15,12 @@
 */
 
 using System;
-using System.Threading.Tasks;
+using System.IO;
 using NUnit.Framework;
+using Path = System.IO.Path;
+using System.Threading.Tasks;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
-using Path = System.IO.Path;
 
 namespace QuantConnect.Tests.Engine.DataCacheProviders
 {
@@ -47,6 +48,22 @@ namespace QuantConnect.Tests.Engine.DataCacheProviders
                 ReadAndWrite(dataCacheProvider, data);
             });
 
+            dataCacheProvider.Dispose();
+        }
+
+        [Test]
+        public void StoreFailsCorruptedFile()
+        {
+            var dataCacheProvider = new ZipDataCacheProvider(TestGlobals.DataProvider, cacheTimer: 0.1);
+
+            var tempZipFileEntry = Path.GetTempFileName().Replace(".tmp", ".zip", StringComparison.InvariantCulture);
+
+            var data = new byte[300];
+            _random.NextBytes(data);
+
+            File.WriteAllText(tempZipFileEntry, "corrupted zip");
+
+            Assert.Throws<InvalidOperationException>(() => dataCacheProvider.Store(tempZipFileEntry + "#testEntry.csv", data));
             dataCacheProvider.Dispose();
         }
 
