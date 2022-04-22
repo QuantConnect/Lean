@@ -1560,6 +1560,28 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <param name="period"></param>
+        /// <returns></returns>
+        [DocumentationAttribute(Indicators)]
+        public RelativeMovingAverage RMA(Symbol symbol, int period, Resolution? resolution = null)
+        {
+            var name = CreateIndicatorName(symbol, $"RMA({period})", resolution);
+            var relativeMovingAverage = new RelativeMovingAverage(name, period);
+            RegisterIndicator(symbol, relativeMovingAverage, resolution);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, relativeMovingAverage, resolution);
+            }
+
+            return relativeMovingAverage;
+        }
+
+
+        /// <summary>
         /// Creates a new RateOfChange indicator. This will compute the n-period rate of change in the security.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>

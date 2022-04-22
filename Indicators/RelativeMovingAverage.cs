@@ -22,7 +22,6 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class RelativeMovingAverage : Indicator, IIndicatorWarmUpPeriodProvider
     {
-
         /// <summary>
         /// Gets the Short Term SMA with 1 x Period of RMA
         /// </summary>
@@ -36,7 +35,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets the Long Term SMA with 3 x Period of RMA
         /// </summary>
-        private SimpleMovingAverage LongAverage { get; }
+        public SimpleMovingAverage LongAverage { get; }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
