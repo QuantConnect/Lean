@@ -152,7 +152,7 @@ class SymbolData:
     def __init__(self, symbol, dailyLookback, lookback, resolution, algorithm):
         self.Symbol = symbol
 
-        self.dailyReturn = RateOfChangePercent('f{symbol}.DailyROCP({1})', 1)
+        self.dailyReturn = RateOfChangePercent(f'{symbol}.DailyROCP({1})', 1)
         self.dailyConsolidator = algorithm.ResolveConsolidator(symbol, Resolution.Daily)
         self.dailyReturnHistory = RollingWindow[IndicatorDataPoint](dailyLookback)
 
