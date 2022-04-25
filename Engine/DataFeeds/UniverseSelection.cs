@@ -382,9 +382,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (securityBenchmark != null)
                 {
                     var resolution = _algorithm.LiveMode ? Resolution.Minute : Resolution.Hour;
-
                     // Check that the tradebar subscription we are using can support this resolution GH #5893
+                    //var subscriptionType = new Tuple<Type, TickType>(securityBenchmark.Security.GetType(), TickType.Trade);
                     var subscriptionType = _algorithm.SubscriptionManager.SubscriptionDataConfigService.LookupSubscriptionConfigDataTypes(securityBenchmark.Security.Type, resolution, securityBenchmark.Security.Symbol.IsCanonical()).First();
+                    var symbol = securityBenchmark.Security.Symbol;
+                    if (symbol.SecurityType == SecurityType.Base && symbol.ToString().TryGetCustomDataType(out var customType))
+                    {
+                        subscriptionType = new Tuple<Type, TickType>(Extensions.PythonTypes[customType], TickType.Trade);
+                    }
                     var baseInstance = subscriptionType.Item1.GetBaseDataInstance();
                     baseInstance.Symbol = securityBenchmark.Security.Symbol;
                     var supportedResolutions = baseInstance.SupportedResolutions();

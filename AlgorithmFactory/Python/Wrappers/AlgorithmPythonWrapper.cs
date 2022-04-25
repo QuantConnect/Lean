@@ -82,7 +82,12 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                         var attr = module.GetAttr(name.ToString());
                         var repr = attr.Repr().GetStringBetweenChars('\'', '\'');
 
-                        if (repr.StartsWith(moduleName) &&                // Must be defined in the module
+                        if (!repr.EndsWith("PythonData") && repr == "Dummy.ExampleCustomData")
+                        {
+                            attr.CreateType();
+                            continue;
+                        }
+                        else if (repr.StartsWith(moduleName) &&                // Must be defined in the module
                             attr.TryConvert(out type, true) &&                  // Must be a Type
                             typeof(QCAlgorithm).IsAssignableFrom(type))   // Must inherit from QCAlgorithm
                         {
@@ -126,6 +131,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                                 // be used and seen.
                             }
                         }
+
                         attr.Dispose();
                     }
                     module.Dispose();
