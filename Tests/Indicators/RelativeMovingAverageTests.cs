@@ -20,7 +20,7 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    internal class RelativeMovingAverageTests : CommonIndicatorTests<IndicatorDataPoint>
+    public class RelativeMovingAverageTests : CommonIndicatorTests<IndicatorDataPoint>
     {
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {
@@ -40,8 +40,6 @@ namespace QuantConnect.Tests.Indicators
         public override void ResetsProperly()
         {
             var rma = new RelativeMovingAverage(5);
-            rma.Update(DateTime.UtcNow, 1m);
-
             foreach (var data in TestHelper.GetDataStream(5 * 3))
             {
                 Assert.IsFalse(rma.IsReady);
