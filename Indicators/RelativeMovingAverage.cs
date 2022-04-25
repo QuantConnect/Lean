@@ -40,18 +40,12 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => ShortAverage.IsReady && MediumAverage.IsReady && LongAverage.IsReady;
+        public override bool IsReady => LongAverage.IsReady;
 
         /// <summary>
-        /// Resets this indicator to its initial state
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
-        public override void Reset()
-        {
-            base.Reset();
-            ShortAverage.Reset();
-            MediumAverage.Reset();
-            LongAverage.Reset();
-        }
+        public int WarmUpPeriod => LongAverage.WarmUpPeriod;
 
         /// <summary>
         /// Initializes a new instance of the RelativeMovingAverage class with the specified name and period
@@ -61,8 +55,6 @@ namespace QuantConnect.Indicators
         public RelativeMovingAverage(string name, int period) 
             : base(name)
         {
-            WarmUpPeriod = period * 3;
-
             ShortAverage = new SimpleMovingAverage(name + "_Short", period);
             MediumAverage = new SimpleMovingAverage(name + "_Medium", period * 2);
             LongAverage = new SimpleMovingAverage(name + "_Long", period * 3);
@@ -92,8 +84,14 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// Resets this indicator to its initial state
         /// </summary>
-        public int WarmUpPeriod { get; }
+        public override void Reset()
+        {
+            base.Reset();
+            ShortAverage.Reset();
+            MediumAverage.Reset();
+            LongAverage.Reset();
+        }
     }
 }

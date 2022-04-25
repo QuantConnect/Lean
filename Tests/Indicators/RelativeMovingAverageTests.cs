@@ -40,10 +40,11 @@ namespace QuantConnect.Tests.Indicators
         public override void ResetsProperly()
         {
             var rma = new RelativeMovingAverage(5);
-            rma.Update(DateTime.Today, 1m);
+            rma.Update(DateTime.UtcNow, 1m);
 
-            foreach (var data in TestHelper.GetDataStream(4))
+            foreach (var data in TestHelper.GetDataStream(5 * 3))
             {
+                Assert.IsFalse(rma.IsReady);
                 rma.Update(data);
             }
             Assert.IsTrue(rma.IsReady);
