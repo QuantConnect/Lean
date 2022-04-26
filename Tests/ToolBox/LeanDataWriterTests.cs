@@ -119,10 +119,13 @@ namespace QuantConnect.Tests.ToolBox
             Assert.AreEqual(data.First().Value.Count(), 3);
         }
 
-        [TestCase(SecurityType.FutureOption)]
-        [TestCase(SecurityType.Future)]
-        [TestCase(SecurityType.Option)]
-        public void LeanDataWriter_CanWriteZipWithMultipleContracts(SecurityType securityType)
+        [TestCase(SecurityType.FutureOption, Resolution.Second)]
+        [TestCase(SecurityType.Future, Resolution.Second)]
+        [TestCase(SecurityType.Option, Resolution.Second)]
+        [TestCase(SecurityType.Option, Resolution.Daily)]
+        [TestCase(SecurityType.Future, Resolution.Daily)]
+        [TestCase(SecurityType.FutureOption, Resolution.Daily)]
+        public void LeanDataWriter_CanWriteZipWithMultipleContracts(SecurityType securityType, Resolution resolution)
         {
             Symbol contract1;
             Symbol contract2;
@@ -146,12 +149,12 @@ namespace QuantConnect.Tests.ToolBox
                 throw new NotImplementedException($"{securityType} not implemented!");
             }
 
-            var filePath1 = LeanData.GenerateZipFilePath(_dataDirectory, contract1, _date, Resolution.Second, TickType.Quote);
-            var leanDataWriter1 = new LeanDataWriter(Resolution.Second, contract1, _dataDirectory, TickType.Quote);
+            var filePath1 = LeanData.GenerateZipFilePath(_dataDirectory, contract1, _date, resolution, TickType.Quote);
+            var leanDataWriter1 = new LeanDataWriter(resolution, contract1, _dataDirectory, TickType.Quote);
             leanDataWriter1.Write(GetQuoteBars(contract1));
 
-            var filePath2 = LeanData.GenerateZipFilePath(_dataDirectory, contract2, _date, Resolution.Second, TickType.Quote);
-            var leanDataWriter2 = new LeanDataWriter(Resolution.Second, contract2, _dataDirectory, TickType.Quote);
+            var filePath2 = LeanData.GenerateZipFilePath(_dataDirectory, contract2, _date, resolution, TickType.Quote);
+            var leanDataWriter2 = new LeanDataWriter(resolution, contract2, _dataDirectory, TickType.Quote);
             leanDataWriter2.Write(GetQuoteBars(contract2));
 
             Assert.AreEqual(filePath1, filePath2);

@@ -126,7 +126,7 @@ namespace QuantConnect.Orders
         ExceededMaximumOrders = -20,
 
         /// <summary>
-        /// Need 11 minute buffer before exchange close
+        /// Below buffer time for MOC order to be placed before exchange closes. 15.5 minutes by default
         /// </summary>
         MarketOnCloseOrderTooLate = -21,
 

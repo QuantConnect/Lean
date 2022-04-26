@@ -147,6 +147,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         Cache(fileName, out _);
                     }
+                    else
+                    {
+                        throw new InvalidOperationException($"Failed to store data {fileName}#{entryName}");
+                    }
 
                     return;
                 }
@@ -282,6 +286,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 catch (Exception exception)
                 {
+                    // don't leak the file stream!
+                    dataStream.DisposeSafely();
                     if (exception is ZipException || exception is ZlibException)
                     {
                         Log.Error("ZipDataCacheProvider.Fetch(): Corrupt zip file/entry: " + filename + "#" + entryName + " Error: " + exception);
