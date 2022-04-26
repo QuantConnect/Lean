@@ -18,11 +18,13 @@ using System.Globalization;
 using System.IO;
 using System.Collections.Generic;
 using QuantConnect.Data;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// Regression algorithm to demonstrate the use of SetBenchmark() with custom data
+    /// </summary>
     public class CustomDataBenchmarkRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
@@ -124,8 +126,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {
-                var source = Path.Combine(Globals.DataFolder, "path_to_my_csv_data.csv");
-                return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+                var source = "https://www.dl.dropboxusercontent.com/s/d83xvd7mm9fzpk0/path_to_my_csv_data.csv?dl=0";
+                return new SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile, FileFormat.Csv);
             }
 
             public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)

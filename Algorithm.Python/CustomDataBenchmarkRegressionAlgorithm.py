@@ -12,6 +12,9 @@
 
 from AlgorithmImports import *
 
+### <summary>
+### Regression algorithm to demonstrate the use of SetBenchmark() with custom data
+### </summary>
 class CustomDataBenchmarkRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
 
@@ -33,10 +36,8 @@ class CustomDataBenchmarkRegressionAlgorithm(QCAlgorithm):
 class ExampleCustomData(PythonData):
 
     def GetSource(self, config, date, isLive):
-        source = os.path.join(Globals.DataFolder, "path_to_my_csv_data.csv")
-        if not os.path.isfile(source):
-            raise FileNotFoundError(source + " not found")
-        return SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile)
+        source = "https://www.dl.dropboxusercontent.com/s/d83xvd7mm9fzpk0/path_to_my_csv_data.csv?dl=0";
+        return SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile)
 
     def Reader(self, config, line, date, isLive):
         data = line.split(',')
