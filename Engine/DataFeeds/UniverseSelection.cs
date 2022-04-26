@@ -383,19 +383,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     var resolution = _algorithm.LiveMode ? Resolution.Minute : Resolution.Hour;
                     // Check that the tradebar subscription we are using can support this resolution GH #5893
-                    //var subscriptionType = new Tuple<Type, TickType>(securityBenchmark.Security.GetType(), TickType.Trade);
                     var subscriptionType = _algorithm.SubscriptionManager.SubscriptionDataConfigService.LookupSubscriptionConfigDataTypes(securityBenchmark.Security.Type, resolution, securityBenchmark.Security.Symbol.IsCanonical()).First();
                     var symbol = securityBenchmark.Security.Symbol;
                     var isCustomData = false;
-                    if (Extensions.PythonTypes.ContainsKey(symbol.Value))
+
+                    // Check if the benchmark security is a custom data in order to make sure we get the correct
+                    // type
+                    if (symbol.SecurityType == SecurityType.Base)
                     {
-                        subscriptionType = new Tuple<Type, TickType>(Extensions.PythonTypes[symbol.Value], TickType.Trade);
-                        isCustomData = true;
-                    }
-                    else if (symbol.SecurityType == SecurityType.Base && _algorithm.Securities.TryGetValue(symbol, out var type))
-                    {
-                        subscriptionType = new Tuple<Type, TickType>(type.SubscriptionDataConfig.Type, TickType.Trade);
-                        isCustomData = true;
+                        if (_algorithm.Securities.TryGetValue(symbol, out var type))
+                        {
+                            subscriptionType = new Tuple<Type, TickType>(type.SubscriptionDataConfig.Type, TickType.Trade);
+                            isCustomData = true;
+                        }
                     }
                     var baseInstance = subscriptionType.Item1.GetBaseDataInstance();
                     baseInstance.Symbol = securityBenchmark.Security.Symbol;

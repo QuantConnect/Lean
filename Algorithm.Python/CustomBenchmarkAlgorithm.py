@@ -27,7 +27,7 @@ class CustomBenchmarkAlgorithm(QCAlgorithm):
         self.SetEndDate(2013,10,11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.AddEquity("SPY", Resolution.Hour)
+        self.AddEquity("SPY", Resolution.Second)
         
         # Disabling the benchmark / setting to a fixed value 
         # self.SetBenchmark(lambda x: 0)

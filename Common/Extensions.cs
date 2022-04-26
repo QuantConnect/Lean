@@ -72,11 +72,8 @@ namespace QuantConnect
         private static RecyclableMemoryStreamManager MemoryManager = new RecyclableMemoryStreamManager();
         private static readonly int DataUpdatePeriod = Config.GetInt("api-data-update-period", 1);
 
-        public static readonly Dictionary<IntPtr, PythonActivator> PythonActivators
+        private static readonly Dictionary<IntPtr, PythonActivator> PythonActivators
             = new Dictionary<IntPtr, PythonActivator>();
-
-        public static readonly Dictionary<string, Type> PythonTypes
-            = new Dictionary<string, Type>();
 
         /// <summary>
         /// Maintains old behavior of NodaTime's (&lt; 2.0) daylight savings mapping.
@@ -2920,9 +2917,6 @@ namespace QuantConnect
 
                 // Save to prevent future additions
                 PythonActivators.Add(pyObject.Handle, pythonType);
-
-                var name = assemblyName.Name.Split('.')[1].ToUpper();
-                PythonTypes.Add(name, pythonType.Type);
             }
             return pythonType.Type;
         }

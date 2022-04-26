@@ -126,13 +126,6 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                                 // be used and seen.
                             }
                         }
-                        else if (!repr.EndsWith("PythonData") && attr.TryConvert(out type, true) &&                  // Must be a Type
-                            typeof(PythonData).IsAssignableFrom(type))
-                        {
-                            attr.CreateType();
-                            continue;
-                        }
-                        
                         attr.Dispose();
                     }
                     module.Dispose();

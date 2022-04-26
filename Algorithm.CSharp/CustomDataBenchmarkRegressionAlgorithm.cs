@@ -23,7 +23,7 @@ using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
-    public class CustomDataBenchmarkRegressionAlgorithm: QCAlgorithm
+    public class CustomDataBenchmarkRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -46,13 +46,74 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public bool CanRunLocally = true;
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
 
-        public Language[] Languages = {Language.CSharp, Language.Python};
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
-        public long DataPoints = 3;
+        /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 114;
 
-        public int AlgorithmHistoryDataPoints = 3;
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "1"},
+            {"Average Win", "0%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "29.610%"},
+            {"Drawdown", "0.600%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "0.282%"},
+            {"Sharpe Ratio", "9.471"},
+            {"Probabilistic Sharpe Ratio", "0%"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0.111"},
+            {"Beta", "-0.016"},
+            {"Annual Standard Deviation", "0.007"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "-6.047"},
+            {"Tracking Error", "0.439"},
+            {"Treynor Ratio", "-4.22"},
+            {"Total Fees", "$2.21"},
+            {"Estimated Strategy Capacity", "$180000000.00"},
+            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
+            {"Fitness Score", "0.248"},
+            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "189.448"},
+            {"Portfolio Turnover", "0.248"},
+            {"Total Insights Generated", "0"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "0"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "e5e9dbcce9cc65204d91b28c850c328b"}
+        };
 
         public class ExampleCustomData : BaseData
         {
