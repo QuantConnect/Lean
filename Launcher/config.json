@@ -9,14 +9,14 @@
   "environment": "backtesting", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
 
   // algorithm class selector
-  "algorithm-type-name": "BasicTemplateBenchmark",
+  "algorithm-type-name": "CustomDataBenchmarkRegressionAlgorithm",
 
   // Algorithm language selector - options CSharp, Python
-  "algorithm-language": "Python",
+  "algorithm-language": "CSharp",
 
   //Physical DLL location
-  //"algorithm-location": "QuantConnect.Algorithm.CSharp.dll",
-  "algorithm-location": "../../../Algorithm.Python/Dummy.py",
+  "algorithm-location": "QuantConnect.Algorithm.CSharp.dll",
+  //"algorithm-location": "../../../Algorithm.Python/Dummy.py",
 
   //Research notebook
   //"composer-dll-directory": ".",

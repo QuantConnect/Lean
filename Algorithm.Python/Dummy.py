@@ -31,10 +31,9 @@ class Dummy(QCAlgorithm):
 
         self.AddEquity("SPY", Resolution.Hour)
         # Load benchmark data
-        # self.AddData(ExampleCustomData, "ExampleCustomData", Resolution.Hour)
-        self.SetBenchmark("ExampleCustomData")
+        self.customSymbol = self.AddData(ExampleCustomData, "ExampleCustomData", Resolution.Hour).Symbol
+        self.SetBenchmark(self.customSymbol)
 
     def OnData(self, data):
         if not self.Portfolio.Invested:
             self.SetHoldings("SPY", 1)
-        self.Log("SIUUUUUUUUU: ")

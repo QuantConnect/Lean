@@ -2921,7 +2921,7 @@ namespace QuantConnect
                 // Save to prevent future additions
                 PythonActivators.Add(pyObject.Handle, pythonType);
 
-                var name = assemblyName.Name.Split('.')[1];
+                var name = assemblyName.Name.Split('.')[1].ToUpper();
                 PythonTypes.Add(name, pythonType.Type);
             }
             return pythonType.Type;

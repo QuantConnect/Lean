@@ -386,9 +386,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     //var subscriptionType = new Tuple<Type, TickType>(securityBenchmark.Security.GetType(), TickType.Trade);
                     var subscriptionType = _algorithm.SubscriptionManager.SubscriptionDataConfigService.LookupSubscriptionConfigDataTypes(securityBenchmark.Security.Type, resolution, securityBenchmark.Security.Symbol.IsCanonical()).First();
                     var symbol = securityBenchmark.Security.Symbol;
-                    if (symbol.SecurityType == SecurityType.Base && symbol.ToString().TryGetCustomDataType(out var customType))
+                    var isCustomData = false;
+                    if (Extensions.PythonTypes.ContainsKey(symbol.Value))
                     {
-                        subscriptionType = new Tuple<Type, TickType>(Extensions.PythonTypes[customType], TickType.Trade);
+                        subscriptionType = new Tuple<Type, TickType>(Extensions.PythonTypes[symbol.Value], TickType.Trade);
+                        isCustomData = true;
+                    }
+                    else if (symbol.SecurityType == SecurityType.Base && _algorithm.Securities.TryGetValue(symbol, out var type))
+                    {
+                        subscriptionType = new Tuple<Type, TickType>(type.SubscriptionDataConfig.Type, TickType.Trade);
+                        isCustomData = true;
                     }
                     var baseInstance = subscriptionType.Item1.GetBaseDataInstance();
                     baseInstance.Symbol = securityBenchmark.Security.Symbol;
@@ -404,6 +411,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         resolution,
                         isInternalFeed: true,
                         fillForward: false,
+                        isCustomData: isCustomData,
                         subscriptionDataTypes: subscriptionList
                         ).First();
 
