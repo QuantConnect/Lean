@@ -82,7 +82,7 @@
   "ib-version": "974",
 
   // tradier configuration
-  "tradier-use-sandbox": true,
+  "tradier-environment": "paper",
   "tradier-account-id": "",
   "tradier-access-token": "",
 

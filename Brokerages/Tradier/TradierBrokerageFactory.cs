@@ -39,6 +39,11 @@ namespace QuantConnect.Brokerages.Tradier
             public static bool UseSandbox => Config.GetBool("tradier-use-sandbox");
 
             /// <summary>
+            /// Gets whether to use the developer sandbox (paper mode) or live mode
+            /// </summary>
+            public static string Environment => Config.Get("tradier-environment");
+
+            /// <summary>
             /// Gets the account ID to be used when instantiating a brokerage
             /// </summary>
             public static string AccountId => Config.Get("tradier-account-id");
@@ -71,6 +76,7 @@ namespace QuantConnect.Brokerages.Tradier
                 var data = new Dictionary<string, string>
                 {
                     { "tradier-use-sandbox", Configuration.UseSandbox.ToStringInvariant() },
+                    { "tradier-environment", Configuration.Environment.ToStringInvariant() },
                     { "tradier-account-id", Configuration.AccountId.ToStringInvariant() },
                     { "tradier-access-token", Configuration.AccessToken.ToStringInvariant() }
                 };
@@ -94,6 +100,11 @@ namespace QuantConnect.Brokerages.Tradier
         {
             var errors = new List<string>();
             var useSandbox = Read<bool>(job.BrokerageData, "tradier-use-sandbox", errors);
+            var environment = Read<string>(job.BrokerageData, "tradier-environment", errors);
+            if (!string.IsNullOrEmpty(environment))
+            {
+                useSandbox = environment.ToLowerInvariant() == "paper";
+            }
             var accountId = Read<string>(job.BrokerageData, "tradier-account-id", errors);
             var accessToken = Read<string>(job.BrokerageData, "tradier-access-token", errors);
 
