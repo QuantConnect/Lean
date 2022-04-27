@@ -51,7 +51,7 @@ namespace QuantConnect.Brokerages.Tradier
         {
             var useSandbox = bool.Parse(job.BrokerageData["tradier-use-sandbox"]);
             var environment = job.BrokerageData["tradier-environment"];
-            if (!environment.IsNullOrEmpty())
+            if (!string.IsNullOrEmpty(environment))
             {
                 useSandbox = environment.ToLowerInvariant() == "paper";
             }

@@ -141,7 +141,7 @@ namespace QuantConnect.Tests.Brokerages.Tradier
 
         private void GetHistoryHelper(HistoryRequest request, Resolution resolution){
 
-            if (!_environment.IsNullOrEmpty())
+            if (!string.IsNullOrEmpty(_environment))
             {
                 _useSandbox = _environment.ToLowerInvariant() == "paper";
             }

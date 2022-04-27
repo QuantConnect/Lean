@@ -101,7 +101,7 @@ namespace QuantConnect.Brokerages.Tradier
             var errors = new List<string>();
             var useSandbox = Read<bool>(job.BrokerageData, "tradier-use-sandbox", errors);
             var environment = Read<string>(job.BrokerageData, "tradier-environment", errors);
-            if (!environment.IsNullOrEmpty())
+            if (!string.IsNullOrEmpty(environment))
             {
                 useSandbox = environment.ToLowerInvariant() == "paper";
             }
