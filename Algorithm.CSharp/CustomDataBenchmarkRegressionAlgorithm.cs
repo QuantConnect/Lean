@@ -17,6 +17,7 @@ using System;
 using System.Globalization;
 using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Benchmarks;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -42,6 +43,15 @@ namespace QuantConnect.Algorithm.CSharp
             if (!Portfolio.Invested)
             {
                 SetHoldings("SPY", 1);
+            }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            var securityBenchmark = (SecurityBenchmark)Benchmark;
+            if (securityBenchmark.Security.Price == 0)
+            {
+                throw new Exception("Security benchmark price was not expected to be zero");
             }
         }
 

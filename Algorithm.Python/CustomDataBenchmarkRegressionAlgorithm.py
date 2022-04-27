@@ -30,6 +30,11 @@ class CustomDataBenchmarkRegressionAlgorithm(QCAlgorithm):
         if not self.Portfolio.Invested:
             self.SetHoldings("SPY", 1)
 
+    def OnEndOfAlgorithm(self):
+        securityBenchmark = self.Benchmark;
+        if securityBenchmark.Security.Price == 0:
+            raise Exception("Security benchmark price was not expected to be zero")
+
 class ExampleCustomData(PythonData):
 
     def GetSource(self, config, date, isLive):
