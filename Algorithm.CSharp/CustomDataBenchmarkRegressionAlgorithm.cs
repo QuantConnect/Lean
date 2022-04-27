@@ -15,7 +15,6 @@
 
 using System;
 using System.Globalization;
-using System.IO;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
@@ -32,8 +31,6 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2017, 8, 18);
             SetEndDate(2017, 8, 21);
             SetCash(100000);
-
-            SetBrokerageModel(Brokerages.BrokerageName.Default, AccountType.Margin);
 
             AddEquity("SPY", Resolution.Hour);
             var customSymbol = AddData<ExampleCustomData>("ExampleCustomData", Resolution.Hour).Symbol;

@@ -17,12 +17,9 @@ from AlgorithmImports import *
 ### </summary>
 class CustomDataBenchmarkRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
-
         self.SetStartDate(2017, 8, 18)  # Set Start Date
         self.SetEndDate(2017, 8, 21)  # Set End Date
         self.SetCash(100000)  # Set Strategy Cash
-
-        self.SetBrokerageModel(BrokerageName.Default, AccountType.Margin)
 
         self.AddEquity("SPY", Resolution.Hour)
         # Load benchmark data
