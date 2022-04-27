@@ -103,7 +103,7 @@ namespace QuantConnect.Brokerages.Tradier
             var environment = Read<string>(job.BrokerageData, "tradier-environment", errors);
             if (!environment.IsNullOrEmpty())
             {
-                useSandbox = environment == "paper";
+                useSandbox = environment.ToLowerInvariant() == "paper";
             }
             var accountId = Read<string>(job.BrokerageData, "tradier-account-id", errors);
             var accessToken = Read<string>(job.BrokerageData, "tradier-access-token", errors);

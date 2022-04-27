@@ -53,7 +53,7 @@ namespace QuantConnect.Brokerages.Tradier
             var environment = job.BrokerageData["tradier-environment"];
             if (!environment.IsNullOrEmpty())
             {
-                useSandbox = environment == "paper";
+                useSandbox = environment.ToLowerInvariant() == "paper";
             }
             var accountId = job.BrokerageData["tradier-account-id"];
             var accessToken = job.BrokerageData["tradier-access-token"];

@@ -143,7 +143,7 @@ namespace QuantConnect.Tests.Brokerages.Tradier
 
             if (!_environment.IsNullOrEmpty())
             {
-                _useSandbox = _environment == "paper";
+                _useSandbox = _environment.ToLowerInvariant() == "paper";
             }
 
             var brokerage = new TradierBrokerage(null, null, null, null, _useSandbox, _accountId, _accessToken);
