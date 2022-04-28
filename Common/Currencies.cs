@@ -43,9 +43,19 @@ namespace QuantConnect
         public const string INR = "INR";
 
         /// <summary>
+        /// IDR (Indonesian rupiah) currency string
+        /// </summary>
+        public const string IDR = "IDR";
+
+        /// <summary>
         /// CNH (Chinese Yuan Renminbi) currency string
         /// </summary>
         public const string CNH = "CNH";
+
+        /// <summary>
+        /// CHF (Swiss Franc) currency string
+        /// </summary>
+        public const string CHF = "CHF";
 
         /// <summary>
         /// HKD (Hong Kong dollar) currency string
@@ -106,6 +116,45 @@ namespace QuantConnect
             {"USDT", "USDT"}
         };
 
+        private static readonly string[] _stableCoinsCurrencies = new string[] 
+        { 
+            USD,
+            EUR,
+            IDR,
+            CHF
+        };
+        
+        private static readonly Dictionary<string, int> _stableCoinsGDAX = new Dictionary<string, int> 
+        {
+            { "USDC", 0 }
+        };
+
+        private static readonly Dictionary<string, int> _stableCoinsBinance = new Dictionary<string, int>
+        {
+            { "USDC", 0 },
+            { "USDT", 0 },
+            { "USDP", 0 },
+            { "BUSD", 0 },
+            { "UST", 0 },
+            { "TUSD", 0 },
+            { "DAI", 0 },
+            { "SUSD", 0},
+            { "IDRT", 2}
+        };
+
+        private static readonly Dictionary<string, int> _stableCoinsBitfinex = new Dictionary<string, int>
+        {
+            { "EURS", 1 },
+            { "XCHF", 3 }
+        };
+
+        private static readonly Dictionary<string, Dictionary<string, int>> _stableCoinsMarkets = new Dictionary<string, Dictionary<string, int>>
+        {
+            { Market.Binance , _stableCoinsBinance},
+            { Market.Bitfinex , _stableCoinsBitfinex},
+            { Market.GDAX , _stableCoinsGDAX},
+        };
+
         /// <summary>
         /// Define some StableCoins that don't have direct pairs for base currencies in our SPDB
         /// This is because some CryptoExchanges do not define direct pairs with the stablecoins they offer.
@@ -132,7 +181,20 @@ namespace QuantConnect
             // Bitfinex StableCoins Missing 1-1 Pairs
             Symbol.Create("EURSEUR", SecurityType.Crypto, Market.Bitfinex), // EUR -> EURS
             Symbol.Create("XCHFCHF", SecurityType.Crypto, Market.Bitfinex), // CHF -> XCHF
-        };  
+        };
+
+        public static bool IsStableCoin(string symbol, string market)
+        {
+            try
+            {
+                var value = _stableCoinsMarkets[market][symbol];
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
 
         /// <summary>
         /// Gets the currency symbol for the specified currency code

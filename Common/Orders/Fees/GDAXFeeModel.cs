@@ -39,19 +39,8 @@ namespace QuantConnect.Orders.Fees
             var isMaker = order.Type == OrderType.Limit && !order.IsMarketable;
 
             // Check if the current symbol is a StableCoin
-            var isStableCoin = false;
             var quoteCurrency = security.QuoteCurrency.Symbol;
-            foreach (var pair in Currencies.StableCoinsWithoutPairs)
-            {
-                if (CurrencyPairUtil.TryDecomposeCurrencyPair(pair, out var pairBaseCurrency, out var pairQuoteCurrency))
-                {
-                    if ((pairBaseCurrency == quoteCurrency) && (pair.ID.Market == security.Symbol.ID.Market))
-                    {
-                        isStableCoin = true;
-                        break;
-                    }
-                }
-            }
+            var isStableCoin = Currencies.IsStableCoin(quoteCurrency, security.Symbol.ID.Market);
 
             var feePercentage = GetFeePercentage(order.Time, isMaker, isStableCoin);
 
