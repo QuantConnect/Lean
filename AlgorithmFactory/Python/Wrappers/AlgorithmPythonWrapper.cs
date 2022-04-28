@@ -690,7 +690,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 
                     requests.Clear();
 
-                    foreach (PyObject pyRequest in pyRequests.GetIterator())
+                    using var iterator = pyRequests.GetIterator();
+                    foreach (PyObject pyRequest in iterator)
                     {
                         SubmitOrderRequest request;
                         if (TryConvert(pyRequest, out request))
