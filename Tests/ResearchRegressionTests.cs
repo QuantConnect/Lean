@@ -214,6 +214,8 @@ namespace QuantConnect.Tests
         {
             var args = $"-m papermill \"{notebookPath}\" \"{notebookoutputPath}\" --log-output --cwd {workingDirectoryForNotebook}";
 
+            Log.Trace($"ResearchRegressionTests.RunResearchNotebookAndGetOutput(): running '{_pythonLocation}' args {args}");
+
             // Use ProcessStartInfo class
             var startInfo = new ProcessStartInfo(_pythonLocation, args)
             {
@@ -230,26 +232,15 @@ namespace QuantConnect.Tests
                 StartInfo = startInfo,
             };
 
-            // real-time stream process output
-            process.OutputDataReceived += (sender, args) =>
-            {
-                if(args.Data != null)
-                {
-                    Log.Debug(args.Data);
-                }
-            };
-            process.ErrorDataReceived += (sender, args) =>
-            {
-                if (args.Data != null)
-                {
-                    Log.Debug(args.Data);
-                }
-            };
-
             process.Start();
             process.BeginErrorReadLine();
             process.BeginOutputReadLine();
-            process.WaitForExit();
+
+            if (!process.WaitForExit(1000 * 30))
+            {
+                process.Kill();
+                Assert.Fail("Timeout waiting for process to exit");
+            }
             return File.ReadAllText(notebookoutputPath);
         }
 
