@@ -200,8 +200,7 @@ def GetDeterminantFromHistory(history):
 
             using (Py.GIL())
             {
-                dynamic GetDeterminantFromHistory = PythonEngine
-                    .ModuleFromString("GetDeterminantFromHistory", code)
+                dynamic GetDeterminantFromHistory = PyModule.FromString("GetDeterminantFromHistory", code)
                     .GetAttr("GetDeterminantFromHistory");
 
                 dynamic df = new PandasConverter().GetDataFrame(history);

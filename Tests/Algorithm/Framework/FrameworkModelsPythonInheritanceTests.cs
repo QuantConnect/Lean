@@ -43,8 +43,7 @@ class MockUniverseSelectionModel(ManualUniverseSelectionModel):
 
             using (Py.GIL())
             {
-                dynamic pyModel = PythonEngine
-                    .ModuleFromString(Guid.NewGuid().ToString(), code)
+                dynamic pyModel = PyModule.FromString(Guid.NewGuid().ToString(), code)
                     .GetAttr("MockUniverseSelectionModel");
 
                 var model = new UniverseSelectionModelPythonWrapper(pyModel());
@@ -77,8 +76,7 @@ class MockUniverseSelectionModel(FundamentalUniverseSelectionModel):
 
             using (Py.GIL())
             {
-                dynamic pyModel = PythonEngine
-                    .ModuleFromString(Guid.NewGuid().ToString(), code)
+                dynamic pyModel = PyModule.FromString(Guid.NewGuid().ToString(), code)
                     .GetAttr("MockUniverseSelectionModel");
 
                 var model = new UniverseSelectionModelPythonWrapper(pyModel());

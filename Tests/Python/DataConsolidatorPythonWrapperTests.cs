@@ -30,7 +30,7 @@ namespace QuantConnect.Tests.Python
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
                     "from AlgorithmImports import *\n" +
                     "class CustomConsolidator():\n" +
                     "   def __init__(self):\n" +
@@ -72,7 +72,7 @@ namespace QuantConnect.Tests.Python
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
                     "from AlgorithmImports import *\n" +
                     "class CustomConsolidator():\n" +
                     "   def __init__(self):\n" +
@@ -103,7 +103,7 @@ namespace QuantConnect.Tests.Python
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
                     "from AlgorithmImports import *\n" +
                     "class CustomConsolidator():\n" +
                     "   def __init__(self):\n" +
@@ -128,7 +128,7 @@ namespace QuantConnect.Tests.Python
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
                     "from AlgorithmImports import *\n" +
                     "class CustomConsolidator():\n" +
                     "   def __init__(self):\n" +
@@ -189,7 +189,7 @@ namespace QuantConnect.Tests.Python
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
                     "from AlgorithmImports import *\n" +
                     "class ImplementingClass():\n" +
                     "   def __init__(self):\n" +
@@ -200,6 +200,7 @@ namespace QuantConnect.Tests.Python
                     "       self.EventCalled = True\n" +
                     "class CustomConsolidator(QuoteBarConsolidator):\n" +
                     "   def __init__(self,span):\n" +
+                    "       super().__init__(span)\n" +
                     "       self.Span = span");
 
                 var implementingClass = module.GetAttr("ImplementingClass").Invoke();

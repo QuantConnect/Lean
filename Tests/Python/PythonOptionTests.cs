@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Python
             using (Py.GIL())
             {
                 //Filter function that returns a list of symbols
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
                     "def filter(universe):\n" +
                     "   universe = universe.WeeklysOnly().Expiration(0, 10)\n" +
                     "   return [symbol for symbol in universe\n"+
@@ -60,7 +60,7 @@ namespace QuantConnect.Tests.Python
             using (Py.GIL())
             {
                 //Filter function that returns a OptionFilterUniverse
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
                     "def filter(universe):\n" +
                     "   universe = universe.WeeklysOnly().Expiration(0, 5)\n" +
                     "   return universe"

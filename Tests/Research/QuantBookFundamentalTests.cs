@@ -144,7 +144,7 @@ namespace QuantConnect.Tests.Research
             {
                 var testModule = _module.FundamentalHistoryTest();
                 var data = testModule.getFundamentals(input[0], input[1], input[2], input[3]);
-                Assert.IsEmpty(data);
+                Assert.AreEqual(true, (bool)data.empty);
             }
         }
 

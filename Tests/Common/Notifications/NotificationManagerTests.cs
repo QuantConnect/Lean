@@ -21,7 +21,6 @@ using QuantConnect.Notifications;
 
 namespace QuantConnect.Tests.Common.Notifications
 {
-    [Parallelizable(ParallelScope.Fixtures)]
     [TestFixture(true)]
     [TestFixture(false)]
     public class NotificationManagerTests
@@ -124,7 +123,7 @@ namespace QuantConnect.Tests.Common.Notifications
             {
                 dynamic function;
                 bool result;
-                var test = PythonEngine.ModuleFromString("testModule",
+                var test = PyModule.FromString("testModule",
                     @"
 from AlgorithmImports import *
 

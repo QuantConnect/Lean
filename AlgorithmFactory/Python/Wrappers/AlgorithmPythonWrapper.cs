@@ -634,7 +634,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
             // Only throws if there is an error in its implementation body
             catch (PythonException exception)
             {
-                if (!exception.Message.StartsWith("TypeError : OnEndOfDay()"))
+                if (!exception.Message.StartsWith("OnEndOfDay()"))
                 {
                     _baseAlgorithm.SetRunTimeError(exception);
                 }
@@ -662,7 +662,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
             // Only throws if there is an error in its implementation body
             catch (PythonException exception)
             {
-                if (!exception.Message.StartsWith("TypeError : OnEndOfDay()"))
+                if (!exception.Message.StartsWith("OnEndOfDay()"))
                 {
                     _baseAlgorithm.SetRunTimeError(exception);
                 }
@@ -690,7 +690,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 
                     requests.Clear();
 
-                    foreach (PyObject pyRequest in pyRequests)
+                    foreach (PyObject pyRequest in pyRequests.GetIterator())
                     {
                         SubmitOrderRequest request;
                         if (TryConvert(pyRequest, out request))

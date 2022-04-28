@@ -311,7 +311,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                     using (Py.GIL())
                     {
                         var name = nameof(BLOPCM);
-                        var instance = PythonEngine.ModuleFromString(name, GetPythonBLOPCM()).GetAttr(name).Invoke(((int)portfolioBias).ToPython());
+                        var instance = PyModule.FromString(name, GetPythonBLOPCM()).GetAttr(name).Invoke(((int)portfolioBias).ToPython());
                         var model = new PortfolioConstructionModelPythonWrapper(instance);
                         _algorithm.SetPortfolioConstruction(model);
                     }

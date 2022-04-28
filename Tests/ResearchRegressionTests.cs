@@ -17,6 +17,7 @@ using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
@@ -228,6 +229,23 @@ namespace QuantConnect.Tests
             {
                 StartInfo = startInfo,
             };
+
+            // real-time stream process output
+            process.OutputDataReceived += (sender, args) =>
+            {
+                if(args.Data != null)
+                {
+                    Log.Debug(args.Data);
+                }
+            };
+            process.ErrorDataReceived += (sender, args) =>
+            {
+                if (args.Data != null)
+                {
+                    Log.Debug(args.Data);
+                }
+            };
+
             process.Start();
             process.BeginErrorReadLine();
             process.BeginOutputReadLine();

@@ -97,6 +97,7 @@ class CustomWarmUpPeriodIndicatorAlgorithm(QCAlgorithm):
 # Represents the traditional simple moving average indicator (SMA) without Warm Up Period parameter defined
 class CSMANotWarmUp(PythonIndicator):
     def __init__(self, name, period):
+        super().__init__()
         self.Name = name
         self.Value = 0
         self.queue = deque(maxlen=period)

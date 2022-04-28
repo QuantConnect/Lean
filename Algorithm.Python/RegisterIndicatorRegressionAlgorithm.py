@@ -107,6 +107,7 @@ class RegisterIndicatorRegressionAlgorithm(QCAlgorithm):
 
 class CustomIndicator(PythonIndicator):
     def __init__(self):
+        super().__init__()
         self.Name = "Jose"
         self.Value = 0
 

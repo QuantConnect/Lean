@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Common.Exceptions
                 try
                 {
                     // importing a module with syntax error 'x = 01' will throw
-                    PythonEngine.ModuleFromString(Guid.NewGuid().ToString(), "x = 01");
+                    PyModule.FromString(Guid.NewGuid().ToString(), "x = 01");
                 }
                 catch (PythonException pythonException)
                 {

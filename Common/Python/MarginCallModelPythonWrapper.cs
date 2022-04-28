@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -62,7 +62,7 @@ namespace QuantConnect.Python
                 // Since ExecuteMarginCall may return a python list
                 // Need to convert to C# list
                 var tickets = new List<OrderTicket>();
-                var iterator = marginCalls.GetIterator();
+                using var iterator = marginCalls.GetIterator();
                 foreach (PyObject pyObject in iterator)
                 {
                     OrderTicket ticket;
@@ -105,7 +105,8 @@ namespace QuantConnect.Python
                 // Since GetMarginCallOrders may return a python list
                 // Need to convert to C# list
                 var requests = new List<SubmitOrderRequest>();
-                foreach (PyObject pyObject in marginCallOrders)
+                using var iterator = marginCallOrders.GetIterator();
+                foreach (PyObject pyObject in iterator)
                 {
                     SubmitOrderRequest request;
                     if (pyObject.TryConvert(out request))

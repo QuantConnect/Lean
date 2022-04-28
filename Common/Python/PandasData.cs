@@ -60,7 +60,7 @@ namespace QuantConnect.Python
                 using (Py.GIL())
                 {
                     // Use our PandasMapper class that modifies pandas indexing to support tickers, symbols and SIDs
-                    _pandas = PythonEngine.ImportModule("PandasMapper");
+                    _pandas = Py.Import("PandasMapper");
                 }
             }
 

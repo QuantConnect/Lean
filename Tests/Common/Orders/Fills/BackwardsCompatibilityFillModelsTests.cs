@@ -288,7 +288,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
                     "from AlgorithmImports import *\n" +
                     "class CustomFillModel(ImmediateFillModel):\n" +
                     "   def __init__(self):\n" +
@@ -320,7 +320,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
                     "from AlgorithmImports import *\n" +
                     "class CustomFillModel(FillModel):\n" +
                     "   def __init__(self):\n" +
@@ -352,7 +352,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
                     "from AlgorithmImports import *\n" +
                     "class CustomFillModel(FillModel):\n" +
                     "   def __init__(self):\n" +
@@ -384,7 +384,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
                     "from AlgorithmImports import *\n" +
                     "class CustomFillModel(FillModel):\n" +
                     "   def __init__(self):\n" +
@@ -423,7 +423,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
                     "from AlgorithmImports import *\n" +
                     "class CustomFillModel(FillModel):\n" +
                     "   def __init__(self):\n" +
@@ -462,7 +462,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
                     "from AlgorithmImports import *\n" +
                     "class CustomFillModel(ImmediateFillModel):\n" +
                     "   def __init__(self):\n" +

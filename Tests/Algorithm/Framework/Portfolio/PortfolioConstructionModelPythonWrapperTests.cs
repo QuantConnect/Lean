@@ -36,13 +36,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             using (Py.GIL())
             {
-                dynamic model = PythonEngine.ModuleFromString(
+                dynamic model = PyModule.FromString(
                     "TestPCM",
                     @"
 from AlgorithmImports import *
 
 class PyPCM(EqualWeightingPortfolioConstructionModel):
     def __init__(self):
+        super().__init__()
         self.CreateTargets_WasCalled = False
         self.OnSecuritiesChanged_WasCalled = False
         self.ShouldCreateTargetForInsight_WasCalled = False
@@ -102,7 +103,7 @@ class PyPCM(EqualWeightingPortfolioConstructionModel):
 
             using (Py.GIL())
             {
-                dynamic model = PythonEngine.ModuleFromString(
+                dynamic model = PyModule.FromString(
                     "TestPCM",
                     @"
 
@@ -113,6 +114,7 @@ from QuantConnect.Algorithm.Framework.Portfolio import *
 
 class PyPCM(EqualWeightingPortfolioConstructionModel):
     def __init__(self):
+        super().__init__()
         self.CreateTargets_WasCalled = False
         self.OnSecuritiesChanged_WasCalled = False
         self.ShouldCreateTargetForInsight_WasCalled = False

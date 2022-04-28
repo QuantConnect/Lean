@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -40,7 +40,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 constructionModel = new TestPortfolioConstructionModel();
                 using (Py.GIL())
                 {
-                    var func = PythonEngine.ModuleFromString("RebalanceFunc",
+                    var func = PyModule.FromString("RebalanceFunc",
                         @"
 from datetime import timedelta
 
@@ -74,7 +74,7 @@ def RebalanceFunc(time):
                 constructionModel = new TestPortfolioConstructionModel();
                 using (Py.GIL())
                 {
-                    var func = PythonEngine.ModuleFromString("RebalanceFunc",
+                    var func = PyModule.FromString("RebalanceFunc",
                         @"
 from datetime import timedelta
 
@@ -114,7 +114,7 @@ def RebalanceFunc(time):
                 constructionModel = new TestPortfolioConstructionModel();
                 using (Py.GIL())
                 {
-                    var func = PythonEngine.ModuleFromString("RebalanceFunc",
+                    var func = PyModule.FromString("RebalanceFunc",
                         @"
 from datetime import timedelta
 
@@ -148,7 +148,7 @@ def RebalanceFunc(time):
                 constructionModel = new TestPortfolioConstructionModel();
                 using (Py.GIL())
                 {
-                    var func = PythonEngine.ModuleFromString("RebalanceFunc",
+                    var func = PyModule.FromString("RebalanceFunc",
                         @"
 from datetime import timedelta
 
@@ -179,7 +179,7 @@ def RebalanceFunc(time):
                 constructionModel = new TestPortfolioConstructionModel();
                 using (Py.GIL())
                 {
-                    var func = PythonEngine.ModuleFromString(
+                    var func = PyModule.FromString(
                         "RebalanceFunc",
                         @"
 from datetime import timedelta
@@ -223,7 +223,7 @@ def RebalanceFunc():
                 constructionModel = new TestPortfolioConstructionModel();
                 using (Py.GIL())
                 {
-                    var func = PythonEngine.ModuleFromString(
+                    var func = PyModule.FromString(
                         "RebalanceFunc",
                         @"
 from datetime import timedelta
@@ -290,7 +290,7 @@ def RebalanceFunc(time):
                 constructionModel = new TestPortfolioConstructionModel();
                 using (Py.GIL())
                 {
-                    dynamic func = PythonEngine.ModuleFromString("RebalanceFunc",
+                    dynamic func = PyModule.FromString("RebalanceFunc",
                         @"
 import datetime
 
@@ -327,7 +327,7 @@ def RebalanceFunc(dateRules):
                 {
                     if (version == 1)
                     {
-                        dynamic func = PythonEngine.ModuleFromString("RebalanceFunc",
+                        dynamic func = PyModule.FromString("RebalanceFunc",
                             @"
 from System import *
 
@@ -337,7 +337,7 @@ def RebalanceFunc(timeSpan):
                     }
                     else
                     {
-                        dynamic func = PythonEngine.ModuleFromString("RebalanceFunc",
+                        dynamic func = PyModule.FromString("RebalanceFunc",
                             @"
 from datetime import timedelta
 
