@@ -116,6 +116,9 @@ namespace QuantConnect
             {"USDT", "USDT"}
         };
 
+        /// <summary>
+        /// Commonly StableCoins quote currencies
+        /// </summary>
         private static readonly string[] _stableCoinsCurrencies = new string[] 
         { 
             USD,
@@ -123,12 +126,26 @@ namespace QuantConnect
             IDR,
             CHF
         };
-        
+
+        /// <summary>
+        /// Define some StableCoins that don't have direct pairs for base currencies in our SPDB in GDAX market
+        /// This is because some CryptoExchanges do not define direct pairs with the stablecoins they offer.
+        ///
+        /// We use this to allow setting cash amounts for these stablecoins without needing a conversion
+        /// security.
+        /// </summary>
         private static readonly Dictionary<string, int> _stableCoinsGDAX = new Dictionary<string, int> 
         {
             { "USDC", 0 }
         };
 
+        /// <summary>
+        /// Define some StableCoins that don't have direct pairs for base currencies in our SPDB in Binance market
+        /// This is because some CryptoExchanges do not define direct pairs with the stablecoins they offer.
+        ///
+        /// We use this to allow setting cash amounts for these stablecoins without needing a conversion
+        /// security.
+        /// </summary>
         private static readonly Dictionary<string, int> _stableCoinsBinance = new Dictionary<string, int>
         {
             { "USDC", 0 },
@@ -142,12 +159,22 @@ namespace QuantConnect
             { "IDRT", 2}
         };
 
+        /// <summary>
+        /// Define some StableCoins that don't have direct pairs for base currencies in our SPDB in Bitfinex market
+        /// This is because some CryptoExchanges do not define direct pairs with the stablecoins they offer.
+        ///
+        /// We use this to allow setting cash amounts for these stablecoins without needing a conversion
+        /// security.
+        /// </summary>
         private static readonly Dictionary<string, int> _stableCoinsBitfinex = new Dictionary<string, int>
         {
             { "EURS", 1 },
             { "XCHF", 3 }
         };
 
+        /// <summary>
+        /// Dictionary to save StableCoins in different Markets
+        /// </summary>
         private static readonly Dictionary<string, Dictionary<string, int>> _stableCoinsMarkets = new Dictionary<string, Dictionary<string, int>>
         {
             { Market.Binance , _stableCoinsBinance},
@@ -156,44 +183,31 @@ namespace QuantConnect
         };
 
         /// <summary>
-        /// Define some StableCoins that don't have direct pairs for base currencies in our SPDB
-        /// This is because some CryptoExchanges do not define direct pairs with the stablecoins they offer.
-        ///
-        /// We use this to allow setting cash amounts for these stablecoins without needing a conversion
-        /// security.
+        /// Checks whether or not certain symbol is a StableCoin between a given market
         /// </summary>
-        public static HashSet<Symbol> StableCoinsWithoutPairs = new HashSet<Symbol>
-        {
-            // Binance StableCoins Missing 1-1 Pairs
-            Symbol.Create("USDCUSD", SecurityType.Crypto, Market.Binance), // USD -> USDC
-            Symbol.Create("USDTUSD", SecurityType.Crypto, Market.Binance), // USD -> USDT
-            Symbol.Create("USDPUSD", SecurityType.Crypto, Market.Binance), // USD -> USDP
-            Symbol.Create("BUSDUSD", SecurityType.Crypto, Market.Binance), // USD -> BUSD
-            Symbol.Create("USTUSD", SecurityType.Crypto, Market.Binance), // USD -> UST
-            Symbol.Create("TUSDUSD", SecurityType.Crypto, Market.Binance), // USD -> TUSD
-            Symbol.Create("DAIUSD", SecurityType.Crypto, Market.Binance), // USD -> DAI
-            Symbol.Create("SUSDUSD", SecurityType.Crypto, Market.Binance), // USD -> SUSD
-            Symbol.Create("IDRTIDR", SecurityType.Crypto, Market.Binance), // IDR -> IDRT
-
-            // Coinbase StableCoins Missing 1-1 Pairs
-            Symbol.Create("USDCUSD", SecurityType.Crypto, Market.GDAX), // USD -> USDC
-
-            // Bitfinex StableCoins Missing 1-1 Pairs
-            Symbol.Create("EURSEUR", SecurityType.Crypto, Market.Bitfinex), // EUR -> EURS
-            Symbol.Create("XCHFCHF", SecurityType.Crypto, Market.Bitfinex), // CHF -> XCHF
-        };
-
-        public static bool IsStableCoin(string symbol, string market)
+        /// <param name="symbol">The symbol from which we want to know if it's a StableCoin</param>
+        /// <param name="market">The market in which we want to search for that StaleCoin</param>
+        /// <param name="quoteCurrency">If the symbol was indeed a StableCoin and this parameter is
+        /// defined, it will check if the quote currency associated with the StableCoin is the
+        /// same as the given in the parameters. Otherwise, it will just check whether or not the 
+        /// given symbol is a StableCoin</param>
+        /// <returns></returns>
+        public static bool IsStableCoin(string symbol, string market, string quoteCurrency = null)
         {
             try
             {
-                var value = _stableCoinsMarkets[market][symbol];
-                return true;
+                var index = _stableCoinsMarkets[market][symbol];
+                if (quoteCurrency == null || quoteCurrency == _stableCoinsCurrencies[index])
+                {
+                    return true;
+                }
             }
             catch
             {
                 return false;
             }
+
+            return false;
         }
 
         /// <summary>

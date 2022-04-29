@@ -111,7 +111,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             );
 
             Assert.AreEqual("USDC", fee.Value.Currency);
-            // 100 (price) * 0.003 (taker fee)
+            // 100 (price) * 0.001 (taker fee)
             Assert.AreEqual(0.1m, fee.Value.Amount);
         }
 
