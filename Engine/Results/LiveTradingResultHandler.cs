@@ -206,24 +206,16 @@ namespace QuantConnect.Lean.Engine.Results
 
                     //Profit loss changes, get the banner statistics, summary information on the performance for the headers.
                     var deltaStatistics = new Dictionary<string, string>();
-                    var runtimeStatistics = new Dictionary<string, string>();
                     var serverStatistics = GetServerStatistics(utcNow);
                     var holdings = GetHoldings();
 
                     //Add the algorithm statistics first.
                     Log.Debug("LiveTradingResultHandler.Update(): Build run time stats");
-                    lock (RuntimeStatistics)
-                    {
-                        foreach (var pair in RuntimeStatistics)
-                        {
-                            runtimeStatistics.Add(pair.Key, pair.Value);
-                        }
-                    }
+
+                    var summary = GenerateStatisticsResults(performanceCharts).Summary;
+                    var runtimeStatistics = GetAlgorithmRuntimeStatistics(summary);
                     Log.Debug("LiveTradingResultHandler.Update(): End build run time stats");
 
-                    //Add other fixed parameters.
-                    var summary = GenerateStatisticsResults(performanceCharts).Summary;
-                    GetAlgorithmRuntimeStatistics(summary, runtimeStatistics);
 
                     // since we're sending multiple packets, let's do it async and forget about it
                     // chart data can get big so let's break them up into groups
@@ -403,7 +395,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <remarks>Will sample charts every 12 hours, 2 data points per day at maximum,
         /// to reduce file size</remarks>
-        private void StoreStatusFile(Dictionary<string, string> runtimeStatistics,
+        private void StoreStatusFile(SortedDictionary<string, string> runtimeStatistics,
             Dictionary<string, Holding> holdings,
             Dictionary<string, Chart> chartComplete,
             SortedDictionary<DateTime, decimal> profitLoss,
@@ -451,7 +443,7 @@ namespace QuantConnect.Lean.Engine.Results
             Dictionary<string, Holding> holdings,
             CashBook cashbook,
             Dictionary<string, string> deltaStatistics,
-            Dictionary<string, string> runtimeStatistics,
+            SortedDictionary<string, string> runtimeStatistics,
             Dictionary<string, string> serverStatistics,
             List<OrderEvent> deltaOrderEvents)
         {
