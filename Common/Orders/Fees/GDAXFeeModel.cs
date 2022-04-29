@@ -14,6 +14,7 @@
 */
 
 using System;
+using QuantConnect.Util;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Orders.Fees
@@ -37,7 +38,11 @@ namespace QuantConnect.Orders.Fees
             // marketable limit orders are considered takers
             var isMaker = order.Type == OrderType.Limit && !order.IsMarketable;
 
-            var feePercentage = GetFeePercentage(order.Time, isMaker);
+            // Check if the current symbol is a StableCoin
+            var quoteCurrency = security.QuoteCurrency.Symbol;
+            var isStableCoin = Currencies.IsStableCoin(quoteCurrency, security.Symbol.ID.Market);
+
+            var feePercentage = GetFeePercentage(order.Time, isMaker, isStableCoin);
 
             // get order value in quote currency, then apply maker/taker fee factor
             var unitPrice = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
@@ -55,15 +60,18 @@ namespace QuantConnect.Orders.Fees
         /// </summary>
         /// <param name="utcTime">The date/time requested (UTC)</param>
         /// <param name="isMaker">true if the maker percentage fee is requested, false otherwise</param>
+        /// <param name="isStableCoin">true if the order security symbol is a StableCoin, false otherwise</param>
         /// <returns>The fee percentage effective at the requested date</returns>
-        public static decimal GetFeePercentage(DateTime utcTime, bool isMaker)
+        public static decimal GetFeePercentage(DateTime utcTime, bool isMaker, bool isStableCoin)
         {
             // Tier 1 fees
             // https://pro.coinbase.com/orders/fees
             // https://blog.coinbase.com/coinbase-pro-market-structure-update-fbd9d49f43d7
             // https://blog.coinbase.com/updates-to-coinbase-pro-fee-structure-b3d9ee586108
+            if (isStableCoin)
+                return isMaker ? 0m : 0.001m;
 
-            if (utcTime < new DateTime(2019, 3, 23, 1, 30, 0))
+            else if (utcTime < new DateTime(2019, 3, 23, 1, 30, 0))
                 return isMaker ? 0m : 0.003m;
                 
             else if (utcTime < new DateTime(2019, 10, 8, 0, 30, 0))
