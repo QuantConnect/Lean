@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,13 +14,14 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using QuantConnect.Orders;
+using Newtonsoft.Json.Linq;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
+using System.Collections.Generic;
+using System.Collections.Specialized;
 
 namespace QuantConnect.Api
 {
@@ -117,7 +118,7 @@ namespace QuantConnect.Api
                 new Dictionary<string, Holding>(),
                 new CashBook(),
                 new Dictionary<string, string>(),
-                new Dictionary<string, string>(),
+                new SortedDictionary<string, string>(),
                 new List<OrderEvent>())
             );
 

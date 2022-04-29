@@ -626,12 +626,15 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Gets the algorithm runtime statistics
         /// </summary>
-        protected Dictionary<string, string> GetAlgorithmRuntimeStatistics(Dictionary<string, string> summary,
-            Dictionary<string, string> runtimeStatistics = null, CapacityEstimate capacityEstimate = null)
+        protected SortedDictionary<string, string> GetAlgorithmRuntimeStatistics(Dictionary<string, string> summary, CapacityEstimate capacityEstimate = null)
         {
-            if (runtimeStatistics == null)
+            var runtimeStatistics = new SortedDictionary<string, string>();
+            lock (RuntimeStatistics)
             {
-                runtimeStatistics = new Dictionary<string, string>();
+                foreach (var pair in RuntimeStatistics)
+                {
+                    runtimeStatistics.Add(pair.Key, pair.Value);
+                }
             }
 
             if (summary.ContainsKey("Probabilistic Sharpe Ratio"))

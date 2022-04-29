@@ -137,7 +137,7 @@ namespace QuantConnect.Packets
             return new LiveResultPacket(job, new LiveResult(new LiveResultParameters(
                 new Dictionary<string, Chart>(), new Dictionary<int, Order>(), new Dictionary<DateTime, decimal>(),
                 new Dictionary<string, Holding>(), new CashBook(), new Dictionary<string, string>(),
-                new Dictionary<string, string>(), new List<OrderEvent>(), new Dictionary<string, string>(),
+                new SortedDictionary<string, string>(), new List<OrderEvent>(), new Dictionary<string, string>(),
                 new AlphaRuntimeStatistics())));
         }
     } // End Queue Packet:

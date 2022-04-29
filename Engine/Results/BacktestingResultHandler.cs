@@ -194,17 +194,8 @@ namespace QuantConnect.Lean.Engine.Results
                 }
 
                 //Get the runtime statistics from the user algorithm:
-                var runtimeStatistics = new Dictionary<string, string>();
-                lock (RuntimeStatistics)
-                {
-
-                    foreach (var pair in RuntimeStatistics)
-                    {
-                        runtimeStatistics.Add(pair.Key, pair.Value);
-                    }
-                }
                 var summary = GenerateStatisticsResults(performanceCharts, estimatedStrategyCapacity: _capacityEstimate).Summary;
-                GetAlgorithmRuntimeStatistics(summary, runtimeStatistics, _capacityEstimate);
+                var runtimeStatistics = GetAlgorithmRuntimeStatistics(summary, _capacityEstimate);
 
                 var progress = (decimal)_daysProcessed / _jobDays;
                 if (progress > 0.999m) progress = 0.999m;
@@ -252,7 +243,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Run over all the data and break it into smaller packets to ensure they all arrive at the terminal
         /// </summary>
-        public virtual IEnumerable<BacktestResultPacket> SplitPackets(Dictionary<string, Chart> deltaCharts, Dictionary<int, Order> deltaOrders, Dictionary<string, string> runtimeStatistics, decimal progress, Dictionary<string, string> serverStatistics)
+        public virtual IEnumerable<BacktestResultPacket> SplitPackets(Dictionary<string, Chart> deltaCharts, Dictionary<int, Order> deltaOrders, SortedDictionary<string, string> runtimeStatistics, decimal progress, Dictionary<string, string> serverStatistics)
         {
             // break the charts into groups
             var splitPackets = new List<BacktestResultPacket>();
