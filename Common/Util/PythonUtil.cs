@@ -29,6 +29,7 @@ namespace QuantConnect.Util
     /// </summary>
     public class PythonUtil
     {
+        private static Regex LeanPathRegex = new Regex("(?:\\S*?\\\\Lean\\\\)|(?:\\S*?/Lean/)", RegexOptions.Compiled);
         private static Regex LineRegex = new Regex("line (\\d+)", RegexOptions.Compiled);
         private static readonly Lazy<dynamic> lazyInspect = new Lazy<dynamic>(() => Py.Import("inspect"));
 
@@ -207,6 +208,7 @@ namespace QuantConnect.Util
                 });
 
             var errorLine = string.Join(Environment.NewLine, lines);
+            errorLine = LeanPathRegex.Replace(errorLine, string.Empty);
 
             return string.IsNullOrWhiteSpace(errorLine)
                 ? string.Empty

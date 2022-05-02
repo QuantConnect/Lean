@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -107,6 +107,23 @@ namespace QuantConnect.Tests.Common.Util
    at QuantConnect.AlgorithmFactory.Python.Wrappers.AlgorithmPythonWrapper.Initialize() in D:\QuantConnect\MyLean\Lean\AlgorithmFactory\Python\Wrappers\AlgorithmPythonWrapper.cs:line 528
    at QuantConnect.Lean.Engine.Setup.BacktestingSetupHandler.<>c__DisplayClass27_0.<Setup>b__0() in D:\QuantConnect\MyLean\Lean\Engine\Setup\BacktestingSetupHandler.cs:line 186",
             10)]
+        [TestCase(@"
+  at <module>
+    class BasicTemplateAlgorithm(QCAlgorithm):
+   at Python.Runtime.PythonException.ThrowLastAsClrException()
+   at Python.Runtime.NewReferenceExtensions.BorrowOrThrow(NewReference& reference)
+   at Python.Runtime.PyModule.Import(String name)
+   at Python.Runtime.Py.Import(String name)
+   at QuantConnect.AlgorithmFactory.Python.Wrappers.AlgorithmPythonWrapper..ctor(String moduleName) at AlgorithmFactory\Python\Wrappers\AlgorithmPythonWrapper.cs:line 74 in BasicTemplateAlgorithm.py: line 23
+",
+            @"  File ""D:/QuantConnect/MyLean/Lean/Algorithm.Python\BasicTemplateAlgorithm.py"", line 23, in <module>
+    class BasicTemplateAlgorithm(QCAlgorithm):
+   at Python.Runtime.PythonException.ThrowLastAsClrException()
+   at Python.Runtime.NewReferenceExtensions.BorrowOrThrow(NewReference& reference)
+   at Python.Runtime.PyModule.Import(String name)
+   at Python.Runtime.Py.Import(String name)
+   at QuantConnect.AlgorithmFactory.Python.Wrappers.AlgorithmPythonWrapper..ctor(String moduleName) in D:\QuantConnect\MyLean\Lean\AlgorithmFactory\Python\Wrappers\AlgorithmPythonWrapper.cs:line 74",
+            0)]
         public void ParsesPythonExceptionStackTrace(string expected, string original, int shift)
         {
             var originalShiftValue = PythonUtil.ExceptionLineShift;
