@@ -280,7 +280,7 @@ namespace QuantConnect.Tests.Algorithm
             {
                 using (Py.GIL())
                 {
-                    var customDataType = PythonEngine.ModuleFromString("testModule",
+                    var customDataType = PyModule.FromString("testModule",
                         @"
 from AlgorithmImports import *
 from QuantConnect.Tests import *

@@ -17,6 +17,7 @@ using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
@@ -213,6 +214,8 @@ namespace QuantConnect.Tests
         {
             var args = $"-m papermill \"{notebookPath}\" \"{notebookoutputPath}\" --log-output --cwd {workingDirectoryForNotebook}";
 
+            Log.Trace($"ResearchRegressionTests.RunResearchNotebookAndGetOutput(): running '{_pythonLocation}' args {args}");
+
             // Use ProcessStartInfo class
             var startInfo = new ProcessStartInfo(_pythonLocation, args)
             {
@@ -228,10 +231,16 @@ namespace QuantConnect.Tests
             {
                 StartInfo = startInfo,
             };
+
             process.Start();
             process.BeginErrorReadLine();
             process.BeginOutputReadLine();
-            process.WaitForExit();
+
+            if (!process.WaitForExit(1000 * 30))
+            {
+                process.Kill();
+                Assert.Fail("Timeout waiting for process to exit");
+            }
             return File.ReadAllText(notebookoutputPath);
         }
 

@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Indicators
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(
+                var module = PyModule.FromString(
                     Guid.NewGuid().ToString(),
                     @"
 from AlgorithmImports import *
@@ -172,7 +172,7 @@ class CustomSimpleMovingAverage(PythonIndicator):
 
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(
+                var module = PyModule.FromString(
                     Guid.NewGuid().ToString(),
                     @"
 from AlgorithmImports import *
@@ -216,7 +216,7 @@ class BadCustomIndicator(PythonIndicator):
             //Setup Python Indicator and Consolidator
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
                     "from AlgorithmImports import *\n" +
                     "consolidator = QuoteBarConsolidator(timedelta(days = 5)) \n" +
                     "timeDelta = timedelta(days=2)\n" +
@@ -257,7 +257,7 @@ class BadCustomIndicator(PythonIndicator):
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(
+                var module = PyModule.FromString(
                     Guid.NewGuid().ToString(),
                     @"
 from AlgorithmImports import *
@@ -300,7 +300,7 @@ class CustomSimpleMovingAverage(PythonIndicator):
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(
+                var module = PyModule.FromString(
                     Guid.NewGuid().ToString(),
                     @"
 from AlgorithmImports import *

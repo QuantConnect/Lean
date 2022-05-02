@@ -51,6 +51,7 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
             risk_free_rate(float): The risk free rate
             delta(float): The risk aversion coeffficient of the market portfolio
             tau(float): The model parameter indicating the uncertainty of the CAPM prior"""
+        super().__init__()
         self.lookback = lookback
         self.period = period
         self.resolution = resolution

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -64,10 +64,10 @@ namespace QuantConnect.Tests.Python
                 Assert.Throws<PythonException>(() => _algorithm.call_plot_throw_test());
 
                 // self.Plot("ERROR", self.Portfolio), where self.Portfolio is IAlgorithm.Portfolio: instance of SecurityPortfolioManager
-                Assert.Throws<PythonException>(() => _algorithm.call_plot_throw_managed_test());
+                Assert.Throws<ArgumentException>(() => _algorithm.call_plot_throw_managed_test());
 
                 // self.Plot("ERROR", self.a), where self.a is an instance of a python object
-                Assert.Throws<PythonException>(() => _algorithm.call_plot_throw_pyobject_test());
+                Assert.Throws<ArgumentException>(() => _algorithm.call_plot_throw_pyobject_test());
             }
         }
     }

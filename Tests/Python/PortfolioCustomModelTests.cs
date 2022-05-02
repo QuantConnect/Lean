@@ -84,7 +84,7 @@ namespace QuantConnect.Tests.Python
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString("CustomMarginCallModel", code);
+                var module = PyModule.FromString("CustomMarginCallModel", code);
                 dynamic CustomMarginCallModel = module.GetAttr("CustomMarginCallModel");
                 return CustomMarginCallModel(portfolio, null);
             }
@@ -127,6 +127,7 @@ from AlgorithmImports import *
 
 class CustomMarginCallModel(DefaultMarginCallModel):
     def __init__(self, portfolio, defaultOrderProperties):
+        super().__init__(portfolio, defaultOrderProperties)
         self.porfolio = portfolio
         self.defaultOrderProperties = defaultOrderProperties
 

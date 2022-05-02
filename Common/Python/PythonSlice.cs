@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -32,7 +32,7 @@ namespace QuantConnect.Python
         static PythonSlice()
         {
             // Python Data class: Converts custom data (PythonData) into a python object'''
-            _converter = PythonEngine.ModuleFromString("converter",
+            _converter = PyModule.FromString("converter",
                 "class Data(object):\n" +
                 "    def __init__(self, data):\n" +
                 "        self.data = data\n" +

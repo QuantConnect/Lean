@@ -48,7 +48,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
                     "from AlgorithmImports import *\n" +
                     "class CustomFeeModel:\n" +
                     "   def __init__(self):\n" +
@@ -79,7 +79,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
                     "from AlgorithmImports import *\n" +
                     "class CustomFeeModel(FeeModel):\n" +
                     "   def __init__(self):\n" +

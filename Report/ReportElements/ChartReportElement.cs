@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -32,7 +32,7 @@ namespace QuantConnect.Report.ReportElements
 
             using (Py.GIL())
             {
-                dynamic module = PythonEngine.ImportModule("ReportCharts");
+                dynamic module = Py.Import("ReportCharts");
                 var classObj = module.ReportCharts;
 
                 Charting = classObj.Invoke();

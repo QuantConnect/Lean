@@ -56,9 +56,10 @@ namespace QuantConnect.Research
             //Determine if we are in a Python Notebook
             try
             {
+                PythonEngine.Initialize();
                 using (Py.GIL())
                 {
-                    var isPython = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                    var isPython = PyModule.FromString(Guid.NewGuid().ToString(),
                         "try:\n" +
                         "   import IPython\n" +
                         "   def IsPythonNotebook():\n" +

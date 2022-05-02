@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -256,7 +256,7 @@ namespace QuantConnect.Util
         /// <returns>PyObject with a python module</returns>
         private static PyObject GetModule()
         {
-            return PythonEngine.ModuleFromString("x",
+            return PyModule.FromString("x",
                 "from clr import AddReference\n" +
                 "AddReference(\"System\")\n" +
                 "from System import Action, Func\n" +

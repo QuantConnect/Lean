@@ -58,6 +58,7 @@ class CustomModelsAlgorithm(QCAlgorithm):
 # If we want to use methods from other models, you need to inherit from one of them
 class CustomFillModel(ImmediateFillModel):
     def __init__(self, algorithm):
+        super().__init__()
         self.algorithm = algorithm
         self.absoluteRemainingByOrderId = {}
         self.random = Random(387510346)
@@ -85,6 +86,7 @@ class CustomFillModel(ImmediateFillModel):
 
 class CustomFeeModel(FeeModel):
     def __init__(self, algorithm):
+        super().__init__()
         self.algorithm = algorithm
 
     def GetOrderFee(self, parameters):
@@ -107,6 +109,7 @@ class CustomSlippageModel:
 
 class CustomBuyingPowerModel(BuyingPowerModel):
     def __init__(self, algorithm):
+        super().__init__()
         self.algorithm = algorithm
 
     def HasSufficientBuyingPowerForOrder(self, parameters):

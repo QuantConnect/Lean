@@ -588,7 +588,7 @@ namespace QuantConnect
             using (Py.GIL())
             {
                 int argCount;
-                var pyArgCount = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                var pyArgCount = PyModule.FromString(Guid.NewGuid().ToString(),
                     "from inspect import signature\n" +
                     "def GetArgCount(method):\n" +
                     "   return len(signature(method).parameters)\n"
@@ -2651,7 +2651,7 @@ namespace QuantConnect
                     var name = type.FullName.Substring(0, type.FullName.IndexOf('`'));
                     code = $"import System; delegate = {name}[{code.Substring(1)}](pyObject)";
 
-                    PythonEngine.Exec(code, null, locals.Handle);
+                    PythonEngine.Exec(code, null, locals);
                     result = (T)locals.GetItem("delegate").AsManagedObject(typeof(T));
                     locals.Dispose();
                     return true;
@@ -2816,7 +2816,8 @@ namespace QuantConnect
                     pyObject = new PyList(new[] {pyObject});
                 }
 
-                foreach (PyObject item in pyObject)
+                using var iterator = pyObject.GetIterator();
+                foreach (PyObject item in iterator)
                 {
                     if (PyString.IsStringType(item))
                     {

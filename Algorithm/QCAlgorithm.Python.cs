@@ -1121,7 +1121,8 @@ namespace QuantConnect.Algorithm
                     // In order to convert it into a C# Dictionary
                     if (PyDict.IsDictType(headers))
                     {
-                        foreach (PyObject pyKey in headers)
+                        using var iterator = headers.GetIterator();
+                        foreach (PyObject pyKey in iterator)
                         {
                             var key = (string)pyKey.AsManagedObject(typeof(string));
                             var value = (string)headers.GetItem(pyKey).AsManagedObject(typeof(string));
