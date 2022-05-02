@@ -2335,15 +2335,21 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             timer = new Timer(
                 _ =>
                 {
-                    // stop the timer to prevent reentrancy
-                    timer.Change(Timeout.Infinite, Timeout.Infinite);
+                    try
+                    {
+                        // stop the timer to prevent reentrancy
+                        timer.Change(Timeout.Infinite, Timeout.Infinite);
 
-                    timeProvider.Advance(timeAdvanceStep);
-                    Log.Debug($"Time advanced to {timeProvider.GetUtcNow()} (UTC)");
-                    timeAdvanced.Set();
+                        timeProvider.Advance(timeAdvanceStep);
+                        Log.Debug($"Time advanced to {timeProvider.GetUtcNow()} (UTC)");
+                        timeAdvanced.Set();
 
-                    // restart the timer
-                    timer.Change(interval, interval);
+                        // restart the timer
+                        timer.Change(interval, interval);
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                    }
                 }, null, interval, interval);
 
             foreach (var timeSlice in _synchronizer.StreamData(cancellationTokenSource.Token))
