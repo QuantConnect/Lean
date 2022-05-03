@@ -39,7 +39,7 @@ RUN mkdir -p /root/ibgateway && \
 ENV PATH="/root/.dotnet:${PATH}"
 RUN wget https://dot.net/v1/dotnet-install.sh && \
     chmod 777 dotnet-install.sh && \
-    ./dotnet-install.sh -c 5.0 && \
+    ./dotnet-install.sh -c 6.0 && \
     rm dotnet-install.sh
 ENV DOTNET_ROOT="/root/.dotnet"
 
