@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -28,7 +28,7 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.13" />
+    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.14" />
     <PackageReference Include="NodaTime" Version="3.0.5" />
   </ItemGroup>
   <ItemGroup>

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -29,7 +29,7 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.13" />
+    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.14" />
     <PackageReference Include="Accord" Version="3.6.0" />
     <PackageReference Include="Accord.Math" Version="3.6.0" />
     <PackageReference Include="Accord.Statistics" Version="3.6.0" />
