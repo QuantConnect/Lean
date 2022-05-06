@@ -134,7 +134,7 @@ namespace QuantConnect.Tests.API
         {
             var language = Language.CSharp;
             var code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs");
-            var algorithmName = "main.cs";
+            var algorithmName = "Main.cs";
             var projectName = $"{DateTime.UtcNow.ToStringInvariant("u")} Test {TestAccount} Lang {language}";
 
             Perform_CreateCompileBackTest_Tests(projectName, language, algorithmName, code);
@@ -173,10 +173,10 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(readProject.Success);
             Assert.IsTrue(readProject.Projects.First().Name == projectName);
 
-            // Test set a project file for the project
+            // Test change project file name and content
             var file = new ProjectFile { Name = algorithmName, Code = code };
-            var addProjectFile = ApiClient.AddProjectFile(project.Projects.First().ProjectId, file.Name, file.Code);
-            Assert.IsTrue(addProjectFile.Success);
+            var updateProjectFileContent = ApiClient.UpdateProjectFileContent(project.Projects.First().ProjectId, file.Name, file.Code);
+            Assert.IsTrue(updateProjectFileContent.Success);
 
             // Download the project again to validate its got the new file
             var verifyRead = ApiClient.ReadProject(project.Projects.First().ProjectId);
@@ -206,12 +206,17 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(backtest.Success);
 
             // Now read the backtest and wait for it to complete
-            var backtestRead = WaitForBacktestCompletion(project.Projects.First().ProjectId, backtest.BacktestId);
+            var backtestRead = WaitForBacktestCompletion(project.Projects.First().ProjectId, backtest.BacktestId, backtest);
             Assert.IsTrue(backtestRead.Success);
             Assert.IsTrue(backtestRead.Progress == 1);
             Assert.IsTrue(backtestRead.Name == backtestName);
             Assert.IsTrue(backtestRead.Statistics["Total Trades"] == "1");
             Assert.IsTrue(backtestRead.Charts["Benchmark"].Series.Count > 0);
+
+            var backtestOrdersRead = ApiClient.ReadBacktestOrders(0,1,project.Projects.First().ProjectId, backtest.BacktestId);
+            Assert.IsTrue(backtestOrdersRead.Success);
+            Assert.IsTrue(backtestOrdersRead.Orders.Any());
+            Assert.AreEqual(Symbols.SPY.Value, backtestOrdersRead.Orders.First().Symbol.Value);
 
             // Verify we have the backtest in our project
             var listBacktests = ApiClient.ListBacktests(project.Projects.First().ProjectId);
@@ -267,7 +272,7 @@ namespace QuantConnect.Tests.API
         /// <param name="projectId">Project id to scan</param>
         /// <param name="backtestId">Backtest id previously started</param>
         /// <returns>Completed backtest object</returns>
-        private Backtest WaitForBacktestCompletion(int projectId, string backtestId)
+        private Backtest WaitForBacktestCompletion(int projectId, string backtestId, Backtest backtest)
         {
             var result = new Backtest();
             var finish = DateTime.Now.AddSeconds(60);

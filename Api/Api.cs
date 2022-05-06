@@ -489,6 +489,35 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
+        /// Read out a backtest orders in the project id specified.
+        /// </summary>
+        /// <param name="start">Starting index of the orders to be fetched. Required if end > 100</param>
+        /// <param name="end">Last index of the orders to be fetched. Note that end - start must be less than 100</param>
+        /// <param name="projectId">Id of the project from which to read the backtest</param>
+        /// <param name="backtestId">Id of the backtest from which to read the orders</param>        
+        /// <returns><see cref="OrdersResponseWrapper"/></returns>
+        
+        public OrdersResponseWrapper ReadBacktestOrders(int start, int end, int projectId, string backtestId)
+        {
+            var request = new RestRequest("backtests/read/orders", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                start,
+                end,
+                projectId,
+                backtestId
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out OrdersResponseWrapper result);
+
+            return result;
+        }
+
+        /// <summary>
         /// Update a backtest name
         /// </summary>
         /// <param name="projectId">Project for the backtest we want to update</param>
@@ -668,6 +697,32 @@ namespace QuantConnect.Api
                 }), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out LiveAlgorithmResults result);
+            return result;
+        }
+
+        /// <summary>
+        /// Read out a live algorithm orders in the project id specified.
+        /// </summary>
+        /// <param name="start">Starting index of the orders to be fetched. Required if end > 100</param>
+        /// <param name="end">Last index of the orders to be fetched. Note that end - start must be less than 100</param>
+        /// <param name="projectId">Id of the project from which to read the live algorithm</param>
+        /// <returns><see cref="OrdersResponseWrapper"/></returns>
+
+        public OrdersResponseWrapper ReadLiveOrders(int start, int end, int projectId)
+        {
+            var request = new RestRequest("live/read/orders", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                start,
+                end,
+                projectId
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out OrdersResponseWrapper result);
             return result;
         }
 
