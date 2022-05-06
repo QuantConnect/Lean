@@ -417,7 +417,7 @@ namespace QuantConnect.Api
         /// <param name="backtestId">Specific backtest id to read</param>
         /// <param name="getCharts">True will return backtest charts</param>
         /// <returns><see cref="Backtest"/></returns>
-
+        
         public Backtest ReadBacktest(int projectId, string backtestId, bool getCharts = true)
         {
             var request = new RestRequest("backtests/read", Method.POST)
