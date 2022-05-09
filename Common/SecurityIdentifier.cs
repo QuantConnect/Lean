@@ -165,27 +165,25 @@ namespace QuantConnect
         {
             get
             {
-                try
+                if (_date.HasValue)
                 {
                     return _date.Value;
                 }
-                catch (InvalidOperationException)
+
+                switch (SecurityType)
                 {
-                    switch (SecurityType)
-                    {
-                        case SecurityType.Base:
-                        case SecurityType.Equity:
-                        case SecurityType.Option:
-                        case SecurityType.Future:
-                        case SecurityType.Index:
-                        case SecurityType.FutureOption:
-                        case SecurityType.IndexOption:
-                            var oadate = ExtractFromProperties(DaysOffset, DaysWidth);
-                            _date = DateTime.FromOADate(oadate);
-                            return _date.Value;
-                        default:
-                            throw new InvalidOperationException("Date is only defined for SecurityType.Equity, SecurityType.Option, SecurityType.Future, SecurityType.FutureOption, SecurityType.IndexOption, and SecurityType.Base");
-                    }
+                    case SecurityType.Base:
+                    case SecurityType.Equity:
+                    case SecurityType.Option:
+                    case SecurityType.Future:
+                    case SecurityType.Index:
+                    case SecurityType.FutureOption:
+                    case SecurityType.IndexOption:
+                        var oadate = ExtractFromProperties(DaysOffset, DaysWidth);
+                        _date = DateTime.FromOADate(oadate);
+                        return _date.Value;
+                    default:
+                        throw new InvalidOperationException("Date is only defined for SecurityType.Equity, SecurityType.Option, SecurityType.Future, SecurityType.FutureOption, SecurityType.IndexOption, and SecurityType.Base");
                 }
             }
         }
@@ -234,35 +232,32 @@ namespace QuantConnect
         {
             get
             {
-                try
+                if (_strikePrice.HasValue)
                 {
-                    // will throw 'InvalidOperationException' if not set
                     return _strikePrice.Value;
                 }
-                catch (InvalidOperationException)
+
+                if (!SecurityType.IsOption())
                 {
-                    if (!SecurityType.IsOption())
-                    {
-                        throw new InvalidOperationException("StrikePrice is only defined for SecurityType.Option, SecurityType.FutureOption, and SecurityType.IndexOption");
-                    }
-
-                    // performance: lets calculate strike price once
-                    var scale = ExtractFromProperties(StrikeScaleOffset, StrikeScaleWidth);
-                    var unscaled = ExtractFromProperties(StrikeOffset, StrikeWidth);
-                    var pow = Math.Pow(10, (int)scale - StrikeDefaultScale);
-                    // If the 20th bit is set to 1, we have a negative strike price.
-                    // Let's normalize the strike and explicitly make it negative
-                    if (((unscaled >> 19) & 1) == 1)
-                    {
-                        _strikePrice = -((unscaled ^ 1 << 19) * (decimal)pow);
-                    }
-                    else
-                    {
-                        _strikePrice = unscaled * (decimal)pow;
-                    }
-
-                    return _strikePrice.Value;
+                    throw new InvalidOperationException("StrikePrice is only defined for SecurityType.Option, SecurityType.FutureOption, and SecurityType.IndexOption");
                 }
+
+                // performance: lets calculate strike price once
+                var scale = ExtractFromProperties(StrikeScaleOffset, StrikeScaleWidth);
+                var unscaled = ExtractFromProperties(StrikeOffset, StrikeWidth);
+                var pow = Math.Pow(10, (int)scale - StrikeDefaultScale);
+                // If the 20th bit is set to 1, we have a negative strike price.
+                // Let's normalize the strike and explicitly make it negative
+                if (((unscaled >> 19) & 1) == 1)
+                {
+                    _strikePrice = -((unscaled ^ 1 << 19) * (decimal)pow);
+                }
+                else
+                {
+                    _strikePrice = unscaled * (decimal)pow;
+                }
+
+                return _strikePrice.Value;
             }
         }
 
@@ -275,20 +270,17 @@ namespace QuantConnect
         {
             get
             {
-                try
+                if (_optionRight.HasValue)
                 {
-                    // will throw 'InvalidOperationException' if not set
                     return _optionRight.Value;
                 }
-                catch (InvalidOperationException)
+
+                if (!SecurityType.IsOption())
                 {
-                    if (!SecurityType.IsOption())
-                    {
-                        throw new InvalidOperationException("OptionRight is only defined for SecurityType.Option, SecurityType.FutureOption, and SecurityType.IndexOption");
-                    }
-                    _optionRight = (OptionRight)ExtractFromProperties(PutCallOffset, PutCallWidth);
-                    return _optionRight.Value;
+                    throw new InvalidOperationException("OptionRight is only defined for SecurityType.Option, SecurityType.FutureOption, and SecurityType.IndexOption");
                 }
+                _optionRight = (OptionRight)ExtractFromProperties(PutCallOffset, PutCallWidth);
+                return _optionRight.Value;
             }
         }
 
@@ -301,21 +293,18 @@ namespace QuantConnect
         {
             get
             {
-                try
+                if (_optionStyle.HasValue)
                 {
-                    // will throw 'InvalidOperationException' if not set
                     return _optionStyle.Value;
                 }
-                catch (InvalidOperationException)
-                {
-                    if (!SecurityType.IsOption())
-                    {
-                        throw new InvalidOperationException("OptionStyle is only defined for SecurityType.Option, SecurityType.FutureOption, and SecurityType.IndexOption");
-                    }
 
-                    _optionStyle = (OptionStyle)(ExtractFromProperties(OptionStyleOffset, OptionStyleWidth));
-                    return _optionStyle.Value;
+                if (!SecurityType.IsOption())
+                {
+                    throw new InvalidOperationException("OptionStyle is only defined for SecurityType.Option, SecurityType.FutureOption, and SecurityType.IndexOption");
                 }
+
+                _optionStyle = (OptionStyle)(ExtractFromProperties(OptionStyleOffset, OptionStyleWidth));
+                return _optionStyle.Value;
             }
         }
 

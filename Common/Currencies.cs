@@ -194,19 +194,15 @@ namespace QuantConnect
         /// <returns></returns>
         public static bool IsStableCoin(string symbol, string market, string quoteCurrency = null)
         {
-            try
+            if (_stableCoinsMarkets.TryGetValue(market, out var stableCoins) && stableCoins.TryGetValue(symbol, out var index))
             {
-                var index = _stableCoinsMarkets[market][symbol];
-                if (quoteCurrency == null || quoteCurrency == _stableCoinsCurrencies[index])
+                if (quoteCurrency == null)
                 {
                     return true;
                 }
-            }
-            catch
-            {
-                return false;
-            }
 
+                return quoteCurrency == _stableCoinsCurrencies[index];
+            }
             return false;
         }
 
