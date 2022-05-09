@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -45,8 +44,7 @@ namespace QuantConnect
     {
         #region Empty, DefaultDate Fields
 
-        private static readonly ConcurrentDictionary<string, SecurityIdentifier> SecurityIdentifierCache
-            = new ConcurrentDictionary<string, SecurityIdentifier>();
+        private static readonly Dictionary<string, SecurityIdentifier> SecurityIdentifierCache = new();
         private static readonly string MapFileProviderTypeName = Config.Get("map-file-provider", "LocalDiskMapFileProvider");
         private static readonly char[] InvalidCharacters = {'|', ' '};
         private static readonly Lazy<IMapFileProvider> MapFileProvider = new Lazy<IMapFileProvider>(
@@ -768,50 +766,61 @@ namespace QuantConnect
         {
             exception = null;
 
-            if (string.IsNullOrWhiteSpace(value) || value == " 0")
+            if (value == null)
             {
                 identifier = Empty;
                 return true;
             }
 
-            // for performance, we first verify if we already have parsed this SecurityIdentifier
-            if (SecurityIdentifierCache.TryGetValue(value, out identifier))
+            lock (SecurityIdentifierCache)
             {
+                // for performance, we first verify if we already have parsed this SecurityIdentifier
+                if (SecurityIdentifierCache.TryGetValue(value, out identifier))
+                {
+                    return true;
+                }
+
+                if (string.IsNullOrWhiteSpace(value) || value == " 0")
+                {
+                    // we know it's not null already let's cache it
+                    SecurityIdentifierCache[value] = identifier = Empty;
+                    return true;
+                }
+
+                // after calling TryGetValue because if it failed it will set identifier to default
+                identifier = Empty;
+
+                try
+                {
+                    var sids = value.Split('|');
+                    for (var i = sids.Length - 1; i > -1; i--)
+                    {
+                        var current = sids[i];
+                        var parts = current.Split(SplitSpace, StringSplitOptions.RemoveEmptyEntries);
+                        if (parts.Length != 2)
+                        {
+                            exception = new FormatException("The string must be splittable on space into two parts.");
+                            return false;
+                        }
+
+                        var symbol = parts[0];
+                        var otherData = parts[1];
+                        var props = otherData.DecodeBase36();
+
+                        // toss the previous in as the underlying, if Empty, ignored by ctor
+                        identifier = new SecurityIdentifier(symbol, props, identifier);
+                    }
+                }
+                catch (Exception error)
+                {
+                    exception = error;
+                    Log.Error($"SecurityIdentifier.TryParseProperties(): Error parsing SecurityIdentifier: '{value}', Exception: {exception}");
+                    return false;
+                }
+
+                SecurityIdentifierCache[value] = identifier;
                 return true;
             }
-            // after calling TryGetValue because if it failed it will set identifier to default
-            identifier = Empty;
-
-            try
-            {
-                var sids = value.Split('|');
-                for (var i = sids.Length - 1; i > -1; i--)
-                {
-                    var current = sids[i];
-                    var parts = current.Split(SplitSpace, StringSplitOptions.RemoveEmptyEntries);
-                    if (parts.Length != 2)
-                    {
-                        exception = new FormatException("The string must be splittable on space into two parts.");
-                        return false;
-                    }
-
-                    var symbol = parts[0];
-                    var otherData = parts[1];
-                    var props = otherData.DecodeBase36();
-
-                    // toss the previous in as the underlying, if Empty, ignored by ctor
-                    identifier = new SecurityIdentifier(symbol, props, identifier);
-                }
-            }
-            catch (Exception error)
-            {
-                exception = error;
-                Log.Error($"SecurityIdentifier.TryParseProperties(): Error parsing SecurityIdentifier: '{value}', Exception: {exception}");
-                return false;
-            }
-
-            SecurityIdentifierCache.TryAdd(value, identifier);
-            return true;
         }
 
         /// <summary>
