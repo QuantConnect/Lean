@@ -417,7 +417,7 @@ namespace QuantConnect.Api
         /// <param name="backtestId">Specific backtest id to read</param>
         /// <param name="getCharts">True will return backtest charts</param>
         /// <returns><see cref="Backtest"/></returns>
-        
+
         public Backtest ReadBacktest(int projectId, string backtestId, bool getCharts = true)
         {
             var request = new RestRequest("backtests/read", Method.POST)
@@ -489,7 +489,7 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
-        /// Read out a backtest orders in the project id specified.
+        /// Read out backtest orders in the project id specified.
         /// </summary>
         /// <param name="start">Starting index of the orders to be fetched. Required if end > 100</param>
         /// <param name="end">Last index of the orders to be fetched. Note that end - start must be less than 100</param>

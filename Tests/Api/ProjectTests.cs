@@ -206,7 +206,7 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(backtest.Success);
 
             // Now read the backtest and wait for it to complete
-            var backtestRead = WaitForBacktestCompletion(project.Projects.First().ProjectId, backtest.BacktestId, backtest);
+            var backtestRead = WaitForBacktestCompletion(project.Projects.First().ProjectId, backtest.BacktestId);
             Assert.IsTrue(backtestRead.Success);
             Assert.IsTrue(backtestRead.Progress == 1);
             Assert.IsTrue(backtestRead.Name == backtestName);
@@ -214,7 +214,7 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(backtestRead.Charts["Benchmark"].Series.Count > 0);
 
             // In the same way, read the orders returned in the backtest
-            var backtestOrdersRead = ApiClient.ReadBacktestOrders(0,1,project.Projects.First().ProjectId, backtest.BacktestId);
+            var backtestOrdersRead = ApiClient.ReadBacktestOrders(0, 1, project.Projects.First().ProjectId, backtest.BacktestId);
             Assert.IsTrue(backtestOrdersRead.Success);
             Assert.IsTrue(backtestOrdersRead.Orders.Any());
             Assert.AreEqual(Symbols.SPY.Value, backtestOrdersRead.Orders.First().Symbol.Value);
@@ -302,7 +302,7 @@ namespace QuantConnect.Tests.API
         /// <param name="projectId">Project id to scan</param>
         /// <param name="backtestId">Backtest id previously started</param>
         /// <returns>Completed backtest object</returns>
-        private Backtest WaitForBacktestCompletion(int projectId, string backtestId, Backtest backtest)
+        private Backtest WaitForBacktestCompletion(int projectId, string backtestId)
         {
             var result = new Backtest();
             var finish = DateTime.Now.AddSeconds(60);

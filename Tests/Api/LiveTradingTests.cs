@@ -324,7 +324,8 @@ namespace QuantConnect.Tests.API
         /// </summary>
         /// <param name="settings">Settings for Lean</param>
         /// <param name="file">File to run</param>
-        /// <param name="StopLiveAlgos">If the true the algorithm will be stopped. Otherwise, it will keep running</param>
+        /// <param name="StopLiveAlgos">If true the algorithm will be stopped at the end of the method.
+        /// Otherwise, it will keep running</param>
         /// <returns>The id of the project created with the algorithm in</returns>
         private int RunLiveAlgorithm(BaseLiveAlgorithmSettings settings, ProjectFile file, bool StopLiveAlgos)
         {
