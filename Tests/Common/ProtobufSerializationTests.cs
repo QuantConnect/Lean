@@ -61,7 +61,7 @@ namespace QuantConnect.Tests.Common
         public void SerializeRoundTripIconicDataTypes(Type baseDataType, bool hasUnderlyingSymbol)
         {
             var item = CreateNewInstance(baseDataType, hasUnderlyingSymbol);
-            var serialized = item.ProtobufSerialize();
+            var serialized = item.ProtobufSerialize(new Guid());
             
             using (var stream = new MemoryStream(serialized))
             {
@@ -117,7 +117,7 @@ namespace QuantConnect.Tests.Common
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-            var serializedTick = ticks.ProtobufSerialize();
+            var serializedTick = ticks.ProtobufSerialize(new Guid());
             stopwatch.Stop();
 
             Log.Trace($"Took {stopwatch.ElapsedMilliseconds}ms. TickCount : {tickCount}.");
@@ -154,7 +154,7 @@ namespace QuantConnect.Tests.Common
         {
             var openInterest = new OpenInterest(DateTime.UtcNow, Symbols.AAPL, 10);
 
-            var serializedTick = openInterest.ProtobufSerialize();
+            var serializedTick = openInterest.ProtobufSerialize(new Guid());
 
             // verify its correct
             using (var stream = new MemoryStream(serializedTick))
@@ -188,7 +188,7 @@ namespace QuantConnect.Tests.Common
                 BidSize = 100
             };
 
-            var serializedTick = tick.ProtobufSerialize();
+            var serializedTick = tick.ProtobufSerialize(new Guid());
 
             // verify its correct
             using (var stream = new MemoryStream(serializedTick))
@@ -227,7 +227,7 @@ namespace QuantConnect.Tests.Common
                 Period = TimeSpan.FromMinutes(1)
             };
 
-            var serializedTradeBar = tradeBar.ProtobufSerialize();
+            var serializedTradeBar = tradeBar.ProtobufSerialize(new Guid());
             using (var stream = new MemoryStream(serializedTradeBar))
             {
                 // verify its correct
@@ -262,7 +262,7 @@ namespace QuantConnect.Tests.Common
                 Period = TimeSpan.FromMinutes(1)
             };
 
-            var serializedQuoteBar = quoteBar.ProtobufSerialize();
+            var serializedQuoteBar = quoteBar.ProtobufSerialize(new Guid());
             using (var stream = new MemoryStream(serializedQuoteBar))
             {
                 // verify its correct
@@ -304,7 +304,7 @@ namespace QuantConnect.Tests.Common
                 Value = 0.5m
             };
 
-            var serializedDividend = dividend.ProtobufSerialize();
+            var serializedDividend = dividend.ProtobufSerialize(new Guid());
             using (var stream = new MemoryStream(serializedDividend))
             {
                 var result = (Dividend)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
@@ -323,7 +323,7 @@ namespace QuantConnect.Tests.Common
         {
             var split = new Split(Symbols.AAPL, DateTime.UtcNow, decimal.MaxValue, decimal.MinValue, SplitType.SplitOccurred);
 
-            var serializedSplit = split.ProtobufSerialize();
+            var serializedSplit = split.ProtobufSerialize(new Guid());
             using (var stream = new MemoryStream(serializedSplit))
             {
                 var result = (Split)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
@@ -356,7 +356,7 @@ namespace QuantConnect.Tests.Common
                     OrderDirection.Buy, 1, 10, OrderFee.Zero, message:"crazy message")
             };
 
-            var serializedOrderEvent = orderEvent.ProtobufSerialize();
+            var serializedOrderEvent = orderEvent.ProtobufSerialize(new Guid());
             using (var stream = new MemoryStream(serializedOrderEvent))
             {
                 var result = (AlphaStreamsOrderEvent)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
@@ -410,7 +410,7 @@ namespace QuantConnect.Tests.Common
                 TotalPortfolioValue = 100000,
             };
 
-            var serializedState = state.ProtobufSerialize();
+            var serializedState = state.ProtobufSerialize(new Guid());
             using (var stream = new MemoryStream(serializedState))
             {
                 var result = (AlphaStreamsPortfolioState)Serializer.Deserialize<IEnumerable<BaseData>>(stream).First();
@@ -459,9 +459,10 @@ namespace QuantConnect.Tests.Common
                 }
             }
 
+            var guid = new Guid();
             {
                 // warmup
-                var serialized = ticks.ProtobufSerialize();
+                var serialized = ticks.ProtobufSerialize(guid);
                 using (var stream = new MemoryStream(serialized))
                 {
                     // verify its correct
@@ -471,7 +472,7 @@ namespace QuantConnect.Tests.Common
                 var start = DateTime.UtcNow;
                 for (var i = 0; i < 10; i++)
                 {
-                    serialized = ticks.ProtobufSerialize();
+                    serialized = ticks.ProtobufSerialize(guid);
                 }
                 var end = DateTime.UtcNow;
                 Log.Trace($"PROTO BUF TOOK {end - start}");
