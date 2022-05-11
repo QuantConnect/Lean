@@ -170,16 +170,19 @@ namespace QuantConnect
             /// </summary>
             private void CalculateCpu()
             {
+                var interval = 1000;
                 var process = Process.GetCurrentProcess();
                 while (!_cancellationToken.IsCancellationRequested)
                 {
                     var startTime = DateTime.UtcNow;
                     var startCpuUsage = process.TotalProcessorTime;
 
-                    if (_cancellationToken.Token.WaitHandle.WaitOne(1000))
+                    if (_cancellationToken.Token.WaitHandle.WaitOne(interval))
                     {
                         return;
                     }
+                    // after the initial internal, increase it
+                    interval = 5000;
 
                     var endTime = DateTime.UtcNow;
                     var endCpuUsage = process.TotalProcessorTime;

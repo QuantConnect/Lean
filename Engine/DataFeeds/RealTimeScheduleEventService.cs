@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -72,14 +72,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         var diff = nextUtcScheduledEvent - timeProvider.GetUtcNow();
                         while (diff.Ticks > 0)
                         {
-                            if (diff.Milliseconds >= 1)
-                            {
-                                _tokenSource.Token.WaitHandle.WaitOne(diff);
-                            }
-                            else
-                            {
-                                Thread.SpinWait(100000);
-                            }
+                            _tokenSource.Token.WaitHandle.WaitOne(diff);
+
                             diff = nextUtcScheduledEvent - timeProvider.GetUtcNow();
 
                             if (_tokenSource.Token.IsCancellationRequested)

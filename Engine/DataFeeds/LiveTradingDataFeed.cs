@@ -84,7 +84,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _factorFileProvider = factorFileProvider;
             _channelProvider = dataChannelProvider;
             _frontierTimeProvider = dataFeedTimeProvider.FrontierTimeProvider;
-            _customExchange = new BaseDataExchange("CustomDataExchange") { SleepInterval = 10 };
+            _customExchange = GetBaseDataExchange();
             _subscriptions = subscriptionManager.DataFeedSubscriptions;
 
             _dataQueueHandler = GetDataQueueHandler();
@@ -158,6 +158,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         protected virtual IDataQueueHandler GetDataQueueHandler()
         {
             return new DataQueueHandlerManager();
+        }
+
+        /// <summary>
+        /// Gets the <see cref="BaseDataExchange"/> to use
+        /// </summary>
+        /// <remarks>Useful for testing</remarks>
+        protected virtual BaseDataExchange GetBaseDataExchange()
+        {
+            return new BaseDataExchange("CustomDataExchange") { SleepInterval = 100 };
         }
 
         /// <summary>
