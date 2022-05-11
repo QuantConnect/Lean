@@ -263,7 +263,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // if we didn't handle anything on this past iteration, take a nap
                     if (!handled && _sleepInterval != 0)
                     {
-                        _cancellationTokenSource.Token.WaitHandle.WaitOne(_sleepInterval);
+                        _cancellationTokenSource.Token.WaitHandle.WaitOne(_sleepInterval.GetSecondUnevenWait());
                     }
                 }
                 catch (Exception err)

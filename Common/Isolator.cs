@@ -157,7 +157,7 @@ namespace QuantConnect
                     break;
                 }
 
-                if (task.Wait(sleepIntervalMillis))
+                if (task.Wait(utcNow.GetSecondUnevenWait(sleepIntervalMillis)))
                 {
                     break;
                 }
