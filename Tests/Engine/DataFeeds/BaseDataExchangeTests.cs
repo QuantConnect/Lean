@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -260,7 +260,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var isFaultedEvent = new ManualResetEvent(false);
             var isCompletedEvent = new ManualResetEvent(false);
-            Task.Run(() => exchange.Start(new CancellationTokenSource(50).Token)).ContinueWith(task =>
+            Task.Run(() => exchange.Start()).ContinueWith(task =>
             {
                 if (task.IsFaulted) isFaultedEvent.Set();
                 isCompletedEvent.Set();
@@ -280,7 +280,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var isCompletedEvent = new ManualResetEvent(false);
             exchange.AddEnumerator(Symbol.Empty, enumerator, () => true, handler => isCompletedEvent.Set());
-            Task.Run(() => exchange.Start(new CancellationTokenSource(50).Token));
+            Task.Run(() => exchange.Start());
 
             isCompletedEvent.WaitOne();
             exchange.Stop();
