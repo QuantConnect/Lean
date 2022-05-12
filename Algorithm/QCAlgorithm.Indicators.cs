@@ -1984,16 +1984,19 @@ namespace QuantConnect.Algorithm
         /// updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose TSI we want</param>
-        /// <param name="longTermPeriod">The period for the first price chance smothing EMA</param>
-        /// <param name="shortTermPeriod">The period for the second price chance smothing EMA</param>
+        /// <param name="shortTermPeriod">Period used for the first price change smoothing</param>
+        /// <param name="longTermPeriod">Period used for the second (double) price change smoothing</param>
+        /// <param name="signalPeriod">The signal period</param>
+        /// <param name="signalType">The type of moving average to use for the signal</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>The TrueStrengthIndex indicator for the given parameters</returns>
         [DocumentationAttribute(Indicators)]
-        public TrueStrengthIndex TSI(Symbol symbol, int longTermPeriod = 25, int shortTermPeriod = 13, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        public TrueStrengthIndex TSI(Symbol symbol, int longTermPeriod = 25, int shortTermPeriod = 13, int signalPeriod = 7,
+            MovingAverageType signalType = MovingAverageType.Exponential, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            var name = CreateIndicatorName(symbol, $"TSI({longTermPeriod},{shortTermPeriod})", resolution);
-            var trueStrengthIndex = new TrueStrengthIndex(name, longTermPeriod, shortTermPeriod);
+            var name = CreateIndicatorName(symbol, $"TSI({longTermPeriod},{shortTermPeriod},{signalPeriod})", resolution);
+            var trueStrengthIndex = new TrueStrengthIndex(name, longTermPeriod, shortTermPeriod, signalPeriod, signalType);
             RegisterIndicator(symbol, trueStrengthIndex, resolution, selector);
 
             if (EnableAutomaticIndicatorWarmUp)

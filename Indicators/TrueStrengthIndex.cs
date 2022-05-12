@@ -20,20 +20,27 @@ namespace QuantConnect.Indicators
     /// This indicator computes the True Strength Index (TSI).
     /// The True Strength Index is calculated as explained here:
     /// https://school.stockcharts.com/doku.php?id=technical_indicators:true_strength_index
+    ///
+    /// Briefly, the calculation has three steps:
+    ///   1. Smooth the momentum and the absolute momentum by getting an EMA of them (typically of period 25)
+    ///   2. Double smooth the momentum and the absolute momentum by getting an EMA of their EMA (typically of period 13)
+    ///   3. The TSI formula itself: divide the double-smoothed momentum over the double-smoothed absolute momentum and multiply by 100
+    ///
+    /// The signal is typically a 7-to-12-EMA of the TSI.
     /// </summary>
     public class TrueStrengthIndex : Indicator, IIndicatorWarmUpPeriodProvider
     {
-        private readonly decimal _period;
-
         private decimal _prevClose;
 
-        private readonly ExponentialMovingAverage _pcEma;
+        private readonly ExponentialMovingAverage _priceChangeEma;
 
-        private readonly ExponentialMovingAverage _pcEmaEma;
+        private readonly ExponentialMovingAverage _priceChangeEmaEma;
 
-        private readonly ExponentialMovingAverage _apcEma;
+        private readonly ExponentialMovingAverage _absPriceChangeEma;
 
-        private readonly ExponentialMovingAverage _apcEmaEma;
+        private readonly ExponentialMovingAverage _absPriceChangeEmaEma;
+
+        private readonly IndicatorBase<IndicatorDataPoint> _tsi;
 
         /// <summary>
         /// Gets the signal line for the TSI indicator
@@ -46,6 +53,11 @@ namespace QuantConnect.Indicators
         public int WarmUpPeriod { get; }
 
         /// <summary>
+        /// Gets a flag indicating when this indicator is ready and fully initialized
+        /// </summary>
+        public override bool IsReady => Samples >= WarmUpPeriod;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="TrueStrengthIndex"/> class using the specified short and long term smoothing periods, and the signal period and type.
         /// </summary>
         /// <param name="shortTermPeriod">Period used for the first price change smoothing</param>
@@ -53,7 +65,7 @@ namespace QuantConnect.Indicators
         /// <param name="signalPeriod">The signal period</param>
         /// <param name="signalType">The type of moving average to use for the signal</param>
         public TrueStrengthIndex(int longTermPeriod = 25, int shortTermPeriod = 13, int signalPeriod = 7, MovingAverageType signalType = MovingAverageType.Exponential)
-            : this($"TSI({longTermPeriod},{shortTermPeriod})", longTermPeriod, shortTermPeriod)
+            : this($"TSI({longTermPeriod},{shortTermPeriod},{signalPeriod})", longTermPeriod, shortTermPeriod, signalPeriod, signalType)
         {
         }
 
@@ -68,18 +80,14 @@ namespace QuantConnect.Indicators
         public TrueStrengthIndex(string name, int longTermPeriod = 25, int shortTermPeriod = 13, int signalPeriod = 7, MovingAverageType signalType = MovingAverageType.Exponential)
             : base(name)
         {
-            _pcEma = new ExponentialMovingAverage(name + "_PC_EMA", longTermPeriod);
-            _pcEmaEma = new ExponentialMovingAverage(name + "_PC_EMA_EMA", shortTermPeriod);
-            _apcEma = new ExponentialMovingAverage(name + "_APC_EMA", longTermPeriod);
-            _apcEmaEma = new ExponentialMovingAverage(name + "_APC_EMA_EMA", shortTermPeriod);
-            Signal = signalType.AsIndicator(name + "_Signal", signalPeriod);
-            _period = WarmUpPeriod = longTermPeriod + shortTermPeriod;
+            _priceChangeEma = new ExponentialMovingAverage(name + "_PC_EMA", longTermPeriod);
+            _absPriceChangeEma = new ExponentialMovingAverage(name + "_APC_EMA", longTermPeriod);
+            _priceChangeEmaEma = new ExponentialMovingAverage(name + "_PC_EMA_EMA", shortTermPeriod).Of(_priceChangeEma, true);
+            _absPriceChangeEmaEma = new ExponentialMovingAverage(name + "_APC_EMA_EMA", shortTermPeriod).Of(_absPriceChangeEma, true);
+            _tsi = _priceChangeEmaEma.Over(_absPriceChangeEmaEma).Times(100m);
+            Signal = signalType.AsIndicator(name + "_Signal", signalPeriod).Of(_tsi, true);
+            WarmUpPeriod = longTermPeriod + shortTermPeriod;
         }
-
-        /// <summary>
-        /// Gets a flag indicating when this indicator is ready and fully initialized
-        /// </summary>
-        public override bool IsReady => Samples >= _period;
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
@@ -94,29 +102,12 @@ namespace QuantConnect.Indicators
                 return 0m;
             }
 
-            decimal pc = input.Price - _prevClose;
+            var priceChange = input.Price - _prevClose;
             _prevClose = input.Price;
+            _priceChangeEma.Update(input.Time, priceChange);
+            _absPriceChangeEma.Update(input.Time, Math.Abs(priceChange));
 
-            _pcEma.Update(input.Time, pc);
-            _apcEma.Update(input.Time, Math.Abs(pc));
-
-            if (_pcEma.IsReady && _apcEma.IsReady) {
-                _pcEmaEma.Update(_pcEma.Current);
-                _apcEmaEma.Update(_apcEma.Current);
-            }
-
-
-            if (!IsReady) {
-                return 0m;
-            }
-
-            decimal tsi = _apcEmaEma.Current.Value == 0m
-                ? Current.Value
-                : (_pcEmaEma.Current.Value / _apcEmaEma.Current.Value) * 100m;
-            Signal.Update(input.Time, tsi);
-
-
-            return tsi;
+            return _tsi.Current.Value;
         }
 
         /// <summary>
@@ -125,10 +116,11 @@ namespace QuantConnect.Indicators
         public override void Reset()
         {
             _prevClose = 0;
-            _pcEma.Reset();
-            _pcEmaEma.Reset();
-            _apcEma.Reset();
-            _apcEmaEma.Reset();
+            _priceChangeEma.Reset();
+            _priceChangeEmaEma.Reset();
+            _absPriceChangeEma.Reset();
+            _absPriceChangeEmaEma.Reset();
+            _tsi.Reset();
             Signal.Reset();
             base.Reset();
         }
