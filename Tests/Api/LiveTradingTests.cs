@@ -22,6 +22,7 @@ using QuantConnect.Api;
 using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Paper;
 using QuantConnect.Configuration;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Tests.API
 {
@@ -324,10 +325,10 @@ namespace QuantConnect.Tests.API
         /// </summary>
         /// <param name="settings">Settings for Lean</param>
         /// <param name="file">File to run</param>
-        /// <param name="StopLiveAlgos">If true the algorithm will be stopped at the end of the method.
+        /// <param name="stopLiveAlgos">If true the algorithm will be stopped at the end of the method.
         /// Otherwise, it will keep running</param>
         /// <returns>The id of the project created with the algorithm in</returns>
-        private int RunLiveAlgorithm(BaseLiveAlgorithmSettings settings, ProjectFile file, bool StopLiveAlgos)
+        private int RunLiveAlgorithm(BaseLiveAlgorithmSettings settings, ProjectFile file, bool stopLiveAlgos)
         {
             // Create a new project
             var project = ApiClient.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp, TestOrganization);
@@ -355,7 +356,7 @@ namespace QuantConnect.Tests.API
             var createLiveAlgorithm = ApiClient.CreateLiveAlgorithm(project.Projects.First().ProjectId, compile.CompileId, freeNode.FirstOrDefault().Id, settings);
             Assert.IsTrue(createLiveAlgorithm.Success);
 
-            if (StopLiveAlgos)
+            if (stopLiveAlgos)
             {
                 // Liquidate live algorithm; will also stop algorithm
                 var liquidateLive = ApiClient.LiquidateLiveAlgorithm(project.Projects.First().ProjectId);
@@ -426,8 +427,8 @@ namespace QuantConnect.Tests.API
         private OrdersResponseWrapper WaitForReadLiveOrdersResponse(int projectId, int seconds)
         {
             var readLiveOrders = new OrdersResponseWrapper();
-            var finish = DateTime.Now.AddMinutes(seconds);
-            while (DateTime.Now < finish)
+            var finish = DateTime.UtcNow.AddMinutes(seconds);
+            while (DateTime.UtcNow < finish)
             {
                 Thread.Sleep(60000);
                 readLiveOrders = ApiClient.ReadLiveOrders(0, 1, projectId);

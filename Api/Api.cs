@@ -491,13 +491,13 @@ namespace QuantConnect.Api
         /// <summary>
         /// Read out backtest orders in the project id specified.
         /// </summary>
+        /// <param name="projectId">Id of the project from which to read the backtest</param>
+        /// <param name="backtestId">Id of the backtest from which to read the orders</param>
         /// <param name="start">Starting index of the orders to be fetched. Required if end > 100</param>
         /// <param name="end">Last index of the orders to be fetched. Note that end - start must be less than 100</param>
-        /// <param name="projectId">Id of the project from which to read the backtest</param>
-        /// <param name="backtestId">Id of the backtest from which to read the orders</param>        
         /// <returns><see cref="OrdersResponseWrapper"/></returns>
-        
-        public OrdersResponseWrapper ReadBacktestOrders(int start, int end, int projectId, string backtestId)
+
+        public OrdersResponseWrapper ReadBacktestOrders(int projectId, string backtestId, int start, int end)
         {
             var request = new RestRequest("backtests/read/orders", Method.POST)
             {
@@ -703,9 +703,9 @@ namespace QuantConnect.Api
         /// <summary>
         /// Read out a live algorithm orders in the project id specified.
         /// </summary>
+        /// <param name="projectId">Id of the project from which to read the live algorithm</param>
         /// <param name="start">Starting index of the orders to be fetched. Required if end > 100</param>
         /// <param name="end">Last index of the orders to be fetched. Note that end - start must be less than 100</param>
-        /// <param name="projectId">Id of the project from which to read the live algorithm</param>
         /// <returns><see cref="OrdersResponseWrapper"/></returns>
 
         public OrdersResponseWrapper ReadLiveOrders(int start, int end, int projectId)

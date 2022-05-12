@@ -20,6 +20,7 @@ using System.Threading;
 using System.Web;
 using NUnit.Framework;
 using QuantConnect.Api;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Tests.API
 {
@@ -214,7 +215,7 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(backtestRead.Charts["Benchmark"].Series.Count > 0);
 
             // In the same way, read the orders returned in the backtest
-            var backtestOrdersRead = ApiClient.ReadBacktestOrders(0, 1, project.Projects.First().ProjectId, backtest.BacktestId);
+            var backtestOrdersRead = ApiClient.ReadBacktestOrders(project.Projects.First().ProjectId, backtest.BacktestId, 0, 1);
             Assert.IsTrue(backtestOrdersRead.Success);
             Assert.IsTrue(backtestOrdersRead.Orders.Any());
             Assert.AreEqual(Symbols.SPY.Value, backtestOrdersRead.Orders.First().Symbol.Value);
@@ -265,9 +266,10 @@ namespace QuantConnect.Tests.API
             var compileSuccess = WaitForCompilerResponse(project.Projects.First().ProjectId, compileCreate.CompileId);
             var backtestName = $"{DateTime.Now.ToStringInvariant("u")} API Backtest";
             var backtest = ApiClient.CreateBacktest(project.Projects.First().ProjectId, compileSuccess.CompileId, backtestName);
+            var backtestRead = WaitForBacktestCompletion(project.Projects.First().ProjectId, backtest.BacktestId);
 
             // Read the orders returned in the backtest
-            var backtestOrdersRead = ApiClient.ReadBacktestOrders(0, 1, project.Projects.First().ProjectId, backtest.BacktestId);
+            var backtestOrdersRead = ApiClient.ReadBacktestOrders(project.Projects.First().ProjectId, backtest.BacktestId, 0, 1);
             Assert.IsTrue(backtestOrdersRead.Success);
             Assert.IsTrue(backtestOrdersRead.Orders.Any());
             Assert.AreEqual(Symbols.SPY.Value, backtestOrdersRead.Orders.First().Symbol.Value);

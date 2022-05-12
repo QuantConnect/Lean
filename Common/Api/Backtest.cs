@@ -78,7 +78,7 @@ namespace QuantConnect.Api
         /// Rolling window detailed statistics.
         /// </summary>
         [JsonProperty(PropertyName = "rollingWindow", NullValueHandling = NullValueHandling.Ignore)]
-        public Dictionary<string, AlgorithmPerformance>? RollingWindow { get; set; }
+        public Dictionary<string, AlgorithmPerformance> RollingWindow { get; set; }
 
         /// <summary>
         /// Rolling window detailed statistics.
@@ -103,7 +103,7 @@ namespace QuantConnect.Api
         /// </summary>
         /// <remarks>Intended for update mode -- send updates to the existing statistics in the result GUI. If statistic key does not exist in GUI, create it</remarks>
         [JsonProperty(PropertyName = "statistics", NullValueHandling = NullValueHandling.Ignore)]
-        public IDictionary<string, string>? Statistics { get; set; }
+        public IDictionary<string, string> Statistics { get; set; }
 
         /// <summary>
         /// Runtime banner/updating statistics in the title banner of the live algorithm GUI.
