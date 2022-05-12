@@ -15,8 +15,6 @@
 */
 
 using System;
-using System.ComponentModel.Composition;
-using System.IO;
 using System.Threading;
 using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine;
@@ -70,21 +68,8 @@ namespace QuantConnect.Lean.Launcher
             string assemblyPath;
             job = leanEngineSystemHandlers.JobQueue.NextJob(out assemblyPath);
 
-            // Activate our PythonVirtualEnvironment; Cloud case we know we deploy to "/venv"
-            if (!string.IsNullOrEmpty(job.PythonVirtualEnvironment))
-            {
-                var path = "/venv";
-                Log.Trace($"Engine.Main(): Activating Python Virtual Environment at {path}");
-                PythonInitializer.ActivatePythonVirtualEnvironment(path);
-            }
-
-            // Activate our PythonVirtualEnvironment if defined in config
-            var configPythonVenv = Config.Get("python-venv");
-            if(!string.IsNullOrEmpty(configPythonVenv))
-            {
-                Log.Trace($"Engine.Main(): Activating Python Virtual Environment at {configPythonVenv}");
-                PythonInitializer.ActivatePythonVirtualEnvironment(configPythonVenv);
-            }
+            // Activate our PythonVirtualEnvironment
+            PythonInitializer.ActivatePythonVirtualEnvironment(job.PythonVirtualEnvironment);
 
             leanEngineAlgorithmHandlers = Initializer.GetAlgorithmHandlers();
 

@@ -8,13 +8,6 @@ FROM quantconnect/lean:foundation
 
 MAINTAINER QuantConnect <contact@quantconnect.com>
 
-#Save foundation image and lean version to environment variable
-ARG LEAN_FOUNDATION_VERSION=UNKNOWN
-ENV LEAN_FOUNDATION_VERSION=$LEAN_FOUNDATION_VERSION
-
-ARG LEAN_TAG=UNKNOWN
-ENV LEAN_VERSION=$LEAN_TAG
-
 #Install debugpy and PyDevD for remote python debugging
 RUN pip install --no-cache-dir ptvsd==4.3.2 debugpy~=1.5.1 pydevd-pycharm~=201.8538.36
 
@@ -30,6 +23,13 @@ COPY ./AlphaStreams/QuantConnect.AlphaStream/bin/Debug/ /Lean/Launcher/bin/Debug
 COPY ./Lean/Launcher/bin/Debug/ /Lean/Launcher/bin/Debug/
 COPY ./Lean/Optimizer.Launcher/bin/Debug/ /Lean/Optimizer.Launcher/bin/Debug/
 COPY ./Lean/Report/bin/Debug/ /Lean/Report/bin/Debug/
+
+#Save foundation image and lean version to environment variable
+ARG LEAN_FOUNDATION_VERSION=UNKNOWN
+ENV LEAN_FOUNDATION_VERSION=$LEAN_FOUNDATION_VERSION
+
+ARG LEAN_TAG=UNKNOWN
+ENV LEAN_VERSION=$LEAN_TAG
 
 # Can override with '-w'
 WORKDIR /Lean/Launcher/bin/Debug

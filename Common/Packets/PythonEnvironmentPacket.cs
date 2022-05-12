@@ -37,6 +37,6 @@ namespace QuantConnect.Packets
         /// Ideally MD5, but environment names work as well.
         /// </summary>
         [JsonProperty(PropertyName = "sPythonVirtualEnvironment")]
-        public string PythonVirtualEnvironment;
+        public string PythonVirtualEnvironment { get; set; }
     }
 }
