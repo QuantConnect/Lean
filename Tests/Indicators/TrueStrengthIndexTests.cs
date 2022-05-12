@@ -29,5 +29,21 @@ namespace QuantConnect.Tests.Indicators
         protected override string TestFileName => "spy_tsi.csv";
 
         protected override string TestColumnName => "TSI_25_13";
+
+        [Test]
+        public void ComparesWithExternalDataSignal()
+        {
+            var tsi = CreateIndicator();
+            TestHelper.TestIndicator(
+                tsi,
+                TestFileName,
+                "Signal_7",
+                (ind, expected) => Assert.AreEqual(
+                    expected,
+                    (double) ((TrueStrengthIndex) ind).Signal.Current.Value,
+                    delta: 1e-4
+                )
+            );
+        }
     }
 }
