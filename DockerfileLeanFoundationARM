@@ -64,11 +64,13 @@ ENV PIP_DEFAULT_TIMEOUT=120
 # Conda install required so that the packages are not
 # overwritten and have their version invalidated by
 # subsequent calls to conda install
+# Note: we pin the jupyter_server version since newer versions no long support python 3.6
 RUN conda install -y                \
     cython=0.29.17                  \
     pandas=0.25.3                   \
     numpy=1.18.1                    \
     wrapt=1.12.1                    \
+    jupyter_server=1.13.1           \
     jupyterlab=3.2.6                \
     matplotlib=3.2.1                \
     scipy=1.4.1                     \
