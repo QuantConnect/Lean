@@ -370,19 +370,21 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        /// Special case for bars where the open time is defined by a function
+        /// Special case for bars where the open time is defined by a function.
+        /// We assert on construction that the function returns a date time in the past or equal to the given time instant.
         /// </summary>
         private class FuncPeriodSpecification : IPeriodSpecification
         {
+            private static readonly DateTime _verificationDate = new DateTime(2022, 01, 03, 10, 10, 10);
             public TimeSpan? Period { get; private set; }
 
             public readonly Func<DateTime, CalendarInfo> _calendarInfoFunc;
 
             public FuncPeriodSpecification(Func<DateTime, CalendarInfo> expiryFunc)
             {
-                if (expiryFunc(DateTime.Now).Start > DateTime.Now)
+                if (expiryFunc(_verificationDate).Start > _verificationDate)
                 {
-                    throw new ArgumentException($"{nameof(FuncPeriodSpecification)}: Please use a function that computes a date/time in the past (e.g.: Time.StartOfWeek and Time.StartOfMonth)");
+                    throw new ArgumentException($"{nameof(FuncPeriodSpecification)}: Please use a function that computes the start of the bar associated with the given date time. Should never return a time later than the one passed in.");
                 }
                 _calendarInfoFunc = expiryFunc;
             }
