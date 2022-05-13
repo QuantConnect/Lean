@@ -177,7 +177,7 @@ namespace QuantConnect.Algorithm
 
             return awesomeOscillator;
         }
-        
+
         /// <summary>
         /// Creates a new AverageDirectionalMovementIndexRating indicator.
         /// </summary>
@@ -368,7 +368,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a Beta indicator for the given target symbol in relation with the reference used. 
+        /// Creates a Beta indicator for the given target symbol in relation with the reference used.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="target">The target symbol whose Beta value we want</param>
@@ -466,7 +466,7 @@ namespace QuantConnect.Algorithm
 
             return commodityChannelIndex;
         }
-        
+
         /// <summary>
         /// Creates a new ChaikinMoneyFlow indicator.
         /// </summary>
@@ -487,7 +487,7 @@ namespace QuantConnect.Algorithm
             }
 
             return chaikinMoneyFlow;
-            
+
         }
 
         /// <summary>
@@ -512,10 +512,10 @@ namespace QuantConnect.Algorithm
 
             return chandeMomentumOscillator;
         }
-        
+
         ///<summary>
         /// Creates a new DeMarker Indicator (DEM), an oscillator-type indicator measuring changes in terms of an asset's
-        /// High and Low tradebar values. 
+        /// High and Low tradebar values.
         ///</summary>
         /// <param name="symbol">The symbol whose DEM we seek.</param>
         /// <param name="period">The period of the moving average implemented</param>
@@ -537,7 +537,7 @@ namespace QuantConnect.Algorithm
 
             return deMarkerIndicator;
         }
-        
+
         /// <summary>
         /// Creates a new Donchian Channel indicator which will compute the Upper Band and Lower Band.
         /// The indicator will be automatically updated on the given resolution.
@@ -1980,6 +1980,34 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a TrueStrengthIndex indicator for the symbol. The indicator will be automatically
+        /// updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose TSI we want</param>
+        /// <param name="shortTermPeriod">Period used for the first price change smoothing</param>
+        /// <param name="longTermPeriod">Period used for the second (double) price change smoothing</param>
+        /// <param name="signalPeriod">The signal period</param>
+        /// <param name="signalType">The type of moving average to use for the signal</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The TrueStrengthIndex indicator for the given parameters</returns>
+        [DocumentationAttribute(Indicators)]
+        public TrueStrengthIndex TSI(Symbol symbol, int longTermPeriod = 25, int shortTermPeriod = 13, int signalPeriod = 7,
+            MovingAverageType signalType = MovingAverageType.Exponential, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"TSI({longTermPeriod},{shortTermPeriod},{signalPeriod})", resolution);
+            var trueStrengthIndex = new TrueStrengthIndex(name, longTermPeriod, shortTermPeriod, signalPeriod, signalType);
+            RegisterIndicator(symbol, trueStrengthIndex, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, trueStrengthIndex, resolution);
+            }
+
+            return trueStrengthIndex;
+        }
+
+        /// <summary>
         /// Creates a new TrueRange indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose TR we want</param>
@@ -2384,7 +2412,7 @@ namespace QuantConnect.Algorithm
                 parts.Add(symbol.ToString());
             }
             parts.Add(res);
-            
+
             return Invariant($"{type}({string.Join("_", parts)})").Replace(")(", ",");
         }
 
