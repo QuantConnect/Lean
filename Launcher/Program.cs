@@ -15,8 +15,6 @@
 */
 
 using System;
-using System.ComponentModel.Composition;
-using System.IO;
 using System.Threading;
 using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine;

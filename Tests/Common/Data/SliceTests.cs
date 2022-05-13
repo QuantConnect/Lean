@@ -364,6 +364,41 @@ def Test(slice):
         }
 
         [Test]
+        public void PythonCustomDataPyObjectValue()
+        {
+            using (Py.GIL())
+            {
+                dynamic testModule = PyModule.FromString("testModule",
+                    @"
+
+from AlgorithmImports import *
+
+class CustomDataTest(PythonData):
+    def Reader(self, config, line, date, isLiveMode):
+        result = CustomDataTest()
+        result.Symbol = config.Symbol
+        result.Value = 10
+        result[""TimeTest""] = datetime.strptime(""2022-05-05"", ""%Y-%m-%d"")
+        return result
+
+def Test(slice, symbol):
+    data = slice.Get(CustomDataTest)
+    return data[symbol][""TimeTest""]");
+                var test = testModule.GetAttr("Test");
+
+                var type = Extensions.CreateType(testModule.GetAttr("CustomDataTest"));
+                var customDataTest = new PythonData(testModule.GetAttr("CustomDataTest")());
+                var config = new SubscriptionDataConfig(type, Symbols.SPY, Resolution.Daily, DateTimeZone.Utc,
+                    DateTimeZone.Utc, false, false, false, isCustom: true);
+                var data1 = customDataTest.Reader(config, "something", DateTime.UtcNow, false);
+
+                var slice = new Slice(DateTime.UtcNow, new[] { data1 }, DateTime.UtcNow);
+
+                Assert.AreEqual(new DateTime(2022, 05, 05), (DateTime)test(new PythonSlice(slice), Symbols.SPY));
+            }
+        }
+
+        [Test]
         public void PythonGetPythonCustomData()
         {
             using (Py.GIL())
