@@ -66,7 +66,6 @@ namespace QuantConnect
     /// </summary>
     public static class Extensions
     {
-        private static ConcurrentBag<Guid> Guids = new ConcurrentBag<Guid>();
         private static readonly HashSet<string> InvalidSecurityTypes = new HashSet<string>();
         private static readonly Regex DateCheck = new Regex(@"\d{8}", RegexOptions.Compiled);
         private static RecyclableMemoryStreamManager MemoryManager = new RecyclableMemoryStreamManager();
@@ -205,6 +204,38 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Helper method to adjust a waiting time, in milliseconds, so it's uneven with the second turn around
+        /// </summary>
+        /// <param name="waitTimeMillis">The desired wait time</param>
+        /// <remarks>This is useful for real time performance in live trading. We want to avoid adding unnecessary cpu usage,
+        /// during periods where we know there will be cpu time demand, like a second turn around where data is emitted.</remarks>
+        /// <returns>The adjusted wait time</returns>
+        public static int GetSecondUnevenWait(this int waitTimeMillis)
+        {
+            return DateTime.UtcNow.GetSecondUnevenWait(waitTimeMillis);
+        }
+
+        /// <summary>
+        /// Helper method to adjust a waiting time, in milliseconds, so it's uneven with the second turn around
+        /// </summary>
+        /// <param name="now">The current time</param>
+        /// <param name="waitTimeMillis">The desired wait time</param>
+        /// <remarks>This is useful for real time performance in live trading. We want to avoid adding unnecessary cpu usage,
+        /// during periods where we know there will be cpu time demand, like a second turn around where data is emitted.</remarks>
+        /// <returns>The adjusted wait time</returns>
+        public static int GetSecondUnevenWait(this DateTime now, int waitTimeMillis)
+        {
+            var wakeUpTime = now.AddMilliseconds(waitTimeMillis);
+            if(wakeUpTime.Millisecond < 100 || wakeUpTime.Millisecond > 900)
+            {
+                // if we are going to wake before/after the next second we add an offset to avoid it
+                var offsetMillis = waitTimeMillis >= 1000 ? 500 : 100;
+                return waitTimeMillis + offsetMillis;
+            }
+            return waitTimeMillis;
+        }
+
+        /// <summary>
         /// Helper method to download a provided url as a byte array
         /// </summary>
         /// <param name="url">The url to download data from</param>
@@ -239,8 +270,8 @@ namespace QuantConnect
         /// <summary>
         /// Will return a memory stream using the <see cref="RecyclableMemoryStreamManager"/> instance.
         /// </summary>
-        /// <remarks>For performance will reuse a memory stream guid per thread. So</remarks>
-        /// <returns></returns>
+        /// <param name="guid">Unique guid</param>
+        /// <returns>A memory stream</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static MemoryStream GetMemoryStream(Guid guid)
         {
@@ -248,50 +279,19 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Gets a unique id. Should be returned using <see cref="ReturnId"/>
-        /// </summary>
-        /// <remarks>Creating a new <see cref="Guid"/> is expensive</remarks>
-        /// <remarks>Used for <see cref="GetMemoryStream"/></remarks>
-        /// <returns>A unused <see cref="Guid"/></returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Guid RentId()
-        {
-            Guid guid;
-            if (!Guids.TryTake(out guid))
-            {
-                guid = new Guid();
-            }
-            return guid;
-        }
-
-        /// <summary>
-        /// Returns a rented unique id <see cref="RentId"/>
-        /// </summary>
-        /// <remarks>Creating a new <see cref="Guid"/> is expensive</remarks>
-        /// <remarks>Used for <see cref="GetMemoryStream"/></remarks>
-        /// <param name="guid">The guid to return</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void ReturnId(Guid guid)
-        {
-            Guids.Add(guid);
-        }
-
-        /// <summary>
         /// Serialize a list of ticks using protobuf
         /// </summary>
         /// <param name="ticks">The list of ticks to serialize</param>
+        /// <param name="guid">Unique guid</param>
         /// <returns>The resulting byte array</returns>
-        public static byte[] ProtobufSerialize(this List<Tick> ticks)
+        public static byte[] ProtobufSerialize(this List<Tick> ticks, Guid guid)
         {
-            var guid = RentId();
             byte[] result;
             using (var stream = GetMemoryStream(guid))
             {
                 Serializer.Serialize(stream, ticks);
                 result = stream.ToArray();
             }
-
-            ReturnId(guid);
             return result;
         }
 
@@ -299,11 +299,10 @@ namespace QuantConnect
         /// Serialize a base data instance using protobuf
         /// </summary>
         /// <param name="baseData">The data point to serialize</param>
+        /// <param name="guid">Unique guid</param>
         /// <returns>The resulting byte array</returns>
-        public static byte[] ProtobufSerialize(this IBaseData baseData)
+        public static byte[] ProtobufSerialize(this IBaseData baseData, Guid guid)
         {
-            var guid = RentId();
-
             byte[] result;
             using (var stream = GetMemoryStream(guid))
             {
@@ -324,7 +323,6 @@ namespace QuantConnect
                 }
                 result = stream.ToArray();
             }
-            ReturnId(guid);
 
             return result;
         }

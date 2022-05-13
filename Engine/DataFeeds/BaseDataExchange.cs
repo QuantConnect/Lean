@@ -15,13 +15,13 @@
 */
 
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
+using QuantConnect.Util;
 using QuantConnect.Data;
-using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Interfaces;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -30,12 +30,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class BaseDataExchange
     {
+        private Thread _thread;
         private int _sleepInterval = 1;
-        private volatile bool _isStopping = false;
         private Func<Exception, bool> _isFatalError;
+        private readonly CancellationTokenSource _cancellationTokenSource;
 
         private readonly string _name;
-        private readonly object _enumeratorsWriteLock = new object();
         private readonly ConcurrentDictionary<Symbol, DataHandler> _dataHandlers;
         private ConcurrentDictionary<Symbol, EnumeratorHandler> _enumerators;
 
@@ -64,6 +64,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             _name = name;
             _isFatalError = x => false;
+            _cancellationTokenSource = new CancellationTokenSource();
             _dataHandlers = new ConcurrentDictionary<Symbol, DataHandler>();
             _enumerators = new ConcurrentDictionary<Symbol, EnumeratorHandler>();
         }
@@ -186,12 +187,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Begins consumption of the wrapped <see cref="IDataQueueHandler"/> on
         /// a separate thread
         /// </summary>
-        /// <param name="token">A cancellation token used to signal to stop</param>
-        public void Start(CancellationToken? token = null)
+        public void Start()
         {
-            Log.Trace("BaseDataExchange({0}) Starting...", Name);
-            _isStopping = false;
-            ConsumeEnumerators(token ?? CancellationToken.None);
+            var manualEvent = new ManualResetEventSlim(false);
+            _thread = new Thread(() =>
+            {
+                manualEvent.Set();
+                Log.Trace($"BaseDataExchange({Name}) Starting...");
+                ConsumeEnumerators();
+            }) {  IsBackground = true, Name = Name };
+            _thread.Start();
+
+            manualEvent.Wait();
+            manualEvent.DisposeSafely();
         }
 
         /// <summary>
@@ -199,33 +207,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void Stop()
         {
-            Log.Trace("BaseDataExchange({0}) Stopping...", Name);
-            _isStopping = true;
+            _thread.StopSafely(TimeSpan.FromSeconds(5), _cancellationTokenSource);
         }
 
         /// <summary> Entry point for queue consumption </summary>
         /// <param name="token">A cancellation token used to signal to stop</param>
         /// <remarks> This function only returns after <see cref="Stop"/> is called or the token is cancelled</remarks>
-        private void ConsumeEnumerators(CancellationToken token)
+        private void ConsumeEnumerators()
         {
-            while (true)
+            while (!_cancellationTokenSource.Token.IsCancellationRequested)
             {
-                if (_isStopping || token.IsCancellationRequested)
-                {
-                    _isStopping = true;
-                    var request = token.IsCancellationRequested ? "Cancellation requested" : "Stop requested";
-                    Log.Trace("BaseDataExchange({0}).ConsumeQueue(): {1}.  Exiting...", Name, request);
-                    return;
-                }
-
                 try
                 {
                     // call move next each enumerator and invoke the appropriate handlers
-
                     var handled = false;
                     foreach (var kvp in _enumerators)
                     {
-                        if (_isStopping)
+                        if (_cancellationTokenSource.Token.IsCancellationRequested)
                         {
                             break;
                         }
@@ -265,7 +263,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // if we didn't handle anything on this past iteration, take a nap
                     if (!handled && _sleepInterval != 0)
                     {
-                        Thread.Sleep(_sleepInterval);
+                        _cancellationTokenSource.Token.WaitHandle.WaitOne(_sleepInterval.GetSecondUnevenWait());
                     }
                 }
                 catch (Exception err)
@@ -273,11 +271,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     Log.Error(err);
                     if (_isFatalError(err))
                     {
-                        Log.Trace("BaseDataExchange({0}).ConsumeQueue(): Fatal error encountered. Exiting...", Name);
+                        Log.Trace($"BaseDataExchange({Name}).ConsumeQueue(): Fatal error encountered. Exiting...");
                         return;
                     }
                 }
             }
+
+            Log.Trace($"BaseDataExchange({Name}).ConsumeQueue(): Exiting...");
         }
 
         /// <summary>

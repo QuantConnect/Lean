@@ -15,15 +15,11 @@
 */
 
 using System;
-using System.Threading;
 using QuantConnect.Data;
-using QuantConnect.Util;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
-using System.Threading.Tasks;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
@@ -53,7 +49,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private BaseDataExchange _customExchange;
         private SubscriptionCollection _subscriptions;
         private IFactorFileProvider _factorFileProvider;
-        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private IDataChannelProvider _channelProvider;
 
         /// <summary>
@@ -82,8 +77,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 throw new ArgumentException("The LiveTradingDataFeed requires a LiveNodePacket.");
             }
 
-            _cancellationTokenSource = new CancellationTokenSource();
-
             _job = (LiveNodePacket)job;
             _timeProvider = dataFeedTimeProvider.TimeProvider;
             _dataProvider = dataProvider;
@@ -91,21 +84,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _factorFileProvider = factorFileProvider;
             _channelProvider = dataChannelProvider;
             _frontierTimeProvider = dataFeedTimeProvider.FrontierTimeProvider;
-            _customExchange = new BaseDataExchange("CustomDataExchange") { SleepInterval = 10 };
+            _customExchange = GetBaseDataExchange();
             _subscriptions = subscriptionManager.DataFeedSubscriptions;
 
             _dataQueueHandler = GetDataQueueHandler();
             _dataQueueHandler?.SetJob(_job);
 
             // run the custom data exchange
-            var manualEvent = new ManualResetEventSlim(false);
-            Task.Factory.StartNew(() =>
-            {
-                manualEvent.Set();
-                _customExchange.Start(_cancellationTokenSource.Token);
-            }, TaskCreationOptions.LongRunning);
-            manualEvent.Wait();
-            manualEvent.DisposeSafely();
+            _customExchange.Start();
 
             IsActive = true;
         }
@@ -159,7 +145,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 IsActive = false;
                 Log.Trace("LiveTradingDataFeed.Exit(): Start. Setting cancellation token...");
-                _cancellationTokenSource.Cancel();
                 _customExchange?.Stop();
                 Log.Trace("LiveTradingDataFeed.Exit(): Exit Finished.");
             }
@@ -173,6 +158,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         protected virtual IDataQueueHandler GetDataQueueHandler()
         {
             return new DataQueueHandlerManager();
+        }
+
+        /// <summary>
+        /// Gets the <see cref="BaseDataExchange"/> to use
+        /// </summary>
+        /// <remarks>Useful for testing</remarks>
+        protected virtual BaseDataExchange GetBaseDataExchange()
+        {
+            return new BaseDataExchange("CustomDataExchange") { SleepInterval = 100 };
         }
 
         /// <summary>

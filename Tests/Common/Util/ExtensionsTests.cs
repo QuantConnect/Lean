@@ -42,6 +42,33 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class ExtensionsTests
     {
+        [TestCase(0, 10, 110)]
+        [TestCase(900, 10, 110)]
+        [TestCase(500, 10, 10)]
+
+        [TestCase(0, 100, 100)]
+        [TestCase(100, 100, 100)]
+        [TestCase(500, 100, 100)]
+        [TestCase(990, 100, 200)]
+        [TestCase(900, 100, 200)]
+
+        [TestCase(0, 1000, 1500)]
+        [TestCase(100, 1000, 1000)]
+        [TestCase(500, 1000, 1000)]
+        [TestCase(990, 1000, 1500)]
+
+        [TestCase(0, 10000, 10500)]
+        [TestCase(100, 10000, 10000)]
+        [TestCase(500, 10000, 10000)]
+        [TestCase(990, 10000, 10500)]
+        public void UnevenSecondWaitTime(int nowMilliseconds, int waitInterval, int expectedWaitInterval)
+        {
+            var nowUtc = new DateTime(2022, 04, 1);
+            nowUtc = nowUtc.AddMilliseconds(nowMilliseconds);
+
+            Assert.AreEqual(expectedWaitInterval, nowUtc.GetSecondUnevenWait(waitInterval));
+        }
+
         [TestCase("20220101", false, true, Resolution.Daily)]
         [TestCase("20220101", false, false, Resolution.Daily)]
         [TestCase("20220103 09:31", true, false, Resolution.Minute)]

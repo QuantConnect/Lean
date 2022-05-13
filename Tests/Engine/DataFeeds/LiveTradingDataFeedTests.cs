@@ -2501,6 +2501,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             DataQueueHandler = dataQueueHandler;
         }
 
+        protected override BaseDataExchange GetBaseDataExchange()
+        {
+            var result = base.GetBaseDataExchange();
+            result.SleepInterval = 10;
+            return result;
+        }
+
         protected override IDataQueueHandler GetDataQueueHandler()
         {
             return DataQueueHandler;

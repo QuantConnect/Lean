@@ -134,7 +134,7 @@ namespace QuantConnect.Lean.Engine.Results
                     if (Messages.Count == 0)
                     {
                         // prevent thread lock/tight loop when there's no work to be done
-                        ExitEvent.WaitOne(100);
+                        ExitEvent.WaitOne(1000.GetSecondUnevenWait());
                     }
                 }
                 catch (Exception err)
