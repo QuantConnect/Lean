@@ -347,7 +347,7 @@ namespace QuantConnect.Lean.Engine.Alphas
                         var nextDueTime = Time.GetSecondUnevenWait((int)Math.Ceiling(_interval.TotalMilliseconds));
                         _timer.Change(nextDueTime, Timeout.Infinite);
                     }
-                    catch (Exception)
+                    catch (ObjectDisposedException)
                     {
                         // ignored disposed
                     }

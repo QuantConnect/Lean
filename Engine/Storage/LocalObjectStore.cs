@@ -62,7 +62,6 @@ namespace QuantConnect.Lean.Engine.Storage
         private volatile bool _dirty;
 
         private Timer _persistenceTimer;
-        private TimeSpan _persistenceInterval;
         private readonly string _storageRoot = DefaultObjectStore;
         private readonly ConcurrentDictionary<string, byte[]> _storage = new ConcurrentDictionary<string, byte[]>();
         private readonly object _persistLock = new object();
@@ -103,8 +102,7 @@ namespace QuantConnect.Lean.Engine.Storage
             // if <= 0 we disable periodic persistence and make it synchronous
             if (Controls.PersistenceIntervalSeconds > 0)
             {
-                _persistenceInterval = TimeSpan.FromSeconds(Controls.PersistenceIntervalSeconds);
-                _persistenceTimer = new Timer(_ => Persist(), null, _persistenceInterval, _persistenceInterval);
+                _persistenceTimer = new Timer(_ => Persist(), null, Controls.PersistenceIntervalSeconds * 1000, Timeout.Infinite);
             }
         }
 
@@ -375,16 +373,13 @@ namespace QuantConnect.Lean.Engine.Storage
             // Acquire the persist lock
             lock (_persistLock)
             {
-                // If there are no changes we are fine
-                if (!_dirty)
-                {
-                    return;
-                }
-
                 try
                 {
-                    // Pause timer while persisting
-                    _persistenceTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+                    // If there are no changes we are fine
+                    if (!_dirty)
+                    {
+                        return;
+                    }
 
                     if (PersistData(this))
                     {
@@ -400,9 +395,11 @@ namespace QuantConnect.Lean.Engine.Storage
                 {
                     try
                     {
-                        // restart timer following end of persistence
-                        var nextDueTime = Time.GetSecondUnevenWait((int)Math.Ceiling(_persistenceInterval.TotalMilliseconds));
-                        _persistenceTimer?.Change(nextDueTime, Timeout.Infinite);
+                        if(_persistenceTimer != null)
+                        {
+                            // restart timer following end of persistence
+                            _persistenceTimer.Change(Time.GetSecondUnevenWait(Controls.PersistenceIntervalSeconds * 1000), Timeout.Infinite);
+                        }
                     }
                     catch (ObjectDisposedException)
                     {
