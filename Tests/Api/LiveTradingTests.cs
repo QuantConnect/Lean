@@ -388,6 +388,7 @@ namespace QuantConnect.Tests.API
             // Wait to receive the orders
             var readLiveOrders = WaitForReadLiveOrdersResponse(projectId, 10);
             Assert.IsTrue(readLiveOrders.Orders.Any());
+            Assert.AreEqual(Symbols.SPY.Value, readLiveOrders.Orders.First().Symbol);
 
             // Liquidate live algorithm; will also stop algorithm
             var liquidateLive = ApiClient.LiquidateLiveAlgorithm(projectId);

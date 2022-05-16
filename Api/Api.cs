@@ -708,7 +708,7 @@ namespace QuantConnect.Api
         /// <param name="end">Last index of the orders to be fetched. Note that end - start must be less than 100</param>
         /// <returns><see cref="OrdersResponseWrapper"/></returns>
 
-        public OrdersResponseWrapper ReadLiveOrders(int start, int end, int projectId)
+        public OrdersResponseWrapper ReadLiveOrders(int projectId, int start, int end)
         {
             var request = new RestRequest("live/read/orders", Method.POST)
             {

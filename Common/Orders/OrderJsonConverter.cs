@@ -209,7 +209,7 @@ namespace QuantConnect.Orders
             
 
             var timeInForce = jObject["Properties"]?["TimeInForce"] ?? jObject["TimeInForce"] ?? jObject["Duration"];
-            order.Properties.TimeInForce = (timeInForce != null && timeInForce.ToString() != "[]")
+            order.Properties.TimeInForce = (timeInForce != null)
                 ? CreateTimeInForce(timeInForce, jObject)
                 : TimeInForce.GoodTilCanceled;
 
@@ -241,15 +241,22 @@ namespace QuantConnect.Orders
             }
             else
             {
-                var rawTickerString = jObject["Symbol"] ?? null;
-                var tickerstring = rawTickerString != null ? rawTickerString.Value<string>() : jObject["symbol_id"].Value<String>();
-                tickerstring = tickerstring.Substring(0, tickerstring.IndexOf(' '));
-
-                if (market == null && !SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(tickerstring, securityType, out market))
+                string tickerString;
+                if (jObject["Symbol"] == null)
                 {
-                    market = DefaultBrokerageModel.DefaultMarketMap[securityType];
+                    tickerString = jObject["symbol_id"].Value<String>();
+                    var sid = SecurityIdentifier.Parse(tickerString);
+                    order.Symbol = new Symbol(sid, tickerString);
                 }
-                order.Symbol = Symbol.Create(tickerstring, securityType, market);
+                else
+                {
+                    tickerString = jObject["Symbol"].Value<String>();
+                    if (market == null && !SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(tickerString, securityType, out market))
+                    {
+                        market = DefaultBrokerageModel.DefaultMarketMap[securityType];
+                    }
+                    order.Symbol = Symbol.Create(tickerString, securityType, market);
+                }
             }
 
             return order;
@@ -317,6 +324,11 @@ namespace QuantConnect.Orders
         /// </summary>
         private static TimeInForce CreateTimeInForce(JToken timeInForce, JObject jObject)
         {
+            if (timeInForce.ToString() == "[]")
+            {
+                return TimeInForce.GoodTilCanceled;
+            }
+
             // for backward-compatibility support deserialization of old JSON format
             if (timeInForce is JValue)
             {
