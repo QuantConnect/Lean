@@ -254,11 +254,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 try
                 {
-                    _cacheCleaner.Change(TimeSpan.FromSeconds(_cacheSeconds), Timeout.InfiniteTimeSpan);
+                    var nextDueTime = Time.GetSecondUnevenWait((int)Math.Ceiling(_cacheSeconds * 1000));
+                    _cacheCleaner.Change(nextDueTime, Timeout.Infinite);
                 }
-                catch (Exception)
+                catch (ObjectDisposedException)
                 {
-                    // ignored
+                    // ignored disposed
                 }
             }
         }

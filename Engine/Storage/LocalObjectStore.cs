@@ -398,8 +398,16 @@ namespace QuantConnect.Lean.Engine.Storage
                 }
                 finally
                 {
-                    // restart timer following end of persistence
-                    _persistenceTimer?.Change(_persistenceInterval, _persistenceInterval);
+                    try
+                    {
+                        // restart timer following end of persistence
+                        var nextDueTime = Time.GetSecondUnevenWait((int)Math.Ceiling(_persistenceInterval.TotalMilliseconds));
+                        _persistenceTimer?.Change(nextDueTime, Timeout.Infinite);
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        // ignored disposed
+                    }
                 }
             }
         }

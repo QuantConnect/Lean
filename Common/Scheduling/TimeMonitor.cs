@@ -56,16 +56,30 @@ namespace QuantConnect.Scheduling
             TimeConsumers = new List<TimeConsumer>();
             _timer = new Timer(state =>
             {
-                lock (TimeConsumers)
+                try
                 {
-                    RemoveAll();
-
-                    foreach (var consumer in TimeConsumers)
+                    lock (TimeConsumers)
                     {
-                        ProcessConsumer(consumer);
+                        RemoveAll();
+
+                        foreach (var consumer in TimeConsumers)
+                        {
+                            ProcessConsumer(consumer);
+                        }
                     }
                 }
-            }, null, monitorIntervalMs, monitorIntervalMs);
+                finally
+                {
+                    try
+                    {
+                        _timer.Change(Time.GetSecondUnevenWait(monitorIntervalMs), Timeout.Infinite);
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        // ignored disposed
+                    }
+                }
+            }, null, monitorIntervalMs, Timeout.Infinite);
         }
 
         /// <summary>

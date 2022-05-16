@@ -204,38 +204,6 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Helper method to adjust a waiting time, in milliseconds, so it's uneven with the second turn around
-        /// </summary>
-        /// <param name="waitTimeMillis">The desired wait time</param>
-        /// <remarks>This is useful for real time performance in live trading. We want to avoid adding unnecessary cpu usage,
-        /// during periods where we know there will be cpu time demand, like a second turn around where data is emitted.</remarks>
-        /// <returns>The adjusted wait time</returns>
-        public static int GetSecondUnevenWait(this int waitTimeMillis)
-        {
-            return DateTime.UtcNow.GetSecondUnevenWait(waitTimeMillis);
-        }
-
-        /// <summary>
-        /// Helper method to adjust a waiting time, in milliseconds, so it's uneven with the second turn around
-        /// </summary>
-        /// <param name="now">The current time</param>
-        /// <param name="waitTimeMillis">The desired wait time</param>
-        /// <remarks>This is useful for real time performance in live trading. We want to avoid adding unnecessary cpu usage,
-        /// during periods where we know there will be cpu time demand, like a second turn around where data is emitted.</remarks>
-        /// <returns>The adjusted wait time</returns>
-        public static int GetSecondUnevenWait(this DateTime now, int waitTimeMillis)
-        {
-            var wakeUpTime = now.AddMilliseconds(waitTimeMillis);
-            if(wakeUpTime.Millisecond < 100 || wakeUpTime.Millisecond > 900)
-            {
-                // if we are going to wake before/after the next second we add an offset to avoid it
-                var offsetMillis = waitTimeMillis >= 1000 ? 500 : 100;
-                return waitTimeMillis + offsetMillis;
-            }
-            return waitTimeMillis;
-        }
-
-        /// <summary>
         /// Helper method to download a provided url as a byte array
         /// </summary>
         /// <param name="url">The url to download data from</param>
