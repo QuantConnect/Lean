@@ -19,6 +19,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Brokerages;
 using QuantConnect.Securities;
+using System.Collections.Generic;
 
 namespace QuantConnect.Orders
 {
@@ -83,14 +84,25 @@ namespace QuantConnect.Orders
         public static Order CreateOrderFromJObject(JObject jObject)
         {
             // create order instance based on order type field
-            var orderType = (OrderType) jObject["Type"].Value<int>();
+            var rawOrderType = jObject["Type"];
+            OrderType orderType;
+            if (rawOrderType == null)
+            {
+                rawOrderType = jObject["type"];
+                orderType = Parse.Enum<OrderType>(rawOrderType.ToString());
+            }
+            else
+            {
+                orderType = (OrderType)rawOrderType.Value<int>();
+            }
             var order = CreateOrder(orderType, jObject);
 
             // populate common order properties
-            order.Id = jObject["Id"].Value<int>();
+            var rawOrderId = jObject["Id"] ?? jObject["order_id"];
+            order.Id = rawOrderId.Value<int>();
 
-            var jsonStatus = jObject["Status"];
-            var jsonTime = jObject["Time"];
+            var jsonStatus = jObject["Status"] ?? jObject["status"];
+            var jsonTime = jObject["Time"] ?? jObject["time"];
             if (jsonStatus.Type == JTokenType.Integer)
             {
                 order.Status = (OrderStatus) jsonStatus.Value<int>();
@@ -102,8 +114,9 @@ namespace QuantConnect.Orders
             else
             {
                 // The `Status` tag can sometimes appear as a string of the enum value in the LiveResultPacket.
-                order.Status = (OrderStatus) Enum.Parse(typeof(OrderStatus), jsonStatus.Value<string>(), true);
+                order.Status = Parse.Enum<OrderStatus>(jsonStatus.ToString());
             }
+
             if (jsonTime != null && jsonTime.Type != JTokenType.Null)
             {
                 order.Time = jsonTime.Value<DateTime>();
@@ -112,33 +125,48 @@ namespace QuantConnect.Orders
             {
                 // `Time` can potentially be null in some LiveResultPacket instances, but
                 // `CreatedTime` will always be there if `Time` is absent.
-                order.Time = jObject["CreatedTime"].Value<DateTime>();
+                var rawOrderTime = jObject["CreatedTime"];
+                if (rawOrderTime == null)
+                {
+                    rawOrderTime = jObject["created_time"];
+                    order.Time = DateTimeOffset.FromUnixTimeSeconds((int)rawOrderTime).UtcDateTime;
+                }
+                else
+                {
+                    order.Time = rawOrderTime.Value<DateTime>();
+                }
             }
 
-            var orderSubmissionData = jObject["OrderSubmissionData"];
+            var orderSubmissionData = jObject["OrderSubmissionData"] ?? jObject["order_submission_data"];
             if (orderSubmissionData != null && orderSubmissionData.Type != JTokenType.Null)
             {
-                var bidPrice = orderSubmissionData["BidPrice"].Value<decimal>();
-                var askPrice = orderSubmissionData["AskPrice"].Value<decimal>();
-                var lastPrice = orderSubmissionData["LastPrice"].Value<decimal>();
+                var rawBidPrice = orderSubmissionData["BidPrice"] ?? jObject["submission_bid_price"];
+                var bidPrice = rawBidPrice.Value<decimal>();
+                var rawAskPrice = orderSubmissionData["AskPrice"] ?? jObject["submission_ask_price"];
+                var askPrice = rawAskPrice.Value<decimal>();
+                var rawLastPrice = orderSubmissionData["LastPrice"] ?? jObject["submission_last_price"];
+                var lastPrice = rawLastPrice.Value<decimal>();
                 order.OrderSubmissionData = new OrderSubmissionData(bidPrice, askPrice, lastPrice);
             }
 
-            var lastFillTime = jObject["LastFillTime"];
-            var lastUpdateTime = jObject["LastUpdateTime"];
-            var canceledTime = jObject["CanceledTime"];
+            var lastFillTime = jObject["LastFillTime"] ?? jObject["last_fill_time"];
+            var lastUpdateTime = jObject["LastUpdateTime"] ?? jObject["last_update_time"];
+            var canceledTime = jObject["CanceledTime"] ?? jObject["canceled_time"];
 
             if (canceledTime != null && canceledTime.Type != JTokenType.Null)
             {
-                order.CanceledTime = canceledTime.Value<DateTime>();
+                order.CanceledTime = jObject["CanceledTime"] != null ? 
+                    canceledTime.Value<DateTime>() : DateTimeOffset.FromUnixTimeSeconds((int)canceledTime).UtcDateTime;
             }
             if (lastFillTime != null && lastFillTime.Type != JTokenType.Null)
             {
-                order.LastFillTime = lastFillTime.Value<DateTime>();
+                order.LastFillTime = jObject["LastFillTime"] != null ?
+                    lastFillTime.Value<DateTime>() : DateTimeOffset.FromUnixTimeSeconds((int)lastFillTime).UtcDateTime;
             }
             if (lastUpdateTime != null && lastUpdateTime.Type != JTokenType.Null)
             {
-                order.LastUpdateTime = lastUpdateTime.Value<DateTime>();
+                order.LastUpdateTime = jObject["LastUpdateTime"] != null ?
+                    lastUpdateTime.Value<DateTime>() : DateTimeOffset.FromUnixTimeSeconds((int)lastUpdateTime).UtcDateTime;
             }
             var tag = jObject["Tag"];
             if (tag != null && tag.Type != JTokenType.Null)
@@ -150,8 +178,9 @@ namespace QuantConnect.Orders
                 order.Tag = "";
             }
 
-            order.Quantity = jObject["Quantity"].Value<decimal>();
-            var orderPrice = jObject["Price"];
+            var rawOrderQuantity = jObject["Quantity"] ?? jObject["quantity"];
+            order.Quantity = rawOrderQuantity.Value<decimal>();
+            var orderPrice = jObject["Price"] ?? jObject["price"];
             if (orderPrice != null && orderPrice.Type != JTokenType.Null)
             {
                 order.Price = orderPrice.Value<decimal>();
@@ -161,17 +190,26 @@ namespace QuantConnect.Orders
                 order.Price = default(decimal);
             }
 
-            var priceCurrency = jObject["PriceCurrency"];
+            var priceCurrency = jObject["PriceCurrency"] ?? jObject["price_currency"];
             if (priceCurrency != null && priceCurrency.Type != JTokenType.Null)
             {
                 order.PriceCurrency = priceCurrency.Value<string>();
             }
-            var securityType = (SecurityType) jObject["SecurityType"].Value<int>();
-            order.BrokerId = jObject["BrokerId"].Select(x => x.Value<string>()).ToList();
-            order.ContingentId = jObject["ContingentId"].Value<int>();
+
+            var rawSecurityType = jObject["SecurityType"];
+            var securityType = jObject["SecurityType"] != null ?
+                (SecurityType) jObject["SecurityType"].Value<int>() : SecurityType.Equity;
+            var rawBrokerId = jObject["BrokerId"] ?? jObject["broker_id"];
+            order.BrokerId = rawBrokerId.Select(x => x.Value<string>()).ToList();
+            var rawContingentId = jObject["ContingentId"] ?? jObject["contingent_id"]; // Sometimes the value is null for live orders
+            if (rawContingentId != null && rawContingentId.Type != JTokenType.Null)
+            {
+                order.ContingentId = rawContingentId.Value<int>();
+            }
+            
 
             var timeInForce = jObject["Properties"]?["TimeInForce"] ?? jObject["TimeInForce"] ?? jObject["Duration"];
-            order.Properties.TimeInForce = timeInForce != null
+            order.Properties.TimeInForce = (timeInForce != null && timeInForce.ToString() != "[]")
                 ? CreateTimeInForce(timeInForce, jObject)
                 : TimeInForce.GoodTilCanceled;
 
@@ -203,7 +241,9 @@ namespace QuantConnect.Orders
             }
             else
             {
-                var tickerstring = jObject["Symbol"].Value<string>();
+                var rawTickerString = jObject["Symbol"] ?? null;
+                var tickerstring = rawTickerString != null ? rawTickerString.Value<string>() : jObject["symbol_id"].Value<String>();
+                tickerstring = tickerstring.Substring(0, tickerstring.IndexOf(' '));
 
                 if (market == null && !SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(tickerstring, securityType, out market))
                 {
