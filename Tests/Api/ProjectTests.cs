@@ -266,14 +266,13 @@ namespace QuantConnect.Tests.API
             var backtestName = $"{DateTime.Now.ToStringInvariant("u")} API Backtest";
             var backtest = ApiClient.CreateBacktest(project.Projects.First().ProjectId, compileSuccess.CompileId, backtestName);
 
-            // Check for ongoing backtest orders
-            var backtestOrdersRead = ApiClient.ReadBacktestOrders(project.Projects.First().ProjectId, backtest.BacktestId, 0, 1);
-            Assert.IsTrue(backtestOrdersRead.Success);
-            Assert.IsTrue(backtestOrdersRead.Orders.Count >= 0);
+            // Check for ongoing backtest
+            var backtestRead = ApiClient.ReadBacktest(project.Projects.First().ProjectId, backtest.BacktestId);
+            Assert.IsTrue(backtestRead.Success);
 
             // Now wait until the backtest is completed and request the orders again
-            var backtestRead = WaitForBacktestCompletion(project.Projects.First().ProjectId, backtest.BacktestId);
-            ApiClient.ReadBacktestOrders(project.Projects.First().ProjectId, backtest.BacktestId, 0, 1);
+            backtestRead = WaitForBacktestCompletion(project.Projects.First().ProjectId, backtest.BacktestId);
+            var backtestOrdersRead = ApiClient.ReadBacktestOrders(project.Projects.First().ProjectId, backtest.BacktestId, 0, 1);
             Assert.IsTrue(backtestOrdersRead.Success);
             Assert.IsTrue(backtestOrdersRead.Orders.Any());
             Assert.AreEqual(Symbols.SPY.Value, backtestOrdersRead.Orders.First().Symbol.Value);
