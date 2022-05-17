@@ -266,7 +266,7 @@ namespace QuantConnect.Tests.API
             var backtestName = $"{DateTime.Now.ToStringInvariant("u")} API Backtest";
             var backtest = ApiClient.CreateBacktest(project.Projects.First().ProjectId, compileSuccess.CompileId, backtestName);
 
-            // Check for ongoing backtest
+            // Read ongoing backtest
             var backtestRead = ApiClient.ReadBacktest(project.Projects.First().ProjectId, backtest.BacktestId);
             Assert.IsTrue(backtestRead.Success);
 
