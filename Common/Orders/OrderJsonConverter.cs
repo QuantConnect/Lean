@@ -197,8 +197,19 @@ namespace QuantConnect.Orders
             }
 
             var rawSecurityType = jObject["SecurityType"];
-            var securityType = jObject["SecurityType"] != null ?
-                (SecurityType) jObject["SecurityType"].Value<int>() : SecurityType.Equity;
+            SecurityType securityType;
+            if (rawSecurityType == null)
+            {
+                rawSecurityType = jObject["symbol_id"];
+                var stringSecurityType = rawSecurityType.Value<String>();
+                securityType = new Symbol(SecurityIdentifier.Parse(stringSecurityType), stringSecurityType).SecurityType;
+
+            }
+            else
+            {
+                securityType = (SecurityType)jObject["SecurityType"].Value<int>();
+            }
+
             var rawBrokerId = jObject["BrokerId"] ?? jObject["broker_id"];
             order.BrokerId = rawBrokerId.Select(x => x.Value<string>()).ToList();
             var rawContingentId = jObject["ContingentId"] ?? jObject["contingent_id"]; // Sometimes the value is null for live orders
