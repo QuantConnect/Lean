@@ -20,7 +20,6 @@ using System.Threading;
 using System.Web;
 using NUnit.Framework;
 using QuantConnect.Api;
-using QuantConnect.Orders;
 
 namespace QuantConnect.Tests.API
 {
@@ -266,10 +265,15 @@ namespace QuantConnect.Tests.API
             var compileSuccess = WaitForCompilerResponse(project.Projects.First().ProjectId, compileCreate.CompileId);
             var backtestName = $"{DateTime.Now.ToStringInvariant("u")} API Backtest";
             var backtest = ApiClient.CreateBacktest(project.Projects.First().ProjectId, compileSuccess.CompileId, backtestName);
-            var backtestRead = WaitForBacktestCompletion(project.Projects.First().ProjectId, backtest.BacktestId);
 
-            // Read the orders returned in the backtest
+            // Check for ongoing backtest orders
             var backtestOrdersRead = ApiClient.ReadBacktestOrders(project.Projects.First().ProjectId, backtest.BacktestId, 0, 1);
+            Assert.IsTrue(backtestOrdersRead.Success);
+            Assert.IsTrue(backtestOrdersRead.Orders.Count >= 0);
+
+            // Now wait until the backtest is completed and request the orders again
+            var backtestRead = WaitForBacktestCompletion(project.Projects.First().ProjectId, backtest.BacktestId);
+            ApiClient.ReadBacktestOrders(project.Projects.First().ProjectId, backtest.BacktestId, 0, 1);
             Assert.IsTrue(backtestOrdersRead.Success);
             Assert.IsTrue(backtestOrdersRead.Orders.Any());
             Assert.AreEqual(Symbols.SPY.Value, backtestOrdersRead.Orders.First().Symbol.Value);
