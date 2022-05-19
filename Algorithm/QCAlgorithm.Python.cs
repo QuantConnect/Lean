@@ -695,7 +695,8 @@ namespace QuantConnect.Algorithm
                 try
                 {
                     var value = (((dynamic)pyObject).Current.Value as PyObject).GetAndDispose<decimal>();
-                    Plot(series, value);
+                    var name = (((dynamic)pyObject).Name as PyObject).GetAndDispose<string>();
+                    Plot(series, name, value);
                 }
                 catch
                 {

@@ -131,8 +131,11 @@ namespace QuantConnect.Tests.Algorithm
                 {
                     throw new NotSupportedException($"RegistersIndicatorProperlyPython(): Unsupported indicator data type: {indicatorTest.GetType()}");
                 }
+
                 Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(_spy, indicator, Resolution.Minute));
-                Assert.DoesNotThrow(() => _algorithm.Plot(_spy.Value, indicator));
+                Assert.DoesNotThrow(() => _algorithm.Plot("TestIndicatorPlot", indicator));
+                Assert.IsTrue(_algorithm.ContainsChart("TestIndicatorPlot"));
+
                 expected++;
 
                 var actual = _algorithm.SubscriptionManager.Subscriptions

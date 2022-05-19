@@ -41,6 +41,11 @@ namespace QuantConnect.Algorithm
             { "Alpha Asset Breakdown", new List<string>() }
         };
 
+        public bool ContainsChart(string key)
+        {
+            return _charts.ContainsKey(key);
+        }
+
         /// <summary>
         /// Access to the runtime statistics property. User provided statistics.
         /// </summary>
