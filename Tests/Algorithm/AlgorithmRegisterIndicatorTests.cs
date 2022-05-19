@@ -131,10 +131,8 @@ namespace QuantConnect.Tests.Algorithm
                 {
                     throw new NotSupportedException($"RegistersIndicatorProperlyPython(): Unsupported indicator data type: {indicatorTest.GetType()}");
                 }
-
                 Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(_spy, indicator, Resolution.Minute));
-                Assert.DoesNotThrow(() => _algorithm.Plot("TestIndicatorPlot", indicator));
-                Assert.IsTrue(_algorithm.ContainsChart("TestIndicatorPlot"));
+                Assert.DoesNotThrow(() => _algorithm.Plot(_spy.Value, indicator));
 
                 expected++;
 
@@ -143,6 +141,15 @@ namespace QuantConnect.Tests.Algorithm
                     .Consolidators.Count;
                 Assert.AreEqual(expected, actual);
             }
+        }
+
+        [Test]
+        public void PlotPythonIndicatorCorrectly()
+        {
+            var indicatorTest = Activator.CreateInstance(_indicatorTestsTypes.First());
+            PyObject indicator = (indicatorTest as CommonIndicatorTests<IndicatorDataPoint>).GetIndicatorAsPyObject();
+            Assert.DoesNotThrow(() => _algorithm.Plot("TestIndicatorPlot", indicator));
+            Assert.IsTrue(_algorithm.ContainsChart("TestIndicatorPlot"));
         }
 
         [Test]
