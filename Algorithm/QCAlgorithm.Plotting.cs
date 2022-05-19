@@ -246,8 +246,7 @@ namespace QuantConnect.Algorithm
         /// <param name="indicators">The indicatorsto plot</param>
         /// <seealso cref="Plot(string,string,decimal)"/>
         [DocumentationAttribute(Charting)]
-        public void Plot<T>(string chart, params IndicatorBase<T>[] indicators)
-            where T : IBaseData
+        public void Plot(string chart, params IndicatorBase[] indicators)
         {
             foreach (var indicator in indicators)
             {
