@@ -168,7 +168,8 @@ namespace QuantConnect.Tests.Algorithm
                 }
 
                 Assert.DoesNotThrow(() => _algorithm.Plot($"TestIndicatorPlot-{type.Name}", indicator));
-                Assert.IsTrue(_algorithm.ContainsChart($"TestIndicatorPlot-{type.Name}"));
+                var charts = _algorithm.GetChartUpdates();
+                Assert.IsTrue(charts.Select(x => x.Name == $"TestIndicatorPlot-{type.Name}").Any());
             }
         }
 
