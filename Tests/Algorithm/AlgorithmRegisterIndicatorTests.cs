@@ -144,12 +144,33 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
-        public void PlotPythonIndicatorCorrectly()
+        public void PlotPythonIndicatorInSeparateChart()
         {
-            var indicatorTest = Activator.CreateInstance(_indicatorTestsTypes.First());
-            PyObject indicator = (indicatorTest as CommonIndicatorTests<IndicatorDataPoint>).GetIndicatorAsPyObject();
-            Assert.DoesNotThrow(() => _algorithm.Plot("TestIndicatorPlot", indicator));
-            Assert.IsTrue(_algorithm.ContainsChart("TestIndicatorPlot"));
+            PyObject indicator;
+
+            foreach (var type in _indicatorTestsTypes)
+            {
+                var indicatorTest = Activator.CreateInstance(type);
+                if (indicatorTest is CommonIndicatorTests<IndicatorDataPoint>)
+                {
+                    indicator = (indicatorTest as CommonIndicatorTests<IndicatorDataPoint>).GetIndicatorAsPyObject();
+                }
+                else if (indicatorTest is CommonIndicatorTests<IBaseDataBar>)
+                {
+                    indicator = (indicatorTest as CommonIndicatorTests<IBaseDataBar>).GetIndicatorAsPyObject();
+                }
+                else if (indicatorTest is CommonIndicatorTests<TradeBar>)
+                {
+                    indicator = (indicatorTest as CommonIndicatorTests<TradeBar>).GetIndicatorAsPyObject();
+                }
+                else
+                {
+                    throw new NotSupportedException($"RegistersIndicatorProperlyPython(): Unsupported indicator data type: {indicatorTest.GetType()}");
+                }
+
+                Assert.DoesNotThrow(() => _algorithm.Plot($"TestIndicatorPlot-{type.Name}", indicator));
+                Assert.IsTrue(_algorithm.ContainsChart($"TestIndicatorPlot-{type.Name}"));
+            }
         }
 
         [Test]
