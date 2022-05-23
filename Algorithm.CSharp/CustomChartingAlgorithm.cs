@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,8 +14,6 @@
 */
 
 using System;
-using QuantConnect.Data;
-using QuantConnect.Indicators;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -32,22 +30,97 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="plotting indicators" />
     public class CustomChartingAlgorithm : QCAlgorithm
     {
-        private Symbol _symbol;
-        private SimpleMovingAverage _sma;
+        private decimal _fastMa;
+        private decimal _slowMa;
+        private decimal _lastPrice;
+        private DateTime _resample;
+        private TimeSpan _resamplePeriod;
+        private readonly DateTime _startDate = new DateTime(2010, 3, 3);
+        private readonly DateTime _endDate = new DateTime(2014, 3, 3);
 
+        /// <summary>
+        /// Called at the start of your algorithm to setup your requirements:
+        /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2020, 11, 3);  //Set Start Date
-            SetCash(100000);             //Set Strategy Cash
+            //Set the date range you want to run your algorithm:
+            SetStartDate(_startDate);
+            SetEndDate(_endDate);
 
-            _symbol = AddEquity("SPY", Resolution.Daily).Symbol;
-            _sma = SMA(_symbol, 20);
-            PlotIndicator("PlotIndicator", _sma);
+            //Set the starting cash for your strategy:
+            SetCash(100000);
+
+            //Add any stocks you'd like to analyse, and set the resolution:
+            // Find more symbols here: http://quantconnect.com/data
+            AddSecurity(SecurityType.Equity, "SPY");
+
+            //Chart - Master Container for the Chart:
+            var stockPlot = new Chart("Trade Plot");
+            //On the Trade Plotter Chart we want 3 series: trades and price:
+            var buyOrders = new Series("Buy", SeriesType.Scatter, 0);
+            var sellOrders = new Series("Sell", SeriesType.Scatter, 0);
+            var assetPrice = new Series("Price", SeriesType.Line, 0);
+            stockPlot.AddSeries(buyOrders);
+            stockPlot.AddSeries(sellOrders);
+            stockPlot.AddSeries(assetPrice);
+            AddChart(stockPlot);
+
+            var avgCross = new Chart("Strategy Equity");
+            var fastMa = new Series("FastMA", SeriesType.Line, 1);
+            var slowMa = new Series("SlowMA", SeriesType.Line, 1);
+            avgCross.AddSeries(fastMa);
+            avgCross.AddSeries(slowMa);
+            AddChart(avgCross);
+
+            _resamplePeriod = TimeSpan.FromMinutes((_endDate - _startDate).TotalMinutes / 2000);
         }
 
-        public override void OnData(Slice data)
+
+        /// <summary>
+        /// OnEndOfDay Event Handler - At the end of each trading day we fire this code.
+        /// To avoid flooding, we recommend running your plotting at the end of each day.
+        /// </summary>
+        public override void OnEndOfDay(Symbol symbol)
         {
-            Plot("Plot", _sma);
+            //Log the end of day prices:
+            Plot("Trade Plot", "Price", _lastPrice);
+        }
+
+
+        /// <summary>
+        /// On receiving new tradebar data it will be passed into this function. The general pattern is:
+        /// "public void OnData( CustomType name ) {...s"
+        /// </summary>
+        /// <param name="data">TradeBars data type synchronized and pushed into this function. The tradebars are grouped in a dictionary.</param>
+        public void OnData(TradeBars data)
+        {
+            _lastPrice = data["SPY"].Close;
+
+            if (_fastMa == 0) _fastMa = _lastPrice;
+            if (_slowMa == 0) _slowMa = _lastPrice;
+
+            _fastMa = (0.01m * _lastPrice) + (0.99m * _fastMa);
+            _slowMa = (0.001m * _lastPrice) + (0.999m * _slowMa);
+
+            if (Time > _resample)
+            {
+                _resample = Time.Add(_resamplePeriod);
+                Plot("Strategy Equity", "FastMA", _fastMa);
+                Plot("Strategy Equity", "SlowMA", _slowMa);
+            }
+
+
+            //On the 5th days when not invested buy:
+            if (!Portfolio.Invested && Time.Day % 13 == 0)
+            {
+                Order("SPY", (int)(Portfolio.MarginRemaining / data["SPY"].Close));
+                Plot("Trade Plot", "Buy", _lastPrice);
+            }
+            else if (Time.Day % 21 == 0 && Portfolio.Invested)
+            {
+                Plot("Trade Plot", "Sell", _lastPrice);
+                Liquidate();
+            }
         }
     }
 }
