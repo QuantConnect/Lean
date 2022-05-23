@@ -210,6 +210,30 @@ class BadCustomIndicator:
         }
 
         [Test]
+        public void PlotPythonCustomIndicatorProperly()
+        {
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(
+                    Guid.NewGuid().ToString(),
+                    @"
+from AlgorithmImports import *
+class GoodCustomIndicator(PythonIndicator):
+    def __init__(self):
+        self.Value = 0
+    def Update(self, input):
+        self.Value = input.Value
+        return True"
+                );
+
+                var goodIndicator = module.GetAttr("GoodCustomIndicator").Invoke();
+                Assert.DoesNotThrow(() => _algorithm.Plot("PlotTest", goodIndicator));
+                var charts = _algorithm.GetChartUpdates();
+                Assert.IsTrue(charts.Select(x => x.Name == "PlotTest").Any());
+            }
+        }
+
+        [Test]
         public void RegistersIndicatorProperlyPythonScript()
         {
             const string code = @"

@@ -25,55 +25,15 @@ from AlgorithmImports import *
 ### <meta name="tag" content="plotting indicators" />
 class CustomChartingAlgorithm(QCAlgorithm):
     def Initialize(self):
-        self.SetStartDate(2016,1,1)
-        self.SetEndDate(2017,1,1)
-        self.SetCash(100000)
-        self.AddEquity("SPY", Resolution.Daily)
+        self.SetStartDate(2020, 11, 3)  # Set Start Date
+        self.SetEndDate(2020, 11, 7)
+        self.SetCash(100000)  # Set Strategy Cash
 
-        # In your initialize method:
-        # Chart - Master Container for the Chart:
-        stockPlot = Chart("Trade Plot")
-        # On the Trade Plotter Chart we want 3 series: trades and price:
-        stockPlot.AddSeries(Series("Buy", SeriesType.Scatter, 0))
-        stockPlot.AddSeries(Series("Sell", SeriesType.Scatter, 0))
-        stockPlot.AddSeries(Series("Price", SeriesType.Line, 0))
-        self.AddChart(stockPlot)
-
-        # On the Average Cross Chart we want 2 series, slow MA and fast MA
-        avgCross = Chart("Average Cross")
-        avgCross.AddSeries(Series("FastMA", SeriesType.Line, 0))
-        avgCross.AddSeries(Series("SlowMA", SeriesType.Line, 0))
-        self.AddChart(avgCross)
-
-        self.fastMA = 0
-        self.slowMA = 0
-        self.lastPrice = 0
-        self.resample = datetime.min
-        self.resamplePeriod = (self.EndDate - self.StartDate) / 2000
-
-    def OnData(self, slice):
-        if slice["SPY"] is None: return
-
-        self.lastPrice = slice["SPY"].Close
-        if self.fastMA == 0: self.fastMA = self.lastPrice
-        if self.slowMA == 0: self.slowMA = self.lastPrice
-        self.fastMA = (0.01 * self.lastPrice) + (0.99 * self.fastMA)
-        self.slowMA = (0.001 * self.lastPrice) + (0.999 * self.slowMA)
+        self.symbol = self.AddEquity("SPY", Resolution.Daily).Symbol
+        self.sma = self.SMA(self.symbol, 20)
+        self.PlotIndicator("PlotIndicator", self.sma)
 
 
-        if self.Time > self.resample:
-            self.resample = self.Time  + self.resamplePeriod
-            self.Plot("Average Cross", "FastMA", self.fastMA)
-            self.Plot("Average Cross", "SlowMA", self.slowMA)
-
-        # On the 5th days when not invested buy:
-        if not self.Portfolio.Invested and self.Time.day % 13 == 0:
-        	self.Order("SPY", (int)(self.Portfolio.MarginRemaining / self.lastPrice))
-        	self.Plot("Trade Plot", "Buy", self.lastPrice)
-        elif self.Time.day % 21 == 0 and self.Portfolio.Invested:
-            self.Plot("Trade Plot", "Sell", self.lastPrice)
-            self.Liquidate()
-
-    def OnEndOfDay(self, symbol):
-       #Log the end of day prices:
-       self.Plot("Trade Plot", "Price", self.lastPrice)
+    def OnData(self, data):
+        self.Plot("Plot", self.sma)
+        self.Log("SiUUUUuuuu")
