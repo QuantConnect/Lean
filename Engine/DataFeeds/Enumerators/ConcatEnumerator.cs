@@ -44,7 +44,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// Creates a new instance
         /// </summary>
         /// <param name="skipDuplicateEndTimes">True will skip data points from enumerators if before or at the last end time</param>
-        /// <param name="enumerators">The sequence of enumerators to concatenate</param>
+        /// <param name="enumerators">The sequence of enumerators to concatenate. Note that the order here matters, it will consume enumerators
+        /// and dispose of them, even if they return true and their current is null, except for the last which will be kept!</param>
         public ConcatEnumerator(bool skipDuplicateEndTimes,
             params IEnumerator<BaseData>[] enumerators
             )

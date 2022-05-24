@@ -417,6 +417,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         historyWarmup = new SubscriptionRequest(warmup, startTimeUtc: warmupHistoryStartDate);
                     }
 
+                    // the order here is important, concat enumerator will keep the last enumerator given and dispose of the rest
                     liveEnumerator = new ConcatEnumerator(true,  GetFileBasedWarmupEnumerator(warmup),
                         GetHistoryWarmupEnumerator(historyWarmup), liveEnumerator);
                 }

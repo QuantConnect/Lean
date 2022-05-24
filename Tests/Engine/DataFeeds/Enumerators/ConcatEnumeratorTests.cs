@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -17,6 +17,7 @@
 using System;
 using NUnit.Framework;
 using QuantConnect.Data;
+using System.Collections;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
@@ -89,6 +90,57 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsNull(concat.Current);
 
             concat.Dispose();
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void DropsEnumeratorsReturningNullAndTrue(bool skipsBasedOnEndTime)
+        {
+            var enumerator1 = new TestEnumerator();
+            var enumerator2 = new TestEnumerator();
+
+            var concat = new ConcatEnumerator(skipsBasedOnEndTime, enumerator1, null, enumerator2);
+
+            Assert.IsTrue(concat.MoveNext());
+
+            Assert.IsNull(concat.Current);
+            Assert.IsTrue(enumerator1.Disposed);
+            Assert.IsFalse(enumerator2.Disposed);
+            Assert.AreEqual(1, enumerator2.MoveNextCount);
+
+            Assert.IsTrue(concat.MoveNext());
+
+            // we assert it just keeps the last enumerator and drops the rest
+            Assert.IsTrue(enumerator1.Disposed);
+            Assert.IsFalse(enumerator2.Disposed);
+            Assert.IsNull(concat.Current);
+            Assert.AreEqual(2, enumerator2.MoveNextCount);
+
+            concat.Dispose();
+        }
+
+        private class TestEnumerator : IEnumerator<BaseData>
+        {
+            public bool Disposed { get; private set; }
+            public int MoveNextCount { get; private set; }
+            public BaseData Current => null;
+
+            object IEnumerator.Current => null;
+
+            public void Dispose()
+            {
+                Disposed = true;
+            }
+
+            public bool MoveNext()
+            {
+                MoveNextCount++;
+                return true;
+            }
+
+            public void Reset()
+            {
+            }
         }
     }
 }
