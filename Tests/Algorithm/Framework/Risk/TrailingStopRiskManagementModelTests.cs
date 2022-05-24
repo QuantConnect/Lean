@@ -106,13 +106,16 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
         }
 
         [Test]
-        [TestCase(Language.CSharp, 0.05, new[] { 1d, 100d, 99.95d, 99.94d, 95d, 94.99d }, new[] { false, false, false, false, false, true })]
-        [TestCase(Language.Python, 0.05, new[] { 1d, 100d, 99.95d, 99.94d, 95d, 94.99d }, new[] { false, false, false, false, false, true })]
+        [TestCase(Language.CSharp, 0.05, new[] { 1d, 100d, 99.95d, 99.94d, 95d, 94.99d }, new[] { false, false, false, false, false, true }, true)]
+        [TestCase(Language.Python, 0.05, new[] { 1d, 100d, 99.95d, 99.94d, 95d, 94.99d }, new[] { false, false, false, false, false, true }, true)]
+        [TestCase(Language.CSharp, 0.05, new[] { 1d, 100d, 99.95d, 99.94d, 95d, 94.99d }, new[] { false, false, false, false, false, true }, false)]
+        [TestCase(Language.Python, 0.05, new[] { 1d, 100d, 99.95d, 99.94d, 95d, 94.99d }, new[] { false, false, false, false, false, true }, false)]
         public void LiquidatesWhenExpected(
             Language language,
             decimal maxDrawdownPercent,
             double[] prices,
-            bool[] shouldLiquidateArray)
+            bool[] shouldLiquidateArray,
+            bool longPosition)
         {
             var decimalPrices = System.Array.ConvertAll(prices, x => (decimal) x);
 
@@ -129,7 +132,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
 
             var holding = new SecurityHolding(security, new IdentityCurrencyConverter(Currencies.USD));
             var holdingsCost = decimalPrices[0];
-            holding.SetHoldings(holdingsCost, 1m);
+            holding.SetHoldings(holdingsCost, longPosition ? 1m : -1m);
             security.Holdings = holding;
 
             var algorithm = new QCAlgorithm();
