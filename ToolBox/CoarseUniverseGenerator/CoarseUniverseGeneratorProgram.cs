@@ -37,6 +37,10 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
     /// </summary>
     public class CoarseUniverseGeneratorProgram
     {
+        private static int _fineFundamentalDataFolderLog;
+        private static readonly DirectoryInfo GlobalFineFundamentalFolder =
+            new DirectoryInfo(Path.Combine(Globals.DataFolder, SecurityType.Equity.SecurityTypeToLower(), Market.USA, "fundamental", "fine"));
+
         private readonly DirectoryInfo _dailyDataFolder;
         private readonly DirectoryInfo _destinationFolder;
         private readonly DirectoryInfo _fineFundamentalFolder;
@@ -53,7 +57,6 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         {
             var dailyDataFolder = new DirectoryInfo(Path.Combine(Globals.DataFolder, SecurityType.Equity.SecurityTypeToLower(), Market.USA, Resolution.Daily.ResolutionToLower()));
             var destinationFolder = new DirectoryInfo(Path.Combine(Globals.DataFolder, SecurityType.Equity.SecurityTypeToLower(), Market.USA, "fundamental", "coarse"));
-            var fineFundamentalFolder = new DirectoryInfo(Path.Combine(dailyDataFolder.Parent.FullName, "fundamental", "fine"));
             var blackListedTickersFile = new FileInfo("blacklisted-tickers.txt");
             var reservedWordPrefix = Config.Get("reserved-words-prefix", "quantconnect-");
             var dataProvider = new DefaultDataProvider();
@@ -61,7 +64,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
             mapFileProvider.Initialize(dataProvider);
             var factorFileProvider = new LocalDiskFactorFileProvider();
             factorFileProvider.Initialize(mapFileProvider, dataProvider);
-            var generator = new CoarseUniverseGeneratorProgram(dailyDataFolder, destinationFolder, fineFundamentalFolder, Market.USA, blackListedTickersFile, reservedWordPrefix, mapFileProvider, factorFileProvider);
+            var generator = new CoarseUniverseGeneratorProgram(dailyDataFolder, destinationFolder, GlobalFineFundamentalFolder, Market.USA, blackListedTickersFile, reservedWordPrefix, mapFileProvider, factorFileProvider);
             return generator.Run();
         }
 
@@ -179,18 +182,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                             continue;
                         }
 
-                        var tickerFineFundamentalFolder = Path.Combine(_fineFundamentalFolder.FullName, ticker);
-                        var fineAvailableDates = Enumerable.Empty<DateTime>();
-                        if (Directory.Exists(tickerFineFundamentalFolder))
-                        {
-                            fineAvailableDates = Directory.GetFiles(tickerFineFundamentalFolder, "*.zip")
-                                .Select(f => DateTime.ParseExact(Path.GetFileNameWithoutExtension(f), DateFormat.EightCharacter, CultureInfo.InvariantCulture))
-                                .ToList();
-                        }
-                        else
-                        {
-                            Log.Debug($"CoarseUniverseGeneratorProgram.Run(): fine folder was not found at '{tickerFineFundamentalFolder}'");
-                        }
+                        var fineAvailableDates = GetFineForTicker(_fineFundamentalFolder, ticker);
 
                         // Get daily data only for the time the ticker was
                         foreach (var tradeBar in tickerDailyData.Where(tb => tb.Time >= startDate && tb.Time <= endDate))
@@ -267,6 +259,43 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
             // sid,symbol,close,volume,dollar volume,has fundamental data,price factor,split factor
             var coarseFileLine = $"{sidContext.SID},{ticker.ToUpperInvariant()},{tradeBar.Close.Normalize().ToStringInvariant()},{tradeBar.Volume.Normalize().ToStringInvariant()},{Math.Truncate(dollarVolume)},{hasFundamentalData},{priceFactor.ToStringInvariant()},{splitFactor.ToStringInvariant()}";
             return coarseFileLine;
+        }
+
+        /// <summary>
+        /// Helper method that will return the dates a ticker has fine data searching both in the given and in the global data folder if they are different
+        /// </summary>
+        private static HashSet<DateTime> GetFineForTicker(DirectoryInfo fineFundamentalSearchPath, string ticker)
+        {
+            var tickerFineFundamentalFolder = Path.Combine(fineFundamentalSearchPath.FullName, ticker);
+            var fineAvailableDates = new HashSet<DateTime>();
+            if (Directory.Exists(tickerFineFundamentalFolder))
+            {
+                fineAvailableDates = Directory.GetFiles(tickerFineFundamentalFolder, "*.zip")
+                    .Select(f => DateTime.ParseExact(Path.GetFileNameWithoutExtension(f), DateFormat.EightCharacter, CultureInfo.InvariantCulture))
+                    .ToHashSet();
+            }
+            else
+            {
+                Log.Debug($"CoarseUniverseGeneratorProgram.GetFineForTicker(): fine folder was not found at '{tickerFineFundamentalFolder}'");
+            }
+
+            if (GlobalFineFundamentalFolder.FullName != fineFundamentalSearchPath.FullName)
+            {
+                if(Interlocked.CompareExchange(ref _fineFundamentalDataFolderLog, 1, 0) == 0)
+                {
+                    // just log it once
+                    Log.Trace($"CoarseUniverseGeneratorProgram.GetFineForTicker(): will search in '{GlobalFineFundamentalFolder.FullName}' for fine data since it's different than '{fineFundamentalSearchPath.FullName}'");
+                }
+
+                var globalTickerFineFundamentalFolder = Path.Combine(GlobalFineFundamentalFolder.FullName, ticker);
+                if (Directory.Exists(globalTickerFineFundamentalFolder))
+                {
+                    fineAvailableDates.UnionWith(Directory.GetFiles(globalTickerFineFundamentalFolder, "*.zip")
+                        .Select(f => DateTime.ParseExact(Path.GetFileNameWithoutExtension(f), DateFormat.EightCharacter, CultureInfo.InvariantCulture)));
+                }
+            }
+
+            return fineAvailableDates;
         }
 
         /// <summary>
