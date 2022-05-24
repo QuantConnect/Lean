@@ -73,7 +73,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
                     continue;
                 }
 
-                var drawdown = 1m - security.Low / maxHigh;
+                var drawdown = maxHigh == 0m ? 0m : 1m - security.Low / maxHigh;
 
                 if (_maximumDrawdownPercent < drawdown)
                 {
