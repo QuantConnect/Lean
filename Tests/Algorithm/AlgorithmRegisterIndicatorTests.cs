@@ -218,7 +218,14 @@ class BadCustomIndicator:
                     Guid.NewGuid().ToString(),
                     @"
 from AlgorithmImports import *
-class GoodCustomIndicator(PythonIndicator):
+class PythonCustomIndicator(PythonIndicator):
+    def __init__(self):
+        self.Value = 0
+    def Update(self, input):
+        self.Value = input.Value
+        return True
+
+class CustomIndicator:
     def __init__(self):
         self.Value = 0
     def Update(self, input):
@@ -226,8 +233,33 @@ class GoodCustomIndicator(PythonIndicator):
         return True"
                 );
 
-                var goodIndicator = module.GetAttr("GoodCustomIndicator").Invoke();
-                Assert.DoesNotThrow(() => _algorithm.Plot("PlotTest", goodIndicator));
+                var customIndicator = module.GetAttr("PythonCustomIndicator").Invoke();
+                Assert.DoesNotThrow(() => _algorithm.Plot("PlotTest", customIndicator));
+                var charts = _algorithm.GetChartUpdates();
+                Assert.IsTrue(charts.Select(x => x.Name == "PlotTest").Any());
+            }
+        }
+
+        [Test]
+        public void PlotCustomIndicatorProperly()
+        {
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(
+                    Guid.NewGuid().ToString(),
+                    @"
+from AlgorithmImports import *
+
+class CustomIndicator:
+    def __init__(self):
+        self.Value = 0
+    def Update(self, input):
+        self.Value = input.Value
+        return True"
+                );
+
+                var customIndicator = module.GetAttr("CustomIndicator").Invoke();
+                Assert.DoesNotThrow(() => _algorithm.Plot("PlotTest", customIndicator));
                 var charts = _algorithm.GetChartUpdates();
                 Assert.IsTrue(charts.Select(x => x.Name == "PlotTest").Any());
             }

@@ -699,8 +699,16 @@ namespace QuantConnect.Algorithm
                 }
                 catch
                 {
-                    var pythonType = pyObject.GetPythonType().Repr();
-                    throw new ArgumentException($"QCAlgorithm.Plot(): The last argument should be a QuantConnect Indicator object, {pythonType} was provided.");
+                    try
+                    {
+                        var value = (((dynamic)pyObject).Value as PyObject).GetAndDispose<decimal>();
+                        Plot(series, value);
+                    }
+                    catch
+                    {
+                        var pythonType = pyObject.GetPythonType().Repr();
+                        throw new ArgumentException($"QCAlgorithm.Plot(): The last argument should be a QuantConnect Indicator object, {pythonType} was provided.");
+                    }
                 }
             }
         }
