@@ -2450,6 +2450,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     }
                 }, null, interval, interval);
 
+            // We should wait for the base exchange to pick up the universe and push a selection data point
+            Thread.Sleep(100);
+
             foreach (var timeSlice in _synchronizer.StreamData(cancellationTokenSource.Token))
             {
                 if (timeSlice.IsTimePulse || !timeSlice.Slice.HasData && timeSlice.SecurityChanges == SecurityChanges.None)
@@ -2545,6 +2548,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
 
                 algorithm.OnEndOfTimeStep();
+                // We should wait for the base exchange to pick up the universe and push a selection data point
+                Thread.Sleep(100);
 
                 foreach (var baseDataCollection in timeSlice.UniverseData.Values)
                 {
