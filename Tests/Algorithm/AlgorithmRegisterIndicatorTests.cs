@@ -223,13 +223,6 @@ class PythonCustomIndicator(PythonIndicator):
         self.Value = 0
     def Update(self, input):
         self.Value = input.Value
-        return True
-
-class CustomIndicator:
-    def __init__(self):
-        self.Value = 0
-    def Update(self, input):
-        self.Value = input.Value
         return True"
                 );
 

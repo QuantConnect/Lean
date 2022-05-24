@@ -692,12 +692,11 @@ namespace QuantConnect.Algorithm
         {
             using (Py.GIL())
             {
-                try
+                if (pyObject.TryConvert(out IndicatorBase indicator, true))
                 {
-                    var indicator = (((dynamic)pyObject) as PyObject).GetAndDispose<IndicatorBase>();
                     Plot(series, indicator);
                 }
-                catch
+                else
                 {
                     try
                     {
