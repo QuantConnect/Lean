@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using System.Linq;
 using Moq;
 using NUnit.Framework;
@@ -22,6 +23,8 @@ using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
+using QuantConnect.Data.Market;
+using QuantConnect.Orders.Fees;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Risk
 {
@@ -88,6 +91,74 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
                 security.Object.Holdings = holding.Object;
 
                 var targets = algorithm.RiskManagement.ManageRisk(algorithm, null).ToList();
+
+                if (shouldLiquidate)
+                {
+                    Assert.AreEqual(1, targets.Count);
+                    Assert.AreEqual(Symbols.AAPL, targets[0].Symbol);
+                    Assert.AreEqual(0, targets[0].Quantity);
+                }
+                else
+                {
+                    Assert.AreEqual(0, targets.Count);
+                }
+            }
+        }
+
+        [Test]
+        [TestCase(Language.CSharp, 0.05, new[] { 1d, 100d, 99.95d, 99.94d, 95d, 94.99d }, new[] { false, false, false, false, false, true })]
+        [TestCase(Language.Python, 0.05, new[] { 1d, 100d, 99.95d, 99.94d, 95d, 94.99d }, new[] { false, false, false, false, false, true })]
+        public void LiquidatesWhenExpected(
+            Language language,
+            decimal maxDrawdownPercent,
+            double[] prices,
+            bool[] shouldLiquidateArray)
+        {
+            var decimalPrices = System.Array.ConvertAll(prices, x => (decimal) x);
+
+            var security = new Security(
+                Symbols.AAPL,
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                new Cash(Currencies.USD, 1000, 1),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
+            security.FeeModel = new ConstantFeeModel(0);
+
+            var holding = new SecurityHolding(security, new IdentityCurrencyConverter(Currencies.USD));
+            var holdingsCost = decimalPrices[0];
+            holding.SetHoldings(holdingsCost, 1m);
+            security.Holdings = holding;
+
+            var algorithm = new QCAlgorithm();
+            algorithm.SetPandasConverter();
+            algorithm.Securities.Add(Symbols.AAPL, security);
+
+            if (language == Language.Python)
+            {
+                using (Py.GIL())
+                {
+                    const string name = nameof(TrailingStopRiskManagementModel);
+                    var instance = Py.Import(name).GetAttr(name).Invoke(maxDrawdownPercent.ToPython());
+                    var model = new RiskManagementModelPythonWrapper(instance);
+                    algorithm.SetRiskManagement(model);
+                }
+            }
+            else
+            {
+                var model = new TrailingStopRiskManagementModel(maxDrawdownPercent);
+                algorithm.SetRiskManagement(model);
+            }
+
+            for (int i = 0; i < decimalPrices.Length; i++)
+            {
+                var price = decimalPrices[i];
+                security.SetMarketPrice(new Tick(DateTime.Now, security.Symbol, price, price));
+
+                var targets = algorithm.RiskManagement.ManageRisk(algorithm, null).ToList();
+                var shouldLiquidate = shouldLiquidateArray[i];
 
                 if (shouldLiquidate)
                 {
