@@ -27,7 +27,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
     public class TrailingStopRiskManagementModel : RiskManagementModel
     {
         private readonly decimal _maximumDrawdownPercent;
-        private readonly Dictionary<Symbol, decimal> _trailing = new Dictionary<Symbol, decimal>();
+        private readonly Dictionary<Symbol, decimal> _trailingHighs = new Dictionary<Symbol, decimal>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TrailingStopRiskManagementModel"/> class
@@ -53,32 +53,29 @@ namespace QuantConnect.Algorithm.Framework.Risk
                 // Remove if not invested
                 if (!security.Invested)
                 {
-                    if (_trailing.ContainsKey(symbol))
-                    {
-                        _trailing.Remove(symbol);
-                    }
+                    _trailingHighs.Remove(symbol);
                     continue;
                 }
 
-                var profitPercent = security.Holdings.UnrealizedProfitPercent;
+                var high = security.High;
+                decimal maxHigh;
 
-                decimal value;
-                if (!_trailing.TryGetValue(symbol, out value))
+                if (!_trailingHighs.TryGetValue(symbol, out maxHigh))
                 {
-                    var newValue = profitPercent > 0 ? profitPercent : 0;
-                    _trailing.Add(symbol, newValue);
+                    _trailingHighs.Add(symbol, high);
                     continue;
                 }
 
-                // Check for new high and update
-                if (value < profitPercent)
+                // Check for new max high and update
+                if (maxHigh < high)
                 {
-                    _trailing[symbol] = profitPercent;
+                    _trailingHighs[symbol] = high;
                     continue;
                 }
 
-                // If unrealized profit percent deviates from local max for more than affordable percentage
-                if (profitPercent < value - _maximumDrawdownPercent)
+                var drawdown = 1m - security.Low / maxHigh;
+
+                if (_maximumDrawdownPercent < drawdown)
                 {
                     // liquidate
                     yield return new PortfolioTarget(security.Symbol, 0);
