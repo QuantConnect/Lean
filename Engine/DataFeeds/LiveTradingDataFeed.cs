@@ -39,6 +39,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class LiveTradingDataFeed : FileSystemDataFeed
     {
+        private static readonly int MaximumWarmupHistoryDaysLookBack = Config.GetInt("maximum-warmup-history-days-look-back", 7);
+
         private LiveNodePacket _job;
 
         // used to get current time
@@ -406,8 +408,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var warmup = new SubscriptionRequest(request, endTimeUtc: _timeProvider.GetUtcNow());
                 if (warmup.TradableDays.Any())
                 {
+                    // since we will source data locally and from the history provider, let's limit the history request size
+                    // by setting a start date respecting the 'MaximumWarmupHistoryDaysLookBack'
+                    var historyWarmup = warmup;
+                    var warmupHistoryStartDate = warmup.EndTimeUtc.AddDays(-MaximumWarmupHistoryDaysLookBack);
+                    if (warmupHistoryStartDate > warmup.StartTimeUtc)
+                    {
+                        historyWarmup = new SubscriptionRequest(warmup, startTimeUtc: warmupHistoryStartDate);
+                    }
+
                     liveEnumerator = new ConcatEnumerator(true,  GetFileBasedWarmupEnumerator(warmup),
-                        GetHistoryWarmupEnumerator(warmup), liveEnumerator);
+                        GetHistoryWarmupEnumerator(historyWarmup), liveEnumerator);
                 }
             }
             return liveEnumerator;

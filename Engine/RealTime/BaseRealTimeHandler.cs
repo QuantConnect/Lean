@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -119,7 +119,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         {
             Algorithm = algorithm;
             ResultHandler = resultHandler;
-            TimeMonitor = new TimeMonitor();
+            TimeMonitor = new TimeMonitor(GetTimeMonitorTimeout());
             IsolatorLimitProvider = isolatorLimitProvider;
 
             if (job.Language == Language.CSharp)
@@ -165,6 +165,14 @@ namespace QuantConnect.Lean.Engine.RealTime
         protected int GetScheduledEventUniqueId()
         {
             return Interlocked.Increment(ref _scheduledEventUniqueId);
+        }
+
+        /// <summary>
+        /// Get's the timeout the scheduled task time monitor should use
+        /// </summary>
+        protected virtual int GetTimeMonitorTimeout()
+        {
+            return 100;
         }
 
         /// <summary>

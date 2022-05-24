@@ -56,6 +56,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _dataFeed.Exit();
             _dataManager.RemoveAllSubscriptions();
             _resultHandler.Exit();
+            _synchronizer.Dispose();
         }
 
         [TestCaseSource(nameof(DataTypeTestCases))]
@@ -272,6 +273,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     }
                 }
                 _algorithm.OnEndOfTimeStep();
+                // we need to give time for the base data exchange to pick up the new data point which will trigger the selection
+                Thread.Sleep(100);
             }
             Assert.IsFalse(tokenSource.IsCancellationRequested, "Test timed out");
         }

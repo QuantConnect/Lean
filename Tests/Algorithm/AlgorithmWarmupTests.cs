@@ -101,6 +101,8 @@ namespace QuantConnect.Tests.Algorithm
                     estimateExpectedDataCount = 2 * (securityType == SecurityType.Forex ? 19 : 6);
                     break;
                 case Resolution.Daily:
+                    // Warmup is 2 days. DUring warmup we expect the daily data point which goes from T-2 to T-1, once warmup finished,
+                    // we will get T-1 to T data point which is let through but the data feed since the algorithm starts at T
                     estimateExpectedDataCount = 1;
                     break;
                 default:

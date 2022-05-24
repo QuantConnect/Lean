@@ -31,7 +31,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class BaseDataExchange
     {
         private Thread _thread;
-        private int _sleepInterval = 1;
+        private uint _sleepInterval = 1;
         private Func<Exception, bool> _isFatalError;
         private readonly CancellationTokenSource _cancellationTokenSource;
 
@@ -42,12 +42,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Gets or sets how long this thread will sleep when no data is available
         /// </summary>
-        public int SleepInterval
+        public uint SleepInterval
         {
             get => _sleepInterval;
             set
             {
-                if (value <= 0)
+                if (value == 0)
                 {
                     throw new ArgumentException("Sleep interval should be bigger than 0");
                 }
@@ -203,10 +203,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         enumeratorHandler.HandleData(enumerator.Current);
                     }
 
-                    // if we didn't handle anything on this past iteration, take a nap
                     if (!handled)
                     {
-                        _manualResetEventSlim.Wait(Time.GetSecondUnevenWait(_sleepInterval), _cancellationTokenSource.Token);
+                        // if we didn't handle anything on this past iteration, take a nap
+                        // wait until we timeout, we are cancelled or there is a new enumerator added
+                        _manualResetEventSlim.Wait(Time.GetSecondUnevenWait((int)_sleepInterval), _cancellationTokenSource.Token);
                     }
                 }
                 catch (OperationCanceledException)

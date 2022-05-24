@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -50,8 +50,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             base.Initialize(algorithm, dataFeedSubscriptionManager);
 
+            // the time provider, is the real time provider
             _timeProvider = GetTimeProvider();
-            _frontierTimeProvider = new LiveTimeProvider(realTime: _timeProvider);
+            _frontierTimeProvider = new LiveTimeProvider(realTime: TimeProvider);
+            // the synchronizer will use our '_frontierTimeProvider' which initially during warmup will be using
+            // the base time provider which is the subscription based time provider (like backtesting)
+            // once wawrmup finishes it will start using the realtime provider
             SubscriptionSynchronizer.SetTimeProvider(_frontierTimeProvider);
 
             // attach event handlers to subscriptions

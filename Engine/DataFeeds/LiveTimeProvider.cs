@@ -1,12 +1,11 @@
-﻿
+
 using System;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// Live time provide which supports an initial warmup period using the given time provider
+    /// Live time provide which supports an initial warmup period using the given time provider <see cref="SubscriptionFrontierTimeProvider"/>
     /// </summary>
-    /// <see cref="SubscriptionFrontierTimeProvider"/>
     public class LiveTimeProvider : ITimeProvider
     {
         private DateTime _previous;

@@ -202,15 +202,12 @@ namespace QuantConnect.Lean.Engine
                 time = timeSlice.Time;
                 DataPoints += timeSlice.DataPointCount;
 
-                if (backtestMode)
+                if (backtestMode && algorithm.Portfolio.TotalPortfolioValue <= 0)
                 {
-                    if (algorithm.Portfolio.TotalPortfolioValue <= 0)
-                    {
-                        var logMessage = "AlgorithmManager.Run(): Portfolio value is less than or equal to zero, stopping algorithm.";
-                        Log.Error(logMessage);
-                        results.SystemDebugMessage(logMessage);
-                        break;
-                    }
+                    var logMessage = "AlgorithmManager.Run(): Portfolio value is less than or equal to zero, stopping algorithm.";
+                    Log.Error(logMessage);
+                    results.SystemDebugMessage(logMessage);
+                    break;
                 }
 
                 // If backtesting/warmup, we need to check if there are realtime events in the past
@@ -727,7 +724,7 @@ namespace QuantConnect.Lean.Engine
             var startTimeTicks = algorithm.Time.Ticks;
             foreach (var timeSlice in synchronizer.StreamData(cancellationToken))
             {
-                if (algorithm.LiveMode && algorithm.IsWarmingUp)
+                if (algorithm.IsWarmingUp)
                 {
                     var now = DateTime.UtcNow;
                     if (now > nextWarmupStatusTime)

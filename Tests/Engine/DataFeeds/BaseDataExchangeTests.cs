@@ -19,7 +19,6 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -71,10 +70,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             });
 
             var finishedRunning = new AutoResetEvent(false);
-            Task.Run(() => { exchange.Start(cancellationToken.Token); finishedRunning.Set(); } );
+            Task.Run(() => { exchange.Start(); finishedRunning.Set(); } );
 
             Assert.IsTrue(lastUpdated.WaitOne(DefaultTimeout));
 
+            exchange.Stop();
             cancellationToken.Cancel();
 
             Assert.IsTrue(finishedRunning.WaitOne(DefaultTimeout));
@@ -115,10 +115,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 lastUpdated.Set();
             });
 
-            Task.Run(() => exchange.Start(cancellationToken.Token));
+            Task.Run(() => exchange.Start());
 
             Assert.IsTrue(lastUpdated.WaitOne(DefaultTimeout));
 
+            exchange.Stop();
             cancellationToken.Cancel();
             enqueable.Dispose();
         }
@@ -159,9 +160,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 last = spy;
             });
 
-            Task.Run(() => exchange.Start(cancellationToken.Token));
+            Task.Run(() => exchange.Start());
 
             Assert.IsTrue(errorCaught.WaitOne(DefaultTimeout));
+
+            exchange.Stop();
 
             Assert.IsNull(last);
 
@@ -186,6 +189,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             isCompletedEvent.WaitOne();
             Assert.IsFalse(isFaultedEvent.WaitOne(0));
+
+            exchange.Stop();
         }
 
         [Test]
@@ -199,6 +204,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Task.Run(() => exchange.Start());
 
             isCompletedEvent.WaitOne();
+            exchange.Stop();
         }
 
         [Test]
