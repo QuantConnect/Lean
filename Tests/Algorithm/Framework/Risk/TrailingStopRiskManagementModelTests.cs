@@ -36,12 +36,12 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
         [TestCase(Language.Python, 0.05, new[] { 1d, 100d, 99.95d, 99.94d, 95d, 94.99d }, new[] { true, true, true, true, true, true }, new[] { false, false, false, false, false, true }, true)]
         [TestCase(Language.CSharp, 0.05, new[] { 1d, 100d, 99.95d, 99.94d, 95d, 94.99d }, new[] { true, true, true, true, true, true }, new[] { false, false, false, false, false, true }, false)]
         [TestCase(Language.Python, 0.05, new[] { 1d, 100d, 99.95d, 99.94d, 95d, 94.99d }, new[] { true, true, true, true, true, true }, new[] { false, false, false, false, false, true }, false)]
-        [TestCase(Language.CSharp, 0.05, new[] { 1d, 2d, 3d }, new[] { false, false, false }, new[] { false, false, false }, true)]
-        [TestCase(Language.Python, 0.05, new[] { 1d, 2d, 3d }, new[] { false, false, false }, new[] { false, false, false }, true)]
-        [TestCase(Language.CSharp, 0.05, new[] { 1d, 1d, 100d, 99.95d, 99.94d, 95d, 94.99d }, new[] { false, true, true, true, true, true, true }, new[] { false, false, false, false, false, false, true }, true)]
-        [TestCase(Language.Python, 0.05, new[] { 1d, 1d, 100d, 99.95d, 99.94d, 95d, 94.99d }, new[] { false, true, true, true, true, true, true }, new[] { false, false, false, false, false, false, true }, true)]
-        [TestCase(Language.CSharp, 0.05, new[] { 1d, 1d, 100d, 99.95d, 99.94d, 95d, 94.99d }, new[] { false, true, true, true, true, true, true }, new[] { false, false, false, false, false, false, true }, false)]
-        [TestCase(Language.Python, 0.05, new[] { 1d, 1d, 100d, 99.95d, 99.94d, 95d, 94.99d }, new[] { false, true, true, true, true, true, true }, new[] { false, false, false, false, false, false, true }, false)]
+        [TestCase(Language.CSharp, 0.05, new[] { 1d, 100d, 94.99d }, new[] { false, false, false }, new[] { false, false, false }, true)]
+        [TestCase(Language.Python, 0.05, new[] { 1d, 100d, 94.99d }, new[] { false, false, false }, new[] { false, false, false }, true)]
+        [TestCase(Language.CSharp, 0.05, new[] { 2d, 1d, 100d, 99.95d, 99.94d, 95d, 94.99d }, new[] { false, true, true, true, true, true, true }, new[] { false, false, false, false, false, false, true }, true)]
+        [TestCase(Language.Python, 0.05, new[] { 2d, 1d, 100d, 99.95d, 99.94d, 95d, 94.99d }, new[] { false, true, true, true, true, true, true }, new[] { false, false, false, false, false, false, true }, true)]
+        [TestCase(Language.CSharp, 0.05, new[] { 2d, 1d, 100d, 99.95d, 99.94d, 95d, 94.99d }, new[] { false, true, true, true, true, true, true }, new[] { false, false, false, false, false, false, true }, false)]
+        [TestCase(Language.Python, 0.05, new[] { 2d, 1d, 100d, 99.95d, 99.94d, 95d, 94.99d }, new[] { false, true, true, true, true, true, true }, new[] { false, false, false, false, false, false, true }, false)]
         public void ReturnsExpectedPortfolioTarget(
             Language language,
             decimal maxDrawdownPercent,
@@ -52,7 +52,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
         {
             var decimalPrices = System.Array.ConvertAll(prices, x => (decimal) x);
 
-            var security = new Security(
+            var security = new Mock<Security>(
                 Symbols.AAPL,
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 new Cash(Currencies.USD, 1000m, 1m),
@@ -61,16 +61,17 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCache()
             );
-            security.FeeModel = new ConstantFeeModel(0);
+            security.CallBase = true;
+            security.Object.FeeModel = new ConstantFeeModel(0);
 
-            var holding = new SecurityHolding(security, new IdentityCurrencyConverter(Currencies.USD));
+            var holding = new SecurityHolding(security.Object, new IdentityCurrencyConverter(Currencies.USD));
             var holdingsCost = decimalPrices[0];
             holding.SetHoldings(holdingsCost, longPosition ? 1m : -1m);
-            security.Holdings = holding;
+            security.Object.Holdings = holding;
 
             var algorithm = new QCAlgorithm();
             algorithm.SetPandasConverter();
-            algorithm.Securities.Add(Symbols.AAPL, security);
+            algorithm.Securities.Add(Symbols.AAPL, security.Object);
 
             if (language == Language.Python)
             {
@@ -91,7 +92,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
             for (int i = 0; i < decimalPrices.Length; i++)
             {
                 var price = decimalPrices[i];
-                security.SetMarketPrice(new Tick(DateTime.Now, security.Symbol, price, price));
+                security.Object.SetMarketPrice(new Tick(DateTime.Now, security.Object.Symbol, price, price));
+                security.Setup((m => m.Invested)).Returns(investedArray[i]);
 
                 var targets = algorithm.RiskManagement.ManageRisk(algorithm, null).ToList();
                 var shouldLiquidate = shouldLiquidateArray[i];
