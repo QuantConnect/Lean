@@ -73,9 +73,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
                     continue;
                 }
 
-                var drawdown = maxHigh == 0m ? 0m : 1m - security.Low / maxHigh;
-
-                if (_maximumDrawdownPercent < drawdown)
+                if (security.Low < maxHigh * (1m - _maximumDrawdownPercent))
                 {
                     // liquidate
                     yield return new PortfolioTarget(security.Symbol, 0);
