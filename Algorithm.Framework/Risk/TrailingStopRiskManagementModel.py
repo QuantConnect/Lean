@@ -21,7 +21,7 @@ class TrailingStopRiskManagementModel(RiskManagementModel):
         Args:
             maximumDrawdownPercent: The maximum percentage drawdown allowed for algorithm portfolio compared with the highest unrealized profit, defaults to 5% drawdown'''
         self.maximumDrawdownPercent = abs(maximumDrawdownPercent)
-        self.maxUnrealizedProfits = dict()
+        self.trailingAbsoluteHoldingsValues = dict()
 
     def ManageRisk(self, algorithm, targets):
         '''Manages the algorithm's risk at each time step
@@ -36,19 +36,18 @@ class TrailingStopRiskManagementModel(RiskManagementModel):
 
             # Remove if not invested
             if not security.Invested:
-                self.maxUnrealizedProfits.pop(symbol, None)
+                self.trailingAbsoluteHoldingsValues.pop(symbol, None)
                 continue
 
-            unrealizedProfit = security.Holdings.UnrealizedProfit
-            maxUnrealizedProfit = self.maxUnrealizedProfits.get(symbol)
+            absoluteHoldingsValue = security.Holdings.AbsoluteHoldingsValue
+            trailingAbsoluteHoldingsValue = self.trailingAbsoluteHoldingsValues.get(symbol)
 
             # Add newly invested securities or check for new max high and update
-            if maxUnrealizedProfit == None or maxUnrealizedProfit < unrealizedProfit:
-                self.maxUnrealizedProfits[symbol] = unrealizedProfit
+            if trailingAbsoluteHoldingsValue == None or (security.Holdings.IsLong and trailingAbsoluteHoldingsValue < absoluteHoldingsValue) or (security.Holdings.IsShort and trailingAbsoluteHoldingsValue > absoluteHoldingsValue):
+                self.trailingAbsoluteHoldingsValues[symbol] = absoluteHoldingsValue
                 continue
 
-            sign = 1 if security.Holdings.IsLong else -1
-            drawdown = abs((maxUnrealizedProfit - unrealizedProfit) / (security.Holdings.AbsoluteHoldingsCost + sign * maxUnrealizedProfit))
+            drawdown = abs((trailingAbsoluteHoldingsValue - absoluteHoldingsValue) / trailingAbsoluteHoldingsValue)
 
             if self.maximumDrawdownPercent < drawdown:
                 # liquidate

@@ -27,7 +27,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
     public class TrailingStopRiskManagementModel : RiskManagementModel
     {
         private readonly decimal _maximumDrawdownPercent;
-        private readonly Dictionary<Symbol, decimal> _maxUnrealizedProfits = new Dictionary<Symbol, decimal>();
+        private readonly Dictionary<Symbol, decimal> _trailingAbsoluteHoldingsValues = new Dictionary<Symbol, decimal>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TrailingStopRiskManagementModel"/> class
@@ -53,28 +53,28 @@ namespace QuantConnect.Algorithm.Framework.Risk
                 // Remove if not invested
                 if (!security.Invested)
                 {
-                    _maxUnrealizedProfits.Remove(symbol);
+                    _trailingAbsoluteHoldingsValues.Remove(symbol);
                     continue;
                 }
 
-                var unrealizedProfit = security.Holdings.UnrealizedProfit;
-                decimal maxUnrealizedProfit;
+                var absoluteHoldingsValue = security.Holdings.AbsoluteHoldingsValue;
+                decimal trailingAbsoluteHoldingsValue;
 
-                if (!_maxUnrealizedProfits.TryGetValue(symbol, out maxUnrealizedProfit))
+                if (!_trailingAbsoluteHoldingsValues.TryGetValue(symbol, out trailingAbsoluteHoldingsValue))
                 {
-                    _maxUnrealizedProfits.Add(symbol, unrealizedProfit);
+                    _trailingAbsoluteHoldingsValues.Add(symbol, absoluteHoldingsValue);
                     continue;
                 }
 
                 // Check for new max high and update
-                if (maxUnrealizedProfit < unrealizedProfit)
+                if ((security.Holdings.IsLong && trailingAbsoluteHoldingsValue < absoluteHoldingsValue) ||
+                    (security.Holdings.IsShort && trailingAbsoluteHoldingsValue > absoluteHoldingsValue))
                 {
-                    _maxUnrealizedProfits[symbol] = unrealizedProfit;
+                    _trailingAbsoluteHoldingsValues[symbol] = absoluteHoldingsValue;
                     continue;
                 }
 
-                var sign = security.Holdings.IsLong ? 1 : -1;
-                var drawdown = Math.Abs((maxUnrealizedProfit - unrealizedProfit) / (security.Holdings.AbsoluteHoldingsCost + sign * maxUnrealizedProfit));
+                var drawdown = Math.Abs((trailingAbsoluteHoldingsValue - absoluteHoldingsValue) / trailingAbsoluteHoldingsValue);
 
                 if (_maximumDrawdownPercent < drawdown)
                 {
