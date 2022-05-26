@@ -692,15 +692,22 @@ namespace QuantConnect.Algorithm
         {
             using (Py.GIL())
             {
-                try
+                if (pyObject.TryConvert(out IndicatorBase indicator, true))
                 {
-                    var value = (((dynamic)pyObject).Current.Value as PyObject).GetAndDispose<decimal>();
-                    Plot(series, value);
+                    Plot(series, indicator);
                 }
-                catch
+                else
                 {
-                    var pythonType = pyObject.GetPythonType().Repr();
-                    throw new ArgumentException($"QCAlgorithm.Plot(): The last argument should be a QuantConnect Indicator object, {pythonType} was provided.");
+                    try
+                    {
+                        var value = (((dynamic)pyObject).Value as PyObject).GetAndDispose<decimal>();
+                        Plot(series, value);
+                    }
+                    catch
+                    {
+                        var pythonType = pyObject.GetPythonType().Repr();
+                        throw new ArgumentException($"QCAlgorithm.Plot(): The last argument should be a QuantConnect Indicator object, {pythonType} was provided.");
+                    }
                 }
             }
         }
