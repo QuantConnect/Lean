@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,21 +15,21 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
-using QuantConnect.Interfaces;
+using QuantConnect.Util;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
-using QuantConnect.Util;
+using QuantConnect.Interfaces;
+using QuantConnect.Data.Market;
+using System.Collections.Generic;
 using Timer = System.Timers.Timer;
+using QuantConnect.Lean.Engine.HistoricalData;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Queues
 {
     /// <summary>
-    /// This is an implementation of <see cref="IDataQueueHandler"/> used for testing
+    /// This is an implementation of <see cref="IDataQueueHandler"/> used for testing. <see cref="FakeHistoryProvider"/>
     /// </summary>
     public class FakeDataQueue : IDataQueueHandler, IDataQueueUniverseProvider
     {
@@ -38,7 +38,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
 
         private readonly Timer _timer;
         private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
-        private readonly object _sync = new object();
         private readonly IDataAggregator _aggregator;
         private readonly MarketHoursDatabase _marketHoursDatabase;
         private readonly Dictionary<Symbol, TimeZoneOffsetProvider> _symbolExchangeTimeZones;
