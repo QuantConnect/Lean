@@ -417,7 +417,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     // the order here is important, concat enumerator will keep the last enumerator given and dispose of the rest
-                    liveEnumerator = new ConcatEnumerator(true,  GetFileBasedWarmupEnumerator(warmup),
+                    liveEnumerator = new ConcatEnumerator(true, GetFileBasedWarmupEnumerator(warmup),
                         GetHistoryWarmupEnumerator(historyWarmup), liveEnumerator);
                 }
             }
@@ -432,7 +432,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IEnumerator<BaseData> result = null;
             try
             {
-                result = new FilterEnumerator<BaseData>(CreateEnumerator(warmup),data => data == null || data.EndTime < warmup.EndTimeLocal);
+                result = new FilterEnumerator<BaseData>(CreateEnumerator(warmup),
+                    // don't let future data past, nor fill forward, that will be handled by the history request
+                    data => data == null || data.EndTime < warmup.EndTimeLocal && !data.IsFillForward);
             }
             catch (Exception e)
             {
@@ -464,7 +466,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     return null;
                 }).GetEnumerator();
 
-                result = new FilterEnumerator<BaseData>(result,data => data == null || data.EndTime < warmup.EndTimeLocal);
+                result = new FilterEnumerator<BaseData>(result, data => data == null || data.EndTime < warmup.EndTimeLocal);
             }
             catch
             {
