@@ -34,14 +34,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
         [Test]
         [TestCase(Language.CSharp, 0.05, new[] { 1d, 100d, 99.95d, 99.94d, 95d, 94.99d }, new[] { true, true, true, true, true, true }, new[] { false, false, false, false, false, true }, true)]
         [TestCase(Language.Python, 0.05, new[] { 1d, 100d, 99.95d, 99.94d, 95d, 94.99d }, new[] { true, true, true, true, true, true }, new[] { false, false, false, false, false, true }, true)]
-        [TestCase(Language.CSharp, 0.05, new[] { 1d, 100d, 99.95d, 99.94d, 95d, 94.99d }, new[] { true, true, true, true, true, true }, new[] { false, false, false, false, false, true }, false)]
-        [TestCase(Language.Python, 0.05, new[] { 1d, 100d, 99.95d, 99.94d, 95d, 94.99d }, new[] { true, true, true, true, true, true }, new[] { false, false, false, false, false, true }, false)]
+        [TestCase(Language.CSharp, 0.1, new[] { 100d, 50d, 54.99, 55d, 55.01d }, new[] { true, true, true, true, true }, new[] { false, false, false, false, true }, false)]
+        [TestCase(Language.Python, 0.1, new[] { 100d, 50d, 54.99, 55d, 55.01d }, new[] { true, true, true, true, true }, new[] { false, false, false, false, true }, false)]
         [TestCase(Language.CSharp, 0.05, new[] { 1d, 100d, 94.99d }, new[] { false, false, false }, new[] { false, false, false }, true)]
         [TestCase(Language.Python, 0.05, new[] { 1d, 100d, 94.99d }, new[] { false, false, false }, new[] { false, false, false }, true)]
         [TestCase(Language.CSharp, 0.05, new[] { 2d, 1d, 100d, 99.95d, 99.94d, 95d, 94.99d }, new[] { false, true, true, true, true, true, true }, new[] { false, false, false, false, false, false, true }, true)]
         [TestCase(Language.Python, 0.05, new[] { 2d, 1d, 100d, 99.95d, 99.94d, 95d, 94.99d }, new[] { false, true, true, true, true, true, true }, new[] { false, false, false, false, false, false, true }, true)]
-        [TestCase(Language.CSharp, 0.05, new[] { 2d, 1d, 100d, 99.95d, 99.94d, 95d, 94.99d }, new[] { false, true, true, true, true, true, true }, new[] { false, false, false, false, false, false, true }, false)]
-        [TestCase(Language.Python, 0.05, new[] { 2d, 1d, 100d, 99.95d, 99.94d, 95d, 94.99d }, new[] { false, true, true, true, true, true, true }, new[] { false, false, false, false, false, false, true }, false)]
+        [TestCase(Language.CSharp, 0.1, new[] { 90d, 100d, 50d, 54.99, 55d, 55.01d }, new[] { false, true, true, true, true, true }, new[] { false, false, false, false, false, true }, false)]
+        [TestCase(Language.Python, 0.1, new[] { 90d, 100d, 50d, 54.99, 55d, 55.01d }, new[] { false, true, true, true, true, true }, new[] { false, false, false, false, false, true }, false)]
         public void ReturnsExpectedPortfolioTarget(
             Language language,
             decimal maxDrawdownPercent,
