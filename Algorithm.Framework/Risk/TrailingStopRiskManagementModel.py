@@ -21,7 +21,7 @@ class TrailingStopRiskManagementModel(RiskManagementModel):
         Args:
             maximumDrawdownPercent: The maximum percentage drawdown allowed for algorithm portfolio compared with the highest unrealized profit, defaults to 5% drawdown'''
         self.maximumDrawdownPercent = abs(maximumDrawdownPercent)
-        self.trailingHighs = dict()
+        self.maxUnrealizedProfits = dict()
 
     def ManageRisk(self, algorithm, targets):
         '''Manages the algorithm's risk at each time step
@@ -36,18 +36,21 @@ class TrailingStopRiskManagementModel(RiskManagementModel):
 
             # Remove if not invested
             if not security.Invested:
-                self.trailingHighs.pop(symbol, None)
+                self.maxUnrealizedProfits.pop(symbol, None)
                 continue
 
-            high = security.High
-            maxHigh = self.trailingHighs.get(symbol)
+            unrealizedProfit = security.Holdings.UnrealizedProfit
+            maxUnrealizedProfit = self.maxUnrealizedProfits.get(symbol)
 
             # Add newly invested securities or check for new max high and update
-            if maxHigh == None or maxHigh < high:
-                self.trailingHighs[symbol] = high
+            if maxUnrealizedProfit == None or maxUnrealizedProfit < unrealizedProfit:
+                self.maxUnrealizedProfits[symbol] = unrealizedProfit
                 continue
 
-            if security.Low < maxHigh * (1.0 - self.maximumDrawdownPercent):
+            sign = 1 if security.Holdings.IsLong else -1
+            drawdown = abs((maxUnrealizedProfit - unrealizedProfit) / (security.Holdings.AbsoluteHoldingsCost + sign * maxUnrealizedProfit))
+
+            if self.maximumDrawdownPercent < drawdown:
                 # liquidate
                 riskAdjustedTargets.append(PortfolioTarget(symbol, 0))
 
