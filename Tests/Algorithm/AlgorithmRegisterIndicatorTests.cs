@@ -143,37 +143,6 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
-        public void PlotPythonIndicatorInSeparateChart()
-        {
-            PyObject indicator;
-
-            foreach (var type in _indicatorTestsTypes)
-            {
-                var indicatorTest = Activator.CreateInstance(type);
-                if (indicatorTest is CommonIndicatorTests<IndicatorDataPoint>)
-                {
-                    indicator = (indicatorTest as CommonIndicatorTests<IndicatorDataPoint>).GetIndicatorAsPyObject();
-                }
-                else if (indicatorTest is CommonIndicatorTests<IBaseDataBar>)
-                {
-                    indicator = (indicatorTest as CommonIndicatorTests<IBaseDataBar>).GetIndicatorAsPyObject();
-                }
-                else if (indicatorTest is CommonIndicatorTests<TradeBar>)
-                {
-                    indicator = (indicatorTest as CommonIndicatorTests<TradeBar>).GetIndicatorAsPyObject();
-                }
-                else
-                {
-                    throw new NotSupportedException($"RegistersIndicatorProperlyPython(): Unsupported indicator data type: {indicatorTest.GetType()}");
-                }
-
-                Assert.DoesNotThrow(() => _algorithm.Plot($"TestIndicatorPlot-{type.Name}", indicator));
-                var charts = _algorithm.GetChartUpdates();
-                Assert.IsTrue(charts.Select(x => x.Name == $"TestIndicatorPlot-{type.Name}").Any());
-            }
-        }
-
-        [Test]
         public void RegisterPythonCustomIndicatorProperly()
         {
             const string code = @"
@@ -206,55 +175,6 @@ class BadCustomIndicator:
 
                 var badIndicator = module.GetAttr("BadCustomIndicator").Invoke();
                 Assert.Throws<NotImplementedException>(() => _algorithm.RegisterIndicator(_spy, badIndicator, Resolution.Minute));
-            }
-        }
-
-        [Test]
-        public void PlotPythonCustomIndicatorProperly()
-        {
-            using (Py.GIL())
-            {
-                var module = PyModule.FromString(
-                    Guid.NewGuid().ToString(),
-                    @"
-from AlgorithmImports import *
-class PythonCustomIndicator(PythonIndicator):
-    def __init__(self):
-        self.Value = 0
-    def Update(self, input):
-        self.Value = input.Value
-        return True"
-                );
-
-                var customIndicator = module.GetAttr("PythonCustomIndicator").Invoke();
-                Assert.DoesNotThrow(() => _algorithm.Plot("PlotTest", customIndicator));
-                var charts = _algorithm.GetChartUpdates();
-                Assert.IsTrue(charts.Select(x => x.Name == "PlotTest").Any());
-            }
-        }
-
-        [Test]
-        public void PlotCustomIndicatorProperly()
-        {
-            using (Py.GIL())
-            {
-                var module = PyModule.FromString(
-                    Guid.NewGuid().ToString(),
-                    @"
-from AlgorithmImports import *
-
-class CustomIndicator:
-    def __init__(self):
-        self.Value = 0
-    def Update(self, input):
-        self.Value = input.Value
-        return True"
-                );
-
-                var customIndicator = module.GetAttr("CustomIndicator").Invoke();
-                Assert.DoesNotThrow(() => _algorithm.Plot("PlotTest", customIndicator));
-                var charts = _algorithm.GetChartUpdates();
-                Assert.IsTrue(charts.Select(x => x.Name == "PlotTest").Any());
             }
         }
 
