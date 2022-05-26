@@ -12,6 +12,7 @@
 # limitations under the License.
 
 from AlgorithmImports import *
+from enum import Enum
 
 class TrailingStopRiskManagementModel(RiskManagementModel):
     '''Provides an implementation of IRiskManagementModel that limits the maximum possible loss
@@ -21,7 +22,7 @@ class TrailingStopRiskManagementModel(RiskManagementModel):
         Args:
             maximumDrawdownPercent: The maximum percentage drawdown allowed for algorithm portfolio compared with the highest unrealized profit, defaults to 5% drawdown'''
         self.maximumDrawdownPercent = abs(maximumDrawdownPercent)
-        self.trailingAbsoluteHoldingsValues = dict()
+        self.trailingAbsoluteHoldingsState = dict()
 
     def ManageRisk(self, algorithm, targets):
         '''Manages the algorithm's risk at each time step
@@ -36,15 +37,24 @@ class TrailingStopRiskManagementModel(RiskManagementModel):
 
             # Remove if not invested
             if not security.Invested:
-                self.trailingAbsoluteHoldingsValues.pop(symbol, None)
+                self.trailingAbsoluteHoldingsState.pop(symbol, None)
                 continue
 
+            position = self.Position.Long if security.Holdings.IsLong else self.Position.Short
             absoluteHoldingsValue = security.Holdings.AbsoluteHoldingsValue
-            trailingAbsoluteHoldingsValue = self.trailingAbsoluteHoldingsValues.get(symbol)
+            trailingAbsoluteHoldingsState = self.trailingAbsoluteHoldingsState.get(symbol)
 
-            # Add newly invested securities or check for new max high and update
-            if trailingAbsoluteHoldingsValue == None or (security.Holdings.IsLong and trailingAbsoluteHoldingsValue < absoluteHoldingsValue) or (security.Holdings.IsShort and trailingAbsoluteHoldingsValue > absoluteHoldingsValue):
-                self.trailingAbsoluteHoldingsValues[symbol] = absoluteHoldingsValue
+            # Add newly invested security (if doesn't exist) or reset holdings state (if position changed)
+            if trailingAbsoluteHoldingsState == None or position != trailingAbsoluteHoldingsState.position:
+                self.trailingAbsoluteHoldingsState[symbol] = self.HoldingsState(position, absoluteHoldingsValue)
+                continue
+
+            trailingAbsoluteHoldingsValue = trailingAbsoluteHoldingsState.absoluteHoldingsValue
+
+            # Check for new max (for long position) or min (for short position) absolute holdings value
+            if ((position == self.Position.Long and trailingAbsoluteHoldingsValue < absoluteHoldingsValue) or
+                (position == self.Position.Short and trailingAbsoluteHoldingsValue > absoluteHoldingsValue)):
+                self.trailingAbsoluteHoldingsState[symbol].absoluteHoldingsValue = absoluteHoldingsValue
                 continue
 
             drawdown = abs((trailingAbsoluteHoldingsValue - absoluteHoldingsValue) / trailingAbsoluteHoldingsValue)
@@ -54,3 +64,12 @@ class TrailingStopRiskManagementModel(RiskManagementModel):
                 riskAdjustedTargets.append(PortfolioTarget(symbol, 0))
 
         return riskAdjustedTargets
+
+    class Position(Enum):
+        Long = 1
+        Short = 2
+
+    class HoldingsState:
+        def __init__(self, position, absoluteHoldingsValue):
+            self.position = position
+            self.absoluteHoldingsValue = absoluteHoldingsValue
