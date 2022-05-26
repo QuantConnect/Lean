@@ -206,7 +206,7 @@ namespace QuantConnect.Scheduling
         {
             var name = _name ?? _dateRule.Name + ": " + _timeRule.Name;
             // back the date up to ensure we get all events, the event scheduler will skip past events that whose time has passed
-            var dates = _dateRule.GetDates(_securities.UtcTime.Date.AddDays(-1), Time.EndOfTime);
+            var dates = ScheduleManager.GetDatesDeferred(_dateRule, _securities);
             var eventTimes = _timeRule.CreateUtcEventTimes(dates);
             if (_predicate != null)
             {

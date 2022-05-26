@@ -24,24 +24,33 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class WarmupScheduledEventsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private Queue<DateTime> _onEndOfDayScheduledEvents = new(new[]
+        {
+            new DateTime(2013, 10, 04, 15, 50, 0),
+            new DateTime(2013, 10, 07, 15, 50, 0),
+
+            new DateTime(2013, 10, 08, 15, 50, 0),
+        });
+
         private Queue<DateTime> _scheduledEvents = new (new[]
         {
+            new DateTime(2013, 10, 04, 18, 0, 0),
+            new DateTime(2013, 10, 05, 0, 0, 0),
+            new DateTime(2013, 10, 05, 6, 0, 0),
+            new DateTime(2013, 10, 05, 12, 0, 0),
+            new DateTime(2013, 10, 05, 18, 0, 0),
+            new DateTime(2013, 10, 06, 0, 0, 0),
+            new DateTime(2013, 10, 06, 6, 0, 0),
+            new DateTime(2013, 10, 06, 12, 0, 0),
+            new DateTime(2013, 10, 06, 18, 0, 0),
+            new DateTime(2013, 10, 07, 0, 0, 0),
+            new DateTime(2013, 10, 07, 6, 0, 0),
             new DateTime(2013, 10, 07, 12, 0, 0),
-            new DateTime(2013, 10, 07, 14, 0, 0),
-            new DateTime(2013, 10, 07, 16, 0, 0),
             new DateTime(2013, 10, 07, 18, 0, 0),
-            new DateTime(2013, 10, 07, 20, 0, 0),
-            new DateTime(2013, 10, 07, 22, 0, 0),
 
             new DateTime(2013, 10, 08, 0, 0, 0),
-            new DateTime(2013, 10, 08, 2, 0, 0),
-            new DateTime(2013, 10, 08, 4, 0, 0),
             new DateTime(2013, 10, 08, 6, 0, 0),
-            new DateTime(2013, 10, 08, 8, 0, 0),
-            new DateTime(2013, 10, 08, 10, 0, 0),
-            new DateTime(2013, 10, 08, 12, 0, 0),
-            new DateTime(2013, 10, 08, 14, 0, 0),
-            new DateTime(2013, 10, 08, 16, 0, 0)
+            new DateTime(2013, 10, 08, 12, 0, 0)
         });
 
         /// <summary>
@@ -54,7 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             AddEquity("SPY", Resolution.Minute, fillDataForward: false);
 
-            Schedule.On(DateRules.EveryDay(), TimeRules.Every(TimeSpan.FromHours(2)), () =>
+            Schedule.On(DateRules.EveryDay(), TimeRules.Every(TimeSpan.FromHours(6)), () =>
             {
                 Debug($"Scheduled event happening at {Time}. IsWarmingUp: {IsWarmingUp}");
                 if (!LiveMode)
@@ -65,14 +74,14 @@ namespace QuantConnect.Algorithm.CSharp
                         throw new Exception($"Unexpected scheduled event time: {Time}. Expected {expected}");
                     }
 
-                    if (expected.Day == 7 && !IsWarmingUp)
+                    if (expected.Day > 7 && IsWarmingUp)
                     {
                         throw new Exception("Algorithm should be warming up on the 7th!");
                     }
                 }
             });
 
-            SetWarmUp(5, Resolution.Hour);
+            SetWarmUp(9, Resolution.Hour);
         }
 
         public override void OnEndOfAlgorithm()
@@ -80,6 +89,24 @@ namespace QuantConnect.Algorithm.CSharp
             if (_scheduledEvents.Count != 0)
             {
                 throw new Exception("Some scheduled event was not fired!");
+            }
+            if (_onEndOfDayScheduledEvents.Count != 0)
+            {
+                throw new Exception("Some OnEndOfDay scheduled event was not fired!");
+            }
+        }
+
+        public override void OnEndOfDay(Symbol symbol)
+        {
+            Debug($"OnEndOfDay scheduled event happening at {Time}. IsWarmingUp: {IsWarmingUp}");
+            var expected = _onEndOfDayScheduledEvents.Dequeue();
+            if (expected != Time)
+            {
+                throw new Exception($"Unexpected OnEndOfDay scheduled event time: {Time}. Expected {expected}");
+            }
+            if (expected.Day > 7 && IsWarmingUp)
+            {
+                throw new Exception("Algorithm should be warming up on the 7th!");
             }
         }
 
@@ -96,7 +123,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1404;
+        public long DataPoints => 1831;
 
         /// <summary>
         /// Data Points count of the algorithm history
