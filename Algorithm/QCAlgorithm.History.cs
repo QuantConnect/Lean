@@ -186,9 +186,13 @@ namespace QuantConnect.Algorithm
                 if (symbols.Count != 0)
                 {
                     var startTimeUtc = CreateBarCountHistoryRequests(symbols, _warmupBarCount.Value, _warmupResolution)
-                        .Min(request => request.StartTimeUtc);
-                    result = startTimeUtc.ConvertFromUtc(TimeZone);
-                    return true;
+                        .DefaultIfEmpty()
+                        .Min(request => request == null ? default : request.StartTimeUtc);
+                    if(startTimeUtc != default)
+                    {
+                        result = startTimeUtc.ConvertFromUtc(TimeZone);
+                        return true;
+                    }
                 }
 
                 // if the algorithm has no added security, let's take a look at the universes to determine
