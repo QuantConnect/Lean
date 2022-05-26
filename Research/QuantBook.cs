@@ -34,7 +34,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
 using System.Threading.Tasks;
@@ -137,7 +136,7 @@ namespace QuantConnect.Research
                     Version = Globals.Version
                 });
 
-                algorithmHandlers.ObjectStore.Initialize("QuantBook",
+                algorithmHandlers.ObjectStore.Initialize(Config.Get("research-object-store-name", "QuantBook"),
                     Config.GetInt("job-user-id"),
                     Config.GetInt("project-id"),
                     Config.Get("api-access-token"),
