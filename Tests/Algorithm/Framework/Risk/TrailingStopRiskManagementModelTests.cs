@@ -51,8 +51,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
             security.Object.FeeModel = new ConstantFeeModel(0);
 
             var holding = new SecurityHolding(security.Object, new IdentityCurrencyConverter(Currencies.USD));
-            var holdingsCost = decimalPrices[0];
-            holding.SetHoldings(holdingsCost, parameters.Quantity);
+            holding.SetHoldings(parameters.InitialPrice, parameters.Quantity);
             security.Object.Holdings = holding;
 
             var algorithm = new QCAlgorithm();
@@ -114,25 +113,28 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
                     "LiquidatesOnCorrectPriceChangeInLongPosition",
                     0.05m,
                     1m,
-                    new decimal[] { 1m, 100m, 99.95m, 99.94m, 95m, 94.99m },
-                    new bool[] { true, true, true, true, true, true },
-                    new bool[] { false, false, false, false, false, false },
-                    new bool[] { false, false, false, false, false, true }
-                ),
-                new TrailingStopRiskManagementModelTestParameters(
-                    "LiquidatesOnCorrectPriceChangeInShortPosition",
-                    0.1m,
-                    -1m,
-                    new decimal[] { 100m, 50m, 54.99m, 55m, 55.01m },
+                    1m,
+                    new decimal[] { 100m, 99.95m, 99.94m, 95m, 94.99m },
                     new bool[] { true, true, true, true, true },
                     new bool[] { false, false, false, false, false },
                     new bool[] { false, false, false, false, true }
                 ),
                 new TrailingStopRiskManagementModelTestParameters(
+                    "LiquidatesOnCorrectPriceChangeInShortPosition",
+                    0.1m,
+                    100m,
+                    -1m,
+                    new decimal[] { 50m, 54.99m, 55m, 55.01m },
+                    new bool[] { true, true, true, true },
+                    new bool[] { false, false, false, false },
+                    new bool[] { false, false, false, true }
+                ),
+                new TrailingStopRiskManagementModelTestParameters(
                     "DoesntLiquidateIfSecurityIsNotInvested",
                     0.05m,
                     1m,
-                    new decimal[] { 1m, 100m, 94.99m },
+                    1m,
+                    new decimal[] { 100m, 94.99m, 90m },
                     new bool[] { false, false, false },
                     new bool[] { false, false, false },
                     new bool[] { false, false, false }
@@ -141,14 +143,16 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
                     "LiquidatesOnCorrectPriceChangeInLongPositionWithUnivestedSecurityInFirstPrices",
                     0.05m,
                     1m,
-                    new decimal[] { 2m, 1m, 100m, 99.95m, 99.94m, 95m, 94.99m },
-                    new bool[] { false, true, true, true, true, true, true },
-                    new bool[] { false, false, false, false, false, false, false },
-                    new bool[] { false, false, false, false, false, false, true }
+                    1m,
+                    new decimal[] { 10m, 100m, 99.95m, 99.94m, 95m, 94.99m },
+                    new bool[] { false, true, true, true, true, true },
+                    new bool[] { false, false, false, false, false, false },
+                    new bool[] { false, false, false, false, false, true }
                 ),
                 new TrailingStopRiskManagementModelTestParameters(
                     "LiquidatesOnCorrectPriceChangeInShortPositionWithUnivestedSecurityInFirstPrices",
                     0.1m,
+                    100m,
                     -1m,
                     new decimal[] { 90m, 100m, 50m, 54.99m, 55m, 55.01m },
                     new bool[] { false, true, true, true, true, true },
@@ -159,6 +163,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
                     "DoesntLiquidateIfPricesDontChangeInLongPosition",
                     0.05m,
                     1m,
+                    1m,
                     new decimal[] { 1m, 1m, 1m, 1m },
                     new bool[] { true, true, true, true },
                     new bool[] { false, false, false, false },
@@ -167,6 +172,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
                 new TrailingStopRiskManagementModelTestParameters(
                     "DoesntLiquidateIfPricesDontChangeInShortPosition",
                     0.05m,
+                    1m,
                     -1m,
                     new decimal[] { 1m, 1m, 1m, 1m },
                     new bool[] { true, true, true, true },
@@ -177,10 +183,31 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
                     "LiquidatesAfterSwitchingToShortPosition",
                     0.05m,
                     1m,
-                    new decimal[] { 1m, 100m, 90m, 70m, 50m, 52.6m },
-                    new bool[] { true, true, true, true, true, true },
-                    new bool[] { false, true, false, false, false, false },
-                    new bool[] { false, false, false, false, false, true }
+                    1m,
+                    new decimal[] { 100m, 90m, 70m, 50m, 52.6m },
+                    new bool[] { true, true, true, true, true },
+                    new bool[] { true, false, false, false, false },
+                    new bool[] { false, false, false, false, true }
+                ),
+                new TrailingStopRiskManagementModelTestParameters(
+                    "LiquidatesOnFirstCallForLongPosition",
+                    0.1m,
+                    100m,
+                    1m,
+                    new decimal[] { 89.99m },
+                    new bool[] { true },
+                    new bool[] { false },
+                    new bool[] { true }
+                ),
+                new TrailingStopRiskManagementModelTestParameters(
+                    "LiquidatesOnFirstCallForShortPosition",
+                    0.1m,
+                    100m,
+                    -1m,
+                    new decimal[] { 110.01m },
+                    new bool[] { true },
+                    new bool[] { false },
+                    new bool[] { true }
                 )
             };
 
@@ -190,6 +217,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
                 select new TrailingStopRiskManagementModelTestParameters(
                     parameters.Name,
                     parameters.MaxDrawdownPercent,
+                    parameters.InitialPrice,
                     parameters.Quantity,
                     parameters.Prices,
                     parameters.InvestedArray,
@@ -209,6 +237,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
             public readonly string Name;
             public readonly Language Language;
             public readonly decimal MaxDrawdownPercent;
+            public readonly decimal InitialPrice;
             public readonly decimal Quantity;
             public readonly decimal[] Prices;
             public readonly bool[] InvestedArray;
@@ -218,6 +247,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
             public TrailingStopRiskManagementModelTestParameters(
                 string name,
                 decimal maxDrawdownPercent,
+                decimal initialPrice,
                 decimal quantity,
                 decimal[] prices,
                 bool[] investedArray,
@@ -229,6 +259,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
                 Name = name;
                 Language = language;
                 MaxDrawdownPercent = maxDrawdownPercent;
+                InitialPrice = initialPrice;
                 Quantity = quantity;
                 Prices = prices;
                 InvestedArray = investedArray;

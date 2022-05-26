@@ -57,7 +57,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
                     continue;
                 }
 
-                var position = security.Holdings.IsLong ? Position.Long : Position.Short;
+                var position = security.Holdings.IsLong ? PositionSide.Long : PositionSide.Short;
                 var absoluteHoldingsValue = security.Holdings.AbsoluteHoldingsValue;
                 HoldingsState trailingAbsoluteHoldingsState;
 
@@ -65,15 +65,14 @@ namespace QuantConnect.Algorithm.Framework.Risk
                 if (!_trailingAbsoluteHoldingsState.TryGetValue(symbol, out trailingAbsoluteHoldingsState) ||
                     position != trailingAbsoluteHoldingsState.Position)
                 {
-                    _trailingAbsoluteHoldingsState[symbol] = new HoldingsState(position, absoluteHoldingsValue);
-                    continue;
+                    _trailingAbsoluteHoldingsState[symbol] = trailingAbsoluteHoldingsState = new HoldingsState(position, security.Holdings.AbsoluteHoldingsCost);
                 }
 
                 var trailingAbsoluteHoldingsValue = trailingAbsoluteHoldingsState.AbsoluteHoldingsValue;
 
                 // Check for new max (for long position) or min (for short position) absolute holdings value
-                if ((position == Position.Long && trailingAbsoluteHoldingsValue < absoluteHoldingsValue) ||
-                    (position == Position.Short && trailingAbsoluteHoldingsValue > absoluteHoldingsValue))
+                if ((position == PositionSide.Long && trailingAbsoluteHoldingsValue < absoluteHoldingsValue) ||
+                    (position == PositionSide.Short && trailingAbsoluteHoldingsValue > absoluteHoldingsValue))
                 {
                     trailingAbsoluteHoldingsState.AbsoluteHoldingsValue = absoluteHoldingsValue;
                     continue;
@@ -90,24 +89,15 @@ namespace QuantConnect.Algorithm.Framework.Risk
         }
 
         /// <summary>
-        /// Specifies the holdings position side (Long, Short)
-        /// </summary>
-        private enum Position
-        {
-            Long,
-            Short
-        };
-
-        /// <summary>
         /// Helper class used to store holdings state for the <see cref="TrailingStopRiskManagementModel"/>
         /// in <see cref="ManageRisk"/>
         /// </summary>
         private class HoldingsState
         {
-            public Position Position;
+            public PositionSide Position;
             public decimal AbsoluteHoldingsValue;
 
-            public HoldingsState(Position position, decimal absoluteHoldingsValue)
+            public HoldingsState(PositionSide position, decimal absoluteHoldingsValue)
             {
                 Position = position;
                 AbsoluteHoldingsValue = absoluteHoldingsValue;
