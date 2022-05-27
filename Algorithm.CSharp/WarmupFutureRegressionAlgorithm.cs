@@ -18,29 +18,33 @@ using System;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm asserting the behavior of option warmup
+    /// Regression algorithm asserting the behavior of future warmup
     /// </summary>
-    public class WarmupOptionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class WarmupFutureRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private List<DateTime> _optionWarmupTimes = new();
-        private const string UnderlyingTicker = "GOOG";
-        private Symbol _optionSymbol;
+        private List<DateTime> _continuousWarmupTimes = new();
+        private List<DateTime> _chainWarmupTimes = new();
+        // S&P 500 EMini futures
+        private const string RootSP500 = Futures.Indices.SP500EMini;
+        public Symbol SP500 = QuantConnect.Symbol.Create(RootSP500, SecurityType.Future, Market.CME);
 
+        /// <summary>
+        /// Initialize your algorithm and add desired assets.
+        /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2015, 12, 24);
-            SetEndDate(2015, 12, 24);
-            SetCash(100000);
+            SetStartDate(2013, 10, 08);
+            SetEndDate(2013, 10, 10);
 
-            var option = AddOption(UnderlyingTicker);
-            _optionSymbol = option.Symbol;
+            var futureSP500 = AddFuture(RootSP500);
+            futureSP500.SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
 
-            option.SetFilter(u => u.Strikes(-5, +5).Expiration(0, 180).IncludeWeeklys());
             SetWarmUp(1, Resolution.Daily);
         }
 
@@ -50,30 +54,38 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">The current slice of data keyed by symbol string</param>
         public override void OnData(Slice slice)
         {
-            if (slice.OptionChains.TryGetValue(_optionSymbol, out var chain))
+            if(IsWarmingUp && slice.ContainsKey(SP500))
             {
-                // we find at the money (ATM) put contract with farthest expiration
-                var atmContract = chain
-                    .OrderByDescending(x => x.Expiry)
-                    .ThenBy(x => Math.Abs(chain.Underlying.Price - x.Strike))
-                    .ThenByDescending(x => x.Right)
-                    .FirstOrDefault();
+                if (Securities[SP500].AskPrice == 0)
+                {
+                    throw new Exception("Continuous contract price is not set!");
+                }
+                _continuousWarmupTimes.Add(Time);
+            }
 
-                if (atmContract != null)
+            foreach (var chain in slice.FutureChains)
+            {
+                // find the front contract expiring no earlier than in 90 days
+                var contract = (
+                    from futuresContract in chain.Value.OrderBy(x => x.Expiry)
+                    where futuresContract.Expiry > Time.Date.AddDays(90)
+                    select futuresContract
+                ).FirstOrDefault();
+
+                // if found, trade it
+                if (contract != null)
                 {
                     if (IsWarmingUp)
                     {
-                        if(atmContract.LastPrice == 0)
+                        if (contract.AskPrice == 0)
                         {
                             throw new Exception("Contract price is not set!");
                         }
-                        _optionWarmupTimes.Add(Time);
+                        _chainWarmupTimes.Add(Time);
                     }
-                    else if (!Portfolio.Invested && IsMarketOpen(_optionSymbol))
+                    else if (!Portfolio.Invested && IsMarketOpen(contract.Symbol))
                     {
-                        // if found, trade it
-                        MarketOrder(atmContract.Symbol, 1);
-                        MarketOnCloseOrder(atmContract.Symbol, -1);
+                        MarketOrder(contract.Symbol, 1);
                     }
                 }
             }
@@ -81,16 +93,24 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            var start = new DateTime(2015, 12, 23, 9, 31, 0);
-            var end = new DateTime(2015, 12, 23, 16, 0, 0);
+            AssertDataTime(new DateTime(2013, 10, 07, 0, 0, 0), new DateTime(2013, 10, 08, 0, 0, 0), _chainWarmupTimes);
+            AssertDataTime(new DateTime(2013, 10, 07, 0, 0, 0), new DateTime(2013, 10, 08, 0, 0, 0), _continuousWarmupTimes);
+        }
+
+        private void AssertDataTime(DateTime start, DateTime end, List<DateTime> times)
+        {
             var count = 0;
             do
             {
-                if (_optionWarmupTimes[count] != start)
+                if (Securities[SP500].Exchange.Hours.IsOpen(start.AddMinutes(-1), true))
                 {
-                    throw new Exception($"Unexpected time {_optionWarmupTimes[count]} expected {start}");
+                    if (times[count] != start)
+                    {
+                        throw new Exception($"Unexpected time {times[count]} expected {start}");
+                    }
+                    // if the market is closed there will be no data, so stop moving the index counter
+                    count++;
                 }
-                count++;
                 start = start.AddMinutes(1);
             }
             while (start < end);
@@ -109,7 +129,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1111660;
+        public long DataPoints => 86905;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -121,34 +141,34 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "2"},
+            {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
+            {"Compounding Annual Return", "224.153%"},
+            {"Drawdown", "1.500%"},
             {"Expectancy", "0"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
+            {"Net Profit", "0.971%"},
+            {"Sharpe Ratio", "35.085"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$1300000.00"},
-            {"Lowest Capacity Asset", "GOOCV 30AKMEIPOSS1Y|GOOCV VP83T1ZUHROL"},
-            {"Fitness Score", "0"},
+            {"Alpha", "-5.591"},
+            {"Beta", "0.727"},
+            {"Annual Standard Deviation", "0.176"},
+            {"Annual Variance", "0.031"},
+            {"Information Ratio", "-151.136"},
+            {"Tracking Error", "0.066"},
+            {"Treynor Ratio", "8.515"},
+            {"Total Fees", "$1.85"},
+            {"Estimated Strategy Capacity", "$5500000.00"},
+            {"Lowest Capacity Asset", "ES VP274HSU1AF5"},
+            {"Fitness Score", "0.208"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
-            {"Portfolio Turnover", "0"},
+            {"Sortino Ratio", "17.639"},
+            {"Return Over Maximum Drawdown", "126.711"},
+            {"Portfolio Turnover", "0.208"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -162,7 +182,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "9d9f9248ee8fe30d87ff0a6f6fea5112"}
+            {"OrderListHash", "4a00c10c083332bf19a18ce24ab6d687"}
         };
     }
 }

@@ -802,8 +802,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
             },
             alwaysInvoke: true,
-            secondsTimeStep: 1,
-            endDate: _startDate.AddSeconds(2));
+            // need to give time for future universe selection to trigger, midnight exchange tz
+            secondsTimeStep: 60 * 60 * 6,
+            endDate: _startDate.AddDays(1));
 
             Assert.IsTrue(receivedSecurityChanges, "Did not add symbol!");
         }
@@ -2196,8 +2197,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             Log.DebuggingEnabled = LogsEnabled;
 
-            // startDate and endDate are in algorithm time zone
-            var startDate = new DateTime(2019, 11, 19, 4, 0, 0);
+            // startDate and endDate are in algorithm time zone. Midnight so selection happens right away
+            var startDate = new DateTime(2019, 11, 19, 0, 0, 0);
             var endDate = startDate.AddDays(2.3);
 
             var algorithmTimeZone = TimeZones.NewYork;

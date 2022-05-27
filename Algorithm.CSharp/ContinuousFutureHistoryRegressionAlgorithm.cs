@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
                 dataMappingMode: DataMappingMode.OpenInterest,
                 contractDepthOffset: 1
             );
-            SetWarmup(10);
+            SetWarmup(1, Resolution.Daily);
         }
 
         /// <summary>
@@ -114,7 +114,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 28617;
+        public long DataPoints => 40881;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -148,12 +148,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Fees", "$1.85"},
             {"Estimated Strategy Capacity", "$290000000.00"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
-            {"Fitness Score", "0.816"},
+            {"Fitness Score", "0.408"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
             {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
-            {"Portfolio Turnover", "0.816"},
+            {"Portfolio Turnover", "0.408"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
