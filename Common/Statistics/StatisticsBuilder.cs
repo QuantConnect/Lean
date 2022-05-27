@@ -47,7 +47,8 @@ namespace QuantConnect.Statistics
             decimal startingCapital,
             decimal totalFees,
             int totalTransactions,
-            CapacityEstimate estimatedStrategyCapacity)
+            CapacityEstimate estimatedStrategyCapacity,
+            string accountCurrencySymbol)
         {
             var equity = ChartPointToDictionary(pointsEquity);
 
@@ -56,7 +57,7 @@ namespace QuantConnect.Statistics
 
             var totalPerformance = GetAlgorithmPerformance(firstDate, lastDate, trades, profitLoss, equity, pointsPerformance, pointsBenchmark, startingCapital);
             var rollingPerformances = GetRollingPerformances(firstDate, lastDate, trades, profitLoss, equity, pointsPerformance, pointsBenchmark, startingCapital);
-            var summary = GetSummary(totalPerformance, estimatedStrategyCapacity, totalFees, totalTransactions);
+            var summary = GetSummary(totalPerformance, estimatedStrategyCapacity, totalFees, totalTransactions, accountCurrencySymbol);
 
             return new StatisticsResults(totalPerformance, rollingPerformances, summary);
         }
@@ -162,7 +163,8 @@ namespace QuantConnect.Statistics
         /// <summary>
         /// Returns a summary of the algorithm performance as a dictionary
         /// </summary>
-        private static Dictionary<string, string> GetSummary(AlgorithmPerformance totalPerformance, CapacityEstimate estimatedStrategyCapacity, decimal totalFees, int totalTransactions)
+        private static Dictionary<string, string> GetSummary(AlgorithmPerformance totalPerformance, CapacityEstimate estimatedStrategyCapacity,
+            decimal totalFees, int totalTransactions, string accountCurrencySymbol)
         {
             var capacity = 0m;
             var lowestCapacitySymbol = Symbol.Empty;
@@ -193,8 +195,8 @@ namespace QuantConnect.Statistics
                 { PerformanceMetrics.InformationRatio, Math.Round((double)totalPerformance.PortfolioStatistics.InformationRatio, 3).ToStringInvariant() },
                 { PerformanceMetrics.TrackingError, Math.Round((double)totalPerformance.PortfolioStatistics.TrackingError, 3).ToStringInvariant() },
                 { PerformanceMetrics.TreynorRatio, Math.Round((double)totalPerformance.PortfolioStatistics.TreynorRatio, 3).ToStringInvariant() },
-                { PerformanceMetrics.TotalFees, "$" + totalFees.ToStringInvariant("0.00") },
-                { PerformanceMetrics.EstimatedStrategyCapacity, "$" + capacity.RoundToSignificantDigits(2).ToStringInvariant() },
+                { PerformanceMetrics.TotalFees, accountCurrencySymbol + totalFees.ToStringInvariant("0.00") },
+                { PerformanceMetrics.EstimatedStrategyCapacity, accountCurrencySymbol + capacity.RoundToSignificantDigits(2).ToStringInvariant() },
                 { PerformanceMetrics.LowestCapacityAsset, lowestCapacitySymbol != Symbol.Empty ? lowestCapacitySymbol.ID.ToString() : "" },
             };
         }
