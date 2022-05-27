@@ -37,6 +37,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         private readonly Random _random = new Random();
 
         private readonly Timer _timer;
+        private readonly IOptionChainProvider _optionChainProvider;
         private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
         private readonly IDataAggregator _aggregator;
         private readonly MarketHoursDatabase _marketHoursDatabase;
@@ -62,6 +63,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         public FakeDataQueue(IDataAggregator dataAggregator)
         {
             _aggregator = dataAggregator;
+            _optionChainProvider = new LiveOptionChainProvider();
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             _symbolExchangeTimeZones = new Dictionary<Symbol, TimeZoneOffsetProvider>();
             _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
@@ -205,9 +207,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
             return offsetProvider;
         }
 
+        /// <summary>
+        /// Method returns a collection of Symbols that are available at the data source.
+        /// </summary>
+        /// <param name="symbol">Symbol to lookup</param>
+        /// <param name="includeExpired">Include expired contracts</param>
+        /// <param name="securityCurrency">Expected security currency(if any)</param>
+        /// <returns>Enumerable of Symbols, that are associated with the provided Symbol</returns>
         public IEnumerable<Symbol> LookupSymbols(Symbol symbol, bool includeExpired, string securityCurrency = null)
         {
-            yield break;
+            switch (symbol.SecurityType)
+            {
+                case SecurityType.Option:
+                case SecurityType.IndexOption:
+                case SecurityType.FutureOption:
+                    foreach (var result in _optionChainProvider.GetOptionContractList(symbol.Underlying, DateTime.UtcNow.Date))
+                    {
+                        yield return result;
+                    }
+                    break;
+                default:
+                    break;
+            }
         }
 
         public bool CanPerformSelection()

@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using NodaTime;
 using System.Linq;
 using QuantConnect.Data;
@@ -52,7 +51,11 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
         public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
         {
-            var single = requests.Single();
+            var single = requests.FirstOrDefault();
+            if(single == null)
+            {
+                yield break;
+            }
 
             var currentLocalTime = single.StartTimeLocal;
             while (currentLocalTime < single.EndTimeLocal)
@@ -89,7 +92,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                     }
                     else
                     {
-                        throw new InvalidOperationException();
+                        yield break;
                     }
 
                     yield return new Slice(data.EndTime, new BaseData[] { data }, data.EndTime.ConvertFromUtc(single.ExchangeHours.TimeZone));
