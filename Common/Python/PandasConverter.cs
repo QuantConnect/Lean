@@ -151,6 +151,53 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
+        /// Converts a dictionary with a list of <see cref="IndicatorDataPoint"/> in a pandas.DataFrame
+        /// </summary>
+        /// <param name="data"><see cref="PyObject"/> that should be a dictionary of string to list of <see cref="IndicatorDataPoint"/></param>
+        /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
+        public PyObject GetIndicatorDataFrame(PyObject data)
+        {
+            using (Py.GIL())
+            {
+                var pyDict = new PyDict();
+                var inputType = data.GetPythonType().ToString();
+                var targetType = nameof(PyDict);
+
+                try
+                {
+                    using (var pyDictData = new PyDict(data))
+                    {
+                        targetType = $"{nameof(String)}: {nameof(List<IndicatorDataPoint>)}";
+
+                        foreach (PyObject dataItem in pyDictData.Items())
+                        {
+                            inputType = $"{dataItem[0].GetPythonType()}: {dataItem[1].GetPythonType()}";
+
+                            var index = new List<DateTime>();
+                            var values = new List<double>();
+
+                            foreach (var item in dataItem[1].As<List<IndicatorDataPoint>>())
+                            {
+                                index.Add(item.EndTime);
+                                values.Add((double)item.Value);
+                            }
+                            pyDict.SetItem(dataItem[0].As<String>().ToLowerInvariant(), _pandas.Series(values, index));
+                        }
+
+                        return _pandas.DataFrame(pyDict, columns: pyDictData.Keys().Select(x => x.As<String>().ToLowerInvariant()).OrderBy(x => x));
+                    }
+                }
+                catch (Exception e)
+                {
+                    throw new ArgumentException(
+                        $"ConvertToDictionary cannot be used to convert a {inputType} into {targetType}. Reason: {e.Message}",
+                        e
+                    );
+                }
+            }
+        }
+
+        /// <summary>
         /// Returns a string that represent the current object
         /// </summary>
         /// <returns></returns>

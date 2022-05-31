@@ -1599,7 +1599,7 @@ def Test(dataFrame, symbol):
                 dynamic test = PyModule.FromString("testModule",
                     $@"
 def Test(dataFrame, symbol):
-    data = dataFrame.lastprice.unstack(0) 
+    data = dataFrame.lastprice.unstack(0)
     data = data.resample('2S').sum()
     data = data[{index}]
     if data is 0:
@@ -2143,7 +2143,7 @@ def Test(dataFrame, symbol):
                 dynamic test = PyModule.FromString("testModule",
                     $@"
 def Test(dataFrame, symbol):
-    series = dataFrame.lastprice.droplevel(0) 
+    series = dataFrame.lastprice.droplevel(0)
     data = series.asfreq(freq='30S')").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
@@ -2204,7 +2204,7 @@ def Test(dataFrame, symbol):
                 dynamic test = PyModule.FromString("testModule",
                     $@"
 def Test(dataFrame, symbol):
-    series = dataFrame.lastprice.droplevel(0) 
+    series = dataFrame.lastprice.droplevel(0)
     data = series.at_time('04:00')").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
@@ -2242,7 +2242,7 @@ def Test(dataFrame, symbol):
                 dynamic test = PyModule.FromString("testModule",
                     $@"
 def Test(dataFrame, symbol):
-    series = dataFrame.lastprice.droplevel(0) 
+    series = dataFrame.lastprice.droplevel(0)
     data = series.between_time('02:00', '06:00')").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
@@ -2417,7 +2417,7 @@ def Test(dataFrame, symbol):
                 dynamic test = PyModule.FromString("testModule",
                     $@"
 def Test(dataFrame, symbol):
-    series = dataFrame.lastprice.droplevel(0) 
+    series = dataFrame.lastprice.droplevel(0)
     data = series.first('2S')").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 10), Symbols.SPY));
@@ -2508,7 +2508,7 @@ def Test(df, other, symbol):
                 dynamic test = PyModule.FromString("testModule",
                     $@"
 def Test(dataFrame, symbol):
-    series = dataFrame.lastprice.droplevel(0) 
+    series = dataFrame.lastprice.droplevel(0)
     data = series.last('2S')").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 10), Symbols.SPY));
@@ -3508,6 +3508,53 @@ def Test(dataFrame, symbol):
                 }
             }
         }
+
+        [Test]
+        public void AcceptsPythonDictAsIndicatorData()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PyModule.FromString("testModule",
+                    $@"
+from AlgorithmImports import *
+from QuantConnect.Python import PandasConverter
+from QuantConnect.Indicators import IndicatorDataPoint;
+def Test():
+    pdConverter = PandasConverter()
+    return pdConverter.GetIndicatorDataFrame({{'ind': [IndicatorDataPoint()]}})").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test());
+            }
+        }
+
+        [Test]
+        public void DoesntAcceptOtherPythonObjectRatherThanDict()
+        {
+            using (Py.GIL())
+            {
+                dynamic tests = PyModule.FromString("testModule",
+                    $@"
+from AlgorithmImports import *
+from QuantConnect.Python import PandasConverter
+from QuantConnect.Indicators import IndicatorDataPoint;
+pdConverter = PandasConverter()
+def Test1():
+    pdConverter.GetIndicatorDataFrame([""ind"", IndicatorDataPoint()])
+def Test2():
+    pdConverter.GetIndicatorDataFrame(IndicatorDataPoint())
+def Test3():
+    pdConverter.GetIndicatorDataFrame({{'ind': IndicatorDataPoint()}})");
+
+                dynamic test1 = tests.GetAttr("Test1");
+                dynamic test2 = tests.GetAttr("Test2");
+                dynamic test3 = tests.GetAttr("Test3");
+
+                Assert.Throws<ArgumentException>(() => test1());
+                Assert.Throws<ArgumentException>(() => test2());
+                Assert.Throws<ArgumentException>(() => test3());
+            }
+        }
+
 
         public IEnumerable<Slice> GetHistory<T>(Symbol symbol, Resolution resolution, IEnumerable<T> data)
             where T : IBaseData
