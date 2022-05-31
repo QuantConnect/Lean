@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -77,7 +77,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNotNull(enumerator.Current);
             Assert.AreEqual(1, symbolUniverse.TotalLookupCalls);
-            var data = enumerator.Current as FuturesChainUniverseDataCollection;
+            var data = enumerator.Current as BaseDataCollection;
             Assert.IsNotNull(data);
             Assert.AreEqual(1, data.Data.Count);
 
@@ -98,7 +98,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNotNull(enumerator.Current);
             Assert.AreEqual(2, symbolUniverse.TotalLookupCalls);
-            data = enumerator.Current as FuturesChainUniverseDataCollection;
+            data = enumerator.Current as BaseDataCollection;
             Assert.IsNotNull(data);
             Assert.AreEqual(2, data.Data.Count);
 
