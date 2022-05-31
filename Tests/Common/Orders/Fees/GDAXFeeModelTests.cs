@@ -103,16 +103,23 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         public void ReturnsExpectedFeeWithStableCoins()
         {
             var time = new DateTime(2019, 2, 1);
-            var fee = _feeModel.GetOrderFee(
+            var stablePairFee = _feeModel.GetOrderFee(
                 new OrderFeeParameters(
                     _daiusdc,
                     new MarketOrder(_daiusdc.Symbol, 1, time)
                 )
             );
 
-            Assert.AreEqual("USDC", fee.Value.Currency);
+            var normalPairFee = _feeModel.GetOrderFee(
+                new OrderFeeParameters(
+                    _btcusd,
+                    new MarketOrder(_btcusd.Symbol, 1, time)
+                )
+            );
+
             // 100 (price) * 0.001 (taker fee)
-            Assert.AreEqual(0.1m, fee.Value.Amount);
+            Assert.AreEqual(0.1m, stablePairFee.Value.Amount);
+            Assert.AreNotEqual(normalPairFee.Value.Amount, stablePairFee.Value.Amount);
         }
 
         [TestCase(2019, 2, 1, 0, 0, 0, 0.3)]

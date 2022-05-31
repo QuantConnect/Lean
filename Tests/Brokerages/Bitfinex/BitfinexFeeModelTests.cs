@@ -168,14 +168,21 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             xchfchf.SetMarketPrice(new Tick(DateTime.UtcNow, xchfchf.Symbol, 100, 100));
 
             var time = new DateTime(2019, 2, 1);
-            var fee = feeModel.GetOrderFee(
+            var stableCoinFee = feeModel.GetOrderFee(
                 new OrderFeeParameters(
                     xchfchf,
                     new MarketOrder(xchfchf.Symbol, -1, time)
                 )
             );
 
-            Assert.AreEqual(0.2m, fee.Value.Amount);
+            var normalPairFee = feeModel.GetOrderFee(
+                new OrderFeeParameters(
+                    Security,
+                    new MarketOrder(Security.Symbol, -1, time)
+                )
+            );
+
+            Assert.AreEqual(normalPairFee.Value.Amount, stableCoinFee.Value.Amount);
         }
     }
 }

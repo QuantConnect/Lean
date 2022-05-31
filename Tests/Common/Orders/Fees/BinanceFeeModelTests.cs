@@ -183,14 +183,21 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             usdcusd.SetMarketPrice(new Tick(DateTime.UtcNow, usdcusd.Symbol, 100, 100));
 
             var time = new DateTime(2019, 2, 1);
-            var fee = feeModel.GetOrderFee(
+            var stableCoinFee = feeModel.GetOrderFee(
                 new OrderFeeParameters(
                     usdcusd,
                     new MarketOrder(usdcusd.Symbol, 1, time)
                 )
             );
 
-            Assert.AreEqual(0.001m, fee.Value.Amount);
+            var normalPairFee = feeModel.GetOrderFee(
+                new OrderFeeParameters(
+                    Security,
+                    new MarketOrder(Security.Symbol, 1, time)
+                )
+            );
+
+            Assert.AreEqual(normalPairFee.Value.Amount, stableCoinFee.Value.Amount);
         }
 
         private static Symbol Symbol => Symbol.Create("ETHUSDT", SecurityType.Crypto, Market.Binance);
