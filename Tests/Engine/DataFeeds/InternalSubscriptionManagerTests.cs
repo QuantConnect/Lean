@@ -21,7 +21,6 @@ using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages.Paper;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -32,6 +31,7 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -56,6 +56,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _dataFeed.Exit();
             _dataManager.RemoveAllSubscriptions();
             _resultHandler.Exit();
+            _synchronizer.Dispose();
         }
 
         [TestCaseSource(nameof(DataTypeTestCases))]
@@ -99,12 +100,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         break;
                     }
                 }
+                _algorithm.OnEndOfTimeStep();
                 // give time for the base exchange to pick up the data point that will trigger the universe selection
                 // so next step we assert the internal config is there
                 Thread.Sleep(100);
-                _algorithm.OnEndOfTimeStep();
             }
             Assert.IsFalse(tokenSource.IsCancellationRequested);
+            tokenSource.DisposeSafely();
         }
 
         [TestCaseSource(nameof(DataTypeTestCases))]
@@ -271,6 +273,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     }
                 }
                 _algorithm.OnEndOfTimeStep();
+                // we need to give time for the base data exchange to pick up the new data point which will trigger the selection
+                Thread.Sleep(100);
             }
             Assert.IsFalse(tokenSource.IsCancellationRequested, "Test timed out");
         }
@@ -364,6 +368,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var backtestingTransactionHandler = new BacktestingTransactionHandler();
             backtestingTransactionHandler.Initialize(_algorithm, new PaperBrokerage(_algorithm, new LiveNodePacket()), _resultHandler);
             _algorithm.Transactions.SetOrderProcessor(backtestingTransactionHandler);
+
+            _algorithm.SetDateTime(new DateTime(2022, 04, 13));
             _algorithm.PostInitialize();
         }
         private class TestAggregationManager : AggregationManager

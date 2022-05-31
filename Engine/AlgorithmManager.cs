@@ -35,7 +35,6 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
-using QuantConnect.Util;
 using QuantConnect.Securities.Option;
 using QuantConnect.Securities.Volatility;
 using QuantConnect.Util.RateLimit;
@@ -177,7 +176,7 @@ namespace QuantConnect.Lean.Engine
                 });
 
             //Loop over the queues: get a data collection, then pass them all into relevent methods in the algorithm.
-            Log.Trace("AlgorithmManager.Run(): Begin DataStream - Start: " + algorithm.StartDate + " Stop: " + algorithm.EndDate);
+            Log.Trace($"AlgorithmManager.Run(): Begin DataStream - Start: {algorithm.StartDate} Stop: {algorithm.EndDate} Time: {algorithm.Time} Warmup: {algorithm.IsWarmingUp}");
             foreach (var timeSlice in Stream(algorithm, synchronizer, results, token))
             {
                 // reset our timer on each loop
@@ -203,21 +202,18 @@ namespace QuantConnect.Lean.Engine
                 time = timeSlice.Time;
                 DataPoints += timeSlice.DataPointCount;
 
-                if (backtestMode)
+                if (backtestMode && algorithm.Portfolio.TotalPortfolioValue <= 0)
                 {
-                    if (algorithm.Portfolio.TotalPortfolioValue <= 0)
-                    {
-                        var logMessage = "AlgorithmManager.Run(): Portfolio value is less than or equal to zero, stopping algorithm.";
-                        Log.Error(logMessage);
-                        results.SystemDebugMessage(logMessage);
-                        break;
-                    }
-
-                    // If backtesting, we need to check if there are realtime events in the past
-                    // which didn't fire because at the scheduled times there was no data (i.e. markets closed)
-                    // and fire them with the correct date/time.
-                    realtime.ScanPastEvents(time);
+                    var logMessage = "AlgorithmManager.Run(): Portfolio value is less than or equal to zero, stopping algorithm.";
+                    Log.Error(logMessage);
+                    results.SystemDebugMessage(logMessage);
+                    break;
                 }
+
+                // If backtesting/warmup, we need to check if there are realtime events in the past
+                // which didn't fire because at the scheduled times there was no data (i.e. markets closed)
+                // and fire them with the correct date/time.
+                realtime.ScanPastEvents(time);
 
                 //Set the algorithm and real time handler's time
                 algorithm.SetDateTime(time);
@@ -718,190 +714,25 @@ namespace QuantConnect.Lean.Engine
 
         private IEnumerable<TimeSlice> Stream(IAlgorithm algorithm, ISynchronizer synchronizer, IResultHandler results, CancellationToken cancellationToken)
         {
-            bool setStartTime = false;
-            var timeZone = algorithm.TimeZone;
-            var history = algorithm.HistoryProvider;
-
             // fulfilling history requirements of volatility models in live mode
             if (algorithm.LiveMode)
             {
                 ProcessVolatilityHistoryRequirements(algorithm);
             }
 
-            // get the required history job from the algorithm
-            DateTime? lastHistoryTimeUtc = null;
-            var historyRequests = algorithm.GetWarmupHistoryRequests().ToList();
-
-            // initialize variables for progress computation
-            var warmUpStartTicks = DateTime.UtcNow.Ticks;
-            var nextStatusTime = DateTime.UtcNow.AddSeconds(1);
-            var minimumIncrement = algorithm.UniverseManager
-                .Select(x => x.Value.UniverseSettings?.Resolution.ToTimeSpan() ?? algorithm.UniverseSettings.Resolution.ToTimeSpan())
-                .DefaultIfEmpty(Time.OneSecond)
-                .Min();
-
-            minimumIncrement = minimumIncrement == TimeSpan.Zero ? Time.OneSecond : minimumIncrement;
-
-            if (historyRequests.Count != 0)
-            {
-                // rewrite internal feed requests
-                var subscriptions = algorithm.SubscriptionManager.Subscriptions.Where(x => !x.IsInternalFeed).ToList();
-                var minResolution = subscriptions.Count > 0 ? subscriptions.Min(x => x.Resolution) : Resolution.Second;
-                foreach (var request in historyRequests)
-                {
-                    Security security;
-                    if (algorithm.Securities.TryGetValue(request.Symbol, out security) && security.IsInternalFeed())
-                    {
-                        if (request.Resolution < minResolution)
-                        {
-                            request.Resolution = minResolution;
-                            request.FillForwardResolution = request.FillForwardResolution.HasValue ? minResolution : (Resolution?) null;
-                        }
-                    }
-                }
-
-                // rewrite all to share the same fill forward resolution
-                if (historyRequests.Any(x => x.FillForwardResolution.HasValue))
-                {
-                    minResolution = historyRequests.Where(x => x.FillForwardResolution.HasValue).Min(x => x.FillForwardResolution.Value);
-                    foreach (var request in historyRequests.Where(x => x.FillForwardResolution.HasValue))
-                    {
-                        request.FillForwardResolution = minResolution;
-                    }
-                }
-
-                foreach (var request in historyRequests)
-                {
-                    warmUpStartTicks = Math.Min(request.StartTimeUtc.Ticks, warmUpStartTicks);
-                    Log.Trace($"AlgorithmManager.Stream(): WarmupHistoryRequest: {request.Symbol}: Start: {request.StartTimeUtc} End: {request.EndTimeUtc} Resolution: {request.Resolution}");
-                }
-
-                var timeSliceFactory = new TimeSliceFactory(timeZone);
-                // make the history request and build time slices
-                foreach (var slice in history.GetHistory(historyRequests, timeZone))
-                {
-                    TimeSlice timeSlice;
-                    try
-                    {
-                        // we need to recombine this slice into a time slice
-                        var paired = new List<DataFeedPacket>();
-                        foreach (var symbol in slice.Keys)
-                        {
-                            var security = algorithm.Securities[symbol];
-                            var data = slice[symbol];
-                            var list = new List<BaseData>();
-                            Type dataType;
-
-                            var ticks = data as List<Tick>;
-                            if (ticks != null)
-                            {
-                                list.AddRange(ticks);
-                                dataType = typeof(Tick);
-                            }
-                            else
-                            {
-                                list.Add(data);
-                                dataType = data.GetType();
-                            }
-
-                            var config = algorithm.SubscriptionManager.SubscriptionDataConfigService
-                                .GetSubscriptionDataConfigs(symbol, includeInternalConfigs: true)
-                                .FirstOrDefault(subscription => dataType.IsAssignableFrom(subscription.Type));
-
-                            if (config == null)
-                            {
-                                throw new Exception($"A data subscription for type '{dataType.Name}' was not found.");
-                            }
-                            paired.Add(new DataFeedPacket(security, config, list));
-                        }
-
-                        timeSlice = timeSliceFactory.Create(slice.Time.ConvertToUtc(timeZone), paired, SecurityChanges.None, new Dictionary<Universe, BaseDataCollection>());
-                    }
-                    catch (Exception err)
-                    {
-                        algorithm.SetRuntimeError(err, $"Warmup history request. Slice.Time {slice.Time}");
-                        yield break;
-                    }
-
-                    if (timeSlice != null)
-                    {
-                        if (!setStartTime)
-                        {
-                            setStartTime = true;
-                            algorithm.Debug("Algorithm warming up...");
-                        }
-                        if (DateTime.UtcNow > nextStatusTime)
-                        {
-                            // send some status to the user letting them know we're done history, but still warming up,
-                            // catching up to real time data
-                            nextStatusTime = DateTime.UtcNow.AddSeconds(1);
-                            var percent = (int)(100 * (timeSlice.Time.Ticks - warmUpStartTicks) / (double)(DateTime.UtcNow.Ticks - warmUpStartTicks));
-                            results.SendStatusUpdate(AlgorithmStatus.History, $"Catching up to realtime {percent}%...");
-                        }
-                        yield return timeSlice;
-                        lastHistoryTimeUtc = timeSlice.Time;
-                    }
-                }
-            }
-
-            // if we're not live or didn't event request warmup, then set us as not warming up
-            if (!algorithm.LiveMode || historyRequests.Count == 0)
-            {
-                algorithm.SetFinishedWarmingUp();
-                if (historyRequests.Count != 0)
-                {
-                    algorithm.Debug("Algorithm finished warming up.");
-                    Log.Trace("AlgorithmManager.Stream(): Finished warmup");
-                }
-            }
-
+            var nextWarmupStatusTime = DateTime.MinValue;
+            var startTimeTicks = algorithm.Time.Ticks;
             foreach (var timeSlice in synchronizer.StreamData(cancellationToken))
             {
-                if (algorithm.LiveMode && algorithm.IsWarmingUp)
+                if (algorithm.IsWarmingUp)
                 {
-                    if (timeSlice.IsTimePulse)
-                    {
-                        continue;
-                    }
-
-                    // this is hand-over logic, we spin up the data feed first and then request
-                    // the history for warmup, so there will be some overlap between the data
-                    if (lastHistoryTimeUtc.HasValue)
-                    {
-                        // make sure there's no historical data, this only matters for the handover
-                        var hasHistoricalData = false;
-                        foreach (var data in timeSlice.Slice.Ticks.Values.SelectMany(x => x).Concat<BaseData>(timeSlice.Slice.Bars.Values))
-                        {
-                            // check if any ticks in the list are on or after our last warmup point, if so, skip this data
-                            if (data.EndTime.ConvertToUtc(algorithm.Securities[data.Symbol].Exchange.TimeZone) >= lastHistoryTimeUtc)
-                            {
-                                hasHistoricalData = true;
-                                break;
-                            }
-                        }
-                        if (hasHistoricalData)
-                        {
-                            continue;
-                        }
-
-                        // prevent us from doing these checks every loop
-                        lastHistoryTimeUtc = null;
-                    }
-
-                    // in live mode wait to mark us as finished warming up when
-                    // the data feed has caught up to now within the min increment
-                    if (timeSlice.Time > DateTime.UtcNow.Subtract(minimumIncrement))
-                    {
-                        algorithm.SetFinishedWarmingUp();
-                        algorithm.Debug("Algorithm finished warming up.");
-                        Log.Trace("AlgorithmManager.Stream(): Finished warmup");
-                    }
-                    else if (DateTime.UtcNow > nextStatusTime)
+                    var now = DateTime.UtcNow;
+                    if (now > nextWarmupStatusTime)
                     {
                         // send some status to the user letting them know we're done history, but still warming up,
                         // catching up to real time data
-                        nextStatusTime = DateTime.UtcNow.AddSeconds(1);
-                        var percent = (int) (100*(timeSlice.Time.Ticks - warmUpStartTicks)/(double) (DateTime.UtcNow.Ticks - warmUpStartTicks));
+                        nextWarmupStatusTime = now.AddSeconds(1);
+                        var percent = (int) (100*(timeSlice.Time.Ticks - startTimeTicks)/(double) (now.Ticks - startTimeTicks));
                         results.SendStatusUpdate(AlgorithmStatus.History, $"Catching up to realtime {percent}%...");
                     }
                 }

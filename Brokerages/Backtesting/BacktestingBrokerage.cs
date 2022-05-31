@@ -587,11 +587,14 @@ namespace QuantConnect.Brokerages.Backtesting
                     }
                 }
 
-                // Cancel any other orders
-                var cancelledOrders = Algorithm.Transactions.CancelOpenOrders(delisting.Symbol);
-                foreach (var cancelledOrder in cancelledOrders)
+                if (!Algorithm.IsWarmingUp)
                 {
-                    Log.Trace("AlgorithmManager.Run(): " + cancelledOrder);
+                    // Cancel any other orders
+                    var cancelledOrders = Algorithm.Transactions.CancelOpenOrders(delisting.Symbol);
+                    foreach (var cancelledOrder in cancelledOrders)
+                    {
+                        Log.Trace("AlgorithmManager.Run(): " + cancelledOrder);
+                    }
                 }
             }
         }

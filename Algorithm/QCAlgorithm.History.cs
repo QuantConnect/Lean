@@ -176,20 +176,51 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <returns></returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<HistoryRequest> GetWarmupHistoryRequests()
+        private bool TryGetWarmupHistoryStartTime(out DateTime result)
         {
+            result = Time;
+
             if (_warmupBarCount.HasValue)
             {
-                return CreateBarCountHistoryRequests(Securities.Keys, _warmupBarCount.Value, _warmupResolution);
+                var symbols = Securities.Keys;
+                if (symbols.Count != 0)
+                {
+                    var startTimeUtc = CreateBarCountHistoryRequests(symbols, _warmupBarCount.Value, _warmupResolution)
+                        .DefaultIfEmpty()
+                        .Min(request => request == null ? default : request.StartTimeUtc);
+                    if(startTimeUtc != default)
+                    {
+                        result = startTimeUtc.ConvertFromUtc(TimeZone);
+                        return true;
+                    }
+                }
+
+                // if the algorithm has no added security, let's take a look at the universes to determine
+                // what the start date should be used. Defaulting to always open
+                result = Time - _warmupBarCount.Value * UniverseSettings.Resolution.ToTimeSpan();
+
+                foreach (var universe in _pendingUniverseAdditions.Concat(UniverseManager.Values))
+                {
+                    var config = universe.Configuration;
+                    var resolution = universe.Configuration.Resolution;
+                    if (_warmupResolution.HasValue)
+                    {
+                        resolution = _warmupResolution.Value;
+                    }
+                    var exchange = MarketHoursDatabase.GetExchangeHours(config);
+                    var start = _historyRequestFactory.GetStartTimeAlgoTz(config.Symbol, _warmupBarCount.Value, resolution, exchange, config.DataTimeZone);
+                    // we choose the min start
+                    result = result < start ? result : start;
+                }
+                return true;
             }
             if (_warmupTimeSpan.HasValue)
             {
-                var end = UtcTime.ConvertFromUtc(TimeZone);
-                return CreateDateRangeHistoryRequests(Securities.Keys, end - _warmupTimeSpan.Value, end, _warmupResolution);
+                result = Time - _warmupTimeSpan.Value;
+                return true;
             }
 
-            // if not warmup requested return nothing
-            return Enumerable.Empty<HistoryRequest>();
+            return false;
         }
 
         /// <summary>

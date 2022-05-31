@@ -79,6 +79,7 @@ namespace QuantConnect.Algorithm
         private readonly TimeKeeper _timeKeeper;
         private LocalTimeKeeper _localTimeKeeper;
 
+        private DateTime _start;
         private DateTime _startDate;   //Default start and end dates.
         private DateTime _endDate;     //Default end to yesterday
         private bool _locked;
@@ -439,13 +440,7 @@ namespace QuantConnect.Algorithm
         /// <remarks>This property is set with SetStartDate() and defaults to the earliest QuantConnect data available - Jan 1st 1998. It is ignored during live trading </remarks>
         /// <seealso cref="SetStartDate(DateTime)"/>
         [DocumentationAttribute(HandlingData)]
-        public DateTime StartDate
-        {
-            get
-            {
-                return _startDate;
-            }
-        }
+        public DateTime StartDate => _startDate;
 
         /// <summary>
         /// Value of the user set start-date from the backtest. Controls the period of the backtest.
@@ -630,6 +625,15 @@ namespace QuantConnect.Algorithm
                     Log($"QCAlgorithm.PostInitialize(): Warning: Using a security benchmark of a different timezone ({benchmarkTimeZone})" +
                         $" than the algorithm TimeZone ({TimeZone}) may lead to skewed and incorrect statistics. Use a higher resolution than daily to minimize.");
                 }
+            }
+
+            if(TryGetWarmupHistoryStartTime(out var result))
+            {
+                SetDateTime(result.ConvertToUtc(TimeZone));
+            }
+            else
+            {
+                SetFinishedWarmingUp();
             }
 
             // perform end of time step checks, such as enforcing underlying securities are in raw data mode
@@ -1019,6 +1023,11 @@ namespace QuantConnect.Algorithm
         public void SetDateTime(DateTime frontier)
         {
             _timeKeeper.SetUtcDateTime(frontier);
+            if (_locked && IsWarmingUp && Time >= _start)
+            {
+                Debug("Algorithm finished warming up.");
+                SetFinishedWarmingUp();
+            }
         }
 
         /// <summary>
@@ -1066,6 +1075,7 @@ namespace QuantConnect.Algorithm
             // so there is no need to update it.
             if (!LiveMode)
             {
+                _start = _startDate;
                 SetDateTime(_startDate.ConvertToUtc(TimeZone));
             }
             // In live mode we need to adjust startDate to reflect the new timezone
@@ -1424,7 +1434,7 @@ namespace QuantConnect.Algorithm
             //3. Check not locked already:
             if (!_locked)
             {
-                _startDate = start;
+                _start = _startDate = start;
                 SetDateTime(_startDate.ConvertToUtc(TimeZone));
             }
             else
@@ -1499,8 +1509,9 @@ namespace QuantConnect.Algorithm
                 Securities.SetLiveMode(live);
                 if (live)
                 {
+                    _start = DateTime.UtcNow.ConvertFromUtc(TimeZone);
                     // startDate is set relative to the algorithm's timezone.
-                    _startDate = DateTime.UtcNow.ConvertFromUtc(TimeZone).Date;
+                    _startDate = _start.Date;
                     _endDate = QuantConnect.Time.EndOfTime;
                 }
             }

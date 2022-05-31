@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -188,21 +188,12 @@ namespace QuantConnect.Scheduling
         public ScheduledEvent On(string name, IDateRule dateRule, ITimeRule timeRule, Action<string, DateTime> callback)
         {
             // back the date up to ensure we get all events, the event scheduler will skip past events that whose time has passed
-            var dates = dateRule.GetDates(_securities.UtcTime.Date.AddDays(-1), Time.EndOfTime);
+            var dates = GetDatesDeferred(dateRule, _securities);
             var eventTimes = timeRule.CreateUtcEventTimes(dates);
             var scheduledEvent = new ScheduledEvent(name, eventTimes, callback);
             Add(scheduledEvent);
 
-            // ScheduledEvent constructor will prime the scheduled event
-            if (scheduledEvent.NextEventUtcTime != DateTime.MaxValue)
-            {
-                Log.Trace($"Event Name \"{scheduledEvent.Name}\", scheduled to run at {scheduledEvent.NextEventUtcTime} (UTC)...");
-            }
-            else
-            {
-                Log.Error($"Event Name \"{scheduledEvent.Name}\", scheduled to run, but no event times were selected");
-            }
-
+            Log.Trace($"Event Name \"{scheduledEvent.Name}\", scheduled to run.");
             return scheduledEvent;
         }
 
@@ -282,5 +273,17 @@ namespace QuantConnect.Scheduling
         }
 
         #endregion
+
+        /// <summary>
+        /// Helper methods to defer the evaluation of the current time until the dates are enumerated for the first time.
+        /// This allows for correct support for warmup period
+        /// </summary>
+        internal static IEnumerable<DateTime> GetDatesDeferred(IDateRule dateRule, SecurityManager securities)
+        {
+            foreach (var item in dateRule.GetDates(securities.UtcTime.Date.AddDays(-1), Time.EndOfTime))
+            {
+                yield return item;
+            }
+        }
     }
 }

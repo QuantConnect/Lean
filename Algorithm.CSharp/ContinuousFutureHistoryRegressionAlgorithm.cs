@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
                 dataMappingMode: DataMappingMode.OpenInterest,
                 contractDepthOffset: 1
             );
-            SetWarmup(10);
+            SetWarmup(1, Resolution.Daily);
         }
 
         /// <summary>
@@ -114,12 +114,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 25858;
+        public long DataPoints => 40881;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 10;
+        public int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -146,14 +146,14 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$1.85"},
-            {"Estimated Strategy Capacity", "$400000000.00"},
+            {"Estimated Strategy Capacity", "$290000000.00"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
-            {"Fitness Score", "0.816"},
+            {"Fitness Score", "0.408"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
             {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
-            {"Portfolio Turnover", "0.816"},
+            {"Portfolio Turnover", "0.408"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -167,7 +167,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "f3bf9e78fa238cf98344d12839b36705"}
+            {"OrderListHash", "9408389924d9b7333a9f0a4f64b08d27"}
         };
     }
 }

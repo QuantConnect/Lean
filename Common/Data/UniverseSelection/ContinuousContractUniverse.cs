@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -130,6 +130,8 @@ namespace QuantConnect.Data.UniverseSelection
             var endTimeLocal = endTimeUtc.ConvertFromUtc(_security.Exchange.TimeZone);
 
             return Time.EachTradeableDay(_security, startTimeLocal, endTimeLocal)
+                // in live trading selection happens on start see 'DataQueueFuturesChainUniverseDataCollectionEnumerator'
+                .Where(tradeableDay => _liveMode || tradeableDay >= startTimeLocal)
                 // in live trading we delay selection so that we make sure auxiliary data is ready
                 .Select(time => _liveMode ? time.Add(Time.LiveAuxiliaryDataOffset) : time);
         }

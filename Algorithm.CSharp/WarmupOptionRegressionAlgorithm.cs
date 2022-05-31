@@ -11,52 +11,89 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
 */
 
+using System;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using System;
 using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Test algorithm to verify the corret working of <see cref="HistoryProviderManager"/>
+    /// Regression algorithm asserting the behavior of option warmup
     /// </summary>
-    public class HistoryProviderManagerRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class WarmupOptionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private bool _onDataTriggered = new();
+        private List<DateTime> _optionWarmupTimes = new();
+        private const string UnderlyingTicker = "GOOG";
+        private Symbol _optionSymbol;
 
-        /// <summary>
-        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
-        /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2017, 12, 17);
-            SetEndDate(2018, 1, 1);
-            AddCrypto("BTCUSD");
-            SetWarmup(1000000);
+            SetStartDate(2015, 12, 24);
+            SetEndDate(2015, 12, 24);
+            SetCash(100000);
+
+            var option = AddOption(UnderlyingTicker);
+            _optionSymbol = option.Symbol;
+
+            option.SetFilter(u => u.Strikes(-5, +5).Expiration(0, 180).IncludeWeeklys());
+            SetWarmUp(1, Resolution.Daily);
         }
 
         /// <summary>
-        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        /// Event - v3.0 DATA EVENT HANDLER: (Pattern) Basic template for user to override for receiving all subscription data in a single event
         /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        /// <param name="slice">The current slice of data keyed by symbol string</param>
+        public override void OnData(Slice slice)
         {
-            _onDataTriggered = true;
+            if (slice.OptionChains.TryGetValue(_optionSymbol, out var chain))
+            {
+                // we find at the money (ATM) put contract with farthest expiration
+                var atmContract = chain
+                    .OrderByDescending(x => x.Expiry)
+                    .ThenBy(x => Math.Abs(chain.Underlying.Price - x.Strike))
+                    .ThenByDescending(x => x.Right)
+                    .FirstOrDefault();
+
+                if (atmContract != null)
+                {
+                    if (IsWarmingUp)
+                    {
+                        if(atmContract.LastPrice == 0)
+                        {
+                            throw new Exception("Contract price is not set!");
+                        }
+                        _optionWarmupTimes.Add(Time);
+                    }
+                    else if (!Portfolio.Invested && IsMarketOpen(_optionSymbol))
+                    {
+                        // if found, trade it
+                        MarketOrder(atmContract.Symbol, 1);
+                        MarketOnCloseOrder(atmContract.Symbol, -1);
+                    }
+                }
+            }
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (IsWarmingUp)
+            var start = new DateTime(2015, 12, 23, 9, 31, 0);
+            var end = new DateTime(2015, 12, 23, 16, 0, 0);
+            var count = 0;
+            do
             {
-                throw new Exception("Warm up not complete");
+                if (_optionWarmupTimes[count] != start)
+                {
+                    throw new Exception($"Unexpected time {_optionWarmupTimes[count]} expected {start}");
+                }
+                count++;
+                start = start.AddMinutes(1);
             }
-            if (!_onDataTriggered)
-            {
-                throw new Exception("No data received is OnData method");
-            }
+            while (start < end);
         }
 
         /// <summary>
@@ -72,19 +109,19 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 829149;
+        public long DataPoints => 1111660;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 14061;
+        public int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "0"},
+            {"Total Trades", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
@@ -100,12 +137,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-0.607"},
-            {"Tracking Error", "0.038"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
+            {"Total Fees", "$2.00"},
+            {"Estimated Strategy Capacity", "$1300000.00"},
+            {"Lowest Capacity Asset", "GOOCV 30AKMEIPOSS1Y|GOOCV VP83T1ZUHROL"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
@@ -125,7 +162,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
+            {"OrderListHash", "9d9f9248ee8fe30d87ff0a6f6fea5112"}
         };
     }
 }

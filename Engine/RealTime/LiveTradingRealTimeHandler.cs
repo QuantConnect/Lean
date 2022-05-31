@@ -17,46 +17,38 @@
 using System;
 using System.Linq;
 using System.Threading;
-using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Util;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Interfaces;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
-using QuantConnect.Util;
+using QuantConnect.Lean.Engine.Results;
 
 namespace QuantConnect.Lean.Engine.RealTime
 {
     /// <summary>
     /// Live trading realtime event processing.
     /// </summary>
-    public class LiveTradingRealTimeHandler : BaseRealTimeHandler, IRealTimeHandler
+    public class LiveTradingRealTimeHandler : BacktestingRealTimeHandler
     {
         private Thread _realTimeThread;
-        private TimeMonitor _timeMonitor;
-        private static MarketHoursDatabase _marketHoursDatabase;
-
-        private IIsolatorLimitResultProvider _isolatorLimitProvider;
-        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        private CancellationTokenSource _cancellationTokenSource = new();
+        private static MarketHoursDatabase _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
 
         /// <summary>
         /// Boolean flag indicating thread state.
         /// </summary>
-        public bool IsActive { get; private set; }
+        public override bool IsActive { get; protected set; }
 
         /// <summary>
         /// Initializes the real time handler for the specified algorithm and job
         /// </summary>
-        public void Setup(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api, IIsolatorLimitResultProvider isolatorLimitProvider)
+        public override void Setup(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api, IIsolatorLimitResultProvider isolatorLimitProvider)
         {
-            //Initialize:
-            Algorithm = algorithm;
-            ResultHandler = resultHandler;
-            _isolatorLimitProvider = isolatorLimitProvider;
-            _cancellationTokenSource = new CancellationTokenSource();
-            _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+            base.Setup(algorithm, job, resultHandler, api, isolatorLimitProvider);
 
             var todayInAlgorithmTimeZone = DateTime.UtcNow.ConvertFromUtc(Algorithm.TimeZone).Date;
 
@@ -73,21 +65,14 @@ namespace QuantConnect.Lean.Engine.RealTime
                 // refresh market hours from api every day
                 RefreshMarketHoursToday(triggerTime.ConvertFromUtc(Algorithm.TimeZone).Date);
             }));
+        }
 
-            base.Setup(todayInAlgorithmTimeZone, Time.EndOfTime, job.Language, DateTime.UtcNow);
-
-            foreach (var scheduledEvent in ScheduledEvents)
-            {
-                // zoom past old events
-                scheduledEvent.Key.SkipEventsUntil(algorithm.UtcTime);
-                // set logging accordingly
-                scheduledEvent.Key.IsLoggingEnabled = Log.DebuggingEnabled;
-            }
-
-            _timeMonitor = new TimeMonitor(monitorIntervalMs: 500);
-
-            _realTimeThread = new Thread(Run) { IsBackground = true, Name = "RealTime Thread" };
-            _realTimeThread.Start(); // RealTime scan time for time based events
+        /// <summary>
+        /// Get's the timeout the scheduled task time monitor should use
+        /// </summary>
+        protected override int GetTimeMonitorTimeout()
+        {
+            return 500;
         }
 
         /// <summary>
@@ -114,7 +99,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                     var scheduledEvent = kvp.Key;
                     try
                     {
-                        _isolatorLimitProvider.Consume(scheduledEvent, time, _timeMonitor);
+                        IsolatorLimitProvider.Consume(scheduledEvent, time, TimeMonitor);
                     }
                     catch (Exception exception)
                     {
@@ -147,45 +132,34 @@ namespace QuantConnect.Lean.Engine.RealTime
         }
 
         /// <summary>
-        /// Adds the specified event to the schedule
-        /// </summary>
-        /// <param name="scheduledEvent">The event to be scheduled, including the date/times the event fires and the callback</param>
-        public override void Add(ScheduledEvent scheduledEvent)
-        {
-            if (Algorithm != null)
-            {
-                scheduledEvent.SkipEventsUntil(Algorithm.UtcTime);
-            }
-
-            ScheduledEvents.AddOrUpdate(scheduledEvent, GetScheduledEventUniqueId());
-        }
-
-        /// <summary>
-        /// Removes the specified event from the schedule
-        /// </summary>
-        /// <param name="scheduledEvent">The event to be removed</param>
-        public override void Remove(ScheduledEvent scheduledEvent)
-        {
-            int id;
-            ScheduledEvents.TryRemove(scheduledEvent, out id);
-        }
-
-        /// <summary>
         /// Set the current time. If the date changes re-start the realtime event setup routines.
         /// </summary>
         /// <param name="time"></param>
-        public void SetTime(DateTime time)
+        public override void SetTime(DateTime time)
         {
-            // in live mode we use current time for our time keeping
-            // this method is used by backtesting to set time based on the data
+            if (Algorithm.IsWarmingUp)
+            {
+                base.SetTime(time);
+            }
+            else if (_realTimeThread == null)
+            {
+                // in live mode we use current time for our time keeping
+                // this method is used by backtesting to set time based on the data
+                _realTimeThread = new Thread(Run) { IsBackground = true, Name = "RealTime Thread" };
+                _realTimeThread.Start(); // RealTime scan time for time based events
+            }
         }
 
         /// <summary>
         /// Scan for past events that didn't fire because there was no data at the scheduled time.
         /// </summary>
         /// <param name="time">Current time.</param>
-        public void ScanPastEvents(DateTime time)
+        public override void ScanPastEvents(DateTime time)
         {
+            if (Algorithm.IsWarmingUp)
+            {
+                base.ScanPastEvents(time);
+            }
             // in live mode we use current time for our time keeping
             // this method is used by backtesting to scan for past events based on the data
         }
@@ -193,14 +167,11 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <summary>
         /// Stop the real time thread
         /// </summary>
-        public void Exit()
+        public override void Exit()
         {
             _realTimeThread.StopSafely(TimeSpan.FromMinutes(5), _cancellationTokenSource);
-            _realTimeThread = null;
-            _timeMonitor.DisposeSafely();
-            _timeMonitor = null;
             _cancellationTokenSource.DisposeSafely();
-            _cancellationTokenSource = null;
+            base.Exit();
         }
 
         /// <summary>
