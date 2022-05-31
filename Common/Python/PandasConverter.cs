@@ -127,6 +127,34 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="data">Dictionary with a list of <see cref="IndicatorDataPoint"/></param>
         /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
+        private void AddSeriesToPyDict(string key, List<IndicatorDataPoint> points, PyDict pyDict)
+        {
+            var index = new List<DateTime>();
+            var values = new List<double>();
+
+            foreach (var point in points)
+            {
+                index.Add(point.EndTime);
+                values.Add((double) point.Value);
+            }
+            pyDict.SetItem(key.ToLowerInvariant(), _pandas.Series(values, index));
+        }
+
+        /// <summary>
+        /// Converts a dictionary with a list of <see cref="IndicatorDataPoint"/> in a pandas.DataFrame
+        /// </summary>
+        /// <param name="data">Dictionary with a list of <see cref="IndicatorDataPoint"/></param>
+        /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
+        private PyObject MakeIndicatorDataFrame(PyDict pyDict)
+        {
+            return _pandas.DataFrame(pyDict, columns: pyDict.Keys().Select(x => x.As<string>().ToLowerInvariant()).OrderBy(x => x));
+        }
+
+        /// <summary>
+        /// Converts a dictionary with a list of <see cref="IndicatorDataPoint"/> in a pandas.DataFrame
+        /// </summary>
+        /// <param name="data">Dictionary with a list of <see cref="IndicatorDataPoint"/></param>
+        /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
         public PyObject GetIndicatorDataFrame(IDictionary<string, List<IndicatorDataPoint>> data)
         {
             using (Py.GIL())
@@ -135,18 +163,10 @@ namespace QuantConnect.Python
 
                 foreach (var kvp in data)
                 {
-                    var index = new List<DateTime>();
-                    var values = new List<double>();
-
-                    foreach (var item in kvp.Value)
-                    {
-                        index.Add(item.EndTime);
-                        values.Add((double)item.Value);
-                    }
-                    pyDict.SetItem(kvp.Key.ToLowerInvariant(), _pandas.Series(values, index));
+                    AddSeriesToPyDict(kvp.Key, kvp.Value, pyDict);
                 }
 
-                return _pandas.DataFrame(pyDict, columns: data.Keys.Select(x => x.ToLowerInvariant()).OrderBy(x => x));
+                return MakeIndicatorDataFrame(pyDict);
             }
         }
 
@@ -160,37 +180,34 @@ namespace QuantConnect.Python
             using (Py.GIL())
             {
                 var pyDict = new PyDict();
-                var inputType = data.GetPythonType().ToString();
-                var targetType = nameof(PyDict);
+                var inputTypeStr = data.GetPythonType().ToString();
+                var targetTypeStr = nameof(PyDict);
+                PyObject currentKvp = null;
 
                 try
                 {
                     using (var pyDictData = new PyDict(data))
                     {
-                        targetType = $"{nameof(String)}: {nameof(List<IndicatorDataPoint>)}";
+                        targetTypeStr = $"{nameof(String)}: {nameof(List<IndicatorDataPoint>)}";
 
-                        foreach (PyObject dataItem in pyDictData.Items())
+                        foreach (var kvp in pyDictData.Items())
                         {
-                            inputType = $"{dataItem[0].GetPythonType()}: {dataItem[1].GetPythonType()}";
-
-                            var index = new List<DateTime>();
-                            var values = new List<double>();
-
-                            foreach (var item in dataItem[1].As<List<IndicatorDataPoint>>())
-                            {
-                                index.Add(item.EndTime);
-                                values.Add((double)item.Value);
-                            }
-                            pyDict.SetItem(dataItem[0].As<String>().ToLowerInvariant(), _pandas.Series(values, index));
+                            currentKvp = kvp;
+                            AddSeriesToPyDict(kvp[0].As<string>(), kvp[1].As<List<IndicatorDataPoint>>(), pyDict);
                         }
 
-                        return _pandas.DataFrame(pyDict, columns: pyDictData.Keys().Select(x => x.As<String>().ToLowerInvariant()).OrderBy(x => x));
+                        return MakeIndicatorDataFrame(pyDict);
                     }
                 }
                 catch (Exception e)
                 {
+                    if (currentKvp != null)
+                    {
+                        inputTypeStr = $"{currentKvp[0].GetPythonType()}: {currentKvp[1].GetPythonType()}";
+                    }
+
                     throw new ArgumentException(
-                        $"ConvertToDictionary cannot be used to convert a {inputType} into {targetType}. Reason: {e.Message}",
+                        $"ConvertToDictionary cannot be used to convert a {inputTypeStr} into {targetTypeStr}. Reason: {e.Message}",
                         e
                     );
                 }
