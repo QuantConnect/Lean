@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -24,7 +24,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// Enumerates data into <see cref="OptionChainUniverseDataCollection"/> instances
     /// </summary>
     /// <remarks>Used in backtest mode <see cref="OptionChainUniverseSubscriptionEnumeratorFactory"/></remarks>
-    public class OptionChainUniverseDataCollectionEnumerator : BaseDataCollectionAggregatorEnumerator<OptionChainUniverseDataCollection>
+    public class OptionChainUniverseDataCollectionEnumerator : BaseDataCollectionAggregatorEnumerator<BaseDataCollection>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="OptionChainUniverseDataCollectionEnumerator"/> class
@@ -41,7 +41,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         /// <param name="collection">The collection to be added to</param>
         /// <param name="current">The data to be added</param>
-        protected override void Add(OptionChainUniverseDataCollection collection, BaseData current)
+        protected override void Add(BaseDataCollection collection, BaseData current)
         {
             var baseDataCollection = current as BaseDataCollection;
             if (baseDataCollection != null)
@@ -59,7 +59,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         /// <param name="collection">The collection to be emitted</param>
         /// <returns>True if its a valid data point</returns>
-        protected override bool IsValid(OptionChainUniverseDataCollection collection)
+        protected override bool IsValid(BaseDataCollection collection)
         {
             return collection?.Underlying != null && collection.Data.Count != 0;
         }

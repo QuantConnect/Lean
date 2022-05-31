@@ -1,4 +1,4 @@
-﻿
+
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
@@ -24,7 +24,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// <summary>
     /// Aggregates an enumerator into <see cref="FuturesChainUniverseDataCollection"/> instances
     /// </summary>
-    public class FuturesChainUniverseDataCollectionAggregatorEnumerator : BaseDataCollectionAggregatorEnumerator<FuturesChainUniverseDataCollection>
+    public class FuturesChainUniverseDataCollectionAggregatorEnumerator : BaseDataCollectionAggregatorEnumerator<BaseDataCollection>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="FuturesChainUniverseDataCollectionAggregatorEnumerator"/> class
@@ -41,12 +41,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         /// <param name="collection">The collection to be added to</param>
         /// <param name="current">The data to be added</param>
-        protected override void Add(FuturesChainUniverseDataCollection collection, BaseData current)
+        protected override void Add(BaseDataCollection collection, BaseData current)
         {
             AddSingleItem(collection, current);
         }
 
-        private static void AddSingleItem(FuturesChainUniverseDataCollection collection, BaseData current)
+        private static void AddSingleItem(BaseDataCollection collection, BaseData current)
         {
             var baseDataCollection = current as BaseDataCollection;
             if (baseDataCollection != null)
