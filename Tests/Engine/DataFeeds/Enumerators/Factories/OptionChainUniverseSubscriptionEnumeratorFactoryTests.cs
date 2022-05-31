@@ -97,7 +97,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             foreach (var data in enumerator.AsEnumerable())
             {
                 emittedCount++;
-                var optionData = data as OptionChainUniverseDataCollection;
+                var optionData = data as BaseDataCollection;
 
                 Assert.IsNotNull(optionData);
                 Assert.IsNotNull(optionData.Underlying);
