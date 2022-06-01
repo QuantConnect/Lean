@@ -3553,6 +3553,58 @@ def Test3():
             }
         }
 
+        [Test]
+        public void ReturnsTheCorrectDataInTheDataFrame()
+        {
+            using (Py.GIL())
+            {
+                dynamic tests = PyModule.FromString("testModule",
+                    $@"
+from datetime import datetime, timedelta
+from QuantConnect.Python import PandasConverter
+from QuantConnect.Indicators import IndicatorDataPoint;
+
+def DataFrameContainsCorrectData():
+    makePoint = lambda i: IndicatorDataPoint(now + timedelta(minutes=i), i)
+    now = datetime.now()
+    indicator1DataPoints = [makePoint(i) for i in range(10)]
+    indicator2DataPoints = [makePoint(i) for i in range(5)]
+    indicator3DataPoints = []
+    pdConverter = PandasConverter()
+    dataFrame = pdConverter.GetIndicatorDataFrame({{
+        'ind1': indicator1DataPoints,
+        'ind2': indicator2DataPoints,
+        'ind3': indicator3DataPoints
+    }})
+
+    hasData = lambda key, data: dataFrame[key].tolist()[:len(data)] == [point.Value for point in data]
+    hasRightIndex = lambda key, data: dataFrame[key].index.tolist()[:len(data)] == [point.EndTime for point in data]
+
+    return (
+        dataFrame.shape == (10, 3) and
+        dataFrame.columns.tolist() == ['ind1', 'ind2', 'ind3'] and
+        hasData('ind1', indicator1DataPoints) and
+        hasData('ind2', indicator2DataPoints) and
+        hasData('ind3', indicator3DataPoints) and
+        hasRightIndex('ind1', indicator1DataPoints) and
+        hasRightIndex('ind2', indicator2DataPoints) and
+        hasRightIndex('ind3', indicator3DataPoints)
+    )
+
+def DataFrameIsEmpty():
+    indicatorDataPoints = []
+    pdConverter = PandasConverter()
+    dataFrame = pdConverter.GetIndicatorDataFrame({{'ind1': indicatorDataPoints}})
+
+    return dataFrame.empty");
+
+                dynamic dataFrameContainsCorrectData = tests.GetAttr("DataFrameContainsCorrectData");
+                dynamic dataFrameIsEmpty = tests.GetAttr("DataFrameIsEmpty");
+
+                Assert.IsTrue(dataFrameContainsCorrectData().As<bool>());
+                Assert.IsTrue(dataFrameIsEmpty().As<bool>());
+            }
+        }
 
         public IEnumerable<Slice> GetHistory<T>(Symbol symbol, Resolution resolution, IEnumerable<T> data)
             where T : IBaseData

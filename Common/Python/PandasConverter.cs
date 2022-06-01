@@ -123,36 +123,6 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
-        /// Creates a series from a list of <see cref="IndicatorDataPoint"/> and adds it to the
-        /// <see cref="PyDict"/> as the value of the given <paramref name="key"/>
-        /// </summary>
-        /// <param name="key">Key to insert in the <see cref="PyDict"/></param>
-        /// <param name="points">List of <see cref="IndicatorDataPoint"/> that will make up the resulting series</param>
-        /// <param name="pyDict"><see cref="PyDict"/> where the resulting key-value pair will be inserted into</param>
-        private void AddSeriesToPyDict(string key, List<IndicatorDataPoint> points, PyDict pyDict)
-        {
-            var index = new List<DateTime>();
-            var values = new List<double>();
-
-            foreach (var point in points)
-            {
-                index.Add(point.EndTime);
-                values.Add((double) point.Value);
-            }
-            pyDict.SetItem(key.ToLowerInvariant(), _pandas.Series(values, index));
-        }
-
-        /// <summary>
-        /// Converts a <see cref="PyDict"/> of string to pandas.Series in a pandas.DataFrame
-        /// </summary>
-        /// <param name="pyDict"><see cref="PyDict"/> of string to pandas.Series</param>
-        /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
-        private PyObject MakeIndicatorDataFrame(PyDict pyDict)
-        {
-            return _pandas.DataFrame(pyDict, columns: pyDict.Keys().Select(x => x.As<string>().ToLowerInvariant()).OrderBy(x => x));
-        }
-
-        /// <summary>
         /// Converts a dictionary with a list of <see cref="IndicatorDataPoint"/> in a pandas.DataFrame
         /// </summary>
         /// <param name="data">Dictionary with a list of <see cref="IndicatorDataPoint"/></param>
@@ -225,6 +195,36 @@ namespace QuantConnect.Python
             return _pandas == null
                 ? "pandas module was not imported."
                 : _pandas.Repr();
+        }
+
+        /// <summary>
+        /// Creates a series from a list of <see cref="IndicatorDataPoint"/> and adds it to the
+        /// <see cref="PyDict"/> as the value of the given <paramref name="key"/>
+        /// </summary>
+        /// <param name="key">Key to insert in the <see cref="PyDict"/></param>
+        /// <param name="points">List of <see cref="IndicatorDataPoint"/> that will make up the resulting series</param>
+        /// <param name="pyDict"><see cref="PyDict"/> where the resulting key-value pair will be inserted into</param>
+        private void AddSeriesToPyDict(string key, List<IndicatorDataPoint> points, PyDict pyDict)
+        {
+            var index = new List<DateTime>();
+            var values = new List<double>();
+
+            foreach (var point in points)
+            {
+                index.Add(point.EndTime);
+                values.Add((double) point.Value);
+            }
+            pyDict.SetItem(key.ToLowerInvariant(), _pandas.Series(values, index));
+        }
+
+        /// <summary>
+        /// Converts a <see cref="PyDict"/> of string to pandas.Series in a pandas.DataFrame
+        /// </summary>
+        /// <param name="pyDict"><see cref="PyDict"/> of string to pandas.Series</param>
+        /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
+        private PyObject MakeIndicatorDataFrame(PyDict pyDict)
+        {
+            return _pandas.DataFrame(pyDict, columns: pyDict.Keys().Select(x => x.As<string>().ToLowerInvariant()).OrderBy(x => x));
         }
     }
 }
