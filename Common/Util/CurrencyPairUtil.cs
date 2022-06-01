@@ -211,8 +211,8 @@ namespace QuantConnect.Util
 
                 foreach(var pair in potentialStableCoins)
                 {
-                    if (Currencies.IsStableCoin(currencies[pair[0]], pairA.ID.Market, currencies[pair[1]])
-                        || Currencies.IsStableCoin(currencies[pair[1]], pairA.ID.Market, currencies[pair[0]]))
+                    if (Currencies.IsStableCoinWithoutPair(currencies[pair[0]] + currencies[pair[1]], pairA.ID.Market)
+                        || Currencies.IsStableCoinWithoutPair(currencies[pair[1]] + currencies[pair[0]], pairA.ID.Market))
                     {
                         // If there's a stablecoin between them, assign to currency in pair A the value
                         // of the currency in pair B 

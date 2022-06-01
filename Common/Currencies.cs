@@ -117,14 +117,26 @@ namespace QuantConnect
         };
 
         /// <summary>
-        /// Commonly StableCoins quote currencies
+        /// Stable pairs in GDAX. We defined them because they have different fees in GDAX market
         /// </summary>
-        private static readonly string[] _stableCoinsCurrencies = new string[] 
-        { 
-            USD,
-            EUR,
-            IDR,
-            CHF
+        public static HashSet<string> StablePairsGDAX = new HashSet<string>
+        {
+            "DAIUSDC",
+            "DAIUSD",
+            "GYENUSD",
+            "PAXUSD",
+            "PAXUSDT",
+            "MUSDUSD",
+            "USDCEUR",
+            "USDCGBP",
+            "USDTEUR",
+            "USDTGBP",
+            "USDTUSD",
+            "USDTUSDC",
+            "USTEUR",
+            "USTUSD",
+            "USTUSDT",
+            "WBTCBTC"
         };
 
         /// <summary>
@@ -133,10 +145,9 @@ namespace QuantConnect
         ///
         /// We use this to allow setting cash amounts for these stablecoins without needing a conversion
         /// security.
-        /// </summary>
-        private static readonly Dictionary<string, int> _stableCoinsGDAX = new Dictionary<string, int> 
+        private static readonly HashSet<string> _stableCoinsWithoutPairsGDAX = new HashSet<string>
         {
-            { "USDC", 0 }
+            "USDCUSD"
         };
 
         /// <summary>
@@ -146,17 +157,17 @@ namespace QuantConnect
         /// We use this to allow setting cash amounts for these stablecoins without needing a conversion
         /// security.
         /// </summary>
-        private static readonly Dictionary<string, int> _stableCoinsBinance = new Dictionary<string, int>
+        private static readonly HashSet<string> _stableCoinsWithoutPairsBinance = new HashSet<string>
         {
-            { "USDC", 0 },
-            { "USDT", 0 },
-            { "USDP", 0 },
-            { "BUSD", 0 },
-            { "UST", 0 },
-            { "TUSD", 0 },
-            { "DAI", 0 },
-            { "SUSD", 0},
-            { "IDRT", 2}
+            "USDCUSD",
+            "USDTUSD",
+            "USDPUSD",
+            "SUSDUSD",
+            "BUSDUSD",
+            "USTUSD",
+            "TUSDUSD",
+            "DAIUSD",
+            "IDRTIDR"
         };
 
         /// <summary>
@@ -166,42 +177,33 @@ namespace QuantConnect
         /// We use this to allow setting cash amounts for these stablecoins without needing a conversion
         /// security.
         /// </summary>
-        private static readonly Dictionary<string, int> _stableCoinsBitfinex = new Dictionary<string, int>
+        private static readonly HashSet<string> _stableCoinsWithoutPairsBitfinex = new HashSet<string>
         {
-            { "EURS", 1 },
-            { "XCHF", 3 }
+            "EURSEUR",
+            "XCHFCHF"
         };
 
         /// <summary>
         /// Dictionary to save StableCoins in different Markets
         /// </summary>
-        private static readonly Dictionary<string, Dictionary<string, int>> _stableCoinsMarkets = new Dictionary<string, Dictionary<string, int>>
+        private static readonly Dictionary<string, HashSet<string>> _stableCoinsWithoutPairsMarkets = new Dictionary<string, HashSet<string>>
         {
-            { Market.Binance , _stableCoinsBinance},
-            { Market.Bitfinex , _stableCoinsBitfinex},
-            { Market.GDAX , _stableCoinsGDAX},
+            { Market.Binance , _stableCoinsWithoutPairsBinance},
+            { Market.Bitfinex , _stableCoinsWithoutPairsBitfinex},
+            { Market.GDAX , _stableCoinsWithoutPairsGDAX},
         };
 
         /// <summary>
-        /// Checks whether or not certain symbol is a StableCoin between a given market
+        /// Checks whether or not certain symbol is a StableCoin without pair in a given market
         /// </summary>
-        /// <param name="symbol">The symbol from which we want to know if it's a StableCoin</param>
-        /// <param name="market">The market in which we want to search for that StaleCoin</param>
-        /// <param name="quoteCurrency">If the symbol was indeed a StableCoin and this parameter is
-        /// defined, it will check if the quote currency associated with the StableCoin is the
-        /// same as the given in the parameters. Otherwise, it will just check whether or not the 
-        /// given symbol is a StableCoin</param>
-        /// <returns></returns>
-        public static bool IsStableCoin(string symbol, string market, string quoteCurrency = null)
+        /// <param name="symbol">The Symbol from wich we want to know if it's a StableCoin without pair</param>
+        /// <param name="market">The market in which we want to search for that StableCoin</param>
+        /// <returns>True if the given symbol is a StableCoin without pair in the given market</returns>
+        public static bool IsStableCoinWithoutPair(string symbol, string market)
         {
-            if (_stableCoinsMarkets.TryGetValue(market, out var stableCoins) && stableCoins.TryGetValue(symbol, out var index))
+            if (_stableCoinsWithoutPairsMarkets.TryGetValue(market, out var stableCoins) && stableCoins.Contains(symbol))
             {
-                if (quoteCurrency == null)
-                {
-                    return true;
-                }
-
-                return quoteCurrency == _stableCoinsCurrencies[index];
+                return true;
             }
             return false;
         }
