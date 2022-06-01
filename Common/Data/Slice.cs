@@ -410,20 +410,34 @@ namespace QuantConnect.Data
                     var dataDictionaryCache = GenericDataDictionary.Get(type, isPythonData);
                     dictionary = Activator.CreateInstance(dataDictionaryCache.GenericType);
 
-                    foreach (var data in instance._data.Value.Values.Select(x => x.Custom).Where(o =>
-                             {
-                                 if (o == null)
-                                 {
-                                     return false;
-                                 }
-                                 if (isPythonData && o is PythonData data)
-                                 {
-                                     return data.IsOfType(type);
-                                 }
-                                 return o.GetType() == type;
-                             }))
+                    var selector = (BaseData value) => {
+                        if (value == null)
+                        {
+                            return false;
+                        }
+                        if (isPythonData && value is PythonData data)
+                        {
+                            return data.IsOfType(type);
+                        }
+                        return value.GetType() == type;
+                    };
+
+                    foreach (var data in instance._data.Value.Values)
                     {
-                        dataDictionaryCache.MethodInfo.Invoke(dictionary, new object[] { data.Symbol, data });
+                        if(selector(data.Custom))
+                        {
+                            dataDictionaryCache.MethodInfo.Invoke(dictionary, new object[] { data.Symbol, data.Custom });
+                        }
+                        else
+                        {
+                            for (int i = 0; i < data.AuxilliaryData.Count; i++)
+                            {
+                                if (selector(data.AuxilliaryData[i]))
+                                {
+                                    dataDictionaryCache.MethodInfo.Invoke(dictionary, new object[] { data.Symbol, data.AuxilliaryData[i] });
+                                }
+                            }
+                        }
                     }
                 }
 

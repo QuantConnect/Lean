@@ -26,7 +26,7 @@ using QuantConnect.Interfaces;
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
     /// <summary>
-    /// Enumerates live futures symbol universe data into <see cref="FuturesChainUniverseDataCollection"/> instances
+    /// Enumerates live futures symbol universe data into <see cref="BaseDataCollection"/> instances
     /// </summary>
     public class DataQueueFuturesChainUniverseDataCollectionEnumerator : IEnumerator<BaseDataCollection>
     {
