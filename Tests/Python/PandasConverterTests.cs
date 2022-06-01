@@ -3516,7 +3516,6 @@ def Test(dataFrame, symbol):
             {
                 dynamic test = PyModule.FromString("testModule",
                     $@"
-from AlgorithmImports import *
 from QuantConnect.Python import PandasConverter
 from QuantConnect.Indicators import IndicatorDataPoint;
 def Test():
@@ -3534,7 +3533,6 @@ def Test():
             {
                 dynamic tests = PyModule.FromString("testModule",
                     $@"
-from AlgorithmImports import *
 from QuantConnect.Python import PandasConverter
 from QuantConnect.Indicators import IndicatorDataPoint;
 pdConverter = PandasConverter()
