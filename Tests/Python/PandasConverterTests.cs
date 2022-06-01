@@ -3566,7 +3566,7 @@ from QuantConnect.Python import PandasConverter
 from QuantConnect.Indicators import IndicatorDataPoint;
 
 def DataFrameContainsCorrectData():
-    now = datetime.now()
+    now = datetime(2018, 1, 1)
     makePoint = lambda i: IndicatorDataPoint(now + timedelta(minutes=i), i)
     indicator1DataPoints = [makePoint(i) for i in range(10)]
     indicator2DataPoints = [makePoint(i) for i in range(5)]
@@ -3579,7 +3579,6 @@ def DataFrameContainsCorrectData():
     }})
 
     hasData = lambda key, data: dataFrame[key].tolist()[:len(data)] == [point.Value for point in data]
-    hasRightIndex = lambda key, data: dataFrame[key].index.tolist()[:len(data)] == [point.EndTime for point in data]
 
     return (
         dataFrame.shape == (10, 3) and
@@ -3588,9 +3587,6 @@ def DataFrameContainsCorrectData():
         hasData('ind1', indicator1DataPoints) and
         hasData('ind2', indicator2DataPoints) and
         hasData('ind3', indicator3DataPoints) and
-        hasRightIndex('ind1', indicator1DataPoints) and
-        hasRightIndex('ind2', indicator2DataPoints) and
-        hasRightIndex('ind3', indicator3DataPoints)
     )
 
 def DataFrameIsEmpty():
@@ -3613,7 +3609,7 @@ def DataFrameIsEmpty():
         {
             using (Py.GIL())
             {
-                var now = DateTime.Now.RoundUp(TimeSpan.FromMinutes(1));
+                var now = new DateTime(2018, 1, 1);
                 Func<int, IndicatorDataPoint> makePoint = i => new IndicatorDataPoint(now.AddMinutes(i), i);
                 var indicator1DataPoints = Enumerable.Range(0, 10).Select(i => makePoint(i)).ToList();
                 var indicator2DataPoints = Enumerable.Range(0, 5).Select(i => makePoint(i)).ToList();

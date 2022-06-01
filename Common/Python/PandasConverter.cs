@@ -151,25 +151,25 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                var pyDict = new PyDict();
-                var inputTypeStr = data.GetPythonType().ToString();
+                using var inputPythonType = data.GetPythonType();
+                var inputTypeStr = inputPythonType.ToString();
                 var targetTypeStr = nameof(PyDict);
                 PyObject currentKvp = null;
 
                 try
                 {
-                    using (var pyDictData = new PyDict(data))
+                    using var pyDictData = new PyDict(data);
+                    using var seriesPyDict = new PyDict();
+
+                    targetTypeStr = $"{nameof(String)}: {nameof(List<IndicatorDataPoint>)}";
+
+                    foreach (var kvp in pyDictData.Items())
                     {
-                        targetTypeStr = $"{nameof(String)}: {nameof(List<IndicatorDataPoint>)}";
-
-                        foreach (var kvp in pyDictData.Items())
-                        {
-                            currentKvp = kvp;
-                            AddSeriesToPyDict(kvp[0].As<string>(), kvp[1].As<List<IndicatorDataPoint>>(), pyDict);
-                        }
-
-                        return MakeIndicatorDataFrame(pyDict);
+                        currentKvp = kvp;
+                        AddSeriesToPyDict(kvp[0].As<string>(), kvp[1].As<List<IndicatorDataPoint>>(), seriesPyDict);
                     }
+
+                    return MakeIndicatorDataFrame(seriesPyDict);
                 }
                 catch (Exception e)
                 {
