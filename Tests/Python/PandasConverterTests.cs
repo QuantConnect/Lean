@@ -32,6 +32,7 @@ using QuantConnect.Tests.Common.Data.UniverseSelection;
 using QuantConnect.Tests.ToolBox;
 using QuantConnect.ToolBox;
 using QuantConnect.Util;
+using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Python
 {
@@ -3554,7 +3555,7 @@ def Test3():
         }
 
         [Test]
-        public void ReturnsTheCorrectDataInTheDataFrame()
+        public void ReturnsTheCorrectDataInTheDataFrameFromPyDict()
         {
             using (Py.GIL())
             {
@@ -3565,8 +3566,8 @@ from QuantConnect.Python import PandasConverter
 from QuantConnect.Indicators import IndicatorDataPoint;
 
 def DataFrameContainsCorrectData():
-    makePoint = lambda i: IndicatorDataPoint(now + timedelta(minutes=i), i)
     now = datetime.now()
+    makePoint = lambda i: IndicatorDataPoint(now + timedelta(minutes=i), i)
     indicator1DataPoints = [makePoint(i) for i in range(10)]
     indicator2DataPoints = [makePoint(i) for i in range(5)]
     indicator3DataPoints = []
@@ -3583,6 +3584,7 @@ def DataFrameContainsCorrectData():
     return (
         dataFrame.shape == (10, 3) and
         dataFrame.columns.tolist() == ['ind1', 'ind2', 'ind3'] and
+        dataFrame.index.tolist() == [point.EndTime for point in indicator1DataPoints] and
         hasData('ind1', indicator1DataPoints) and
         hasData('ind2', indicator2DataPoints) and
         hasData('ind3', indicator3DataPoints) and
@@ -3603,6 +3605,35 @@ def DataFrameIsEmpty():
 
                 Assert.IsTrue(dataFrameContainsCorrectData().As<bool>());
                 Assert.IsTrue(dataFrameIsEmpty().As<bool>());
+            }
+        }
+
+        [Test]
+        public void ReturnsTheCorrectDataInTheDataFrameFromDictionary()
+        {
+            using (Py.GIL())
+            {
+                var now = DateTime.Now.RoundUp(TimeSpan.FromMinutes(1));
+                Func<int, IndicatorDataPoint> makePoint = i => new IndicatorDataPoint(now.AddMinutes(i), i);
+                var indicator1DataPoints = Enumerable.Range(0, 10).Select(i => makePoint(i)).ToList();
+                var indicator2DataPoints = Enumerable.Range(0, 5).Select(i => makePoint(i)).ToList();
+                var indicator3DataPoints = new List<IndicatorDataPoint>();
+
+                var pdConverter = new PandasConverter();
+                var dataFrame = pdConverter.GetIndicatorDataFrame(new Dictionary<string, List<IndicatorDataPoint>>
+                {
+                    {"ind1", indicator1DataPoints},
+                    {"ind2", indicator2DataPoints},
+                    {"ind3", indicator3DataPoints}
+                });
+
+                Func<string, List<double>> getIndicatorData = key => dataFrame.GetItem(key).GetAttr("tolist").Invoke().As<List<double>>();
+                CollectionAssert.AreEqual(new int[] {10, 3}, dataFrame.GetAttr("shape").As<int[]>());
+                CollectionAssert.AreEqual(new string[] { "ind1", "ind2", "ind3" }, dataFrame.GetAttr("columns").As<string[]>());
+                CollectionAssert.AreEqual(indicator1DataPoints.Select(point => point.EndTime).ToList(), dataFrame.GetAttr("index").GetAttr("tolist").Invoke().As<List<DateTime>>());
+                CollectionAssert.AreEqual(indicator1DataPoints.Select(point => point.Value), getIndicatorData("ind1").GetRange(0, indicator1DataPoints.Count));
+                CollectionAssert.AreEqual(indicator2DataPoints.Select(point => point.Value), getIndicatorData("ind2").GetRange(0, indicator2DataPoints.Count));
+                CollectionAssert.AreEqual(indicator3DataPoints.Select(point => point.Value), getIndicatorData("ind3").GetRange(0, indicator3DataPoints.Count));
             }
         }
 
