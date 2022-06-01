@@ -19,6 +19,7 @@ using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Lean.Engine.DataFeeds.Queues;
 
 namespace QuantConnect.Lean.Engine.HistoricalData
@@ -88,6 +89,14 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                             Ask = new Bar(_historyCount, _historyCount, _historyCount, _historyCount),
                             Bid = new Bar(_historyCount, _historyCount, _historyCount, _historyCount),
                             Period = single.Resolution.ToTimeSpan()
+                        };
+                    }
+                    else if (single.DataType == typeof(ZipEntryName))
+                    {
+                        data = new ZipEntryName
+                        {
+                            Symbol = single.Symbol,
+                            Time = currentLocalTime
                         };
                     }
                     else
