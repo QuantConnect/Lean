@@ -75,12 +75,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             }
             else
             {
-                var factory = new BaseDataSubscriptionEnumeratorFactory(_isLiveMode, _dataCacheProvider);
-
-                var newRequest = new SubscriptionRequest(request, configuration: GetSubscriptionConfiguration(request));
-                var enumerator = _enumeratorConfigurator(request, factory.CreateEnumerator(newRequest, dataProvider));
-
-                return new FuturesChainUniverseDataCollectionAggregatorEnumerator(enumerator, request.Security.Symbol);
+                throw new Exception();
             }
         }
 

@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -152,27 +153,32 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     return factory.CreateEnumerator(request, _dataProvider);
                 }
             }
-            if (request.Configuration.Type == typeof(CoarseFundamental))
+            else if (request.Configuration.Type == typeof(CoarseFundamental))
             {
                 factory = new BaseDataCollectionSubscriptionEnumeratorFactory();
             }
-            if (request.Universe is OptionChainUniverse)
+            else if (request.Configuration.Type == typeof(ZipEntryName))
             {
-                factory = new OptionChainUniverseSubscriptionEnumeratorFactory((req) =>
+                var result = new BaseDataSubscriptionEnumeratorFactory(false, _mapFileProvider, _cacheProvider).CreateEnumerator(request, _dataProvider);
+                result = ConfigureEnumerator(request, true, result);
+
+                if (request.Configuration.Symbol.HasUnderlying)
                 {
-                    if (!req.Configuration.SecurityType.IsOption())
-                    {
-                        var enumerator = _subscriptionFactory.CreateEnumerator(req, _dataProvider);
-                        enumerator = new FilterEnumerator<BaseData>(enumerator, data => data.DataType != MarketDataType.Auxiliary);
-                        return ConfigureEnumerator(req, true, enumerator);
-                    }
-                    var underlyingFactory = new BaseDataSubscriptionEnumeratorFactory(false, _mapFileProvider, _cacheProvider);
-                    return ConfigureEnumerator(req, true, underlyingFactory.CreateEnumerator(req, _dataProvider));
-                });
-            }
-            if (request.Universe is FuturesChainUniverse)
-            {
-                factory = new FuturesChainUniverseSubscriptionEnumeratorFactory((req, e) => ConfigureEnumerator(req, true, e), _cacheProvider);
+                    // TODO: creating this subscription request is sad
+                    var req = new SubscriptionRequest(request,
+                        configuration: new SubscriptionDataConfig(request.Configuration, symbol: request.Configuration.Symbol.Underlying, objectType: typeof(TradeBar), tickType: TickType.Trade));
+
+                    var underlying = _subscriptionFactory.CreateEnumerator(req, _dataProvider);
+                    underlying = new FilterEnumerator<BaseData>(underlying, data => data.DataType != MarketDataType.Auxiliary);
+                    // TODO: we shouldn't need to aggregate this enumerator
+                    underlying = ConfigureEnumerator(req, true, underlying);
+
+                    result = new SynchronizingBaseDataEnumerator(result, underlying);
+                    result = ConfigureEnumerator(request, true, result);
+                    result = new FilterEnumerator<BaseData>(result, data => (data as BaseDataCollection).Underlying != null);
+                }
+
+                return result;
             }
 
             // define our data enumerator

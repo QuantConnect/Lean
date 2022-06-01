@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -26,8 +26,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// that aggregates an underlying <see cref="IEnumerator{BaseData}"/> into a single
     /// data packet
     /// </summary>
-    public class BaseDataCollectionAggregatorEnumerator<T> : IEnumerator<T>
-        where T : BaseDataCollection, new()
+    public class BaseDataCollectionAggregatorEnumerator : IEnumerator<BaseDataCollection>
     {
         private bool _endOfStream;
         private bool _needsMoveNext;
@@ -65,7 +64,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 return false;
             }
 
-            T collection = null;
+            BaseDataCollection collection = null;
             while (true)
             {
                 if (_needsMoveNext)
@@ -135,7 +134,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <returns>
         /// The element in the collection at the current position of the enumerator.
         /// </returns>
-        public T Current
+        public BaseDataCollection Current
         {
             get; private set;
         }
@@ -168,9 +167,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="time">The start time of the collection</param>
         /// <param name="endTime">The end time of the collection</param>
         /// <returns>A new, empty <see cref="BaseDataCollection"/></returns>
-        protected virtual T CreateCollection(Symbol symbol, DateTime time, DateTime endTime)
+        private BaseDataCollection CreateCollection(Symbol symbol, DateTime time, DateTime endTime)
         {
-            return new T
+            return new BaseDataCollection
             {
                 Symbol = symbol,
                 Time = time,
@@ -183,19 +182,39 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         /// <param name="collection">The collection to be added to</param>
         /// <param name="current">The data to be added</param>
-        protected virtual void Add(T collection, BaseData current)
+        private void Add(BaseDataCollection collection, BaseData current)
         {
-            collection.Add(current);
-        }
-
-        /// <summary>
-        /// Adds all specified instances of <see cref="BaseData"/> to the current collection
-        /// </summary>
-        /// <param name="collection">The collection to be added to</param>
-        /// <param name="current">The data collection to be added</param>
-        protected virtual void SetData(T collection, List<BaseData> current)
-        {
-            collection.Data = current;
+            if (_symbol.HasUnderlying && _symbol.Underlying == current.Symbol)
+            {
+                var baseDataCollection = current as BaseDataCollection;
+                if (baseDataCollection != null)
+                {
+                    collection.Underlying = baseDataCollection.Data[0];
+                }
+                else
+                {
+                    collection.Underlying = current;
+                }
+            }
+            else
+            {
+                var baseDataCollection = current as BaseDataCollection;
+                if (baseDataCollection != null)
+                {
+                    if(baseDataCollection.Data.Count > 1)
+                    {
+                        collection.Data = baseDataCollection.Data;
+                    }
+                    else
+                    {
+                        collection.Data.Add(baseDataCollection.Data[0]);
+                    }
+                }
+                else
+                {
+                    collection.Data.Add(current);
+                }
+            }
         }
 
         /// <summary>
@@ -203,26 +222,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         /// <param name="collection">The collection to be emitted</param>
         /// <returns>True if its a valid data point</returns>
-        protected virtual bool IsValid(T collection)
+        private bool IsValid(BaseDataCollection collection)
         {
-            return true;
-        }
-    }
-
-    /// <summary>
-    /// Provides a non-generic implementation of <see cref="BaseDataCollectionAggregatorEnumerator{T}"/>
-    /// </summary>
-    public class BaseDataCollectionAggregatorEnumerator : BaseDataCollectionAggregatorEnumerator<BaseDataCollection>
-    {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="BaseDataCollectionAggregatorEnumerator"/> class
-        /// </summary>
-        /// <param name="enumerator">The enumerator to aggregate</param>
-        /// <param name="symbol">The output data's symbol</param>
-        /// <param name="liveMode">True if running in live mode</param>
-        public BaseDataCollectionAggregatorEnumerator(IEnumerator<BaseData> enumerator, Symbol symbol, bool liveMode = false)
-            : base(enumerator, symbol, liveMode)
-        {
+            return collection != null && collection.Data?.Count > 0;
         }
     }
 }
