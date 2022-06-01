@@ -435,15 +435,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         historyWarmup = new SubscriptionRequest(warmup, startTimeUtc: warmupHistoryStartDate);
                     }
 
-                    var historyEnumerator = GetHistoryWarmupEnumerator(historyWarmup);
-                    if (request.IsUniverseSubscription)
-                    {
-                        historyEnumerator = ConfigureEnumerator(historyWarmup, true, historyEnumerator);
-                    }
-
                     // the order here is important, concat enumerator will keep the last enumerator given and dispose of the rest
                     liveEnumerator = new ConcatEnumerator(true, GetFileBasedWarmupEnumerator(warmup),
-                        historyEnumerator, liveEnumerator);
+                        GetHistoryWarmupEnumerator(historyWarmup), liveEnumerator);
                 }
             }
             return liveEnumerator;
@@ -477,12 +471,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             try
             {
                 var historyRequest = new Data.HistoryRequest(warmup.Configuration, warmup.ExchangeHours, warmup.StartTimeUtc, warmup.EndTimeUtc);
-                result = _algorithm.HistoryProvider.GetHistory(new[] { historyRequest }, _algorithm.TimeZone).Select(slice =>
+                result = _algorithm.HistoryProvider.GetHistory(new[] { historyRequest }, _algorithm.TimeZone).SelectMany(slice =>
                 {
                     try
                     {
                         var data = slice.Get(historyRequest.DataType);
-                        return (BaseData)data[warmup.Configuration.Symbol];
+                        return (IEnumerable<BaseData>)data.Values;
                     }
                     catch (Exception e)
                     {
@@ -492,6 +486,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }).GetEnumerator();
 
                 result = new FilterEnumerator<BaseData>(result, data => data == null || data.EndTime < warmup.EndTimeLocal);
+
+                if (warmup.IsUniverseSubscription)
+                {
+                    result = ConfigureEnumerator(warmup, true, result);
+                    result = AppendUnderlyingEnumerator(warmup, result, GetHistoryWarmupEnumerator);
+                }
+                return result;
             }
             catch
             {
