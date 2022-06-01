@@ -383,11 +383,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating futures chain universe: " + config.Symbol.ID);
 
-                var symbolUniverse = GetUniverseProvider(SecurityType.Option);
+                var symbolUniverse = GetUniverseProvider(SecurityType.Future);
 
-                var enumeratorFactory = new FuturesChainUniverseSubscriptionEnumeratorFactory(symbolUniverse, _timeProvider);
-                enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
-
+                enumerator = new DataQueueFuturesChainUniverseDataCollectionEnumerator(request, symbolUniverse, _timeProvider);
                 enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, tzOffsetProvider);
             }
             else
@@ -437,9 +435,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         historyWarmup = new SubscriptionRequest(warmup, startTimeUtc: warmupHistoryStartDate);
                     }
 
+                    var historyEnumerator = GetHistoryWarmupEnumerator(historyWarmup);
+                    if (request.IsUniverseSubscription)
+                    {
+                        historyEnumerator = ConfigureEnumerator(historyWarmup, true, historyEnumerator);
+                    }
+
                     // the order here is important, concat enumerator will keep the last enumerator given and dispose of the rest
                     liveEnumerator = new ConcatEnumerator(true, GetFileBasedWarmupEnumerator(warmup),
-                        GetHistoryWarmupEnumerator(historyWarmup), liveEnumerator);
+                        historyEnumerator, liveEnumerator);
                 }
             }
             return liveEnumerator;

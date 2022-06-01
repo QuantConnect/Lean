@@ -93,11 +93,18 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                     }
                     else if (single.DataType == typeof(ZipEntryName))
                     {
-                        data = new ZipEntryName
+                        if(single.Symbol.SecurityType == SecurityType.Future)
                         {
-                            Symbol = single.Symbol,
-                            Time = currentLocalTime
-                        };
+                            data = new ZipEntryName
+                            {
+                                Symbol = Symbol.CreateFuture(single.Symbol.ID.Symbol, single.Symbol.ID.Market, currentLocalTime.AddDays(20)),
+                                Time = currentLocalTime
+                            };
+                        }
+                        else
+                        {
+                            yield break;
+                        }
                     }
                     else
                     {
