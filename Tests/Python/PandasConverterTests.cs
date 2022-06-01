@@ -32,6 +32,7 @@ using QuantConnect.Tests.Common.Data.UniverseSelection;
 using QuantConnect.Tests.ToolBox;
 using QuantConnect.ToolBox;
 using QuantConnect.Util;
+using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Python
 {
@@ -1599,7 +1600,7 @@ def Test(dataFrame, symbol):
                 dynamic test = PyModule.FromString("testModule",
                     $@"
 def Test(dataFrame, symbol):
-    data = dataFrame.lastprice.unstack(0) 
+    data = dataFrame.lastprice.unstack(0)
     data = data.resample('2S').sum()
     data = data[{index}]
     if data is 0:
@@ -2143,7 +2144,7 @@ def Test(dataFrame, symbol):
                 dynamic test = PyModule.FromString("testModule",
                     $@"
 def Test(dataFrame, symbol):
-    series = dataFrame.lastprice.droplevel(0) 
+    series = dataFrame.lastprice.droplevel(0)
     data = series.asfreq(freq='30S')").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
@@ -2204,7 +2205,7 @@ def Test(dataFrame, symbol):
                 dynamic test = PyModule.FromString("testModule",
                     $@"
 def Test(dataFrame, symbol):
-    series = dataFrame.lastprice.droplevel(0) 
+    series = dataFrame.lastprice.droplevel(0)
     data = series.at_time('04:00')").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
@@ -2242,7 +2243,7 @@ def Test(dataFrame, symbol):
                 dynamic test = PyModule.FromString("testModule",
                     $@"
 def Test(dataFrame, symbol):
-    series = dataFrame.lastprice.droplevel(0) 
+    series = dataFrame.lastprice.droplevel(0)
     data = series.between_time('02:00', '06:00')").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
@@ -2417,7 +2418,7 @@ def Test(dataFrame, symbol):
                 dynamic test = PyModule.FromString("testModule",
                     $@"
 def Test(dataFrame, symbol):
-    series = dataFrame.lastprice.droplevel(0) 
+    series = dataFrame.lastprice.droplevel(0)
     data = series.first('2S')").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 10), Symbols.SPY));
@@ -2508,7 +2509,7 @@ def Test(df, other, symbol):
                 dynamic test = PyModule.FromString("testModule",
                     $@"
 def Test(dataFrame, symbol):
-    series = dataFrame.lastprice.droplevel(0) 
+    series = dataFrame.lastprice.droplevel(0)
     data = series.last('2S')").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY, 10), Symbols.SPY));
@@ -3506,6 +3507,129 @@ def Test(dataFrame, symbol):
                 {
                     Assert.AreEqual(sumValue, df.get("close").sum().AsManagedObject(typeof(double)), 1e-4);
                 }
+            }
+        }
+
+        [Test]
+        public void AcceptsPythonDictAsIndicatorData()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PyModule.FromString("testModule",
+                    $@"
+from QuantConnect.Python import PandasConverter
+from QuantConnect.Indicators import IndicatorDataPoint;
+def Test():
+    pdConverter = PandasConverter()
+    return pdConverter.GetIndicatorDataFrame({{'ind': [IndicatorDataPoint()]}})").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test());
+            }
+        }
+
+        [Test]
+        public void DoesntAcceptOtherPythonObjectRatherThanDict()
+        {
+            using (Py.GIL())
+            {
+                dynamic tests = PyModule.FromString("testModule",
+                    $@"
+from QuantConnect.Python import PandasConverter
+from QuantConnect.Indicators import IndicatorDataPoint;
+pdConverter = PandasConverter()
+def Test1():
+    pdConverter.GetIndicatorDataFrame([""ind"", IndicatorDataPoint()])
+def Test2():
+    pdConverter.GetIndicatorDataFrame(IndicatorDataPoint())
+def Test3():
+    pdConverter.GetIndicatorDataFrame({{'ind': IndicatorDataPoint()}})");
+
+                dynamic test1 = tests.GetAttr("Test1");
+                dynamic test2 = tests.GetAttr("Test2");
+                dynamic test3 = tests.GetAttr("Test3");
+
+                Assert.Throws<ArgumentException>(() => test1());
+                Assert.Throws<ArgumentException>(() => test2());
+                Assert.Throws<ArgumentException>(() => test3());
+            }
+        }
+
+        [Test]
+        public void ReturnsTheCorrectDataInTheDataFrameFromPyDict()
+        {
+            using (Py.GIL())
+            {
+                dynamic tests = PyModule.FromString("testModule",
+                    $@"
+from datetime import datetime, timedelta
+from QuantConnect.Python import PandasConverter
+from QuantConnect.Indicators import IndicatorDataPoint;
+
+def DataFrameContainsCorrectData():
+    dateTime = datetime(2018, 1, 1)
+    makePoint = lambda i: IndicatorDataPoint(dateTime + timedelta(minutes=i), i)
+    indicator1DataPoints = [makePoint(i) for i in range(10)]
+    indicator2DataPoints = [makePoint(i) for i in range(5)]
+    indicator3DataPoints = []
+    pdConverter = PandasConverter()
+    dataFrame = pdConverter.GetIndicatorDataFrame({{
+        'ind1': indicator1DataPoints,
+        'ind2': indicator2DataPoints,
+        'ind3': indicator3DataPoints
+    }})
+
+    hasData = lambda key, data: dataFrame[key].tolist()[:len(data)] == [point.Value for point in data]
+
+    return (
+        dataFrame.shape == (10, 3) and
+        dataFrame.columns.tolist() == ['ind1', 'ind2', 'ind3'] and
+        dataFrame.index.tolist() == [point.EndTime for point in indicator1DataPoints] and
+        hasData('ind1', indicator1DataPoints) and
+        hasData('ind2', indicator2DataPoints) and
+        hasData('ind3', indicator3DataPoints)
+    )
+
+def DataFrameIsEmpty():
+    indicatorDataPoints = []
+    pdConverter = PandasConverter()
+    dataFrame = pdConverter.GetIndicatorDataFrame({{'ind1': indicatorDataPoints}})
+
+    return dataFrame.empty");
+
+                dynamic dataFrameContainsCorrectData = tests.GetAttr("DataFrameContainsCorrectData");
+                dynamic dataFrameIsEmpty = tests.GetAttr("DataFrameIsEmpty");
+
+                Assert.IsTrue(dataFrameContainsCorrectData().As<bool>());
+                Assert.IsTrue(dataFrameIsEmpty().As<bool>());
+            }
+        }
+
+        [Test]
+        public void ReturnsTheCorrectDataInTheDataFrameFromDictionary()
+        {
+            using (Py.GIL())
+            {
+                var dateTime = new DateTime(2018, 1, 1);
+                Func<int, IndicatorDataPoint> makePoint = i => new IndicatorDataPoint(dateTime.AddMinutes(i), i);
+                var indicator1DataPoints = Enumerable.Range(0, 10).Select(i => makePoint(i)).ToList();
+                var indicator2DataPoints = Enumerable.Range(0, 5).Select(i => makePoint(i)).ToList();
+                var indicator3DataPoints = new List<IndicatorDataPoint>();
+
+                var pdConverter = new PandasConverter();
+                var dataFrame = pdConverter.GetIndicatorDataFrame(new Dictionary<string, List<IndicatorDataPoint>>
+                {
+                    {"ind1", indicator1DataPoints},
+                    {"ind2", indicator2DataPoints},
+                    {"ind3", indicator3DataPoints}
+                });
+
+                Func<string, List<double>> getIndicatorData = key => dataFrame.GetItem(key).GetAttr("tolist").Invoke().As<List<double>>();
+                CollectionAssert.AreEqual(new int[] {10, 3}, dataFrame.GetAttr("shape").As<int[]>());
+                CollectionAssert.AreEqual(new string[] { "ind1", "ind2", "ind3" }, dataFrame.GetAttr("columns").As<string[]>());
+                CollectionAssert.AreEqual(indicator1DataPoints.Select(point => point.EndTime).ToList(), dataFrame.GetAttr("index").GetAttr("tolist").Invoke().As<List<DateTime>>());
+                CollectionAssert.AreEqual(indicator1DataPoints.Select(point => point.Value), getIndicatorData("ind1").GetRange(0, indicator1DataPoints.Count));
+                CollectionAssert.AreEqual(indicator2DataPoints.Select(point => point.Value), getIndicatorData("ind2").GetRange(0, indicator2DataPoints.Count));
+                CollectionAssert.AreEqual(indicator3DataPoints.Select(point => point.Value), getIndicatorData("ind3").GetRange(0, indicator3DataPoints.Count));
             }
         }
 
