@@ -1651,7 +1651,7 @@ namespace QuantConnect.Algorithm
 
             var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol,
                 resolution,
-                fillDataForward || isCanonical,
+                fillDataForward,
                 extendedMarketHours,
                 isFilteredSubscription: !isCanonical);
 

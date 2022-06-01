@@ -39,17 +39,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// Initializes a new instance of the <see cref="OptionChainUniverseSubscriptionEnumeratorFactory"/> class
         /// </summary>
         /// <param name="enumeratorConfigurator">Function used to configure the sub-enumerators before sync (fill-forward/filter/ect...)</param>
-        public OptionChainUniverseSubscriptionEnumeratorFactory(Func<SubscriptionRequest, IEnumerator<BaseData>> enumeratorConfigurator)
-        {
-            _isLiveMode = false;
-            _enumeratorConfigurator = enumeratorConfigurator;
-
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="OptionChainUniverseSubscriptionEnumeratorFactory"/> class
-        /// </summary>
-        /// <param name="enumeratorConfigurator">Function used to configure the sub-enumerators before sync (fill-forward/filter/ect...)</param>
         /// <param name="symbolUniverse">Symbol universe provider of the data queue</param>
         /// <param name="timeProvider">The time provider instance used to determine when bars are completed and can be emitted</param>
         public OptionChainUniverseSubscriptionEnumeratorFactory(Func<SubscriptionRequest, IEnumerator<BaseData>> enumeratorConfigurator,
@@ -80,7 +69,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             }
             else
             {
-                throw new Exception();
+                throw new Exception("Not!");
             }
         }
 
