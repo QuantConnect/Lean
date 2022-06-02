@@ -714,14 +714,31 @@ namespace QuantConnect.Lean.Engine
 
         private IEnumerable<TimeSlice> Stream(IAlgorithm algorithm, ISynchronizer synchronizer, IResultHandler results, CancellationToken cancellationToken)
         {
+            var nextWarmupStatusTime = DateTime.MinValue;
+            var warmingUp = algorithm.IsWarmingUp;
+            var warmingUpPercent = 0;
+            if (warmingUp)
+            {
+                nextWarmupStatusTime = DateTime.UtcNow.AddSeconds(1);
+                algorithm.Debug("Algorithm starting warm up...");
+                results.SendStatusUpdate(AlgorithmStatus.History, $"{warmingUpPercent}");
+            }
+            else
+            {
+                results.SendStatusUpdate(AlgorithmStatus.Running);
+            }
+
+            // bellow we compare with slice.Time which is in UTC
+            var startTimeTicks = algorithm.UtcTime.Ticks;
+            var warmupEndTicks = algorithm.StartDate.ConvertToUtc(algorithm.TimeZone).Ticks;
+
             // fulfilling history requirements of volatility models in live mode
             if (algorithm.LiveMode)
             {
+                warmupEndTicks = DateTime.UtcNow.Ticks;
                 ProcessVolatilityHistoryRequirements(algorithm);
             }
 
-            var nextWarmupStatusTime = DateTime.MinValue;
-            var startTimeTicks = algorithm.Time.Ticks;
             foreach (var timeSlice in synchronizer.StreamData(cancellationToken))
             {
                 if (algorithm.IsWarmingUp)
@@ -731,10 +748,23 @@ namespace QuantConnect.Lean.Engine
                     {
                         // send some status to the user letting them know we're done history, but still warming up,
                         // catching up to real time data
-                        nextWarmupStatusTime = now.AddSeconds(1);
-                        var percent = (int) (100*(timeSlice.Time.Ticks - startTimeTicks)/(double) (now.Ticks - startTimeTicks));
-                        results.SendStatusUpdate(AlgorithmStatus.History, $"Catching up to realtime {percent}%...");
+                        nextWarmupStatusTime = now.AddSeconds(2);
+                        var newPercent = (int) (100*(timeSlice.Time.Ticks - startTimeTicks)/(double) (warmupEndTicks - startTimeTicks));
+                        // if there isn't any progress don't send the same update many times
+                        if (newPercent != warmingUpPercent)
+                        {
+                            warmingUpPercent = newPercent;
+                            algorithm.Debug($"Processing algorithm warm-up request {warmingUpPercent}%...");
+                            results.SendStatusUpdate(AlgorithmStatus.History, $"{warmingUpPercent}");
+                        }
                     }
+                }
+                else if (warmingUp)
+                {
+                    // warmup finished, send an update
+                    warmingUp = false;
+                    algorithm.Debug("Algorithm finished warming up.");
+                    results.SendStatusUpdate(AlgorithmStatus.Running, "100");
                 }
                 yield return timeSlice;
             }

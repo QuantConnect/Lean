@@ -1025,7 +1025,6 @@ namespace QuantConnect.Algorithm
             _timeKeeper.SetUtcDateTime(frontier);
             if (_locked && IsWarmingUp && Time >= _start)
             {
-                Debug("Algorithm finished warming up.");
                 SetFinishedWarmingUp();
             }
         }

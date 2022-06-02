@@ -315,9 +315,6 @@ namespace QuantConnect.Lean.Engine
                         }
                     };
 
-                    //Send status to user the algorithm is now executing.
-                    AlgorithmHandlers.Results.SendStatusUpdate(AlgorithmStatus.Running);
-
                     // Result manager scanning message queue: (started earlier)
                     AlgorithmHandlers.Results.DebugMessage(
                         $"Launching analysis for {job.AlgorithmId} with LEAN Engine v{Globals.Version}");
