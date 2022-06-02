@@ -719,7 +719,7 @@ namespace QuantConnect.Lean.Engine
             if (warmingUp)
             {
                 nextWarmupStatusTime = DateTime.UtcNow.AddSeconds(1);
-                results.SendStatusUpdate(AlgorithmStatus.History, $"Catching up to realtime 0%...");
+                results.SendStatusUpdate(AlgorithmStatus.History, $"Processing algorithm warm-up request 0%...");
             }
             else
             {
@@ -744,7 +744,7 @@ namespace QuantConnect.Lean.Engine
                         // catching up to real time data
                         nextWarmupStatusTime = now.AddSeconds(1);
                         var percent = (int) (100*(timeSlice.Time.Ticks - startTimeTicks)/(double) (now.Ticks - startTimeTicks));
-                        results.SendStatusUpdate(AlgorithmStatus.History, $"Catching up to realtime {percent}%...");
+                        results.SendStatusUpdate(AlgorithmStatus.History, $"Processing algorithm warm-up request {percent}%...");
                     }
                 }
                 else if (warmingUp)
@@ -752,7 +752,7 @@ namespace QuantConnect.Lean.Engine
                     // warmup finished, send an update
                     warmingUp = false;
                     algorithm.Debug("Algorithm finished warming up.");
-                    results.SendStatusUpdate(AlgorithmStatus.Running, "Catching up to realtime 100%");
+                    results.SendStatusUpdate(AlgorithmStatus.Running, "Processing algorithm warm-up request 100%");
                 }
                 yield return timeSlice;
             }
