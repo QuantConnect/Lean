@@ -54,6 +54,7 @@ namespace QuantConnect.Lean.Engine.Results
         private CapacityEstimate _capacityEstimate;
 
         //Processing Time:
+        private DateTime _initialTime;
         private DateTime _nextSample;
         private string _algorithmId;
         private int _projectId;
@@ -389,6 +390,7 @@ namespace QuantConnect.Lean.Engine.Results
         public virtual void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue)
         {
             Algorithm = algorithm;
+            _initialTime = Algorithm.Time;
             StartingPortfolioValue = startingPortfolioValue;
             DailyPortfolioValue = StartingPortfolioValue;
             CumulativeMaxPortfolioValue = StartingPortfolioValue;
@@ -403,8 +405,8 @@ namespace QuantConnect.Lean.Engine.Results
 
             //Setup the sampling periods:
             _jobDays = Algorithm.Securities.Count > 0
-                ? Time.TradeableDates(Algorithm.Securities.Values, algorithm.StartDate, algorithm.EndDate)
-                : Convert.ToInt32((algorithm.EndDate.Date - algorithm.StartDate.Date).TotalDays) + 1;
+                ? Time.TradeableDates(Algorithm.Securities.Values, _initialTime, algorithm.EndDate)
+                : Convert.ToInt32((algorithm.EndDate.Date - _initialTime.Date).TotalDays) + 1;
 
             //Set the security / market types.
             var types = new List<SecurityType>();
@@ -556,25 +558,6 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Sample the current equity of the strategy directly with time-value pair.
-        /// </summary>
-        /// <param name="time">Current backtest time.</param>
-        /// <param name="value">Current equity value.</param>
-        protected override void SampleEquity(DateTime time, decimal value)
-        {
-            base.SampleEquity(time, value);
-
-            try
-            {
-                //Recalculate the days processed. We use 'int' so it's thread safe
-                _daysProcessed = (int) (time - Algorithm.StartDate).TotalDays;
-            }
-            catch (OverflowException)
-            {
-            }
-        }
-
-        /// <summary>
         /// Sample estimated strategy capacity
         /// </summary>
         /// <param name="time">Time of the sample</param>
@@ -721,6 +704,14 @@ namespace QuantConnect.Lean.Engine.Results
             _capacityEstimate.UpdateMarketCapacity(forceProcess);
 
             var time = Algorithm.UtcTime;
+            try
+            {
+                //Recalculate the days processed. We use 'int' so it's thread safe
+                _daysProcessed = (int)(Algorithm.Time - _initialTime).TotalDays;
+            }
+            catch (OverflowException)
+            {
+            }
 
             if (time > _nextSample || forceProcess)
             {

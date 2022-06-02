@@ -714,13 +714,24 @@ namespace QuantConnect.Lean.Engine
 
         private IEnumerable<TimeSlice> Stream(IAlgorithm algorithm, ISynchronizer synchronizer, IResultHandler results, CancellationToken cancellationToken)
         {
+            var nextWarmupStatusTime = DateTime.MinValue;
+            var warmingUp = algorithm.IsWarmingUp;
+            if (warmingUp)
+            {
+                nextWarmupStatusTime = DateTime.UtcNow.AddSeconds(1);
+                results.SendStatusUpdate(AlgorithmStatus.History, $"Catching up to realtime 0%...");
+            }
+            else
+            {
+                results.SendStatusUpdate(AlgorithmStatus.Running);
+            }
+
             // fulfilling history requirements of volatility models in live mode
             if (algorithm.LiveMode)
             {
                 ProcessVolatilityHistoryRequirements(algorithm);
             }
 
-            var nextWarmupStatusTime = DateTime.MinValue;
             var startTimeTicks = algorithm.Time.Ticks;
             foreach (var timeSlice in synchronizer.StreamData(cancellationToken))
             {
@@ -735,6 +746,13 @@ namespace QuantConnect.Lean.Engine
                         var percent = (int) (100*(timeSlice.Time.Ticks - startTimeTicks)/(double) (now.Ticks - startTimeTicks));
                         results.SendStatusUpdate(AlgorithmStatus.History, $"Catching up to realtime {percent}%...");
                     }
+                }
+                else if (warmingUp)
+                {
+                    // warmup finished, send an update
+                    warmingUp = false;
+                    algorithm.Debug("Algorithm finished warming up.");
+                    results.SendStatusUpdate(AlgorithmStatus.Running, "Catching up to realtime 100%");
                 }
                 yield return timeSlice;
             }
