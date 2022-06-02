@@ -728,13 +728,17 @@ namespace QuantConnect.Lean.Engine
                 results.SendStatusUpdate(AlgorithmStatus.Running);
             }
 
+            // bellow we compare with slice.Time which is in UTC
+            var startTimeTicks = algorithm.UtcTime.Ticks;
+            var warmupEndTicks = algorithm.StartDate.ConvertToUtc(algorithm.TimeZone).Ticks;
+
             // fulfilling history requirements of volatility models in live mode
             if (algorithm.LiveMode)
             {
+                warmupEndTicks = DateTime.UtcNow.Ticks;
                 ProcessVolatilityHistoryRequirements(algorithm);
             }
 
-            var startTimeTicks = algorithm.Time.Ticks;
             foreach (var timeSlice in synchronizer.StreamData(cancellationToken))
             {
                 if (algorithm.IsWarmingUp)
@@ -745,7 +749,7 @@ namespace QuantConnect.Lean.Engine
                         // send some status to the user letting them know we're done history, but still warming up,
                         // catching up to real time data
                         nextWarmupStatusTime = now.AddSeconds(2);
-                        var newPercent = (int) (100*(timeSlice.Time.Ticks - startTimeTicks)/(double) (now.Ticks - startTimeTicks));
+                        var newPercent = (int) (100*(timeSlice.Time.Ticks - startTimeTicks)/(double) (warmupEndTicks - startTimeTicks));
                         // if there isn't any progress don't send the same update many times
                         if (newPercent != warmingUpPercent)
                         {
