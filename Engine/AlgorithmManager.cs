@@ -716,10 +716,12 @@ namespace QuantConnect.Lean.Engine
         {
             var nextWarmupStatusTime = DateTime.MinValue;
             var warmingUp = algorithm.IsWarmingUp;
+            var warmingUpPercent = 0;
             if (warmingUp)
             {
                 nextWarmupStatusTime = DateTime.UtcNow.AddSeconds(1);
-                results.SendStatusUpdate(AlgorithmStatus.History, $"Processing algorithm warm-up request 0%...");
+                algorithm.Debug("Algorithm starting warm up...");
+                results.SendStatusUpdate(AlgorithmStatus.History, $"{warmingUpPercent}");
             }
             else
             {
@@ -742,9 +744,14 @@ namespace QuantConnect.Lean.Engine
                     {
                         // send some status to the user letting them know we're done history, but still warming up,
                         // catching up to real time data
-                        nextWarmupStatusTime = now.AddSeconds(1);
-                        var percent = (int) (100*(timeSlice.Time.Ticks - startTimeTicks)/(double) (now.Ticks - startTimeTicks));
-                        results.SendStatusUpdate(AlgorithmStatus.History, $"Processing algorithm warm-up request {percent}%...");
+                        nextWarmupStatusTime = now.AddSeconds(2);
+                        var newPercent = (int) (100*(timeSlice.Time.Ticks - startTimeTicks)/(double) (now.Ticks - startTimeTicks));
+                        // if there isn't any progress don't send the same update many times
+                        if (newPercent != warmingUpPercent)
+                        {
+                            warmingUpPercent = newPercent;
+                            results.SendStatusUpdate(AlgorithmStatus.History, $"{warmingUpPercent}");
+                        }
                     }
                 }
                 else if (warmingUp)
@@ -752,7 +759,7 @@ namespace QuantConnect.Lean.Engine
                     // warmup finished, send an update
                     warmingUp = false;
                     algorithm.Debug("Algorithm finished warming up.");
-                    results.SendStatusUpdate(AlgorithmStatus.Running, "Processing algorithm warm-up request 100%");
+                    results.SendStatusUpdate(AlgorithmStatus.Running, "100");
                 }
                 yield return timeSlice;
             }
