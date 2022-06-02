@@ -82,7 +82,7 @@ namespace QuantConnect
             {"NZD", "$"},
             {"AUD", "$"},
             {"CAD", "$"},
-            {"CHF", "Fr"},
+            {CHF, "Fr"},
             {HKD, "$"},
             {"SGD", "$"},
             {"XAG", "Ag"},
@@ -102,18 +102,44 @@ namespace QuantConnect
             {"TRY", "₺"},
             {"TWD", "NT$"},
             {"ZAR", "R"},
+            {"RUB", "₽"},
+            {"BRL", "R$"},
+            {"GNF", "Fr"},
+            {IDR, "Rp"},
 
-            {"BTC", "฿"},
-            {"BCH", "฿"},
+            {"BTC", "₿"},
+            {"BCH", "Ƀ"},
+            {"BSV", "Ɓ"},
             {"LTC", "Ł"},
             {"ETH", "Ξ"},
-
-            {"EOS", "EOS"},
-            {"XRP", "XRP"},
-            {"XLM", "XLM"},
-            {"ETC", "ETC"},
+            {"EOS", "ε"},
+            {"XRP", "✕"},
+            {"XLM", "*"},
+            {"ETC", "ξ"},
             {"ZRX", "ZRX"},
-            {"USDT", "USDT"}
+            {"USDT", "₮"},
+            {"ADA", "₳"},
+            {"SOL", "◎"},
+            {"DOT", "●"},
+            {"DOGE", "Ð"},
+            {"DAI", "◈"},
+            {"ALGO", "Ⱥ"},
+            {"ICP", "∞"},
+            {"XMR", "ɱ"},
+            {"XTZ", "ꜩ"},
+            {"IOTA", "ɨ"},
+            {"MIOTA", "ɨ"},
+            {"MKR", "Μ"},
+            {"ZEC", "ⓩ"},
+            {"DASH", "Đ"},
+            {"XNO", "Ӿ"},
+            {"REP", "Ɍ"},
+            {"STEEM", "ȿ"},
+            {"THETA", "ϑ"},
+            {"FIL", "⨎"},
+            {"BAT", "⟁"},
+            {"LSK", "Ⱡ"},
+            {"NAV", "Ꞥ"}
         };
 
         /// <summary>
@@ -216,7 +242,7 @@ namespace QuantConnect
         public static string GetCurrencySymbol(string currency)
         {
             string currencySymbol;
-            return CurrencySymbols.TryGetValue(currency, out currencySymbol) ? currencySymbol : "$";
+            return CurrencySymbols.TryGetValue(currency, out currencySymbol) ? currencySymbol : currency;
         }
     }
 }

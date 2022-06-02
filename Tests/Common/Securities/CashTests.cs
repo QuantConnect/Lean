@@ -525,7 +525,7 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase("USD", "$")]
         [TestCase("EUR", "€")]
         [TestCase("GBP", "₤")]
-        [TestCase("BTC", "฿")]
+        [TestCase("BTC", "₿")]
         public void CashHasCorrectCurrencySymbol(string symbol, string currencySymbol)
         {
             var cash = new Cash(symbol, 1, 1);
