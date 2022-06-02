@@ -107,6 +107,7 @@ namespace QuantConnect
             {"BCH", "฿"},
             {"LTC", "Ł"},
             {"ETH", "Ξ"},
+            {"ADA", "₳"},
 
             {"EOS", "EOS"},
             {"XRP", "XRP"},
@@ -216,7 +217,7 @@ namespace QuantConnect
         public static string GetCurrencySymbol(string currency)
         {
             string currencySymbol;
-            return CurrencySymbols.TryGetValue(currency, out currencySymbol) ? currencySymbol : "$";
+            return CurrencySymbols.TryGetValue(currency, out currencySymbol) ? currencySymbol : currency;
         }
     }
 }
