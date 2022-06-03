@@ -69,7 +69,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             }
             else
             {
-                throw new Exception("Not!");
+                throw new InvalidOperationException($"Backtesting is expected to be using {nameof(BaseDataSubscriptionEnumeratorFactory)}");
             }
         }
 

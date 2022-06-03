@@ -69,9 +69,14 @@ namespace QuantConnect.Lean.Engine.Setup
         public IObjectStore ObjectStore { get; }
 
         /// <summary>
-        /// Gets the DataProvider
+        /// Gets the DataCacheProvider
         /// </summary>
-        public IDataProvider DataProvider { get; }
+        public IDataCacheProvider DataCacheProvider { get; }
+
+        /// <summary>
+        /// The map file provider instance of the algorithm
+        /// </summary>
+        public IMapFileProvider MapFileProvider { get; }
 
         /// <summary>
         /// Creates a new instance
@@ -84,7 +89,8 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="transactionHandler">The configured transaction handler</param>
         /// <param name="realTimeHandler">The configured real time handler</param>
         /// <param name="objectStore">The configured object store</param>
-        /// <param name="dataProvider">The configured data provider</param>
+        /// <param name="dataCacheProvider">The configured data cache provider</param>
+        /// <param name="mapFileProvider">The map file provider</param>
         public SetupHandlerParameters(UniverseSelection universeSelection,
             IAlgorithm algorithm,
             IBrokerage brokerage,
@@ -93,7 +99,8 @@ namespace QuantConnect.Lean.Engine.Setup
             ITransactionHandler transactionHandler,
             IRealTimeHandler realTimeHandler,
             IObjectStore objectStore,
-            IDataProvider dataProvider
+            IDataCacheProvider dataCacheProvider,
+            IMapFileProvider mapFileProvider
             )
         {
             UniverseSelection = universeSelection;
@@ -104,7 +111,8 @@ namespace QuantConnect.Lean.Engine.Setup
             TransactionHandler = transactionHandler;
             RealTimeHandler = realTimeHandler;
             ObjectStore = objectStore;
-            DataProvider = dataProvider;
+            DataCacheProvider = dataCacheProvider;
+            MapFileProvider = mapFileProvider;
         }
     }
 }
