@@ -311,52 +311,49 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             var symbols = new List<Symbol>();
 
-            using (var client = new WebClient())
+            // use QC url to bypass TLS issues with Mono pre-4.8 version
+            var url = "https://www.quantconnect.com/api/v2/theocc/series-search?symbolType=U&symbol=" + underlyingSymbol.Value;
+
+            // download the text file
+            var fileContent = url.DownloadData();
+
+            // read the lines, skipping the headers
+            var lines = fileContent.Split(new[] { "\r\n" }, StringSplitOptions.None).Skip(7);
+
+            // Example of a line:
+            // SPY		2021	03	26	190	000	C P 	0	612	360000000
+
+            // parse the lines, creating the Lean option symbols
+            foreach (var line in lines)
             {
-                // use QC url to bypass TLS issues with Mono pre-4.8 version
-                var url = "https://www.quantconnect.com/api/v2/theocc/series-search?symbolType=U&symbol=" + underlyingSymbol.Value;
+                var fields = line.Split('\t');
 
-                // download the text file
-                var fileContent = client.DownloadString(url);
+                var ticker = fields[0].Trim();
+                if (ticker != underlyingSymbol.Value)
+                    continue;
 
-                // read the lines, skipping the headers
-                var lines = fileContent.Split(new[] { "\r\n" }, StringSplitOptions.None).Skip(7);
+                var expiryDate = new DateTime(fields[2].ToInt32(), fields[3].ToInt32(), fields[4].ToInt32());
+                var strike = (fields[5] + "." + fields[6]).ToDecimal();
 
-                // Example of a line:
-                // SPY		2021	03	26	190	000	C P 	0	612	360000000
+                Action<OptionRight> addSymbol = right =>
+                    symbols.Add(Symbol.CreateOption(
+                        underlyingSymbol,
+                        underlyingSymbol.ID.Market,
+                        underlyingSymbol.SecurityType.DefaultOptionStyle(),
+                        right,
+                        strike,
+                        expiryDate));
 
-                // parse the lines, creating the Lean option symbols
-                foreach (var line in lines)
+                foreach (var right in fields[7].Trim().Split(' '))
                 {
-                    var fields = line.Split('\t');
-
-                    var ticker = fields[0].Trim();
-                    if (ticker != underlyingSymbol.Value)
-                        continue;
-
-                    var expiryDate = new DateTime(fields[2].ToInt32(), fields[3].ToInt32(), fields[4].ToInt32());
-                    var strike = (fields[5] + "." + fields[6]).ToDecimal();
-
-                    Action<OptionRight> addSymbol = right =>
-                        symbols.Add(Symbol.CreateOption(
-                            underlyingSymbol,
-                            underlyingSymbol.ID.Market,
-                            underlyingSymbol.SecurityType.DefaultOptionStyle(),
-                            right,
-                            strike,
-                            expiryDate));
-
-                    foreach (var right in fields[7].Trim().Split(' '))
+                    if (right.Contains("C"))
                     {
-                        if (right.Contains("C"))
-                        {
-                            addSymbol(OptionRight.Call);
-                        }
+                        addSymbol(OptionRight.Call);
+                    }
 
-                        if (right.Contains("P"))
-                        {
-                            addSymbol(OptionRight.Put);
-                        }
+                    if (right.Contains("P"))
+                    {
+                        addSymbol(OptionRight.Put);
                     }
                 }
             }
