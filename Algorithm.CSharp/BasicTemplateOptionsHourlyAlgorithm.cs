@@ -109,7 +109,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 64216;
+        public long DataPoints => 33016;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -121,28 +121,28 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "4"},
+            {"Total Trades", "2"},
             {"Average Win", "0%"},
-            {"Average Loss", "-0.07%"},
-            {"Compounding Annual Return", "-12.496%"},
+            {"Average Loss", "-0.05%"},
+            {"Compounding Annual Return", "-4.572%"},
             {"Drawdown", "0.200%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "-0.134%"},
-            {"Sharpe Ratio", "-8.839"},
+            {"Net Profit", "-0.047%"},
+            {"Sharpe Ratio", "0"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.083"},
-            {"Beta", "-0.054"},
-            {"Annual Standard Deviation", "0.008"},
+            {"Alpha", "0"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-18.699"},
-            {"Tracking Error", "0.155"},
-            {"Treynor Ratio", "1.296"},
-            {"Total Fees", "$4.00"},
-            {"Estimated Strategy Capacity", "$1000.00"},
-            {"Lowest Capacity Asset", "AAPL 2ZTXYMUAHCIAU|AAPL R735QTJ8XC9X"},
+            {"Information Ratio", "-19.236"},
+            {"Tracking Error", "0.147"},
+            {"Treynor Ratio", "0"},
+            {"Total Fees", "$2.00"},
+            {"Estimated Strategy Capacity", "$2000.00"},
+            {"Lowest Capacity Asset", "AAPL 2ZTXYLO9EQPZA|AAPL R735QTJ8XC9X"},
             {"Fitness Score", "0.04"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
@@ -162,7 +162,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "81e8a822d43de2165c1d3f52964ec312"}
+            {"OrderListHash", "cbe772cbad4a9459a00a3a8514beb116"}
         };
     }
 }
