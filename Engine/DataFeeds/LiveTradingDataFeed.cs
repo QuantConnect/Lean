@@ -470,29 +470,29 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IEnumerator<BaseData> result = null;
             try
             {
-                var historyRequest = new Data.HistoryRequest(warmup.Configuration, warmup.ExchangeHours, warmup.StartTimeUtc, warmup.EndTimeUtc);
-                result = _algorithm.HistoryProvider.GetHistory(new[] { historyRequest }, _algorithm.TimeZone).SelectMany(slice =>
-                {
-                    try
-                    {
-                        var data = slice.Get(historyRequest.DataType);
-                        return (IEnumerable<BaseData>)data.Values;
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Error(e, $"History warmup: {warmup.Configuration}");
-                    }
-                    return null;
-                }).GetEnumerator();
-
-                result = new FilterEnumerator<BaseData>(result, data => data == null || data.EndTime < warmup.EndTimeLocal);
-
                 if (warmup.IsUniverseSubscription)
                 {
-                    result = ConfigureEnumerator(warmup, true, result);
-                    result = AppendUnderlyingEnumerator(warmup, result, GetHistoryWarmupEnumerator);
+                    result = CreateUniverseEnumerator(warmup, GetHistoryWarmupEnumerator);
                 }
-                return result;
+                else
+                {
+                    var historyRequest = new Data.HistoryRequest(warmup.Configuration, warmup.ExchangeHours, warmup.StartTimeUtc, warmup.EndTimeUtc);
+                    result = _algorithm.HistoryProvider.GetHistory(new[] { historyRequest }, _algorithm.TimeZone).SelectMany(slice =>
+                    {
+                        try
+                        {
+                            var data = slice.Get(historyRequest.DataType);
+                            return (IEnumerable<BaseData>)data.Values;
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Error(e, $"History warmup: {warmup.Configuration}");
+                        }
+                        return null;
+                    }).GetEnumerator();
+                }
+
+                return new FilterEnumerator<BaseData>(result, data => data == null || data.EndTime < warmup.EndTimeLocal);
             }
             catch
             {

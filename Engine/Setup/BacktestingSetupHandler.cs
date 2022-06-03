@@ -15,7 +15,6 @@
 */
 
 using System;
-using System.Linq;
 using QuantConnect.Util;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
@@ -171,10 +170,10 @@ namespace QuantConnect.Lean.Engine.Setup
                     algorithm.Schedule.SetEventSchedule(parameters.RealTimeHandler);
 
                     // set the option chain provider
-                    algorithm.SetOptionChainProvider(new CachingOptionChainProvider(new BacktestingOptionChainProvider(parameters.DataProvider)));
+                    algorithm.SetOptionChainProvider(new CachingOptionChainProvider(new BacktestingOptionChainProvider(parameters.DataCacheProvider, parameters.MapFileProvider)));
 
                     // set the future chain provider
-                    algorithm.SetFutureChainProvider(new CachingFutureChainProvider(new BacktestingFutureChainProvider(parameters.DataProvider)));
+                    algorithm.SetFutureChainProvider(new CachingFutureChainProvider(new BacktestingFutureChainProvider(parameters.DataCacheProvider)));
 
                     // set the object store
                     algorithm.SetObjectStore(parameters.ObjectStore);

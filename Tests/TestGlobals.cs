@@ -16,6 +16,7 @@
 using QuantConnect.Util;
 using QuantConnect.Interfaces;
 using QuantConnect.Configuration;
+using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Tests
 {
@@ -32,6 +33,8 @@ namespace QuantConnect.Tests
             = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"));
         public static IFactorFileProvider FactorFileProvider
             = Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>(Config.Get("factor-file-provider", "LocalDiskFactorFileProvider"));
+
+        public static IDataCacheProvider DataCacheProvider = new ZipDataCacheProvider(DataProvider);
 
         /// <summary>
         /// Initialize our providers, called by AssemblyInitialize.cs so all tests
