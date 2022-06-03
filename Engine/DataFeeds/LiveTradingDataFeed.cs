@@ -39,7 +39,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class LiveTradingDataFeed : FileSystemDataFeed
     {
-        private static readonly int MaximumWarmupHistoryDaysLookBack = Config.GetInt("maximum-warmup-history-days-look-back", 7);
+        private static readonly int MaximumWarmupHistoryDaysLookBack = Config.GetInt("maximum-warmup-history-days-look-back", 5);
 
         private LiveNodePacket _job;
 
@@ -211,7 +211,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         {
                             enqueable.Enqueue(data);
 
-                            subscription.OnNewDataAvailable();
+                            subscription?.OnNewDataAvailable();
                         });
 
                         enumerator = enqueable;
@@ -354,7 +354,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _customExchange.AddEnumerator(config.Symbol, aggregator, handleData: data =>
                 {
                     enqueable.Enqueue(data);
-                    subscription.OnNewDataAvailable();
+                    subscription?.OnNewDataAvailable();
                 });
 
                 enumerator = GetConfiguredFrontierAwareEnumerator(enqueable, tzOffsetProvider,
@@ -368,7 +368,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Func<SubscriptionRequest, IEnumerator<BaseData>> configure = (subRequest) =>
                 {
                     var fillForwardResolution = _subscriptions.UpdateAndGetFillForwardResolution(subRequest.Configuration);
-                    var input = Subscribe(subRequest.Configuration, (sender, args) => subscription.OnNewDataAvailable());
+                    var input = Subscribe(subRequest.Configuration, (sender, args) => subscription?.OnNewDataAvailable());
                     return new LiveFillForwardEnumerator(_frontierTimeProvider, input, subRequest.Security.Exchange, fillForwardResolution, subRequest.Configuration.ExtendedMarketHours, localEndTime, subRequest.Configuration.Increment, subRequest.Configuration.DataTimeZone);
                 };
 
@@ -410,7 +410,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // send the subscription for the new symbol through to the data queuehandler
             if (_channelProvider.ShouldStreamSubscription(subscription.Configuration))
             {
-                Subscribe(request.Configuration, (sender, args) => subscription.OnNewDataAvailable());
+                Subscribe(request.Configuration, (sender, args) => subscription?.OnNewDataAvailable());
             }
 
             return subscription;
@@ -472,7 +472,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 if (warmup.IsUniverseSubscription)
                 {
-                    result = CreateUniverseEnumerator(warmup, GetHistoryWarmupEnumerator);
+                    result = CreateUniverseEnumerator(warmup, createUnderlyingEnumerator: GetHistoryWarmupEnumerator);
                 }
                 else
                 {
