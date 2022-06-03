@@ -213,7 +213,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 200618;
+        public long DataPoints => 188424;
 
         /// <summary>
         /// Data Points count of the algorithm history
