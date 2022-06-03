@@ -15,7 +15,6 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -103,7 +102,6 @@ namespace QuantConnect.Lean.Engine
 
                 IBrokerage brokerage = null;
                 DataManager dataManager = null;
-                IDataCacheProvider historyDataCacheProvider = null;
                 var synchronizer = _liveMode ? new LiveSynchronizer() : new Synchronizer();
                 try
                 {
@@ -187,13 +185,12 @@ namespace QuantConnect.Lean.Engine
                     // set the history provider before setting up the algorithm
                     var historyProvider = GetHistoryProvider();
                     historyProvider.SetBrokerage(brokerage);
-                    historyDataCacheProvider = new ZipDataCacheProvider(AlgorithmHandlers.DataProvider, isDataEphemeral:_liveMode);
                     historyProvider.Initialize(
                         new HistoryProviderInitializeParameters(
                             job,
                             SystemHandlers.Api,
                             AlgorithmHandlers.DataProvider,
-                            historyDataCacheProvider,
+                            AlgorithmHandlers.DataCacheProvider,
                             AlgorithmHandlers.MapFileProvider,
                             AlgorithmHandlers.FactorFileProvider,
                             progress =>
@@ -222,7 +219,7 @@ namespace QuantConnect.Lean.Engine
 
                     //Initialize the internal state of algorithm and job: executes the algorithm.Initialize() method.
                     initializeComplete = AlgorithmHandlers.Setup.Setup(new SetupHandlerParameters(dataManager.UniverseSelection, algorithm, brokerage, job, AlgorithmHandlers.Results,
-                        AlgorithmHandlers.Transactions, AlgorithmHandlers.RealTime, AlgorithmHandlers.ObjectStore, AlgorithmHandlers.DataProvider));
+                        AlgorithmHandlers.Transactions, AlgorithmHandlers.RealTime, AlgorithmHandlers.ObjectStore, AlgorithmHandlers.DataCacheProvider, AlgorithmHandlers.MapFileProvider));
 
                     // set this again now that we've actually added securities
                     AlgorithmHandlers.Results.SetAlgorithm(algorithm, AlgorithmHandlers.Setup.StartingPortfolioValue);
@@ -433,7 +430,6 @@ namespace QuantConnect.Lean.Engine
                     AlgorithmHandlers.Setup.Dispose();
                 }
 
-                historyDataCacheProvider.DisposeSafely();
                 Log.Trace("Engine.Main(): Analysis Completed and Results Posted.");
             }
             catch (Exception err)

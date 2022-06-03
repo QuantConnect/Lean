@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -34,7 +34,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// An implementation of <see cref="IOptionChainProvider"/> that fetches the list of contracts
     /// from the Options Clearing Corporation (OCC) website
     /// </summary>
-    public class LiveOptionChainProvider : IOptionChainProvider
+    public class LiveOptionChainProvider : BacktestingOptionChainProvider
     {
         private static readonly HttpClient _client;
         private static readonly DateTime _epoch = new DateTime(1970, 1, 1);
@@ -67,26 +67,63 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        /// <param name="dataCacheProvider">The data cache provider instance to use</param>
+        /// <param name="mapFileProvider">The map file provider instance to use</param>
+        public LiveOptionChainProvider(IDataCacheProvider dataCacheProvider, IMapFileProvider mapFileProvider)
+            : base(dataCacheProvider, mapFileProvider)
+        {
+        }
+
+        /// <summary>
         /// Gets the option chain associated with the underlying Symbol
         /// </summary>
         /// <param name="underlyingSymbol">Underlying symbol to get the option chain for</param>
         /// <param name="date">Unused</param>
         /// <returns>Option chain</returns>
         /// <exception cref="ArgumentException">Option underlying Symbol is not Future or Equity</exception>
-        public IEnumerable<Symbol> GetOptionContractList(Symbol underlyingSymbol, DateTime date)
+        public override IEnumerable<Symbol> GetOptionContractList(Symbol underlyingSymbol, DateTime date)
         {
-            if (underlyingSymbol.SecurityType == SecurityType.Equity || underlyingSymbol.SecurityType == SecurityType.Index)
+            var result = Enumerable.Empty<Symbol>();
+            try
             {
-                // Source data from TheOCC if we're trading equity or index options
-                return GetEquityOptionContractList(underlyingSymbol, date);
+                result = base.GetOptionContractList(underlyingSymbol, date);
             }
-            if (underlyingSymbol.SecurityType == SecurityType.Future)
+            catch
             {
-                // We get our data from CME if we're trading future options
-                return GetFutureOptionContractList(underlyingSymbol, date);
             }
 
-            throw new ArgumentException("Option Underlying SecurityType is not supported. Supported types are: Equity, Index, Future");
+            bool yielded = false;
+            foreach (var symbol in result)
+            {
+                yielded = true;
+                yield return symbol;
+            }
+
+            if (!yielded)
+            {
+                if (underlyingSymbol.SecurityType == SecurityType.Equity || underlyingSymbol.SecurityType == SecurityType.Index)
+                {
+                    // Source data from TheOCC if we're trading equity or index options
+                    foreach (var symbol in GetEquityOptionContractList(underlyingSymbol, date))
+                    {
+                        yield return symbol;
+                    }
+                }
+                else if (underlyingSymbol.SecurityType == SecurityType.Future)
+                {
+                    // We get our data from CME if we're trading future options
+                    foreach (var symbol in GetFutureOptionContractList(underlyingSymbol, date))
+                    {
+                        yield return symbol;
+                    }
+                }
+                else
+                {
+                    throw new ArgumentException("Option Underlying SecurityType is not supported. Supported types are: Equity, Index, Future");
+                }
+            }
         }
 
         private IEnumerable<Symbol> GetFutureOptionContractList(Symbol futureContractSymbol, DateTime date)

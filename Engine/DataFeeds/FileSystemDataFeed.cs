@@ -93,7 +93,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <remarks>Protected so it can be used by the <see cref="LiveTradingDataFeed"/> to warmup requests</remarks>
         protected IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request)
         {
-            return request.IsUniverseSubscription ? CreateUniverseEnumerator(request) : CreateDataEnumerator(request);
+            return request.IsUniverseSubscription ? CreateUniverseEnumerator(request, CreateDataEnumerator) : CreateDataEnumerator(request);
         }
 
         private IEnumerator<BaseData> CreateDataEnumerator(SubscriptionRequest request)
@@ -140,7 +140,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
         }
 
-        private IEnumerator<BaseData> CreateUniverseEnumerator(SubscriptionRequest request)
+        protected IEnumerator<BaseData> CreateUniverseEnumerator(SubscriptionRequest request, Func<SubscriptionRequest, IEnumerator<BaseData>> createUnderlyingEnumerator)
         {
             ISubscriptionEnumeratorFactory factory = _subscriptionFactory;
             if (request.Universe is ITimeTriggeredUniverse)
@@ -160,12 +160,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             else if (request.Configuration.Type == typeof(ZipEntryName))
             {
-                // TODO: subscription should already come in as fill forward true
-                request = new SubscriptionRequest(request, configuration: new SubscriptionDataConfig(request.Configuration, fillForward: true));
+                // TODO: subscription should already come in correctly built
+                var resolution = request.Configuration.Resolution == Resolution.Tick ? Resolution.Second : request.Configuration.Resolution;
 
-                var result = new BaseDataSubscriptionEnumeratorFactory(false, _mapFileProvider, _cacheProvider).CreateEnumerator(request, _dataProvider);
+                // TODO: subscription should already come in as fill forward true
+                request = new SubscriptionRequest(request, configuration: new SubscriptionDataConfig(request.Configuration, fillForward: true, resolution: resolution));
+
+                var result = new BaseDataSubscriptionEnumeratorFactory(_algorithm.OptionChainProvider, _algorithm.FutureChainProvider)
+                    .CreateEnumerator(request, _dataProvider);
                 result = ConfigureEnumerator(request, true, result);
-                return AppendUnderlyingEnumerator(request, result, (request) => _subscriptionFactory.CreateEnumerator(request, _dataProvider));
+                return TryAppendUnderlyingEnumerator(request, result, createUnderlyingEnumerator);
             }
 
             // define our data enumerator
@@ -174,24 +178,26 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// 
+        /// If required will add a new enumerator for the underlying symbol
         /// </summary>
-        protected IEnumerator<BaseData> AppendUnderlyingEnumerator(SubscriptionRequest request, IEnumerator<BaseData> parent, Func<SubscriptionRequest, IEnumerator<BaseData>> createEnumerator)
+        protected IEnumerator<BaseData> TryAppendUnderlyingEnumerator(SubscriptionRequest request, IEnumerator<BaseData> parent, Func<SubscriptionRequest, IEnumerator<BaseData>> createEnumerator)
         {
-            if (request.Configuration.Symbol.HasUnderlying)
+            if (request.Configuration.Symbol.SecurityType.IsOption() && request.Configuration.Symbol.HasUnderlying)
             {
                 // TODO: creating this subscription request/config is bad
                 var underlyingRequests = new SubscriptionRequest(request,
+                    isUniverseSubscription: false,
                     configuration: new SubscriptionDataConfig(request.Configuration, symbol: request.Configuration.Symbol.Underlying, objectType: typeof(TradeBar), tickType: TickType.Trade));
 
                 var underlying = createEnumerator(underlyingRequests);
                 underlying = new FilterEnumerator<BaseData>(underlying, data => data.DataType != MarketDataType.Auxiliary);
-                // TODO: we shouldn't require aggregating the underling. If we don't it changes algorithm data point count
-                underlying = ConfigureEnumerator(underlyingRequests, true, underlying);
 
                 parent = new SynchronizingBaseDataEnumerator(parent, underlying);
-                parent = ConfigureEnumerator(request, true, parent);
+                // we aggregate both underlying and chain data
+                parent = new BaseDataCollectionAggregatorEnumerator(parent, request.Configuration.Symbol);
+                // only let through if underlying and chain data present
                 parent = new FilterEnumerator<BaseData>(parent, data => (data as BaseDataCollection).Underlying != null);
+                parent = ConfigureEnumerator(request, false, parent);
             }
 
             return parent;

@@ -424,6 +424,7 @@ namespace QuantConnect.Data
 
                     foreach (var data in instance._data.Value.Values)
                     {
+                        // search both in auxiliary and custom data of the slice for the requested type
                         if(selector(data.Custom))
                         {
                             dataDictionaryCache.MethodInfo.Invoke(dictionary, new object[] { data.Symbol, data.Custom });

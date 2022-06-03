@@ -48,16 +48,12 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnEndOfAlgorithm()
+        public override void OnEndOfDay(Symbol symbol)
         {
             var config = SubscriptionManager.Subscriptions.ToList();
-            if (config.All(dataConfig => dataConfig.Symbol != "AAPL"))
+            if (config.All(dataConfig => dataConfig.Symbol != symbol))
             {
-                throw new Exception("Was expecting configurations for AAPL");
-            }
-            if (config.All(dataConfig => dataConfig.Symbol.SecurityType != SecurityType.Option))
-            {
-                throw new Exception($"Was expecting configurations for {_aaplOption}");
+                throw new Exception($"Was expecting configurations for {symbol}");
             }
         }
 

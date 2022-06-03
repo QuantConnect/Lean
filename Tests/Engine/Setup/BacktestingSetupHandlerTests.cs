@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -25,6 +25,7 @@ using QuantConnect.Lean.Engine.RealTime;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Algorithm.Framework.Selection;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Engine.Setup
 {
@@ -55,7 +56,7 @@ namespace QuantConnect.Tests.Engine.Setup
 
             Assert.IsFalse(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, _algorithm,
                 null, new BacktestNodePacket(), new TestResultHandler(),
-                null, new BacktestingRealTimeHandler(), null, TestGlobals.DataProvider)));
+                null, new BacktestingRealTimeHandler(), null, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider)));
 
             setupHandler.DisposeSafely();
             Assert.AreEqual(1, setupHandler.Errors.Count);

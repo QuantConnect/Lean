@@ -33,7 +33,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             // Store initial Log Handler
             _logHandler = Log.LogHandler;
-            _provider = new BacktestingFutureChainProvider(TestGlobals.DataProvider);
+            _provider = new BacktestingFutureChainProvider(TestGlobals.DataCacheProvider);
         }
 
         [OneTimeTearDown]
@@ -61,7 +61,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var result = _provider.GetFutureContractList(symbol, new DateTime(2013, 10, 11)).ToList();
 
             Assert.IsTrue(testHandler.Logs.Any(entry => 
-            entry.Message.Contains("BacktestingFutureChainProvider.GetFutureContractList(): Failed, files not found:")));
+            entry.Message.Contains("found no source of contracts for NONEXISTING XZ06GLQJ9LK9 for date 20131011 for any tick type")));
             Assert.IsEmpty(result);
         }
     }
