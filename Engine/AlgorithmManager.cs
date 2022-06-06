@@ -763,6 +763,8 @@ namespace QuantConnect.Lean.Engine
                 {
                     // warmup finished, send an update
                     warmingUp = false;
+                    // we trigger this callback here and not internally in the algorithm so that we can go through python if required
+                    algorithm.OnWarmupFinished();
                     algorithm.Debug("Algorithm finished warming up.");
                     results.SendStatusUpdate(AlgorithmStatus.Running, "100");
                 }
