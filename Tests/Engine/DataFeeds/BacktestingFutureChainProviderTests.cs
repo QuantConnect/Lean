@@ -43,11 +43,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Log.LogHandler = _logHandler;
         }
 
-        [Test]
-        public void CorrectlyDeterminesContractList()
+        [TestCase("20131011")]
+        // saturday, will fetch previous tradable date instead
+        [TestCase("20131012")]
+        public void CorrectlyDeterminesContractList(string date)
         {
-            var symbol = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2013, 11, 11));
-            var result = _provider.GetFutureContractList(symbol, new DateTime(2013, 10, 11));
+            var dateTime = Time.ParseDate(date);
+            var symbol = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, dateTime.AddDays(10));
+            var result = _provider.GetFutureContractList(symbol, dateTime);
 
             Assert.IsNotEmpty(result);
         }
