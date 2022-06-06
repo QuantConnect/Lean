@@ -159,9 +159,6 @@ namespace QuantConnect.Algorithm
         public void SetFinishedWarmingUp()
         {
             IsWarmingUp = false;
-
-            // notify the algorithm
-            OnWarmupFinished();
         }
 
         /// <summary>
