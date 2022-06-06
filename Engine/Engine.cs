@@ -231,7 +231,7 @@ namespace QuantConnect.Lean.Engine
                     AlgorithmHandlers.Alphas.OnAfterAlgorithmInitialized(algorithm);
 
                     //If there are any reasons it failed, pass these back to the IDE.
-                    if (!initializeComplete || algorithm.ErrorMessages.Count > 0 || AlgorithmHandlers.Setup.Errors.Count > 0)
+                    if (!initializeComplete || AlgorithmHandlers.Setup.Errors.Count > 0)
                     {
                         initializeComplete = false;
                         //Get all the error messages: internal in algorithm and external in setup handler.
