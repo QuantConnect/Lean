@@ -243,7 +243,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // materialize the enumerable into a set for processing
-            var selections = universeData.FilteredContracts = selectSymbolsResult.ToHashSet();
+            var selections = selectSymbolsResult.ToHashSet();
 
             // first check for no pending removals, even if the universe selection
             // didn't change we might need to remove a security because a position was closed

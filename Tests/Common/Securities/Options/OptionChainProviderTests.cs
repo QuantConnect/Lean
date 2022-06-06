@@ -31,6 +31,22 @@ namespace QuantConnect.Tests.Common.Securities.Options
     public class OptionChainProviderTests
     {
         [Test]
+        public void BacktestingOptionChainProviderUsesPreviousTradableDateChain()
+        {
+            // the 7th is a saturday should fetch fridays data instead
+            var date = new DateTime(2014, 6, 7);
+            Assert.AreEqual(DayOfWeek.Saturday, date.DayOfWeek);
+
+            var provider = new BacktestingOptionChainProvider(TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider);
+            var twxOptionChain = provider.GetOptionContractList(Symbol.Create("TWX", SecurityType.Equity, Market.USA), date)
+                .ToList();
+
+            Assert.AreEqual(184, twxOptionChain.Count);
+            Assert.AreEqual(23m, twxOptionChain.OrderBy(s => s.ID.StrikePrice).First().ID.StrikePrice);
+            Assert.AreEqual(105m, twxOptionChain.OrderBy(s => s.ID.StrikePrice).Last().ID.StrikePrice);
+        }
+
+        [Test]
         public void BacktestingOptionChainProviderLoadsEquityOptionChain()
         {
             var provider = new BacktestingOptionChainProvider(TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider);
