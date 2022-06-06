@@ -29,14 +29,14 @@ namespace QuantConnect.Data.UniverseSelection
         private DateTime _endTime;
 
         /// <summary>
-        /// The option chain's underlying price data
+        /// The associated underlying price data if any
         /// </summary>
         public BaseData Underlying { get; set; }
 
         /// <summary>
         /// Gets or sets the contracts selected by the universe
         /// </summary>
-        public HashSet<Symbol> FilteredContracts { get; set; }
+        public IReadOnlyCollection<Symbol> FilteredContracts { get; set; }
 
         /// <summary>
         /// Gets the data list
@@ -78,6 +78,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="endTime">The end time of this data</param>
         /// <param name="symbol">A common identifier for all data in this packet</param>
         /// <param name="data">The data to add to this collection</param>
+        /// <param name="underlying">The associated underlying price data if any</param>
         public BaseDataCollection(DateTime time, DateTime endTime, Symbol symbol, IEnumerable<BaseData> data = null, BaseData underlying = null)
             : this(time, endTime, symbol, data != null ? data.ToList() : new List<BaseData>(), underlying, null)
         {
@@ -90,7 +91,9 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="endTime">The end time of this data</param>
         /// <param name="symbol">A common identifier for all data in this packet</param>
         /// <param name="data">The data to add to this collection</param>
-        public BaseDataCollection(DateTime time, DateTime endTime, Symbol symbol, List<BaseData> data, BaseData underlying, HashSet<Symbol> filteredContracts)
+        /// <param name="underlying">The associated underlying price data if any</param>
+        /// <param name="filteredContracts">The contracts selected by the universe</param>
+        public BaseDataCollection(DateTime time, DateTime endTime, Symbol symbol, List<BaseData> data, BaseData underlying, IReadOnlyCollection<Symbol> filteredContracts)
         {
             Symbol = symbol;
             Time = time;
