@@ -192,9 +192,15 @@ namespace QuantConnect.Algorithm
                     }
                 }
 
+                var defaultResolutionToUse = UniverseSettings.Resolution;
+                if (_warmupResolution.HasValue)
+                {
+                    defaultResolutionToUse = _warmupResolution.Value;
+                }
+
                 // if the algorithm has no added security, let's take a look at the universes to determine
                 // what the start date should be used. Defaulting to always open
-                result = Time - _warmupBarCount.Value * UniverseSettings.Resolution.ToTimeSpan();
+                result = Time - _warmupBarCount.Value * defaultResolutionToUse.ToTimeSpan();
 
                 foreach (var universe in _pendingUniverseAdditions.Concat(UniverseManager.Values))
                 {

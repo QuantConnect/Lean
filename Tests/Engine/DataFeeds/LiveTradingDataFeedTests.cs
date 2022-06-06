@@ -83,6 +83,42 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [Test]
+        public void WarmupExpiredAsset()
+        {
+            _startDate = new DateTime(2014, 6, 14);
+            CustomMockedFileBaseData.StartDate = _startDate;
+            _manualTimeProvider.SetCurrentTimeUtc(_startDate);
+
+            var endDate = _startDate.AddDays(1);
+            _algorithm.UniverseSettings.Resolution = Resolution.Daily;
+            _algorithm.SetWarmup(10, Resolution.Daily);
+            var feed = RunDataFeed();
+
+            var aapl = _algorithm.AddEquity("AAPL");
+            // the expiration of this option contract is before the start date of the algorithm but we should still get some data during warmup
+            var option = Symbol.CreateOption(aapl.Symbol, Market.USA, OptionStyle.American, OptionRight.Call, 925, new DateTime(2014, 06, 13));
+            _algorithm.AddOptionContract(option, Resolution.Minute);
+
+            var emittedData = false;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
+            {
+                if (ts.Slice.HasData)
+                {
+                    if (_algorithm.IsWarmingUp && ts.Slice.Keys.Any(s => s == option))
+                    {
+                        emittedData = true;
+                        // we got what we wanted shortcut unit test
+                        _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                    }
+                }
+            },
+            endDate: endDate,
+            secondsTimeStep: 60);
+
+            Assert.IsTrue(emittedData);
+        }
+
+        [Test]
         public void Warmup()
         {
             _startDate = new DateTime(2014, 5, 8);
@@ -1721,8 +1757,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             bool shouldThrowException,
             T customDataType) where T : BaseData, new()
         {
-            // startDate and endDate are in algorithm time zone
-            var startDate = new DateTime(2019, 6, 3);
+            // startDate and endDate are in algorithm time zone. Start date has to be before the expiration of symbol
+            var startDate = new DateTime(2015, 6, 8);
             var endDate = startDate.AddDays(days);
 
             if (resolution == Resolution.Minute)
@@ -1867,9 +1903,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new SecurityCacheProvider(algorithm.Portfolio));
             algorithm.Securities.SetSecurityService(securityService);
             var dataPermissionManager = new DataPermissionManager();
-            var fileProvider = new DefaultDataProvider();
             var dataManager = new DataManager(_feed,
-                new UniverseSelection(algorithm, securityService, dataPermissionManager, fileProvider),
+                new UniverseSelection(algorithm, securityService, dataPermissionManager, TestGlobals.DataProvider),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
@@ -1919,7 +1954,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
 
             _feed.Initialize(algorithm, new LiveNodePacket(), new BacktestingResultHandler(),
-                TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, fileProvider,
+                TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider,
                 dataManager, _synchronizer, new TestDataChannelProvider());
 
             if (!dataQueueStarted.WaitOne(TimeSpan.FromMilliseconds(5000)))

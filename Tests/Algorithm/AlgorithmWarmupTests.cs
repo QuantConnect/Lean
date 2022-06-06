@@ -196,6 +196,54 @@ namespace QuantConnect.Tests.Algorithm
             zipCacheProvider.DisposeSafely();
         }
 
+        [TestCase(false)]
+        [TestCase(true)]
+        public void WarmupStartDate_NoAsset(bool withResolution)
+        {
+            var algo = new AlgorithmStub();
+            algo.SetStartDate(2013, 10, 01);
+            DateTime expected;
+            if (withResolution)
+            {
+                algo.SetWarmUp(100, Resolution.Daily);
+                expected = new DateTime(2013, 06, 23);
+            }
+            else
+            {
+                algo.SetWarmUp(100);
+                // defaults to universe settings
+                expected = new DateTime(2013, 09, 30, 22, 20, 0);
+            }
+            algo.PostInitialize();
+
+            Assert.AreEqual(expected, algo.Time);
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void WarmupStartDate_Equity(bool withResolution)
+        {
+            var algo = new AlgorithmStub(new NullDataFeed { ShouldThrow = false });
+            algo.SetStartDate(2013, 10, 01);
+            algo.AddEquity("AAPL");
+            DateTime expected;
+            if (withResolution)
+            {
+                algo.SetWarmUp(100, Resolution.Daily);
+                expected = new DateTime(2013, 05, 09);
+            }
+            else
+            {
+                algo.SetWarmUp(100);
+                // uses the assets resolution
+                expected = new DateTime(2013, 9, 30, 14, 20, 0);
+            }
+            algo.PostInitialize();
+
+            // before than the case with no asset because takes into account 100 tradable dates of AAPL
+            Assert.AreEqual(expected, algo.Time);
+        }
+
         private class TestSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
         {
             public static TestWarmupAlgorithm TestAlgorithm { get; set; }

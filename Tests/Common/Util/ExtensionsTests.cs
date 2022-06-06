@@ -25,6 +25,7 @@ using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Custom.AlphaStreams;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
@@ -67,6 +68,97 @@ namespace QuantConnect.Tests.Common.Util
             nowUtc = nowUtc.AddMilliseconds(nowMilliseconds);
 
             Assert.AreEqual(expectedWaitInterval, nowUtc.GetSecondUnevenWait(waitInterval));
+        }
+
+        [TestCase(SecurityType.Cfd, "20501231", false)]
+        [TestCase(SecurityType.Equity, "20501231", false)]
+        [TestCase(SecurityType.Base, "20501231", false)]
+        [TestCase(SecurityType.Forex, "20501231", false)]
+        [TestCase(SecurityType.Crypto, "20501231", false)]
+        [TestCase(SecurityType.Index, "20501231", false)]
+
+        [TestCase(SecurityType.Option, null, false)]
+        [TestCase(SecurityType.Future, null, false)]
+        [TestCase(SecurityType.FutureOption, null, false)]
+        [TestCase(SecurityType.IndexOption, null, false)]
+
+        [TestCase(SecurityType.Option, "20501231", true)]
+        [TestCase(SecurityType.Future, "20501231", true)]
+        [TestCase(SecurityType.FutureOption, "20501231", true)]
+        [TestCase(SecurityType.IndexOption, "20501231", true)]
+        public void GetDelistingDate(SecurityType securityType, string expectedExpiration, bool isChain)
+        {
+            Symbol symbol = null;
+
+            switch (securityType)
+            {
+                case SecurityType.Base:
+                    symbol = Symbol.CreateBase(typeof(IndexedBaseData), Symbols.AAPL, Market.USA);
+                    break;
+                case SecurityType.Equity:
+                    symbol = Symbols.AAPL;
+                    break;
+                case SecurityType.Option:
+                    symbol = Symbols.SPY_C_192_Feb19_2016;
+                    if (isChain)
+                    {
+                        symbol = symbol.Canonical;
+                    }
+                    else
+                    {
+                        expectedExpiration = symbol.ID.Date.ToString(DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+                    }
+                    break;
+                case SecurityType.Forex:
+                    symbol = Symbols.EURUSD;
+                    break;
+                case SecurityType.Future:
+                    symbol = Symbols.Fut_SPY_Feb19_2016;
+                    if (isChain)
+                    {
+                        symbol = symbol.Canonical;
+                    }
+                    else
+                    {
+                        expectedExpiration = symbol.ID.Date.ToString(DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+                    }
+                    break;
+                case SecurityType.Cfd:
+                    symbol = Symbols.DE30EUR;
+                    break;
+                case SecurityType.Crypto:
+                    symbol = Symbols.BTCEUR;
+                    break;
+                case SecurityType.FutureOption:
+                    symbol = Symbols.CreateFutureOptionSymbol(Symbols.Fut_SPY_Feb19_2016, OptionRight.Call, 10, new DateTime(2022, 05, 01));
+                    if (isChain)
+                    {
+                        symbol = symbol.Canonical;
+                    }
+                    else
+                    {
+                        expectedExpiration = symbol.ID.Date.ToString(DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+                    }
+                    break;
+                case SecurityType.Index:
+                    symbol = Symbols.SPX;
+                    break;
+                case SecurityType.IndexOption:
+                    symbol = Symbol.CreateOption(Symbols.SPX, Symbols.SPX.ID.Market, OptionStyle.European, OptionRight.Call, 1, new DateTime(2022, 05, 02));
+                    if (isChain)
+                    {
+                        symbol = symbol.Canonical;
+                    }
+                    else
+                    {
+                        expectedExpiration = symbol.ID.Date.ToString(DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+                    }
+                    break;
+                default:
+                    break;
+            }
+            var mapFile = TestGlobals.MapFileProvider.Get(AuxiliaryDataKey.Create(symbol)).ResolveMapFile(symbol);
+            Assert.AreEqual(Time.ParseDate(expectedExpiration), symbol.GetDelistingDate(mapFile));
         }
 
         [TestCase("20220101", false, true, Resolution.Daily)]
