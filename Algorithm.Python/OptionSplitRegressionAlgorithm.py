@@ -42,7 +42,6 @@ class OptionSplitRegressionAlgorithm(QCAlgorithm):
 
         if not self.Portfolio.Invested:
             if self.Time.hour > 9 and self.Time.minute > 0:
-                sorted_contracts = []
                 for kvp in slice.OptionChains:
                     chain = kvp.Value
                     contracts = filter(lambda x: x.Strike == 650 and x.Right ==  OptionRight.Call, chain)

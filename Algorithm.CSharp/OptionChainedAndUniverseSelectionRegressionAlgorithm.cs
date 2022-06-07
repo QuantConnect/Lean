@@ -48,12 +48,16 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnEndOfDay(Symbol symbol)
+        public override void OnEndOfAlgorithm()
         {
             var config = SubscriptionManager.Subscriptions.ToList();
-            if (config.All(dataConfig => dataConfig.Symbol != symbol))
+            if (config.All(dataConfig => dataConfig.Symbol != "AAPL"))
             {
-                throw new Exception($"Was expecting configurations for {symbol}");
+                throw new Exception("Was expecting configurations for AAPL");
+            }
+            if (config.All(dataConfig => dataConfig.Symbol.SecurityType != SecurityType.Option))
+            {
+                throw new Exception($"Was expecting configurations for {_aaplOption}");
             }
         }
 
@@ -91,7 +95,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1825580;
+        public long DataPoints => 1781484;
 
         /// <summary>
         /// Data Points count of the algorithm history
