@@ -15,7 +15,6 @@
 
 using NUnit.Framework;
 using QuantConnect.ToolBox;
-using QuantConnect.ToolBox.BitfinexDownloader;
 using QuantConnect.ToolBox.GDAXDownloader;
 using System;
 using System.Collections.Generic;
@@ -28,7 +27,6 @@ namespace QuantConnect.Tests.Brokerages
         public static IEnumerable<IExchangeInfoDownloader> Config()
         {
             yield return new GDAXExchangeInfoDownloader();
-            yield return new BitfinexExchangeInfoDownloader();
         }
 
         [TestCaseSource(nameof(Config))]
