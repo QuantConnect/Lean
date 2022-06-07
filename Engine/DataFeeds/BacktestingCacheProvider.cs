@@ -27,7 +27,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public abstract class BacktestingCacheProvider
     {
-        private static readonly TickType[] DataTypes = new[] { TickType.OpenInterest, TickType.Quote, TickType.Trade };
+        // see https://github.com/QuantConnect/Lean/issues/6384
+        private static readonly TickType[] DataTypes = new[] { TickType.Quote, TickType.OpenInterest, TickType.Trade };
         private bool _loggedPreviousTradableDate;
 
         /// <summary>

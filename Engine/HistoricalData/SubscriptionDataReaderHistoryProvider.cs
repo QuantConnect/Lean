@@ -153,13 +153,14 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             // so to combat this we deliberately filter the results from the data reader to fix these cases
             // which only apply to non-tick data
 
+            var factory = config.Type.GetBaseDataInstance();
             reader = new SubscriptionFilterEnumerator(reader, security, request.EndTimeLocal, config.ExtendedMarketHours, false, request.ExchangeHours);
             reader = new FilterEnumerator<BaseData>(reader, data =>
             {
                 // allow all ticks
                 if (config.Resolution == Resolution.Tick) return true;
-                // filter out all aux data
-                if (data.DataType == MarketDataType.Auxiliary) return false;
+                // filter out all aux data unless we are actually asking for auxiliary data
+                if (data.DataType == MarketDataType.Auxiliary && factory.DataType != MarketDataType.Auxiliary) return false;
                 // filter out future data
                 if (data.EndTime > request.EndTimeLocal) return false;
                 // filter out data before the start
