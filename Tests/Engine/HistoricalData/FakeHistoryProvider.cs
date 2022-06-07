@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
+using System;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
-using System;
 using System.Collections.Generic;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
@@ -26,20 +26,9 @@ namespace QuantConnect.Tests.Engine.HistoricalData
     /// <summary>
     /// Provides FAKE implementation of <see cref="IHistoryProvider"/>
     /// </summary>
-    public class FakeHistoryProvider : HistoryProviderBase
+    internal class TestHistoryProvider : HistoryProviderBase
     {
-        private IBrokerage _brokerage;
-
         public override int DataPointCount => 2;
-
-        /// <summary>
-        /// Sets the brokerage to be used for historical requests
-        /// </summary>
-        /// <param name="brokerage">The brokerage instance</param>
-        public void SetBrokerage(IBrokerage brokerage)
-        {
-            _brokerage = brokerage;
-        }
 
         /// <summary>
         /// Initializes this history provider to work for the specified job

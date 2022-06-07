@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -302,6 +302,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(201900, smartStream.GetInt32());
         }
 
+        [Parallelizable(ParallelScope.None)]
         [TestCase(typeof(TradeBar), typeof(TradeBarTest), TickType.Trade)]
         [TestCase(typeof(QuoteBar), typeof(QuoteBarTest), TickType.Quote)]
         public void Performance(Type streamReaderType, Type readLineReaderType, TickType tickType)
@@ -323,7 +324,7 @@ namespace QuantConnect.Tests.Common.Util
                     false,
                     tickType: tickType
                 );
-                var zipCache = new ZipDataCacheProvider(new DefaultDataProvider());
+                var zipCache = new ZipDataCacheProvider(TestGlobals.DataProvider);
                 var date = new DateTime(2013, 10, 07);
                 var reader = new TextSubscriptionDataSourceReader(
                     zipCache,
@@ -337,7 +338,7 @@ namespace QuantConnect.Tests.Common.Util
 
                 // start test
                 stopWatch.Start();
-                for (int i = 0; i < 200; i++)
+                for (int i = 0; i < 300; i++)
                 {
                     streamReaderCount += reader.Read(source).Count();
                 }
@@ -358,7 +359,7 @@ namespace QuantConnect.Tests.Common.Util
                     false,
                     tickType: tickType
                 );
-                var zipCache = new ZipDataCacheProvider(new DefaultDataProvider());
+                var zipCache = new ZipDataCacheProvider(TestGlobals.DataProvider);
                 var date = new DateTime(2013, 10, 07);
                 var reader = new TextSubscriptionDataSourceReader(
                     zipCache,
@@ -372,7 +373,7 @@ namespace QuantConnect.Tests.Common.Util
 
                 // start test
                 stopWatch.Start();
-                for (int i = 0; i < 200; i++)
+                for (int i = 0; i < 300; i++)
                 {
                     getLineReaderCount += reader.Read(source).Count();
                 }

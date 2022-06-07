@@ -3019,18 +3019,21 @@ namespace QuantConnect
         /// <returns></returns>
         public static DateTime GetDelistingDate(this Symbol symbol, MapFile mapFile = null)
         {
+            if (symbol.IsCanonical())
+            {
+                return Time.EndOfTime;
+            }
             switch (symbol.ID.SecurityType)
             {
-                case SecurityType.Future:
-                    return symbol.ID.Date == SecurityIdentifier.DefaultDate ? Time.EndOfTime : symbol.ID.Date;
                 case SecurityType.Option:
                     return OptionSymbol.GetLastDayOfTrading(symbol);
                 case SecurityType.FutureOption:
                     return FutureOptionSymbol.GetLastDayOfTrading(symbol);
+                case SecurityType.Future:
                 case SecurityType.IndexOption:
                     return symbol.ID.Date;
                 default:
-                    return mapFile?.DelistingDate ?? SecurityIdentifier.DefaultDate;
+                    return mapFile?.DelistingDate ?? Time.EndOfTime;
             }
         }
 

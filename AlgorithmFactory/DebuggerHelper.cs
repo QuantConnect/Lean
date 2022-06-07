@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -103,8 +103,14 @@ while not sys.gettrace():
                             break;
 
                         case DebuggingMethod.DebugPy:
-                            Log.Trace("DebuggerHelper.Initialize(): debugpy waiting for attach at port 5678...");
-                            PythonEngine.RunSimpleString("import debugpy; debugpy.listen(('0.0.0.0', 5678)); debugpy.wait_for_client()");
+                            PythonEngine.RunSimpleString(@"import debugpy
+from AlgorithmImports import *
+from QuantConnect.Logging import *
+
+Log.Trace(""DebuggerHelper.Initialize(): debugpy waiting for attach at port 5678..."");
+
+debugpy.listen(('0.0.0.0', 5678))
+debugpy.wait_for_client()");
                             break;
 
                         case DebuggingMethod.PyCharm:

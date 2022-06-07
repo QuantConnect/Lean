@@ -137,6 +137,7 @@ namespace QuantConnect.Tests
 
         private static Symbol CreateEquitySymbol(string symbol, string market = Market.USA)
         {
+            TestGlobals.Initialize();
             return Symbol.Create(symbol, SecurityType.Equity, market);
         }
         public static Symbol CreateFutureSymbol(string symbol, DateTime expiry)

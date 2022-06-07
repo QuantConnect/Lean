@@ -13,49 +13,100 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data;
-using QuantConnect.Interfaces;
 using System;
+using QuantConnect.Interfaces;
 using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Test algorithm to verify the corret working of <see cref="HistoryProviderManager"/>
+    /// Regression algorithm reproducing GH issue 1046. Where scheduled events wouldn't work during warmup
     /// </summary>
-    public class HistoryProviderManagerRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class WarmupScheduledEventsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private bool _onDataTriggered = new();
+        private Queue<DateTime> _onEndOfDayScheduledEvents = new(new[]
+        {
+            new DateTime(2013, 10, 04, 15, 50, 0),
+            new DateTime(2013, 10, 07, 15, 50, 0),
+
+            new DateTime(2013, 10, 08, 15, 50, 0),
+        });
+
+        private Queue<DateTime> _scheduledEvents = new (new[]
+        {
+            new DateTime(2013, 10, 04, 18, 0, 0),
+            new DateTime(2013, 10, 05, 0, 0, 0),
+            new DateTime(2013, 10, 05, 6, 0, 0),
+            new DateTime(2013, 10, 05, 12, 0, 0),
+            new DateTime(2013, 10, 05, 18, 0, 0),
+            new DateTime(2013, 10, 06, 0, 0, 0),
+            new DateTime(2013, 10, 06, 6, 0, 0),
+            new DateTime(2013, 10, 06, 12, 0, 0),
+            new DateTime(2013, 10, 06, 18, 0, 0),
+            new DateTime(2013, 10, 07, 0, 0, 0),
+            new DateTime(2013, 10, 07, 6, 0, 0),
+            new DateTime(2013, 10, 07, 12, 0, 0),
+            new DateTime(2013, 10, 07, 18, 0, 0),
+
+            new DateTime(2013, 10, 08, 0, 0, 0),
+            new DateTime(2013, 10, 08, 6, 0, 0),
+            new DateTime(2013, 10, 08, 12, 0, 0)
+        });
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2017, 12, 17);
-            SetEndDate(2018, 1, 1);
-            AddCrypto("BTCUSD");
-            SetWarmup(1000000);
-        }
+            SetStartDate(2013, 10, 08);
+            SetEndDate(2013, 10, 08);
 
-        /// <summary>
-        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
-        {
-            _onDataTriggered = true;
+            AddEquity("SPY", Resolution.Minute, fillDataForward: false);
+
+            Schedule.On(DateRules.EveryDay(), TimeRules.Every(TimeSpan.FromHours(6)), () =>
+            {
+                Debug($"Scheduled event happening at {Time}. IsWarmingUp: {IsWarmingUp}");
+                if (!LiveMode)
+                {
+                    var expected = _scheduledEvents.Dequeue();
+                    if (expected != Time)
+                    {
+                        throw new Exception($"Unexpected scheduled event time: {Time}. Expected {expected}");
+                    }
+
+                    if (expected.Day > 7 && IsWarmingUp)
+                    {
+                        throw new Exception("Algorithm should be warming up on the 7th!");
+                    }
+                }
+            });
+
+            SetWarmUp(9, Resolution.Hour);
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (IsWarmingUp)
+            if (_scheduledEvents.Count != 0)
             {
-                throw new Exception("Warm up not complete");
+                throw new Exception("Some scheduled event was not fired!");
             }
-            if (!_onDataTriggered)
+            if (_onEndOfDayScheduledEvents.Count != 0)
             {
-                throw new Exception("No data received is OnData method");
+                throw new Exception("Some OnEndOfDay scheduled event was not fired!");
+            }
+        }
+
+        public override void OnEndOfDay(Symbol symbol)
+        {
+            Debug($"OnEndOfDay scheduled event happening at {Time}. IsWarmingUp: {IsWarmingUp}");
+            var expected = _onEndOfDayScheduledEvents.Dequeue();
+            if (expected != Time)
+            {
+                throw new Exception($"Unexpected OnEndOfDay scheduled event time: {Time}. Expected {expected}");
+            }
+            if (expected.Day > 7 && IsWarmingUp)
+            {
+                throw new Exception("Algorithm should be warming up on the 7th!");
             }
         }
 
@@ -72,12 +123,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 829149;
+        public long DataPoints => 1831;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 14061;
+        public int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -100,8 +151,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-0.607"},
-            {"Tracking Error", "0.038"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},

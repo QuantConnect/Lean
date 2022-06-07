@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
     {
         private Crypto _btcusd;
         private Crypto _btceur;
-        private Crypto _btcusdc;
+        private Crypto _daiusdc;
         private readonly IFeeModel _feeModel = new GDAXFeeModel();
 
         [SetUp]
@@ -56,15 +56,15 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             );
             _btceur.SetMarketPrice(new Tick(DateTime.UtcNow, _btceur.Symbol, 100, 100));
 
-            _btcusdc = new Crypto(
+            _daiusdc = new Crypto(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new Cash("USDC", 0, 10),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create("BTCUSDC", SecurityType.Crypto, Market.GDAX), Resolution.Minute, tz, tz, true, false, false),
-                new SymbolProperties("BTCUSDC", "USDC", 1, 0.01m, 0.00000001m, string.Empty),
+                new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create("DAIUSDC", SecurityType.Crypto, Market.GDAX), Resolution.Minute, tz, tz, true, false, false),
+                new SymbolProperties("DAIUSDC", "USDC", 1, 0.01m, 0.00000001m, string.Empty),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null
             );
-            _btcusdc.SetMarketPrice(new Tick(DateTime.UtcNow, _btcusdc.Symbol, 100, 100));
+            _daiusdc.SetMarketPrice(new Tick(DateTime.UtcNow, _daiusdc.Symbol, 100, 100));
         }
 
         [Test]
@@ -103,16 +103,23 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         public void ReturnsExpectedFeeWithStableCoins()
         {
             var time = new DateTime(2019, 2, 1);
-            var fee = _feeModel.GetOrderFee(
+            var stablePairFee = _feeModel.GetOrderFee(
                 new OrderFeeParameters(
-                    _btcusdc,
-                    new MarketOrder(_btcusdc.Symbol, 1, time)
+                    _daiusdc,
+                    new MarketOrder(_daiusdc.Symbol, 1, time)
                 )
             );
 
-            Assert.AreEqual("USDC", fee.Value.Currency);
+            var normalPairFee = _feeModel.GetOrderFee(
+                new OrderFeeParameters(
+                    _btcusd,
+                    new MarketOrder(_btcusd.Symbol, 1, time)
+                )
+            );
+
             // 100 (price) * 0.001 (taker fee)
-            Assert.AreEqual(0.1m, fee.Value.Amount);
+            Assert.AreEqual(0.1m, stablePairFee.Value.Amount);
+            Assert.AreNotEqual(normalPairFee.Value.Amount, stablePairFee.Value.Amount);
         }
 
         [TestCase(2019, 2, 1, 0, 0, 0, 0.3)]

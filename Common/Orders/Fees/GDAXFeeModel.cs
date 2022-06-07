@@ -39,8 +39,7 @@ namespace QuantConnect.Orders.Fees
             var isMaker = order.Type == OrderType.Limit && !order.IsMarketable;
 
             // Check if the current symbol is a StableCoin
-            var quoteCurrency = security.QuoteCurrency.Symbol;
-            var isStableCoin = Currencies.IsStableCoin(quoteCurrency, security.Symbol.ID.Market);
+            var isStableCoin = Currencies.StablePairsGDAX.Contains(security.Symbol.Value);
 
             var feePercentage = GetFeePercentage(order.Time, isMaker, isStableCoin);
 

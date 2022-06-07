@@ -605,7 +605,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
 
             // check if the brokerage should perform cash sync now
-            if (_brokerage.ShouldPerformCashSync(CurrentTimeUtc))
+            if (!_algorithm.IsWarmingUp && _brokerage.ShouldPerformCashSync(CurrentTimeUtc))
             {
                 // only perform cash syncs if we haven't had a fill for at least 10 seconds
                 if (TimeSinceLastFill > TimeSpan.FromSeconds(10))

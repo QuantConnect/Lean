@@ -74,12 +74,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 244;
+        public long DataPoints => 398;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 22;
+        public int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -89,12 +89,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "11.988%"},
+            {"Compounding Annual Return", "11.856%"},
             {"Drawdown", "1.200%"},
             {"Expectancy", "0"},
             {"Net Profit", "1.237%"},
-            {"Sharpe Ratio", "1.822"},
-            {"Probabilistic Sharpe Ratio", "62.380%"},
+            {"Sharpe Ratio", "1.797"},
+            {"Probabilistic Sharpe Ratio", "62.183%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
@@ -102,18 +102,18 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0.425"},
             {"Annual Standard Deviation", "0.047"},
             {"Annual Variance", "0.002"},
-            {"Information Ratio", "-1.886"},
-            {"Tracking Error", "0.055"},
-            {"Treynor Ratio", "0.203"},
+            {"Information Ratio", "-1.856"},
+            {"Tracking Error", "0.054"},
+            {"Treynor Ratio", "0.197"},
             {"Total Fees", "$3.23"},
             {"Estimated Strategy Capacity", "$600000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Fitness Score", "0.027"},
+            {"Fitness Score", "0.014"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "5.644"},
-            {"Return Over Maximum Drawdown", "10.205"},
-            {"Portfolio Turnover", "0.029"},
+            {"Sortino Ratio", "3.149"},
+            {"Return Over Maximum Drawdown", "5.693"},
+            {"Portfolio Turnover", "0.016"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},

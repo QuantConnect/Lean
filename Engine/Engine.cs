@@ -231,7 +231,7 @@ namespace QuantConnect.Lean.Engine
                     AlgorithmHandlers.Alphas.OnAfterAlgorithmInitialized(algorithm);
 
                     //If there are any reasons it failed, pass these back to the IDE.
-                    if (!initializeComplete || algorithm.ErrorMessages.Count > 0 || AlgorithmHandlers.Setup.Errors.Count > 0)
+                    if (!initializeComplete || AlgorithmHandlers.Setup.Errors.Count > 0)
                     {
                         initializeComplete = false;
                         //Get all the error messages: internal in algorithm and external in setup handler.
@@ -314,9 +314,6 @@ namespace QuantConnect.Lean.Engine
                                 break;
                         }
                     };
-
-                    //Send status to user the algorithm is now executing.
-                    AlgorithmHandlers.Results.SendStatusUpdate(AlgorithmStatus.Running);
 
                     // Result manager scanning message queue: (started earlier)
                     AlgorithmHandlers.Results.DebugMessage(

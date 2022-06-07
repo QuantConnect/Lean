@@ -61,6 +61,7 @@ from QuantConnect.Data.Shortable import *
 from QuantConnect.Orders.Slippage import *
 from QuantConnect.Securities.Forex import *
 from QuantConnect.Data.Fundamental import *
+from QuantConnect.Securities.Crypto import *
 from QuantConnect.Securities.Option import *
 from QuantConnect.Securities.Equity import *
 from QuantConnect.Securities.Future import *

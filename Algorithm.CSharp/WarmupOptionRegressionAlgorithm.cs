@@ -11,86 +11,89 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm which tests that a two leg currency conversion happens correctly
+    /// Regression algorithm asserting the behavior of option warmup
     /// </summary>
-    public class TwoLegCurrencyConversionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class WarmupOptionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _ethUsdSymbol;
-        private Symbol _ltcUsdSymbol;
+        private List<DateTime> _optionWarmupTimes = new();
+        private const string UnderlyingTicker = "GOOG";
+        private Symbol _optionSymbol;
 
         public override void Initialize()
         {
-            SetStartDate(2018, 04, 04);
-            SetEndDate(2018, 04, 04);
-            SetBrokerageModel(BrokerageName.GDAX, AccountType.Cash);
+            SetStartDate(2015, 12, 24);
+            SetEndDate(2015, 12, 24);
+            SetCash(100000);
 
-            // GDAX doesn't have LTCETH or ETHLTC, but they do have ETHUSD and LTCUSD to form a path between ETH and LTC
-            SetAccountCurrency("ETH");
-            SetCash("ETH", 100000);
-            SetCash("LTC", 100000);
-            SetCash("USD", 100000);
+            var option = AddOption(UnderlyingTicker);
+            _optionSymbol = option.Symbol;
 
-            _ethUsdSymbol = AddCrypto("ETHUSD", Resolution.Minute).Symbol;
-            _ltcUsdSymbol = AddCrypto("LTCUSD", Resolution.Minute).Symbol;
+            option.SetFilter(u => u.Strikes(-5, +5).Expiration(0, 180).IncludeWeeklys());
+            SetWarmUp(1, Resolution.Daily);
         }
 
+        /// <summary>
+        /// Event - v3.0 DATA EVENT HANDLER: (Pattern) Basic template for user to override for receiving all subscription data in a single event
+        /// </summary>
+        /// <param name="slice">The current slice of data keyed by symbol string</param>
         public override void OnData(Slice slice)
         {
-            if (!Portfolio.Invested)
+            if (slice.OptionChains.TryGetValue(_optionSymbol, out var chain))
             {
-                MarketOrder(_ltcUsdSymbol, 1);
+                // we find at the money (ATM) put contract with farthest expiration
+                var atmContract = chain
+                    .OrderByDescending(x => x.Expiry)
+                    .ThenBy(x => Math.Abs(chain.Underlying.Price - x.Strike))
+                    .ThenByDescending(x => x.Right)
+                    .FirstOrDefault();
+
+                if (atmContract != null)
+                {
+                    if (IsWarmingUp)
+                    {
+                        if(atmContract.LastPrice == 0)
+                        {
+                            throw new Exception("Contract price is not set!");
+                        }
+                        _optionWarmupTimes.Add(Time);
+                    }
+                    else if (!Portfolio.Invested && IsMarketOpen(_optionSymbol))
+                    {
+                        // if found, trade it
+                        MarketOrder(atmContract.Symbol, 1);
+                        MarketOnCloseOrder(atmContract.Symbol, -1);
+                    }
+                }
             }
         }
 
         public override void OnEndOfAlgorithm()
         {
-            var ltcCash = Portfolio.CashBook["LTC"];
-
-            var conversionSymbols = ltcCash.CurrencyConversion.ConversionRateSecurities
-                .Select(x => x.Symbol)
-                .ToList();
-
-            if (conversionSymbols.Count != 2)
+            var start = new DateTime(2015, 12, 23, 9, 31, 0);
+            var end = new DateTime(2015, 12, 23, 16, 0, 0);
+            var count = 0;
+            do
             {
-                throw new Exception(
-                    $"Expected two conversion rate securities for LTC to ETH, is {conversionSymbols.Count}");
+                if (_optionWarmupTimes[count] != start)
+                {
+                    throw new Exception($"Unexpected time {_optionWarmupTimes[count]} expected {start}");
+                }
+                count++;
+                start = start.AddMinutes(1);
             }
-
-            if (conversionSymbols[0] != _ltcUsdSymbol)
-            {
-                throw new Exception(
-                    $"Expected first conversion rate security from LTC to ETH to be {_ltcUsdSymbol}, is {conversionSymbols[0]}");
-            }
-
-            if (conversionSymbols[1] != _ethUsdSymbol)
-            {
-                throw new Exception(
-                    $"Expected second conversion rate security from LTC to ETH to be {_ethUsdSymbol}, is {conversionSymbols[1]}");
-            }
-
-            var ltcUsdValue = Securities[_ltcUsdSymbol].GetLastData().Value;
-            var ethUsdValue = Securities[_ethUsdSymbol].GetLastData().Value;
-
-            var expectedConversionRate = ltcUsdValue / ethUsdValue;
-            var actualConversionRate = ltcCash.ConversionRate;
-
-            if (actualConversionRate != expectedConversionRate)
-            {
-                throw new Exception(
-                    $"Expected conversion rate from LTC to ETH to be {expectedConversionRate}, is {actualConversionRate}");
-            }
+            while (start < end);
         }
 
         /// <summary>
@@ -101,24 +104,24 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+        public Language[] Languages { get; } = { Language.CSharp };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 5765;
+        public long DataPoints => 1111660;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 120;
+        public int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "1"},
+            {"Total Trades", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
@@ -137,14 +140,14 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "Ξ0.00"},
-            {"Estimated Strategy Capacity", "Ξ2000.00"},
-            {"Lowest Capacity Asset", "LTCUSD XJ"},
+            {"Total Fees", "$2.00"},
+            {"Estimated Strategy Capacity", "$1300000.00"},
+            {"Lowest Capacity Asset", "GOOCV 30AKMEIPOSS1Y|GOOCV VP83T1ZUHROL"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-139.899"},
+            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
             {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -152,14 +155,14 @@ namespace QuantConnect.Algorithm.CSharp
             {"Long Insight Count", "0"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "Ξ0"},
-            {"Total Accumulated Estimated Alpha Value", "Ξ0"},
-            {"Mean Population Estimated Insight Value", "Ξ0"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
             {"Mean Population Direction", "0%"},
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "9ffe1c1c11cbeaa5cc2d18048c4f3049"}
+            {"OrderListHash", "9d9f9248ee8fe30d87ff0a6f6fea5112"}
         };
     }
 }

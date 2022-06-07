@@ -81,12 +81,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 12966;
+        public long DataPoints => 17287;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 19082;
+        public int AlgorithmHistoryDataPoints => 180;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -115,12 +115,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Fees", "$29.84"},
             {"Estimated Strategy Capacity", "$410000.00"},
             {"Lowest Capacity Asset", "LTCUSD XJ"},
-            {"Fitness Score", "0.499"},
+            {"Fitness Score", "0.249"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-189.336"},
-            {"Portfolio Turnover", "0.999"},
+            {"Return Over Maximum Drawdown", "-130.888"},
+            {"Portfolio Turnover", "0.499"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},

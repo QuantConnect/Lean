@@ -516,12 +516,6 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public string GetParameter(string name) => _baseAlgorithm.GetParameter(name);
 
         /// <summary>
-        /// Gets the history requests required for provide warm up data for the algorithm
-        /// </summary>
-        /// <returns></returns>
-        public IEnumerable<HistoryRequest> GetWarmupHistoryRequests() => _baseAlgorithm.GetWarmupHistoryRequests();
-
-        /// <summary>
         /// Initialise the Algorithm and Prepare Required Data:
         /// </summary>
         public void Initialize()

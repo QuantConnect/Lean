@@ -22,6 +22,7 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using System;
 using QuantConnect.Tests.Brokerages;
+using QuantConnect.Securities.Crypto;
 
 namespace QuantConnect.Tests.Common.Orders.Fees
 {
@@ -161,6 +162,42 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 tFee * Math.Abs(Quantity),
                 fee.Value.Amount);
             Assert.AreEqual("ETH", fee.Value.Currency);
+        }
+
+        [Test]
+        public void ReturnsSameFeesForStableCoinsWithoutPairs()
+        {
+            IFeeModel feeModel = new BinanceFeeModel();
+
+            var tz = TimeZones.NewYork;
+
+            // Use a StableCoin without pair in Binance
+            Security usdcusd = new Crypto(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new Cash("USD", 0, 10),
+                new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create("USDCUSD", SecurityType.Crypto, Market.Binance), Resolution.Minute, tz, tz, true, false, false),
+                new SymbolProperties("USDCUSD", "USD", 1, 0.01m, 0.00000001m, string.Empty),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
+            usdcusd.SetMarketPrice(new Tick(DateTime.UtcNow, usdcusd.Symbol, 100, 100));
+
+            var time = new DateTime(2019, 2, 1);
+            var stableCoinFee = feeModel.GetOrderFee(
+                new OrderFeeParameters(
+                    usdcusd,
+                    new MarketOrder(usdcusd.Symbol, 1, time)
+                )
+            );
+
+            var normalPairFee = feeModel.GetOrderFee(
+                new OrderFeeParameters(
+                    Security,
+                    new MarketOrder(Security.Symbol, 1, time)
+                )
+            );
+
+            Assert.AreEqual(normalPairFee.Value.Amount, stableCoinFee.Value.Amount);
         }
 
         private static Symbol Symbol => Symbol.Create("ETHUSDT", SecurityType.Crypto, Market.Binance);

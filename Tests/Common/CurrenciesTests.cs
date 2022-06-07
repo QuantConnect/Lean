@@ -63,5 +63,22 @@ namespace QuantConnect.Tests.Common
                 Assert.IsTrue(!string.IsNullOrWhiteSpace(Currencies.GetCurrencySymbol(quoteCurrency)), "Missing currency symbol for: " + quoteCurrency);
             }
         }
+
+        [TestCase(Currencies.USD)]
+        [TestCase(Currencies.EUR)]
+        [TestCase("BTC")]
+        [TestCase("ADA")]
+        public void ReturnsSymbolForCurrencyWithSymbol(string currency)
+        {
+            Assert.AreNotEqual(currency, Currencies.GetCurrencySymbol(currency));
+        }
+
+        [TestCase("ABC")]
+        [TestCase("XYZ")]
+        [TestCase("CUR")]
+        public void ReturnsTickerForUnknownCurrency(string currency)
+        {
+            Assert.AreEqual(currency, Currencies.GetCurrencySymbol(currency));
+        }
     }
 }

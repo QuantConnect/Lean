@@ -24,6 +24,8 @@ namespace QuantConnect.Tests
     /// </summary>
     public static class TestGlobals
     {
+        private static bool _initialized;
+
         public static IDataProvider DataProvider
             = Composer.Instance.GetExportedValueByTypeName<IDataProvider>(Config.Get("data-provider", "DefaultDataProvider"));
         public static IMapFileProvider MapFileProvider
@@ -37,8 +39,17 @@ namespace QuantConnect.Tests
         /// </summary>
         public static void Initialize()
         {
-            MapFileProvider.Initialize(DataProvider);
-            FactorFileProvider.Initialize(MapFileProvider, DataProvider);
+            lock (DataProvider)
+            {
+                if (_initialized)
+                {
+                    return;
+                }
+                _initialized = true;
+
+                MapFileProvider.Initialize(DataProvider);
+                FactorFileProvider.Initialize(MapFileProvider, DataProvider);
+            }
         }
     }
 }

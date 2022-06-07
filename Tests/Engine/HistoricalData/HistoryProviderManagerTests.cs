@@ -40,7 +40,7 @@ namespace QuantConnect.Tests.Engine.HistoricalData
         public void Setup()
         {
             _historyProviderWrapper = new();
-            var historyProviders = Newtonsoft.Json.JsonConvert.SerializeObject(new[] { "SubscriptionDataReaderHistoryProvider", "FakeHistoryProvider" });
+            var historyProviders = Newtonsoft.Json.JsonConvert.SerializeObject(new[] { nameof(SubscriptionDataReaderHistoryProvider), nameof(TestHistoryProvider) });
             var jobWithArrayHistoryProviders = new LiveNodePacket
             {
                 HistoryProvider = historyProviders
@@ -105,8 +105,8 @@ namespace QuantConnect.Tests.Engine.HistoricalData
             _historyProviderWrapper.DownloadFailed += (sender, args) => { downloadFailed = true; };
             _historyProviderWrapper.ReaderErrorDetected += (sender, args) => { readerErrorDetected = true; };
 
-            var historyProvider = Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>("FakeHistoryProvider");
-            (historyProvider as FakeHistoryProvider).TriggerEvents();
+            var historyProvider = Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>(nameof(TestHistoryProvider));
+            (historyProvider as TestHistoryProvider).TriggerEvents();
             Assert.IsTrue(invalidConfigurationDetected);
             Assert.IsTrue(numericalPrecisionLimited);
             Assert.IsTrue(startDateLimited);

@@ -634,12 +634,6 @@ namespace QuantConnect.Interfaces
         void SetFinishedWarmingUp();
 
         /// <summary>
-        /// Gets the date/time warmup should begin
-        /// </summary>
-        /// <returns></returns>
-        IEnumerable<HistoryRequest> GetWarmupHistoryRequests();
-
-        /// <summary>
         /// Set the maximum number of orders the algortihm is allowed to process.
         /// </summary>
         /// <param name="max">Maximum order count int</param>

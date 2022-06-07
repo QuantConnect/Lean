@@ -21,6 +21,7 @@ using System;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Brokerages;
+using QuantConnect.Securities.Crypto;
 
 namespace QuantConnect.Tests.Brokerages.Bitfinex
 {
@@ -146,6 +147,42 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             Assert.AreEqual(
                 BitfinexFeeModel.TakerFee * Math.Abs(Quantity), fee.Value.Amount);
             Assert.AreEqual("ETH", fee.Value.Currency);
+        }
+
+        [Test]
+        public void ReturnsSameFeesForStableCoinsWithoutPairs()
+        {
+            IFeeModel feeModel = new BitfinexFeeModel();
+
+            var tz = TimeZones.NewYork;
+
+            // Use a StableCoin without pair in Bitfinex
+            Security xchfchf = new Crypto(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new Cash("CHF", 0, 10),
+                new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create("XCHFCHF", SecurityType.Crypto, Market.Binance), Resolution.Minute, tz, tz, true, false, false),
+                new SymbolProperties("XCHFCHF", "CHF", 1, 0.01m, 0.00000001m, string.Empty),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
+            xchfchf.SetMarketPrice(new Tick(DateTime.UtcNow, xchfchf.Symbol, 100, 100));
+
+            var time = new DateTime(2019, 2, 1);
+            var stableCoinFee = feeModel.GetOrderFee(
+                new OrderFeeParameters(
+                    xchfchf,
+                    new MarketOrder(xchfchf.Symbol, -1, time)
+                )
+            );
+
+            var normalPairFee = feeModel.GetOrderFee(
+                new OrderFeeParameters(
+                    Security,
+                    new MarketOrder(Security.Symbol, -1, time)
+                )
+            );
+
+            Assert.AreEqual(normalPairFee.Value.Amount, stableCoinFee.Value.Amount);
         }
     }
 }

@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Configuration;
@@ -100,18 +101,20 @@ namespace QuantConnect.Tests.Algorithm
                     estimateExpectedDataCount = 2 * (securityType == SecurityType.Forex ? 19 : 6);
                     break;
                 case Resolution.Daily:
-                    estimateExpectedDataCount = 2;
+                    // Warmup is 2 days. During warmup we expect the daily data point which goes from T-2 to T-1, once warmup finished,
+                    // we will get T-1 to T data point which is let through but the data feed since the algorithm starts at T
+                    estimateExpectedDataCount = 1;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(resolution), resolution, null);
             }
 
-            Log.Trace($"WarmUpDataCount: {_algorithm.WarmUpDataCount}. Resolution {resolution}. SecurityType {securityType}");
+            Log.Debug($"WarmUpDataCount: {_algorithm.WarmUpDataCount}. Resolution {resolution}. SecurityType {securityType}");
             Assert.GreaterOrEqual(_algorithm.WarmUpDataCount, estimateExpectedDataCount);
         }
 
         [Test]
-        public void WarmUpInternalSubscriptionsHistoryRequest()
+        public void WarmUpInternalSubscriptions()
         {
             var algo = new AlgorithmStub(new MockDataFeed())
             {
@@ -122,16 +125,27 @@ namespace QuantConnect.Tests.Algorithm
             algo.AddCfd("DE30EUR", Resolution.Second, Market.Oanda);
             algo.SetWarmup(10);
             algo.PostInitialize();
-            algo.OnEndOfTimeStep();
             algo.DataManager.UniverseSelection.EnsureCurrencyDataFeeds(SecurityChanges.None);
 
-            var result = algo.GetWarmupHistoryRequests();
+            Assert.AreEqual(algo.StartDate - TimeSpan.FromSeconds(10), algo.Time);
+        }
 
-            foreach (var historyRequest in result)
+        [Test]
+        public void WarmUpUniverseSelection()
+        {
+            var algo = new AlgorithmStub(new MockDataFeed())
             {
-                Assert.AreEqual(Resolution.Second, historyRequest.Resolution);
-                Assert.AreEqual(TimeSpan.FromSeconds(10), historyRequest.EndTimeUtc - historyRequest.StartTimeUtc);
-            }
+                HistoryProvider = new SubscriptionDataReaderHistoryProvider()
+            };
+
+            algo.SetStartDate(2013, 10, 08);
+            var universe = algo.AddUniverse((_) => Enumerable.Empty<Symbol>());
+            var barCount = 3;
+            algo.SetWarmup(barCount);
+            algo.PostInitialize();
+
+            // +2 is due to the weekend
+            Assert.AreEqual(algo.StartDate - universe.Configuration.Resolution.ToTimeSpan() * (barCount + 2), algo.Time);
         }
 
         [Test]
@@ -180,6 +194,54 @@ namespace QuantConnect.Tests.Algorithm
             }
 
             zipCacheProvider.DisposeSafely();
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void WarmupStartDate_NoAsset(bool withResolution)
+        {
+            var algo = new AlgorithmStub();
+            algo.SetStartDate(2013, 10, 01);
+            DateTime expected;
+            if (withResolution)
+            {
+                algo.SetWarmUp(100, Resolution.Daily);
+                expected = new DateTime(2013, 06, 23);
+            }
+            else
+            {
+                algo.SetWarmUp(100);
+                // defaults to universe settings
+                expected = new DateTime(2013, 09, 30, 22, 20, 0);
+            }
+            algo.PostInitialize();
+
+            Assert.AreEqual(expected, algo.Time);
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void WarmupStartDate_Equity(bool withResolution)
+        {
+            var algo = new AlgorithmStub(new NullDataFeed { ShouldThrow = false });
+            algo.SetStartDate(2013, 10, 01);
+            algo.AddEquity("AAPL");
+            DateTime expected;
+            if (withResolution)
+            {
+                algo.SetWarmUp(100, Resolution.Daily);
+                expected = new DateTime(2013, 05, 09);
+            }
+            else
+            {
+                algo.SetWarmUp(100);
+                // uses the assets resolution
+                expected = new DateTime(2013, 9, 30, 14, 20, 0);
+            }
+            algo.PostInitialize();
+
+            // before than the case with no asset because takes into account 100 tradable dates of AAPL
+            Assert.AreEqual(expected, algo.Time);
         }
 
         private class TestSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper

@@ -13,62 +13,41 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data;
+using System;
 using System.Collections.Generic;
 using QuantConnect.Interfaces;
-using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Basic template India algorithm simply initializes the date range and cash. This is a skeleton
-    /// framework you can use for designing an algorithm.
+    /// Regression algorithm asserting <see cref="OnWarmupFinished"/> is being called
     /// </summary>
-    /// <meta name="tag" content="using data" />
-    /// <meta name="tag" content="using quantconnect" />
-    /// <meta name="tag" content="trading and orders" />
-    public class BasicTemplateIndiaAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class OnWarmupFinishedRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private bool _onWarmupFinished;
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetAccountCurrency("INR");  //Set Account Currency
-            SetStartDate(2019, 1, 23);  //Set Start Date
-            SetEndDate(2019, 10, 31);   //Set End Date
-            SetCash(100000);            //Set Strategy Cash
+            SetStartDate(2013, 10, 08);
+            SetEndDate(2013, 10, 11);
+            SetCash(100000);
 
-            // Find more symbols here: http://quantconnect.com/data
-            // Equities Resolutions: Tick, Second, Minute, Hour, Daily.
-            AddEquity("YESBANK", Resolution.Minute, Market.India);
-
-            //Set Order Prperties as per the requirements for order placement
-            DefaultOrderProperties = new IndiaOrderProperties(exchange: Exchange.NSE);
-            //override default productType value set in config.json if needed - order specific productType value
-            //DefaultOrderProperties = new IndiaOrderProperties(exchange: Exchange.NSE, IndiaOrderProperties.IndiaProductType.CNC);
-
-            // General Debug statement for acknowledgement
-            Debug("Intialization Done");
+            AddEquity("SPY", Resolution.Minute);
+            SetWarmup(TimeSpan.FromDays(1));
         }
 
-        /// <summary>
-        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        public override void OnWarmupFinished()
         {
-            if (!Portfolio.Invested)
-            {
-                var marketTicket = MarketOrder("YESBANK", 1);
-            }
+            _onWarmupFinished = true;
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        public override void OnEndOfAlgorithm()
         {
-            if (orderEvent.Status.IsFill())
+            if (!_onWarmupFinished)
             {
-                Debug($"Purchased Complete: {orderEvent.Symbol}");
+                throw new Exception($"OnWarmupFinished was not called!");
             }
         }
 
@@ -85,7 +64,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 29524;
+        public long DataPoints => 3943;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -97,15 +76,15 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "1"},
+            {"Total Trades", "0"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-0.010%"},
-            {"Drawdown", "0.000%"},
+            {"Compounding Annual Return", "0%"},
+            {"Drawdown", "0%"},
             {"Expectancy", "0"},
-            {"Net Profit", "-0.008%"},
-            {"Sharpe Ratio", "-1.183"},
-            {"Probabilistic Sharpe Ratio", "0.001%"},
+            {"Net Profit", "0%"},
+            {"Sharpe Ratio", "0"},
+            {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
@@ -113,17 +92,17 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-1.183"},
-            {"Tracking Error", "0"},
+            {"Information Ratio", "-57.739"},
+            {"Tracking Error", "0.178"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "₹6.00"},
-            {"Estimated Strategy Capacity", "₹61000000000.00"},
-            {"Lowest Capacity Asset", "YESBANK UL"},
+            {"Total Fees", "$0.00"},
+            {"Estimated Strategy Capacity", "$0"},
+            {"Lowest Capacity Asset", ""},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-0.247"},
-            {"Return Over Maximum Drawdown", "-1.104"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
             {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -131,14 +110,14 @@ namespace QuantConnect.Algorithm.CSharp
             {"Long Insight Count", "0"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "₹0"},
-            {"Total Accumulated Estimated Alpha Value", "₹0"},
-            {"Mean Population Estimated Insight Value", "₹0"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
             {"Mean Population Direction", "0%"},
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "6cc69218edd7bd461678b9ee0c575db5"}
+            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
         };
     }
 }

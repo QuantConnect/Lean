@@ -246,8 +246,8 @@ namespace QuantConnect.Securities
             // Check out the StableCoinsWithoutPairs static var for those that are missing their 1-1 conversion pairs
             if (marketMap.TryGetValue(SecurityType.Crypto, out var market)
                 && 
-                (Currencies.IsStableCoin(Symbol, market, accountCurrency)
-                || Currencies.IsStableCoin(accountCurrency, market, Symbol)))
+                (Currencies.IsStableCoinWithoutPair(Symbol + accountCurrency, market)
+                || Currencies.IsStableCoinWithoutPair(accountCurrency + Symbol, market)))
             {
                 CurrencyConversion = null;
                 ConversionRate = 1.0m;
