@@ -354,7 +354,6 @@ namespace QuantConnect.Tests.Common
         {
             const decimal underlyingPrice = 200m;
             const decimal underlyingVol = 0.15m;
-            const decimal riskFreeRate = 0.01m;
             var tz = TimeZones.NewYork;
             var evaluationDate = new DateTime(2015, 2, 19);
             var SPY_C_192_Feb19_2016E = Symbol.CreateOption("SPY", Market.USA, OptionStyle.European, OptionRight.Call, 192m, new DateTime(2016, 02, 19));
@@ -408,6 +407,78 @@ namespace QuantConnect.Tests.Common
 
             Assert.AreEqual(OptionPriceModelResult.None, resultsCall);
             Assert.AreEqual(OptionPriceModelResult.None, resultsCall);
+        }
+
+        [Test]
+        [TestCase("BlackScholes", OptionStyle.American, true)]
+        [TestCase("BlackScholes", OptionStyle.European, false)]
+        [TestCase("Integral", OptionStyle.American, true)]
+        [TestCase("Integral", OptionStyle.European, false)]
+        [TestCase("BaroneAdesiWhaley", OptionStyle.American, false)]
+        [TestCase("BaroneAdesiWhaley", OptionStyle.European, true)]
+        [TestCase("BjerksundStensland", OptionStyle.American, false)]
+        [TestCase("BjerksundStensland", OptionStyle.European, true)]
+        public void ThrowsIfOptionStyleIsNotSupportedByQLPricingModel(string qlModelName, OptionStyle optionStyle, bool shouldThrow)
+        {
+            const decimal underlyingPrice = 200m;
+            const decimal underlyingVol = 0.15m;
+            var tz = TimeZones.NewYork;
+            var evaluationDate = new DateTime(2015, 2, 19);
+            var spy = Symbols.SPY;
+            var SPY_C_192_Feb19_2016E = Symbol.CreateOption(spy.Value, Market.USA, optionStyle, OptionRight.Call, 192m, new DateTime(2016, 02, 19));
+            var SPY_P_192_Feb19_2016E = Symbol.CreateOption(spy.Value, Market.USA, optionStyle, OptionRight.Put, 192m, new DateTime(2016, 02, 19));
+
+            // setting up underlying
+            var equity = new Equity(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new SubscriptionDataConfig(typeof(TradeBar), spy, Resolution.Minute, tz, tz, true, false, false),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
+            equity.SetMarketPrice(new Tick { Value = underlyingPrice });
+            equity.VolatilityModel = new DummyVolatilityModel(underlyingVol);
+
+            // setting up European style call option
+            var contractCall = new OptionContract(SPY_C_192_Feb19_2016E, spy) { Time = evaluationDate };
+            var optionCall = new Option(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new SubscriptionDataConfig(typeof(TradeBar), SPY_C_192_Feb19_2016E, Resolution.Minute, tz, tz, true, false, false),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
+            optionCall.Underlying = equity;
+
+            // setting up European style put option
+            var contractPut = new OptionContract(SPY_P_192_Feb19_2016E, spy) { Time = evaluationDate };
+            var optionPut = new Option(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new SubscriptionDataConfig(typeof(TradeBar), SPY_P_192_Feb19_2016E, Resolution.Minute, tz, tz, true, false, false),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
+            optionPut.Underlying = equity;
+
+            // running evaluation
+            var priceModel = (IOptionPriceModel)typeof(OptionPriceModels).GetMethod(qlModelName).Invoke(null, new object[]{});
+            TestDelegate call = () => priceModel.Evaluate(optionCall, null, contractCall);
+            TestDelegate put = () => priceModel.Evaluate(optionPut, null, contractPut);
+
+            if (shouldThrow)
+            {
+                Assert.Throws<ArgumentException>(call);
+                Assert.Throws<ArgumentException>(put);
+            }
+            else
+            {
+                Assert.DoesNotThrow(call);
+                Assert.DoesNotThrow(put);
+            }
         }
 
         /// <summary>

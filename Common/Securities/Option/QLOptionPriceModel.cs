@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QLNet;
@@ -47,18 +48,28 @@ namespace QuantConnect.Securities.Option
         public bool VolatilityEstimatorWarmedUp => _underlyingVolEstimator.IsReady;
 
         /// <summary>
+        /// TODO:
+        /// </summary>
+        public OptionStyle[] AllowedOptionStyles { get; } = new[] { OptionStyle.European };
+
+        /// <summary>
         /// Method constructs QuantLib option price model with necessary estimators of underlying volatility, risk free rate, and underlying dividend yield
         /// </summary>
         /// <param name="pricingEngineFunc">Function modeled stochastic process, and returns new pricing engine to run calculations for that option</param>
         /// <param name="underlyingVolEstimator">The underlying volatility estimator</param>
         /// <param name="riskFreeRateEstimator">The risk free rate estimator</param>
         /// <param name="dividendYieldEstimator">The underlying dividend yield estimator</param>
-        public QLOptionPriceModel(PricingEngineFunc pricingEngineFunc, IQLUnderlyingVolatilityEstimator underlyingVolEstimator, IQLRiskFreeRateEstimator riskFreeRateEstimator, IQLDividendYieldEstimator dividendYieldEstimator)
+        public QLOptionPriceModel(PricingEngineFunc pricingEngineFunc, IQLUnderlyingVolatilityEstimator underlyingVolEstimator, IQLRiskFreeRateEstimator riskFreeRateEstimator, IQLDividendYieldEstimator dividendYieldEstimator, OptionStyle[] allowedOptionStyles = null)
         {
             _pricingEngineFunc = (option, process) => pricingEngineFunc(process);
             _underlyingVolEstimator = underlyingVolEstimator ?? new ConstantQLUnderlyingVolatilityEstimator();
             _riskFreeRateEstimator = riskFreeRateEstimator ?? new ConstantQLRiskFreeRateEstimator();
             _dividendYieldEstimator = dividendYieldEstimator ?? new ConstantQLDividendYieldEstimator();
+
+            if (allowedOptionStyles != null)
+            {
+                AllowedOptionStyles = allowedOptionStyles;
+            }
         }
         /// <summary>
         /// Method constructs QuantLib option price model with necessary estimators of underlying volatility, risk free rate, and underlying dividend yield
@@ -67,12 +78,17 @@ namespace QuantConnect.Securities.Option
         /// <param name="underlyingVolEstimator">The underlying volatility estimator</param>
         /// <param name="riskFreeRateEstimator">The risk free rate estimator</param>
         /// <param name="dividendYieldEstimator">The underlying dividend yield estimator</param>
-        public QLOptionPriceModel(PricingEngineFuncEx pricingEngineFunc, IQLUnderlyingVolatilityEstimator underlyingVolEstimator, IQLRiskFreeRateEstimator riskFreeRateEstimator, IQLDividendYieldEstimator dividendYieldEstimator)
+        public QLOptionPriceModel(PricingEngineFuncEx pricingEngineFunc, IQLUnderlyingVolatilityEstimator underlyingVolEstimator, IQLRiskFreeRateEstimator riskFreeRateEstimator, IQLDividendYieldEstimator dividendYieldEstimator, OptionStyle[] allowedOptionStyles = null)
         {
             _pricingEngineFunc = pricingEngineFunc;
             _underlyingVolEstimator = underlyingVolEstimator ?? new ConstantQLUnderlyingVolatilityEstimator();
             _riskFreeRateEstimator = riskFreeRateEstimator ?? new ConstantQLRiskFreeRateEstimator();
             _dividendYieldEstimator = dividendYieldEstimator ?? new ConstantQLDividendYieldEstimator();
+
+            if (allowedOptionStyles != null)
+            {
+                AllowedOptionStyles = allowedOptionStyles;
+            }
         }
 
         /// <summary>
@@ -86,6 +102,11 @@ namespace QuantConnect.Securities.Option
         /// price of the specified option contract</returns>
         public OptionPriceModelResult Evaluate(Security security, Slice slice, OptionContract contract)
         {
+            if (!AllowedOptionStyles.Contains(contract.Symbol.ID.OptionStyle))
+            {
+               throw new ArgumentException($"{contract.Symbol.ID.OptionStyle} style options are not supported by this pricing model");
+            }
+
             try
             {
                 // expired options has no price
@@ -140,11 +161,13 @@ namespace QuantConnect.Securities.Option
                 {
                     try
                     {
-                        return (decimal)greek();
+                        var g = (decimal)greek();
+                        return g;
                     }
                     catch (Exception)
                     {
-                        return EnableGreekApproximation ? (decimal)reevalFunc() : 0.0m;
+                        var v = EnableGreekApproximation ? (decimal)reevalFunc() : 0.0m;
+                        return v;
                     }
                 };
 
