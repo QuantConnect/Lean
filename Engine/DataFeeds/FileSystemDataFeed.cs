@@ -229,8 +229,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 enumerator = new BaseDataCollectionAggregatorEnumerator(enumerator, request.Configuration.Symbol);
             }
 
+            enumerator = TryAddFillForwardEnumerator(request, enumerator, request.Configuration.FillDataForward);
+
+            // optionally apply exchange/user filters
+            if (request.Configuration.IsFilteredSubscription)
+            {
+                enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(_resultHandler, enumerator, request.Security,
+                    request.EndTimeLocal, request.Configuration.ExtendedMarketHours, false, request.ExchangeHours);
+            }
+
+            return enumerator;
+        }
+
+        /// <summary>
+        /// Will add a fill forward enumerator if requested
+        /// </summary>
+        protected IEnumerator<BaseData> TryAddFillForwardEnumerator(SubscriptionRequest request, IEnumerator<BaseData> enumerator, bool fillForward)
+        {
             // optionally apply fill forward logic, but never for tick data
-            if (request.Configuration.FillDataForward && request.Configuration.Resolution != Resolution.Tick)
+            if (fillForward && request.Configuration.Resolution != Resolution.Tick)
             {
                 // copy forward Bid/Ask bars for QuoteBars
                 if (request.Configuration.Type == typeof(QuoteBar))
@@ -242,13 +259,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 enumerator = new FillForwardEnumerator(enumerator, request.Security.Exchange, fillForwardResolution,
                     request.Configuration.ExtendedMarketHours, request.EndTimeLocal, request.Configuration.Resolution.ToTimeSpan(), request.Configuration.DataTimeZone);
-            }
-
-            // optionally apply exchange/user filters
-            if (request.Configuration.IsFilteredSubscription)
-            {
-                enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(_resultHandler, enumerator, request.Security,
-                    request.EndTimeLocal, request.Configuration.ExtendedMarketHours, false, request.ExchangeHours);
             }
 
             return enumerator;
