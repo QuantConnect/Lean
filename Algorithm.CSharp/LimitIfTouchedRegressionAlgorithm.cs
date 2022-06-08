@@ -35,9 +35,9 @@ namespace QuantConnect.Algorithm.CSharp
         // We assert the following occur in FIFO order in OnOrderEvent
         private readonly Queue<string> _expectedEvents = new Queue<string>(new[]
         {
-            "Time: 10/10/2013 13:31:00 OrderID: 72 EventID: 11 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 144.6434 USD LimitPrice: 144.3551 TriggerPrice: 143.6051 OrderFee: 1 USD",
-            "Time: 10/10/2013 15:57:00 OrderID: 73 EventID: 11 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 145.6636 USD LimitPrice: 145.6434 TriggerPrice: 144.8934 OrderFee: 1 USD",
-            "Time: 10/11/2013 15:37:00 OrderID: 74 EventID: 11 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 146.7185 USD LimitPrice: 146.6723 TriggerPrice: 145.9223 OrderFee: 1 USD"        });
+            "Time: 10/10/2013 13:31:00 OrderID: 72 EventID: 399 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 144.6434 USD LimitPrice: 144.3551 TriggerPrice: 143.61 OrderFee: 1 USD",
+            "Time: 10/10/2013 15:57:00 OrderID: 73 EventID: 156 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 145.6636 USD LimitPrice: 145.6434 TriggerPrice: 144.89 OrderFee: 1 USD",
+            "Time: 10/11/2013 15:37:00 OrderID: 74 EventID: 380 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: 146.7185 USD LimitPrice: 146.6723 TriggerPrice: 145.92 OrderFee: 1 USD"        });
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -89,6 +89,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 var newQuantity = _request.Quantity - _negative;
                 _request.UpdateQuantity(newQuantity, $"LIT - Quantity: {newQuantity}");
+                _request.UpdateTriggerPrice(_request.Get(OrderField.TriggerPrice).RoundToSignificantDigits(5));
             }
         }
 
@@ -175,7 +176,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "359ac5b8cd73a8e42b7897a883f5f73d"}
+            {"OrderListHash", "5aebd643ee5365f55f10038150b47203"}
         };
     }
 }
