@@ -22,6 +22,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Data.Auxiliary;
 using System.Collections;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -126,6 +127,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     Time = localTime,
                     EndTime = localTime
                 };
+
+                Log.Trace($"DataQueueOptionChainUniverseDataCollectionEnumerator({_currentData.Symbol}): Emitting data point: {_currentData.EndTime}. " +
+                    $"Count: {_currentData.Data.Count}. Underlying: {_currentData.Underlying}");
 
                 _lastEmitTime = localTime;
 

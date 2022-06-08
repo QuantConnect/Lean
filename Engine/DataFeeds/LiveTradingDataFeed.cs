@@ -423,21 +423,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             if (_algorithm.IsWarmingUp)
             {
-                var warmup = new SubscriptionRequest(request, endTimeUtc: _timeProvider.GetUtcNow());
-                if (warmup.TradableDays.Any())
+                var warmupRequest = new SubscriptionRequest(request, endTimeUtc: _timeProvider.GetUtcNow(),
+                    // we will not fill forward each warmup enumerators separately but concatenated bellow
+                    configuration: new SubscriptionDataConfig(request.Configuration, fillForward: false));
+                if (warmupRequest.TradableDays.Any())
                 {
                     // since we will source data locally and from the history provider, let's limit the history request size
                     // by setting a start date respecting the 'MaximumWarmupHistoryDaysLookBack'
-                    var historyWarmup = warmup;
-                    var warmupHistoryStartDate = warmup.EndTimeUtc.AddDays(-MaximumWarmupHistoryDaysLookBack);
-                    if (warmupHistoryStartDate > warmup.StartTimeUtc)
+                    var historyWarmup = warmupRequest;
+                    var warmupHistoryStartDate = warmupRequest.EndTimeUtc.AddDays(-MaximumWarmupHistoryDaysLookBack);
+                    if (warmupHistoryStartDate > warmupRequest.StartTimeUtc)
                     {
-                        historyWarmup = new SubscriptionRequest(warmup, startTimeUtc: warmupHistoryStartDate);
+                        historyWarmup = new SubscriptionRequest(warmupRequest, startTimeUtc: warmupHistoryStartDate);
                     }
 
+                    var synchronizedWarmupEnumerator = TryAddFillForwardEnumerator(warmupRequest,
+                        // we concatenate the file based and history based warmup enumerators, dropping duplicate time stamps
+                        new ConcatEnumerator(true, GetFileBasedWarmupEnumerator(warmupRequest), GetHistoryWarmupEnumerator(historyWarmup)) { CanEmitNull = false },
+                        // if required by the original request, we will fill forward the Synced warmup data
+                        request.Configuration.FillDataForward);
+
                     // the order here is important, concat enumerator will keep the last enumerator given and dispose of the rest
-                    liveEnumerator = new ConcatEnumerator(true, GetFileBasedWarmupEnumerator(warmup),
-                        GetHistoryWarmupEnumerator(historyWarmup), liveEnumerator);
+                    liveEnumerator = new ConcatEnumerator(true, synchronizedWarmupEnumerator, liveEnumerator);
                 }
             }
             return liveEnumerator;
@@ -452,7 +459,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             try
             {
                 result = new FilterEnumerator<BaseData>(CreateEnumerator(warmup),
-                    // don't let future data past, nor fill forward, that will be handled by the history request
+                    // don't let future data past, nor fill forward, that will be handled after merging with the history request response
                     data => data == null || data.EndTime < warmup.EndTimeLocal && !data.IsFillForward);
             }
             catch (Exception e)
@@ -492,7 +499,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }).GetEnumerator();
                 }
 
-                return new FilterEnumerator<BaseData>(result, data => data == null || data.EndTime < warmup.EndTimeLocal);
+                return new FilterEnumerator<BaseData>(result,
+                    // don't let future data past, nor fill forward, that will be handled after merging with the file based enumerator
+                    data => data == null || data.EndTime < warmup.EndTimeLocal && !data.IsFillForward);
             }
             catch
             {
