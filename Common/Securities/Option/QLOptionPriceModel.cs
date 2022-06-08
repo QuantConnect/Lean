@@ -48,9 +48,10 @@ namespace QuantConnect.Securities.Option
         public bool VolatilityEstimatorWarmedUp => _underlyingVolEstimator.IsReady;
 
         /// <summary>
-        /// TODO:
+        /// List of option styles supported by the pricing model.
+        /// By default, both American and European option styles are supported.
         /// </summary>
-        public OptionStyle[] AllowedOptionStyles { get; } = new[] { OptionStyle.European };
+        public OptionStyle[] AllowedOptionStyles { get; } = new[] { OptionStyle.European, OptionStyle.American };
 
         /// <summary>
         /// Method constructs QuantLib option price model with necessary estimators of underlying volatility, risk free rate, and underlying dividend yield
@@ -59,6 +60,7 @@ namespace QuantConnect.Securities.Option
         /// <param name="underlyingVolEstimator">The underlying volatility estimator</param>
         /// <param name="riskFreeRateEstimator">The risk free rate estimator</param>
         /// <param name="dividendYieldEstimator">The underlying dividend yield estimator</param>
+        /// <param name="allowedOptionStyles">List of option styles supported by the pricing model. It defaults to both American and European option styles</param>
         public QLOptionPriceModel(PricingEngineFunc pricingEngineFunc, IQLUnderlyingVolatilityEstimator underlyingVolEstimator, IQLRiskFreeRateEstimator riskFreeRateEstimator, IQLDividendYieldEstimator dividendYieldEstimator, OptionStyle[] allowedOptionStyles = null)
         {
             _pricingEngineFunc = (option, process) => pricingEngineFunc(process);
@@ -78,6 +80,7 @@ namespace QuantConnect.Securities.Option
         /// <param name="underlyingVolEstimator">The underlying volatility estimator</param>
         /// <param name="riskFreeRateEstimator">The risk free rate estimator</param>
         /// <param name="dividendYieldEstimator">The underlying dividend yield estimator</param>
+        /// <param name="allowedOptionStyles">List of option styles supported by the pricing model. It defaults to both American and European option styles</param>
         public QLOptionPriceModel(PricingEngineFuncEx pricingEngineFunc, IQLUnderlyingVolatilityEstimator underlyingVolEstimator, IQLRiskFreeRateEstimator riskFreeRateEstimator, IQLDividendYieldEstimator dividendYieldEstimator, OptionStyle[] allowedOptionStyles = null)
         {
             _pricingEngineFunc = pricingEngineFunc;
