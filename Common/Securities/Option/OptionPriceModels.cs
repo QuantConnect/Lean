@@ -46,6 +46,7 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         /// <param name="priceEngineName">QL price engine name</param>
         /// <param name="riskFree">The risk free rate</param>
+        /// <param name="allowedOptionStyles">List of option styles supported by the pricing model. It defaults to both American and European option styles</param>
         /// <returns>New option price model instance of specific engine</returns>
         public static IOptionPriceModel Create(string priceEngineName, decimal riskFree, OptionStyle[] allowedOptionStyles = null)
         {
@@ -119,7 +120,7 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// Pricing engine for European options using finite-differences.
+        /// Pricing engine for European and American options using finite-differences.
         /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
         /// </summary>
         /// <returns>New option price model instance</returns>
@@ -138,7 +139,7 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// Pricing engine for vanilla options using binomial trees. Jarrow-Rudd model.
+        /// Pricing engine for European and American vanilla options using binomial trees. Jarrow-Rudd model.
         /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
         /// </summary>
         /// <returns>New option price model instance</returns>
@@ -153,7 +154,7 @@ namespace QuantConnect.Securities.Option
 
 
         /// <summary>
-        /// Pricing engine for vanilla options using binomial trees. Cox-Ross-Rubinstein(CRR) model.
+        /// Pricing engine for European and American vanilla options using binomial trees. Cox-Ross-Rubinstein(CRR) model.
         /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
         /// </summary>
         /// <returns>New option price model instance</returns>
@@ -167,7 +168,7 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// Pricing engine for vanilla options using binomial trees. Additive Equiprobabilities model.
+        /// Pricing engine for European and American vanilla options using binomial trees. Additive Equiprobabilities model.
         /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
         /// </summary>
         /// <returns>New option price model instance</returns>
@@ -181,7 +182,7 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// Pricing engine for vanilla options using binomial trees. Trigeorgis model.
+        /// Pricing engine for European and American vanilla options using binomial trees. Trigeorgis model.
         /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
         /// </summary>
         /// <returns>New option price model instance</returns>
@@ -195,7 +196,7 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// Pricing engine for vanilla options using binomial trees. Tian model.
+        /// Pricing engine for European and American vanilla options using binomial trees. Tian model.
         /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
         /// </summary>
         /// <returns>New option price model instance</returns>
@@ -209,7 +210,7 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// Pricing engine for vanilla options using binomial trees. Leisen-Reimer model.
+        /// Pricing engine for European and American vanilla options using binomial trees. Leisen-Reimer model.
         /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
         /// </summary>
         /// <returns>New option price model instance</returns>
@@ -223,7 +224,7 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// Pricing engine for vanilla options using binomial trees. Joshi model.
+        /// Pricing engine for European and American vanilla options using binomial trees. Joshi model.
         /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
         /// </summary>
         /// <returns>New option price model instance</returns>
