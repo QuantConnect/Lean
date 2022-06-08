@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -284,7 +284,7 @@ namespace QuantConnect.Orders
         /// Submits an <see cref="UpdateOrderRequest"/> with the <see cref="SecurityTransactionManager"/> to update
         /// the ticket with tag specified in <paramref name="tag"/>
         /// </summary>
-        /// <param name="tag"></param>
+        /// <param name="tag">The new tag for this order ticket</param>
         /// <returns><see cref="OrderResponse"/> from updating the order</returns>
         public OrderResponse UpdateTag(string tag)
         {
@@ -299,8 +299,8 @@ namespace QuantConnect.Orders
         /// Submits an <see cref="UpdateOrderRequest"/> with the <see cref="SecurityTransactionManager"/> to update
         /// the ticket with quantity specified in <paramref name="quantity"/> and with tag specified in <paramref name="quantity"/>
         /// </summary>
-        /// <param name="quantity"></param>
-        /// <param name="tag"></param>
+        /// <param name="quantity">The new quantity for this order ticket</param>
+        /// <param name="tag">The new tag for this order ticket</param>
         /// <returns><see cref="OrderResponse"/> from updating the order</returns>
         public OrderResponse UpdateQuantity(decimal quantity, string tag = null)
         {
@@ -316,8 +316,8 @@ namespace QuantConnect.Orders
         /// Submits an <see cref="UpdateOrderRequest"/> with the <see cref="SecurityTransactionManager"/> to update
         /// the ticker with limit price specified in <paramref name="limitPrice"/> and with tag specified in <paramref name="tag"/>
         /// </summary>
-        /// <param name="limitPrice"></param>
-        /// <param name="tag"></param>
+        /// <param name="limitPrice">The new limit price for this order ticket</param>
+        /// <param name="tag">The new tag for this order ticket</param>
         /// <returns><see cref="OrderResponse"/> from updating the order</returns>
         public OrderResponse UpdateLimitPrice(decimal limitPrice, string tag = null)
         {
@@ -333,14 +333,31 @@ namespace QuantConnect.Orders
         /// Submits an <see cref="UpdateOrderRequest"/> with the <see cref="SecurityTransactionManager"/> to update
         /// the ticker with stop price specified in <paramref name="stopPrice"/> and with tag specified in <paramref name="tag"/>
         /// </summary>
-        /// <param name="stopPrice"></param>
-        /// <param name="tag"></param>
+        /// <param name="stopPrice">The new stop price  for this order ticket</param>
+        /// <param name="tag">The new tag for this order ticket</param>
         /// <returns><see cref="OrderResponse"/> from updating the order</returns>
         public OrderResponse UpdateStopPrice(decimal stopPrice, string tag = null)
         {
             var fields = new UpdateOrderFields()
             {
                 StopPrice = stopPrice,
+                Tag = tag
+            };
+            return Update(fields);
+        }
+
+        /// <summary>
+        /// Submits an <see cref="UpdateOrderRequest"/> with the <see cref="SecurityTransactionManager"/> to update
+        /// the ticker with trigger price specified in <paramref name="triggerPrice"/> and with tag specified in <paramref name="tag"/>
+        /// </summary>
+        /// <param name="triggerPrice">The new price which, when touched, will trigger the setting of a limit order.</param>
+        /// <param name="tag">The new tag for this order ticket</param>
+        /// <returns><see cref="OrderResponse"/> from updating the order</returns>
+        public OrderResponse UpdateTriggerPrice(decimal triggerPrice, string tag = null)
+        {
+            var fields = new UpdateOrderFields()
+            {
+                TriggerPrice = triggerPrice,
                 Tag = tag
             };
             return Update(fields);
