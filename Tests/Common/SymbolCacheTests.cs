@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -16,8 +16,7 @@
 
 using System;
 using NUnit.Framework;
-using QuantConnect.Algorithm.CSharp;
-using QuantConnect.Data.Custom;
+using QuantConnect.Data.Custom.IconicTypes;
 using Bitcoin = QuantConnect.Algorithm.CSharp.LiveTradingFeaturesAlgorithm.Bitcoin;
 
 namespace QuantConnect.Tests.Common
@@ -90,10 +89,10 @@ namespace QuantConnect.Tests.Common
             // SID.GenerateBase uses <ticker>.<base-data-type-name> as the alias for custom data types
             var ticker = "ticker";
 
-            var symbol1 = Symbol.Create(ticker, SecurityType.Base, Market.USA, baseDataType: typeof(Quandl));
+            var symbol1 = Symbol.Create(ticker, SecurityType.Base, Market.USA, baseDataType: typeof(UnlinkedData));
             SymbolCache.Set(symbol1.ID.Symbol, symbol1);
 
-            var symbol2 = Symbol.Create(ticker, SecurityType.Base, Market.USA, baseDataType: typeof(QuandlVix));
+            var symbol2 = Symbol.Create(ticker, SecurityType.Base, Market.USA, baseDataType: typeof(UnlinkedDataTradeBar));
             SymbolCache.Set(symbol2.ID.Symbol, symbol2);
 
             Assert.Throws<InvalidOperationException>(

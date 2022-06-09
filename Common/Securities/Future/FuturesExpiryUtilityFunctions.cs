@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -257,11 +257,18 @@ namespace QuantConnect.Securities.Future
         }
 
         /// <summary>
-        /// Method to retrieve the last weekday of any month
+        /// Method to retrieve the last Thursday of any month
         /// </summary>
         /// <param name="time">Date from the given month</param>
-        /// <returns>Last day of the we</returns>
+        /// <returns>Last Thursday of the given month</returns>
         public static DateTime LastThursday(DateTime time) => LastWeekday(time, DayOfWeek.Thursday);
+
+        /// <summary>
+        /// Method to retrieve the last Friday of any month
+        /// </summary>
+        /// <param name="time">Date from the given month</param>
+        /// <returns>Last Friday of the given month</returns>
+        public static DateTime LastFriday(DateTime time) => LastWeekday(time, DayOfWeek.Friday);
 
         /// <summary>
         /// Method to check whether a given time is holiday or not
@@ -367,6 +374,34 @@ namespace QuantConnect.Securities.Future
         /// <returns>List of DateTimes with default time (00:00:00)</returns>
         public static List<DateTime> GetDatesFromDateTimeList(IEnumerable<DateTime> dateTimeList)
             => dateTimeList?.Select(x => x.Date).ToList() ?? new List<DateTime>();
+
+        /// <summary>
+        /// Calculates the date of Good Friday for a given year.
+        /// </summary>
+        /// <param name="year">Year to calculate Good Friday for</param>
+        /// <returns>Date of Good Friday</returns>
+        public static DateTime GetGoodFriday(int year)
+        {
+            // Acknowledgement
+            // Author: Jan Schreuder
+            // Link: https://www.codeproject.com/Articles/10860/Calculating-Christian-Holidays
+            // Calculates Easter Sunday as Easter is always celebrated on the Sunday immediately following the Paschal Full Moon date of the year
+            int g = year % 19;
+            int c = year / 100;
+            int h = (c - c / 4 - (8 * c + 13) / 25 + 19 * g + 15) % 30;
+            int i = h - h / 28 * (1 - h / 28 * (29 / (h + 1)) * ((21 - g) / 11));
+
+            int day = i - (year + year / 4 + i + 2 - c + c / 4) % 7 + 28;
+            int month = 3;
+            if (day > 31)
+            {
+                month++;
+                day -= 31;
+            }
+
+            // Calculate Good Friday
+            return new DateTime(year, month, day).AddDays(-2);
+        }
 
         private static readonly Dictionary<string, int> ExpiriesPriorMonth = new Dictionary<string, int>
         {

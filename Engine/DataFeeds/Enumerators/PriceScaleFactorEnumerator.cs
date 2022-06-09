@@ -19,6 +19,7 @@ using System.Collections;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -31,8 +32,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     {
         private readonly IEnumerator<BaseData> _rawDataEnumerator;
         private readonly SubscriptionDataConfig _config;
-        private readonly Lazy<FactorFile> _factorFile;
-        private DateTime _lastTradableDate;
+        private readonly IFactorFileProvider _factorFileProvider;
+        private DateTime _nextTradableDate;
+        private IFactorProvider _factorFile;
+        private bool _liveMode;
 
         /// <summary>
         /// Explicit interface implementation for <see cref="Current"/>
@@ -54,16 +57,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="rawDataEnumerator">The underlying raw data enumerator</param>
         /// <param name="config">The <see cref="SubscriptionDataConfig"/> to enumerate for.
         /// Will determine the <see cref="DataNormalizationMode"/> to use.</param>
-        /// <param name="factorFile">The <see cref="FactorFile"/> instance to use</param>
+        /// <param name="factorFileProvider">The <see cref="IFactorFileProvider"/> instance to use</param>
+        /// <param name="liveMode">True, is this is a live mode data stream</param>
         public PriceScaleFactorEnumerator(
             IEnumerator<BaseData> rawDataEnumerator,
             SubscriptionDataConfig config,
-            Lazy<FactorFile> factorFile)
+            IFactorFileProvider factorFileProvider,
+            bool liveMode = false)
         {
-            _lastTradableDate = DateTime.MinValue;
             _config = config;
+            _liveMode = liveMode;
+            _nextTradableDate = DateTime.MinValue;
             _rawDataEnumerator = rawDataEnumerator;
-            _factorFile = factorFile;
+            _factorFileProvider = factorFileProvider;
         }
 
         /// <summary>
@@ -88,16 +94,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
             if (underlyingReturnValue
                 && Current != null
-                && _factorFile != null
+                && _factorFileProvider != null
                 && _config.DataNormalizationMode != DataNormalizationMode.Raw)
             {
-                if (Current.Time.Date > _lastTradableDate)
+                if (Current.Time >= _nextTradableDate)
                 {
-                    _lastTradableDate = Current.Time.Date;
-                    UpdateScaleFactor(_lastTradableDate);
+                    _factorFile = _factorFileProvider.Get(_config.Symbol);
+                    _config.PriceScaleFactor = _factorFile.GetPriceScale(Current.Time.Date, _config.DataNormalizationMode, _config.ContractDepthOffset, _config.DataMappingMode);
+
+                    // update factor files every day
+                    _nextTradableDate = Current.Time.Date.AddDays(1);
+                    if (_liveMode)
+                    {
+                        // in live trading we add a offset to make sure new factor files are available
+                        _nextTradableDate = _nextTradableDate.Add(Time.LiveAuxiliaryDataOffset);
+                    }
                 }
 
-                Current = Current.Normalize(_config);
+                Current = Current.Normalize(_config.PriceScaleFactor, _config.DataNormalizationMode, _config.SumOfDividends);
             }
 
             return underlyingReturnValue;
@@ -110,27 +124,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         public void Reset()
         {
             throw new NotImplementedException("Reset method not implemented. Assumes loop will only be used once.");
-        }
-
-        private void UpdateScaleFactor(DateTime date)
-        {
-            switch (_config.DataNormalizationMode)
-            {
-                case DataNormalizationMode.Raw:
-                    return;
-
-                case DataNormalizationMode.TotalReturn:
-                case DataNormalizationMode.SplitAdjusted:
-                    _config.PriceScaleFactor = _factorFile.Value.GetSplitFactor(date);
-                    break;
-
-                case DataNormalizationMode.Adjusted:
-                    _config.PriceScaleFactor = _factorFile.Value.GetPriceScaleFactor(date);
-                    break;
-
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
         }
     }
 }

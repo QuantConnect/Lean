@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -23,6 +23,11 @@ namespace QuantConnect.Securities.Option
     /// </summary>
     public class OptionPriceModelResult
     {
+        /// <summary>
+        /// Represents the zero option price and greeks.
+        /// </summary>
+        public static OptionPriceModelResult None { get; } = new(0, new Greeks());
+
         private readonly Lazy<Greeks> _greeks;
         private readonly Lazy<decimal> _impliedVolatility;
 

@@ -14,11 +14,14 @@
  *
 */
 
+using System;
 using System.IO;
 using Ionic.Zip;
-using QuantConnect.Interfaces;
-using QuantConnect.Logging;
+using System.Linq;
 using QuantConnect.Util;
+using QuantConnect.Logging;
+using QuantConnect.Interfaces;
+using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -53,14 +56,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>An <see cref="Stream"/> of the cached data</returns>
         public Stream Fetch(string key)
         {
-            var stream = _dataProvider.Fetch(key);
+            LeanData.ParseKey(key, out var filePath, out var entryName);
+            var stream = _dataProvider.Fetch(filePath);
 
-            if (key.EndsWith(".zip") && stream != null)
+            if (filePath.EndsWith(".zip") && stream != null)
             {
                 // get the first entry from the zip file
                 try
                 {
-                    var entryStream = Compression.UnzipStream(stream, out _zipFile);
+                    var entryStream = Compression.UnzipStream(stream, out _zipFile, entryName);
 
                     // save the file stream so it can be disposed later
                     _zipFileStream = stream;
@@ -86,6 +90,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public void Store(string key, byte[] data)
         {
             //
+        }
+
+        /// <summary>
+        /// Returns a list of zip entries in a provided zip file
+        /// </summary>
+        public List<string> GetZipEntries(string zipFile)
+        {
+            var stream = _dataProvider.Fetch(zipFile);
+            if (stream == null)
+            {
+                throw new ArgumentException($"Failed to create source stream {zipFile}");
+            }
+            var entryNames = Compression.GetZipEntryFileNames(stream).ToList();
+            stream.DisposeSafely();
+
+            return entryNames;
         }
 
         /// <summary>

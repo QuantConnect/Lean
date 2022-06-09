@@ -134,7 +134,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 throw new ArgumentException("Expected BacktestNodePacket but received " + parameters.AlgorithmNodePacket.GetType().Name);
             }
 
-            Log.Trace($"BacktestingSetupHandler.Setup(): Setting up job: Plan: {job.UserPlan}, UID: {job.UserId.ToStringInvariant()}, " +
+            Log.Trace($"BacktestingSetupHandler.Setup(): Setting up job: UID: {job.UserId.ToStringInvariant()}, " +
                 $"PID: {job.ProjectId.ToStringInvariant()}, Version: {job.Version}, Source: {job.RequestSource}"
             );
 
@@ -209,11 +209,16 @@ namespace QuantConnect.Lean.Engine.Setup
                 sleepIntervalMillis: 100,  // entire system is waiting on this, so be as fast as possible
                 workerThread: WorkerThread);
 
+            if (Errors.Count > 0)
+            {
+                // if we already got an error just exit right away
+                return false;
+            }
+
             //Before continuing, detect if this is ready:
             if (!initializeComplete) return false;
 
-            //Calculate the max runtime for the strategy
-            MaximumRuntime = GetMaximumRuntime(parameters);
+            MaximumRuntime = TimeSpan.FromMinutes(job.Controls.MaximumRuntimeMinutes);
 
             BaseSetupHandler.SetupCurrencyConversions(algorithm, parameters.UniverseSelection);
             StartingPortfolioValue = algorithm.Portfolio.Cash;
@@ -223,7 +228,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 algorithm.Portfolio.TotalPortfolioValue * algorithm.Settings.FreePortfolioValuePercentage;
 
             // Get and set maximum orders for this job
-            MaxOrders = GetMaximumOrders(job);
+            MaxOrders = job.Controls.BacktestingMaxOrders;
             algorithm.SetMaximumOrders(MaxOrders);
 
             //Starting date of the algorithm:
@@ -233,99 +238,11 @@ namespace QuantConnect.Lean.Engine.Setup
             Log.Trace("SetUp Backtesting: User: " + job.UserId + " ProjectId: " + job.ProjectId + " AlgoId: " + job.AlgorithmId);
             Log.Trace($"Dates: Start: {algorithm.StartDate.ToStringInvariant("d")} " +
                       $"End: {algorithm.EndDate.ToStringInvariant("d")} " +
-                      $"Cash: {StartingPortfolioValue.ToStringInvariant("C")}");
+                      $"Cash: {StartingPortfolioValue.ToStringInvariant("C")} " +
+                      $"MaximumRuntime: {MaximumRuntime} " +
+                      $"MaxOrders: {MaxOrders}");
 
-            if (Errors.Count > 0)
-            {
-                initializeComplete = false;
-            }
             return initializeComplete;
-        }
-
-        /// <summary>
-        /// Get maximum orders for our algorithm, restricted by UserPlan
-        /// </summary>
-        /// <param name="job"></param>
-        /// <returns></returns>
-        protected virtual int GetMaximumOrders(BacktestNodePacket job)
-        {
-            if (job == null)
-            {
-                throw new ArgumentException("Job must not be null");
-            }
-
-            return job.Controls.BacktestingMaxOrders;
-        }
-
-        /// <summary>
-        /// Calculate the maximum runtime for this algorithm job.
-        /// </summary>
-        /// <param name="parameters">Setup handler parameters</param>
-        /// <returns>Timespan maximum run period</returns>
-        protected virtual TimeSpan GetMaximumRuntime(SetupHandlerParameters parameters)
-        {
-            if (parameters == null)
-            {
-                throw new ArgumentException("Parameters must not be null");
-            }
-
-            var start = parameters.Algorithm.StartDate;
-            var finish = parameters.Algorithm.EndDate;
-            var subscriptionManager = parameters.Algorithm.SubscriptionManager;
-            var universeManager = parameters.Algorithm.UniverseManager;
-            var controls = parameters.AlgorithmNodePacket.Controls;
-
-            // option/futures chain subscriptions
-            var derivativeSubscriptions = subscriptionManager.Subscriptions
-                .Where(x => x.Symbol.IsCanonical())
-                .Select(x => controls.GetLimit(x.Resolution))
-                .Sum();
-
-            // universe coarse/fine/custom subscriptions
-            var universeSubscriptions = universeManager
-                // use max limit for universes without explicitly added securities
-                .Sum(u => u.Value.Members.Count == 0 ? controls.GetLimit(u.Value.UniverseSettings.Resolution) : u.Value.Members.Count);
-
-            var subscriptionCount = derivativeSubscriptions + universeSubscriptions;
-
-            double maxRunTime = 0;
-            var jobDays = (finish - start).TotalDays;
-
-            maxRunTime = 10 * subscriptionCount * jobDays;
-
-            //Rationalize:
-            if ((maxRunTime / 3600) > 12)
-            {
-                //12 hours maximum
-                maxRunTime = 3600 * 12;
-            }
-            else if (maxRunTime < 60)
-            {
-                //If less than 60 seconds.
-                maxRunTime = 60;
-            }
-
-            Log.Trace("BacktestingSetupHandler.GetMaxRunTime(): Job Days: " + jobDays + " Max Runtime: " + Math.Round(maxRunTime / 60) + " min");
-
-            //Override for windows:
-            if (OS.IsWindows)
-            {
-                maxRunTime = 24 * 60 * 60;
-            }
-
-            // Python takes forever; lets give it 10x longer to finish.
-            if (parameters.AlgorithmNodePacket.Language == Language.Python)
-            {
-                maxRunTime *= 10;
-            }
-
-            // For non-free plans double maximum runtime
-            if (parameters.AlgorithmNodePacket.UserPlan != UserPlan.Free)
-            {
-                maxRunTime += maxRunTime;
-            }
-
-            return TimeSpan.FromSeconds(maxRunTime);
         }
 
         /// <summary>

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -13,15 +13,8 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Util;
-using QLNet;
 
 namespace QuantConnect.Securities.Option
 {
@@ -29,8 +22,13 @@ namespace QuantConnect.Securities.Option
     /// Class implements default underlying constant volatility estimator (<see cref="IQLUnderlyingVolatilityEstimator"/>.), that projects the underlying own volatility 
     /// model into corresponding option pricing model.
     /// </summary>
-    class ConstantQLUnderlyingVolatilityEstimator : IQLUnderlyingVolatilityEstimator
+    public class ConstantQLUnderlyingVolatilityEstimator : IQLUnderlyingVolatilityEstimator
     {
+        /// <summary>
+        /// Indicates whether volatility model has been warmed ot not
+        /// </summary>
+        public bool IsReady { get; private set; }
+
         /// <summary>
         /// Returns current estimate of the underlying volatility
         /// </summary>
@@ -48,6 +46,7 @@ namespace QuantConnect.Securities.Option
                 option.Underlying.VolatilityModel != null &&
                 option.Underlying.VolatilityModel.Volatility > 0m)
             {
+                IsReady = true;
                 return (double)option.Underlying.VolatilityModel.Volatility;
             }
 

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -48,10 +48,17 @@ namespace QuantConnect.AlgorithmFactory
 
             /// <summary>
             ///  Python Tool for Visual Studio Debugger for remote python debugging.
-            /// <see cref="Language.Python"/> will use 'Python Extension in VS Code' 
-            ///or 'Python Tools in Visual Studio'
+            /// <see cref="Language.Python"/>. Deprecated, routes to DebugPy which
+            /// is it's replacement. Used in the same way.
             /// </summary>
             PTVSD,
+
+            /// <summary>
+            ///  DebugPy - a debugger for Python.
+            /// <see cref="Language.Python"/> can use  `Python Extension` in VS Code
+            /// or attach to Python in Visual Studio
+            /// </summary>
+            DebugPy,
 
             /// <summary>
             ///  PyCharm PyDev Debugger for remote python debugging.
@@ -68,7 +75,7 @@ namespace QuantConnect.AlgorithmFactory
             if (language == Language.Python)
             {
                 DebuggingMethod debuggingType;
-                Enum.TryParse(Config.Get("debugging-method", DebuggingMethod.LocalCmdline.ToString()), out debuggingType);
+                Enum.TryParse(Config.Get("debugging-method", DebuggingMethod.LocalCmdline.ToString()), true, out debuggingType);
 
                 Log.Trace("DebuggerHelper.Initialize(): initializing python...");
                 PythonInitializer.Initialize();
@@ -93,6 +100,17 @@ while not sys.gettrace():
                         case DebuggingMethod.PTVSD:
                             Log.Trace("DebuggerHelper.Initialize(): waiting for PTVSD debugger to attach at localhost:5678...");
                             PythonEngine.RunSimpleString("import ptvsd; ptvsd.enable_attach(); ptvsd.wait_for_attach()");
+                            break;
+
+                        case DebuggingMethod.DebugPy:
+                            PythonEngine.RunSimpleString(@"import debugpy
+from AlgorithmImports import *
+from QuantConnect.Logging import *
+
+Log.Trace(""DebuggerHelper.Initialize(): debugpy waiting for attach at port 5678..."");
+
+debugpy.listen(('0.0.0.0', 5678))
+debugpy.wait_for_client()");
                             break;
 
                         case DebuggingMethod.PyCharm:

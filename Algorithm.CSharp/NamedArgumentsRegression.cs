@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -24,8 +24,40 @@ namespace QuantConnect.Algorithm.CSharp
     /// Used to test PythonNet kwargs
     /// </summary>
     /// <meta name="tag" content="using data" />
-    public class NamedArgumentsRegression : IRegressionAlgorithmDefinition
+    public class NamedArgumentsRegression : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        /// <summary>
+        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
+        /// </summary>
+        public override void Initialize()
+        {
+            SetStartDate(2013, 10, 08);  //Set Start Date
+            SetEndDate(2013, 10, 17);    //Set End Date
+            SetCash(100000);             //Set Strategy Cash
+
+            // Find more symbols here: http://quantconnect.com/data
+            // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
+            // Futures Resolution: Tick, Second, Minute
+            // Options Resolution: Minute Only.
+            AddEquity("SPY", Resolution.Daily);
+
+            // There are other assets with similar methods. See "Selecting Options" etc for more details.
+            // AddFuture, AddForex, AddCfd, AddOption
+        }
+
+        /// <summary>
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        /// </summary>
+        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice data)
+        {
+            if (!Portfolio.Invested)
+            {
+                SetHoldings("SPY", percentage: 1);
+                Debug("Purchased Stock");
+            }
+        }
+
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
@@ -34,7 +66,17 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.Python };
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 73;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -62,6 +104,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Treynor Ratio", "2.651"},
             {"Total Fees", "$3.45"},
             {"Estimated Strategy Capacity", "$970000000.00"},
+            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Fitness Score", "0.112"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},

@@ -23,6 +23,7 @@ using System.Text;
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
+using Ionic.Zip;
 using QuantConnect.Logging;
 using ZipEntry = ICSharpCode.SharpZipLib.Zip.ZipEntry;
 using ZipFile = Ionic.Zip.ZipFile;
@@ -185,6 +186,39 @@ namespace QuantConnect
                     }
 
                     zip.AddEntry(entry, data);
+                    zip.UseZip64WhenSaving = Zip64Option.Always;
+                    zip.Save();
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Append the zip data to the file-entry specified.
+        /// </summary>
+        /// <param name="path">The zip file path</param>
+        /// <param name="entry">The entry name</param>
+        /// <param name="data">The entry data</param>
+        /// <param name="overrideEntry">True if should override entry if it already exists</param>
+        /// <returns>True on success</returns>
+        public static bool ZipCreateAppendData(string path, string entry, byte[] data, bool overrideEntry = false)
+        {
+            try
+            {
+                using (var zip = File.Exists(path) ? ZipFile.Read(path) : new ZipFile(path))
+                {
+                    if (overrideEntry && zip.ContainsEntry(entry))
+                    {
+                        zip.RemoveEntry(entry);
+                    }
+
+                    zip.AddEntry(entry, data);
+                    zip.UseZip64WhenSaving = Zip64Option.Always;
                     zip.Save();
                 }
             }
@@ -563,12 +597,12 @@ namespace QuantConnect
         /// </remarks>
         /// <param name="filename">The zip file to stream</param>
         /// <returns>The stream zip contents</returns>
-        public static IEnumerable<KeyValuePair<string, IEnumerable<string>>> Unzip(string filename)
+        public static IEnumerable<KeyValuePair<string, List<string>>> Unzip(string filename)
         {
             if (!File.Exists(filename))
             {
                 Log.Error($"Compression.Unzip(): File does not exist: {filename}");
-                return Enumerable.Empty<KeyValuePair<string, IEnumerable<string>>>();
+                return Enumerable.Empty<KeyValuePair<string, List<string>>>();
             }
 
             try
@@ -579,7 +613,7 @@ namespace QuantConnect
             {
                 Log.Error(err);
             }
-            return Enumerable.Empty<KeyValuePair<string, IEnumerable<string>>>();
+            return Enumerable.Empty<KeyValuePair<string, List<string>>>();
         }
 
         /// <summary>
@@ -588,13 +622,13 @@ namespace QuantConnect
         /// <param name="stream">The zipped stream to be read</param>
         /// <returns>An enumerable whose elements are zip entry key value pairs with
         /// a key of the zip entry name and the value of the zip entry's file lines</returns>
-        public static IEnumerable<KeyValuePair<string, IEnumerable<string>>> Unzip(Stream stream)
+        public static IEnumerable<KeyValuePair<string, List<string>>> Unzip(Stream stream)
         {
             using (var zip = ZipFile.Read(stream))
             {
                 foreach (var entry in zip)
                 {
-                    yield return new KeyValuePair<string, IEnumerable<string>>(entry.FileName, ReadZipEntry(entry));
+                    yield return new KeyValuePair<string, List<string>>(entry.FileName, ReadZipEntry(entry));
                 }
             }
         }
@@ -604,12 +638,12 @@ namespace QuantConnect
         /// </summary>
         /// <param name="filename">The zip file path to stream</param>
         /// <returns>An enumerable containing each line from the first unzipped entry</returns>
-        public static IEnumerable<string> ReadLines(string filename)
+        public static List<string> ReadLines(string filename)
         {
             if (!File.Exists(filename))
             {
                 Log.Error($"Compression.ReadFirstZipEntry(): File does not exist: {filename}");
-                return Enumerable.Empty<string>();
+                return new List<string>();
             }
 
             try
@@ -620,37 +654,36 @@ namespace QuantConnect
             {
                 Log.Error(err);
             }
-            return Enumerable.Empty<string>();
+            return new List<string>();
         }
 
-        private static IEnumerable<KeyValuePair<string, IEnumerable<string>>> ReadLinesImpl(string filename, bool firstEntryOnly = false)
+        private static IEnumerable<KeyValuePair<string, List<string>>> ReadLinesImpl(string filename, bool firstEntryOnly = false)
         {
             using (var zip = ZipFile.Read(filename))
             {
-                if (firstEntryOnly)
+                for (var i = 0; i < zip.Count; i++)
                 {
-                    var entry = zip[0];
-                    yield return new KeyValuePair<string, IEnumerable<string>>(entry.FileName, ReadZipEntry(entry));
-                    yield break;
-                }
-                foreach (var entry in zip)
-                {
-                    yield return new KeyValuePair<string, IEnumerable<string>>(entry.FileName, ReadZipEntry(entry));
+                    var entry = zip[i];
+                    yield return new KeyValuePair<string, List<string>>(entry.FileName, ReadZipEntry(entry));
+                    if (firstEntryOnly)
+                    {
+                        yield break;
+                    }
                 }
             }
         }
 
-        private static IEnumerable<string> ReadZipEntry(Ionic.Zip.ZipEntry entry)
+        private static List<string> ReadZipEntry(Ionic.Zip.ZipEntry entry)
         {
-            using (var entryReader = new StreamReader(entry.OpenReader()))
+            var result = new List<string>();
+            using var entryReader = new StreamReader(entry.OpenReader());
+            var line = entryReader.ReadLine();
+            while (line != null)
             {
-                var line = entryReader.ReadLine();
-                while (line != null)
-                {
-                    yield return line;
-                    line = entryReader.ReadLine();
-                }
+                result.Add(line);
+                line = entryReader.ReadLine();
             }
+            return result;
         }
 
         /// <summary>
@@ -690,14 +723,27 @@ namespace QuantConnect
         /// <summary>
         /// Unzip a stream that represents a zip file and return the first entry as a stream
         /// </summary>
-        public static Stream UnzipStream(Stream zipstream, out ZipFile zipFile)
+        public static Stream UnzipStream(Stream zipstream, out ZipFile zipFile, string entryName = null)
         {
             zipFile = ZipFile.Read(zipstream);
 
             try
             {
-                //Read the file entry into buffer:
-                var entry = zipFile.Entries.FirstOrDefault();
+                Ionic.Zip.ZipEntry entry;
+                if (string.IsNullOrEmpty(entryName))
+                {
+                    //Read the file entry into buffer:
+                    entry = zipFile.Entries.FirstOrDefault();
+                }
+                else
+                {
+                    // Attempt to find our specific entry
+                    if (!zipFile.ContainsEntry(entryName))
+                    {
+                        return null;
+                    }
+                    entry = zipFile[entryName];
+                }
 
                 if (entry != null)
                 {

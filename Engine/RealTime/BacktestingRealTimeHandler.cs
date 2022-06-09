@@ -15,46 +15,39 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Util;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Scheduling;
-using QuantConnect.Util;
+using QuantConnect.Interfaces;
+using System.Collections.Generic;
+using QuantConnect.Lean.Engine.Results;
 
 namespace QuantConnect.Lean.Engine.RealTime
 {
     /// <summary>
     /// Pseudo realtime event processing for backtesting to simulate realtime events in fast forward.
     /// </summary>
-    public class BacktestingRealTimeHandler : BaseRealTimeHandler, IRealTimeHandler
+    public class BacktestingRealTimeHandler : BaseRealTimeHandler
     {
-        private TimeMonitor _timeMonitor;
         private bool _sortingScheduledEventsRequired;
-        private IIsolatorLimitResultProvider _isolatorLimitProvider;
         private List<ScheduledEvent> _scheduledEventsSortedByTime = new List<ScheduledEvent>();
 
         /// <summary>
         /// Flag indicating the hander thread is completely finished and ready to dispose.
         /// this doesn't run as its own thread
         /// </summary>
-        public bool IsActive => false;
+        public override bool IsActive { get; protected set; }
 
         /// <summary>
         /// Initializes the real time handler for the specified algorithm and job
         /// </summary>
-        public void Setup(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api, IIsolatorLimitResultProvider isolatorLimitProvider)
+        public override void Setup(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api, IIsolatorLimitResultProvider isolatorLimitProvider)
         {
-            //Initialize:
-            Algorithm = algorithm;
-            ResultHandler = resultHandler;
-            _isolatorLimitProvider = isolatorLimitProvider;
-
             // create events for algorithm's end of tradeable dates
             // set up the events for each security to fire every tradeable date before market close
-            base.Setup(Algorithm.StartDate, Algorithm.EndDate, job.Language);
+            base.Setup(algorithm, job, resultHandler, api, isolatorLimitProvider);
 
             foreach (var scheduledEvent in GetScheduledEventsSortedByTime())
             {
@@ -65,8 +58,6 @@ namespace QuantConnect.Lean.Engine.RealTime
             }
             // after skipping events we should re order
             _sortingScheduledEventsRequired = true;
-
-            _timeMonitor = new TimeMonitor();
         }
 
         /// <summary>
@@ -106,7 +97,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// Set the time for the realtime event handler.
         /// </summary>
         /// <param name="time">Current time.</param>
-        public void SetTime(DateTime time)
+        public override void SetTime(DateTime time)
         {
             var scheduledEvents = GetScheduledEventsSortedByTime();
 
@@ -115,7 +106,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             {
                 try
                 {
-                    _isolatorLimitProvider.Consume(scheduledEvents[0], time, _timeMonitor);
+                    IsolatorLimitProvider.Consume(scheduledEvents[0], time, TimeMonitor);
                 }
                 catch (Exception exception)
                 {
@@ -131,7 +122,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// Scan for past events that didn't fire because there was no data at the scheduled time.
         /// </summary>
         /// <param name="time">Current time.</param>
-        public void ScanPastEvents(DateTime time)
+        public override void ScanPastEvents(DateTime time)
         {
             var scheduledEvents = GetScheduledEventsSortedByTime();
 
@@ -145,7 +136,7 @@ namespace QuantConnect.Lean.Engine.RealTime
 
                 try
                 {
-                    _isolatorLimitProvider.Consume(scheduledEvent, nextEventUtcTime, _timeMonitor);
+                    IsolatorLimitProvider.Consume(scheduledEvent, nextEventUtcTime, TimeMonitor);
                 }
                 catch (Exception exception)
                 {
@@ -155,15 +146,6 @@ namespace QuantConnect.Lean.Engine.RealTime
 
                 SortFirstElement(scheduledEvents);
             }
-        }
-
-        /// <summary>
-        /// Stop the real time thread
-        /// </summary>
-        public void Exit()
-        {
-            _timeMonitor.DisposeSafely();
-            _timeMonitor = null;
         }
 
         private List<ScheduledEvent> GetScheduledEventsSortedByTime()

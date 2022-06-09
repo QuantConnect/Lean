@@ -169,6 +169,16 @@ namespace QuantConnect.Algorithm.CSharp
         public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 20443;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
@@ -185,13 +195,13 @@ namespace QuantConnect.Algorithm.CSharp
             {"Loss Rate", "0%"},
             {"Win Rate", "100%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.67"},
-            {"Beta", "0.197"},
+            {"Alpha", "-0.671"},
+            {"Beta", "0.211"},
             {"Annual Standard Deviation", "0.344"},
             {"Annual Variance", "0.118"},
-            {"Information Ratio", "-1.96"},
-            {"Tracking Error", "0.361"},
-            {"Treynor Ratio", "-3.349"},
+            {"Information Ratio", "-1.963"},
+            {"Tracking Error", "0.36"},
+            {"Treynor Ratio", "-3.133"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "SPX XL80P3GHDZXQ|SPX 31"},
@@ -214,7 +224,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "439042b39981ea246e50728cc57c31c7"}
+            {"OrderListHash", "856448f4cbba4fc39af8dba369c054df"}
         };
     }
 }

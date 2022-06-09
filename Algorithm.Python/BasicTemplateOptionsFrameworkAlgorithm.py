@@ -29,7 +29,7 @@ class BasicTemplateOptionsFrameworkAlgorithm(QCAlgorithm):
         self.UniverseSettings.Resolution = Resolution.Minute
 
         self.SetStartDate(2014, 6, 5)
-        self.SetEndDate(2014, 6, 6)
+        self.SetEndDate(2014, 6, 9)
         self.SetCash(100000)
 
         # set framework models

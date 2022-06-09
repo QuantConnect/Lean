@@ -88,12 +88,6 @@ namespace QuantConnect.Packets
         public string SessionId = "";
 
         /// <summary>
-        /// User subscriptions state - free or paid.
-        /// </summary>
-        [JsonProperty(PropertyName = "sUserPlan")]
-        public UserPlan UserPlan = UserPlan.Free;
-
-        /// <summary>
         /// Language flag: Currently represents IL code or Dynamic Scripted Types.
         /// </summary>
         [JsonProperty(PropertyName = "eLanguage")]

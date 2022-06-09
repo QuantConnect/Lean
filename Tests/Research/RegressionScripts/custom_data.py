@@ -11,25 +11,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Common")
+from AlgorithmImports import *
 
-from System import *
-from QuantConnect import *
-from QuantConnect.Data import *
-from QuantConnect.Python import *
-from datetime import datetime
 import decimal
 
-class QuandlFuture(PythonQuandl):
-    '''Custom quandl data type for setting customized value column name. Value column is used for the primary trading calculations and charting.'''
-    def __init__(self):
-        # Define ValueColumnName: cannot be None, Empty or non-existant column name
-        # If ValueColumnName is "Close", do not use PythonQuandl, use Quandl:
-        # self.AddData[QuandlFuture](self.crude, Resolution.Daily)
-        self.ValueColumnName = "Settle"
+class CustomPythonData(PythonData):
+    def GetSource(self, config, date, isLive):
+        source = Globals.DataFolder + "/equity/usa/daily/ibm.zip"
+        return SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv)
 
+    def Reader(self, config, line, date, isLive):
+        if line == None:
+            return None
+
+        customPythonData = CustomPythonData()
+        customPythonData.Symbol = config.Symbol
+
+        scaleFactor = 1 / 10000
+        csv = line.split(",")
+        customPythonData.Time = datetime.strptime(csv[0], '%Y%m%d %H:%M')
+        customPythonData["Open"] = float(csv[1]) * scaleFactor
+        customPythonData["High"] = float(csv[2]) * scaleFactor
+        customPythonData["Low"] = float(csv[3]) * scaleFactor
+        customPythonData["Close"] = float(csv[4]) * scaleFactor
+        customPythonData["Volume"] = float(csv[5])
+        return customPythonData
 
 class Nifty(PythonData):
     '''NIFTY Custom Data Class'''

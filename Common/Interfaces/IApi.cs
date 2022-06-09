@@ -18,6 +18,9 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using QuantConnect.Api;
+using QuantConnect.Optimizer.Objectives;
+using QuantConnect.Optimizer.Parameters;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.Interfaces
 {
@@ -170,6 +173,96 @@ namespace QuantConnect.Interfaces
         BacktestList ListBacktests(int projectId);
 
         /// <summary>
+        /// Estimate optimization with the specified parameters via QuantConnect.com API
+        /// </summary>
+        /// <param name="projectId">Project ID of the project the optimization belongs to</param>
+        /// <param name="name">Name of the optimization</param>
+        /// <param name="target">Target of the optimization, see examples in <see cref="PortfolioStatistics"/></param>
+        /// <param name="targetTo">Target extremum of the optimization, for example "max" or "min"</param>
+        /// <param name="targetValue">Optimization target value</param>
+        /// <param name="strategy">Optimization strategy, <see cref="GridSearchOptimizationStrategy"/></param>
+        /// <param name="compileId">Optimization compile ID</param>
+        /// <param name="parameters">Optimization parameters</param>
+        /// <param name="constraints">Optimization constraints</param>
+        /// <returns>Estimate object from the API.</returns>
+        public Estimate EstimateOptimization(
+            int projectId,
+            string name,
+            string target,
+            string targetTo,
+            decimal? targetValue,
+            string strategy,
+            string compileId,
+            HashSet<OptimizationParameter> parameters,
+            IReadOnlyList<Constraint> constraints);
+
+        /// <summary>
+        /// Create an optimization with the specified parameters via QuantConnect.com API
+        /// </summary>
+        /// <param name="projectId">Project ID of the project the optimization belongs to</param>
+        /// <param name="name">Name of the optimization</param>
+        /// <param name="target">Target of the optimization, see examples in <see cref="PortfolioStatistics"/></param>
+        /// <param name="targetTo">Target extremum of the optimization, for example "max" or "min"</param>
+        /// <param name="targetValue">Optimization target value</param>
+        /// <param name="strategy">Optimization strategy, <see cref="GridSearchOptimizationStrategy"/></param>
+        /// <param name="compileId">Optimization compile ID</param>
+        /// <param name="parameters">Optimization parameters</param>
+        /// <param name="constraints">Optimization constraints</param>
+        /// <param name="estimatedCost">Estimated cost for optimization</param>
+        /// <param name="nodeType">Optimization node type</param>
+        /// <param name="parallelNodes">Number of parallel nodes for optimization</param>
+        /// <returns>BaseOptimization object from the API.</returns>
+        public BaseOptimization CreateOptimization(
+            int projectId,
+            string name,
+            string target,
+            string targetTo,
+            decimal? targetValue,
+            string strategy,
+            string compileId,
+            HashSet<OptimizationParameter> parameters,
+            IReadOnlyList<Constraint> constraints,
+            decimal estimatedCost,
+            string nodeType,
+            int parallelNodes);
+
+        /// <summary>
+        /// List all the optimizations for a project
+        /// </summary>
+        /// <param name="projectId">Project id we'd like to get a list of optimizations for</param>
+        /// <returns>A list of BaseOptimization objects, <see cref="BaseOptimization"/></returns>
+        public List<BaseOptimization> ListOptimizations(int projectId);
+
+        /// <summary>
+        /// Read an optimization
+        /// </summary>        
+        /// <param name="optimizationId">Optimization id for the optimization we want to read</param>
+        /// <returns><see cref="Optimization"/></returns>
+        public Optimization ReadOptimization(string optimizationId);
+
+        /// <summary>
+        /// Abort an optimization
+        /// </summary>        
+        /// <param name="optimizationId">Optimization id for the optimization we want to abort</param>
+        /// <returns><see cref="RestResponse"/></returns>
+        public RestResponse AbortOptimization(string optimizationId);
+
+        /// <summary>
+        /// Update an optimization
+        /// </summary>
+        /// <param name="optimizationId">Optimization id we want to update</param>
+        /// <param name="name">Name we'd like to assign to the optimization</param>
+        /// <returns><see cref="RestResponse"/></returns>
+        public RestResponse UpdateOptimization(string optimizationId, string name = null);
+
+        /// <summary>
+        /// Delete an optimization
+        /// </summary>        
+        /// <param name="optimizationId">Optimization id for the optimization we want to delete</param>
+        /// <returns><see cref="RestResponse"/></returns>
+        public RestResponse DeleteOptimization(string optimizationId);
+
+        /// <summary>
         /// Gets the logs of a specific live algorithm
         /// </summary>
         /// <param name="projectId">Project Id of the live running algorithm</param>
@@ -188,11 +281,93 @@ namespace QuantConnect.Interfaces
         DataLink ReadDataLink(string filePath, string organizationId);
 
         /// <summary>
+        /// Get valid data entries for a given filepath from data/list
+        /// </summary>
+        /// <returns></returns>
+        DataList ReadDataDirectory(string filePath);
+
+        /// <summary>
+        /// Gets data prices from data/prices
+        /// </summary>
+        public DataPricesList ReadDataPrices(string organizationId);
+
+        /// <summary>
+        /// Read out the report of a backtest in the project id specified.
+        /// </summary>
+        /// <param name="projectId">Project id to read</param>
+        /// <param name="backtestId">Specific backtest id to read</param>
+        /// <returns><see cref="BacktestReport"/></returns>
+        public BacktestReport ReadBacktestReport(int projectId, string backtestId);
+
+        /// <summary>
         /// Method to download and save the data purchased through QuantConnect
         /// </summary>
         /// <param name="filePath">File path representing the data requested</param>
         /// <returns>A bool indicating whether the data was successfully downloaded or not.</returns>
         bool DownloadData(string filePath, string organizationId);
+
+        /// <summary>
+        /// Create a new node in the organization, node configuration is defined by the
+        /// <see cref="SKU"/>
+        /// </summary>
+        /// <param name="name">The name of the new node</param>
+        /// <param name="organizationId">ID of the organization</param>
+        /// <param name="sku"><see cref="SKU"/> Object representing configuration</param>
+        /// <returns>Returns <see cref="CreatedNode"/> which contains API response and
+        /// <see cref="Node"/></returns>
+        public CreatedNode CreateNode(string name, string organizationId, SKU sku);
+
+        /// <summary>
+        /// Reads the nodes associated with the organization, creating a
+        /// <see cref="NodeList"/> for the response
+        /// </summary>
+        /// <param name="organizationId">ID of the organization</param>
+        /// <returns><see cref="NodeList"/> containing Backtest, Research, and Live Nodes</returns>
+        public NodeList ReadNodes(string organizationId);
+
+        /// <summary>
+        /// Update an organizations node with a new name
+        /// </summary>
+        /// <param name="nodeId">The node ID of the node you want to update</param>
+        /// <param name="newName">The new name for that node</param>
+        /// <param name="organizationId">ID of the organization</param>
+        /// <returns><see cref="RestResponse"/> containing success response and errors</returns>
+        public RestResponse UpdateNode(string nodeId, string newName, string organizationId);
+
+        /// <summary>
+        /// Delete a node from an organization, requires node ID.
+        /// </summary>
+        /// <param name="nodeId">The node ID of the node you want to delete</param>
+        /// <param name="organizationId">ID of the organization</param>
+        /// <returns><see cref="RestResponse"/> containing success response and errors</returns>
+        public RestResponse DeleteNode(string nodeId, string organizationId);
+
+        /// <summary>
+        /// Stop a running node in a organization
+        /// </summary>
+        /// <param name="nodeId">The node ID of the node you want to stop</param>
+        /// <param name="organizationId">ID of the organization</param>
+        /// <returns><see cref="RestResponse"/> containing success response and errors</returns>
+        public RestResponse StopNode(string nodeId, string organizationId);
+
+        /// <summary>
+        /// Will read the organization account status
+        /// </summary>
+        /// <param name="organizationId">The target organization id, if null will return default organization</param>
+        public Account ReadAccount(string organizationId = null);
+
+        /// <summary>
+        /// Get a list of organizations tied to this account
+        /// </summary>
+        /// <returns></returns>
+        public List<Organization> ListOrganizations();
+
+        /// <summary>
+        /// Fetch organization data from web API
+        /// </summary>
+        /// <param name="organizationId"></param>
+        /// <returns></returns>
+        public Organization ReadOrganization(string organizationId = null);
 
         /// <summary>
         /// Create a new live algorithm for a logged in user.

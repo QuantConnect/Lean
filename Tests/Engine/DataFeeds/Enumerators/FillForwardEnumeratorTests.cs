@@ -33,6 +33,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 {
@@ -1696,7 +1697,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             while (fillForwardEnumerator.MoveNext())
             {
                 Assert.NotNull(fillForwardEnumerator.Current);
-                Assert.GreaterOrEqual(fillForwardEnumerator.Current.Time, previous?.Time);
+                // we don't care about 'Time' because lean only uses 'EndTime', in case some auxiliary data point comes in 'Time == EndTime'
+                // but the enumerator output should always go increasing 'EndTime'
                 Assert.GreaterOrEqual(fillForwardEnumerator.Current.EndTime, previous?.EndTime);
                 Assert.AreEqual(
                     fillForwardEnumerator.Current.DataType != MarketDataType.Auxiliary,
@@ -1821,6 +1823,72 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(
                 (int)(data.Last().EndTime - data[1].EndTime).TotalDays + 1,
                 dateSet.Count);
+
+            fillForwardEnumerator.Dispose();
+        }
+
+        [Test]
+        public void FillsForwardSymbolChangedDailyResolution()
+        {
+            var symbol = Symbols.Fut_SPY_Mar19_2016;
+            var entry = MarketHoursDatabase.FromDataFolder().GetEntry(symbol.ID.Market, symbol, symbol.SecurityType);
+            var reference = new DateTime(2014, 6, 5, 20, 0, 0);
+            var dataResolution = Time.OneDay;
+
+            var data = new BaseData[]
+            {
+                new TradeBar {
+                    Time = reference,
+                    Value = 1,
+                    Period = dataResolution,
+                    Volume = 100,
+                    Symbol = symbol
+                }, new TradeBar {
+                    Time = reference.AddDays(1),
+                    Value = 2,
+                    Period = dataResolution,
+                    Volume = 200,
+                    Symbol = symbol
+                },
+                new SymbolChangedEvent(symbol, reference.AddDays(3).Date, symbol, symbol),
+                new TradeBar {
+                    Time = reference.AddDays(2),
+                    Value = 3,
+                    Period = dataResolution,
+                    Volume = 300,
+                    Symbol = symbol
+                }}.ToList();
+
+            var enumerator = data.GetEnumerator();
+
+            var fillForwardEnumerator = new FillForwardEnumerator(enumerator,
+                new FutureExchange(entry.ExchangeHours),
+                Ref.Create(dataResolution),
+                false,
+                data.Last().EndTime,
+                dataResolution,
+                entry.DataTimeZone);
+
+            BaseData previous = null;
+            var counter = 0;
+            while (fillForwardEnumerator.MoveNext())
+            {
+                Assert.NotNull(fillForwardEnumerator.Current);
+                // we don't care about 'Time' because lean only uses 'EndTime', in case some auxiliary data point comes in 'Time == EndTime'
+                // but the enumerator output should always go increasing 'EndTime'
+                if (previous != null)
+                {
+                    Assert.GreaterOrEqual(fillForwardEnumerator.Current.EndTime, previous?.EndTime);
+                }
+                if (fillForwardEnumerator.Current.IsFillForward)
+                {
+                    Assert.AreNotEqual(MarketDataType.Auxiliary, fillForwardEnumerator.Current.DataType);
+                    counter++;
+                }
+                previous = fillForwardEnumerator.Current;
+            }
+
+            Assert.AreEqual((int)(data.Last().EndTime - data[1].EndTime).TotalDays - 1, counter);
 
             fillForwardEnumerator.Dispose();
         }
@@ -2056,7 +2124,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             while (fillForwardEnumerator.MoveNext())
             {
                 Assert.NotNull(fillForwardEnumerator.Current);
-                Assert.GreaterOrEqual(fillForwardEnumerator.Current.Time, previous?.Time ?? DateTime.MinValue);
+                // we don't care about .Time because lean only uses .EndTime
+                // in case some auxiliary data point comes in it will respect endtime being ascendant but it's time == endtime
                 Assert.GreaterOrEqual(fillForwardEnumerator.Current.EndTime, previous?.EndTime ?? DateTime.MinValue);
                 Assert.AreEqual(
                     fillForwardEnumerator.Current.DataType != MarketDataType.Auxiliary,
@@ -2108,6 +2177,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             public bool CanRunLocally { get; } = true;
             public Language[] Languages { get; } = { Language.CSharp };
+
+            /// <summary>
+            /// Data Points count of all timeslices of algorithm
+            /// </summary>
+            public long DataPoints => 0;
+
+            /// </summary>
+            /// Data Points count of the algorithm history
+            /// </summary>
+            public int AlgorithmHistoryDataPoints => 0;
+
             public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>();
         }
 

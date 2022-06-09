@@ -60,16 +60,18 @@ namespace QuantConnect.Python
                 using (Py.GIL())
                 {
                     // Use our PandasMapper class that modifies pandas indexing to support tickers, symbols and SIDs
-                    _pandas = PythonEngine.ImportModule("PandasMapper");
+                    _pandas = Py.Import("PandasMapper");
                 }
             }
 
-            var enumerable = data as IEnumerable;
-            if (enumerable != null)
+            // in the case we get a list/collection of data we take the first data point to determine the type
+            // but it's also possible to get a data which supports enumerating we don't care about those cases
+            if (data is not IBaseData && data is IEnumerable enumerable)
             {
                 foreach (var item in enumerable)
                 {
                     data = item;
+                    break;
                 }
             }
 

@@ -18,7 +18,8 @@ using QuantConnect.Securities;
 namespace QuantConnect.Orders.Fees
 {
     /// <summary>
-    /// An order fee where the fee quantity has already been subtracted from the filled quantity
+    /// An order fee where the fee quantity has already been subtracted from the filled quantity so instead we subtracted
+    /// from the quote currency when applied to the portfolio
     /// </summary>
     /// <remarks>
     /// This type of order fee is returned by some crypto brokerages (e.g. Bitfinex and Binance)
@@ -26,13 +27,20 @@ namespace QuantConnect.Orders.Fees
     /// </remarks>
     public class ModifiedFillQuantityOrderFee : OrderFee
     {
+        private readonly string _quoteCurrency;
+        private readonly decimal _contractMultiplier;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ModifiedFillQuantityOrderFee"/> class
         /// </summary>
         /// <param name="orderFee">The order fee</param>
-        public ModifiedFillQuantityOrderFee(CashAmount orderFee)
+        /// <param name="quoteCurrency">The associated security quote currency</param>
+        /// <param name="contractMultiplier">The associated security contract multiplier</param>
+        public ModifiedFillQuantityOrderFee(CashAmount orderFee, string quoteCurrency, decimal contractMultiplier)
             : base(orderFee)
         {
+            _quoteCurrency = quoteCurrency;
+            _contractMultiplier = contractMultiplier;
         }
 
         /// <summary>
@@ -42,7 +50,7 @@ namespace QuantConnect.Orders.Fees
         /// <param name="fill">The order fill event</param>
         public override void ApplyToPortfolio(SecurityPortfolioManager portfolio, OrderEvent fill)
         {
-            // do not apply the fee twice
+            portfolio.CashBook[_quoteCurrency].AddAmount(-Value.Amount * fill.FillPrice * _contractMultiplier);
         }
     }
 }

@@ -30,5 +30,15 @@ namespace QuantConnect.Algorithm.CSharp
     public class ETFConstituentUniverseCompositeDelistingRegressionAlgorithmNoAddEquityETF : ETFConstituentUniverseCompositeDelistingRegressionAlgorithm
     {
         protected override bool AddETFSubscription { get; set; } = false;
+
+        /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public override long DataPoints => 623;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public override int AlgorithmHistoryDataPoints => 0;
     }
 }

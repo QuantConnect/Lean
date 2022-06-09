@@ -23,6 +23,7 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Packets;
+using QuantConnect.Tests.Common.Data.UniverseSelection;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Engine.Results
@@ -48,7 +49,7 @@ namespace QuantConnect.Tests.Engine.Results
             var aapl = algo.AddEquity("AAPL", extendedMarketHours: extendedMarketHoursEnabled);
             algo.PostInitialize();
             resultHandler.SetAlgorithm(algo, 100000);
-            resultHandler.OnSecuritiesChanged(SecurityChanges.Added(aapl));
+            resultHandler.OnSecuritiesChanged(SecurityChangesTests.AddedNonInternal(aapl));
 
             // Add values during market hours, should always update
             algo.Portfolio.CashBook["USD"].AddAmount(1000);

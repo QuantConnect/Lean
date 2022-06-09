@@ -42,6 +42,16 @@ namespace QuantConnect.Algorithm.CSharp
         public Language[] Languages { get; } = { Language.CSharp };
 
         /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public override long DataPoints => 6214;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public override int AlgorithmHistoryDataPoints => 61;
+
+        /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
@@ -65,8 +75,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "-0.859"},
             {"Tracking Error", "0.004"},
             {"Treynor Ratio", "-0.832"},
-            {"Total Fees", "$2.89"},
-            {"Estimated Strategy Capacity", "$8900000000.00"},
+            {"Total Fees", "€2.89"},
+            {"Estimated Strategy Capacity", "€8900000000.00"},
             {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
             {"Fitness Score", "0.506"},
             {"Kelly Criterion Estimate", "0"},

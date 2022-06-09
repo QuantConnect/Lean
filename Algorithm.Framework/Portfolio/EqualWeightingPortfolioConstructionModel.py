@@ -28,6 +28,7 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
                               The function returns null if unknown, in which case the function will be called again in the
                               next loop. Returning current time will trigger rebalance.
             portfolioBias: Specifies the bias of the portfolio (Short, Long/Short, Long)'''
+        super().__init__()
         self.portfolioBias = portfolioBias
 
         # If the argument is an instance of Resolution or Timedelta

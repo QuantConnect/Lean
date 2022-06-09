@@ -116,7 +116,14 @@ namespace QuantConnect.Brokerages
             {
                 try
                 {
-                    _client?.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", _cts.Token).SynchronouslyAwaitTask();
+                    try
+                    {
+                        _client?.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", _cts.Token).SynchronouslyAwaitTask();
+                    }
+                    catch
+                    {
+                        // ignored
+                    }
 
                     _cts?.Cancel();
 
@@ -141,7 +148,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Wraps IsAlive
         /// </summary>
-        public bool IsOpen => _client != null && _client.State == WebSocketState.Open;
+        public bool IsOpen => _client?.State == WebSocketState.Open;
 
         /// <summary>
         /// Wraps message event
@@ -204,7 +211,7 @@ namespace QuantConnect.Brokerages
         {
             var receiveBuffer = new byte[ReceiveBufferSize];
 
-            while (!_cts.IsCancellationRequested)
+            while (_cts is { IsCancellationRequested: false })
             {
                 Log.Trace($"WebSocketClientWrapper.HandleConnection({_url}): Connecting...");
 

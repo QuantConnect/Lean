@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -26,6 +26,7 @@ namespace QuantConnect.Python
     /// </summary>
     public class PythonData : DynamicData
     {
+        private readonly string _pythonTypeName;
         private readonly dynamic _pythonData;
         private readonly dynamic _defaultResolution;
         private readonly dynamic _supportedResolutions;
@@ -54,6 +55,7 @@ namespace QuantConnect.Python
                 _isSparseData = pythonData.GetPythonMethod("IsSparseData");
                 _defaultResolution = pythonData.GetPythonMethod("DefaultResolution");
                 _supportedResolutions = pythonData.GetPythonMethod("SupportedResolutions");
+                _pythonTypeName = pythonData.GetPythonType().GetAssemblyName().Name;
             }
         }
 
@@ -86,7 +88,11 @@ namespace QuantConnect.Python
             using (Py.GIL())
             {
                 var data = _pythonData.Reader(config, line, date, isLiveMode);
-                return (data as PyObject).GetAndDispose<BaseData>();
+                var result = (data as PyObject).GetAndDispose<BaseData>();
+
+                (result as PythonData)?.SetProperty("__typename", _pythonTypeName);
+
+                return result;
             }
         }
 
@@ -173,6 +179,20 @@ namespace QuantConnect.Python
             {
                 SetProperty(index, value is double ? value.ConvertInvariant<decimal>() : value);
             }
+        }
+
+        /// <summary>
+        /// Helper method to determine if the current instance is of the provided type
+        /// </summary>
+        /// <param name="type">Target type to check against</param>
+        /// <returns>True if this instance is of the provided type</returns>
+        public bool IsOfType(Type type)
+        {
+            if (HasProperty("__typename"))
+            {
+                return (string)GetProperty("__typename") == type.FullName;
+            }
+            return GetType() == type;
         }
     }
 }

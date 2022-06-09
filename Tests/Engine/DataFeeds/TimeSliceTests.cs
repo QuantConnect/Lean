@@ -19,12 +19,13 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
+using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
-using QuandlFuture = QuantConnect.Algorithm.CSharp.QCUQuandlFutures.QuandlFuture;
+using QuantConnect.Tests.Common.Data.UniverseSelection;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -71,7 +72,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             IEnumerable<TimeSlice> timeSlices = rawTicks.Select(t => _timeSliceFactory.Create(
                 t.Time,
                 new List<DataFeedPacket> { new DataFeedPacket(security, subscriptionDataConfig, new List<BaseData>() { t }) },
-                new SecurityChanges(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
+                SecurityChangesTests.CreateNonInternal(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
                 new Dictionary<Universe, BaseDataCollection>()));
 
             Tick[] timeSliceTicks = timeSlices.SelectMany(ts => ts.Slice.Ticks.Values.SelectMany(x => x)).ToArray();
@@ -98,9 +99,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var symbol2 = Symbol.Create("SCF/CBOE_VX2_EW", SecurityType.Base, Market.USA);
 
             var subscriptionDataConfig1 = new SubscriptionDataConfig(
-                typeof(QuandlFuture), symbol1, Resolution.Daily, TimeZones.Utc, TimeZones.Utc, true, true, false, isCustom: true);
+                typeof(UnlinkedData), symbol1, Resolution.Daily, TimeZones.Utc, TimeZones.Utc, true, true, false, isCustom: true);
             var subscriptionDataConfig2 = new SubscriptionDataConfig(
-                typeof(QuandlFuture), symbol2, Resolution.Daily, TimeZones.Utc, TimeZones.Utc, true, true, false, isCustom: true);
+                typeof(UnlinkedData), symbol2, Resolution.Daily, TimeZones.Utc, TimeZones.Utc, true, true, false, isCustom: true);
 
             var security1 = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
@@ -125,10 +126,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var timeSlice = _timeSliceFactory.Create(DateTime.UtcNow,
                 new List<DataFeedPacket>
                 {
-                    new DataFeedPacket(security1, subscriptionDataConfig1, new List<BaseData> {new QuandlFuture { Symbol = symbol1, Time = DateTime.UtcNow.Date, Value = 15 } }),
-                    new DataFeedPacket(security2, subscriptionDataConfig2, new List<BaseData> {new QuandlFuture { Symbol = symbol2, Time = DateTime.UtcNow.Date, Value = 20 } }),
+                    new DataFeedPacket(security1, subscriptionDataConfig1, new List<BaseData> {new UnlinkedData { Symbol = symbol1, Time = DateTime.UtcNow.Date, Value = 15 } }),
+                    new DataFeedPacket(security2, subscriptionDataConfig2, new List<BaseData> {new UnlinkedData { Symbol = symbol2, Time = DateTime.UtcNow.Date, Value = 20 } }),
                 },
-                new SecurityChanges(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
+                SecurityChangesTests.CreateNonInternal(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
                 new Dictionary<Universe, BaseDataCollection>());
 
             Assert.AreEqual(2, timeSlice.CustomData.Count);
@@ -136,8 +137,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var data1 = timeSlice.CustomData[0].Data[0];
             var data2 = timeSlice.CustomData[1].Data[0];
 
-            Assert.IsInstanceOf(typeof(QuandlFuture), data1);
-            Assert.IsInstanceOf(typeof(QuandlFuture), data2);
+            Assert.IsInstanceOf(typeof(UnlinkedData), data1);
+            Assert.IsInstanceOf(typeof(UnlinkedData), data2);
             Assert.AreEqual(symbol1, data1.Symbol);
             Assert.AreEqual(symbol2, data2.Symbol);
             Assert.AreEqual(15, data1.Value);
@@ -202,7 +203,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         new Tick(DateTime.UtcNow, symbol, 281, 0, 0)
                     })
                 },
-                new SecurityChanges(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
+                SecurityChangesTests.CreateNonInternal(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
                 new Dictionary<Universe, BaseDataCollection>());
 
             Assert.AreEqual(1, timeSlice.ConsolidatorUpdateData.Count);
@@ -246,7 +247,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                                 new TradeBar(time, symbol, 100, 100, 110, 106, volume)
                             }),
                         },
-                        new SecurityChanges(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
+                        SecurityChangesTests.CreateNonInternal(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
                         new Dictionary<Universe, BaseDataCollection>())
                         .Slice;
                 });

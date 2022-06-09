@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,13 +14,14 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using QuantConnect.Orders;
+using Newtonsoft.Json.Linq;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
+using System.Collections.Generic;
+using System.Collections.Specialized;
 
 namespace QuantConnect.Api
 {
@@ -73,18 +74,6 @@ namespace QuantConnect.Api
         {
             var jObject = JObject.Load(reader);
 
-            var liveResults = CreateLiveResultsFromJObject(jObject);
-
-            return liveResults;
-        }
-
-        /// <summary>
-        /// Custom parsing of live results data
-        /// </summary>
-        /// <param name="jObject">Json representing LiveResults</param>
-        /// <returns></returns>
-        public static LiveAlgorithmResults CreateLiveResultsFromJObject(JObject jObject)
-        {
             var liveAlgoResults = new LiveAlgorithmResults
             {
                 Success = jObject["success"].Value<bool>()
@@ -129,7 +118,7 @@ namespace QuantConnect.Api
                 new Dictionary<string, Holding>(),
                 new CashBook(),
                 new Dictionary<string, string>(),
-                new Dictionary<string, string>(),
+                new SortedDictionary<string, string>(),
                 new List<OrderEvent>())
             );
 

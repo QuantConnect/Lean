@@ -95,7 +95,7 @@ Python algorithms require a little extra work in order to be able to debug them.
 First in order to debug a Python algorithm in VS Code we must make the following change to our configuration (Launcher\config.json) under the comment debugging configuration:
 
     "debugging": true,
-    "debugging-method": "PTVSD",
+    "debugging-method": "DebugPy",
 
 In setting this we are telling Lean to expect a debugger connection using ‘Python Tools for Visual Studio Debugger’. Once this is set Lean will stop upon initialization and await a connection to the debugger via port 5678.
 

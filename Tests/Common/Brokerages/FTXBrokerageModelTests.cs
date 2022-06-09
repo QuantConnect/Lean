@@ -37,8 +37,8 @@ namespace QuantConnect.Tests.Common.Brokerages
         [SetUp]
         public void Init()
         {
-            _brokerageModel = new();
-            _symbol = Symbol.Create("ETHUSD", SecurityType.Crypto, Market.FTX);
+            _brokerageModel = GetBrokerageModel();
+            _symbol = Symbol.Create("ETHUSD", SecurityType.Crypto, Market);
         }
 
         protected Crypto Security =>
@@ -60,10 +60,12 @@ namespace QuantConnect.Tests.Common.Brokerages
                 RegisteredSecurityDataTypesProvider.Null
             );
 
+        protected virtual string Market => QuantConnect.Market.FTX;
+
         [Test]
         public void GetCashBuyingPowerModelTest()
         {
-            var model = new FTXBrokerageModel(AccountType.Cash);
+            var model = GetBrokerageModel(AccountType.Cash);
             Assert.IsInstanceOf<CashBuyingPowerModel>(model.GetBuyingPowerModel(Security));
             Assert.AreEqual(1, model.GetLeverage(Security));
         }
@@ -71,33 +73,36 @@ namespace QuantConnect.Tests.Common.Brokerages
         [Test]
         public void GetSecurityMarginModelTest()
         {
-            var model = new FTXBrokerageModel(AccountType.Margin);
+            var model = GetBrokerageModel(AccountType.Margin);
             Assert.IsInstanceOf<SecurityMarginModel>(model.GetBuyingPowerModel(Security));
             Assert.AreEqual(3M, model.GetLeverage(Security));
         }
 
         [Test]
-        public void GetFeeModelTest()
+        public virtual void GetFeeModelTest()
         {
             Assert.IsInstanceOf<FTXFeeModel>(_brokerageModel.GetFeeModel(Security));
         }
 
         [TestCase(SecurityType.Crypto)]
-        public void ShouldReturnFTXMarket(SecurityType securityType)
+        public void ShouldReturnProperMarket(SecurityType securityType)
         {
-            Assert.AreEqual(Market.FTX, _brokerageModel.DefaultMarkets[securityType]);
+            Assert.AreEqual(Market, _brokerageModel.DefaultMarkets[securityType]);
         }
 
         [TestCase(0.01, true)]
         [TestCase(0.00005, false)]
         public void CanSubmitOrder_WhenQuantityIsLargeEnough(decimal orderQuantity, bool isValidOrderQuantity)
         {
-            BrokerageMessageEvent message;
-            var order = new Mock<Order>();
+            var order = new Mock<Order>
+            {
+                Object =
+                {
+                    Quantity = orderQuantity
+                }
+            };
 
-            order.Object.Quantity = orderQuantity;
-
-            Assert.AreEqual(isValidOrderQuantity, _brokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(market: Market.FTX), order.Object, out message));
+            Assert.AreEqual(isValidOrderQuantity, _brokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(market: Market), order.Object, out _));
         }
 
         [Test]
@@ -110,11 +115,87 @@ namespace QuantConnect.Tests.Common.Brokerages
             var updateRequestMock = new Mock<UpdateOrderRequest>(DateTime.UtcNow, 1, new UpdateOrderFields());
 
             Assert.False(_brokerageModel.CanUpdateOrder(
-                TestsHelpers.GetSecurity(), 
-                order, 
-                updateRequestMock.Object, 
+                TestsHelpers.GetSecurity(),
+                order,
+                updateRequestMock.Object,
                 out var message));
             Assert.NotNull(message);
         }
+
+        [TestCase(-1, 100000)]
+        [TestCase(1, 10000)]
+        public void CannotSubmitStopMarketOrder(decimal quantity, decimal stopPrice)
+        {
+            var order = new Mock<StopMarketOrder>
+            {
+                Object =
+                {
+                    Quantity = quantity,
+                    StopPrice =  stopPrice
+                }
+            };
+            order.SetupGet(s => s.Type).Returns(OrderType.StopMarket);
+
+            CannotSubmitStopOrder_WhenPriceMissingMarketPrice(order.Object);
+        }
+
+        [TestCase(-1, 100000)]
+        [TestCase(1, 10000)]
+        public void CannotSubmitStopLimitOrder(decimal quantity, decimal stopPrice)
+        {
+            var order = new Mock<StopLimitOrder>
+            {
+                Object =
+                {
+                    Quantity = quantity,
+                    StopPrice =  stopPrice
+                }
+            };
+            order.SetupGet(s => s.Type).Returns(OrderType.StopLimit);
+
+
+            CannotSubmitStopOrder_WhenPriceMissingMarketPrice(order.Object);
+        }
+
+        private void CannotSubmitStopOrder_WhenPriceMissingMarketPrice(Order order)
+        {
+            var security = TestsHelpers.GetSecurity(symbol: _symbol.Value, market: _symbol.ID.Market, quoteCurrency: "USD");
+
+            security.Cache.AddData(new Tick
+            {
+                AskPrice = 50001,
+                BidPrice = 49999,
+                Time = DateTime.UtcNow,
+                Symbol = _symbol,
+                TickType = TickType.Quote,
+                AskSize = 1,
+                BidSize = 1
+            });
+
+            Assert.AreEqual(false, _brokerageModel.CanSubmitOrder(security, order, out var message));
+            Assert.NotNull(message);
+        }
+
+        [TestCase(OrderType.StopMarket)]
+        [TestCase(OrderType.StopLimit)]
+        public void CannotSubmitMarketOrder_IfPriceNotInitialized(OrderType orderType)
+        {
+            var order = new Mock<StopLimitOrder>
+            {
+                Object =
+                {
+                    Quantity = 1,
+                    StopPrice =  100
+                }
+            };
+            order.SetupGet(s => s.Type).Returns(orderType);
+
+            var security = TestsHelpers.GetSecurity(symbol: _symbol.Value, market: _symbol.ID.Market, quoteCurrency: "USD");
+
+            Assert.AreEqual(false, _brokerageModel.CanSubmitOrder(security, order.Object, out var message));
+            Assert.NotNull(message);
+        }
+
+        protected virtual FTXBrokerageModel GetBrokerageModel(AccountType accountType = AccountType.Margin) => new(accountType);
     }
 }

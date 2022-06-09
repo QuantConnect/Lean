@@ -57,7 +57,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var factor = 0.5m;
             var sumOfDividends = 100m;
-            var adjustedTb = tb.Clone(tb.IsFillForward).Adjust(factor);
+            var adjustedTb = tb.Clone(tb.IsFillForward).Normalize(factor, DataNormalizationMode.Adjusted, 0);
 
             var exchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.Utc);
             var offsetProvider = new TimeZoneOffsetProvider(TimeZones.Utc, new DateTime(2020, 5, 21), new DateTime(2020, 5, 22));

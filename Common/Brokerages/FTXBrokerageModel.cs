@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
 using QuantConnect.Benchmarks;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Util;
+using System.Collections.Generic;
 
 namespace QuantConnect.Brokerages
 {
@@ -30,33 +30,23 @@ namespace QuantConnect.Brokerages
         private const decimal _defaultLeverage = 3m;
 
         /// <summary>
+        /// market name
+        /// </summary>
+        protected virtual string MarketName => Market.FTX;
+
+        /// <summary>
+        /// Gets a map of the default markets to be used for each security type
+        /// </summary>
+        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets(Market.FTX);
+
+        /// <summary>
         /// Creates an instance of <see cref="FTXBrokerageModel"/> class
         /// </summary>
         /// <param name="accountType">Cash or Margin</param>
         public FTXBrokerageModel(AccountType accountType = AccountType.Margin) : base(accountType)
         {
         }
-
-        /// <summary>
-        /// Gets a map of the default markets to be used for each security type
-        /// </summary>
-        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets();
-
-
-        /// <summary>
-        /// Gets a new buying power model for the security, returning the default model with the security's configured leverage.
-        /// For cash accounts, leverage = 1 is used.
-        /// For margin trading, FTX supports up to 20x leverage, default is 3xs 
-        /// </summary>
-        /// <param name="security">The security to get a buying power model for</param>
-        /// <returns>The buying power model for this brokerage/security</returns>
-        public override IBuyingPowerModel GetBuyingPowerModel(Security security)
-        {
-            return AccountType == AccountType.Margin
-                ? new SecurityMarginModel(GetLeverage(security))
-                : new CashBuyingPowerModel();
-        }
-
+        
         /// <summary>
         /// Gets the brokerage's leverage for the specified security
         /// </summary>
@@ -87,7 +77,7 @@ namespace QuantConnect.Brokerages
         /// <returns>The benchmark for this brokerage</returns>
         public override IBenchmark GetBenchmark(SecurityManager securities)
         {
-            var symbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.FTX);
+            var symbol = Symbol.Create("BTCUSD", SecurityType.Crypto, MarketName);
             return SecurityBenchmark.CreateInstance(securities, symbol);
         }
 
@@ -110,10 +100,55 @@ namespace QuantConnect.Brokerages
             }
 
             message = null;
+
+            if (order.Type is OrderType.StopMarket or OrderType.StopLimit)
+            {
+                if (!security.HasData)
+                {
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                        "There is no data for this symbol yet, please check the security.HasData flag to ensure there is at least one data point."
+                    );
+
+                    return false;
+                }
+
+                var stopPrice = (order as StopMarketOrder)?.StopPrice;
+                if (!stopPrice.HasValue)
+                {
+                    stopPrice = (order as StopLimitOrder)?.StopPrice;
+                }
+
+                switch (order.Direction)
+                {
+                    case OrderDirection.Sell:
+                        if (stopPrice > security.BidPrice)
+                        {
+                            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                                StringExtensions.Invariant($"Trigger price too high: must be below current market price.")
+                            );
+                        }
+                        break;
+
+                    case OrderDirection.Buy:
+                        if (stopPrice < security.AskPrice)
+                        {
+                            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                                StringExtensions.Invariant($"Trigger price too low: must be above current market price.")
+                            );
+                        }
+                        break;
+                }
+
+                if (message != null)
+                {
+                    return false;
+                }
+            }
+
             if (security.Type != SecurityType.Crypto)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    StringExtensions.Invariant($"The {nameof(FTXBrokerageModel)} does not support {security.Type} security type.")
+                    StringExtensions.Invariant($"The {this.GetType().Name} does not support {security.Type} security type.")
                 );
 
                 return false;
@@ -141,10 +176,10 @@ namespace QuantConnect.Brokerages
             return false;
         }
 
-        private static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets()
+        protected static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets(string market)
         {
             var map = DefaultMarketMap.ToDictionary();
-            map[SecurityType.Crypto] = Market.FTX;
+            map[SecurityType.Crypto] = market;
             return map.ToReadOnlyDictionary();
         }
     }

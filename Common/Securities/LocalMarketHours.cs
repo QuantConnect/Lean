@@ -14,8 +14,9 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Securities
@@ -27,7 +28,6 @@ namespace QuantConnect.Securities
     {
         private readonly bool _hasPreMarket;
         private readonly bool _hasPostMarket;
-        private readonly MarketHoursSegment[] _segments;
 
         /// <summary>
         /// Gets whether or not this exchange is closed all day
@@ -55,7 +55,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the individual market hours segments that define the hours of operation for this day
         /// </summary>
-        public IEnumerable<MarketHoursSegment> Segments => _segments;
+        public ReadOnlyCollection<MarketHoursSegment> Segments { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LocalMarketHours"/> class
@@ -76,15 +76,16 @@ namespace QuantConnect.Securities
         {
             DayOfWeek = day;
             // filter out the closed states, we'll assume closed if no segment exists
-            _segments = (segments ?? Enumerable.Empty<MarketHoursSegment>()).Where(x => x.State != MarketHoursState.Closed).ToArray();
-            IsClosedAllDay = _segments.Length == 0;
-            IsOpenAllDay = _segments.Length == 1
-                && _segments[0].Start == TimeSpan.Zero
-                && _segments[0].End == Time.OneDay
-                && _segments[0].State == MarketHoursState.Market;
+            Segments = new ReadOnlyCollection<MarketHoursSegment>((segments ?? Enumerable.Empty<MarketHoursSegment>()).Where(x => x.State != MarketHoursState.Closed).ToList());
+            IsClosedAllDay = Segments.Count == 0;
+            IsOpenAllDay = Segments.Count == 1
+                && Segments[0].Start == TimeSpan.Zero
+                && Segments[0].End == Time.OneDay
+                && Segments[0].State == MarketHoursState.Market;
 
-            foreach (var segment in _segments)
+            for (var i = 0; i < Segments.Count; i++)
             {
+                var segment = Segments[i];
                 if (segment.State == MarketHoursState.PreMarket)
                 {
                     _hasPreMarket = true;
@@ -136,8 +137,9 @@ namespace QuantConnect.Securities
         /// <returns>The market's opening time of day</returns>
         public TimeSpan? GetMarketOpen(TimeSpan time, bool extendedMarket)
         {
-            foreach (var segment in _segments)
+            for (var i = 0; i < Segments.Count; i++)
             {
+                var segment = Segments[i];
                 if (segment.State == MarketHoursState.Closed || segment.End <= time)
                 {
                     continue;
@@ -168,8 +170,9 @@ namespace QuantConnect.Securities
         /// <returns>The market's closing time of day</returns>
         public TimeSpan? GetMarketClose(TimeSpan time, bool extendedMarket)
         {
-            foreach (var segment in _segments)
+            for (var i = 0; i < Segments.Count; i++)
             {
+                var segment = Segments[i];
                 if (segment.State == MarketHoursState.Closed || segment.End <= time)
                 {
                     continue;
@@ -200,8 +203,9 @@ namespace QuantConnect.Securities
         /// <returns>True if the exchange is considered open, false otherwise</returns>
         public bool IsOpen(TimeSpan time, bool extendedMarket)
         {
-            foreach (var segment in _segments)
+            for (var i = 0; i < Segments.Count; i++)
             {
+                var segment = Segments[i];
                 if (segment.State == MarketHoursState.Closed)
                 {
                     continue;
@@ -231,8 +235,9 @@ namespace QuantConnect.Securities
                 return IsOpen(start, extendedMarket);
             }
 
-            foreach (var segment in _segments)
+            for (var i = 0; i < Segments.Count; i++)
             {
+                var segment = Segments[i];
                 if (segment.State == MarketHoursState.Closed)
                 {
                     continue;
@@ -289,7 +294,7 @@ namespace QuantConnect.Securities
                 return "Open All Day";
             }
 
-            return Invariant($"{DayOfWeek}: {string.Join(" | ", (IEnumerable<MarketHoursSegment>) _segments)}");
+            return Invariant($"{DayOfWeek}: {string.Join(" | ", Segments)}");
         }
     }
 }

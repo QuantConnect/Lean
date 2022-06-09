@@ -163,7 +163,7 @@ class BadCustomIndicator:
 
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(), code);
+                var module = PyModule.FromString(Guid.NewGuid().ToString(), code);
 
                 var goodIndicator = module.GetAttr("GoodCustomIndicator").Invoke();
                 Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(_spy, goodIndicator, Resolution.Minute));
@@ -204,7 +204,7 @@ algo.RegisterIndicator(forex.Symbol, indicator, Resolution.Daily)";
 
             using (Py.GIL())
             {
-                Assert.DoesNotThrow(() => PythonEngine.ModuleFromString("RegistersIndicatorProperlyPythonScript", code));
+                Assert.DoesNotThrow(() => PyModule.FromString("RegistersIndicatorProperlyPythonScript", code));
             }
         }
     }

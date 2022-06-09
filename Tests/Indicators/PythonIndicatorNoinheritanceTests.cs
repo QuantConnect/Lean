@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -33,7 +33,7 @@ namespace QuantConnect.Tests.Indicators
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(
+                var module = PyModule.FromString(
                     Guid.NewGuid().ToString(),
                     @"
 from collections import deque

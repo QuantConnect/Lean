@@ -20,6 +20,7 @@ using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Tests.Common.Securities;
 
@@ -82,7 +83,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             yield return Data.Dequeue();
         }
 
-        public void Initialize(SubscriptionDataConfig config, FactorFile factorFile, MapFile mapFile, DateTime startTime)
+        public void Initialize(SubscriptionDataConfig config, IFactorFileProvider factorFileProvider, IMapFileProvider mapFileProvider, DateTime startTime)
         {
         }
     }

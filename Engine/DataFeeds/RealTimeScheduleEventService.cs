@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -16,19 +16,22 @@
 using System;
 using System.Threading;
 using QuantConnect.Util;
+using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// Allows to setup a real time scheduled event, internally using a <see cref="Timer"/>,
+    /// Allows to setup a real time scheduled event, internally using a <see cref="Thread"/>,
     /// that is guaranteed to trigger at or after the requested time, never before.
     /// </summary>
     /// <remarks>This class is of value because <see cref="Timer"/> could fire the
     /// event before time.</remarks>
     public class RealTimeScheduleEventService : IDisposable
     {
-        private readonly Timer _timer;
-        private readonly Ref<ReferenceWrapper<DateTime>> _nextUtcScheduledEvent;
+        private readonly Thread _pulseThread;
+        private readonly Queue<DateTime> _work;
+        private readonly ManualResetEvent _event;
+        private readonly CancellationTokenSource _tokenSource;
 
         /// <summary>
         /// Event fired when the scheduled time is past
@@ -41,34 +44,48 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="timeProvider">The time provider to use</param>
         public RealTimeScheduleEventService(ITimeProvider timeProvider)
         {
-            _nextUtcScheduledEvent = Ref.Create(new ReferenceWrapper<DateTime>(DateTime.MinValue));
-            _timer = new Timer(
-                async state =>
+            _tokenSource = new CancellationTokenSource();
+            _event = new ManualResetEvent(false);
+            _work = new Queue<DateTime>();
+            _pulseThread = new Thread(() =>
                 {
-                    var nextUtcScheduledEvent = ((Ref<ReferenceWrapper<DateTime>>)state).Value.Value;
-                    var diff = nextUtcScheduledEvent - timeProvider.GetUtcNow();
-                    // we need to guarantee we trigger the event after the requested due time
-                    // has past, if we got called earlier lets wait until time is right
-                    while (diff.Ticks > 0)
+                    while (!_tokenSource.Token.IsCancellationRequested)
                     {
-                        if (diff.Milliseconds >= 1)
+                        DateTime nextUtcScheduledEvent;
+                        lock (_work)
                         {
-                            Thread.Sleep(diff);
+                            _work.TryDequeue(out nextUtcScheduledEvent);
                         }
-                        else
+
+                        if (nextUtcScheduledEvent == default)
                         {
-                            Thread.SpinWait(1000);
+                            _event.WaitOne(_tokenSource.Token);
+                            _event.Reset();
+                            if (_tokenSource.Token.IsCancellationRequested)
+                            {
+                                return;
+                            }
+                            continue;
                         }
+
                         // testing has shown that it sometimes requires more than one loop
-                        diff = nextUtcScheduledEvent - timeProvider.GetUtcNow();
+                        var diff = nextUtcScheduledEvent - timeProvider.GetUtcNow();
+                        while (diff.Ticks > 0)
+                        {
+                            _tokenSource.Token.WaitHandle.WaitOne(diff);
+
+                            diff = nextUtcScheduledEvent - timeProvider.GetUtcNow();
+
+                            if (_tokenSource.Token.IsCancellationRequested)
+                            {
+                                return;
+                            }
+                        }
+
+                        NewEvent?.Invoke(this, EventArgs.Empty);
                     }
-                    NewEvent?.Invoke(this, EventArgs.Empty);
-                },
-                _nextUtcScheduledEvent,
-                // Due time is never, has to be scheduled
-                Timeout.InfiniteTimeSpan,
-                // Do not trigger periodically
-                Timeout.InfiniteTimeSpan);
+                }) { IsBackground = true, Name = "RealTimeScheduleEventService" };
+            _pulseThread.Start();
         }
 
         /// <summary>
@@ -80,9 +97,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// but it is not guaranteed.</remarks>
         public void ScheduleEvent(TimeSpan dueTime, DateTime utcNow)
         {
-            _nextUtcScheduledEvent.Value = new ReferenceWrapper<DateTime>(utcNow + dueTime);
-            // the timer will wake up a little earlier to improve accuracy
-            _timer.Change(dueTime, Timeout.InfiniteTimeSpan);
+            lock (_work)
+            {
+                _work.Enqueue(utcNow + dueTime);
+                _event.Set();
+            }
         }
 
         /// <summary>
@@ -90,7 +109,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void Dispose()
         {
-            _timer.Dispose();
+            _pulseThread.StopSafely(TimeSpan.FromSeconds(1), _tokenSource);
+            _tokenSource.DisposeSafely();
+            _event.DisposeSafely();
         }
     }
 }

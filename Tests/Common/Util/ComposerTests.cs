@@ -24,6 +24,19 @@ namespace QuantConnect.Tests.Common.Util
     public class ComposerTests
     {
         [Test]
+        public void GetExportedValueByTypeName()
+        {
+            var instance = Composer.Instance.GetExportedValueByTypeName<IExport2>("Export6");
+            Assert.AreEqual(typeof(Export6), instance.GetType());
+
+            var instance2 = Composer.Instance.GetExportedValueByTypeName<IExport2>("Export7");
+            Assert.AreEqual(typeof(Export7), instance2.GetType());
+
+            var instance3 = Composer.Instance.GetExportedValueByTypeName<IExport2>("Export8", forceTypeNameOnExisting: false);
+            Assert.AreNotEqual(typeof(Export8), instance3.GetType());
+        }
+
+        [Test]
         public void ComposesTypes()
         {
             var instances = Composer.Instance.GetExportedValues<IExport>().ToList();
@@ -102,6 +115,25 @@ namespace QuantConnect.Tests.Common.Util
             public decimal Export { get { return 5; } }
 
             public int Id { get { return 5; } }
+        }
+
+
+        [InheritedExport(typeof(IExport2))]
+        interface IExport2
+        {
+            int Id { get; }
+        }
+        class Export6 : IExport2
+        {
+            public int Id { get { return 6; } }
+        }
+        class Export7 : IExport2
+        {
+            public int Id { get { return 7; } }
+        }
+        class Export8 : IExport2
+        {
+            public int Id { get { return 8; } }
         }
     }
 }

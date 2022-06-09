@@ -38,7 +38,7 @@ namespace QuantConnect.Brokerages
             typeof(GoodTilDateTimeInForce)
         };
 
-        private const decimal _maxLeverage = 7m;
+        private const decimal _maxLeverage = 5m;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SamcoBrokerageModel"/> class
@@ -142,20 +142,6 @@ namespace QuantConnect.Brokerages
         public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets();
 
         /// <summary>
-        /// Gets a new buying power model for the security, returning the default model with the
-        /// security's configured leverage. For cash accounts, leverage = 1 is used. For margin
-        /// trading, max leverage = 7
-        /// </summary>
-        /// <param name="security">The security to get a buying power model for</param>
-        /// <returns>The buying power model for this brokerage/security</returns>
-        public override IBuyingPowerModel GetBuyingPowerModel(Security security)
-        {
-            return AccountType == AccountType.Cash
-                ? (IBuyingPowerModel)new CashBuyingPowerModel()
-                : new SecurityMarginModel(_maxLeverage);
-        }
-
-        /// <summary>
         /// Samco global leverage rule
         /// </summary>
         /// <param name="security"></param>
@@ -167,7 +153,7 @@ namespace QuantConnect.Brokerages
                 return 1m;
             }
 
-            if (security.Type == SecurityType.Equity || security.Type == SecurityType.Future || security.Type == SecurityType.Option)
+            if (security.Type == SecurityType.Equity || security.Type == SecurityType.Future || security.Type == SecurityType.Option || security.Type == SecurityType.Index)
             {
                 return _maxLeverage;
             }

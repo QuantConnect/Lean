@@ -14,10 +14,7 @@
 */
 
 using System;
-using Ionic.Zip;
-using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Util;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
 
@@ -28,7 +25,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class ZipEntryNameSubscriptionDataSourceReader : ISubscriptionDataSourceReader
     {
-        private readonly IDataProvider _dataProvider;
+        private readonly IDataCacheProvider _dataProvider;
         private readonly SubscriptionDataConfig _config;
         private readonly DateTime _date;
         private readonly bool _isLiveMode;
@@ -47,13 +44,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="config">The subscription's configuration</param>
         /// <param name="date">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
-        public ZipEntryNameSubscriptionDataSourceReader(IDataProvider dataProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public ZipEntryNameSubscriptionDataSourceReader(IDataCacheProvider dataProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             _date = date;
             _config = config;
             _isLiveMode = isLiveMode;
             _dataProvider = dataProvider;
-            _factory = _factory = config.GetBaseDataInstance();
+            _factory = config.GetBaseDataInstance();
         }
 
         /// <summary>
@@ -66,16 +63,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             List<string> entryNames;
             try
             {
-                var stream = _dataProvider.Fetch(source.Source);
-                if (stream == null)
-                {
-                    OnInvalidSource(source, new ArgumentException($"Failed to create source stream {source.Source}"));
-                    yield break;
-                }
-                entryNames = Compression.GetZipEntryFileNames(stream).ToList();
-                stream.DisposeSafely();
+                entryNames = _dataProvider.GetZipEntries(source.Source);
             }
-            catch (ZipException err)
+            catch (Exception err)
             {
                 OnInvalidSource(source, err);
                 yield break;

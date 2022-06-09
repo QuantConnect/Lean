@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -77,6 +77,9 @@ namespace QuantConnect.Configuration
                 new CommandLineOption("splits-percentage", CommandOptionType.SingleValue, "[OPTIONAL for RandomDataGenerator. Sets the probability each equity generated will have a stock split event. Note that this is not the total probability for all symbols generated. Only used for Equity. Defaults to 15.0: Example: --splits-percentage=10.0 ]"),
                 new CommandLineOption("dividends-percentage", CommandOptionType.SingleValue, "[OPTIONAL for RandomDataGenerator. Sets the probability each equity generated will have dividends. Note that this is not the probability for all symbols genearted. Only used for Equity. Defaults to 60.0: Example: --dividends-percentage=25.5 ]"),
                 new CommandLineOption("dividend-every-quarter-percentage", CommandOptionType.SingleValue, "[OPTIONAL for RandomDataGenerator. Sets the probability each equity generated will have a dividend event every quarter. Note that this is not the total probability for all symbols generated. Only used for Equity. Defaults to 30.0: Example: --dividend-every-quarter-percentage=15.0 ]"),
+                new CommandLineOption("option-price-engine", CommandOptionType.SingleValue, "[OPTIONAL for RandomDataGenerator. Sets the stochastic process, and returns new pricing engine to run calculations for that option. Defaults to BaroneAdesiWhaleyApproximationEngine: Example: --option-price-engine=BaroneAdesiWhaleyApproximationEngine ]"),
+                new CommandLineOption("volatility-model-resolution", CommandOptionType.SingleValue, "[OPTIONAL for RandomDataGenerator. Sets the volatility model period span. Defaults to Daily: Example: --volatility-model-resolution=Daily ]"),
+                new CommandLineOption("chain-symbol-count", CommandOptionType.SingleValue, "[OPTIONAL for RandomDataGenerator. Sets the size of the option chain. Defaults to 1 put and 1 call: Example: --chain-symbol-count=2 ]")
             };
 
         /// <summary>

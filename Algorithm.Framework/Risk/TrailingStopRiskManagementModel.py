@@ -21,7 +21,7 @@ class TrailingStopRiskManagementModel(RiskManagementModel):
         Args:
             maximumDrawdownPercent: The maximum percentage drawdown allowed for algorithm portfolio compared with the highest unrealized profit, defaults to 5% drawdown'''
         self.maximumDrawdownPercent = abs(maximumDrawdownPercent)
-        self.trailing = dict()
+        self.trailingAbsoluteHoldingsState = dict()
 
     def ManageRisk(self, algorithm, targets):
         '''Manages the algorithm's risk at each time step
@@ -36,26 +36,34 @@ class TrailingStopRiskManagementModel(RiskManagementModel):
 
             # Remove if not invested
             if not security.Invested:
-                self.trailing.pop(symbol, None)
+                self.trailingAbsoluteHoldingsState.pop(symbol, None)
                 continue
 
-            profitPercent = security.Holdings.UnrealizedProfitPercent
+            position = PositionSide.Long if security.Holdings.IsLong else PositionSide.Short
+            absoluteHoldingsValue = security.Holdings.AbsoluteHoldingsValue
+            trailingAbsoluteHoldingsState = self.trailingAbsoluteHoldingsState.get(symbol)
 
-            # Add newly invested securities
-            value = self.trailing.get(symbol)
-            if value == None:
-                newValue = profitPercent if profitPercent > 0 else 0
-                self.trailing[symbol] = newValue
+            # Add newly invested security (if doesn't exist) or reset holdings state (if position changed)
+            if trailingAbsoluteHoldingsState == None or position != trailingAbsoluteHoldingsState.position:
+                self.trailingAbsoluteHoldingsState[symbol] = trailingAbsoluteHoldingsState = self.HoldingsState(position, security.Holdings.AbsoluteHoldingsCost)
+
+            trailingAbsoluteHoldingsValue = trailingAbsoluteHoldingsState.absoluteHoldingsValue
+
+            # Check for new max (for long position) or min (for short position) absolute holdings value
+            if ((position == PositionSide.Long and trailingAbsoluteHoldingsValue < absoluteHoldingsValue) or
+                (position == PositionSide.Short and trailingAbsoluteHoldingsValue > absoluteHoldingsValue)):
+                self.trailingAbsoluteHoldingsState[symbol].absoluteHoldingsValue = absoluteHoldingsValue
                 continue
 
-            # Check for new high and update
-            if value < profitPercent:
-                self.trailing[symbol] = profitPercent
-                continue
+            drawdown = abs((trailingAbsoluteHoldingsValue - absoluteHoldingsValue) / trailingAbsoluteHoldingsValue)
 
-            # If unrealized profit percent deviates from local max for more than affordable percentage
-            if profitPercent < value - self.maximumDrawdownPercent:
+            if self.maximumDrawdownPercent < drawdown:
                 # liquidate
                 riskAdjustedTargets.append(PortfolioTarget(symbol, 0))
 
         return riskAdjustedTargets
+
+    class HoldingsState:
+        def __init__(self, position, absoluteHoldingsValue):
+            self.position = position
+            self.absoluteHoldingsValue = absoluteHoldingsValue

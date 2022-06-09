@@ -23,7 +23,7 @@ namespace QuantConnect.Orders.Fees
         /// <summary>
         /// Brokerage calculation Factor
         /// </summary>
-        protected override decimal BrokerageMultiplier => 0.0003M;
+        protected override decimal BrokerageMultiplier => 0.0002M;
 
         /// <summary>
         /// Maximum brokerage per order
@@ -38,7 +38,7 @@ namespace QuantConnect.Orders.Fees
         /// <summary>
         /// Exchange Transaction Charge calculation Factor
         /// </summary>
-        protected override decimal ExchangeTransactionChargeMultiplier => 0.0000325M;
+        protected override decimal ExchangeTransactionChargeMultiplier => 0.0000345M;
 
         /// <summary>
         /// State Tax calculation Factor
@@ -48,11 +48,11 @@ namespace QuantConnect.Orders.Fees
         /// <summary>
         /// Sebi Charges calculation Factor
         /// </summary>
-        protected override decimal SebiChargesMultiplier => 0.000002M;
+        protected override decimal SebiChargesMultiplier => 0.000001M;
 
         /// <summary>
         /// Stamp Charges calculation Factor
         /// </summary>
-        protected override decimal StampChargesMultiplier => 0.00002M;
+        protected override decimal StampChargesMultiplier => 0.00003M;
     }
 }

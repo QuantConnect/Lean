@@ -54,6 +54,9 @@ namespace QuantConnect.Securities.Future
             { "PA", "PAO" },
             { "PL", "PO" },
             { "RB", "OB" },
+            { "YG", "OYG" },
+            { "ZG", "OZG" },
+            { "ZI", "OZI" }
         };
 
         private static Dictionary<string, string> _futureOptionsToFutureGLOBEX = _futureToFutureOptionsGLOBEX

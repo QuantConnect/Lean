@@ -118,7 +118,7 @@ namespace QuantConnect.Indicators
             AverageTrueRange.Update(input);
 
             var typicalPrice = (input.High + input.Low + input.Close)/3m;
-            MiddleBand.Update(input.Time, typicalPrice);
+            MiddleBand.Update(input.EndTime, typicalPrice);
 
             // poke the upper/lower bands, they actually don't use the input, they compute
             // based on the ATR and the middle band

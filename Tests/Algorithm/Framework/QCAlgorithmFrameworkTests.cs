@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -63,7 +63,7 @@ namespace QuantConnect.Tests.Algorithm.Framework
             };
             security.SetMarketPrice(tick);
 
-            algo.OnFrameworkData(new Slice(new DateTime(2000, 01, 01), algo.Securities.Select(s => tick)));
+            algo.OnFrameworkData(new Slice(new DateTime(2000, 01, 01), algo.Securities.Select(s => tick), new DateTime(2000, 01, 01)));
 
             Assert.IsTrue(eventFired);
             Assert.AreEqual(1, construction.Insights.Count);
@@ -103,7 +103,7 @@ namespace QuantConnect.Tests.Algorithm.Framework
             security.IsDelisted = isDelisted;
 
             // Trigger Alpha to emit insight
-            algorithm.OnFrameworkData(new Slice(new DateTime(2000, 01, 01), new List<BaseData>() { tick }));
+            algorithm.OnFrameworkData(new Slice(new DateTime(2000, 01, 01), new List<BaseData>() { tick }, new DateTime(2000, 01, 01)));
 
             // Manually emit insight
             algorithm.EmitInsights(Insight.Price(Symbols.SPY, TimeSpan.FromDays(1), InsightDirection.Up, .5, .75));

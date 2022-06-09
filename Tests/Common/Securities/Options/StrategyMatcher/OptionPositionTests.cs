@@ -148,9 +148,9 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
         }
 
         [Test]
-        public void None_CreatesOptionPosition_WithZeroQuantity()
+        public void Empty_CreatesOptionPosition_WithZeroQuantity()
         {
-            var none = OptionPosition.None(Symbols.SPY);
+            var none = OptionPosition.Empty(Symbols.SPY);
             Assert.AreEqual(0, none.Quantity);
             Assert.AreEqual(Symbols.SPY, none.Symbol);
         }

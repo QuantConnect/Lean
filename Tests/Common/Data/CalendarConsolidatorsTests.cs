@@ -40,7 +40,7 @@ namespace QuantConnect.Tests.Common.Data
 
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(
+                var module = PyModule.FromString(
                     "PythonCalendar",
                     @"
 from AlgorithmImports import *

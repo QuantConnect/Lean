@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,13 +13,13 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
+using System.Collections.Generic;
 
 namespace QuantConnect.Brokerages.Tradier
 {
@@ -37,6 +37,11 @@ namespace QuantConnect.Brokerages.Tradier
             /// Gets whether to use the developer sandbox or not
             /// </summary>
             public static bool UseSandbox => Config.GetBool("tradier-use-sandbox");
+
+            /// <summary>
+            /// Gets whether to use the developer sandbox (paper mode) or live mode
+            /// </summary>
+            public static string Environment => Config.Get("tradier-environment");
 
             /// <summary>
             /// Gets the account ID to be used when instantiating a brokerage
@@ -71,6 +76,7 @@ namespace QuantConnect.Brokerages.Tradier
                 var data = new Dictionary<string, string>
                 {
                     { "tradier-use-sandbox", Configuration.UseSandbox.ToStringInvariant() },
+                    { "tradier-environment", Configuration.Environment.ToStringInvariant() },
                     { "tradier-account-id", Configuration.AccountId.ToStringInvariant() },
                     { "tradier-access-token", Configuration.AccessToken.ToStringInvariant() }
                 };
@@ -94,6 +100,10 @@ namespace QuantConnect.Brokerages.Tradier
         {
             var errors = new List<string>();
             var useSandbox = Read<bool>(job.BrokerageData, "tradier-use-sandbox", errors);
+            if (job.BrokerageData.TryGetValue("tradier-environment", out string environment) && !string.IsNullOrEmpty(environment))
+            {
+                useSandbox = environment.ToLowerInvariant() == "paper";
+            }
             var accountId = Read<string>(job.BrokerageData, "tradier-account-id", errors);
             var accessToken = Read<string>(job.BrokerageData, "tradier-access-token", errors);
 
@@ -101,7 +111,7 @@ namespace QuantConnect.Brokerages.Tradier
                 algorithm,
                 algorithm.Transactions,
                 algorithm.Portfolio,
-                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")),
+                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"), forceTypeNameOnExisting: false),
                 useSandbox,
                 accountId,
                 accessToken);

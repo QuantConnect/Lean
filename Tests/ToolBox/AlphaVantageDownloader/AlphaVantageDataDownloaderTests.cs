@@ -78,7 +78,7 @@ namespace QuantConnect.Tests.ToolBox.AlphaVantageDownloader
                 })
                 .Verifiable();
 
-            var result = _downloader.Get(symbol, resolution, start, end);
+            var result = _downloader.Get(new DataDownloaderGetParameters(symbol, resolution, start, end));
 
             _avClient.Verify();
             var requestUrl = BuildUrl(request);
@@ -120,7 +120,7 @@ namespace QuantConnect.Tests.ToolBox.AlphaVantageDownloader
                 })
                 .Verifiable();
 
-            var result = _downloader.Get(symbol, resolution, start, end);
+            var result = _downloader.Get(new DataDownloaderGetParameters(symbol, resolution, start, end));
 
             _avClient.Verify();
             var requestUrl = BuildUrl(request);
@@ -173,7 +173,7 @@ namespace QuantConnect.Tests.ToolBox.AlphaVantageDownloader
                 })
                 .Verifiable();
 
-            var result = _downloader.Get(symbol, resolution, start, end).ToList();
+            var result = _downloader.Get(new DataDownloaderGetParameters(symbol, resolution, start, end)).ToList();
 
             _avClient.Verify();
             Assert.AreEqual(2, requestUrls.Count);
@@ -197,7 +197,7 @@ namespace QuantConnect.Tests.ToolBox.AlphaVantageDownloader
             var start = DateTime.UtcNow.AddMonths(-2);
             var end = DateTime.UtcNow;
 
-            Assert.Throws<ArgumentOutOfRangeException>(() => _downloader.Get(symbol, resolution, start, end).ToList());
+            Assert.Throws<ArgumentOutOfRangeException>(() => _downloader.Get(new DataDownloaderGetParameters(symbol, resolution, start, end)).ToList());
         }
 
         [TestCase(Resolution.Minute)]
@@ -218,7 +218,7 @@ namespace QuantConnect.Tests.ToolBox.AlphaVantageDownloader
                 })
                 .Verifiable();
 
-            Assert.Throws<FormatException>(() => _downloader.Get(symbol, resolution, start, end).ToList());
+            Assert.Throws<FormatException>(() => _downloader.Get(new DataDownloaderGetParameters(symbol, resolution, start, end)).ToList());
         }
 
         [Test]
@@ -230,7 +230,7 @@ namespace QuantConnect.Tests.ToolBox.AlphaVantageDownloader
             var start = DateTime.UtcNow.AddYears(-2).AddDays(-1);
             var end = DateTime.UtcNow;
 
-            Assert.Throws<ArgumentOutOfRangeException>(() => _downloader.Get(symbol, resolution, start, end).ToList());
+            Assert.Throws<ArgumentOutOfRangeException>(() => _downloader.Get(new DataDownloaderGetParameters(symbol, resolution, start, end)).ToList());
         }
 
         [Test]

@@ -69,34 +69,35 @@ namespace QuantConnect.Tests.Algorithm
 
             transactionHandler.Exit();
         }
+    }
 
-        private class NullBrokerage : IBrokerage
-        {
-            public void Dispose() {}
+    public class NullBrokerage : IBrokerage
+    {
+        public virtual void Dispose() {}
 #pragma warning disable 0067 // NullBrokerage doesn't use any of these so we will just ignore them
-            public event EventHandler<OrderEvent> OrderStatusChanged;
-            public event EventHandler<OrderEvent> OptionPositionAssigned;
-            public event EventHandler<OptionNotificationEventArgs> OptionNotification;
-            public event EventHandler<AccountEvent> AccountChanged;
-            public event EventHandler<BrokerageMessageEvent> Message;
+        public event EventHandler<OrderEvent> OrderStatusChanged;
+        public event EventHandler<OrderEvent> OptionPositionAssigned;
+        public event EventHandler<OptionNotificationEventArgs> OptionNotification;
+        public event EventHandler<AccountEvent> AccountChanged;
+        public event EventHandler<BrokerageMessageEvent> Message;
+        public event EventHandler<DelistingNotificationEventArgs> DelistingNotification;
 #pragma warning restore 0067
 
-            public string Name => "NullBrokerage";
-            public bool IsConnected { get; } = true;
-            public List<Order> GetOpenOrders() { return new List<Order>(); }
-            public List<Holding> GetAccountHoldings() { return new List<Holding>(); }
-            public List<CashAmount> GetCashBalance() { return new List<CashAmount>(); }
-            public bool PlaceOrder(Order order) { return true; }
-            public bool UpdateOrder(Order order) { return true; }
-            public bool CancelOrder(Order order) { return true; }
-            public void Connect() {}
-            public void Disconnect() {}
-            public bool AccountInstantlyUpdated { get; } = true;
-            public string AccountBaseCurrency => Currencies.USD;
-            public IEnumerable<BaseData> GetHistory(HistoryRequest request) { return Enumerable.Empty<BaseData>(); }
-            public DateTime LastSyncDateTimeUtc { get; } = DateTime.UtcNow;
-            public bool ShouldPerformCashSync(DateTime currentTimeUtc) { return false; }
-            public bool PerformCashSync(IAlgorithm algorithm, DateTime currentTimeUtc, Func<TimeSpan> getTimeSinceLastFill) { return true; }
-        }
+        public string Name => "NullBrokerage";
+        public bool IsConnected { get; } = true;
+        public List<Order> GetOpenOrders() { return new List<Order>(); }
+        public List<Holding> GetAccountHoldings() { return new List<Holding>(); }
+        public List<CashAmount> GetCashBalance() { return new List<CashAmount>(); }
+        public bool PlaceOrder(Order order) { return true; }
+        public bool UpdateOrder(Order order) { return true; }
+        public bool CancelOrder(Order order) { return true; }
+        public void Connect() {}
+        public void Disconnect() {}
+        public bool AccountInstantlyUpdated { get; } = true;
+        public string AccountBaseCurrency => Currencies.USD;
+        public virtual IEnumerable<BaseData> GetHistory(HistoryRequest request) { return Enumerable.Empty<BaseData>(); }
+        public DateTime LastSyncDateTimeUtc { get; } = DateTime.UtcNow;
+        public bool ShouldPerformCashSync(DateTime currentTimeUtc) { return false; }
+        public bool PerformCashSync(IAlgorithm algorithm, DateTime currentTimeUtc, Func<TimeSpan> getTimeSinceLastFill) { return true; }
     }
 }

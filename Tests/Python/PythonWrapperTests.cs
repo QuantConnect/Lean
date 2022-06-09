@@ -30,7 +30,7 @@ namespace QuantConnect.Tests.Python
             {
                 using (Py.GIL())
                 {
-                    var module = PythonEngine.ModuleFromString(nameof(ValidateImplementationOf), MissingMethod1);
+                    var module = PyModule.FromString(nameof(ValidateImplementationOf), MissingMethod1);
                     var model = module.GetAttr("ModelMissingMethod1");
                     Assert.That(() => model.ValidateImplementationOf<IModel>(), Throws
                         .Exception.InstanceOf<NotImplementedException>().With.Message.Contains("Method1"));
@@ -42,7 +42,7 @@ namespace QuantConnect.Tests.Python
             {
                 using (Py.GIL())
                 {
-                    var module = PythonEngine.ModuleFromString(nameof(ValidateImplementationOf), FullyImplemented);
+                    var module = PyModule.FromString(nameof(ValidateImplementationOf), FullyImplemented);
                     var model = module.GetAttr("FullyImplementedModel");
                     Assert.That(() => model.ValidateImplementationOf<IModel>(), Throws.Nothing);
                 }
@@ -53,7 +53,7 @@ namespace QuantConnect.Tests.Python
             {
                 using (Py.GIL())
                 {
-                    var module = PythonEngine.ModuleFromString(nameof(ValidateImplementationOf), DerivedFromCsharp);
+                    var module = PyModule.FromString(nameof(ValidateImplementationOf), DerivedFromCsharp);
                     var model = module.GetAttr("DerivedFromCSharpModel");
                     Assert.That(() => model.ValidateImplementationOf<IModel>(), Throws.Nothing);
                 }

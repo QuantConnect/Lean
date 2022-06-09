@@ -14,13 +14,12 @@
 */
 
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Util;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 
 namespace QuantConnect.Securities
 {
@@ -39,7 +38,7 @@ namespace QuantConnect.Securities
         private BaseData _lastData;
         private IReadOnlyList<BaseData> _lastTickQuotes = new List<BaseData>();
         private IReadOnlyList<BaseData> _lastTickTrades = new List<BaseData>();
-        private ConcurrentDictionary<Type, IReadOnlyList<BaseData>> _dataByType = new ConcurrentDictionary<Type, IReadOnlyList<BaseData>>();
+        private ConcurrentDictionary<Type, IReadOnlyList<BaseData>> _dataByType = new();
 
         /// <summary>
         /// Gets the most recent price submitted to this cache
@@ -247,14 +246,6 @@ namespace QuantConnect.Securities
         /// <param name="dataType">The data type</param>
         public void StoreData(IReadOnlyList<BaseData> data, Type dataType)
         {
-#if DEBUG // don't run this in release as we should never fail here, but it's also nice to have here as documentation of intent
-            if (data.DistinctBy(d => d.GetType()).Skip(1).Any())
-            {
-                throw new ArgumentException(
-                    "SecurityCache.StoreData data list must contain elements of the same type."
-                );
-            }
-#endif
             if (dataType == typeof(Tick))
             {
                 var tick = data[data.Count - 1] as Tick;
@@ -323,6 +314,21 @@ namespace QuantConnect.Securities
         /// </summary>
         public void Reset()
         {
+            Price = 0;
+
+            Open = 0;
+            High = 0;
+            Low = 0;
+            Close = 0;
+
+            BidPrice = 0;
+            BidSize = 0;
+            AskPrice = 0;
+            AskSize = 0;
+
+            Volume = 0;
+            OpenInterest = 0;
+
             _dataByType.Clear();
             _lastTickQuotes = new List<BaseData>();
             _lastTickTrades = new List<BaseData>();

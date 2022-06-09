@@ -14,10 +14,10 @@
  *
 */
 
-using System.Collections.Concurrent;
 using System.IO;
-using QuantConnect.Interfaces;
 using QuantConnect.Util;
+using QuantConnect.Interfaces;
+using System.Collections.Concurrent;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -28,14 +28,14 @@ namespace QuantConnect.Data.Auxiliary
     {
         private IMapFileProvider _mapFileProvider;
         private IDataProvider _dataProvider;
-        private readonly ConcurrentDictionary<Symbol, FactorFile> _cache;
+        private readonly ConcurrentDictionary<Symbol, IFactorProvider> _cache;
 
         /// <summary>
         /// Creates a new instance of the <see cref="LocalDiskFactorFileProvider"/>
         /// </summary>
         public LocalDiskFactorFileProvider()
         {
-            _cache = new ConcurrentDictionary<Symbol, FactorFile>();
+            _cache = new ConcurrentDictionary<Symbol, IFactorProvider>();
         }
 
         /// <summary>
@@ -55,54 +55,40 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         /// <param name="symbol">The security's symbol whose factor file we seek</param>
         /// <returns>The resolved factor file, or null if not found</returns>
-        public FactorFile Get(Symbol symbol)
+        public IFactorProvider Get(Symbol symbol)
         {
-            FactorFile factorFile;
+            symbol = symbol.GetFactorFileSymbol();
+            IFactorProvider factorFile;
             if (_cache.TryGetValue(symbol, out factorFile))
             {
                 return factorFile;
             }
 
-            var market = symbol.ID.Market;
-
             // we first need to resolve the map file to get a permtick, that's how the factor files are stored
-            var mapFileResolver = _mapFileProvider.Get(market);
+            var mapFileResolver = _mapFileProvider.Get(AuxiliaryDataKey.Create(symbol));
             if (mapFileResolver == null)
             {
-                return GetFactorFile(symbol, symbol.Value, market);
+                return GetFactorFile(symbol, symbol.Value);
             }
 
-            var mapFile = mapFileResolver.ResolveMapFile(symbol.ID.Symbol, symbol.ID.Date);
+            var mapFile = mapFileResolver.ResolveMapFile(symbol);
             if (mapFile.IsNullOrEmpty())
             {
-                return GetFactorFile(symbol, symbol.Value, market);
+                return GetFactorFile(symbol, symbol.Value);
             }
 
-            return GetFactorFile(symbol, mapFile.Permtick, market);
+            return GetFactorFile(symbol, mapFile.Permtick);
         }
 
         /// <summary>
         /// Checks that the factor file exists on disk, and if it does, loads it into memory
         /// </summary>
-        private FactorFile GetFactorFile(Symbol symbol, string permtick, string market)
+        private IFactorProvider GetFactorFile(Symbol symbol, string permtick)
         {
-            FactorFile factorFile = null;
+            var path = Path.Combine(Globals.CacheDataFolder, symbol.SecurityType.SecurityTypeToLower(), symbol.ID.Market, "factor_files", permtick.ToLowerInvariant() + ".csv");
 
-            var path = Path.Combine(Globals.CacheDataFolder, "equity", market, "factor_files", permtick.ToLowerInvariant() + ".csv");
-
-            var factorFileStream = _dataProvider.Fetch(path);
-            if (factorFileStream != null)
-            {
-                factorFile = FactorFile.Read(permtick, factorFileStream);
-                factorFileStream.DisposeSafely();
-                _cache.AddOrUpdate(symbol, factorFile, (s, c) => factorFile);
-            }
-            else
-            {
-                // add null value to the cache, we don't want to check the disk multiple times
-                // but keep existing value if it exists, just in case
-                _cache.AddOrUpdate(symbol, factorFile, (s, oldValue) => oldValue);
-            }
+            var factorFile = PriceScalingExtensions.SafeRead(permtick, _dataProvider.ReadLines(path), symbol.SecurityType);
+            _cache.AddOrUpdate(symbol, factorFile, (s, c) => factorFile);
             return factorFile;
         }
     }

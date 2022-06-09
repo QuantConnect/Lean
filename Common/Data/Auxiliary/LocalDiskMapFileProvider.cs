@@ -14,11 +14,11 @@
  *
 */
 
-using System.Collections.Concurrent;
 using System.IO;
 using System.Threading;
-using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Interfaces;
+using System.Collections.Concurrent;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -29,7 +29,7 @@ namespace QuantConnect.Data.Auxiliary
     public class LocalDiskMapFileProvider : IMapFileProvider
     {
         private static int _wroteTraceStatement;
-        private readonly ConcurrentDictionary<string, MapFileResolver> _cache;
+        private readonly ConcurrentDictionary<AuxiliaryDataKey, MapFileResolver> _cache;
         private IDataProvider _dataProvider;
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public LocalDiskMapFileProvider()
         {
-            _cache = new ConcurrentDictionary<string, MapFileResolver>();
+            _cache = new ConcurrentDictionary<AuxiliaryDataKey, MapFileResolver>();
         }
 
         /// <summary>
@@ -53,20 +53,19 @@ namespace QuantConnect.Data.Auxiliary
         /// Gets a <see cref="MapFileResolver"/> representing all the map
         /// files for the specified market
         /// </summary>
-        /// <param name="market">The equity market, for example, 'usa'</param>
+        /// <param name="auxiliaryDataKey">Key used to fetch a map file resolver. Specifying market and security type</param>
         /// <returns>A <see cref="MapFileRow"/> containing all map files for the specified market</returns>
-        public MapFileResolver Get(string market)
+        public MapFileResolver Get(AuxiliaryDataKey auxiliaryDataKey)
         {
-            // TODO: Consider using DataProvider to load in the files from disk to unify data fetching behavior
-            // Reference LocalDiskFactorFile, LocalZipFactorFile, and LocalZipMapFile providers for examples.
-
-            market = market.ToLowerInvariant();
-            return _cache.GetOrAdd(market, GetMapFileResolver);
+            return _cache.GetOrAdd(auxiliaryDataKey, GetMapFileResolver);
         }
 
-        private static MapFileResolver GetMapFileResolver(string market)
+        private MapFileResolver GetMapFileResolver(AuxiliaryDataKey key)
         {
-            var mapFileDirectory = Path.Combine(Globals.CacheDataFolder, "equity", market, "map_files");
+            var securityType = key.SecurityType;
+            var market = key.Market;
+
+            var mapFileDirectory =  MapFile.GetMapFilePath(market, securityType);
             if (!Directory.Exists(mapFileDirectory))
             {
                 // only write this message once per application instance
@@ -78,7 +77,7 @@ namespace QuantConnect.Data.Auxiliary
                 }
                 return MapFileResolver.Empty;
             }
-            return new MapFileResolver(MapFile.GetMapFiles(mapFileDirectory, market));
+            return new MapFileResolver(MapFile.GetMapFiles(mapFileDirectory, market, securityType, _dataProvider));
         }
     }
 }

@@ -26,7 +26,8 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         public void RetrievesFromDisk()
         {
             var provider = new LocalDiskMapFileProvider();
-            var mapFiles = provider.Get(QuantConnect.Market.USA);
+            provider.Initialize(TestGlobals.DataProvider);
+            var mapFiles = provider.Get(AuxiliaryDataKey.EquityUsa);
             Assert.IsNotEmpty(mapFiles);
         }
 
@@ -34,8 +35,9 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         public void CachesValueAndReturnsSameReference()
         {
             var provider = new LocalDiskMapFileProvider();
-            var mapFiles1 = provider.Get(QuantConnect.Market.USA);
-            var mapFiles2 = provider.Get(QuantConnect.Market.USA);
+            provider.Initialize(TestGlobals.DataProvider);
+            var mapFiles1 = provider.Get(AuxiliaryDataKey.EquityUsa);
+            var mapFiles2 = provider.Get(AuxiliaryDataKey.EquityUsa);
             Assert.IsTrue(ReferenceEquals(mapFiles1, mapFiles2));
         }
     }

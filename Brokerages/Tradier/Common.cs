@@ -134,7 +134,13 @@ namespace QuantConnect.Brokerages.Tradier
         GTC,
         /// TradierOrderDuration: Day Period
         [EnumMember(Value = "day")]
-        Day
+        Day,
+        /// TradierOrderDuration: Pre market Period
+        [EnumMember(Value = "pre")]
+        Pre,
+        /// TradierOrderDuration: Post market Period
+        [EnumMember(Value = "post")]
+        Post
     }
 
     /// <summary>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -24,15 +24,15 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// <summary>
         /// Stores <see cref="MapFileRow"/> instances
         /// </summary>
-        public List<MapFileRow> MapRows = new List<MapFileRow>();
+        public List<MapFileRow> MapRows = new();
 
         /// <summary>
-        /// Stores <see cref="FactorFileRow"/> instances
+        /// Stores <see cref="CorporateFactorRow"/> instances
         /// </summary>
-        public List<FactorFileRow> DividendsSplits = new List<FactorFileRow>();
-        
+        public List<CorporateFactorRow> DividendsSplits = new List<CorporateFactorRow>();
+
         /// <summary>
-        /// Current symbol value. Can be renamed
+        /// Current Symbol value. Can be renamed
         /// </summary>
         public Symbol CurrentSymbol { get; private set; }
 
@@ -41,11 +41,13 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         private readonly RandomDataGeneratorSettings _settings;
         private readonly DateTime _delistDate;
         private readonly bool _willBeDelisted;
+        private readonly BaseSymbolGenerator _symbolGenerator;
 
         public DividendSplitMapGenerator(
-            Symbol symbol, 
-            RandomDataGeneratorSettings settings, 
-            RandomValueGenerator randomValueGenerator, 
+            Symbol symbol,
+            RandomDataGeneratorSettings settings,
+            RandomValueGenerator randomValueGenerator,
+            BaseSymbolGenerator symbolGenerator,
             Random random,
             DateTime delistDate,
             bool willBeDelisted)
@@ -56,6 +58,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             _random = random;
             _delistDate = delistDate;
             _willBeDelisted = willBeDelisted;
+            _symbolGenerator = symbolGenerator;
         }
 
         /// <summary>
@@ -90,7 +93,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     // On the first trading day write relevant starting data to factor and map files
                     if (firstTick)
                     {
-                        DividendsSplits.Add(new FactorFileRow(tick.Time,
+                        DividendsSplits.Add(new CorporateFactorRow(tick.Time,
                             previousPriceFactor,
                             previousSplitFactor,
                             tick.Value));
@@ -108,7 +111,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         {
                             if (tick.Time > splitDate)
                             {
-                                DividendsSplits.Add(new FactorFileRow(
+                                DividendsSplits.Add(new CorporateFactorRow(
                                     splitDate,
                                     previousPriceFactor,
                                     previousSplitFactor,
@@ -131,7 +134,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         {
                             if (tick.Time > dividendDate)
                             {
-                                DividendsSplits.Add(new FactorFileRow(
+                                DividendsSplits.Add(new CorporateFactorRow(
                                     dividendDate,
                                     previousPriceFactor,
                                     previousSplitFactor,
@@ -184,7 +187,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                             var randomDate = _randomValueGenerator.NextDate(tick.Time, tick.Time.AddMonths(1), (DayOfWeek)_random.Next(1, 5));
                             MapRows.Add(new MapFileRow(randomDate, CurrentSymbol.Value));
 
-                            CurrentSymbol = _randomValueGenerator.NextSymbol(_settings.SecurityType, _settings.Market);
+                            CurrentSymbol = _symbolGenerator.NextSymbol(_settings.SecurityType, _settings.Market);
                         }
 
                         previousMonth = tick.Time.Month;

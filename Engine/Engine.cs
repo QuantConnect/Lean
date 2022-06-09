@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -184,12 +185,8 @@ namespace QuantConnect.Lean.Engine
                     algorithm.Transactions.SetOrderProcessor(AlgorithmHandlers.Transactions);
 
                     // set the history provider before setting up the algorithm
-                    var historyProvider = GetHistoryProvider(job.HistoryProvider);
-                    if (historyProvider is BrokerageHistoryProvider)
-                    {
-                        (historyProvider as BrokerageHistoryProvider).SetBrokerage(brokerage);
-                    }
-
+                    var historyProvider = GetHistoryProvider();
+                    historyProvider.SetBrokerage(brokerage);
                     historyDataCacheProvider = new ZipDataCacheProvider(AlgorithmHandlers.DataProvider, isDataEphemeral:_liveMode);
                     historyProvider.Initialize(
                         new HistoryProviderInitializeParameters(
@@ -234,7 +231,7 @@ namespace QuantConnect.Lean.Engine
                     AlgorithmHandlers.Alphas.OnAfterAlgorithmInitialized(algorithm);
 
                     //If there are any reasons it failed, pass these back to the IDE.
-                    if (!initializeComplete || algorithm.ErrorMessages.Count > 0 || AlgorithmHandlers.Setup.Errors.Count > 0)
+                    if (!initializeComplete || AlgorithmHandlers.Setup.Errors.Count > 0)
                     {
                         initializeComplete = false;
                         //Get all the error messages: internal in algorithm and external in setup handler.
@@ -318,9 +315,6 @@ namespace QuantConnect.Lean.Engine
                         }
                     };
 
-                    //Send status to user the algorithm is now executing.
-                    AlgorithmHandlers.Results.SendStatusUpdate(AlgorithmStatus.Running);
-
                     // Result manager scanning message queue: (started earlier)
                     AlgorithmHandlers.Results.DebugMessage(
                         $"Launching analysis for {job.AlgorithmId} with LEAN Engine v{Globals.Version}");
@@ -348,7 +342,7 @@ namespace QuantConnect.Lean.Engine
                             }
 
                             Log.Trace("Engine.Run(): Exiting Algorithm Manager");
-                        }, job.Controls.RamAllocation, workerThread:workerThread);
+                        }, job.Controls.RamAllocation, workerThread:workerThread, sleepIntervalMillis: algorithm.LiveMode ? 10000 : 1000);
 
                         if (!complete)
                         {
@@ -484,13 +478,9 @@ namespace QuantConnect.Lean.Engine
         /// <summary>
         /// Load the history provider from the Composer
         /// </summary>
-        private IHistoryProvider GetHistoryProvider(string historyProvider)
+        private HistoryProviderManager GetHistoryProvider()
         {
-            if (historyProvider.IsNullOrEmpty())
-            {
-                historyProvider = Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider");
-            }
-            var provider = Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>(historyProvider);
+            var provider = new HistoryProviderManager();
 
             provider.InvalidConfigurationDetected += (sender, args) => { AlgorithmHandlers.Results.ErrorMessage(args.Message); };
             provider.NumericalPrecisionLimited += (sender, args) =>

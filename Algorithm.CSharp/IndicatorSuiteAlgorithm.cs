@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
-using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
@@ -34,7 +33,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class IndicatorSuiteAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private string _ticker = "SPY";
-        private string _customTicker = "WIKI/FB";
+        private string _customTicker = "IBM";
 
         private Symbol _symbol;
         private Symbol _customSymbol;
@@ -64,7 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
             _symbol = AddSecurity(SecurityType.Equity, _ticker, Resolution.Daily).Symbol;
 
             //Add the Custom Data:
-            _customSymbol = AddData<Quandl>(_customTicker, Resolution.Daily).Symbol;
+            _customSymbol = AddData<CustomData>(_customTicker, Resolution.Daily).Symbol;
 
             //Set up default Indicators, these indicators are defined on the Value property of incoming data (except ATR and AROON which use the full TradeBar object)
             _indicators = new Indicators
@@ -118,9 +117,9 @@ namespace QuantConnect.Algorithm.CSharp
             // these are indicators that require multiple inputs. the most common of which is a ratio.
             // suppose we seek the ratio of BTC to SPY, we could write the following:
             var spyClose = Identity(_symbol);
-            var fbClose = Identity(_customSymbol);
+            var ibmClose = Identity(_customSymbol);
             // this will create a new indicator whose value is FB/SPY
-            _ratio = fbClose.Over(spyClose);
+            _ratio = ibmClose.Over(spyClose);
             // we can also easily plot our indicators each time they update using th PlotIndicator function
             PlotIndicator("Ratio", _ratio);
         }
@@ -128,8 +127,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Custom data event handler:
         /// </summary>
-        /// <param name="data">Quandl - dictionary Bars of Quandl Data</param>
-        public void OnData(Quandl data)
+        /// <param name="data">CustomData - dictionary Bars of custom data</param>
+        public void OnData(CustomData data)
         {
         }
 
@@ -237,6 +236,16 @@ namespace QuantConnect.Algorithm.CSharp
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
         public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 4537;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm

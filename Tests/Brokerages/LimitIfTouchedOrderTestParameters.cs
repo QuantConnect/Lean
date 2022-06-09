@@ -28,9 +28,10 @@ namespace QuantConnect.Tests.Brokerages
             Symbol symbol,
             decimal highLimit,
             decimal lowLimit,
-            IOrderProperties properties = null
+            IOrderProperties properties = null,
+            OrderSubmissionData orderSubmissionData = null
             )
-            : base(symbol, properties)
+            : base(symbol, properties, orderSubmissionData)
         {
             _highLimit = highLimit;
             _lowLimit = lowLimit;

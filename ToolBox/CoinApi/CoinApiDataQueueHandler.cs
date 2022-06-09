@@ -107,7 +107,7 @@ namespace QuantConnect.ToolBox.CoinApi
         {
             if (!CanSubscribe(dataConfig.Symbol))
             {
-                return Enumerable.Empty<BaseData>().GetEnumerator();
+                return null;
             }
 
             var enumerator = _dataAggregator.Add(dataConfig, newDataAvailableHandler);

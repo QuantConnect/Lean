@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,12 +14,12 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Threading;
-using System.Threading.Tasks;
+using System.Reflection;
+using QuantConnect.Util;
+using System.Diagnostics;
+using System.Collections.Generic;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
@@ -147,7 +147,7 @@ namespace QuantConnect
         public class CpuPerformance : IDisposable
         {
             private readonly CancellationTokenSource _cancellationToken;
-            private readonly Task _cpuPerformanceTask;
+            private readonly Thread _cpuThread;
 
             /// <summary>
             /// CPU usage as a percentage (0-100)
@@ -161,7 +161,8 @@ namespace QuantConnect
             public CpuPerformance()
             {
                 _cancellationToken = new CancellationTokenSource();
-                _cpuPerformanceTask = Task.Factory.StartNew(CalculateCpu, _cancellationToken.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                _cpuThread = new Thread(() => CalculateCpu()) {  IsBackground = true, Name = "CpuPerformance" };
+                _cpuThread.Start();
             }
 
             /// <summary>
@@ -175,7 +176,7 @@ namespace QuantConnect
                     var startTime = DateTime.UtcNow;
                     var startCpuUsage = process.TotalProcessorTime;
 
-                    if (_cancellationToken.Token.WaitHandle.WaitOne(1000))
+                    if (_cancellationToken.Token.WaitHandle.WaitOne(startTime.GetSecondUnevenWait(5000)))
                     {
                         return;
                     }
@@ -196,9 +197,8 @@ namespace QuantConnect
             /// </summary>
             public void Dispose()
             {
-                _cancellationToken.Cancel();
-                _cpuPerformanceTask.Wait();
-                _cpuPerformanceTask.Dispose();
+                _cpuThread.StopSafely(TimeSpan.FromSeconds(5), _cancellationToken);
+                _cancellationToken.DisposeSafely();
             }
         }
     }

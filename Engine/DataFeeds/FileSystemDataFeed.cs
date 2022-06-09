@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -43,6 +43,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IMapFileProvider _mapFileProvider;
         private IFactorFileProvider _factorFileProvider;
         private IDataProvider _dataProvider;
+        private IDataCacheProvider _cacheProvider;
         private SubscriptionCollection _subscriptions;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private SubscriptionDataReaderSubscriptionEnumeratorFactory _subscriptionFactory;
@@ -55,7 +56,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Initializes the data feed for the specified job and algorithm
         /// </summary>
-        public void Initialize(IAlgorithm algorithm,
+        public virtual void Initialize(IAlgorithm algorithm,
             AlgorithmNodePacket job,
             IResultHandler resultHandler,
             IMapFileProvider mapFileProvider,
@@ -73,17 +74,27 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _timeProvider = dataFeedTimeProvider.FrontierTimeProvider;
             _subscriptions = subscriptionManager.DataFeedSubscriptions;
             _cancellationTokenSource = new CancellationTokenSource();
+            _cacheProvider = new ZipDataCacheProvider(dataProvider, isDataEphemeral: false);
             _subscriptionFactory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(
                 _resultHandler,
                 _mapFileProvider,
                 _factorFileProvider,
-                _dataProvider,
+                _cacheProvider,
                 enablePriceScaling: false);
 
             IsActive = true;
         }
 
-        private Subscription CreateDataSubscription(SubscriptionRequest request)
+        /// <summary>
+        /// Creates a file based data enumerator for the given subscription request
+        /// </summary>
+        /// <remarks>Protected so it can be used by the <see cref="LiveTradingDataFeed"/> to warmup requests</remarks>
+        protected IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request)
+        {
+            return request.IsUniverseSubscription ? CreateUniverseEnumerator(request) : CreateDataEnumerator(request);
+        }
+
+        private IEnumerator<BaseData> CreateDataEnumerator(SubscriptionRequest request)
         {
             // ReSharper disable once PossibleMultipleEnumeration
             if (!request.TradableDays.Any())
@@ -98,7 +109,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var enumerator = _subscriptionFactory.CreateEnumerator(request, _dataProvider);
             enumerator = ConfigureEnumerator(request, false, enumerator);
 
-            return SubscriptionUtils.CreateAndScheduleWorker(request, enumerator, _factorFileProvider, true);
+            return enumerator;
         }
 
         /// <summary>
@@ -106,26 +117,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="request">Defines the subscription to be added, including start/end times the universe and security</param>
         /// <returns>The created <see cref="Subscription"/> if successful, null otherwise</returns>
-        public Subscription CreateSubscription(SubscriptionRequest request)
+        public virtual Subscription CreateSubscription(SubscriptionRequest request)
         {
-            return request.IsUniverseSubscription
-                ? CreateUniverseSubscription(request)
-                : CreateDataSubscription(request);
+            var enumerator = CreateEnumerator(request);
+
+            if (request.IsUniverseSubscription && request.Universe is UserDefinedUniverse)
+            {
+                // for user defined universe we do not use a worker task, since calls to AddData can happen in any moment
+                // and we have to be able to inject selection data points into the enumerator
+                return SubscriptionUtils.Create(request, enumerator);
+            }
+            return SubscriptionUtils.CreateAndScheduleWorker(request, enumerator, _factorFileProvider, true);
         }
 
         /// <summary>
         /// Removes the subscription from the data feed, if it exists
         /// </summary>
         /// <param name="subscription">The subscription to remove</param>
-        public void RemoveSubscription(Subscription subscription)
+        public virtual void RemoveSubscription(Subscription subscription)
         {
         }
 
-        /// <summary>
-        /// Adds a new subscription for universe selection
-        /// </summary>
-        /// <param name="request">The subscription request</param>
-        private Subscription CreateUniverseSubscription(SubscriptionRequest request)
+        private IEnumerator<BaseData> CreateUniverseEnumerator(SubscriptionRequest request)
         {
             ISubscriptionEnumeratorFactory factory = _subscriptionFactory;
             if (request.Universe is ITimeTriggeredUniverse)
@@ -136,9 +149,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 if (request.Universe is UserDefinedUniverse)
                 {
-                    // for user defined universe we do not use a worker task, since calls to AddData can happen in any moment
-                    // and we have to be able to inject selection data points into the enumerator
-                    return SubscriptionUtils.Create(request, factory.CreateEnumerator(request, _dataProvider));
+                    return factory.CreateEnumerator(request, _dataProvider);
                 }
             }
             if (request.Configuration.Type == typeof(CoarseFundamental))
@@ -149,28 +160,30 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 factory = new OptionChainUniverseSubscriptionEnumeratorFactory((req) =>
                 {
-                    var mapFileResolver = req.Security.Symbol.SecurityType == SecurityType.Option
-                        ? _mapFileProvider.Get(req.Configuration.Market)
-                        : null;
-
-                    var underlyingFactory = new BaseDataSubscriptionEnumeratorFactory(false, mapFileResolver, _factorFileProvider);
+                    if (!req.Configuration.SecurityType.IsOption())
+                    {
+                        var enumerator = _subscriptionFactory.CreateEnumerator(req, _dataProvider);
+                        enumerator = new FilterEnumerator<BaseData>(enumerator, data => data.DataType != MarketDataType.Auxiliary);
+                        return ConfigureEnumerator(req, true, enumerator);
+                    }
+                    var underlyingFactory = new BaseDataSubscriptionEnumeratorFactory(false, _mapFileProvider, _cacheProvider);
                     return ConfigureEnumerator(req, true, underlyingFactory.CreateEnumerator(req, _dataProvider));
                 });
             }
             if (request.Universe is FuturesChainUniverse)
             {
-                factory = new FuturesChainUniverseSubscriptionEnumeratorFactory((req, e) => ConfigureEnumerator(req, true, e));
+                factory = new FuturesChainUniverseSubscriptionEnumeratorFactory((req, e) => ConfigureEnumerator(req, true, e), _cacheProvider);
             }
 
             // define our data enumerator
             var enumerator = factory.CreateEnumerator(request, _dataProvider);
-            return SubscriptionUtils.CreateAndScheduleWorker(request, enumerator, _factorFileProvider, true);
+            return enumerator;
         }
 
         /// <summary>
         /// Send an exit signal to the thread.
         /// </summary>
-        public void Exit()
+        public virtual void Exit()
         {
             if (IsActive)
             {
@@ -178,6 +191,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Log.Trace("FileSystemDataFeed.Exit(): Start. Setting cancellation token...");
                 _cancellationTokenSource.Cancel();
                 _subscriptionFactory?.DisposeSafely();
+                _cacheProvider.DisposeSafely();
                 Log.Trace("FileSystemDataFeed.Exit(): Exit Finished.");
             }
         }
