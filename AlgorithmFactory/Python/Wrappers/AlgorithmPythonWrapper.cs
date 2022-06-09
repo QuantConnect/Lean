@@ -83,7 +83,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                         var repr = attr.Repr().GetStringBetweenChars('\'', '\'');
 
                         if (repr.StartsWith(moduleName) &&                // Must be defined in the module
-                            attr.TryConvert(out type) &&                  // Must be a Type
+                            attr.TryConvert(out type, true) &&                  // Must be a Type
                             typeof(QCAlgorithm).IsAssignableFrom(type))   // Must inherit from QCAlgorithm
                         {
                             Logging.Log.Trace("AlgorithmPythonWrapper(): Creating IAlgorithm instance.");
@@ -440,8 +440,11 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice.</param>
         /// <param name="leverage">leverage for this security</param>
         /// <param name="extendedMarketHours">ExtendedMarketHours send in data from 4am - 8pm, not used for FOREX</param>
-        public Security AddSecurity(SecurityType securityType, string symbol, Resolution? resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours)
-            => _baseAlgorithm.AddSecurity(securityType, symbol, resolution, market, fillDataForward, leverage, extendedMarketHours);
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the security</param>
+        public Security AddSecurity(SecurityType securityType, string symbol, Resolution? resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours,
+            DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null)
+            => _baseAlgorithm.AddSecurity(securityType, symbol, resolution, market, fillDataForward, leverage, extendedMarketHours, dataMappingMode, dataNormalizationMode);
 
         /// <summary>
         /// Creates and adds a new single <see cref="Future"/> contract to the algorithm
@@ -511,12 +514,6 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="name">The name of the parameter to get</param>
         /// <returns>The value of the specified parameter, or null if not found</returns>
         public string GetParameter(string name) => _baseAlgorithm.GetParameter(name);
-
-        /// <summary>
-        /// Gets the history requests required for provide warm up data for the algorithm
-        /// </summary>
-        /// <returns></returns>
-        public IEnumerable<HistoryRequest> GetWarmupHistoryRequests() => _baseAlgorithm.GetWarmupHistoryRequests();
 
         /// <summary>
         /// Initialise the Algorithm and Prepare Required Data:
@@ -631,7 +628,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
             // Only throws if there is an error in its implementation body
             catch (PythonException exception)
             {
-                if (!exception.Message.StartsWith("TypeError : OnEndOfDay()"))
+                if (!exception.Message.StartsWith("OnEndOfDay()"))
                 {
                     _baseAlgorithm.SetRunTimeError(exception);
                 }
@@ -659,7 +656,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
             // Only throws if there is an error in its implementation body
             catch (PythonException exception)
             {
-                if (!exception.Message.StartsWith("TypeError : OnEndOfDay()"))
+                if (!exception.Message.StartsWith("OnEndOfDay()"))
                 {
                     _baseAlgorithm.SetRunTimeError(exception);
                 }
@@ -687,7 +684,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 
                     requests.Clear();
 
-                    foreach (PyObject pyRequest in pyRequests)
+                    using var iterator = pyRequests.GetIterator();
+                    foreach (PyObject pyRequest in iterator)
                     {
                         SubmitOrderRequest request;
                         if (TryConvert(pyRequest, out request))

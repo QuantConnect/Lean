@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
@@ -130,6 +131,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
             public void Store(string key, byte[] data)
             {
+            }
+            public List<string> GetZipEntries(string zipFile)
+            {
+                throw new NotImplementedException();
             }
             public void Dispose()
             {

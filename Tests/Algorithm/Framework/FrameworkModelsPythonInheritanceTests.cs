@@ -43,8 +43,7 @@ class MockUniverseSelectionModel(ManualUniverseSelectionModel):
 
             using (Py.GIL())
             {
-                dynamic pyModel = PythonEngine
-                    .ModuleFromString(Guid.NewGuid().ToString(), code)
+                dynamic pyModel = PyModule.FromString(Guid.NewGuid().ToString(), code)
                     .GetAttr("MockUniverseSelectionModel");
 
                 var model = new UniverseSelectionModelPythonWrapper(pyModel());
@@ -77,8 +76,7 @@ class MockUniverseSelectionModel(FundamentalUniverseSelectionModel):
 
             using (Py.GIL())
             {
-                dynamic pyModel = PythonEngine
-                    .ModuleFromString(Guid.NewGuid().ToString(), code)
+                dynamic pyModel = PyModule.FromString(Guid.NewGuid().ToString(), code)
                     .GetAttr("MockUniverseSelectionModel");
 
                 var model = new UniverseSelectionModelPythonWrapper(pyModel());
@@ -87,7 +85,7 @@ class MockUniverseSelectionModel(FundamentalUniverseSelectionModel):
                 Assert.AreEqual(1, universes.Count);
 
                 var data = new BaseDataCollection();
-                data.Data.Add(new CoarseFundamental());
+                data.Add(new CoarseFundamental());
 
                 var universe = universes.First();
                 var symbols = universe.SelectSymbols(DateTime.Now, data).ToList();

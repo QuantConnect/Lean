@@ -57,7 +57,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             );
 
             Assert.AreEqual(Currencies.INR, fee.Value.Currency);
-            Assert.AreEqual(0.04m, fee.Value.Amount);
+            Assert.AreEqual(0.02m, fee.Value.Amount);
         }
     }
 }

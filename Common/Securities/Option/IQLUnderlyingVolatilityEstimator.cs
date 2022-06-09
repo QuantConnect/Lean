@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -15,12 +15,6 @@
 
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QLNet;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QuantConnect.Securities.Option
 {
@@ -28,7 +22,7 @@ namespace QuantConnect.Securities.Option
     /// Defines QuantLib underlying volatility estimator for option pricing model. User may define his own estimators, 
     /// including those forward and backward looking ones.
     /// </summary>
-    interface IQLUnderlyingVolatilityEstimator
+    public interface IQLUnderlyingVolatilityEstimator
     {
         /// <summary>
         /// Returns current estimate of the underlying volatility
@@ -39,5 +33,10 @@ namespace QuantConnect.Securities.Option
         /// <param name="contract">The option contract to evaluate</param>
         /// <returns>Volatility</returns>
         double Estimate(Security security, Slice slice, OptionContract contract);
+
+        /// <summary>
+        /// Indicates whether volatility model is warmed up or no
+        /// </summary>
+        bool IsReady { get; }
     }
 }

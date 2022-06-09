@@ -826,6 +826,7 @@ namespace QuantConnect.Tests.Common.Securities
                 { "GNF.csv", 10 },
                 { "HO.csv", 1 },
                 { "ME.csv", 1 },
+                { "MSF.csv", 1 },
                 { "NKN.csv", 2 },
                 { "PL.csv", 1 },
                 { "RB.csv", 1 },

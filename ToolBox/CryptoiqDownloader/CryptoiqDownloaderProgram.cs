@@ -47,7 +47,7 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
                 {
                     // Download the data
                     var symbolObject = Symbol.Create(ticker, SecurityType.Crypto, market);
-                    var data = downloader.Get(symbolObject, Resolution.Tick, startDate, endDate);
+                    var data = downloader.Get(new DataDownloaderGetParameters(symbolObject, Resolution.Tick, startDate, endDate, TickType.Quote));
 
                     // Save the data
                     var writer = new LeanDataWriter(Resolution.Tick, symbolObject, dataDirectory, TickType.Quote);

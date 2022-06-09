@@ -44,6 +44,12 @@ namespace QuantConnect.Interfaces
         event EventHandler<OptionNotificationEventArgs> OptionNotification;
 
         /// <summary>
+        /// Event that fires each time a delisting occurs
+        /// </summary>
+        /// <remarks>TODO: Wire brokerages to call this event to process delistings</remarks>
+        event EventHandler<DelistingNotificationEventArgs> DelistingNotification;
+
+        /// <summary>
         /// Event that fires each time a user's brokerage account is changed
         /// </summary>
         event EventHandler<AccountEvent> AccountChanged;

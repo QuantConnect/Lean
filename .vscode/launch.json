@@ -8,8 +8,8 @@
         marketplace.
 
         Attach to Python:
-        Will attempt to attach to LEAN running locally using PTVSD. Requires that the process is
-        actively running and config is set: "debugging": true, "debugging-method": "PTVSD",
+        Will attempt to attach to LEAN running locally using DebugPy. Requires that the process is
+        actively running and config is set: "debugging": true, "debugging-method": "DebugPy",
         Requires Python extension from the marketplace. Currently only works with algorithms in
         Algorithm.Python directory. This is because we map that directory to our build directory
         that contains the py file at runtime. If using another location change "localRoot" value 

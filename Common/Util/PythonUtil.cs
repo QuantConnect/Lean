@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -29,6 +29,7 @@ namespace QuantConnect.Util
     /// </summary>
     public class PythonUtil
     {
+        private static Regex LeanPathRegex = new Regex("(?:\\S*?\\\\Lean\\\\)|(?:\\S*?/Lean/)", RegexOptions.Compiled);
         private static Regex LineRegex = new Regex("line (\\d+)", RegexOptions.Compiled);
         private static readonly Lazy<dynamic> lazyInspect = new Lazy<dynamic>(() => Py.Import("inspect"));
 
@@ -207,6 +208,7 @@ namespace QuantConnect.Util
                 });
 
             var errorLine = string.Join(Environment.NewLine, lines);
+            errorLine = LeanPathRegex.Replace(errorLine, string.Empty);
 
             return string.IsNullOrWhiteSpace(errorLine)
                 ? string.Empty
@@ -254,7 +256,7 @@ namespace QuantConnect.Util
         /// <returns>PyObject with a python module</returns>
         private static PyObject GetModule()
         {
-            return PythonEngine.ModuleFromString("x",
+            return PyModule.FromString("x",
                 "from clr import AddReference\n" +
                 "AddReference(\"System\")\n" +
                 "from System import Action, Func\n" +

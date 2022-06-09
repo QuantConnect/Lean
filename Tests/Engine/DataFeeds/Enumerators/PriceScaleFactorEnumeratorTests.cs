@@ -31,7 +31,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
     public class PriceScaleFactorEnumeratorTests
     {
         private SubscriptionDataConfig _config;
-        private FactorFile _factorFile;
         private RawDataEnumerator _rawDataEnumerator;
 
         [SetUp]
@@ -46,7 +45,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 true,
                 false);
 
-            _factorFile = TestGlobals.FactorFileProvider.Get(_config.Symbol);
             _rawDataEnumerator = new RawDataEnumerator();
         }
 
@@ -56,7 +54,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var enumerator = new PriceScaleFactorEnumerator(
                 _rawDataEnumerator,
                 _config,
-                new Lazy<FactorFile>(() => _factorFile));
+                TestGlobals.FactorFileProvider);
             _rawDataEnumerator.CurrentValue = new TradeBar(
                 new DateTime(2018, 1, 1),
                 _config.Symbol,
@@ -86,7 +84,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var enumerator = new PriceScaleFactorEnumerator(
                 _rawDataEnumerator,
                 _config,
-                new Lazy<FactorFile>(() => _factorFile));
+                TestGlobals.FactorFileProvider);
             _rawDataEnumerator.CurrentValue = new QuoteBar(
                 new DateTime(2018, 1, 1),
                 _config.Symbol,
@@ -126,7 +124,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var enumerator = new PriceScaleFactorEnumerator(
                 _rawDataEnumerator,
                 _config,
-                new Lazy<FactorFile>(() => _factorFile));
+                TestGlobals.FactorFileProvider);
             _rawDataEnumerator.CurrentValue = new Tick(
                 new DateTime(2018, 1, 1),
                 _config.Symbol,
@@ -171,7 +169,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var enumerator = new PriceScaleFactorEnumerator(
                 _rawDataEnumerator,
                 _config,
-                new Lazy<FactorFile>(() => _factorFile));
+                TestGlobals.FactorFileProvider);
             _rawDataEnumerator.CurrentValue = new Tick(
                 new DateTime(2018, 1, 1),
                 _config.Symbol,
@@ -191,7 +189,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var enumerator = new PriceScaleFactorEnumerator(
                 _rawDataEnumerator,
                 _config,
-                new Lazy<FactorFile>(() => _factorFile));
+                TestGlobals.FactorFileProvider);
             _rawDataEnumerator.CurrentValue = null;
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
@@ -209,7 +207,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var enumerator = new PriceScaleFactorEnumerator(
                 _rawDataEnumerator,
                 _config,
-                new Lazy<FactorFile>(() => _factorFile));
+                TestGlobals.FactorFileProvider);
 
             // Before factor file update date (2018, 3, 15)
             _rawDataEnumerator.CurrentValue = new Tick(
@@ -220,7 +218,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 10);
 
             Assert.IsTrue(enumerator.MoveNext());
-            var expectedFactor = _factorFile.GetPriceScaleFactor(dateBeforeUpadate);
+            var factorFile = TestGlobals.FactorFileProvider.Get(_config.Symbol);
+            var expectedFactor = factorFile.GetPriceFactor(dateBeforeUpadate, DataNormalizationMode.Adjusted);
             var tick = enumerator.Current as Tick;
             Assert.AreEqual(expectedFactor, _config.PriceScaleFactor);
             Assert.AreEqual(10 * expectedFactor, tick.Price);
@@ -234,7 +233,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 10,
                 10);
             Assert.IsTrue(enumerator.MoveNext());
-            var expectedFactor2 = _factorFile.GetPriceScaleFactor(dateAtUpadate);
+            var expectedFactor2 = factorFile.GetPriceFactor(dateAtUpadate, DataNormalizationMode.Adjusted);
             var tick2 = enumerator.Current as Tick;
             Assert.AreEqual(expectedFactor2, _config.PriceScaleFactor);
             Assert.AreEqual(10 * expectedFactor2, tick2.Price);
@@ -248,7 +247,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 10,
                 10);
             Assert.IsTrue(enumerator.MoveNext());
-            var expectedFactor3 = _factorFile.GetPriceScaleFactor(dateAfterUpadate);
+            var expectedFactor3 = factorFile.GetPriceFactor(dateAfterUpadate, DataNormalizationMode.Adjusted);
             var tick3 = enumerator.Current as Tick;
             Assert.AreEqual(expectedFactor3, _config.PriceScaleFactor);
             Assert.AreEqual(10 * expectedFactor3, tick3.Price);

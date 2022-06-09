@@ -80,8 +80,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // we add an order of the equity option
             orderProvider.AddOrder(new LimitOrder(equityOption.Symbol, 1, 1, DateTime.UtcNow));
             var universe = new TestUniverse();
-            universe.AddMember(DateTime.UtcNow, equity);
-            universe.AddMember(DateTime.UtcNow, equityOption);
+            universe.AddMember(DateTime.UtcNow, equity, false);
+            universe.AddMember(DateTime.UtcNow, equityOption, false);
 
             // we try to remove the equity
             Assert.IsNull(pendingRemovals.TryRemoveMember(equity, universe));

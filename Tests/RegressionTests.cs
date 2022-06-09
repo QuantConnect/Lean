@@ -13,14 +13,14 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using NUnit.Framework;
-using System.Linq;
 using Newtonsoft.Json.Linq;
+using NUnit.Framework;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Tests
 {
@@ -66,6 +66,17 @@ namespace QuantConnect.Tests
                 // this training algorithm should have consumed the only minute available in the bucket
                 Assert.AreEqual(0, algorithmManager.TimeLimit.AdditionalTimeBucket.AvailableTokens);
             }
+
+            // Skip non-deterministic data points regression algorithms
+            if (parameters.DataPoints != -1)
+            {
+                Assert.AreEqual(parameters.DataPoints, algorithmManager.DataPoints, "Failed on DataPoints");
+            }
+            // Skip non-deterministic history data points regression algorithms
+            if (parameters.AlgorithmHistoryDataPoints != -1)
+            {
+                Assert.AreEqual(parameters.AlgorithmHistoryDataPoints, algorithmManager.AlgorithmHistoryDataPoints, "Failed on AlgorithmHistoryDataPoints");
+            }
         }
 
         private static TestCaseData[] GetRegressionTestParameters()
@@ -77,12 +88,12 @@ namespace QuantConnect.Tests
 
             var nonDefaultStatuses = new Dictionary<string, AlgorithmStatus>
             {
-                {"TrainingInitializeRegressionAlgorithm", AlgorithmStatus.RuntimeError},
-                {"OnOrderEventExceptionRegression", AlgorithmStatus.RuntimeError},
-                {"WarmUpAfterInitializeRegression", AlgorithmStatus.RuntimeError }
+                { "TrainingInitializeRegressionAlgorithm", AlgorithmStatus.RuntimeError },
+                { "OnOrderEventExceptionRegression", AlgorithmStatus.RuntimeError },
+                { "WarmUpAfterInitializeRegression", AlgorithmStatus.RuntimeError }
             };
 
-            var languages = Config.GetValue("regression-test-languages", JArray.FromObject(new[] {"CSharp", "Python"}))
+            var languages = Config.GetValue("regression-test-languages", JArray.FromObject(new[] { "CSharp", "Python" }))
                 .Select(str => Parse.Enum<Language>(str.Value<string>()))
                 .ToHashSet();
 
@@ -91,12 +102,12 @@ namespace QuantConnect.Tests
                 from type in typeof(BasicTemplateAlgorithm).Assembly.GetTypes()
                 where typeof(IRegressionAlgorithmDefinition).IsAssignableFrom(type)
                 where !type.IsAbstract                          // non-abstract
-                where type.GetConstructor(new Type[0]) != null  // has default ctor
-                let instance = (IRegressionAlgorithmDefinition) Activator.CreateInstance(type)
+                where type.GetConstructor(Array.Empty<Type>()) != null  // has default ctor
+                let instance = (IRegressionAlgorithmDefinition)Activator.CreateInstance(type)
                 let status = nonDefaultStatuses.GetValueOrDefault(type.Name, AlgorithmStatus.Completed)
                 where instance.CanRunLocally                   // open source has data to run this algorithm
                 from language in instance.Languages.Where(languages.Contains)
-                select new AlgorithmStatisticsTestParameters(type.Name, instance.ExpectedStatistics, language, status)
+                select new AlgorithmStatisticsTestParameters(type.Name, instance.ExpectedStatistics, language, status, instance.DataPoints, instance.AlgorithmHistoryDataPoints)
             )
             .OrderBy(x => x.Language).ThenBy(x => x.Algorithm)
             // generate test cases from test parameters
@@ -111,18 +122,24 @@ namespace QuantConnect.Tests
             public readonly AlphaRuntimeStatistics AlphaStatistics;
             public readonly Language Language;
             public readonly AlgorithmStatus ExpectedFinalStatus;
+            public readonly long DataPoints;
+            public readonly int AlgorithmHistoryDataPoints;
 
             public AlgorithmStatisticsTestParameters(
                 string algorithm,
                 Dictionary<string, string> statistics,
                 Language language,
-                AlgorithmStatus expectedFinalStatus
+                AlgorithmStatus expectedFinalStatus,
+                long dataPoints = 0,
+                int algorithmHistoryDataPoints = 0
                 )
             {
                 Algorithm = algorithm;
                 Statistics = statistics;
                 Language = language;
                 ExpectedFinalStatus = expectedFinalStatus;
+                DataPoints = dataPoints;
+                AlgorithmHistoryDataPoints = algorithmHistoryDataPoints;
             }
         }
     }

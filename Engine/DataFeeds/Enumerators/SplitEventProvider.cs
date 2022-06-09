@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -31,7 +32,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         // and on the next trading day we use this data to produce the split instance
         private decimal? _splitFactor;
         private decimal _referencePrice;
-        private FactorFile _factorFile;
+        private CorporateFactorProvider _factorFile;
         private MapFile _mapFile;
         private SubscriptionDataConfig _config;
 
@@ -39,18 +40,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// Initializes this instance
         /// </summary>
         /// <param name="config">The <see cref="SubscriptionDataConfig"/></param>
-        /// <param name="factorFile">The factor file to use</param>
-        /// <param name="mapFile">The <see cref="MapFile"/> to use</param>
+        /// <param name="factorFileProvider">The factor file provider to use</param>
+        /// <param name="mapFileProvider">The <see cref="Data.Auxiliary.MapFile"/> provider to use</param>
         /// <param name="startTime">Start date for the data request</param>
         public void Initialize(
             SubscriptionDataConfig config,
-            FactorFile factorFile,
-            MapFile mapFile,
+            IFactorFileProvider factorFileProvider,
+            IMapFileProvider mapFileProvider,
             DateTime startTime)
         {
-            _mapFile = mapFile;
-            _factorFile = factorFile;
             _config = config;
+            _mapFile = mapFileProvider.ResolveMapFile(_config);
+            _factorFile = factorFileProvider.Get(_config.Symbol) as CorporateFactorProvider;
         }
 
         /// <summary>
@@ -61,6 +62,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         public IEnumerable<BaseData> GetEvents(NewTradableDateEventArgs eventArgs)
         {
             if (_config.Symbol == eventArgs.Symbol
+                && _factorFile != null
                 && _mapFile.HasData(eventArgs.Date))
             {
                 var factor = _splitFactor;

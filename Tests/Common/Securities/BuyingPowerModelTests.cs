@@ -14,7 +14,9 @@
 */
 
 using System;
+using NodaTime;
 using NUnit.Framework;
+using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Securities
@@ -22,6 +24,15 @@ namespace QuantConnect.Tests.Common.Securities
     [TestFixture]
     public class BuyingPowerModelTests
     {
+        private BuyingPowerModel _model;
+
+        [OneTimeSetUp]
+        public void Setup()
+        {
+            _model = new BuyingPowerModel();
+        }
+
+
         // Current Order Margin 
         [TestCase(-40, 25, -900, 1, 4)]   	    // -1000
         [TestCase(-36, 25, -880, 1, 1)]  	    // -900
@@ -39,10 +50,12 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(-40.5, 12.5, 1508, .5, 161)]	// -506.25
         public void OrderCalculation(decimal currentHoldings, decimal perUnitMargin, decimal targetMargin, decimal lotSize, decimal expectedOrderSize)
         {
-            var currentHoldingsMargin = currentHoldings * perUnitMargin;
+            var spy = SetupSecurity(currentHoldings, lotSize, perUnitMargin);
+
+            var currentHoldingsMargin = _model.GetInitialMarginRequirement(spy, spy.Holdings.Quantity);
 
             // Determine the order size to get us to our target margin
-            var orderSize = BuyingPowerModel.GetAmountToOrder(currentHoldingsMargin, targetMargin, perUnitMargin, lotSize);
+            var orderSize = _model.GetAmountToOrder(spy, targetMargin, perUnitMargin, out _);
             Assert.AreEqual(expectedOrderSize, orderSize);
 
             // Determine the final margin and assert we have met our target condition
@@ -69,15 +82,17 @@ namespace QuantConnect.Tests.Common.Securities
 
         public void OrderAdjustmentCalculation(decimal currentOrderSize, decimal perUnitMargin, decimal targetMargin, decimal lotSize, decimal expectedOrderSize)
         {
-            var currentOrderMargin = currentOrderSize * perUnitMargin;
+            var spy = SetupSecurity(currentOrderSize, lotSize, perUnitMargin);
+
+            var currentHoldingsMargin = _model.GetInitialMarginRequirement(spy, spy.Holdings.Quantity);
 
             // Determine the adjustment to get us to our target margin and apply it
             // Use our GetAmountToOrder for determining adjustment to reach the end goal
             var orderAdjustment =
-                BuyingPowerModel.GetAmountToOrder(currentOrderMargin, targetMargin, perUnitMargin, lotSize);
+                _model.GetAmountToOrder(spy, targetMargin, perUnitMargin, out _);
 
             // Apply the change in margin
-            var resultMargin = currentOrderMargin + (orderAdjustment * perUnitMargin);
+            var resultMargin = currentHoldingsMargin + (orderAdjustment * perUnitMargin);
 
             // Assert after our adjustment we have met our target condition
             Assert.IsTrue(Math.Abs(resultMargin) <= Math.Abs(targetMargin));
@@ -85,6 +100,31 @@ namespace QuantConnect.Tests.Common.Securities
             // Verify our adjustment meets our expected order size
             var adjustOrderSize = currentOrderSize + orderAdjustment;
             Assert.AreEqual(expectedOrderSize, adjustOrderSize);
+        }
+
+        /// <summary>
+        /// Helper method for tests, sets up an equity security with our properties
+        /// </summary>
+        /// <returns>Equity with the given setup values</returns>
+        private static Security SetupSecurity(decimal currentHoldings, decimal lotSize, decimal perUnitMargin)
+        {
+            var spy = new QuantConnect.Securities.Equity.Equity(Symbols.SPY, SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc), new Cash("$", 0, 1),
+                new SymbolProperties(null, "$", 1, 0.01m, lotSize, null, 0), null, null, new SecurityCache());
+
+            spy.Holdings.SetHoldings(perUnitMargin, currentHoldings);
+            spy.SetLeverage(1);
+
+            spy.SetMarketPrice(new TradeBar
+            {
+                Time = DateTime.Now,
+                Symbol = spy.Symbol,
+                Open = perUnitMargin,
+                High = perUnitMargin,
+                Low = perUnitMargin,
+                Close = perUnitMargin
+            });
+
+            return spy;
         }
     }
 }

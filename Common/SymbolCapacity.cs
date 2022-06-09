@@ -18,6 +18,7 @@ using System;
 using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 
@@ -56,12 +57,13 @@ namespace QuantConnect
         private decimal _previousVolume;
         private DateTime? _previousTime;
 
+        private bool _isInternal;
         private decimal _averageDollarVolume;
+        private decimal _resolutionScaleFactor;
         private decimal _marketCapacityDollarVolume;
         private bool _resetMarketCapacityDollarVolume;
         private decimal _fastTradingVolumeDiscountFactor;
         private OrderEvent _previousOrderEvent;
-        private readonly Resolution _resolution;
 
         /// <summary>
         /// Total trades made in between snapshots
@@ -72,31 +74,6 @@ namespace QuantConnect
         /// The Symbol's Security
         /// </summary>
         public Security Security { get; }
-
-        private decimal _resolutionScaleFactor
-        {
-            get
-            {
-                switch (_resolution)
-                {
-                    case Resolution.Daily:
-                        return 0.02m;
-
-                    case Resolution.Hour:
-                        return 0.05m;
-
-                    case Resolution.Minute:
-                        return 0.20m;
-
-                    case Resolution.Tick:
-                    case Resolution.Second:
-                        return 0.50m;
-
-                    default:
-                        return 1m;
-                }
-            }
-        }
 
         /// <summary>
         /// The absolute dollar volume (in account currency) we've traded
@@ -122,18 +99,11 @@ namespace QuantConnect
             Security = _algorithm.Securities[symbol];
             _symbol = symbol;
 
-            var resolution = _algorithm
+            _isInternal = _algorithm
                 .SubscriptionManager
                 .SubscriptionDataConfigService
-                .GetSubscriptionDataConfigs(symbol)
-                .Where(s => !s.IsInternalFeed)
-                .OrderBy(s => s.Resolution)
-                .FirstOrDefault()?
-                .Resolution;
-
-            _resolution = resolution == null || resolution == Resolution.Tick
-                ? Resolution.Second
-                : resolution.Value;
+                .GetSubscriptionDataConfigs(symbol, includeInternalConfigs: true)
+                .All(config => config.IsInternalFeed);
         }
 
         /// <summary>
@@ -166,7 +136,7 @@ namespace QuantConnect
         /// Determines whether we should add the Market Volume to the <see cref="MarketCapacityDollarVolume"/>
         /// </summary>
         /// <returns></returns>
-        private bool IncludeMarketVolume()
+        private bool IncludeMarketVolume(Resolution resolution)
         {
             if (_previousOrderEvent == null)
             {
@@ -177,7 +147,7 @@ namespace QuantConnect
             DateTime timeout;
             decimal k;
 
-            switch (_resolution)
+            switch (resolution)
             {
                 case Resolution.Tick:
                 case Resolution.Second:
@@ -200,13 +170,13 @@ namespace QuantConnect
                     break;
 
                 case Resolution.Hour:
-                    return _algorithm.UtcTime == _previousOrderEvent.UtcTime.RoundUp(_resolution.ToTimeSpan());
+                    return _algorithm.UtcTime == _previousOrderEvent.UtcTime.RoundUp(resolution.ToTimeSpan());
 
                 case Resolution.Daily:
                     // At the end of a daily bar, the EndTime is the next day.
                     // Increment the order by one day to match it
                     return _algorithm.UtcTime == _previousOrderEvent.UtcTime ||
-                        _algorithm.UtcTime.Date == _previousOrderEvent.UtcTime.RoundUp(_resolution.ToTimeSpan());
+                        _algorithm.UtcTime.Date == _previousOrderEvent.UtcTime.RoundUp(resolution.ToTimeSpan());
 
                 default:
                     timeout = _previousOrderEvent.UtcTime.AddHours(1);
@@ -229,6 +199,7 @@ namespace QuantConnect
             }
 
             var utcTime = _algorithm.UtcTime;
+            var resolution = bar.Period.ToHigherResolutionEquivalent(false);
             var conversionRate = Security.QuoteCurrency.ConversionRate;
             var timeBetweenBars = (decimal)(utcTime - (_previousTime ?? utcTime)).TotalMinutes;
 
@@ -244,9 +215,10 @@ namespace QuantConnect
             _previousTime = utcTime;
             _previousVolume = bar.Volume;
 
-            var includeMarketVolume = IncludeMarketVolume();
+            var includeMarketVolume = IncludeMarketVolume(resolution);
             if (includeMarketVolume)
             {
+                _resolutionScaleFactor = ResolutionScaleFactor(resolution);
                 _marketCapacityDollarVolume += bar.Close * _fastTradingVolumeDiscountFactor * bar.Volume * conversionRate * Security.SymbolProperties.ContractMultiplier;
             }
 
@@ -292,10 +264,46 @@ namespace QuantConnect
                     quote.High,
                     quote.Low,
                     quote.Close,
-                    volume);
+                    volume,
+                    quote.Period);
+            }
+
+            if (!_isInternal)
+            {
+                return null;
+            }
+            // internal subscriptions, like mapped continuous future contract won't be sent through the slice
+            // but will be available in the security cache, if not present will return null
+            var result = Security.Cache.GetData<TradeBar>();
+            if (result != null
+                && _algorithm.UtcTime == result.EndTime.ConvertToUtc(Security.Exchange.Hours.TimeZone))
+            {
+                return result;
             }
 
             return null;
+        }
+
+        private static decimal ResolutionScaleFactor(Resolution resolution)
+        {
+            switch (resolution)
+            {
+                case Resolution.Daily:
+                    return 0.02m;
+
+                case Resolution.Hour:
+                    return 0.05m;
+
+                case Resolution.Minute:
+                    return 0.20m;
+
+                case Resolution.Tick:
+                case Resolution.Second:
+                    return 0.50m;
+
+                default:
+                    return 1m;
+            }
         }
 
         /// <summary>

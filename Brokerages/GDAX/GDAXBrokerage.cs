@@ -237,21 +237,26 @@ namespace QuantConnect.Brokerages.GDAX
             foreach (var item in orders)
             {
                 Order order;
+
+                var quantity = item.Side == "sell" ? -item.Size : item.Size;
+                var symbol = _symbolMapper.GetLeanSymbol(item.ProductId, SecurityType.Crypto, Market.GDAX);
+                var time = DateTime.UtcNow;
+
                 if (item.Type == "market")
                 {
-                    order = new MarketOrder { Price = item.Price };
+                    order = new MarketOrder(symbol, quantity, time, item.Price);
                 }
                 else if (!string.IsNullOrEmpty(item.Stop))
                 {
-                    order = new StopLimitOrder { StopPrice = item.StopPrice, LimitPrice = item.Price };
+                    order = new StopLimitOrder(symbol, quantity, item.StopPrice, item.Price, time);
                 }
                 else if (item.Type == "limit")
                 {
-                    order = new LimitOrder { LimitPrice = item.Price };
+                    order = new LimitOrder(symbol, quantity, item.Price, time);
                 }
                 else if (item.Type == "stop")
                 {
-                    order = new StopMarketOrder { StopPrice = item.Price };
+                    order = new StopMarketOrder(symbol, quantity, item.Price, time);
                 }
                 else
                 {
@@ -260,12 +265,8 @@ namespace QuantConnect.Brokerages.GDAX
                     continue;
                 }
 
-                order.Quantity = item.Side == "sell" ? -item.Size : item.Size;
-                order.BrokerId = new List<string> { item.Id };
-                order.Symbol = _symbolMapper.GetLeanSymbol(item.ProductId, SecurityType.Crypto, Market.GDAX);
-                order.Time = DateTime.UtcNow;
                 order.Status = ConvertOrderStatus(item);
-                order.Price = item.Price;
+                order.BrokerId.Add(item.Id);
                 list.Add(order);
             }
 

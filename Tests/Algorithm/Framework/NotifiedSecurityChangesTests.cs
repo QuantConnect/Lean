@@ -20,6 +20,7 @@ using QuantConnect.Algorithm.Framework;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
+using QuantConnect.Tests.Common.Data.UniverseSelection;
 
 namespace QuantConnect.Tests.Algorithm.Framework
 {
@@ -44,7 +45,7 @@ namespace QuantConnect.Tests.Algorithm.Framework
                 new RegisteredSecurityDataTypesProvider(),
                 new SecurityCache()
             );
-            var changes = SecurityChanges.Removed(SPY);
+            var changes = SecurityChangesTests.RemovedNonInternal(SPY);
             NotifiedSecurityChanges.UpdateDictionary(dictionary, changes,
                 security => security.Symbol,
                 security => new Disposable(security.Symbol)

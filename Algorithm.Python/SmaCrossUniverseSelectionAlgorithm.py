@@ -63,8 +63,8 @@ class SmaCrossUniverseSelectionAlgorithm(QCAlgorithm):
             symbol = cf.Symbol
             price = cf.AdjustedPrice
             # grab the SMA instance for this symbol
-            avg = self.averages.setdefault(symbol,
-                self.WarmUpIndicator(symbol, SimpleMovingAverage(100), Resolution.Daily))
+            avg = self.averages.setdefault(symbol, SimpleMovingAverage(100))
+            self.WarmUpIndicator(symbol, avg, Resolution.Daily)
             # Update returns true when the indicators are ready, so don't accept until they are
             if avg.Update(cf.EndTime, price):
                value = avg.Current.Value

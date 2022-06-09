@@ -560,7 +560,10 @@ namespace QuantConnect.Interfaces
         /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice.</param>
         /// <param name="leverage">leverage for this security</param>
         /// <param name="extendedMarketHours">ExtendedMarketHours send in data from 4am - 8pm, not used for FOREX</param>
-        Security AddSecurity(SecurityType securityType, string symbol, Resolution? resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours);
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the security</param>
+        Security AddSecurity(SecurityType securityType, string symbol, Resolution? resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours,
+            DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null);
 
         /// <summary>
         /// Creates and adds a new single <see cref="Future"/> contract to the algorithm
@@ -629,12 +632,6 @@ namespace QuantConnect.Interfaces
         /// Sets <see cref="IsWarmingUp"/> to false to indicate this algorithm has finished its warm up
         /// </summary>
         void SetFinishedWarmingUp();
-
-        /// <summary>
-        /// Gets the date/time warmup should begin
-        /// </summary>
-        /// <returns></returns>
-        IEnumerable<HistoryRequest> GetWarmupHistoryRequests();
 
         /// <summary>
         /// Set the maximum number of orders the algortihm is allowed to process.

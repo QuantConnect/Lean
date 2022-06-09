@@ -626,12 +626,15 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Gets the algorithm runtime statistics
         /// </summary>
-        protected Dictionary<string, string> GetAlgorithmRuntimeStatistics(Dictionary<string, string> summary,
-            Dictionary<string, string> runtimeStatistics = null, CapacityEstimate capacityEstimate = null)
+        protected SortedDictionary<string, string> GetAlgorithmRuntimeStatistics(Dictionary<string, string> summary, CapacityEstimate capacityEstimate = null)
         {
-            if (runtimeStatistics == null)
+            var runtimeStatistics = new SortedDictionary<string, string>();
+            lock (RuntimeStatistics)
             {
-                runtimeStatistics = new Dictionary<string, string>();
+                foreach (var pair in RuntimeStatistics)
+                {
+                    runtimeStatistics.Add(pair.Key, pair.Value);
+                }
             }
 
             if (summary.ContainsKey("Probabilistic Sharpe Ratio"))
@@ -643,18 +646,16 @@ namespace QuantConnect.Lean.Engine.Results
                 runtimeStatistics["Probabilistic Sharpe Ratio"] = "0%";
             }
 
-            var accountCurrencySymbol = Currencies.GetCurrencySymbol(Algorithm.AccountCurrency);
-
-            runtimeStatistics["Unrealized"] = accountCurrencySymbol + Algorithm.Portfolio.TotalUnrealizedProfit.ToStringInvariant("N2");
-            runtimeStatistics["Fees"] = $"-{accountCurrencySymbol}{Algorithm.Portfolio.TotalFees.ToStringInvariant("N2")}";
-            runtimeStatistics["Net Profit"] = accountCurrencySymbol + Algorithm.Portfolio.TotalProfit.ToStringInvariant("N2");
+            runtimeStatistics["Unrealized"] = AlgorithmCurrencySymbol + Algorithm.Portfolio.TotalUnrealizedProfit.ToStringInvariant("N2");
+            runtimeStatistics["Fees"] = $"-{AlgorithmCurrencySymbol}{Algorithm.Portfolio.TotalFees.ToStringInvariant("N2")}";
+            runtimeStatistics["Net Profit"] = AlgorithmCurrencySymbol + Algorithm.Portfolio.TotalProfit.ToStringInvariant("N2");
             runtimeStatistics["Return"] = GetNetReturn().ToStringInvariant("P");
-            runtimeStatistics["Equity"] = accountCurrencySymbol + Algorithm.Portfolio.TotalPortfolioValue.ToStringInvariant("N2");
-            runtimeStatistics["Holdings"] = accountCurrencySymbol + Algorithm.Portfolio.TotalHoldingsValue.ToStringInvariant("N2");
-            runtimeStatistics["Volume"] = accountCurrencySymbol + Algorithm.Portfolio.TotalSaleVolume.ToStringInvariant("N2");
+            runtimeStatistics["Equity"] = AlgorithmCurrencySymbol + Algorithm.Portfolio.TotalPortfolioValue.ToStringInvariant("N2");
+            runtimeStatistics["Holdings"] = AlgorithmCurrencySymbol + Algorithm.Portfolio.TotalHoldingsValue.ToStringInvariant("N2");
+            runtimeStatistics["Volume"] = AlgorithmCurrencySymbol + Algorithm.Portfolio.TotalSaleVolume.ToStringInvariant("N2");
             if (capacityEstimate != null)
             {
-                runtimeStatistics["Capacity"] = accountCurrencySymbol + capacityEstimate.Capacity.RoundToSignificantDigits(2).ToFinancialFigures();
+                runtimeStatistics["Capacity"] = AlgorithmCurrencySymbol + capacityEstimate.Capacity.RoundToSignificantDigits(2).ToFinancialFigures();
             }
 
             return runtimeStatistics;
@@ -695,7 +696,7 @@ namespace QuantConnect.Lean.Engine.Results
                     var trades = Algorithm.TradeBuilder.ClosedTrades;
 
                     statisticsResults = StatisticsBuilder.Generate(trades, profitLoss, equity, performance, benchmark,
-                        StartingPortfolioValue, Algorithm.Portfolio.TotalFees, totalTransactions, estimatedStrategyCapacity);
+                        StartingPortfolioValue, Algorithm.Portfolio.TotalFees, totalTransactions, estimatedStrategyCapacity, AlgorithmCurrencySymbol);
                 }
             }
             catch (Exception err)

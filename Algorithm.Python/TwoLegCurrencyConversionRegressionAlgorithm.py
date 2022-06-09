@@ -20,7 +20,7 @@ class TwoLegCurrencyConversionRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
         self.SetStartDate(2018, 4, 4)
         self.SetEndDate(2018, 4, 4)
-
+        self.SetBrokerageModel(BrokerageName.GDAX, AccountType.Cash)
         # GDAX doesn't have LTCETH or ETHLTC, but they do have ETHUSD and LTCUSD to form a path between ETH and LTC
         self.SetAccountCurrency("ETH")
         self.SetCash("ETH", 100000)

@@ -40,6 +40,7 @@ namespace QuantConnect.Lean.Engine.Alphas
     /// </summary>
     public class DefaultAlphaHandler : IAlphaHandler
     {
+        private static int _storePeriodMs = Convert.ToInt32(TimeSpan.FromMinutes(10).TotalMilliseconds);
         private DateTime _lastStepTime;
         private List<Insight> _insights;
         private ISecurityValuesProvider _securityValuesProvider;
@@ -166,8 +167,8 @@ namespace QuantConnect.Lean.Engine.Alphas
             {
                 _storeTimer = new Timer(_ => StoreInsights(),
                     null,
-                    TimeSpan.FromMinutes(10),
-                    TimeSpan.FromMinutes(10));
+                    _storePeriodMs,
+                    Timeout.Infinite);
             }
             IsActive = true;
         }
@@ -227,32 +228,47 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <remarks>Method called by the storing timer and on exit</remarks>
         protected virtual void StoreInsights()
         {
-            // avoid reentrancy
-            if (Monitor.TryEnter(_lock))
+            try
+            {
+                // avoid reentrancy
+                if (Monitor.TryEnter(_lock))
+                {
+                    try
+                    {
+                        if (InsightManager == null)
+                        {
+                            // could be null if we are not initialized and exit is called
+                            return;
+                        }
+                        // default save all results to disk and don't remove any from memory
+                        // this will result in one file with all of the insights/results in it
+                        var insights = InsightManager.AllInsights.OrderBy(insight => insight.GeneratedTimeUtc).ToList();
+                        if (insights.Count > 0)
+                        {
+                            var directory = Directory.GetParent(_alphaResultsPath);
+                            if (!directory.Exists)
+                            {
+                                directory.Create();
+                            }
+                            File.WriteAllText(_alphaResultsPath, JsonConvert.SerializeObject(insights, Formatting.Indented));
+                        }
+                    }
+                    finally
+                    {
+                        Monitor.Exit(_lock);
+                    }
+                }
+            }
+            finally
             {
                 try
                 {
-                    if (InsightManager == null)
-                    {
-                        // could be null if we are not initialized and exit is called
-                        return;
-                    }
-                    // default save all results to disk and don't remove any from memory
-                    // this will result in one file with all of the insights/results in it
-                    var insights = InsightManager.AllInsights.OrderBy(insight => insight.GeneratedTimeUtc).ToList();
-                    if (insights.Count > 0)
-                    {
-                        var directory = Directory.GetParent(_alphaResultsPath);
-                        if (!directory.Exists)
-                        {
-                            directory.Create();
-                        }
-                        File.WriteAllText(_alphaResultsPath, JsonConvert.SerializeObject(insights, Formatting.Indented));
-                    }
+                    // restart timer following end of persistence
+                    _storeTimer?.Change(Time.GetSecondUnevenWait(_storePeriodMs), Timeout.Infinite);
                 }
-                finally
+                catch (ObjectDisposedException)
                 {
-                    Monitor.Exit(_lock);
+                    // ignored disposed
                 }
             }
         }
@@ -296,7 +312,7 @@ namespace QuantConnect.Lean.Engine.Alphas
                 _maximumNumberOfInsightsPerPacket = maximumNumberOfInsightsPerPacket;
 
                 _timer = new Timer(MessagingUpdateIntervalElapsed);
-                _timer.Change(interval, interval);
+                _timer.Change(interval, Timeout.InfiniteTimeSpan);
 
                 // don't bother holding on more than makes sense. this makes the maximum
                 // number of insights we'll hold in the queue equal to one hour's worth of
@@ -308,33 +324,33 @@ namespace QuantConnect.Lean.Engine.Alphas
             {
                 try
                 {
-                    _timer.Change(Timeout.Infinite, Timeout.Infinite);
+                    Insight insight;
+                    var insights = new List<Insight>();
+                    while (insights.Count < _maximumNumberOfInsightsPerPacket && _insights.TryDequeue(out insight))
+                    {
+                        insights.Add(insight);
+                    }
 
+                    if (insights.Count > 0)
+                    {
+                        _messagingHandler.Send(new AlphaResultPacket(_job.AlgorithmId, _job.UserId, insights));
+                    }
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err);
+                }
+                finally
+                {
                     try
                     {
-
-                        Insight insight;
-                        var insights = new List<Insight>();
-                        while (insights.Count < _maximumNumberOfInsightsPerPacket && _insights.TryDequeue(out insight))
-                        {
-                            insights.Add(insight);
-                        }
-
-                        if (insights.Count > 0)
-                        {
-                            _messagingHandler.Send(new AlphaResultPacket(_job.AlgorithmId, _job.UserId, insights));
-                        }
+                        var nextDueTime = Time.GetSecondUnevenWait((int)Math.Ceiling(_interval.TotalMilliseconds));
+                        _timer.Change(nextDueTime, Timeout.Infinite);
                     }
-                    catch (Exception err)
+                    catch (ObjectDisposedException)
                     {
-                        Log.Error(err);
+                        // ignored disposed
                     }
-
-                    _timer.Change(_interval, _interval);
-                }
-                catch (ObjectDisposedException)
-                {
-                    // pass. The timer callback can be called even after disposed
                 }
             }
 

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -21,6 +21,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Brokerages.Tradier
 {
@@ -28,6 +29,7 @@ namespace QuantConnect.Tests.Brokerages.Tradier
     public class TradierBrokerageHistoryProviderTests
     {
         private bool _useSandbox = Config.GetBool("tradier-use-sandbox");
+        private string _environment = Config.Get("tradier-environment");
         private string _accountId = Config.Get("tradier-account-id");
         private string _accessToken = Config.Get("tradier-access-token");
 
@@ -138,6 +140,11 @@ namespace QuantConnect.Tests.Brokerages.Tradier
         }
 
         private void GetHistoryHelper(HistoryRequest request, Resolution resolution){
+
+            if (!string.IsNullOrEmpty(_environment))
+            {
+                _useSandbox = _environment.ToLowerInvariant() == "paper";
+            }
 
             var brokerage = new TradierBrokerage(null, null, null, null, _useSandbox, _accountId, _accessToken);
             var requests = new[] { request };

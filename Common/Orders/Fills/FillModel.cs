@@ -790,17 +790,7 @@ namespace QuantConnect.Orders.Fills
         /// </summary>
         protected static bool IsExchangeOpen(Security asset, bool isExtendedMarketHours)
         {
-            if (!asset.Exchange.DateTimeIsOpen(asset.LocalTime))
-            {
-                // if we're not open at the current time exactly, check the bar size, this handle large sized bars (hours/days)
-                var currentBar = asset.GetLastData();
-                if (asset.LocalTime.Date != currentBar.EndTime.Date
-                    || !asset.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, isExtendedMarketHours))
-                {
-                    return false;
-                }
-            }
-            return true;
+            return asset.IsMarketOpen(isExtendedMarketHours);
         }
     }
 }

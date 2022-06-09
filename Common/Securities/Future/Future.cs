@@ -19,6 +19,7 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
 using Python.Runtime;
+using QuantConnect.Data.Market;
 using QuantConnect.Util;
 
 namespace QuantConnect.Securities.Future
@@ -27,8 +28,14 @@ namespace QuantConnect.Securities.Future
     /// Futures Security Object Implementation for Futures Assets
     /// </summary>
     /// <seealso cref="Security"/>
-    public class Future : Security, IDerivativeSecurity
+    public class Future : Security, IDerivativeSecurity, IContinuousSecurity
     {
+        /// <summary>
+        /// Gets or sets whether or not this security should be considered tradable
+        /// </summary>
+        /// <remarks>Canonical futures are not tradable</remarks>
+        public override bool IsTradable => !Symbol.IsCanonical();
+
         /// <summary>
         /// The default number of days required to settle a futures sale
         /// </summary>
@@ -79,7 +86,7 @@ namespace QuantConnect.Securities.Future
             SettlementType = SettlementType.Cash;
             Holdings = new FutureHolding(this, currencyConverter);
             _symbolProperties = symbolProperties;
-            SetFilter(TimeSpan.Zero, TimeSpan.FromDays(35));
+            SetFilter(TimeSpan.Zero, TimeSpan.Zero);
         }
 
         /// <summary>
@@ -126,7 +133,7 @@ namespace QuantConnect.Securities.Future
             SettlementType = SettlementType.Cash;
             Holdings = new FutureHolding(this, currencyConverter);
             _symbolProperties = symbolProperties;
-            SetFilter(TimeSpan.Zero, TimeSpan.FromDays(35));
+            SetFilter(TimeSpan.Zero, TimeSpan.Zero);
             Underlying = underlying;
         }
 
@@ -163,6 +170,14 @@ namespace QuantConnect.Securities.Future
         /// Gets or sets the underlying security object.
         /// </summary>
         public Security Underlying
+        {
+            get; set;
+        }
+
+        /// <summary>
+        /// Gets or sets the currently mapped symbol for the security
+        /// </summary>
+        public Symbol Mapped
         {
             get; set;
         }

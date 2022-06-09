@@ -74,7 +74,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         }
 
         [TestCase(0.01, true)]
-        [TestCase(0.00009, false)]
+        [TestCase(0.000015, false)]
         public void CanSubmitOrder_WhenQuantityIsLargeEnough(decimal orderQuantity, bool isValidOrderQuantity)
         {
             BrokerageMessageEvent message;
@@ -82,7 +82,7 @@ namespace QuantConnect.Tests.Common.Brokerages
 
             order.Object.Quantity = orderQuantity;
 
-            Assert.AreEqual(isValidOrderQuantity, _gdaxBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(), order.Object, out message));
+            Assert.AreEqual(isValidOrderQuantity, _gdaxBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(market: Market.GDAX), order.Object, out message));
         }
 
         [TestCase(SecurityType.Crypto, true)]

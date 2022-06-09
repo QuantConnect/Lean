@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -22,7 +22,7 @@ namespace QuantConnect.Indicators
     /// <summary>
     /// Provides a wrapper for <see cref="IndicatorBase{IBaseData}"/> implementations written in python
     /// </summary>
-    public class PythonIndicator : IndicatorBase<IBaseData>
+    public class PythonIndicator : IndicatorBase<IBaseData>, IIndicatorWarmUpPeriodProvider
     {
         private bool _isReady;
         private dynamic _indicator;
@@ -41,6 +41,23 @@ namespace QuantConnect.Indicators
                     : indicator.GetAttr("__class__").GetAttr("__name__");
 
                 return name.GetAndDispose<string>();
+            }
+        }
+
+        /// <summary>
+        /// Get the indicator WarmUpPeriod parameter. If not defined, use 0
+        /// </summary>
+        /// <param name="indicator">The python implementation of <see cref="IndicatorBase{IBaseDataBar}"/></param>
+        /// <returns>The WarmUpPeriod of the indicator.</returns>
+        private static int GetIndicatorWarmUpPeriod(PyObject indicator)
+        {
+            using (Py.GIL())
+            {
+                var warmUpPeriod = indicator.HasAttr("WarmUpPeriod")
+                    ? indicator.GetAttr("WarmUpPeriod")
+                    : 0.ToPython();
+
+                return warmUpPeriod.GetAndDispose<int>();
             }
         }
 
@@ -67,7 +84,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="indicator">The python implementation of <see cref="IndicatorBase{IBaseDataBar}"/></param>
         public PythonIndicator(PyObject indicator)
-            : base(GetIndicatorName(indicator))
+            : base (GetIndicatorName(indicator))
         {
             SetIndicator(indicator);
         }
@@ -100,6 +117,7 @@ namespace QuantConnect.Indicators
                 }
             }
 
+            WarmUpPeriod = GetIndicatorWarmUpPeriod(indicator);
             _indicator = indicator;
         }
 
@@ -107,6 +125,11 @@ namespace QuantConnect.Indicators
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
         public override bool IsReady => _isReady;
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized
+        /// </summary>
+        public int WarmUpPeriod { get; protected set; }
 
         /// <summary>
         /// Computes the next value of this indicator from the given state

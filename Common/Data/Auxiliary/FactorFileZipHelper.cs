@@ -26,47 +26,51 @@ namespace QuantConnect.Data.Auxiliary
     public static class FactorFileZipHelper
     {
         /// <summary>
+        /// Gets the factor file zip filename for the specified date
+        /// </summary>
+        public static string GetFactorFileZipFileName(string market, DateTime date, SecurityType securityType)
+        {
+            return Path.Combine(Globals.DataFolder, $"{securityType.SecurityTypeToLower()}/{market}/factor_files/factor_files_{date:yyyyMMdd}.zip");
+        }
+
+        /// <summary>
         /// Reads the zip bytes as text and parses as FactorFileRows to create FactorFiles
         /// </summary>
-        public static IEnumerable<KeyValuePair<Symbol, FactorFile>> ReadFactorFileZip(Stream file, MapFileResolver mapFileResolver, string market)
+        public static IEnumerable<KeyValuePair<Symbol, IFactorProvider>> ReadFactorFileZip(Stream file, MapFileResolver mapFileResolver, string market, SecurityType securityType)
         {
             if (file == null || file.Length == 0)
             {
-                return new Dictionary<Symbol, FactorFile>();
+                return new Dictionary<Symbol, IFactorProvider>();
             }
 
             var keyValuePairs = (
                     from kvp in Compression.Unzip(file)
                     let filename = kvp.Key
                     let lines = kvp.Value
-                    let factorFile = SafeRead(filename, lines)
+                    let factorFile = PriceScalingExtensions.SafeRead(Path.GetFileNameWithoutExtension(filename), lines, securityType)
                     let mapFile = mapFileResolver.GetByPermtick(factorFile.Permtick)
                     where mapFile != null
-                    let sid = SecurityIdentifier.GenerateEquity(mapFile.FirstDate, mapFile.FirstTicker, market)
-                    let symbol = new Symbol(sid, mapFile.Permtick)
-                    select new KeyValuePair<Symbol, FactorFile>(symbol, factorFile)
+                    select new KeyValuePair<Symbol, IFactorProvider>(GetSymbol(mapFile, market, securityType), factorFile)
                 );
 
             return keyValuePairs;
         }
 
-        /// <summary>
-        /// Parses the contents as a FactorFile, if error returns a new empty factor file
-        /// </summary>
-        public static FactorFile SafeRead(string filename, IEnumerable<string> contents)
+        private static Symbol GetSymbol(MapFile mapFile, string market, SecurityType securityType)
         {
-            var permtick = Path.GetFileNameWithoutExtension(filename);
-            try
+            SecurityIdentifier sid;
+            switch (securityType)
             {
-                DateTime? minimumDate;
-                // FactorFileRow.Parse handles entries with 'inf' and exponential notation and provides the associated minimum tradeable date for these cases
-                // previously these cases were not handled causing an exception and returning an empty factor file
-                return new FactorFile(permtick, FactorFileRow.Parse(contents, out minimumDate), minimumDate);
+                case SecurityType.Equity:
+                    sid = SecurityIdentifier.GenerateEquity(mapFile.FirstDate, mapFile.FirstTicker, market);
+                    break;
+                case SecurityType.Future:
+                    sid = SecurityIdentifier.GenerateFuture(SecurityIdentifier.DefaultDate, mapFile.Permtick, market);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(securityType), securityType, null);
             }
-            catch
-            {
-                return new FactorFile(permtick, Enumerable.Empty<FactorFileRow>());
-            }
+            return new Symbol(sid, mapFile.Permtick);
         }
     }
 }

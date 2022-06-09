@@ -27,7 +27,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private readonly ITimeProvider _underlyingTimeProvider;
         private readonly Func<DateTime, bool> _customStepEvaluator;
-        private DateTime _currentUtc;
+        private DateTime _currentUtc = DateTime.MinValue;
 
         /// <summary>
         /// Creates a new instance
@@ -41,7 +41,29 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             _underlyingTimeProvider = underlyingTimeProvider;
             _customStepEvaluator = customStepEvaluator;
+        }
 
+        /// <summary>
+        /// Gets the current utc time step
+        /// </summary>
+        public DateTime GetUtcNow()
+        {
+            if (_currentUtc == DateTime.MinValue)
+            {
+                Initialize();
+            }
+            var utcNow = _underlyingTimeProvider.GetUtcNow();
+
+            // we check if we should advance time based on the provided custom step evaluator
+            if (_customStepEvaluator(utcNow))
+            {
+                _currentUtc = utcNow;
+            }
+            return _currentUtc;
+        }
+
+        private void Initialize()
+        {
             // to determine the current time we go backwards up to 2 days until we reach a valid time we don't want to start on an invalid time
             var utcNow = _underlyingTimeProvider.GetUtcNow();
             for (var i = 0; i < 48; i++)
@@ -52,21 +74,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _currentUtc = before;
                 }
             }
-        }
-
-        /// <summary>
-        /// Gets the current utc time step
-        /// </summary>
-        public DateTime GetUtcNow()
-        {
-            var utcNow = _underlyingTimeProvider.GetUtcNow();
-
-            // we check if we should advance time based on the provided custom step evaluator
-            if (_customStepEvaluator(utcNow))
-            {
-                _currentUtc = utcNow;
-            }
-            return _currentUtc;
         }
     }
 }

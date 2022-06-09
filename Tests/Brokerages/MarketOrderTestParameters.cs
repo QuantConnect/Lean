@@ -21,8 +21,8 @@ namespace QuantConnect.Tests.Brokerages
 {
     public class MarketOrderTestParameters : OrderTestParameters
     {
-        public MarketOrderTestParameters(Symbol symbol, IOrderProperties properties = null)
-            : base(symbol, properties)
+        public MarketOrderTestParameters(Symbol symbol, IOrderProperties properties = null, OrderSubmissionData orderSubmissionData = null)
+            : base(symbol, properties, orderSubmissionData)
         {
         }
 

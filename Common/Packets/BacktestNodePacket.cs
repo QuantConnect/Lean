@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using Newtonsoft.Json;
 using QuantConnect.Securities;
 
@@ -69,21 +68,10 @@ namespace QuantConnect.Packets
         public int TradeableDates = 0;
 
         /// <summary>
-        /// The initial breakpoints for debugging, if any
-        /// </summary>
-        [JsonProperty(PropertyName = "aBreakpoints")]
-        public List<Breakpoint> Breakpoints = new List<Breakpoint>();
-
-        /// <summary>
-        /// The initial Watchlist for debugging, if any
-        /// </summary>
-        [JsonProperty(PropertyName = "aWatchlist")]
-        public List<string> Watchlist = new List<string>();
-
-        /// <summary>
         /// True, if this is a debugging backtest
         /// </summary>
-        public bool IsDebugging => Breakpoints.Any();
+        [JsonProperty(PropertyName = "bDebugging")]
+        public bool IsDebugging;
 
         /// <summary>
         /// Optional initial cash amount if set
@@ -107,22 +95,21 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Initialize the backtest task packet.
         /// </summary>
-        public BacktestNodePacket(int userId, int projectId, string sessionId, byte[] algorithmData, decimal startingCapital, string name, UserPlan userPlan = UserPlan.Free) 
-            : this (userId, projectId, sessionId, algorithmData, name, userPlan, new CashAmount(startingCapital, Currencies.USD))
+        public BacktestNodePacket(int userId, int projectId, string sessionId, byte[] algorithmData, decimal startingCapital, string name)
+            : this (userId, projectId, sessionId, algorithmData, name, new CashAmount(startingCapital, Currencies.USD))
         {
         }
 
         /// <summary>
         /// Initialize the backtest task packet.
         /// </summary>
-        public BacktestNodePacket(int userId, int projectId, string sessionId, byte[] algorithmData, string name, UserPlan userPlan = UserPlan.Free, CashAmount? startingCapital = null)
+        public BacktestNodePacket(int userId, int projectId, string sessionId, byte[] algorithmData, string name, CashAmount? startingCapital = null)
             : base(PacketType.BacktestNode)
         {
             UserId = userId;
             Algorithm = algorithmData;
             SessionId = sessionId;
             ProjectId = projectId;
-            UserPlan = userPlan;
             Name = name;
             CashAmount = startingCapital;
             Language = Language.CSharp;

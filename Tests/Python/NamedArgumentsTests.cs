@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -34,7 +34,7 @@ namespace QuantConnect.Tests.Python
             using (Py.GIL())
             {
                 // Test function that will used named args in Python -> C#
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
                     "def test(algorithm):\n" +
                     "   aapl = algorithm.AddEquity(ticker='AAPL')\n" +
                     "   return aapl\n"

@@ -21,7 +21,7 @@ namespace QuantConnect.Orders
     public enum OrderField
     {
         /// <summary>
-        /// The limit price for a <see cref="LimitOrder"/> or <see cref="StopLimitOrder"/>
+        /// The limit price for a <see cref="LimitOrder"/>, <see cref="StopLimitOrder"/> or <see cref="LimitIfTouchedOrder"/>
         /// </summary>
         LimitPrice,
 

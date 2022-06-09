@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.IO;
 using QuantConnect.Util;
 using QuantConnect.Logging;
 using System.Threading.Tasks;
@@ -31,8 +30,8 @@ namespace QuantConnect.Data.Auxiliary
         private readonly object _lock;
         private IDataProvider _dataProvider;
         private IMapFileProvider _mapFileProvider;
-        private Dictionary<string, bool> _seededMarket;
-        private readonly Dictionary<Symbol, FactorFile> _factorFiles;
+        private Dictionary<AuxiliaryDataKey, bool> _seededMarket;
+        private readonly Dictionary<Symbol, IFactorProvider> _factorFiles;
 
         /// <summary>
         /// The cached refresh period for the factor files
@@ -45,8 +44,8 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public LocalZipFactorFileProvider()
         {
-            _factorFiles = new Dictionary<Symbol, FactorFile>();
-            _seededMarket = new Dictionary<string, bool>();
+            _factorFiles = new Dictionary<Symbol, IFactorProvider>();
+            _seededMarket = new Dictionary<AuxiliaryDataKey, bool>();
             _lock = new object();
         }
 
@@ -73,27 +72,27 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         /// <param name="symbol">The security's symbol whose factor file we seek</param>
         /// <returns>The resolved factor file, or null if not found</returns>
-        public FactorFile Get(Symbol symbol)
+        public IFactorProvider Get(Symbol symbol)
         {
-            var market = symbol.ID.Market.ToLowerInvariant();
+            symbol = symbol.GetFactorFileSymbol();
+            var key = AuxiliaryDataKey.Create(symbol);
             lock (_lock)
             {
-                if (!_seededMarket.ContainsKey(market))
+                if (!_seededMarket.ContainsKey(key))
                 {
-                    HydrateFactorFileFromLatestZip(market);
-                    _seededMarket[market] = true;
+                    HydrateFactorFileFromLatestZip(key);
+                    _seededMarket[key] = true;
                 }
 
-                FactorFile factorFile;
-                if (_factorFiles.TryGetValue(symbol, out factorFile))
+                IFactorProvider factorFile;
+                if (!_factorFiles.TryGetValue(symbol, out factorFile))
                 {
-                    return factorFile;
+                    // Could not find factor file for symbol
+                    Log.Error($"LocalZipFactorFileProvider.Get({symbol}): No factor file found.");
+                    _factorFiles[symbol] = factorFile = symbol.GetEmptyFactorFile();
                 }
+                return factorFile;
             }
-
-            // Could not find factor file for symbol
-            Log.Error($"LocalZipFactorFileProvider.Get({symbol}): No factor file found.");
-            return null;
         }
 
         /// <summary>
@@ -104,19 +103,15 @@ namespace QuantConnect.Data.Auxiliary
             lock (_lock)
             {
                 // we clear the seeded markets so they are reloaded
-                _seededMarket = new Dictionary<string, bool>();
+                _seededMarket = new Dictionary<AuxiliaryDataKey, bool>();
             }
             _ = Task.Delay(CacheRefreshPeriod).ContinueWith(_ => StartExpirationTask());
         }
 
         /// Hydrate the <see cref="_factorFiles"/> from the latest zipped factor file on disk
-        private void HydrateFactorFileFromLatestZip(string market)
+        private void HydrateFactorFileFromLatestZip(AuxiliaryDataKey key)
         {
-            if (market != QuantConnect.Market.USA.ToLowerInvariant())
-            {
-                // don't explode for other markets which request factor files and we don't have
-                return;
-            }
+            var market = key.Market;
             // start the search with yesterday, today's file will be available tomorrow
             var todayNewYork = DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork).Date;
             var date = todayNewYork.AddDays(-1);
@@ -125,8 +120,7 @@ namespace QuantConnect.Data.Auxiliary
 
             do
             {
-                var zipFileName = $"equity/{market}/factor_files/factor_files_{date:yyyyMMdd}.zip";
-                var factorFilePath = Path.Combine(Globals.DataFolder, zipFileName);
+                var factorFilePath = FactorFileZipHelper.GetFactorFileZipFileName(market, date, key.SecurityType);
 
                 // Fetch a stream for our zip from our data provider
                 var stream = _dataProvider.Fetch(factorFilePath);
@@ -134,8 +128,8 @@ namespace QuantConnect.Data.Auxiliary
                 // If the file was found we can read the file
                 if (stream != null)
                 {
-                    var mapFileResolver = _mapFileProvider.Get(market);
-                    foreach (var keyValuePair in FactorFileZipHelper.ReadFactorFileZip(stream, mapFileResolver, market))
+                    var mapFileResolver = _mapFileProvider.Get(key);
+                    foreach (var keyValuePair in FactorFileZipHelper.ReadFactorFileZip(stream, mapFileResolver, market, key.SecurityType))
                     {
                         // we merge with existing, this will allow to hold multiple markets
                         _factorFiles[keyValuePair.Key] = keyValuePair.Value;

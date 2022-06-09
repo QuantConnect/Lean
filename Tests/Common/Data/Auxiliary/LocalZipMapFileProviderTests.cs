@@ -59,7 +59,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             var dataProviderTest = new DefaultDataProviderTest();
             fileProviderTest.Initialize(dataProviderTest);
 
-            var mapFileResolver = fileProviderTest.Get(QuantConnect.Market.USA);
+            var mapFileResolver = fileProviderTest.Get(AuxiliaryDataKey.EquityUsa);
 
             fileProviderTest.Enabled = false;
             dataProviderTest.DisposeSafely();
@@ -74,15 +74,15 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             var dataProviderTest = new DefaultDataProviderTest();
             fileProviderTest.Initialize(dataProviderTest);
 
-            fileProviderTest.Get(QuantConnect.Market.USA);
+            fileProviderTest.Get(AuxiliaryDataKey.EquityUsa);
             Assert.AreEqual(1, dataProviderTest.FetchCount);
             Thread.Sleep(50);
-            fileProviderTest.Get(QuantConnect.Market.USA);
+            fileProviderTest.Get(AuxiliaryDataKey.EquityUsa);
             Assert.AreEqual(1, dataProviderTest.FetchCount);
 
             Thread.Sleep(1000);
 
-            fileProviderTest.Get(QuantConnect.Market.USA);
+            fileProviderTest.Get(AuxiliaryDataKey.EquityUsa);
             Assert.AreEqual(2, dataProviderTest.FetchCount);
 
             fileProviderTest.Enabled = false;

@@ -16,12 +16,11 @@
 
 using System;
 using System.Linq;
-using System.Collections;
 using QuantConnect.Data;
+using System.Collections;
 using System.Globalization;
 using QuantConnect.Logging;
 using QuantConnect.Interfaces;
-using QuantConnect.Data.Custom;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Auxiliary;
@@ -61,15 +60,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private DateTime _periodStart;
         private readonly DateTime _periodFinish;
 
-        private readonly MapFileResolver _mapFileResolver;
+        private readonly IMapFileProvider _mapFileProvider;
         private readonly IFactorFileProvider _factorFileProvider;
-        private FactorFile _factorFile;
+        private IFactorProvider _factorFile;
         private MapFile _mapFile;
 
         private bool _pastDelistedDate;
-
-        // true if we're in live mode, false otherwise
-        private readonly bool _isLiveMode;
 
         private BaseData _previous;
         private decimal? _lastRawPrice;
@@ -130,21 +126,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Subscription data reader takes a subscription request, loads the type, accepts the data source and enumerate on the results.
         /// </summary>
         /// <param name="config">Subscription configuration object</param>
-        /// <param name="periodStart">Start date for the data request/backtest</param>
-        /// <param name="periodFinish">Finish date for the data request/backtest</param>
-        /// <param name="mapFileResolver">Used for resolving the correct map files</param>
+        /// <param name="dataRequest">The data request</param>
+        /// <param name="mapFileProvider">Used for resolving the correct map files</param>
         /// <param name="factorFileProvider">Used for getting factor files</param>
         /// <param name="dataCacheProvider">Used for caching files</param>
-        /// <param name="tradeableDates">Defines the dates for which we'll request data, in order, in the security's data time zone</param>
-        /// <param name="isLiveMode">True if we're in live mode, false otherwise</param>
         /// <param name="dataProvider">The data provider to use</param>
         public SubscriptionDataReader(SubscriptionDataConfig config,
-            DateTime periodStart,
-            DateTime periodFinish,
-            MapFileResolver mapFileResolver,
+            BaseDataRequest dataRequest,
+            IMapFileProvider mapFileProvider,
             IFactorFileProvider factorFileProvider,
-            IEnumerable<DateTime> tradeableDates,
-            bool isLiveMode,
             IDataCacheProvider dataCacheProvider,
             IDataProvider dataProvider)
         {
@@ -152,15 +142,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _config = config;
 
             //Save Start and End Dates:
-            _periodStart = periodStart;
-            _periodFinish = periodFinish;
-            _mapFileResolver = mapFileResolver;
+            _periodStart = dataRequest.StartTimeLocal;
+            _periodFinish = dataRequest.EndTimeLocal;
+            _mapFileProvider = mapFileProvider;
             _factorFileProvider = factorFileProvider;
             _dataCacheProvider = dataCacheProvider;
 
             //Save access to securities
-            _isLiveMode = isLiveMode;
-            _tradeableDates = tradeableDates.GetEnumerator();
+            _tradeableDates = dataRequest.TradableDays.GetEnumerator();
             _dataProvider = dataProvider;
         }
 
@@ -188,16 +177,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return;
             }
 
-            //If its quandl set the access token in data factory:
-            var quandl = _dataFactory as Quandl;
-            if (quandl != null)
-            {
-                if (!Quandl.IsAuthCodeSet)
-                {
-                    Quandl.SetAuthCode(Config.Get("quandl-auth-token"));
-                }
-            }
-
             // If Tiingo data, set the access token in data factory
             var tiingo = _dataFactory as TiingoPrice;
             if (tiingo != null)
@@ -208,21 +187,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
-            _factorFile = new FactorFile(_config.Symbol.Value, new List<FactorFileRow>());
-            _mapFile = new MapFile(_config.Symbol.Value, new List<MapFileRow>());
-
             // load up the map files for equities, options, and custom data if it supports it.
             // Only load up factor files for equities
             if (_dataFactory.RequiresMapping())
             {
                 try
                 {
-                    var mapFile = _mapFileResolver.ResolveMapFile(_config.Symbol, _config.Type);
+                    var mapFile = _mapFileProvider.ResolveMapFile(_config);
 
                     // only take the resolved map file if it has data, otherwise we'll use the empty one we defined above
                     if (mapFile.Any()) _mapFile = mapFile;
 
-                    if (!_config.IsCustomData && !_config.SecurityType.IsOption())
+                    if (_config.PricesShouldBeScaled())
                     {
                         var factorFile = _factorFileProvider.Get(_config.Symbol);
                         _hasScaleFactors = factorFile != null;
@@ -231,7 +207,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             _factorFile = factorFile;
 
                             // if factor file has minimum date, update start period if before minimum date
-                            if (!_isLiveMode && _factorFile != null && _factorFile.FactorFileMinimumDate.HasValue)
+                            if (_factorFile != null && _factorFile.FactorFileMinimumDate.HasValue)
                             {
                                 if (_periodStart < _factorFile.FactorFileMinimumDate.Value)
                                 {
@@ -261,11 +237,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
+            _factorFile ??= _config.Symbol.GetEmptyFactorFile();
+            _mapFile ??= new MapFile(_config.Symbol.Value, Enumerable.Empty<MapFileRow>());
+
             _delistingDate = _config.Symbol.GetDelistingDate(_mapFile);
 
             // adding a day so we stop at EOD
             _delistingDate = _delistingDate.AddDays(1);
-
             UpdateDataEnumerator(true);
 
             _initialized = true;
@@ -300,14 +278,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             if (_subscriptionFactoryEnumerator == null)
             {
-                // in live mode the trade able dates will eventually advance to the next
-                if (_isLiveMode)
-                {
-                    // HACK attack -- we don't want to block in live mode
-                    Current = null;
-                    return true;
-                }
-
                 _endOfStream = true;
                 return false;
             }
@@ -354,6 +324,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // if we move past our current 'date' then we need to do daily things, such
                     // as updating factors and symbol mapping
                     var shouldSkip = false;
+
                     while (instance.Time.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date > _tradeableDates.Current)
                     {
                         var currentTradeableDate = _tradeableDates.Current;
@@ -427,7 +398,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // called on date changes, never return null for live mode, we'll always
                 // just keep trying to refresh the subscription
                 DateTime date;
-                if (!TryGetNextDate(out date) && !_isLiveMode)
+                if (!TryGetNextDate(out date))
                 {
                     _subscriptionFactoryEnumerator = null;
                     // if we run out of dates then we're finished with this subscription
@@ -435,12 +406,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 // fetch the new source, using the data time zone for the date
-                var newSource = _dataFactory.GetSource(_config, date, _isLiveMode);
+                var newSource = _dataFactory.GetSource(_config, date, false);
 
                 // check if we should create a new subscription factory
                 var sourceChanged = _source != newSource && newSource.Source != "";
-                var liveRemoteFile = _isLiveMode && (_source == null || _source.TransportMedium == SubscriptionTransportMedium.RemoteFile);
-                if (sourceChanged || liveRemoteFile)
+                if (sourceChanged)
                 {
                     // dispose of the current enumerator before creating a new one
                     Dispose();
@@ -468,7 +438,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private ISubscriptionDataSourceReader CreateSubscriptionFactory(SubscriptionDataSource source, BaseData baseDataInstance, IDataProvider dataProvider)
         {
-            var factory = SubscriptionDataSourceReader.ForSource(source, _dataCacheProvider, _config, _tradeableDates.Current, _isLiveMode, baseDataInstance, dataProvider);
+            var factory = SubscriptionDataSourceReader.ForSource(source, _dataCacheProvider, _config, _tradeableDates.Current, false, baseDataInstance, dataProvider);
             AttachEventHandlers(factory, source);
             return factory;
         }
@@ -532,13 +502,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>True if we got a new date from the enumerator, false if it's exhausted, or in live mode if we're already at today</returns>
         private bool TryGetNextDate(out DateTime date)
         {
-            if (_isLiveMode && _tradeableDates.Current >= DateTime.Today)
-            {
-                // special behavior for live mode, don't advance past today
-                date = _tradeableDates.Current;
-                return false;
-            }
-
             while (_tradeableDates.MoveNext())
             {
                 date = _tradeableDates.Current;

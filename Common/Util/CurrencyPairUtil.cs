@@ -16,8 +16,8 @@
 using System;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Cfd;
-using QuantConnect.Securities.Crypto;
 using QuantConnect.Securities.Forex;
+using QuantConnect.Securities.Crypto;
 
 namespace QuantConnect.Util
 {
@@ -30,26 +30,46 @@ namespace QuantConnect.Util
             new Lazy<SymbolPropertiesDatabase>(Securities.SymbolPropertiesDatabase.FromDataFolder);
 
         /// <summary>
+        /// Tries to decomposes the specified currency pair into a base and quote currency provided as out parameters
+        /// </summary>
+        /// <param name="currencyPair">The input currency pair to be decomposed</param>
+        /// <param name="baseCurrency">The output base currency</param>
+        /// <param name="quoteCurrency">The output quote currency</param>
+        /// <returns>True if was able to decompose the currency pair</returns>
+        public static bool TryDecomposeCurrencyPair(Symbol currencyPair, out string baseCurrency, out string quoteCurrency)
+        {
+            baseCurrency = null;
+            quoteCurrency = null;
+
+            if (!IsValidSecurityType(currencyPair?.SecurityType, throwException: false))
+            {
+                return false;
+            }
+
+            try
+            {
+                DecomposeCurrencyPair(currencyPair, out baseCurrency, out quoteCurrency);
+                return true;
+            }
+            catch
+            {
+                // ignored
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Decomposes the specified currency pair into a base and quote currency provided as out parameters
         /// </summary>
         /// <param name="currencyPair">The input currency pair to be decomposed</param>
         /// <param name="baseCurrency">The output base currency</param>
         /// <param name="quoteCurrency">The output quote currency</param>
-        public static void DecomposeCurrencyPair(Symbol currencyPair, out string baseCurrency, out string quoteCurrency)
+        /// <param name="defaultQuoteCurrency">Optionally can provide a default quote currency</param>
+        public static void DecomposeCurrencyPair(Symbol currencyPair, out string baseCurrency, out string quoteCurrency, string defaultQuoteCurrency = Currencies.USD)
         {
-            if (currencyPair == null)
-            {
-                throw new ArgumentException("Currency pair must not be null");
-            }
-
+            IsValidSecurityType(currencyPair?.SecurityType, throwException: true);
             var securityType = currencyPair.SecurityType;
-
-            if (securityType != SecurityType.Forex &&
-                securityType != SecurityType.Cfd &&
-                securityType != SecurityType.Crypto)
-            {
-                throw new ArgumentException($"Unsupported security type: {securityType}");
-            }
 
             if (securityType == SecurityType.Forex)
             {
@@ -61,7 +81,7 @@ namespace QuantConnect.Util
                 currencyPair.ID.Market,
                 currencyPair,
                 currencyPair.SecurityType,
-                Currencies.USD);
+                defaultQuoteCurrency);
 
             if (securityType == SecurityType.Cfd)
             {
@@ -172,17 +192,78 @@ namespace QuantConnect.Util
         /// <returns>The <see cref="Match"/> member that represents the relation between the two pairs</returns>
         public static Match ComparePair(this Symbol pairA, string baseCurrencyB, string quoteCurrencyB)
         {
-            if (pairA.Value == baseCurrencyB + quoteCurrencyB)
+            var pairAValue = pairA.ID.Symbol;
+
+            // Check for a stablecoin between the currencies
+            if (TryDecomposeCurrencyPair(pairA, out var baseCurrencyA, out  var quoteCurrencyA))
+            {
+                var currencies = new string[] { baseCurrencyA, quoteCurrencyA, baseCurrencyB, quoteCurrencyB};
+                var isThereAnyMatch = false;
+
+                // Compute all the potential stablecoins
+                var potentialStableCoins = new int[][] 
+                {
+                    new int[]{ 1, 3 },
+                    new int[]{ 1, 2 },
+                    new int[]{ 0, 3 },
+                    new int[]{ 0, 2 }
+                };
+
+                foreach(var pair in potentialStableCoins)
+                {
+                    if (Currencies.IsStableCoinWithoutPair(currencies[pair[0]] + currencies[pair[1]], pairA.ID.Market)
+                        || Currencies.IsStableCoinWithoutPair(currencies[pair[1]] + currencies[pair[0]], pairA.ID.Market))
+                    {
+                        // If there's a stablecoin between them, assign to currency in pair A the value
+                        // of the currency in pair B 
+                        currencies[pair[0]] = currencies[pair[1]];
+                        isThereAnyMatch = true;
+                    }
+                }
+
+                // Update the value of pairAValue if there was a match
+                if (isThereAnyMatch)
+                {
+                    pairAValue = currencies[0] + currencies[1];
+                }
+            }
+
+            if (pairAValue == baseCurrencyB + quoteCurrencyB)
             {
                 return Match.ExactMatch;
             }
-
-            if (pairA.Value == quoteCurrencyB + baseCurrencyB)
+            
+            if (pairAValue == quoteCurrencyB + baseCurrencyB)
             {
                 return Match.InverseMatch;
             }
 
             return Match.NoMatch;
+        }
+
+        private static bool IsValidSecurityType(SecurityType? securityType, bool throwException)
+        {
+            if (securityType == null)
+            {
+                if (throwException)
+                {
+                    throw new ArgumentException("Currency pair must not be null");
+                }
+                return false;
+            }
+
+            if (securityType != SecurityType.Forex &&
+                securityType != SecurityType.Cfd &&
+                securityType != SecurityType.Crypto)
+            {
+                if (throwException)
+                {
+                    throw new ArgumentException($"Unsupported security type: {securityType}");
+                }
+                return false;
+            }
+
+            return true;
         }
     }
 }

@@ -15,10 +15,11 @@
 */
 
 using System;
-using System.Collections.Generic;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
+using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
+using System.Collections.Generic;
+using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -27,28 +28,39 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// </summary>
     public class MappingEventProvider : ITradableDateEventProvider
     {
-        private MapFile _mapFile;
-        private SubscriptionDataConfig _config;
+        private IMapFileProvider _mapFileProvider;
+
+        /// <summary>
+        /// The associated configuration
+        /// </summary>
+        protected SubscriptionDataConfig Config { get; private set; }
+
+        /// <summary>
+        /// The current instance being used
+        /// </summary>
+        protected MapFile MapFile { get; private set; }
 
         /// <summary>
         /// Initializes this instance
         /// </summary>
         /// <param name="config">The <see cref="SubscriptionDataConfig"/></param>
-        /// <param name="factorFile">The factor file to use</param>
-        /// <param name="mapFile">The <see cref="MapFile"/> to use</param>
+        /// <param name="factorFileProvider">The factor file provider to use</param>
+        /// <param name="mapFileProvider">The <see cref="Data.Auxiliary.MapFile"/> provider to use</param>
         /// <param name="startTime">Start date for the data request</param>
-        public void Initialize(
+        public virtual void Initialize(
             SubscriptionDataConfig config,
-            FactorFile factorFile,
-            MapFile mapFile,
+            IFactorFileProvider factorFileProvider,
+            IMapFileProvider mapFileProvider,
             DateTime startTime)
         {
-            _mapFile = mapFile;
-            _config = config;
-            if (_mapFile.HasData(startTime.Date))
+            _mapFileProvider = mapFileProvider;
+            Config = config;
+            InitializeMapFile();
+
+            if (MapFile.HasData(startTime.Date))
             {
                 // initialize mapped symbol using request start date
-                _config.MappedSymbol = _mapFile.GetMappedSymbol(startTime.Date, _config.MappedSymbol);
+                Config.MappedSymbol = MapFile.GetMappedSymbol(startTime.Date, Config.MappedSymbol);
             }
         }
 
@@ -57,24 +69,34 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         /// <param name="eventArgs">The new tradable day event arguments</param>
         /// <returns>New mapping event if any</returns>
-        public IEnumerable<BaseData> GetEvents(NewTradableDateEventArgs eventArgs)
+        public virtual IEnumerable<BaseData> GetEvents(NewTradableDateEventArgs eventArgs)
         {
-            if (_config.Symbol == eventArgs.Symbol
-                && _mapFile.HasData(eventArgs.Date))
+            if (Config.Symbol == eventArgs.Symbol
+                && MapFile.HasData(eventArgs.Date))
             {
+                var old = Config.MappedSymbol;
+                var newSymbol = MapFile.GetMappedSymbol(eventArgs.Date, Config.MappedSymbol);
+                Config.MappedSymbol = newSymbol;
+
                 // check to see if the symbol was remapped
-                var newSymbol = _mapFile.GetMappedSymbol(eventArgs.Date, _config.MappedSymbol);
-                if (newSymbol != _config.MappedSymbol)
+                if (old != Config.MappedSymbol)
                 {
                     var changed = new SymbolChangedEvent(
-                        _config.Symbol,
+                        Config.Symbol,
                         eventArgs.Date,
-                        _config.MappedSymbol,
-                        newSymbol);
-                    _config.MappedSymbol = newSymbol;
+                        old,
+                        Config.MappedSymbol);
                     yield return changed;
                 }
             }
+        }
+
+        /// <summary>
+        /// Initializes the map file to use
+        /// </summary>
+        protected void InitializeMapFile()
+        {
+            MapFile = _mapFileProvider.ResolveMapFile(Config);
         }
     }
 }

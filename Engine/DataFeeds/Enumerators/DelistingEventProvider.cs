@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
@@ -45,16 +46,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// Initializes this instance
         /// </summary>
         /// <param name="config">The <see cref="SubscriptionDataConfig"/></param>
-        /// <param name="factorFile">The factor file to use</param>
-        /// <param name="mapFile">The <see cref="MapFile"/> to use</param>
+        /// <param name="factorFileProvider">The factor file provider to use</param>
+        /// <param name="mapFileProvider">The <see cref="Data.Auxiliary.MapFile"/> provider to use</param>
         /// <param name="startTime">Start date for the data request</param>
         public virtual void Initialize(
             SubscriptionDataConfig config,
-            FactorFile factorFile,
-            MapFile mapFile,
+            IFactorFileProvider factorFileProvider,
+            IMapFileProvider mapFileProvider,
             DateTime startTime)
         {
             _config = config;
+            var mapFile = mapFileProvider.ResolveMapFile(_config);
             DelistingDate = new ReferenceWrapper<DateTime>(config.Symbol.GetDelistingDate(mapFile));
         }
 

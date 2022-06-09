@@ -49,7 +49,7 @@ class CustomDataIconicTypesAddDataRegressionAlgorithm(QCAlgorithm):
         if unlinkedDataSymbolUnderlying.Underlying != unlinkedDataSymbolUnderlyingEquity:
             raise Exception(f"Unlinked data type underlying does not equal equity Symbol added. Expected {unlinkedDataSymbolUnderlyingEquity} got {unlinkedDataSymbolUnderlying.Underlying}")
         if customOptionSymbol.Underlying != optionSymbol:
-            raise Exception("Option symbol not equal to custom underlying symbol. Expected {optionSymbol} got {customOptionSymbol.Underlying}")
+            raise Exception(f"Option symbol not equal to custom underlying symbol. Expected {optionSymbol} got {customOptionSymbol.Underlying}")
 
         try:
             customDataNoCache = self.AddData(LinkedData, "AAPL", Resolution.Daily)

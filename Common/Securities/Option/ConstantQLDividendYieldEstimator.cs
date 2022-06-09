@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -13,22 +13,15 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QLNet;
-using QuantConnect.Util;
 
 namespace QuantConnect.Securities.Option
 {
     /// <summary>
     /// Class implements default flat dividend yield curve estimator, implementing <see cref="IQLDividendYieldEstimator"/>.  
     /// </summary>
-    class ConstantQLDividendYieldEstimator : IQLDividendYieldEstimator
+    public class ConstantQLDividendYieldEstimator : IQLDividendYieldEstimator
     {
         private readonly double _dividendYield;
         /// <summary>

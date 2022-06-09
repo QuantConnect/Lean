@@ -91,10 +91,10 @@ namespace QuantConnect.Brokerages.GDAX
             var restClient = new RestClient(restApi);
             var webSocketClient = new WebSocketClientWrapper();
             var priceProvider = new ApiPriceProvider(job.UserId, job.UserToken);
-            var aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"));
+            var aggregator = Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"), forceTypeNameOnExisting: false);
 
             IBrokerage brokerage;
-            if (job.DataQueueHandler.EndsWith("GDAXDataQueueHandler"))
+            if (job.DataQueueHandler.Contains("GDAXDataQueueHandler"))
             {
                 var dataQueueHandler = new GDAXDataQueueHandler(job.BrokerageData["gdax-url"], webSocketClient,
                     restClient, job.BrokerageData["gdax-api-key"], job.BrokerageData["gdax-api-secret"],

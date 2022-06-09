@@ -41,6 +41,16 @@ namespace QuantConnect.Securities
         public static readonly int[] AllYear = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
 
         /// <summary>
+        /// GJMQVZ Cycle
+        /// </summary>
+        public static readonly int[] GJMQVZ = { 2, 4, 6, 8, 10, 12 };
+
+        /// <summary>
+        /// GJKMNQVZ Cycle
+        /// </summary>
+        public static readonly int[] GJKMNQVZ = { 2, 4, 5, 6, 7, 8, 10, 12 };
+
+        /// <summary>
         /// HMUZ Cycle
         /// </summary>
         public static readonly int[] HMUZ = March;
@@ -51,6 +61,26 @@ namespace QuantConnect.Securities
         public static readonly int[] HKNUZ = { 3, 5, 7, 9, 12 };
 
         /// <summary>
+        /// HKNV Cycle
+        /// </summary>
+        public static readonly int[] HKNV = { 3, 5, 7, 10 };
+
+        /// <summary>
+        /// HKNVZ Cycle
+        /// </summary>
+        public static readonly int[] HKNVZ = { 3, 5, 7, 10, 12 };
+
+        /// <summary>
+        /// FHKNUX Cycle
+        /// </summary>
+        public static readonly int[] FHKNUX = { 1, 3, 5, 7, 9, 11 };
+
+        /// <summary>
+        /// FHJKQUVX Cycle
+        /// </summary>
+        public static readonly int[] FHJKQUVX = { 1, 3, 4, 5, 8, 9, 10, 11 };
+
+        /// <summary>
         /// HKNUVZ Cycle
         /// </summary>
         public static readonly int[] HKNUVZ = { 3, 5, 7, 9, 10, 12 };
@@ -58,7 +88,12 @@ namespace QuantConnect.Securities
         /// <summary>
         /// FHKNQUVZ Cycle
         /// </summary>
-        public static readonly int[] FHKNQUVZ = { 1, 3, 5, 7, 9, 10, 12 };
+        public static readonly int[] FHKNUVZ = { 1, 3, 5, 7, 9, 10, 12 };
+
+        /// <summary>
+        /// FHKMQUVZ Cycle
+        /// </summary>
+        public static readonly int[] FHKNQUVZ = { 1, 3, 5, 7, 8, 9, 10, 12 };
 
         /// <summary>
         /// FHKNQUX Cycle

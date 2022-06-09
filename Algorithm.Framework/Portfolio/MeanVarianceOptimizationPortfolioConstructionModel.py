@@ -39,6 +39,7 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
             period(int): The time interval of history price to calculate the weight
             resolution: The resolution of the history price
             optimizer(class): Method used to compute the portfolio weights"""
+        super().__init__()
         self.lookback = lookback
         self.period = period
         self.resolution = resolution

@@ -38,6 +38,6 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="symbol">The security's symbol whose factor file we seek</param>
         /// <returns>The resolved factor file, or null if not found</returns>
-        FactorFile Get(Symbol symbol);
+        IFactorProvider Get(Symbol symbol);
     }
 }

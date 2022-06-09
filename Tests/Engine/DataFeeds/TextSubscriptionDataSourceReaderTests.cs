@@ -376,6 +376,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             public string Data { set; get; }
             public bool IsDataEphemeral { set; get; }
 
+            public List<string> GetZipEntries(string zipFile)
+            {
+                throw new NotImplementedException();
+            }
             public Stream Fetch(string key)
             {
                 var stream = new MemoryStream();

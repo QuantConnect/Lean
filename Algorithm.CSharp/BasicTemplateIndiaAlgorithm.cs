@@ -14,8 +14,9 @@
 */
 
 using QuantConnect.Data;
-using QuantConnect.Orders;
 using System.Collections.Generic;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -26,20 +27,21 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="using quantconnect" />
     /// <meta name="tag" content="trading and orders" />
-    public class BasicTemplateIndiaAlgorithm : QCAlgorithm
+    public class BasicTemplateIndiaAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2003, 10, 07);  //Set Start Date
-            SetEndDate(2003, 10, 11);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetAccountCurrency("INR");  //Set Account Currency
+            SetStartDate(2019, 1, 23);  //Set Start Date
+            SetEndDate(2019, 10, 31);   //Set End Date
+            SetCash(100000);            //Set Strategy Cash
 
             // Find more symbols here: http://quantconnect.com/data
             // Equities Resolutions: Tick, Second, Minute, Hour, Daily.
-            AddEquity("UNIONBANK", Resolution.Second, Market.India);
+            AddEquity("YESBANK", Resolution.Minute, Market.India);
 
             //Set Order Prperties as per the requirements for order placement
             DefaultOrderProperties = new IndiaOrderProperties(exchange: Exchange.NSE);
@@ -58,7 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
-                var marketTicket = MarketOrder("UNIONBANK", 1);
+                var marketTicket = MarketOrder("YESBANK", 1);
             }
         }
 
@@ -73,60 +75,70 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
-        public bool CanRunLocally { get; } = false;
+        public bool CanRunLocally { get; } = true;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp };
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 29524;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "3"},
+            {"Total Trades", "1"},
             {"Average Win", "0%"},
-            {"Average Loss", "-1.01%"},
-            {"Compounding Annual Return", "261.134%"},
-            {"Drawdown", "2.200%"},
-            {"Expectancy", "-1"},
-            {"Net Profit", "1.655%"},
-            {"Sharpe Ratio", "8.505"},
-            {"Probabilistic Sharpe Ratio", "66.840%"},
-            {"Loss Rate", "100%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "-0.010%"},
+            {"Drawdown", "0.000%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "-0.008%"},
+            {"Sharpe Ratio", "-1.183"},
+            {"Probabilistic Sharpe Ratio", "0.001%"},
+            {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.091"},
-            {"Beta", "1.006"},
-            {"Annual Standard Deviation", "0.224"},
-            {"Annual Variance", "0.05"},
-            {"Information Ratio", "-33.445"},
-            {"Tracking Error", "0.002"},
-            {"Treynor Ratio", "1.893"},
-            {"Total Fees", "$10.32"},
-            {"Estimated Strategy Capacity", "$27000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Fitness Score", "0.747"},
-            {"Kelly Criterion Estimate", "38.796"},
-            {"Kelly Criterion Probability Value", "0.228"},
-            {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "85.095"},
-            {"Portfolio Turnover", "0.747"},
-            {"Total Insights Generated", "100"},
-            {"Total Insights Closed", "99"},
-            {"Total Insights Analysis Completed", "99"},
-            {"Long Insight Count", "100"},
+            {"Alpha", "0"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "-1.183"},
+            {"Tracking Error", "0"},
+            {"Treynor Ratio", "0"},
+            {"Total Fees", "₹6.00"},
+            {"Estimated Strategy Capacity", "₹61000000000.00"},
+            {"Lowest Capacity Asset", "YESBANK UL"},
+            {"Fitness Score", "0"},
+            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "-0.247"},
+            {"Return Over Maximum Drawdown", "-1.104"},
+            {"Portfolio Turnover", "0"},
+            {"Total Insights Generated", "0"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "0"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$135639.1761"},
-            {"Total Accumulated Estimated Alpha Value", "$21852.9784"},
-            {"Mean Population Estimated Insight Value", "$220.7372"},
-            {"Mean Population Direction", "53.5354%"},
-            {"Mean Population Magnitude", "53.5354%"},
-            {"Rolling Averaged Population Direction", "58.2788%"},
-            {"Rolling Averaged Population Magnitude", "58.2788%"},
-            {"OrderListHash", "ad2216297c759d8e5aef48ff065f8919"}
+            {"Estimated Monthly Alpha Value", "₹0"},
+            {"Total Accumulated Estimated Alpha Value", "₹0"},
+            {"Mean Population Estimated Insight Value", "₹0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "6cc69218edd7bd461678b9ee0c575db5"}
         };
     }
 }

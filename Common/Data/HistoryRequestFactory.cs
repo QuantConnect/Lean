@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
+using System;
 using NodaTime;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Util;
-using System;
 
 namespace QuantConnect.Data
 {
@@ -52,10 +52,16 @@ namespace QuantConnect.Data
             SecurityExchangeHours exchangeHours,
             Resolution? resolution)
         {
-            resolution = resolution ?? subscription.Resolution;
+            resolution ??= subscription.Resolution;
 
-            // find the correct data type for the history request
-            var dataType = subscription.IsCustomData ? subscription.Type : LeanData.GetDataType(resolution.Value, subscription.TickType);
+            var dataType = subscription.Type;
+
+            // if we change resolution the data type can change, for example subscription being Tick type and resolution daily
+            // data type here won't be Tick anymore, but TradeBar/QuoteBar
+            if (resolution.Value != subscription.Resolution && LeanData.IsCommonLeanDataType(dataType))
+            {
+                dataType = LeanData.GetDataType(resolution.Value, subscription.TickType);
+            }
 
             var request = new HistoryRequest(subscription,
                 exchangeHours,

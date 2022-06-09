@@ -53,7 +53,7 @@ namespace QuantConnect.ToolBox.GDAXDownloader
                 {
                     // Download the data
                     var symbolObject = Symbol.Create(ticker, SecurityType.Crypto, market);
-                    var data = downloader.Get(symbolObject, castResolution, fromDate, toDate);
+                    var data = downloader.Get(new DataDownloaderGetParameters(symbolObject, castResolution, fromDate, toDate));
 
                     // Save the data
                     var writer = new LeanDataWriter(castResolution, symbolObject, dataDirectory, TickType.Trade);
@@ -72,6 +72,15 @@ namespace QuantConnect.ToolBox.GDAXDownloader
                 Log.Trace(err.StackTrace);
             }
             Console.ReadLine();
+        }
+
+        /// <summary>
+        /// Endpoint for downloading exchange info
+        /// </summary>
+        public static void ExchangeInfoDownloader()
+        {
+            new ExchangeInfoUpdater(new GDAXExchangeInfoDownloader())
+                .Run();
         }
     }
 }

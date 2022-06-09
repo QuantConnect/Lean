@@ -137,7 +137,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            Console.WriteLine($"{Time}: {orderEvent}");
+            Debug($"{Time}: {orderEvent}");
         }
 
         private void ExpectAdditions(SecurityChanges changes, params string[] tickers)
@@ -192,52 +192,62 @@ namespace QuantConnect.Algorithm.CSharp
         public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 989;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "92"},
+            {"Total Trades", "121"},
             {"Average Win", "0.16%"},
-            {"Average Loss", "-0.08%"},
-            {"Compounding Annual Return", "50.130%"},
+            {"Average Loss", "-0.07%"},
+            {"Compounding Annual Return", "73.783%"},
             {"Drawdown", "1.100%"},
-            {"Expectancy", "0.887"},
-            {"Net Profit", "3.684%"},
-            {"Sharpe Ratio", "5.658"},
-            {"Probabilistic Sharpe Ratio", "93.094%"},
-            {"Loss Rate", "35%"},
-            {"Win Rate", "65%"},
-            {"Profit-Loss Ratio", "1.89"},
-            {"Alpha", "0.302"},
-            {"Beta", "0.193"},
-            {"Annual Standard Deviation", "0.059"},
-            {"Annual Variance", "0.003"},
-            {"Information Ratio", "2.471"},
-            {"Tracking Error", "0.072"},
-            {"Treynor Ratio", "1.723"},
-            {"Total Fees", "$42.35"},
-            {"Estimated Strategy Capacity", "$3200000.00"},
+            {"Expectancy", "1.035"},
+            {"Net Profit", "5.044%"},
+            {"Sharpe Ratio", "7.228"},
+            {"Probabilistic Sharpe Ratio", "96.401%"},
+            {"Loss Rate", "37%"},
+            {"Win Rate", "63%"},
+            {"Profit-Loss Ratio", "2.24"},
+            {"Alpha", "0.469"},
+            {"Beta", "0.045"},
+            {"Annual Standard Deviation", "0.066"},
+            {"Annual Variance", "0.004"},
+            {"Information Ratio", "3.887"},
+            {"Tracking Error", "0.083"},
+            {"Treynor Ratio", "10.691"},
+            {"Total Fees", "$48.52"},
+            {"Estimated Strategy Capacity", "$3300000.00"},
             {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
-            {"Fitness Score", "0.751"},
-            {"Kelly Criterion Estimate", "24.01"},
-            {"Kelly Criterion Probability Value", "0.075"},
-            {"Sortino Ratio", "43.136"},
-            {"Return Over Maximum Drawdown", "123.916"},
-            {"Portfolio Turnover", "0.751"},
-            {"Total Insights Generated", "55"},
-            {"Total Insights Closed", "53"},
-            {"Total Insights Analysis Completed", "53"},
-            {"Long Insight Count", "55"},
+            {"Fitness Score", "0.998"},
+            {"Kelly Criterion Estimate", "-0.975"},
+            {"Kelly Criterion Probability Value", "1"},
+            {"Sortino Ratio", "34.524"},
+            {"Return Over Maximum Drawdown", "97.671"},
+            {"Portfolio Turnover", "1.034"},
+            {"Total Insights Generated", "53"},
+            {"Total Insights Closed", "52"},
+            {"Total Insights Analysis Completed", "52"},
+            {"Long Insight Count", "53"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$942079.8347"},
-            {"Total Accumulated Estimated Alpha Value", "$1027128.7087"},
-            {"Mean Population Estimated Insight Value", "$19379.7870"},
-            {"Mean Population Direction", "58.4906%"},
+            {"Estimated Monthly Alpha Value", "$-10490010"},
+            {"Total Accumulated Estimated Alpha Value", "$-11437020"},
+            {"Mean Population Estimated Insight Value", "$-219942.7"},
+            {"Mean Population Direction", "55.7692%"},
             {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "55.0223%"},
+            {"Rolling Averaged Population Direction", "53.4734%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "18209554e81f4169a66cd32f9c50462b"}
+            {"OrderListHash", "2f06d6262bc18da24bbef48d18db010b"}
         };
     }
 }

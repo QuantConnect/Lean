@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Data;
-using QuantConnect.Data.Custom;
+using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 
@@ -49,7 +49,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void ExistingCustom()
         {
             // add custom data
-            var baseSymbol = Symbol.CreateBase(typeof(Quandl), Symbols.SPY, Market.USA);
+            var baseSymbol = Symbol.CreateBase(typeof(UnlinkedData), Symbols.SPY, Market.USA);
             var baseCache = _cacheProvider.GetSecurityCache(baseSymbol);
             var baseSecurity = new Security(
                 baseSymbol,
@@ -76,11 +76,11 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(dataToStore, data);
 
             // we add some data to the custom cache
-            var newData = new List<Quandl> {new Quandl()};
-            baseCache.StoreData(newData, typeof(Quandl));
+            var newData = new List<UnlinkedData> {new UnlinkedData()};
+            baseCache.StoreData(newData, typeof(UnlinkedData));
 
             // the data should also be in the underlying cache
-            Assert.AreEqual(newData, underlyingCache.GetAll<Quandl>());
+            Assert.AreEqual(newData, underlyingCache.GetAll<UnlinkedData>());
         }
 
         [Test]
@@ -99,7 +99,7 @@ namespace QuantConnect.Tests.Common.Securities
             _securities.Add(Symbols.SPY, underlyingSecurity);
 
             // add base using underlying
-            var baseSymbol = Symbol.CreateBase(typeof(Quandl), Symbols.SPY, Market.USA);
+            var baseSymbol = Symbol.CreateBase(typeof(UnlinkedData), Symbols.SPY, Market.USA);
             var baseCache = _cacheProvider.GetSecurityCache(baseSymbol);
 
             // we store data in the underlying cache and expect it to be available through the base cache too
@@ -113,11 +113,11 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(dataToStore, data);
 
             // we store data in the base cache and expect it to be available through the underlying cache too
-            var newData = new List<Quandl> { new Quandl() };
-            baseCache.StoreData(newData, typeof(Quandl));
+            var newData = new List<UnlinkedData> { new UnlinkedData() };
+            baseCache.StoreData(newData, typeof(UnlinkedData));
 
             // the data should also be in the underlying cache
-            Assert.AreEqual(newData, underlyingCache.GetAll<Quandl>());
+            Assert.AreEqual(newData, underlyingCache.GetAll<UnlinkedData>());
         }
 
         public Security GetSecurity(Symbol symbol)

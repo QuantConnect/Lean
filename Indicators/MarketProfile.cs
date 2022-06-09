@@ -39,11 +39,6 @@ namespace QuantConnect.Indicators
     public abstract class MarketProfile : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
-        /// Period of the indicator
-        /// </summary>
-        private readonly int _period;
-
-        /// <summary>
         /// Percentage of total volume contained in the ValueArea
         /// </summary>
         private readonly decimal _valueAreaVolumePercentage;
@@ -132,7 +127,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
-        public int WarmUpPeriod => _period;
+        public int WarmUpPeriod { get; private set; }
 
         /// <summary>
         /// Creates a new MarkProfile indicator with the specified period
@@ -151,6 +146,7 @@ namespace QuantConnect.Indicators
                 throw new ArgumentException("Must be strictly bigger than zero.", nameof(priceRangeRoundOff));
             }
 
+            WarmUpPeriod = period;
             _valueAreaVolumePercentage = valueAreaVolumePercentage;
             _oldDataPoints = new RollingWindow<Tuple<decimal, decimal>>(period);
             _volumePerPrice = new SortedList<decimal, decimal>();

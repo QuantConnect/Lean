@@ -74,7 +74,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         _collection.EndTime = point.EndTime;
                     }
                     // aggregate the data points
-                    _collection.Data.Add(point);
+                    _collection.Add(point);
                 }
             }
 

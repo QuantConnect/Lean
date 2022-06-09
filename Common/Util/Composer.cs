@@ -27,6 +27,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
 using QuantConnect.Logging;
 
 namespace QuantConnect.Util
@@ -215,6 +216,25 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Will return all loaded types that are assignable to T type
+        /// </summary>
+        public IEnumerable<Type> GetExportedTypes<T>() where T : class
+        {
+            var type = typeof(T);
+            return _exportedTypes.Where(type1 =>
+                {
+                    try
+                    {
+                        return type.IsAssignableFrom(type1);
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                });
+        }
+
+        /// <summary>
         /// Extension method to searches the composition container for an export that has a matching type name. This function
         /// will first try to match on Type.AssemblyQualifiedName, then Type.FullName, and finally on Type.Name
         ///
@@ -222,8 +242,10 @@ namespace QuantConnect.Util
         /// </summary>
         /// <typeparam name="T">The type of the export</typeparam>
         /// <param name="typeName">The name of the type to find. This can be an assembly qualified name, a full name, or just the type's name</param>
+        /// <param name="forceTypeNameOnExisting">When false, if any existing instance of type T is found, it will be returned even if type name doesn't match.
+        /// This is useful in cases where a single global instance is desired, like for <see cref="IDataAggregator"/></param>
         /// <returns>The export instance</returns>
-        public T GetExportedValueByTypeName<T>(string typeName)
+        public T GetExportedValueByTypeName<T>(string typeName, bool forceTypeNameOnExisting = true)
             where T : class
         {
             try
@@ -235,8 +257,8 @@ namespace QuantConnect.Util
                     var type = typeof(T);
                     if (_exportedValues.TryGetValue(type, out values))
                     {
-                        // if we've alread loaded this part, then just return the same one
-                        instance = values.OfType<T>().FirstOrDefault(x => x.GetType().MatchesTypeName(typeName));
+                        // if we've already loaded this part, then just return the same one
+                        instance = values.OfType<T>().FirstOrDefault(x => !forceTypeNameOnExisting || x.GetType().MatchesTypeName(typeName));
                         if (instance != null)
                         {
                             return instance;

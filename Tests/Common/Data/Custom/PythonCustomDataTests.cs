@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
             dynamic instance;
             using (Py.GIL())
             {
-                PyObject test = PythonEngine.ModuleFromString("testModule",
+                PyObject test = PyModule.FromString("testModule",
                     @"
 from AlgorithmImports import *
 
@@ -49,7 +49,7 @@ class Test(PythonData):
             dynamic instance;
             using (Py.GIL())
             {
-                PyObject test = PythonEngine.ModuleFromString("testModule",
+                PyObject test = PyModule.FromString("testModule",
                     @"
 from AlgorithmImports import *
 
@@ -68,7 +68,7 @@ class Test(PythonData):
             dynamic instance;
             using (Py.GIL())
             {
-                PyObject test = PythonEngine.ModuleFromString("testModule",
+                PyObject test = PyModule.FromString("testModule",
                     @"
 from AlgorithmImports import *
 
@@ -87,7 +87,7 @@ class Test(PythonData):
             dynamic instance;
             using (Py.GIL())
             {
-                PyObject test = PythonEngine.ModuleFromString("testModule",
+                PyObject test = PyModule.FromString("testModule",
                     @"
 from AlgorithmImports import *
 

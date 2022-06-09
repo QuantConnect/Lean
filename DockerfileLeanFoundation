@@ -29,18 +29,18 @@ RUN add-apt-repository ppa:ubuntu-toolchain-r/test \
 
 # Install IB Gateway: Installs to /root/ibgateway
 RUN mkdir -p /root/ibgateway && \
-    wget https://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64.v985.1j.sh && \
-    chmod 777 ibgateway-latest-standalone-linux-x64.v985.1j.sh && \
-    ./ibgateway-latest-standalone-linux-x64.v985.1j.sh -q -dir /root/ibgateway && \
-    rm ibgateway-latest-standalone-linux-x64.v985.1j.sh
+    wget https://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64.v10.12.2d.sh && \
+    chmod 777 ibgateway-latest-standalone-linux-x64.v10.12.2d.sh && \
+    ./ibgateway-latest-standalone-linux-x64.v10.12.2d.sh -q -dir /root/ibgateway && \
+    rm ibgateway-latest-standalone-linux-x64.v10.12.2d.sh
 
-# Install dotnet 5 sdk & runtime
+# Install dotnet 6 sdk & runtime
 RUN wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
     dpkg -i packages-microsoft-prod.deb && \
     apt-get update; \
     apt-get install -y apt-transport-https && \
     apt-get update && \
-    apt-get install -y dotnet-sdk-5.0 && \
+    apt-get install -y dotnet-sdk-6.0 && \
     rm packages-microsoft-prod.deb && \
     apt-get clean && apt-get autoclean && apt-get autoremove --purge -y && rm -rf /var/lib/apt/lists/*
 
@@ -53,9 +53,9 @@ ENV PATH="/opt/miniconda3/bin:${PATH}"
 RUN wget https://cdn.quantconnect.com/miniconda/${CONDA} && \
     bash ${CONDA} -b -p /opt/miniconda3 && rm -rf ${CONDA} && \
     ln -s /opt/miniconda3/lib/libpython3.6m.so /usr/lib/libpython3.6m.so && \
-    conda update -y conda pip && \
-    pip install --upgrade --no-cache-dir pip && \
-    conda install -y python=3.6.8 && conda clean -y --all
+    conda install -y conda=4.10.3 && \
+    pip install --upgrade --no-cache-dir pip==21.2.2 && \
+    conda install -y python=3.6.8 && conda install -y pip=21.2.2 && conda clean -y --all
 
 # Avoid pip install read timeouts
 ENV PIP_DEFAULT_TIMEOUT=120
@@ -83,7 +83,7 @@ RUN pip install --no-cache-dir      \
     setuptools-git==1.2             \
     xarray==0.15.1                  \
     plotly==4.7.1                   \
-    jupyterlab==2.1.2               \
+    jupyterlab==3.2.6               \
     tensorflow==1.15.2              \
     docutils==0.14                  \
     cvxopt==1.2.0                   \
@@ -119,7 +119,7 @@ RUN pip install --no-cache-dir      \
     gym==0.17.2                     \
     ipywidgets==7.5.1               \
     deap==1.3.1                     \
-    cvxpy==1.0.31                   \
+    cvxpy==1.1.15                   \
     pykalman==0.9.5                 \
     pyportfolioopt==1.2.2           \
     pyramid-arima==0.9.0            \
@@ -167,7 +167,7 @@ RUN pip install --no-cache-dir      \
     ruptures==1.1.3                 \
     simpy==4.0.1                    \
     scikit-learn-extra==0.2.0       \
-    ray==1.5.1
+    ray==1.9.1
 
 # feature_selector has overly strict dependency version ranges
 # We already installed close-enough versions of all of its dependencies above
@@ -259,10 +259,10 @@ RUN wget https://cdn.quantconnect.com/tigramite/tigramite-4.1.zip && \
     python setup.py install && cd .. && rm -rf tigramite-4.1 && rm tigramite-4.1.zip
 
 # Install H2O: https://www.h2o.ai/download/
-RUN wget https://cdn.quantconnect.com/h2o/h2o-3.30.0.3.zip && \
-    unzip -q h2o-3.30.0.3.zip && \
-    pip install h2o-3.30.0.3/python/h2o-3.30.0.3-py2.py3-none-any.whl && \
-    rm -rf h2o-3.30.0.3 && rm h2o-3.30.0.3.zip
+RUN wget https://cdn.quantconnect.com/h2o/h2o-3.34.0.7.zip && \
+    unzip -q h2o-3.34.0.7.zip && \
+    pip install h2o-3.34.0.7-py2.py3-none-any.whl && \
+    rm h2o-3.34.0.7.zip h2o-3.34.0.7-py2.py3-none-any.whl
 
 # Remove black-listed packages
 RUN pip uninstall -y s3transfer

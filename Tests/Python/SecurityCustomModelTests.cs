@@ -77,7 +77,7 @@ namespace QuantConnect.Tests.Python
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString("CustomBuyingPowerModel", code);
+                var module = PyModule.FromString("CustomBuyingPowerModel", code);
                 return module.GetAttr("CustomBuyingPowerModel").Invoke();
             }
         }

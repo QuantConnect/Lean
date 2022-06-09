@@ -54,8 +54,12 @@ namespace QuantConnect.Lean.Engine.Results
         private DateTime _nextChartTrimming;
         private DateTime _nextLogStoreUpdate;
         private DateTime _nextStatisticsUpdate;
-        private DateTime _nextStatusUpdate;
         private DateTime _currentUtcDate;
+
+        /// <summary>
+        /// The earliest time of next dump to the status file 
+        /// </summary>
+        protected DateTime NextStatusUpdate;
 
         //Log Message Store:
         private DateTime _nextSample;
@@ -130,7 +134,7 @@ namespace QuantConnect.Lean.Engine.Results
                     if (Messages.Count == 0)
                     {
                         // prevent thread lock/tight loop when there's no work to be done
-                        ExitEvent.WaitOne(100);
+                        ExitEvent.WaitOne(Time.GetSecondUnevenWait(1000));
                     }
                 }
                 catch (Exception err)
@@ -202,24 +206,16 @@ namespace QuantConnect.Lean.Engine.Results
 
                     //Profit loss changes, get the banner statistics, summary information on the performance for the headers.
                     var deltaStatistics = new Dictionary<string, string>();
-                    var runtimeStatistics = new Dictionary<string, string>();
                     var serverStatistics = GetServerStatistics(utcNow);
                     var holdings = GetHoldings();
 
                     //Add the algorithm statistics first.
                     Log.Debug("LiveTradingResultHandler.Update(): Build run time stats");
-                    lock (RuntimeStatistics)
-                    {
-                        foreach (var pair in RuntimeStatistics)
-                        {
-                            runtimeStatistics.Add(pair.Key, pair.Value);
-                        }
-                    }
+
+                    var summary = GenerateStatisticsResults(performanceCharts).Summary;
+                    var runtimeStatistics = GetAlgorithmRuntimeStatistics(summary);
                     Log.Debug("LiveTradingResultHandler.Update(): End build run time stats");
 
-                    //Add other fixed parameters.
-                    var summary = GenerateStatisticsResults(performanceCharts).Summary;
-                    GetAlgorithmRuntimeStatistics(summary, runtimeStatistics);
 
                     // since we're sending multiple packets, let's do it async and forget about it
                     // chart data can get big so let's break them up into groups
@@ -294,7 +290,7 @@ namespace QuantConnect.Lean.Engine.Results
                         _nextStatisticsUpdate = utcNow.AddMinutes(1);
                     }
 
-                    if (utcNow > _nextStatusUpdate)
+                    if (utcNow > NextStatusUpdate)
                     {
                         var chartComplete = new Dictionary<string, Chart>();
                         lock (ChartLock)
@@ -358,6 +354,15 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
+        /// Assigns the next earliest status update time
+        /// </summary>
+        protected virtual void SetNextStatusUpdate()
+        {
+            // Update the status json file every hour
+            NextStatusUpdate = DateTime.UtcNow.AddHours(1);
+        }
+
+        /// <summary>
         /// Stores the order events
         /// </summary>
         /// <param name="utcTime">The utc date associated with these order events</param>
@@ -385,18 +390,12 @@ namespace QuantConnect.Lean.Engine.Results
             return TransactionHandler.OrderEvents.Where(orderEvent => orderEvent.UtcTime >= _currentUtcDate).ToList();
         }
 
-        private void SetNextStatusUpdate()
-        {
-            // Update the status json file every hour
-            _nextStatusUpdate = DateTime.UtcNow.AddHours(1);
-        }
-
         /// <summary>
         /// Will store the complete status of the algorithm in a single json file
         /// </summary>
         /// <remarks>Will sample charts every 12 hours, 2 data points per day at maximum,
         /// to reduce file size</remarks>
-        private void StoreStatusFile(Dictionary<string, string> runtimeStatistics,
+        private void StoreStatusFile(SortedDictionary<string, string> runtimeStatistics,
             Dictionary<string, Holding> holdings,
             Dictionary<string, Chart> chartComplete,
             SortedDictionary<DateTime, decimal> profitLoss,
@@ -444,7 +443,7 @@ namespace QuantConnect.Lean.Engine.Results
             Dictionary<string, Holding> holdings,
             CashBook cashbook,
             Dictionary<string, string> deltaStatistics,
-            Dictionary<string, string> runtimeStatistics,
+            SortedDictionary<string, string> runtimeStatistics,
             Dictionary<string, string> serverStatistics,
             List<OrderEvent> deltaOrderEvents)
         {
@@ -1249,7 +1248,7 @@ namespace QuantConnect.Lean.Engine.Results
 
             foreach (var kvp in Algorithm.Securities
                 // we send non internal, non canonical and tradable securities. When securities are removed they are marked as non tradable
-                .Where(pair => pair.Value.IsTradable && !pair.Value.IsInternalFeed() && !pair.Key.IsCanonical() && (!onlyInvested || pair.Value.Invested))
+                .Where(pair => pair.Value.IsTradable && !pair.Value.IsInternalFeed() && (!pair.Key.IsCanonical() || pair.Key.SecurityType == QuantConnect.SecurityType.Future) && (!onlyInvested || pair.Value.Invested))
                 .OrderBy(x => x.Key.Value))
             {
                 var security = kvp.Value;

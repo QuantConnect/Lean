@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -52,13 +52,17 @@ namespace QuantConnect.Lean.Engine.Storage
         public event EventHandler<ObjectStoreErrorRaisedEventArgs> ErrorRaised;
 
         /// <summary>
+        /// Gets the default object store location
+        /// </summary>
+        public static string DefaultObjectStore => Path.GetFullPath(Config.Get("object-store-root", "./storage"));
+
+        /// <summary>
         /// Flag indicating the state of this object storage has changed since the last <seealso cref="Persist"/> invocation
         /// </summary>
         private volatile bool _dirty;
 
         private Timer _persistenceTimer;
-        private TimeSpan _persistenceInterval;
-        private readonly string _storageRoot = Path.GetFullPath(Config.Get("object-store-root", "./storage"));
+        private readonly string _storageRoot = DefaultObjectStore;
         private readonly ConcurrentDictionary<string, byte[]> _storage = new ConcurrentDictionary<string, byte[]>();
         private readonly object _persistLock = new object();
 
@@ -98,8 +102,7 @@ namespace QuantConnect.Lean.Engine.Storage
             // if <= 0 we disable periodic persistence and make it synchronous
             if (Controls.PersistenceIntervalSeconds > 0)
             {
-                _persistenceInterval = TimeSpan.FromSeconds(Controls.PersistenceIntervalSeconds);
-                _persistenceTimer = new Timer(_ => Persist(), null, _persistenceInterval, _persistenceInterval);
+                _persistenceTimer = new Timer(_ => Persist(), null, Controls.PersistenceIntervalSeconds * 1000, Timeout.Infinite);
             }
         }
 
@@ -203,7 +206,7 @@ namespace QuantConnect.Lean.Engine.Storage
             // Before saving confirm we are abiding by the control rules
             // Start by counting our file and its length
             var fileCount = 1;
-            var expectedStorageSizeBytes = contents.Length;
+            var expectedStorageSizeBytes = contents?.Length ?? 0;
             foreach (var kvp in _storage)
             {
                 if (key.Equals(kvp.Key))
@@ -214,7 +217,10 @@ namespace QuantConnect.Lean.Engine.Storage
                 else
                 {
                     fileCount++;
-                    expectedStorageSizeBytes += kvp.Value.Length;
+                    if(kvp.Value != null)
+                    {
+                        expectedStorageSizeBytes += kvp.Value.Length;
+                    }
                 }
             }
 
@@ -277,6 +283,8 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <summary>
         /// Returns the file path for the specified key
         /// </summary>
+        /// <remarks>If the key is not already inserted it will just return a path associated with it
+        /// and add the key with null value</remarks>
         /// <param name="key">The object key</param>
         /// <returns>The path for the file</returns>
         public virtual string GetFilePath(string key)
@@ -284,13 +292,15 @@ namespace QuantConnect.Lean.Engine.Storage
             // Ensure we have an object for that key
             if (!ContainsKey(key))
             {
-                throw new KeyNotFoundException($"Object with key '{key}' was not found in the current project. " +
-                    "Please use ObjectStore.ContainsKey(key) to check if an object exists before attempting to read."
-                );
+                // Add a key with null value to tell Persist() not to delete the file created in the path associated
+                // with this key and not update it with the value associated with the key(null)
+                SaveBytes(key, null);
             }
-
-            // Persist to ensure pur files are up to date
-            Persist();
+            else
+            {
+                // Persist to ensure pur files are up to date
+                Persist();
+            }
 
             // Fetch the path to file and return it
             return PathForKey(key);
@@ -363,16 +373,13 @@ namespace QuantConnect.Lean.Engine.Storage
             // Acquire the persist lock
             lock (_persistLock)
             {
-                // If there are no changes we are fine
-                if (!_dirty)
-                {
-                    return;
-                }
-
                 try
                 {
-                    // Pause timer while persisting
-                    _persistenceTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+                    // If there are no changes we are fine
+                    if (!_dirty)
+                    {
+                        return;
+                    }
 
                     if (PersistData(this))
                     {
@@ -386,8 +393,18 @@ namespace QuantConnect.Lean.Engine.Storage
                 }
                 finally
                 {
-                    // restart timer following end of persistence
-                    _persistenceTimer?.Change(_persistenceInterval, _persistenceInterval);
+                    try
+                    {
+                        if(_persistenceTimer != null)
+                        {
+                            // restart timer following end of persistence
+                            _persistenceTimer.Change(Time.GetSecondUnevenWait(Controls.PersistenceIntervalSeconds * 1000), Timeout.Infinite);
+                        }
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        // ignored disposed
+                    }
                 }
             }
         }
@@ -414,9 +431,13 @@ namespace QuantConnect.Lean.Engine.Storage
                 // Write all our store data to disk
                 foreach (var kvp in data)
                 {
-                    // Get a path for this key and write to it
-                    var path = PathForKey(kvp.Key);
-                    File.WriteAllBytes(path, kvp.Value);
+                    // Skip the key associated with null values. They are not linked to a file yet
+                    if (kvp.Value != null)
+                    {
+                        // Get a path for this key and write to it
+                        var path = PathForKey(kvp.Key);
+                        File.WriteAllBytes(path, kvp.Value);
+                    }
                 }
 
                 return true;

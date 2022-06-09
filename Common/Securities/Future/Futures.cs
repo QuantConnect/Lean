@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -229,6 +229,96 @@ namespace QuantConnect.Securities
             /// </summary>
             /// <returns>The symbol</returns>
             public const string JapaneseYenEmini = "J7";
+
+            /// <summary>
+            /// Micro EUR/USD Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroEUR = "M6E";
+
+            /// <summary>
+            /// Micro AUD/USD Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroAUD = "M6A";
+
+            /// <summary>
+            /// Micro GBP/USD Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroGBP = "M6B";
+
+            /// <summary>
+            /// Micro CAD/USD Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroCADUSD = "MCD";
+
+            /// <summary>
+            /// Micro JPY/USD Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroJPY = "MJY";
+
+            /// <summary>
+            /// Micro CHF/USD Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroCHF = "MSF";
+
+            /// <summary>
+            /// Micro USD/JPY Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroUSDJPY = "M6J";
+
+            /// <summary>
+            /// Micro INR/USD Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroINRUSD = "MIR";
+
+            /// <summary>
+            /// Micro USD/CAD Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroCAD = "M6C";
+
+            /// <summary>
+            /// Micro USD/CHF Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroUSDCHF = "M6S";
+
+            /// <summary>
+            /// Micro USD/CNH Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroUSDCNH = "MNH";
+
+            /// <summary>
+            /// Micro Ether Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroEther = "MET";
+
+            /// <summary>
+            /// Micro Bitcoin Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroBTC = "MBT";
+
+            /// <summary>
+            /// BTIC on Micro Ether Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string BTICMicroEther = "MRB";
+
+            /// <summary>
+            /// BTIC on Micro Bitcoin Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string BTICMicroBTC = "MIB";
         }
 
         /// <summary>
@@ -660,6 +750,54 @@ namespace QuantConnect.Securities
             /// </summary>
             /// <returns>The symbol</returns>
             public const string LowSulfurGasoil = "G";
+
+            /// <summary>
+            /// Micro WTI Crude Oil Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroCrudeOilWTI = "MCL";
+
+            /// <summary>
+            /// Micro Singapore FOB Marine Fuel 0.5% (Platts) Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroSingaporeFOBMarineFuelZeroPointFivePercetPlatts = "S5O";
+
+            /// <summary>
+            /// Micro Gasoil 0.1% Barges FOB ARA (Platts) Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroGasoilZeroPointOnePercentBargesFOBARAPlatts = "M1B";
+
+            /// <summary>
+            /// Micro European FOB Rdam Marine Fuel 0.5% Barges (Platts) Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroEuropeanFOBRdamMarineFuelZeroPointFivePercentBargesPlatts = "R5O";
+
+            /// <summary>
+            /// Micro European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroEuropeanThreePointFivePercentOilBargesFOBRdamPlatts = "MEF";
+
+            /// <summary>
+            /// Micro Singapore Fuel Oil 380CST (Platts) Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroSingaporeFuelOil380CSTPlatts = "MAF";
+
+            /// <summary>
+            /// Micro Coal (API 5) fob Newcastle (Argus/McCloskey) Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroCoalAPIFivefobNewcastleArgusMcCloskey = "M5F";
+
+            /// <summary>
+            /// Micro European 3.5% Fuel Oil Cargoes FOB Med (Platts) Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroEuropeanThreePointFivePercentFuelOilCargoesFOBMedPlatts = "M35";
         }
 
         /// <summary>
@@ -712,6 +850,30 @@ namespace QuantConnect.Securities
             /// Ultra 10-Year U.S. Treasury Note Futures
             /// </summary>
             public const string UltraTenYearUSTreasuryNote = "TN";
+
+            /// <summary>
+            /// Micro 10-Year Yield Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroY10TreasuryNote = "10Y";
+
+            /// <summary>
+            /// Micro 30-Year Yield Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroY30TreasuryBond = "30Y";
+
+            /// <summary>
+            /// Micro 2-Year Yield Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroY2TreasuryBond = "2YY";
+
+            /// <summary>
+            /// Micro 5-Year Yield Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroY5TreasuryBond = "5YY";
         }
 
         /// <summary>
@@ -824,7 +986,62 @@ namespace QuantConnect.Securities
             /// <summary>
             /// Hang Seng Index
             /// </summary>
+            /// <returns>The symbol</returns>
             public const string HangSeng = "HSI";
+
+            /// <summary>
+            /// Micro E-mini S&amp;P 500 Index Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroSP500EMini = "MES";
+
+            /// <summary>
+            /// Micro E-mini Nasdaq-100 Index Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroNASDAQ100EMini = "MNQ";
+
+            /// <summary>
+            /// Micro E-mini Russell 2000 Index Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroRussell2000EMini = "M2K";
+
+            /// <summary>
+            /// Micro E-mini Dow Jones Industrial Average Index Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroDow30EMini = "MYM";
+
+            /// <summary>
+            /// MSCI Europe Net Total Return (USD) Futures
+            /// </summary>
+            public const string MSCIEuropeNTR = "M1EU";
+
+            /// <summary>
+            /// MSCI Japan Net Total Return Futures
+            /// </summary>
+            public const string MSCIJapanNTR = "M1JP";
+
+            /// <summary>
+            /// MSCI Emerging Markets Asia Net Total Return Futures
+            /// </summary>
+            public const string MSCIEmergingMarketsAsiaNTR = "M1MSA";
+
+            /// <summary>
+            /// MSCI EAFE Index Futures
+            /// </summary>
+            public const string MSCIEafeIndex = "MXEA";
+
+            /// <summary>
+            /// MSCI Emerging Markets Index Futures
+            /// </summary>
+            public const string MSCIEmergingMarketsIndex = "MXEF";
+
+            /// <summary>
+            /// MSCI USA Index Futures
+            /// </summary>
+            public const string MSCIUsaIndex = "MXUS";
         }
 
         /// <summary>
@@ -915,6 +1132,50 @@ namespace QuantConnect.Securities
             /// </summary>
             /// <returns>The symbol</returns>
             public const string USMidwestDomesticHotRolledCoilSteelCRUIndex = "HRC";
+
+            /// <summary>
+            /// Micro Gold Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroGold = "MGC";
+
+            /// <summary>
+            /// Micro Silver Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroSilver = "SIL";
+
+            /// <summary>
+            /// Micro Gold TAS Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroGoldTAS = "MGT";
+
+            /// <summary>
+            /// Micro Palladium Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroPalladium = "PAM";
+
+            /// <summary>
+            /// Mini Sized NY Gold Futures
+            /// </summary>
+            public const string MiniNYGold = "YG";
+
+            /// <summary>
+            /// Mini Sized NY Silver Futures
+            /// </summary>
+            public const string MiniNYSilver = "YI";
+
+            /// <summary>
+            /// Gold 100 Oz Futures
+            /// </summary>
+            public const string Gold100Oz = "ZG";
+
+            /// <summary>
+            /// Silver 5000 Oz Futures
+            /// </summary>
+            public const string Silver5000Oz = "ZI";
         }
 
         /// <summary>

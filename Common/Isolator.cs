@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -108,15 +108,16 @@ namespace QuantConnect
             var message = "";
             var emaPeriod = 60d;
             var memoryUsed = 0L;
-            var end = DateTime.Now + timeSpan;
-            var memoryLogger = DateTime.Now + TimeSpan.FromMinutes(1);
+            var utcNow = DateTime.UtcNow;
+            var end = utcNow + timeSpan;
+            var memoryLogger = utcNow + TimeSpan.FromMinutes(1);
             var isolatorLimitResult = new IsolatorLimitResult(TimeSpan.Zero, string.Empty);
 
             //Convert to bytes
             memoryCap *= 1024 * 1024;
             var spikeLimit = memoryCap*2;
 
-            while (!task.IsCompleted && DateTime.Now < end)
+            while (!task.IsCompleted && utcNow < end)
             {
                 // if over 80% allocation force GC then sample
                 var sample = Convert.ToDouble(GC.GetTotalMemory(memoryUsed > memoryCap * 0.8));
@@ -132,7 +133,7 @@ namespace QuantConnect
                     break;
                 }
 
-                if (DateTime.Now > memoryLogger)
+                if (utcNow > memoryLogger)
                 {
                     if (memoryUsed > memoryCap * 0.8)
                     {
@@ -145,7 +146,7 @@ namespace QuantConnect
                               $"App: {PrettyFormatRam(OS.ApplicationMemoryUsed * 1024 * 1024)}, " +
                               Invariant($"CurrentTimeStepElapsed: {isolatorLimitResult.CurrentTimeStepElapsed:mm':'ss'.'fff}"));
 
-                    memoryLogger = DateTime.Now.AddMinutes(1);
+                    memoryLogger = utcNow.AddMinutes(1);
                 }
 
                 // check to see if we're within other custom limits defined by the caller
@@ -156,10 +157,12 @@ namespace QuantConnect
                     break;
                 }
 
-                if (task.Wait(sleepIntervalMillis))
+                if (task.Wait(utcNow.GetSecondUnevenWait(sleepIntervalMillis)))
                 {
                     break;
                 }
+
+                utcNow = DateTime.UtcNow;
             }
 
             if (task.IsCompleted == false && message == "")

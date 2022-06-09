@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -13,12 +13,11 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using QLNet;
+using System;
+using System.Globalization;
+using System.Linq;
+using Fasterflect;
 
 namespace QuantConnect.Securities.Option
 {
@@ -43,7 +42,27 @@ namespace QuantConnect.Securities.Option
         private const int _timeStepsFD = 100;
 
         /// <summary>
-        /// Pricing engine for European vanilla options using analytical formulae. 
+        /// Creates pricing engine by engine type name. 
+        /// </summary>
+        /// <param name="priceEngineName">QL price engine name</param>
+        /// <param name="riskFree">The risk free rate</param>
+        /// <returns>New option price model instance of specific engine</returns>
+        public static IOptionPriceModel Create(string priceEngineName, decimal riskFree)
+        {
+            var type = AppDomain.CurrentDomain.GetAssemblies()
+                .Where(a => !a.IsDynamic)
+                .SelectMany(a => a.GetTypes())
+                .Where(s => s.Implements(typeof(IPricingEngine)))
+                .FirstOrDefault(t => t.FullName?.EndsWith(priceEngineName, StringComparison.InvariantCulture) == true);
+
+            return new QLOptionPriceModel(process => (IPricingEngine)Activator.CreateInstance(type, process),
+                _underlyingVolEstimator,
+                new ConstantQLRiskFreeRateEstimator(riskFree),
+                _dividendYieldEstimator);
+        }
+
+        /// <summary>
+        /// Pricing engine for European vanilla options using analytical formula. 
         /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_analytic_european_engine.html
         /// </summary>
         /// <returns>New option price model instance</returns>
@@ -103,7 +122,7 @@ namespace QuantConnect.Securities.Option
         {
             PricingEngineFuncEx pricingEngineFunc = (symbol, process) =>
                             symbol.ID.OptionStyle == OptionStyle.American ?
-                            new FDAmericanEngine(process, _timeStepsFD, _timeStepsFD - 1) as IPricingEngine:
+                            new FDAmericanEngine(process, _timeStepsFD, _timeStepsFD - 1) as IPricingEngine :
                             new FDEuropeanEngine(process, _timeStepsFD, _timeStepsFD - 1) as IPricingEngine;
 
             return new QLOptionPriceModel(pricingEngineFunc,

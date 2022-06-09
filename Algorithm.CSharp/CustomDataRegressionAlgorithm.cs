@@ -18,7 +18,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using Newtonsoft.Json;
 using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -31,12 +33,14 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="regression test" />
     public class CustomDataRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private bool _warmedUpChecked = false;
+
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2011, 9, 13);
+            SetStartDate(2011, 9, 14);
             SetEndDate(2015, 12, 01);
 
             //Set the cash for the strategy:
@@ -45,6 +49,9 @@ namespace QuantConnect.Algorithm.CSharp
             //Define the symbol and "type" of our generic data:
             var resolution = LiveMode ? Resolution.Second : Resolution.Daily;
             AddData<Bitcoin>("BTC", resolution);
+
+            var seeder = new FuncSecuritySeeder(GetLastKnownPrices);
+            SetSecurityInitializer(security => seeder.SeedSecurity(security));
         }
 
         /// <summary>
@@ -66,6 +73,30 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        public override void OnSecuritiesChanged(SecurityChanges changes)
+        {
+            changes.FilterCustomSecurities = false;
+            foreach (var addedSecurity in changes.AddedSecurities)
+            {
+                if (addedSecurity.Symbol.Value == "BTC")
+                {
+                    _warmedUpChecked = true;
+                }
+                if (!addedSecurity.HasData)
+                {
+                    throw new Exception($"Security {addedSecurity.Symbol} was not warmed up!");
+                }
+            }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            if (!_warmedUpChecked)
+            {
+                throw new Exception($"Security was not warmed up!");
+            }
+        }
+
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
@@ -77,6 +108,16 @@ namespace QuantConnect.Algorithm.CSharp
         public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 8942;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
@@ -84,30 +125,30 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "157.497%"},
+            {"Compounding Annual Return", "157.655%"},
             {"Drawdown", "84.800%"},
             {"Expectancy", "0"},
             {"Net Profit", "5319.007%"},
-            {"Sharpe Ratio", "2.086"},
-            {"Probabilistic Sharpe Ratio", "69.456%"},
+            {"Sharpe Ratio", "2.123"},
+            {"Probabilistic Sharpe Ratio", "70.581%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "1.747"},
-            {"Beta", "0.047"},
+            {"Alpha", "1.776"},
+            {"Beta", "0.059"},
             {"Annual Standard Deviation", "0.84"},
             {"Annual Variance", "0.706"},
-            {"Information Ratio", "1.922"},
-            {"Tracking Error", "0.848"},
-            {"Treynor Ratio", "37.473"},
+            {"Information Ratio", "1.962"},
+            {"Tracking Error", "0.847"},
+            {"Treynor Ratio", "30.455"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "BTC.Bitcoin 2S"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "2.269"},
-            {"Return Over Maximum Drawdown", "1.858"},
+            {"Sortino Ratio", "2.271"},
+            {"Return Over Maximum Drawdown", "1.86"},
             {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},

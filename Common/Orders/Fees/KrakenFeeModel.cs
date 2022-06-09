@@ -31,19 +31,19 @@ namespace QuantConnect.Orders.Fees
         /// We don't use 30 day model, so using only tier1 fees.
         /// https://www.kraken.com/features/fee-schedule#kraken-pro
         /// </summary>
-        public const decimal MakerTier1CryptoFee = 0.16m;
+        public const decimal MakerTier1CryptoFee = 0.0016m;
         
         /// <summary>
         /// We don't use 30 day model, so using only tier1 fees.
         /// https://www.kraken.com/features/fee-schedule#kraken-pro
         /// </summary>
-        public const decimal TakerTier1CryptoFee = 0.26m;
+        public const decimal TakerTier1CryptoFee = 0.0026m;
         
         /// <summary>
         /// We don't use 30 day model, so using only tier1 fees.
         /// https://www.kraken.com/features/fee-schedule#stablecoin-fx-pairs
         /// </summary>
-        public const decimal Tier1FxFee = 0.2m;
+        public const decimal Tier1FxFee = 0.002m;
 
         /// <summary>
         /// Fiats and stablecoins list that have own fee.
@@ -72,6 +72,8 @@ namespace QuantConnect.Orders.Fees
                 // limit order posted to the order book
                 unitPrice = ((LimitOrder)order).LimitPrice;
             }
+            
+            unitPrice *= security.SymbolProperties.ContractMultiplier;
 
             var fee = TakerTier1CryptoFee;
 
@@ -104,7 +106,7 @@ namespace QuantConnect.Orders.Fees
             CurrencyPairUtil.DecomposeCurrencyPair(security.Symbol, out actualBaseCurrency, out actualQuoteCurrency);
             
             return new OrderFee(new CashAmount(
-                unitPrice * order.AbsoluteQuantity * fee,
+                isBuy ? unitPrice * order.AbsoluteQuantity * fee : 1 * order.AbsoluteQuantity * fee,
                 isBuy ? actualQuoteCurrency : actualBaseCurrency));
         }
     }

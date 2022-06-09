@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Brokerages.Tradier;
@@ -23,17 +24,20 @@ namespace QuantConnect.Tests.Brokerages.Tradier
     [TestFixture]
     public class TradierBrokerageSerializationTests
     {
-        [Test]
-        public void ProperlyHandlesNullStringValues()
+        [TestCase("gtc")]
+        [TestCase("pre")]
+        [TestCase("post")]
+        [TestCase("day")]
+        public void ProperlyHandlesNullStringValues(string orderDuration)
         {
-            const string rawResponse = @"{'orders':{'order':
+            var rawResponse = @"{'orders':{'order':
         {'id':69183,
         'type':'limit',
         'symbol':'AAPL',
         'side':'buy',
         'quantity':128.00000,
         'status':'filled',
-        'duration':'gtc',
+        'duration':'_orderDuration_',
         'price':115.83,
         'avg_fill_price':115.83000,
         'exec_quantity':128.00000,
@@ -45,15 +49,18 @@ namespace QuantConnect.Tests.Brokerages.Tradier
         'class':'equity'
         }
     }
-}";
-            var orders = JsonConvert.DeserializeObject<TradierOrdersContainer>(rawResponse);
+}".Replace("_orderDuration_", orderDuration, StringComparison.InvariantCulture);
 
-            const string rawNullResponse = @"{'orders': null }";
-            orders = JsonConvert.DeserializeObject<TradierOrdersContainer>(rawNullResponse);
-
-            const string rawNullResponse2 = @"{'orders': 'null' }";
-            orders = JsonConvert.DeserializeObject<TradierOrdersContainer>(rawNullResponse2);
+            Assert.DoesNotThrow(() => JsonConvert.DeserializeObject<TradierOrdersContainer>(rawResponse));
         }
+
+        [TestCase(@"{'orders': null }")]
+        [TestCase(@"{'orders': 'null' }")]
+        public void HandlesNullResponse(string nullResponse)
+        {
+            Assert.DoesNotThrow(() => JsonConvert.DeserializeObject<TradierOrdersContainer>(nullResponse));
+        }
+
         [Test]
         public void QuotesHandles_null_OHLC()
         {

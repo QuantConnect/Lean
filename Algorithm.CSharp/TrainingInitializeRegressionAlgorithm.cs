@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -55,6 +55,17 @@ namespace QuantConnect.Algorithm.CSharp
 
         public bool CanRunLocally => false;
         public Language[] Languages => new[] {Language.CSharp};
+
+        /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 0;
+
+        /// </summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
+
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>();
     }
 }
