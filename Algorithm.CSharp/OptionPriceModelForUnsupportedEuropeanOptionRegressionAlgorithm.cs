@@ -31,7 +31,7 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private bool _showGreeks = false;
         private bool _triedGreeksCalculation = false;
-        private Symbol _spxOptionSymbol;
+        private Symbol _optionSymbol;
 
         public override void Initialize()
         {
@@ -39,12 +39,12 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2021, 1, 4);
             SetCash(100000);
 
-            var spxIndex = AddIndex("SPX", Resolution.Minute);
-            spxIndex.SetDataNormalizationMode(DataNormalizationMode.Raw);
-            var spxOption = AddIndexOption("SPX", Resolution.Minute);
+            var index = AddIndex("SPX", Resolution.Minute);
+            index.SetDataNormalizationMode(DataNormalizationMode.Raw);
+            var indexOption = AddIndexOption("SPX", Resolution.Minute);
             // BaroneAdesiWhaley model does not support European style options
-            spxOption.PriceModel = OptionPriceModels.BaroneAdesiWhaley();
-            _spxOptionSymbol = spxOption.Symbol;
+            indexOption.PriceModel = OptionPriceModels.BaroneAdesiWhaley();
+            _optionSymbol = indexOption.Symbol;
 
             _showGreeks = true;
             _triedGreeksCalculation = false;
@@ -59,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             foreach (var kvp in slice.OptionChains)
             {
-                if (kvp.Key != _spxOptionSymbol)
+                if (kvp.Key != _optionSymbol)
                 {
                     continue;
                 }

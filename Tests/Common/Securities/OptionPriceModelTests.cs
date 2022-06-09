@@ -26,6 +26,7 @@ using Moq;
 using QLNet;
 using Cash = QuantConnect.Securities.Cash;
 using Option = QuantConnect.Securities.Option.Option;
+using Log = QuantConnect.Logging.Log;
 
 namespace QuantConnect.Tests.Common
 {
@@ -317,6 +318,22 @@ namespace QuantConnect.Tests.Common
             {
                 Assert.DoesNotThrow(call);
                 Assert.DoesNotThrow(put);
+
+                var results = priceModel.Evaluate(optionCall, null, contractCall);
+                var greeks = results.Greeks;
+
+                Assert.That(greeks.Delta, Is.InRange(0, 1m));
+                Assert.Less(greeks.Theta, 0);
+                Assert.Greater(greeks.Rho, 0m);
+                Assert.Greater(greeks.Vega, 0m);
+
+                results = priceModel.Evaluate(optionPut, null, contractPut);
+                greeks = results.Greeks;
+
+                Assert.That(greeks.Delta, Is.InRange(-1m, 0));
+                Assert.Less(greeks.Theta, 0);
+                Assert.Less(greeks.Rho, 0m);
+                Assert.Greater(greeks.Vega, 0m);
             }
         }
 
