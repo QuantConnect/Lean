@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -20,7 +20,6 @@ using NUnit.Framework;
 using QuantConnect.Algorithm;
 using Python.Runtime;
 using QuantConnect.Data.Market;
-using QuantConnect.Data;
 using QuantConnect.Indicators;
 using QuantConnect.Tests.Indicators;
 using System;
@@ -40,8 +39,7 @@ namespace QuantConnect.Tests.Algorithm
         [SetUp]
         public void Setup()
         {
-            _algorithm = new QCAlgorithm();
-            _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
+            _algorithm = new AlgorithmStub();
             _spy = _algorithm.AddEquity("SPY").Symbol;
 
             _indicatorTestsTypes =
@@ -54,16 +52,51 @@ namespace QuantConnect.Tests.Algorithm
                 select type;
         }
 
+        [TestCase(true)]
+        [TestCase(false)]
+        public void IgnorePlotDuringLiveWarmup(bool liveMode)
+        {
+            _algorithm.SetLiveMode(liveMode);
+
+            _algorithm.Plot("Chart", 1);
+            _algorithm.Plot("Chart", "Series", 2);
+
+            foreach (var chart in _algorithm.GetChartUpdates(true))
+            {
+                foreach (var serie in chart.Series)
+                {
+                    if (liveMode)
+                    {
+                        Assert.IsEmpty(serie.Value.Values);
+                    }
+                    else
+                    {
+                        Assert.IsNotEmpty(serie.Value.Values);
+                    }
+                }
+            }
+
+            _algorithm.SetFinishedWarmingUp();
+            _algorithm.Plot("Chart", 1);
+            _algorithm.Plot("Chart", "Series", 2);
+
+            foreach (var chart in _algorithm.GetChartUpdates(true))
+            {
+                foreach (var serie in chart.Series)
+                {
+                    Assert.IsNotEmpty(serie.Value.Values);
+                }
+            }
+        }
+
         [Test]
         public void TestGetChartUpdatesWhileAdding()
         {
-            var algorithm = new QCAlgorithm();
-
             var task1 = Task.Factory.StartNew(() =>
             {
                 for (var i = 0; i < 1000; i++)
                 {
-                    algorithm.AddChart(new Chart($"Test_{i}"));
+                    _algorithm.AddChart(new Chart($"Test_{i}"));
                     Thread.Sleep(1);
                 }
             });
@@ -72,7 +105,7 @@ namespace QuantConnect.Tests.Algorithm
             {
                 for (var i = 0; i < 1000; i++)
                 {
-                    algorithm.GetChartUpdates(true);
+                    _algorithm.GetChartUpdates(true);
                     Thread.Sleep(1);
                 }
             });
