@@ -27,84 +27,22 @@ namespace QuantConnect.Algorithm.CSharp
     /// Regression algorithm excersizing an equity covered European style option, using an option price model
     /// that does not support European style options and asserting that the option price model is not used.
     /// </summary>
-    public class OptionPriceModelForUnsupportedEuropeanOptionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class OptionPriceModelForUnsupportedEuropeanOptionRegressionAlgorithm : OptionPriceModelForOptionStylesBaseRegressionAlgorithm, IRegressionAlgorithmDefinition
     {
-        private bool _showGreeks = false;
-        private bool _triedGreeksCalculation = false;
-        private Symbol _optionSymbol;
-
         public override void Initialize()
         {
-            SetStartDate(2021, 1, 4);
-            SetEndDate(2021, 1, 4);
-            SetCash(100000);
+            SetStartDate(2021, 1, 14);
+            SetEndDate(2021, 1, 14);
 
-            var index = AddIndex("SPX", Resolution.Minute);
-            index.SetDataNormalizationMode(DataNormalizationMode.Raw);
-            var indexOption = AddIndexOption("SPX", Resolution.Minute);
+            _option = AddIndexOption("SPX", Resolution.Hour);
             // BaroneAdesiWhaley model does not support European style options
-            indexOption.PriceModel = OptionPriceModels.BaroneAdesiWhaley();
-            _optionSymbol = indexOption.Symbol;
+            _option.PriceModel = OptionPriceModels.BaroneAdesiWhaley();
 
-            _showGreeks = true;
+            SetWarmup(7, Resolution.Daily);
+
+            _optionStyle = OptionStyle.European;
+            _optionStyleIsSupported = false;
             _triedGreeksCalculation = false;
-        }
-
-        public override void OnData(Slice slice)
-        {
-            if (IsWarmingUp)
-            {
-                return;
-            }
-
-            foreach (var kvp in slice.OptionChains)
-            {
-                if (kvp.Key != _optionSymbol)
-                {
-                    continue;
-                }
-
-                var chain = kvp.Value;
-                var contracts = chain.Where(x => x.Right == OptionRight.Call);
-
-                if (!contracts.Any())
-                {
-                    return;
-                }
-
-                if (_showGreeks)
-                {
-                    _showGreeks = false;
-                    _triedGreeksCalculation = true;
-
-                    foreach (var contract in contracts)
-                    {
-                        Greeks greeks;
-                        try
-                        {
-                            greeks = contract.Greeks;
-                            throw new Exception($"Expected greeks not to be calculated for {contract.Symbol.Value}, an European style option, using an option price model that does not support them, but they were");
-                        }
-                        catch (ArgumentException)
-                        {
-                            // Expected
-                        }
-                    }
-                }
-            }
-        }
-
-        public override void OnEndOfDay(Symbol symbol)
-        {
-            _showGreeks = true;
-        }
-
-        public override void OnEndOfAlgorithm()
-        {
-            if (!_triedGreeksCalculation)
-            {
-                throw new Exception("Expected greeks to be calculated");
-            }
         }
 
         /// <summary>
@@ -120,7 +58,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 7118;
+        public long DataPoints => 1406;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -157,8 +95,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "0"},
-            {"Return Over Maximum Drawdown", "0"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
             {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},

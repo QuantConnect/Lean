@@ -12,58 +12,23 @@
 # limitations under the License.
 
 from AlgorithmImports import *
+from OptionPriceModelForOptionStylesBaseRegressionAlgorithm import OptionPriceModelForOptionStylesBaseRegressionAlgorithm
 
 ### <summary>
 ### Regression algorithm excersizing an equity covered American style option, using an option price model
 ### that supports American style options and asserting that the option price model is used.
 ### </summary>
-class OptionPriceModelForSupportedAmericanOptionRegressionAlgorithm(QCAlgorithm):
+class OptionPriceModelForSupportedAmericanOptionRegressionAlgorithm(OptionPriceModelForOptionStylesBaseRegressionAlgorithm):
     def Initialize(self):
-        self.SetStartDate(2015, 12, 23)
+        self.SetStartDate(2015, 12, 24)
         self.SetEndDate(2015, 12, 24)
-        self.SetCash(100000)
 
-        equity = self.AddEquity("GOOG", Resolution.Minute)
-        equity.SetDataNormalizationMode(DataNormalizationMode.Raw)
-        option = self.AddOption("GOOG", Resolution.Minute)
+        self._option = self.AddOption("GOOG", Resolution.Minute)
         # BaroneAdesiWhaley model supports American style options
-        option.PriceModel = OptionPriceModels.BaroneAdesiWhaley()
-        self._optionSymbol = option.Symbol
+        self._option.PriceModel = OptionPriceModels.BaroneAdesiWhaley()
 
-        self._showGreeks = True
+        self.SetWarmup(1, Resolution.Daily)
+
+        self._optionStyle = OptionStyle.American
+        self._optionStyleIsSupported = True
         self._triedGreeksCalculation = False
-
-    def OnData(self, slice):
-        if self.IsWarmingUp: return
-
-        for kvp in slice.OptionChains:
-            if kvp.Key != self._optionSymbol: continue
-
-            chain = kvp.Value
-            contracts = [contract for contract in chain if contract.Right == OptionRight.Call]
-
-            if len(contracts) == 0: return
-
-            if self._showGreeks:
-                self._showGreeks = False
-                self._triedGreeksCalculation = True
-
-                for contract in contracts:
-                    try:
-                        greeks = contract.Greeks
-                    except ArgumentException:
-                        raise Exception(f'Expected greeks to be calculated for {contract.Symbol.Value}, an American style option, but they were not')
-
-                    self.Debug(f'{contract.Symbol.Value},\n'
-                        f'strike: {contract.Strike},\n'
-                        f'Gamma: {greeks.Gamma},\n'
-                        f'Rho: {greeks.Rho},\n'
-                        f'Delta: {greeks.Delta},\n'
-                        f'Vega: {greeks.Vega}')
-
-    def OnEndOfDay(self, symbol):
-        self._showGreeks = True
-
-    def OnEndOfAlgorithm(self):
-        if not self._triedGreeksCalculation:
-            raise Exception("Expected greeks to be calculated")

@@ -20,48 +20,15 @@ from datetime import timedelta
 ### </summary>
 class OptionPriceModelForUnsupportedAmericanOptionRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
-        self.SetStartDate(2015, 12, 23)
+        self.SetStartDate(2015, 12, 24)
         self.SetEndDate(2015, 12, 24)
-        self.SetCash(100000)
 
-        index = self.AddEquity("GOOG", Resolution.Minute)
-        index.SetDataNormalizationMode(DataNormalizationMode.Raw)
-        option = self.AddOption("GOOG", Resolution.Minute)
+        self._option = self.AddOption("GOOG", Resolution.Minute)
         # BlackSholes model does not support American style options
-        option.PriceModel = OptionPriceModels.BlackScholes()
-        self._optionSymbol = option.Symbol
+        self._option.PriceModel = OptionPriceModels.BlackScholes()
 
-        self.SetWarmUp(timedelta(10))
+        self.SetWarmup(1, Resolution.Daily)
 
-        self._showGreeks = True
+        self._optionStyle = OptionStyle.American
+        self._optionStyleIsSupported = False
         self._triedGreeksCalculation = False
-
-    def OnData(self, slice):
-        if self.IsWarmingUp: return
-
-        for kvp in slice.OptionChains:
-            if kvp.Key != self._optionSymbol: continue
-
-            chain = kvp.Value
-            contracts = [contract for contract in chain if contract.Right == OptionRight.Call]
-
-            if len(contracts) == 0: return
-
-            if self._showGreeks:
-                self._showGreeks = False
-                self._triedGreeksCalculation = True
-
-                for contract in contracts:
-                    try:
-                        greeks = contract.Greeks
-                        raise Exception(f'Expected greeks not to be calculated for {contract.Symbol.Value}, an American style option, using an option price model that does not support them, but they were');
-                    except ArgumentException:
-                        # Expected
-                        pass
-
-    def OnEndOfDay(self, symbol):
-        self._showGreeks = True
-
-    def OnEndOfAlgorithm(self):
-        if not self._triedGreeksCalculation:
-            raise Exception("Expected greeks to be calculated")

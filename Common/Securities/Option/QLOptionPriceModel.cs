@@ -31,6 +31,8 @@ namespace QuantConnect.Securities.Option
     /// </summary>
     public class QLOptionPriceModel : IOptionPriceModel
     {
+        private static readonly OptionStyle[] _defaultAllowedOptionStyles = new[] { OptionStyle.European, OptionStyle.American };
+
         private readonly IQLUnderlyingVolatilityEstimator _underlyingVolEstimator;
         private readonly IQLRiskFreeRateEstimator _riskFreeRateEstimator;
         private readonly IQLDividendYieldEstimator _dividendYieldEstimator;
@@ -51,7 +53,7 @@ namespace QuantConnect.Securities.Option
         /// List of option styles supported by the pricing model.
         /// By default, both American and European option styles are supported.
         /// </summary>
-        public OptionStyle[] AllowedOptionStyles { get; } = new[] { OptionStyle.European, OptionStyle.American };
+        public OptionStyle[] AllowedOptionStyles { get; }
 
         /// <summary>
         /// Method constructs QuantLib option price model with necessary estimators of underlying volatility, risk free rate, and underlying dividend yield
@@ -68,10 +70,7 @@ namespace QuantConnect.Securities.Option
             _riskFreeRateEstimator = riskFreeRateEstimator ?? new ConstantQLRiskFreeRateEstimator();
             _dividendYieldEstimator = dividendYieldEstimator ?? new ConstantQLDividendYieldEstimator();
 
-            if (allowedOptionStyles != null)
-            {
-                AllowedOptionStyles = allowedOptionStyles;
-            }
+            AllowedOptionStyles = allowedOptionStyles ?? _defaultAllowedOptionStyles;
         }
         /// <summary>
         /// Method constructs QuantLib option price model with necessary estimators of underlying volatility, risk free rate, and underlying dividend yield
@@ -107,7 +106,7 @@ namespace QuantConnect.Securities.Option
         {
             if (!AllowedOptionStyles.Contains(contract.Symbol.ID.OptionStyle))
             {
-               throw new ArgumentException($"{contract.Symbol.ID.OptionStyle} style options are not supported by this pricing model");
+               throw new ArgumentException($"{contract.Symbol.ID.OptionStyle} style options are not supported by {this.GetType().Name}");
             }
 
             try

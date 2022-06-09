@@ -12,53 +12,23 @@
 # limitations under the License.
 
 from AlgorithmImports import *
+from OptionPriceModelForOptionStylesBaseRegressionAlgorithm import OptionPriceModelForOptionStylesBaseRegressionAlgorithm
 
 ### <summary>
 ### Regression algorithm excersizing an equity covered European style option, using an option price model
 ### that does not support European style options and asserting that the option price model is not used.
 ### </summary>
-class OptionPriceModelForUnsupportedEuropeanOptionRegressionAlgorithm(QCAlgorithm):
+class OptionPriceModelForUnsupportedEuropeanOptionRegressionAlgorithm(OptionPriceModelForOptionStylesBaseRegressionAlgorithm):
     def Initialize(self):
-        self.SetStartDate(2021, 1, 4)
-        self.SetEndDate(2021, 1, 4)
-        self.SetCash(100000)
+        self.SetStartDate(2021, 1, 14)
+        self.SetEndDate(2021, 1, 14)
 
-        index = self.AddIndex("SPX", Resolution.Minute)
-        index.SetDataNormalizationMode(DataNormalizationMode.Raw)
-        indexOption = self.AddIndexOption("SPX", Resolution.Minute)
+        self._option = self.AddIndexOption("SPX", Resolution.Hour)
         # BaroneAdesiWhaley model does not support European style options
-        indexOption.PriceModel = OptionPriceModels.BaroneAdesiWhaley()
-        self._indexOptionSymbol = indexOption.Symbol
+        self._option.PriceModel = OptionPriceModels.BaroneAdesiWhaley()
 
-        self._showGreeks = True
+        self.SetWarmup(7, Resolution.Daily)
+
+        self._optionStyle = OptionStyle.European
+        self._optionStyleIsSupported = False
         self._triedGreeksCalculation = False
-
-    def OnData(self, slice):
-        if self.IsWarmingUp: return
-
-        for kvp in slice.OptionChains:
-            if kvp.Key != self._indexOptionSymbol: continue
-
-            chain = kvp.Value
-            contracts = [contract for contract in chain if contract.Right == OptionRight.Call]
-
-            if len(contracts) == 0: return
-
-            if self._showGreeks:
-                self._showGreeks = False
-                self._triedGreeksCalculation = True
-
-                for contract in contracts:
-                    try:
-                        greeks = contract.Greeks
-                        raise Exception(f'Expected greeks not to be calculated for {contract.Symbol.Value}, an European style option, using an option price model that does not support them, but they were');
-                    except ArgumentException:
-                        # Expected
-                        pass
-
-    def OnEndOfDay(self, symbol):
-        self._showGreeks = True
-
-    def OnEndOfAlgorithm(self):
-        if not self._triedGreeksCalculation:
-            raise Exception("Expected greeks to be calculated")

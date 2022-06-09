@@ -27,90 +27,22 @@ namespace QuantConnect.Algorithm.CSharp
     /// Regression algorithm excersizing an equity covered American style option, using an option price model
     /// that supports American style options and asserting that the option price model is used.
     /// </summary>
-    public class OptionPriceModelForSupportedAmericanOptionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class OptionPriceModelForSupportedAmericanOptionRegressionAlgorithm : OptionPriceModelForOptionStylesBaseRegressionAlgorithm, IRegressionAlgorithmDefinition
     {
-        private bool _showGreeks = false;
-        private bool _triedGreeksCalculation = false;
-        private Symbol _optionSymbol;
-
         public override void Initialize()
         {
-            SetStartDate(2015, 12, 23);
+            SetStartDate(2015, 12, 24);
             SetEndDate(2015, 12, 24);
-            SetCash(100000);
 
-            var equity = AddEquity("GOOG", Resolution.Minute);
-            equity.SetDataNormalizationMode(DataNormalizationMode.Raw);
-            var option = AddOption("GOOG", Resolution.Minute);
+            _option = AddOption("GOOG", Resolution.Minute);
             // BaroneAdesiWhaley model supports American style options
-            option.PriceModel = OptionPriceModels.BaroneAdesiWhaley();
-            _optionSymbol = option.Symbol;
+            _option.PriceModel = OptionPriceModels.BaroneAdesiWhaley();
 
-            _showGreeks = true;
+            SetWarmup(1, Resolution.Daily);
+
+            _optionStyle = OptionStyle.American;
+            _optionStyleIsSupported = true;
             _triedGreeksCalculation = false;
-        }
-
-        public override void OnData(Slice slice)
-        {
-            if (IsWarmingUp)
-            {
-                return;
-            }
-
-            foreach (var kvp in slice.OptionChains)
-            {
-                if (kvp.Key != _optionSymbol)
-                {
-                    continue;
-                }
-
-                var chain = kvp.Value;
-                var contracts = chain.Where(x => x.Right == OptionRight.Call);
-
-                if (!contracts.Any())
-                {
-                    return;
-                }
-
-                if (_showGreeks)
-                {
-                    _showGreeks = false;
-                    _triedGreeksCalculation = true;
-
-                    foreach (var contract in contracts)
-                    {
-                        Greeks greeks;
-                        try
-                        {
-                            greeks = contract.Greeks;
-                        }
-                        catch (ArgumentException)
-                        {
-                            throw new Exception($"Expected greeks to be calculated for {contract.Symbol.Value}, an American style option, but they were not");
-                        }
-
-                        Debug($@"{contract.Symbol.Value},
-                            strike: {contract.Strike},
-                            Gamma: {greeks.Gamma},
-                            Rho: {greeks.Rho},
-                            Delta: {greeks.Delta},
-                            Vega: {greeks.Vega}");
-                    }
-                }
-            }
-        }
-
-        public override void OnEndOfDay(Symbol symbol)
-        {
-            _showGreeks = true;
-        }
-
-        public override void OnEndOfAlgorithm()
-        {
-            if (!_triedGreeksCalculation)
-            {
-                throw new Exception("Expected greeks to be calculated");
-            }
         }
 
         /// <summary>
@@ -126,7 +58,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 910617;
+        public long DataPoints => 911426;
 
         /// <summary>
         /// Data Points count of the algorithm history
