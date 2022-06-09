@@ -2094,8 +2094,11 @@ namespace QuantConnect.Algorithm
                 return false;
             }
 
-            // cancel open orders
-            Transactions.CancelOpenOrders(security.Symbol);
+            if (!IsWarmingUp)
+            {
+                // cancel open orders
+                Transactions.CancelOpenOrders(security.Symbol);
+            }
 
             // liquidate if invested
             if (security.Invested)
