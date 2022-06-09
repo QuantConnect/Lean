@@ -24,28 +24,27 @@ using QuantConnect.Securities.Option;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm excersizing an equity covered American style option, using an option price model that supports American style options and asserting that the option price model is used.
+    /// Regression algorithm excersizing an equity covered American style option, using an option price model
+    /// that supports American style options and asserting that the option price model is used.
     /// </summary>
     public class OptionPriceModelForSupportedAmericanOptionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private bool _showGreeks = false;
         private bool _triedGreeksCalculation = false;
-        private Symbol _spyOptionSymbol;
+        private Symbol _optionSymbol;
 
         public override void Initialize()
         {
-            SetStartDate(2020, 1, 2);
-            SetEndDate(2020, 1, 14);
+            SetStartDate(2015, 12, 23);
+            SetEndDate(2015, 12, 24);
             SetCash(100000);
 
-            var spyIndex = AddEquity("SPY", Resolution.Minute);
-            spyIndex.SetDataNormalizationMode(DataNormalizationMode.Raw);
-            var spyOption = AddOption("SPY", Resolution.Minute);
-            spyOption.SetFilter(-1, 1, TimeSpan.FromDays(45), TimeSpan.FromDays(55));
-            spyOption.PriceModel = OptionPriceModels.BaroneAdesiWhaley();
-            _spyOptionSymbol = spyOption.Symbol;
-
-            SetWarmUp(TimeSpan.FromDays(155));
+            var equity = AddEquity("GOOG", Resolution.Minute);
+            equity.SetDataNormalizationMode(DataNormalizationMode.Raw);
+            var option = AddOption("GOOG", Resolution.Minute);
+            // BaroneAdesiWhaley model supports American style options
+            option.PriceModel = OptionPriceModels.BaroneAdesiWhaley();
+            _optionSymbol = option.Symbol;
 
             _showGreeks = true;
             _triedGreeksCalculation = false;
@@ -60,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             foreach (var kvp in slice.OptionChains)
             {
-                if (kvp.Key != _spyOptionSymbol)
+                if (kvp.Key != _optionSymbol)
                 {
                     continue;
                 }
@@ -90,7 +89,7 @@ namespace QuantConnect.Algorithm.CSharp
                             throw new Exception($"Expected greeks to be calculated for {contract.Symbol.Value}, an American style option, but they were not");
                         }
 
-                        Log($@"{contract.Symbol.Value},
+                        Debug($@"{contract.Symbol.Value},
                             strike: {contract.Strike},
                             Gamma: {greeks.Gamma},
                             Rho: {greeks.Rho},
@@ -122,13 +121,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        // public Language[] Languages { get; } = { Language.CSharp, Language.Python };
-        public Language[] Languages { get; } = { Language.CSharp };
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 26311717;
+        public long DataPoints => 910617;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -156,8 +154,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-2.663"},
-            {"Tracking Error", "0.069"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},

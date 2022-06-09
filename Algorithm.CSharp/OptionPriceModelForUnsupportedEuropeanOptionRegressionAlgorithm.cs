@@ -24,7 +24,8 @@ using QuantConnect.Securities.Option;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm excersizing an equity covered European style option, using an option price model that does not support European style options and asserting that the option price model is not used.
+    /// Regression algorithm excersizing an equity covered European style option, using an option price model
+    /// that does not support European style options and asserting that the option price model is not used.
     /// </summary>
     public class OptionPriceModelForUnsupportedEuropeanOptionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
@@ -35,16 +36,15 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             SetStartDate(2021, 1, 4);
-            SetEndDate(2021, 1, 10);
+            SetEndDate(2021, 1, 4);
             SetCash(100000);
 
             var spxIndex = AddIndex("SPX", Resolution.Minute);
             spxIndex.SetDataNormalizationMode(DataNormalizationMode.Raw);
             var spxOption = AddIndexOption("SPX", Resolution.Minute);
+            // BaroneAdesiWhaley model does not support European style options
             spxOption.PriceModel = OptionPriceModels.BaroneAdesiWhaley();
             _spxOptionSymbol = spxOption.Symbol;
-
-            SetWarmUp(10, Resolution.Daily);
 
             _showGreeks = true;
             _triedGreeksCalculation = false;
@@ -83,12 +83,6 @@ namespace QuantConnect.Algorithm.CSharp
                         try
                         {
                             greeks = contract.Greeks;
-                            Log($@"{contract.Symbol.Value},
-                                strike: {contract.Strike},
-                                Gamma: {greeks.Gamma},
-                                Rho: {greeks.Rho},
-                                Delta: {greeks.Delta},
-                                Vega: {greeks.Vega}");
                             throw new Exception($"Expected greeks not to be calculated for {contract.Symbol.Value}, an European style option, using an option price model that does not support them, but they were");
                         }
                         catch (ArgumentException)
@@ -121,13 +115,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        // public Language[] Languages { get; } = { Language.CSharp, Language.Python };
-        public Language[] Languages { get; } = { Language.CSharp };
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 38359;
+        public long DataPoints => 7118;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -155,8 +148,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-103.054"},
-            {"Tracking Error", "0.069"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
@@ -164,8 +157,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
+            {"Sortino Ratio", "0"},
+            {"Return Over Maximum Drawdown", "0"},
             {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
