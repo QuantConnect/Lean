@@ -259,14 +259,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         enumerator = new LiveFillForwardEnumerator(_frontierTimeProvider, enumerator, request.Security.Exchange, fillForwardResolution, request.Configuration.ExtendedMarketHours, localEndTime, request.Configuration.Increment, request.Configuration.DataTimeZone);
                     }
 
-                    // define market hours and user filters to incoming data
+                    // make our subscriptions aware of the frontier of the data feed, prevents future data from spewing into the feed
+                    enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, timeZoneOffsetProvider);
+
+                    // define market hours and user filters to incoming data after the frontier enumerator so during warmup we avoid any realtime data making it's way into the securities
                     if (request.Configuration.IsFilteredSubscription)
                     {
                         enumerator = new SubscriptionFilterEnumerator(enumerator, request.Security, localEndTime, request.Configuration.ExtendedMarketHours, true, request.ExchangeHours);
                     }
-
-                    // finally, make our subscriptions aware of the frontier of the data feed, prevents future data from spewing into the feed
-                    enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, timeZoneOffsetProvider);
                 }
                 else
                 {
