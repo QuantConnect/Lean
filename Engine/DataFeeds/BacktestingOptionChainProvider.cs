@@ -14,66 +14,66 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.IO;
-using QuantConnect.Configuration;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Interfaces;
-using QuantConnect.Logging;
-using QuantConnect.Util;
+using System.Collections.Generic;
+using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
     /// An implementation of <see cref="IOptionChainProvider"/> that reads the list of contracts from open interest zip data files
     /// </summary>
-    public class BacktestingOptionChainProvider : IOptionChainProvider
+    public class BacktestingOptionChainProvider : BacktestingChainProvider, IOptionChainProvider
     {
-        private IDataProvider _dataProvider;
         private IMapFileProvider _mapFileProvider;
 
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        /// <param name="dataProvider">The data provider instance to use</param>
-        public BacktestingOptionChainProvider(IDataProvider dataProvider)
+        /// <param name="dataCacheProvider">The data cache provider instance to use</param>
+        /// <param name="mapFileProvider">The map file provider instance to use</param>
+        public BacktestingOptionChainProvider(IDataCacheProvider dataCacheProvider, IMapFileProvider mapFileProvider)
+            : base(dataCacheProvider)
         {
-            _dataProvider = dataProvider;
-            _mapFileProvider =
-                Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider",
-                    "LocalDiskMapFileProvider"));
+            _mapFileProvider = mapFileProvider;
         }
 
         /// <summary>
         /// Gets the list of option contracts for a given underlying symbol
         /// </summary>
-        /// <param name="underlyingSymbol">The underlying symbol</param>
+        /// <param name="symbol">The underlying symbol</param>
         /// <param name="date">The date for which to request the option chain (only used in backtesting)</param>
         /// <returns>The list of option contracts</returns>
-        public IEnumerable<Symbol> GetOptionContractList(Symbol underlyingSymbol, DateTime date)
+        public virtual IEnumerable<Symbol> GetOptionContractList(Symbol symbol, DateTime date)
         {
-            if (!underlyingSymbol.SecurityType.HasOptions())
+            if (!symbol.SecurityType.HasOptions())
             {
-                throw new NotSupportedException($"BacktestingOptionChainProvider.GetOptionContractList(): SecurityType.Equity, SecurityType.Future, or SecurityType.Index is expected but was {underlyingSymbol.SecurityType}");
+                if (symbol.SecurityType.IsOption() && symbol.Underlying != null)
+                {
+                    // be user friendly and take the underlying
+                    symbol = symbol.Underlying;
+                }
+                else
+                {
+                    throw new NotSupportedException($"BacktestingOptionChainProvider.GetOptionContractList(): " +
+                        $"{nameof(SecurityType.Equity)}, {nameof(SecurityType.Future)}, or {nameof(SecurityType.Index)} is expected but was {symbol.SecurityType}");
+                }
             }
 
             // Resolve any mapping before requesting option contract list for equities
             // Needs to be done in order for the data file key to be accurate
             Symbol mappedSymbol;
-            if (underlyingSymbol.RequiresMapping())
+            if (symbol.RequiresMapping())
             {
-                var mapFileResolver = _mapFileProvider.Get(AuxiliaryDataKey.Create(underlyingSymbol));
-                var mapFile = mapFileResolver.ResolveMapFile(underlyingSymbol);
-                var ticker = mapFile.GetMappedSymbol(date, underlyingSymbol.Value);
-                mappedSymbol = underlyingSymbol.UpdateMappedSymbol(ticker);
+                var mapFileResolver = _mapFileProvider.Get(AuxiliaryDataKey.Create(symbol));
+                var mapFile = mapFileResolver.ResolveMapFile(symbol);
+                var ticker = mapFile.GetMappedSymbol(date, symbol.Value);
+                mappedSymbol = symbol.UpdateMappedSymbol(ticker);
             }
             else
             {
-                mappedSymbol = underlyingSymbol;
+                mappedSymbol = symbol;
             }
-
-
-            // build the option contract list from the open interest zip file entry names
 
             // create a canonical option symbol for the given underlying
             var canonicalSymbol = Symbol.CreateOption(
@@ -84,39 +84,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 0,
                 SecurityIdentifier.DefaultDate);
 
-            var zipFileName = string.Empty;
-            Stream stream = null;
-
-            // In order of trust-worthiness of containing the complete option chain, OpenInterest is guaranteed
-            // to have the complete option chain. Quotes come after open-interest
-            // because it's also likely to contain the option chain. Trades may be
-            // missing portions of the option chain, so we resort to it last.
-            foreach (var tickType in new[] { TickType.OpenInterest, TickType.Quote, TickType.Trade })
-            {
-                // build the zip file name and fetch it with our provider
-                zipFileName = LeanData.GenerateZipFilePath(Globals.DataFolder, canonicalSymbol, date, Resolution.Minute, tickType);
-                stream = _dataProvider.Fetch(zipFileName);
-
-                if (stream != null)
-                {
-                    break;
-                }
-            }
-
-            if (stream == null)
-            {
-                Log.Trace($"BacktestingOptionChainProvider.GetOptionContractList(): File not found: {zipFileName}");
-                yield break;
-            }
-
-            // generate and return the contract symbol for each zip entry
-            var zipEntryNames = Compression.GetZipEntryFileNames(stream);
-            foreach (var zipEntryName in zipEntryNames)
-            {
-                yield return LeanData.ReadSymbolFromZipEntry(canonicalSymbol, Resolution.Minute, zipEntryName);
-            }
-
-            stream.DisposeSafely();
+            return GetSymbols(canonicalSymbol, date);
         }
     }
 }

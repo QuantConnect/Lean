@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -14,8 +14,9 @@
 */
 
 using System;
-using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Interfaces;
+using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -23,17 +24,44 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// An implementation of <see cref="IFutureChainProvider"/> that fetches the list of contracts
     /// from an external source
     /// </summary>
-    public class LiveFutureChainProvider : IFutureChainProvider
+    public class LiveFutureChainProvider : BacktestingFutureChainProvider
     {
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        /// <param name="dataCacheProvider">The data cache provider instance to use</param>
+        public LiveFutureChainProvider(IDataCacheProvider dataCacheProvider) : base(dataCacheProvider)
+        {
+        }
+
         /// <summary>
         /// Gets the list of future contracts for a given underlying symbol
         /// </summary>
         /// <param name="symbol">The underlying symbol</param>
         /// <param name="date">The date for which to request the future chain (only used in backtesting)</param>
         /// <returns>The list of future contracts</returns>
-        public IEnumerable<Symbol> GetFutureContractList(Symbol symbol, DateTime date)
+        public override IEnumerable<Symbol> GetFutureContractList(Symbol symbol, DateTime date)
         {
-            throw new NotImplementedException("LiveFutureChainProvider.GetFutureContractList() has not been implemented yet.");
+            var result = Enumerable.Empty<Symbol>();
+            try
+            {
+                result = base.GetFutureContractList(symbol, date);
+            }
+            catch
+            {
+            }
+
+            bool yielded = false;
+            foreach (var symbols in result)
+            {
+                yielded = true;
+                yield return symbols;
+            }
+
+            if (!yielded)
+            {
+                throw new NotImplementedException("LiveFutureChainProvider.GetFutureContractList() has not been implemented yet.");
+            }
         }
     }
 }
