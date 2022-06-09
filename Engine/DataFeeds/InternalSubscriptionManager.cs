@@ -77,9 +77,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         // during warmup in live trading do not add these internal subscription until the algorithm starts
                         // these subscription are only added for realtime price in low resolution subscriptions which isn't required for warmup
-                        startTimeUtc = _algorithm.StartDate.ConvertToUtc(_algorithm.TimeZone);
+                        startTimeUtc = DateTime.UtcNow;
                     }
-                    var internalRequest = new SubscriptionRequest(false, null, request.Security, config, request.StartTimeUtc, request.EndTimeUtc);
+                    var internalRequest = new SubscriptionRequest(false, null, request.Security, config, startTimeUtc, request.EndTimeUtc);
                     if (existing)
                     {
                         _subscriptionRequests[request.Configuration.Symbol].Add(internalRequest);

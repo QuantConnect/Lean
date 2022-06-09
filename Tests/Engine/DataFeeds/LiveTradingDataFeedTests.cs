@@ -97,6 +97,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _manualTimeProvider.SetCurrentTimeUtc(_algorithm.UtcTime);
 
             var es = _algorithm.AddOption("AAPL");
+            // allow time for the exchange to pick up the selection point
+            Thread.Sleep(50);
             var countWarmup = 0;
             var countLive = 0;
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
@@ -116,7 +118,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
             },
             endDate: endDate,
-            secondsTimeStep: 60 * 60 * 4);
+            secondsTimeStep: 60 * 60);
 
             Assert.AreNotEqual(0, countWarmup);
             Assert.AreNotEqual(0, countLive);
@@ -137,6 +139,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _manualTimeProvider.SetCurrentTimeUtc(_algorithm.UtcTime);
 
             var es = _algorithm.AddFuture("ES");
+            // allow time for the exchange to pick up the selection point
+            Thread.Sleep(50);
             var countWarmup = 0;
             var countLive = 0;
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
@@ -156,7 +160,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
             },
             endDate: endDate,
-            secondsTimeStep: 60 * 60 * 4);
+            secondsTimeStep: 60 * 60);
 
             Assert.AreNotEqual(0, countWarmup);
             Assert.AreNotEqual(0, countLive);
