@@ -12,7 +12,6 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from System import Enum
 
 ### <summary>
 ### Base regression algorithm excersizing for exercising different style options with option price models that migth
