@@ -14,9 +14,9 @@
 */
 
 using System;
+using QuantConnect.Data;
 using System.Collections;
 using System.Collections.Generic;
-using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
@@ -184,9 +184,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="current">The data to be added</param>
         private void Add(BaseDataCollection collection, BaseData current)
         {
+            var baseDataCollection = current as BaseDataCollection;
             if (_symbol.HasUnderlying && _symbol.Underlying == current.Symbol)
             {
-                var baseDataCollection = current as BaseDataCollection;
+                // if the underlying has been aggregated, even if it shouldn't need to be, let's handle it nicely
                 if (baseDataCollection != null)
                 {
                     collection.Underlying = baseDataCollection.Data[0];
@@ -198,9 +199,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             }
             else
             {
-                var baseDataCollection = current as BaseDataCollection;
                 if (baseDataCollection != null)
                 {
+                    // datapoint is already aggregated, let's see if it's a single point or a collection we can use already
                     if(baseDataCollection.Data.Count > 1)
                     {
                         collection.Data = baseDataCollection.Data;
@@ -222,7 +223,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         /// <param name="collection">The collection to be emitted</param>
         /// <returns>True if its a valid data point</returns>
-        private bool IsValid(BaseDataCollection collection)
+        private static bool IsValid(BaseDataCollection collection)
         {
             return collection != null && collection.Data?.Count > 0;
         }
