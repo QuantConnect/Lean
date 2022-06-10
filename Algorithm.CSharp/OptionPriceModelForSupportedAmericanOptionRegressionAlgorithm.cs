@@ -30,15 +30,13 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2015, 12, 24);
             SetEndDate(2015, 12, 24);
 
-            _option = AddOption("GOOG", Resolution.Minute);
+            var option = AddOption("GOOG", Resolution.Minute);
             // BaroneAdesiWhaley model supports American style options
-            _option.PriceModel = OptionPriceModels.BaroneAdesiWhaley();
+            option.PriceModel = OptionPriceModels.BaroneAdesiWhaley();
 
             SetWarmup(1, Resolution.Daily);
 
-            _optionStyle = OptionStyle.American;
-            _optionStyleIsSupported = true;
-            _triedGreeksCalculation = false;
+            Init(option, optionStyleIsSupported: true);
         }
 
         /// <summary>

@@ -23,12 +23,10 @@ class OptionPriceModelForUnsupportedEuropeanOptionRegressionAlgorithm(OptionPric
         self.SetStartDate(2021, 1, 14)
         self.SetEndDate(2021, 1, 14)
 
-        self._option = self.AddIndexOption("SPX", Resolution.Hour)
+        option = self.AddIndexOption("SPX", Resolution.Hour)
         # BaroneAdesiWhaley model does not support European style options
-        self._option.PriceModel = OptionPriceModels.BaroneAdesiWhaley()
+        option.PriceModel = OptionPriceModels.BaroneAdesiWhaley()
 
         self.SetWarmup(7, Resolution.Daily)
 
-        self._optionStyle = OptionStyle.European
-        self._optionStyleIsSupported = False
-        self._triedGreeksCalculation = False
+        self.Init(option, optionStyleIsSupported=False)

@@ -12,23 +12,21 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from datetime import timedelta
+from OptionPriceModelForOptionStylesBaseRegressionAlgorithm import OptionPriceModelForOptionStylesBaseRegressionAlgorithm
 
 ### <summary>
 ### Regression algorithm excersizing an equity covered American style option, using an option price model
 ### that supports American style options and asserting that the option price model is used.
 ### </summary>
-class OptionPriceModelForUnsupportedAmericanOptionRegressionAlgorithm(QCAlgorithm):
+class OptionPriceModelForUnsupportedAmericanOptionRegressionAlgorithm(OptionPriceModelForOptionStylesBaseRegressionAlgorithm):
     def Initialize(self):
         self.SetStartDate(2015, 12, 24)
         self.SetEndDate(2015, 12, 24)
 
-        self._option = self.AddOption("GOOG", Resolution.Minute)
+        option = self.AddOption("GOOG", Resolution.Minute)
         # BlackSholes model does not support American style options
-        self._option.PriceModel = OptionPriceModels.BlackScholes()
+        option.PriceModel = OptionPriceModels.BlackScholes()
 
         self.SetWarmup(1, Resolution.Daily)
 
-        self._optionStyle = OptionStyle.American
-        self._optionStyleIsSupported = False
-        self._triedGreeksCalculation = False
+        self.Init(option, optionStyleIsSupported=False)

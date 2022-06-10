@@ -29,11 +29,11 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public abstract class OptionPriceModelForOptionStylesBaseRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        protected OptionStyle _optionStyle = OptionStyle.European;
-        protected bool _optionStyleIsSupported;
-        protected bool _triedGreeksCalculation;
-        protected Option _option;
-        protected IEnumerable<OptionContract> _contracts;
+        private bool _optionStyleIsSupported;
+        private Option _option;
+        private bool _triedGreeksCalculation;
+
+        private IEnumerable<OptionContract> _contracts;
 
         public override void OnData(Slice slice)
         {
@@ -70,6 +70,14 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        protected void Init(Option option, bool optionStyleIsSupported)
+        {
+            _option = option;
+            _optionStyleIsSupported = optionStyleIsSupported;
+            _triedGreeksCalculation = false;
+        }
+
+
         public void CheckGreeks()
         {
             if (_contracts == null || !_contracts.Any())
@@ -89,7 +97,7 @@ namespace QuantConnect.Algorithm.CSharp
                     // Greeks should have not been successfully accessed if the option style is not supported
                     if (!_optionStyleIsSupported)
                     {
-                        throw new Exception($"Expected greeks not to be calculated for {contract.Symbol.Value}, an {_optionStyle} style option, using {_option?.PriceModel.GetType().Name}, which does not support them, but they were");
+                        throw new Exception($"Expected greeks not to be calculated for {contract.Symbol.Value}, an {_option.Style} style option, using {_option?.PriceModel.GetType().Name}, which does not support them, but they were");
 
                     }
                 }
@@ -98,7 +106,7 @@ namespace QuantConnect.Algorithm.CSharp
                     // ArgumentException is only expected if the option style is not supported
                     if (_optionStyleIsSupported)
                     {
-                        throw new Exception($"Expected greeks to be calculated for {contract.Symbol.Value}, an {_optionStyle} style option, using {_option?.PriceModel.GetType().Name}, which supports them, but they were not");
+                        throw new Exception($"Expected greeks to be calculated for {contract.Symbol.Value}, an {_option.Style} style option, using {_option?.PriceModel.GetType().Name}, which supports them, but they were not");
                     }
                 }
 

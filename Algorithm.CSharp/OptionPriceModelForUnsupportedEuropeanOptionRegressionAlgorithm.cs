@@ -34,15 +34,13 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2021, 1, 14);
             SetEndDate(2021, 1, 14);
 
-            _option = AddIndexOption("SPX", Resolution.Hour);
+            var option = AddIndexOption("SPX", Resolution.Hour);
             // BaroneAdesiWhaley model does not support European style options
-            _option.PriceModel = OptionPriceModels.BaroneAdesiWhaley();
+            option.PriceModel = OptionPriceModels.BaroneAdesiWhaley();
 
             SetWarmup(7, Resolution.Daily);
 
-            _optionStyle = OptionStyle.European;
-            _optionStyleIsSupported = false;
-            _triedGreeksCalculation = false;
+            Init(option, optionStyleIsSupported: false);
         }
 
         /// <summary>

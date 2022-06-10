@@ -23,12 +23,10 @@ class OptionPriceModelForSupportedAmericanOptionRegressionAlgorithm(OptionPriceM
         self.SetStartDate(2015, 12, 24)
         self.SetEndDate(2015, 12, 24)
 
-        self._option = self.AddOption("GOOG", Resolution.Minute)
+        option = self.AddOption("GOOG", Resolution.Minute)
         # BaroneAdesiWhaley model supports American style options
-        self._option.PriceModel = OptionPriceModels.BaroneAdesiWhaley()
+        option.PriceModel = OptionPriceModels.BaroneAdesiWhaley()
 
         self.SetWarmup(1, Resolution.Daily)
 
-        self._optionStyle = OptionStyle.American
-        self._optionStyleIsSupported = True
-        self._triedGreeksCalculation = False
+        self.Init(option, optionStyleIsSupported=True)

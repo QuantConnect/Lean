@@ -20,7 +20,6 @@ from AlgorithmImports import *
 class OptionPriceModelForOptionStylesBaseRegressionAlgorithm(QCAlgorithm):
     def __init__(self):
         super().__init__()
-        self._optionStyle = OptionStyle.European
         self._optionStyleIsSupported = False
         self._triedGreeksCalculation = False
         self._option = None
@@ -43,6 +42,11 @@ class OptionPriceModelForOptionStylesBaseRegressionAlgorithm(QCAlgorithm):
         if not self._triedGreeksCalculation:
             raise Exception("Expected greeks to be accessed")
 
+    def Init(self, option, optionStyleIsSupported):
+        self._option = option
+        self._optionStyleIsSupported = optionStyleIsSupported
+        self._triedGreeksCalculation = False
+
     def CheckGreeks(self):
         if self._contracts is None or len(self._contracts) == 0: return
 
@@ -55,10 +59,10 @@ class OptionPriceModelForOptionStylesBaseRegressionAlgorithm(QCAlgorithm):
 
                 # Greeks should have not been successfully accessed if the option style is not supported
                 if not self._optionStyleIsSupported:
-                    raise Exception(f'Expected greeks not to be calculated for {contract.Symbol.Value}, an {self._optionStyle} style option, using {type(self._option.PriceModel).__name__}, which does not support them, but they were')
+                    raise Exception(f'Expected greeks not to be calculated for {contract.Symbol.Value}, an {self._option.Style} style option, using {type(self._option.PriceModel).__name__}, which does not support them, but they were')
             except ArgumentException:
                 # ArgumentException is only expected if the option style is not supported
-                raise Exception(f'Expected greeks to be calculated for {contract.Symbol.Value}, an {self._optionStyle} style option, using {type(self._option.PriceModel).__name__}, which supports them, but they were not')
+                raise Exception(f'Expected greeks to be calculated for {contract.Symbol.Value}, an {self._option.Style} style option, using {type(self._option.PriceModel).__name__}, which supports them, but they were not')
 
             # Greeks shpould be valid if they were successfuly accessed for supported option style
             if self._optionStyleIsSupported and (greeks.Delta < 0 or greeks.Delta > 1 or greeks.Theta >= 0 or greeks.Rho <= 0 or greeks.Vega <= 0):

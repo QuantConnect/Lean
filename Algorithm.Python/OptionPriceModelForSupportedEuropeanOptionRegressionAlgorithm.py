@@ -23,12 +23,10 @@ class OptionPriceModelForSupportedEuropeanOptionRegressionAlgorithm(OptionPriceM
         self.SetStartDate(2021, 1, 14)
         self.SetEndDate(2021, 1, 14)
 
-        self._option = self.AddIndexOption("SPX", Resolution.Hour)
+        option = self.AddIndexOption("SPX", Resolution.Hour)
         # BlackScholes model supports European style options
-        self._option.PriceModel = OptionPriceModels.BlackScholes()
+        option.PriceModel = OptionPriceModels.BlackScholes()
 
         self.SetWarmup(7, Resolution.Daily)
 
-        self._optionStyle = OptionStyle.European
-        self._optionStyleIsSupported = True
-        self._triedGreeksCalculation = False
+        self.Init(option, optionStyleIsSupported=True)

@@ -33,15 +33,13 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2015, 12, 24);
             SetEndDate(2015, 12, 24);
 
-            _option = AddOption("GOOG", Resolution.Minute);
+            var option = AddOption("GOOG", Resolution.Minute);
             // BlackSholes model does not support American style options
-            _option.PriceModel = OptionPriceModels.BlackScholes();
+            option.PriceModel = OptionPriceModels.BlackScholes();
 
             SetWarmup(1, Resolution.Daily);
 
-            _optionStyle = OptionStyle.American;
-            _optionStyleIsSupported = false;
-            _triedGreeksCalculation = false;
+            Init(option, optionStyleIsSupported: false);
         }
 
         /// <summary>

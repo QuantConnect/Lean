@@ -34,15 +34,13 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2021, 1, 14);
             SetEndDate(2021, 1, 14);
 
-            _option = AddIndexOption("SPX", Resolution.Hour);
+            var option = AddIndexOption("SPX", Resolution.Hour);
             // BlackScholes model supports European style options
-            _option.PriceModel = OptionPriceModels.BlackScholes();
+            option.PriceModel = OptionPriceModels.BlackScholes();
 
             SetWarmup(7, Resolution.Daily);
 
-            _optionStyle = OptionStyle.European;
-            _optionStyleIsSupported = true;
-            _triedGreeksCalculation = false;
+            Init(option, optionStyleIsSupported: true);
         }
 
         /// <summary>
