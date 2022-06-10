@@ -14,10 +14,12 @@
  *
 */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -91,7 +93,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <remarks>Protected so it can be used by the <see cref="LiveTradingDataFeed"/> to warmup requests</remarks>
         protected IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request)
         {
-            return request.IsUniverseSubscription ? CreateUniverseEnumerator(request) : CreateDataEnumerator(request);
+            return request.IsUniverseSubscription ? CreateUniverseEnumerator(request, CreateDataEnumerator) : CreateDataEnumerator(request);
         }
 
         private IEnumerator<BaseData> CreateDataEnumerator(SubscriptionRequest request)
@@ -138,7 +140,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
         }
 
-        private IEnumerator<BaseData> CreateUniverseEnumerator(SubscriptionRequest request)
+        protected IEnumerator<BaseData> CreateUniverseEnumerator(SubscriptionRequest request, Func<SubscriptionRequest, IEnumerator<BaseData>> createUnderlyingEnumerator)
         {
             ISubscriptionEnumeratorFactory factory = _subscriptionFactory;
             if (request.Universe is ITimeTriggeredUniverse)
@@ -152,32 +154,53 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     return factory.CreateEnumerator(request, _dataProvider);
                 }
             }
-            if (request.Configuration.Type == typeof(CoarseFundamental))
+            else if (request.Configuration.Type == typeof(CoarseFundamental))
             {
                 factory = new BaseDataCollectionSubscriptionEnumeratorFactory();
             }
-            if (request.Universe is OptionChainUniverse)
+            else if (request.Configuration.Type == typeof(ZipEntryName))
             {
-                factory = new OptionChainUniverseSubscriptionEnumeratorFactory((req) =>
-                {
-                    if (!req.Configuration.SecurityType.IsOption())
-                    {
-                        var enumerator = _subscriptionFactory.CreateEnumerator(req, _dataProvider);
-                        enumerator = new FilterEnumerator<BaseData>(enumerator, data => data.DataType != MarketDataType.Auxiliary);
-                        return ConfigureEnumerator(req, true, enumerator);
-                    }
-                    var underlyingFactory = new BaseDataSubscriptionEnumeratorFactory(false, _mapFileProvider, _cacheProvider);
-                    return ConfigureEnumerator(req, true, underlyingFactory.CreateEnumerator(req, _dataProvider));
-                });
-            }
-            if (request.Universe is FuturesChainUniverse)
-            {
-                factory = new FuturesChainUniverseSubscriptionEnumeratorFactory((req, e) => ConfigureEnumerator(req, true, e), _cacheProvider);
+                // TODO: subscription should already come in correctly built
+                var resolution = request.Configuration.Resolution == Resolution.Tick ? Resolution.Second : request.Configuration.Resolution;
+
+                // TODO: subscription should already come in as fill forward true
+                request = new SubscriptionRequest(request, configuration: new SubscriptionDataConfig(request.Configuration, fillForward: true, resolution: resolution));
+
+                var result = new BaseDataSubscriptionEnumeratorFactory(_algorithm.OptionChainProvider, _algorithm.FutureChainProvider)
+                    .CreateEnumerator(request, _dataProvider);
+                result = ConfigureEnumerator(request, true, result);
+                return TryAppendUnderlyingEnumerator(request, result, createUnderlyingEnumerator);
             }
 
             // define our data enumerator
             var enumerator = factory.CreateEnumerator(request, _dataProvider);
             return enumerator;
+        }
+
+        /// <summary>
+        /// If required will add a new enumerator for the underlying symbol
+        /// </summary>
+        protected IEnumerator<BaseData> TryAppendUnderlyingEnumerator(SubscriptionRequest request, IEnumerator<BaseData> parent, Func<SubscriptionRequest, IEnumerator<BaseData>> createEnumerator)
+        {
+            if (request.Configuration.Symbol.SecurityType.IsOption() && request.Configuration.Symbol.HasUnderlying)
+            {
+                // TODO: creating this subscription request/config is bad
+                var underlyingRequests = new SubscriptionRequest(request,
+                    isUniverseSubscription: false,
+                    configuration: new SubscriptionDataConfig(request.Configuration, symbol: request.Configuration.Symbol.Underlying, objectType: typeof(TradeBar), tickType: TickType.Trade));
+
+                var underlying = createEnumerator(underlyingRequests);
+                underlying = new FilterEnumerator<BaseData>(underlying, data => data.DataType != MarketDataType.Auxiliary);
+
+                parent = new SynchronizingBaseDataEnumerator(parent, underlying);
+                // we aggregate both underlying and chain data
+                parent = new BaseDataCollectionAggregatorEnumerator(parent, request.Configuration.Symbol);
+                // only let through if underlying and chain data present
+                parent = new FilterEnumerator<BaseData>(parent, data => (data as BaseDataCollection).Underlying != null);
+                parent = ConfigureEnumerator(request, false, parent);
+            }
+
+            return parent;
         }
 
         /// <summary>
@@ -199,15 +222,32 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Configure the enumerator with aggregation/fill-forward/filter behaviors. Returns new instance if re-configured
         /// </summary>
-        private IEnumerator<BaseData> ConfigureEnumerator(SubscriptionRequest request, bool aggregate, IEnumerator<BaseData> enumerator)
+        protected IEnumerator<BaseData> ConfigureEnumerator(SubscriptionRequest request, bool aggregate, IEnumerator<BaseData> enumerator)
         {
             if (aggregate)
             {
                 enumerator = new BaseDataCollectionAggregatorEnumerator(enumerator, request.Configuration.Symbol);
             }
 
+            enumerator = TryAddFillForwardEnumerator(request, enumerator, request.Configuration.FillDataForward);
+
+            // optionally apply exchange/user filters
+            if (request.Configuration.IsFilteredSubscription)
+            {
+                enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(_resultHandler, enumerator, request.Security,
+                    request.EndTimeLocal, request.Configuration.ExtendedMarketHours, false, request.ExchangeHours);
+            }
+
+            return enumerator;
+        }
+
+        /// <summary>
+        /// Will add a fill forward enumerator if requested
+        /// </summary>
+        protected IEnumerator<BaseData> TryAddFillForwardEnumerator(SubscriptionRequest request, IEnumerator<BaseData> enumerator, bool fillForward)
+        {
             // optionally apply fill forward logic, but never for tick data
-            if (request.Configuration.FillDataForward && request.Configuration.Resolution != Resolution.Tick)
+            if (fillForward && request.Configuration.Resolution != Resolution.Tick)
             {
                 // copy forward Bid/Ask bars for QuoteBars
                 if (request.Configuration.Type == typeof(QuoteBar))
@@ -219,13 +259,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 enumerator = new FillForwardEnumerator(enumerator, request.Security.Exchange, fillForwardResolution,
                     request.Configuration.ExtendedMarketHours, request.EndTimeLocal, request.Configuration.Resolution.ToTimeSpan(), request.Configuration.DataTimeZone);
-            }
-
-            // optionally apply exchange/user filters
-            if (request.Configuration.IsFilteredSubscription)
-            {
-                enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(_resultHandler, enumerator, request.Security,
-                    request.EndTimeLocal, request.Configuration.ExtendedMarketHours, false, request.ExchangeHours);
             }
 
             return enumerator;

@@ -79,12 +79,6 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>The data that passes the filter</returns>
         public override IEnumerable<Symbol> SelectSymbols(DateTime utcTime, BaseDataCollection data)
         {
-            var optionsUniverseDataCollection = data as OptionChainUniverseDataCollection;
-            if (optionsUniverseDataCollection == null)
-            {
-                throw new ArgumentException($"Expected data of type '{typeof(OptionChainUniverseDataCollection).Name}'");
-            }
-
             // date change detection needs to be done in exchange time zone
             var exchangeDate = data.Time.ConvertFromUtc(Option.Exchange.TimeZone).Date;
             if (_cacheDate == exchangeDate)
@@ -92,9 +86,9 @@ namespace QuantConnect.Data.UniverseSelection
                 return Unchanged;
             }
 
-            var availableContracts = optionsUniverseDataCollection.Data.Select(x => x.Symbol);
+            var availableContracts = data.Data.Select(x => x.Symbol);
             // we will only update unique strikes when there is an exchange date change
-            _optionFilterUniverse.Refresh(availableContracts, optionsUniverseDataCollection.Underlying, _lastExchangeDate != exchangeDate);
+            _optionFilterUniverse.Refresh(availableContracts, data.Underlying, _lastExchangeDate != exchangeDate);
             _lastExchangeDate = exchangeDate;
 
             var results = Option.ContractFilter.Filter(_optionFilterUniverse);
@@ -106,15 +100,7 @@ namespace QuantConnect.Data.UniverseSelection
             }
 
             // always prepend the underlying symbol
-            var resultingSymbols = _underlyingSymbol.Concat(results).ToHashSet();
-
-            // we save off the filtered results to the universe data collection for later
-            // population into the OptionChain. This is non-ideal and could be remedied by
-            // the universe subscription emitting a special type after selection that could
-            // be checked for in TimeSlice.Create, but for now this will do
-            optionsUniverseDataCollection.FilteredContracts = resultingSymbols;
-
-            return resultingSymbols;
+            return _underlyingSymbol.Concat(results);
         }
 
         /// <summary>

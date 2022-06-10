@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -179,10 +179,12 @@ namespace QuantConnect.Data.UniverseSelection
             var result = SelectSymbols(utcTime, data);
             if (ReferenceEquals(result, Unchanged))
             {
+                data.FilteredContracts = _previousSelections;
                 return Unchanged;
             }
 
             var selections = result.ToHashSet();
+            data.FilteredContracts = selections;
             var hasDiffs = _previousSelections.AreDifferent(selections);
             _previousSelections = selections;
             if (!hasDiffs)

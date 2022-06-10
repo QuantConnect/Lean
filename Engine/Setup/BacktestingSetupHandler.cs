@@ -15,7 +15,6 @@
 */
 
 using System;
-using System.Linq;
 using QuantConnect.Util;
 using QuantConnect.Logging;
 using QuantConnect.Packets;

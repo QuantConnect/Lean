@@ -83,16 +83,105 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [Test]
-        public void WarmupExpiredAsset()
+        public void WarmupOptionSelection()
         {
-            _startDate = new DateTime(2014, 6, 14);
-            CustomMockedFileBaseData.StartDate = _startDate;
+            _startDate = new DateTime(2014, 6, 9);
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
 
             var endDate = _startDate.AddDays(1);
+            _algorithm.SetBenchmark(x => 1);
+            _algorithm.SetWarmup(2, Resolution.Daily);
+            _algorithm.UniverseSettings.Resolution = Resolution.Hour;
+            var feed = RunDataFeed();
+            // after algorithm initialization let's set the time provider time to reflect warmup window
+            _manualTimeProvider.SetCurrentTimeUtc(_algorithm.UtcTime);
+
+            var es = _algorithm.AddOption("AAPL");
+            // allow time for the exchange to pick up the selection point
+            Thread.Sleep(50);
+            var countWarmup = 0;
+            var countLive = 0;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
+            {
+                if (ts.UniverseData?.Count > 0)
+                {
+                    Assert.IsNotNull(ts.UniverseData.Select(x => x.Value.Underlying));
+                    Assert.IsNotEmpty(ts.UniverseData.Select(x => x.Value.FilteredContracts));
+                    if (_algorithm.IsWarmingUp)
+                    {
+                        countWarmup++;
+                    }
+                    else
+                    {
+                        countLive++;
+                        // we got what we wanted shortcut unit test
+                        _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                    }
+                }
+            },
+            endDate: endDate,
+            secondsTimeStep: 60 * 60);
+
+            Assert.AreNotEqual(0, countWarmup);
+            Assert.AreNotEqual(0, countLive);
+        }
+
+        [Test]
+        public void WarmupFutureSelection()
+        {
+            _startDate = new DateTime(2013, 10, 10);
+            _manualTimeProvider.SetCurrentTimeUtc(_startDate);
+
+            var endDate = _startDate.AddDays(1);
+            _algorithm.SetBenchmark(x => 1);
+            _algorithm.SetWarmup(2, Resolution.Daily);
+            _algorithm.UniverseSettings.Resolution = Resolution.Hour;
+            var feed = RunDataFeed();
+            // after algorithm initialization let's set the time provider time to reflect warmup window
+            _manualTimeProvider.SetCurrentTimeUtc(_algorithm.UtcTime);
+
+            var es = _algorithm.AddFuture("ES");
+            // allow time for the exchange to pick up the selection point
+            Thread.Sleep(50);
+            var countWarmup = 0;
+            var countLive = 0;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
+            {
+                if(ts.UniverseData?.Count > 0)
+                {
+                    Assert.IsNotEmpty(ts.UniverseData.Select(x => x.Value.FilteredContracts));
+                    if (_algorithm.IsWarmingUp)
+                    {
+                        countWarmup++;
+                    }
+                    else
+                    {
+                        countLive++;
+                        // we got what we wanted shortcut unit test
+                        _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                    }
+                }
+            },
+            endDate: endDate,
+            secondsTimeStep: 60 * 60);
+
+            Assert.AreNotEqual(0, countWarmup);
+            Assert.AreNotEqual(0, countLive);
+        }
+
+        [Test]
+        public void WarmupExpiredAsset()
+        {
+            _startDate = new DateTime(2014, 6, 14);
+            _manualTimeProvider.SetCurrentTimeUtc(_startDate);
+
+            var endDate = _startDate.AddDays(1);
+            _algorithm.SetBenchmark(x => 1);
             _algorithm.UniverseSettings.Resolution = Resolution.Daily;
             _algorithm.SetWarmup(10, Resolution.Daily);
             var feed = RunDataFeed();
+            // after algorithm initialization let's set the time provider time to reflect warmup window
+            _manualTimeProvider.SetCurrentTimeUtc(_algorithm.UtcTime);
 
             var aapl = _algorithm.AddEquity("AAPL");
             // the expiration of this option contract is before the start date of the algorithm but we should still get some data during warmup
@@ -119,7 +208,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [Test]
-        public void Warmup()
+        public void WarmupAddSecurity()
         {
             _startDate = new DateTime(2014, 5, 8);
             CustomMockedFileBaseData.StartDate = _startDate;
@@ -133,7 +222,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var emittedDataDuringWarmup = false;
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
             {
-                if (ts.Slice.HasData)
+                if (ts.Slice.ContainsKey(Symbols.EURUSD))
                 {
                     if (_algorithm.IsWarmingUp)
                     {
@@ -823,6 +912,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 symbol = Symbol.CreateOption(symbol, symbol.ID.Market, OptionStyle.American, OptionRight.Call, 1, expiration);
                 _algorithm.AddFutureOptionContract(symbol);
             }
+            // allow time for the base exchange to pick up the universe selection point
+            Thread.Sleep(150);
 
             var receivedSecurityChanges = false;
             ConsumeBridge(feed, TimeSpan.FromSeconds(3), ts =>
@@ -839,7 +930,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             },
             alwaysInvoke: true,
             // need to give time for future universe selection to trigger, midnight exchange tz
-            secondsTimeStep: 60 * 60 * 6,
+            secondsTimeStep: 60 * 60 * 3,
             endDate: _startDate.AddDays(1));
 
             Assert.IsTrue(receivedSecurityChanges, "Did not add symbol!");
@@ -1017,6 +1108,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     }
                     return new[] { symbol };
                 });
+            // allow time for the base exchange to pick up the universe selection point
+            Thread.Sleep(100);
             SecurityChanges securityChanges = null;
             var receivedFundamentalsData = false;
             ConsumeBridge(feed, TimeSpan.FromSeconds(10), ts =>
@@ -1606,7 +1699,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var endTime = DateTime.UtcNow.Add(timeout);
             bool startedReceivingata = false;
-            var cancellationTokenSource = new CancellationTokenSource();
+            using var cancellationTokenSource = new CancellationTokenSource(timeout * 2);
             _algorithm.SetLocked();
             foreach (var timeSlice in _synchronizer.StreamData(cancellationTokenSource.Token))
             {

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -22,14 +22,14 @@ using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
 {
     [TestFixture]
-    public class FuturesChainUniverseSubscriptionEnumeratorFactoryTests
+    public class DataQueueFuturesChainUniverseDataCollectionEnumeratorTests
     {
         [Test]
         public void RefreshesFutureChainUniverseOnDateChange()
@@ -38,7 +38,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             var timeProvider = new ManualTimeProvider(startTime);
 
             var symbolUniverse = new TestDataQueueUniverseProvider(timeProvider);
-            var factory = new FuturesChainUniverseSubscriptionEnumeratorFactory(symbolUniverse, timeProvider);
 
             var canonicalSymbol = Symbol.Create(Futures.Indices.VIX, SecurityType.Future, Market.CFE, "/VX");
 
@@ -70,14 +69,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             );
 
             var universeSettings = new UniverseSettings(Resolution.Minute, 0, true, false, TimeSpan.Zero);
-            var universe = new FuturesChainUniverse(future, universeSettings);
+            using var universe = new FuturesChainUniverse(future, universeSettings);
             var request = new SubscriptionRequest(true, universe, future, config, startTime, Time.EndOfTime);
-            var enumerator = factory.CreateEnumerator(request, new DefaultDataProvider());
+            var enumerator = new DataQueueFuturesChainUniverseDataCollectionEnumerator(request, symbolUniverse, timeProvider);
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNotNull(enumerator.Current);
             Assert.AreEqual(1, symbolUniverse.TotalLookupCalls);
-            var data = enumerator.Current as FuturesChainUniverseDataCollection;
+            var data = enumerator.Current;
             Assert.IsNotNull(data);
             Assert.AreEqual(1, data.Data.Count);
 
@@ -98,7 +97,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNotNull(enumerator.Current);
             Assert.AreEqual(2, symbolUniverse.TotalLookupCalls);
-            data = enumerator.Current as FuturesChainUniverseDataCollection;
+            data = enumerator.Current;
             Assert.IsNotNull(data);
             Assert.AreEqual(2, data.Data.Count);
 
@@ -111,7 +110,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             enumerator.Dispose();
         }
 
-        public class TestDataQueueUniverseProvider : IDataQueueUniverseProvider
+        private class TestDataQueueUniverseProvider : IDataQueueUniverseProvider
         {
             private readonly Symbol[] _symbolList1 =
             {

@@ -430,7 +430,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 chain.Underlying = underlyingData;
             }
 
-            var universeData = baseData as OptionChainUniverseDataCollection;
+            var universeData = baseData as BaseDataCollection;
             if (universeData != null)
             {
                 if (universeData.Underlying != null)
@@ -501,7 +501,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 futuresChains[canonical] = chain;
             }
 
-            var universeData = baseData as FuturesChainUniverseDataCollection;
+            var universeData = baseData as BaseDataCollection;
             if (universeData != null)
             {
                 foreach (var contractSymbol in universeData.FilteredContracts)
