@@ -15,6 +15,7 @@
 
 using System;
 using System.Linq;
+using QuantConnect.Logging;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
 
@@ -47,8 +48,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 result = base.GetFutureContractList(symbol, date);
             }
-            catch
+            catch (Exception ex)
             {
+                // this shouldn't happen but just in case let's log it
+                Log.Error(ex);
             }
 
             bool yielded = false;

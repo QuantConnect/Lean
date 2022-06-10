@@ -62,6 +62,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 catch
                 {
+                    // the cache provider will throw if the file isn't available TODO: it's api should be more like TryGetZipEntries
                 }
 
                 if (entries != null)
@@ -78,7 +79,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (!_loggedPreviousTradableDate)
                     {
                         _loggedPreviousTradableDate = true;
-                        Log.Error($"BacktestingCacheProvider.GetSymbols(): {date} is not a tradable date for {canonicalSymbol}. When requesting contracts " +
+                        Log.Trace($"BacktestingCacheProvider.GetSymbols(): {date} is not a tradable date for {canonicalSymbol}. When requesting contracts " +
                             $" for non tradable dates, will return contracts of previous tradable date.");
                     }
 
@@ -90,7 +91,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     yield break;
                 }
 
-                Log.Trace($"BacktestingCacheProvider.GetSymbols(): found no source of contracts for {canonicalSymbol} for date {date.ToString(DateFormat.EightCharacter)} for any tick type");
+                if (Log.DebuggingEnabled)
+                {
+                    Log.Debug($"BacktestingCacheProvider.GetSymbols(): found no source of contracts for {canonicalSymbol} for date {date.ToString(DateFormat.EightCharacter)} for any tick type");
+                }
                 yield break;
             }
 

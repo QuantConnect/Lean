@@ -14,19 +14,19 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
+using System.Linq;
 using System.Net.Http;
-using System.Threading;
 using Newtonsoft.Json;
-using QuantConnect.Interfaces;
+using System.Threading;
+using QuantConnect.Util;
 using QuantConnect.Logging;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using System.Collections.Generic;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities.FutureOption.Api;
-using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -90,8 +90,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 result = base.GetOptionContractList(underlyingSymbol, date);
             }
-            catch
+            catch (Exception ex)
             {
+                // this shouldn't happen but just in case let's log it
+                Log.Error(ex);
             }
 
             bool yielded = false;
