@@ -292,10 +292,21 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(tradeBars[0].Volume, fromDynamicSecurityData.Volume);
         }
 
-        internal static Security GetSecurity()
+        internal static Security GetSecurity(bool isMarketAlwaysOpen = true)
         {
+            SecurityExchangeHours securityExchangeHours;
+            if (isMarketAlwaysOpen)
+            {
+                securityExchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
+            }
+            else
+            {
+                var marketHourDbEntry = MarketHoursDatabase.FromDataFolder().GetEntry(Market.USA, "SPY", SecurityType.Equity);
+                securityExchangeHours = marketHourDbEntry.ExchangeHours;
+            }
+
             return new Security(
-                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                securityExchangeHours,
                 CreateTradeBarConfig(),
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),

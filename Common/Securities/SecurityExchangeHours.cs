@@ -45,6 +45,15 @@ namespace QuantConnect.Securities
         private readonly LocalMarketHours _friday;
         private readonly LocalMarketHours _saturday;
         private readonly Dictionary<DayOfWeek, LocalMarketHours> _openHoursByDay;
+        private static List<DayOfWeek> daysOfWeek = new List<DayOfWeek>() {
+                DayOfWeek.Sunday,
+                DayOfWeek.Monday,
+                DayOfWeek.Tuesday,
+                DayOfWeek.Wednesday,
+                DayOfWeek.Thursday,
+                DayOfWeek.Friday,
+                DayOfWeek.Saturday
+        };
 
         /// <summary>
         /// Gets the time zone this exchange resides in
@@ -81,6 +90,11 @@ namespace QuantConnect.Securities
         /// considers <see cref="MarketHoursState.Market"/>
         /// </summary>
         public TimeSpan RegularMarketDuration { get; }
+
+        /// <summary>
+        /// Checks whether the market is always open or not
+        /// </summary>
+        public bool IsMarketAlwaysOpen { private set; get; }
 
         /// <summary>
         /// Gets a <see cref="SecurityExchangeHours"/> instance that is always open
@@ -132,6 +146,8 @@ namespace QuantConnect.Securities
                 .OrderByDescending(grp => grp.Count())
                 .ThenByDescending(grp => grp.Key)
                 .First().Key;
+
+            IsMarketAlwaysOpen = CheckIsMarketAlwaysOpen();
         }
 
         /// <summary>
@@ -208,6 +224,47 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets the local date time corresponding to the previous market open to the specified time
+        /// </summary>
+        /// <param name="localDateTime">The time to begin searching for the last market open (non-inclusive)</param>
+        /// <param name="extendedMarket">True to include extended market hours in the search</param>
+        /// <returns>The previous market opening date time to the specified local date time</returns>
+        public DateTime GetPreviousMarketOpen(DateTime localDateTime, bool extendedMarket)
+        {
+            var time = localDateTime;
+            var marketHours = GetMarketHours(time);
+            var nextMarketOpen = GetNextMarketOpen(time, extendedMarket);
+
+            if (localDateTime == nextMarketOpen)
+            {
+                return localDateTime;
+            }
+
+            // let's loop for a week
+            for (int i = 0; i < 7; i++)
+            {
+                foreach(var segment in marketHours.Segments.Reverse())
+                {
+                    if ((time.Date + segment.Start <= localDateTime) &&
+                        (segment.State == MarketHoursState.Market || extendedMarket))
+                    {
+                        // Check the current segment is not part of another segment before
+                        var timeOfDay = time.Date + segment.Start;
+                        if (GetNextMarketOpen(timeOfDay.AddTicks(-1), extendedMarket) == timeOfDay)
+                        {
+                            return timeOfDay;
+                        }
+                    }
+                }
+
+                time = time.AddDays(-1);
+                marketHours = GetMarketHours(time);
+            }
+
+            throw new InvalidOperationException($"Did not find last market open for {localDateTime}. IsMarketAlwaysOpen: {IsMarketAlwaysOpen}");
+        }
+
+        /// <summary>
         /// Gets the local date time corresponding to the next market open following the specified time
         /// </summary>
         /// <param name="localDateTime">The time to begin searching for market open (non-inclusive)</param>
@@ -217,12 +274,16 @@ namespace QuantConnect.Securities
         {
             var time = localDateTime;
             var oneWeekLater = localDateTime.Date.AddDays(15);
+
+            var lastDay = time.Date.AddDays(-1);
+            var lastDayMarketHours = GetMarketHours(lastDay);
+            var lastDaySegment = lastDayMarketHours.Segments.LastOrDefault();
             do
             {
                 var marketHours = GetMarketHours(time);
                 if (!marketHours.IsClosedAllDay && !_holidays.Contains(time.Date.Ticks))
                 {
-                    var marketOpenTimeOfDay = marketHours.GetMarketOpen(time.TimeOfDay, extendedMarket);
+                    var marketOpenTimeOfDay = marketHours.GetMarketOpen(time.TimeOfDay, extendedMarket, lastDaySegment?.End);
                     if (marketOpenTimeOfDay.HasValue)
                     {
                         var marketOpen = time.Date + marketOpenTimeOfDay.Value;
@@ -231,6 +292,22 @@ namespace QuantConnect.Securities
                             return marketOpen;
                         }
                     }
+
+                    // If there was an early close the market opens until next day first segment,
+                    // so we don't take into account continuous segments between days, then
+                    // lastDaySegment should be null
+                    if (_earlyCloses.ContainsKey(time.Date))
+                    {
+                        lastDaySegment = null;
+                    }
+                    else
+                    {
+                        lastDaySegment = marketHours.Segments.LastOrDefault();
+                    }
+                }
+                else
+                {
+                    lastDaySegment = null;
                 }
 
                 time = time.Date + Time.OneDay;
@@ -255,7 +332,12 @@ namespace QuantConnect.Securities
                 var marketHours = GetMarketHours(time);
                 if (!marketHours.IsClosedAllDay && !_holidays.Contains(time.Date.Ticks))
                 {
-                    var marketCloseTimeOfDay = marketHours.GetMarketClose(time.TimeOfDay, extendedMarket);
+                    // Get next day first segment. This is made because we need to check the segment returned
+                    // by GetMarketClose() ends at segment.End and not continues in the next segment. We get
+                    // the next day first segment for the case in which the next market close is the last segment
+                    // of the current day
+                    var nextSegment = GetNextOrPreviousSegment(time, isNextDay: true);
+                    var marketCloseTimeOfDay = marketHours.GetMarketClose(time.TimeOfDay, extendedMarket, nextSegment?.Start);
                     if (marketCloseTimeOfDay.HasValue)
                     {
                         var marketClose = time.Date + marketCloseTimeOfDay.Value;
@@ -271,6 +353,69 @@ namespace QuantConnect.Securities
             while (time < oneWeekLater);
 
             throw new ArgumentException("Unable to locate next market close within two weeks.");
+        }
+
+        /// <summary>
+        /// Returns next day first segment or previous day last segment
+        /// </summary>
+        /// <param name="time">Time of reference</param>
+        /// <param name="isNextDay">True to get next day first segment. False to get previous day last segment</param>
+        /// <returns>Next day first segment or previous day last segment</returns>
+        private MarketHoursSegment GetNextOrPreviousSegment(DateTime time, bool isNextDay)
+        {
+            var nextOrPrevious = isNextDay ? 1 : -1;
+            var nextOrPreviousDay = time.Date.AddDays(nextOrPrevious);
+            if (_earlyCloses.ContainsKey(nextOrPreviousDay.Date))
+            {
+                return null;
+            }
+
+            var segments = GetMarketHours(nextOrPreviousDay).Segments;
+            return isNextDay ? segments.FirstOrDefault() : segments.LastOrDefault();
+        }
+
+        /// <summary>
+        /// Check whether the market is always open or not
+        /// </summary>
+        /// <returns>True if the market is always open, false otherwise</returns>
+        private bool CheckIsMarketAlwaysOpen()
+        {
+            LocalMarketHours marketHours = null;
+            for (var i = 0; i < daysOfWeek.Count; i++)
+            {
+                var day = daysOfWeek[i];
+                switch (day)
+                {
+                    case DayOfWeek.Sunday:
+                        marketHours = _sunday;
+                        break;
+                    case DayOfWeek.Monday:
+                        marketHours = _monday;
+                        break;
+                    case DayOfWeek.Tuesday:
+                        marketHours = _tuesday;
+                        break;
+                    case DayOfWeek.Wednesday:
+                        marketHours = _wednesday;
+                        break;
+                    case DayOfWeek.Thursday:
+                        marketHours = _thursday;
+                        break;
+                    case DayOfWeek.Friday:
+                        marketHours = _friday;
+                        break;
+                    case DayOfWeek.Saturday:
+                        marketHours = _saturday;
+                        break;
+                }
+
+                if (!marketHours.IsOpenAllDay)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         /// <summary>
