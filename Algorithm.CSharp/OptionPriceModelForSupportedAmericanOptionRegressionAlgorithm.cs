@@ -27,14 +27,14 @@ namespace QuantConnect.Algorithm.CSharp
     {
         public override void Initialize()
         {
-            SetStartDate(2015, 12, 24);
-            SetEndDate(2015, 12, 24);
+            SetStartDate(2014, 6, 9);
+            SetEndDate(2014, 6, 9);
 
-            var option = AddOption("GOOG", Resolution.Minute);
+            var option = AddOption("AAPL", Resolution.Minute);
             // BaroneAdesiWhaley model supports American style options
             option.PriceModel = OptionPriceModels.BaroneAdesiWhaley();
 
-            SetWarmup(1, Resolution.Daily);
+            SetWarmup(2, Resolution.Daily);
 
             Init(option, optionStyleIsSupported: true);
         }
@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 911426;
+        public override long DataPoints => 1781481;
 
         /// <summary>
         /// Data Points count of the algorithm history

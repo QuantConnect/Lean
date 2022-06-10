@@ -12,6 +12,7 @@
 # limitations under the License.
 
 from AlgorithmImports import *
+from System import Enum
 
 ### <summary>
 ### Base regression algorithm excersizing for exercising different style options with option price models that migth
@@ -57,18 +58,20 @@ class OptionPriceModelForOptionStylesBaseRegressionAlgorithm(QCAlgorithm):
                 greeks = contract.Greeks
 
                 # Greeks should have not been successfully accessed if the option style is not supported
+                optionStyleStr = 'American' if self._option.Style == OptionStyle.American else 'European'
                 if not self._optionStyleIsSupported:
-                    raise Exception(f'Expected greeks not to be calculated for {contract.Symbol.Value}, an {self._option.Style} style option, using {type(self._option.PriceModel).__name__}, which does not support them, but they were')
+                    raise Exception(f'Expected greeks not to be calculated for {contract.Symbol.Value}, an {optionStyleStr} style option, using {type(self._option.PriceModel).__name__}, which does not support them, but they were')
             except ArgumentException:
                 # ArgumentException is only expected if the option style is not supported
-                raise Exception(f'Expected greeks to be calculated for {contract.Symbol.Value}, an {self._option.Style} style option, using {type(self._option.PriceModel).__name__}, which supports them, but they were not')
+                if self._optionStyleIsSupported:
+                    raise Exception(f'Expected greeks to be calculated for {contract.Symbol.Value}, an {optionStyleStr} style option, using {type(self._option.PriceModel).__name__}, which supports them, but they were not')
 
             # Greeks shpould be valid if they were successfuly accessed for supported option style
             if (self._optionStyleIsSupported
                 and ((contract.Right == OptionRight.Call and (greeks.Delta < 0.0 or greeks.Delta > 1.0 or greeks.Rho <= 0.0))
                     or (contract.Right == OptionRight.Put and (greeks.Delta < -1.0 or greeks.Delta > 0.0 or greeks.Rho >= 0.0))
-                    or greeks.Theta >= 0.0 or greeks.Vega <= 0.0)):
-                raise Exception(f'Expected greeks to have valid values. Greeks were: Gamma: {greeks.Gamma}, Rho: {greeks.Rho}, Delta: {greeks.Delta}, Vega: {greeks.Vega}')
+                    or greeks.Theta == 0.0 or greeks.Vega <= 0.0 or greeks.Gamma <= 0.0)):
+                raise Exception(f'Expected greeks to have valid values. Greeks were: Delta: {greeks.Delta}, Rho: {greeks.Rho}, Delta: {greeks.Delta}, Vega: {greeks.Vega}, Gamma: {greeks.Gamma}')
 
 
 

@@ -113,9 +113,9 @@ namespace QuantConnect.Algorithm.CSharp
                 if (_optionStyleIsSupported
                     && ((contract.Right == OptionRight.Call && (greeks.Delta < 0m || greeks.Delta > 1m || greeks.Rho <= 0m))
                         || (contract.Right == OptionRight.Put && (greeks.Delta < -1m || greeks.Delta > 0m || greeks.Rho >= 0m))
-                        || greeks.Theta >= 0m || greeks.Vega <= 0m))
+                        || greeks.Theta == 0m || greeks.Vega <= 0m || greeks.Gamma <= 0m))
                 {
-                    throw new Exception($"Expected greeks to have valid values. Greeks were: Gamma: {greeks.Gamma}, Rho: {greeks.Rho}, Delta: {greeks.Delta}, Vega: {greeks.Vega}");
+                    throw new Exception($"Expected greeks to have valid values. Greeks were: Delta: {greeks.Delta}, Rho: {greeks.Rho}, Theta: {greeks.Theta}, Vega: {greeks.Vega}, Gamma: {greeks.Gamma}");
                 }
             }
         }

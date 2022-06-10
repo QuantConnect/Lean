@@ -20,13 +20,13 @@ from OptionPriceModelForOptionStylesBaseRegressionAlgorithm import OptionPriceMo
 ### </summary>
 class OptionPriceModelForUnsupportedAmericanOptionRegressionAlgorithm(OptionPriceModelForOptionStylesBaseRegressionAlgorithm):
     def Initialize(self):
-        self.SetStartDate(2015, 12, 24)
-        self.SetEndDate(2015, 12, 24)
+        self.SetStartDate(2014, 6, 9)
+        self.SetEndDate(2014, 6, 9)
 
-        option = self.AddOption("GOOG", Resolution.Minute)
+        option = self.AddOption("AAPL", Resolution.Minute)
         # BlackSholes model does not support American style options
         option.PriceModel = OptionPriceModels.BlackScholes()
 
-        self.SetWarmup(1, Resolution.Daily)
+        self.SetWarmup(2, Resolution.Daily)
 
         self.Init(option, optionStyleIsSupported=False)
