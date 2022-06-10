@@ -31,9 +31,8 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private bool _optionStyleIsSupported;
         private Option _option;
+        private bool _checkGreeks;
         private bool _triedGreeksCalculation;
-
-        private OptionChain _contracts;
 
         public override void OnData(Slice slice)
         {
@@ -49,16 +48,13 @@ namespace QuantConnect.Algorithm.CSharp
                     continue;
                 }
 
-                _contracts = kvp.Value;
+                CheckGreeks(kvp.Value);
             }
         }
 
         public override void OnEndOfDay(Symbol symbol)
         {
-            if (!IsWarmingUp)
-            {
-                CheckGreeks();
-            }
+            _checkGreeks = true;
         }
 
         public override void OnEndOfAlgorithm()
@@ -73,20 +69,22 @@ namespace QuantConnect.Algorithm.CSharp
         {
             _option = option;
             _optionStyleIsSupported = optionStyleIsSupported;
+            _checkGreeks = true;
             _triedGreeksCalculation = false;
         }
 
 
-        public void CheckGreeks()
+        public void CheckGreeks(OptionChain contracts)
         {
-            if (_contracts == null || !_contracts.Any())
+            if (!_checkGreeks || !contracts.Any())
             {
                 return;
             }
 
+            _checkGreeks = false;
             _triedGreeksCalculation = true;
 
-            foreach (var contract in _contracts)
+            foreach (var contract in contracts)
             {
                 Greeks greeks = new Greeks();
                 try

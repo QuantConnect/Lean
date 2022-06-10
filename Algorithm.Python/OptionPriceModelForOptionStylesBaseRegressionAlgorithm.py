@@ -22,9 +22,9 @@ class OptionPriceModelForOptionStylesBaseRegressionAlgorithm(QCAlgorithm):
     def __init__(self):
         super().__init__()
         self._optionStyleIsSupported = False
+        self._checkGreeks = True
         self._triedGreeksCalculation = False
         self._option = None
-        self._contracts = None
 
     def OnData(self, slice):
         if self.IsWarmingUp: return
@@ -32,11 +32,10 @@ class OptionPriceModelForOptionStylesBaseRegressionAlgorithm(QCAlgorithm):
         for kvp in slice.OptionChains:
             if self._option is None or kvp.Key != self._option.Symbol: continue
 
-            self._contracts = [contract for contract in kvp.Value]
+            self.CheckGreeks([contract for contract in kvp.Value])
 
     def OnEndOfDay(self, symbol):
-        if not self.IsWarmingUp:
-            self.CheckGreeks()
+        self._checkGreeks = True
 
     def OnEndOfAlgorithm(self):
         if not self._triedGreeksCalculation:
@@ -45,14 +44,16 @@ class OptionPriceModelForOptionStylesBaseRegressionAlgorithm(QCAlgorithm):
     def Init(self, option, optionStyleIsSupported):
         self._option = option
         self._optionStyleIsSupported = optionStyleIsSupported
+        self._checkGreeks = True
         self._triedGreeksCalculation = False
 
-    def CheckGreeks(self):
-        if self._contracts is None or len(self._contracts) == 0: return
+    def CheckGreeks(self, contracts):
+        if not self._checkGreeks or len(contracts) == 0: return
 
+        self._checkGreeks = False
         self._triedGreeksCalculation = True
 
-        for contract in self._contracts:
+        for contract in contracts:
             greeks = Greeks()
             try:
                 greeks = contract.Greeks
