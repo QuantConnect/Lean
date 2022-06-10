@@ -33,7 +33,7 @@ namespace QuantConnect.Algorithm.CSharp
         private Option _option;
         private bool _triedGreeksCalculation;
 
-        private IEnumerable<OptionContract> _contracts;
+        private OptionChain _contracts;
 
         public override void OnData(Slice slice)
         {
@@ -49,8 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
                     continue;
                 }
 
-                var chain = kvp.Value;
-                _contracts = chain.Where(x => x.Right == OptionRight.Call);
+                _contracts = kvp.Value;
             }
         }
 
@@ -111,7 +110,10 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 // Greeks shpould be valid if they were successfuly accessed for supported option style
-                if (_optionStyleIsSupported && (greeks.Delta < 0m || greeks.Delta > 1m || greeks.Theta >= 0m || greeks.Rho <= 0m || greeks.Vega <= 0m))
+                if (_optionStyleIsSupported
+                    && ((contract.Right == OptionRight.Call && (greeks.Delta < 0m || greeks.Delta > 1m || greeks.Rho <= 0m))
+                        || (contract.Right == OptionRight.Put && (greeks.Delta < -1m || greeks.Delta > 0m || greeks.Rho >= 0m))
+                        || greeks.Theta >= 0m || greeks.Vega <= 0m))
                 {
                     throw new Exception($"Expected greeks to have valid values. Greeks were: Gamma: {greeks.Gamma}, Rho: {greeks.Rho}, Delta: {greeks.Delta}, Vega: {greeks.Vega}");
                 }

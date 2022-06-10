@@ -31,8 +31,7 @@ class OptionPriceModelForOptionStylesBaseRegressionAlgorithm(QCAlgorithm):
         for kvp in slice.OptionChains:
             if self._option is None or kvp.Key != self._option.Symbol: continue
 
-            chain = kvp.Value
-            self._contracts = [contract for contract in chain if contract.Right == OptionRight.Call]
+            self._contracts = [contract for contract in kvp.Value]
 
     def OnEndOfDay(self, symbol):
         if not self.IsWarmingUp:
@@ -65,7 +64,10 @@ class OptionPriceModelForOptionStylesBaseRegressionAlgorithm(QCAlgorithm):
                 raise Exception(f'Expected greeks to be calculated for {contract.Symbol.Value}, an {self._option.Style} style option, using {type(self._option.PriceModel).__name__}, which supports them, but they were not')
 
             # Greeks shpould be valid if they were successfuly accessed for supported option style
-            if self._optionStyleIsSupported and (greeks.Delta < 0 or greeks.Delta > 1 or greeks.Theta >= 0 or greeks.Rho <= 0 or greeks.Vega <= 0):
+            if (self._optionStyleIsSupported
+                and ((contract.Right == OptionRight.Call and (greeks.Delta < 0.0 or greeks.Delta > 1.0 or greeks.Rho <= 0.0))
+                    or (contract.Right == OptionRight.Put and (greeks.Delta < -1.0 or greeks.Delta > 0.0 or greeks.Rho >= 0.0))
+                    or greeks.Theta >= 0.0 or greeks.Vega <= 0.0)):
                 raise Exception(f'Expected greeks to have valid values. Greeks were: Gamma: {greeks.Gamma}, Rho: {greeks.Rho}, Delta: {greeks.Delta}, Vega: {greeks.Vega}')
 
 
