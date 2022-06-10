@@ -158,7 +158,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             {
                 // allow all ticks
                 if (config.Resolution == Resolution.Tick) return true;
-                // filter out all aux data
+                // filter out all aux data. TODO: what if we are asking for aux data?
                 if (data.DataType == MarketDataType.Auxiliary) return false;
                 // filter out future data
                 if (data.EndTime > request.EndTimeLocal) return false;

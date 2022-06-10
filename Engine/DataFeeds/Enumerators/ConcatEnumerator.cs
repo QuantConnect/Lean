@@ -38,6 +38,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// The current BaseData object
         /// </summary>
         public BaseData Current { get; set; }
+
+        /// <summary>
+        /// True if emitting a null data point is expected
+        /// </summary>
+        /// <remarks>Warmup enumerators are not allowed to return true and setting current to Null, this is because it's not a valid behavior for backtesting enumerators,
+        /// for example <see cref="FillForwardEnumerator"/></remarks>
+        public bool CanEmitNull { get; set; }
+
         object IEnumerator.Current => Current;
 
         /// <summary>
@@ -50,8 +58,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             params IEnumerator<BaseData>[] enumerators
             )
         {
-            _enumerators = enumerators.Where(enumerator => enumerator != null).ToList();
+            CanEmitNull = true;
             _skipDuplicateEndTimes = skipDuplicateEndTimes;
+            _enumerators = enumerators.Where(enumerator => enumerator != null).ToList();
         }
 
         /// <summary>
@@ -65,11 +74,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 var enumerator = _enumerators[_currentIndex];
                 while (enumerator.MoveNext())
                 {
-                    if (enumerator.Current == null && _currentIndex < _enumerators.Count - 1)
+                    if (enumerator.Current == null && (_currentIndex < _enumerators.Count - 1 || !CanEmitNull))
                     {
                         // if there are more enumerators and the current stopped providing data drop it
                         // in live trading, some enumerators will always return true (see TimeTriggeredUniverseSubscriptionEnumeratorFactory & InjectionEnumerator)
                         // but unless it's the last enumerator we drop it, because these first are the warmup enumerators
+                        // or we are not allowed to return null
                         break;
                     }
 

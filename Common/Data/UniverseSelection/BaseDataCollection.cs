@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -27,6 +27,16 @@ namespace QuantConnect.Data.UniverseSelection
     public class BaseDataCollection : BaseData, IEnumerable<BaseData>
     {
         private DateTime _endTime;
+
+        /// <summary>
+        /// The associated underlying price data if any
+        /// </summary>
+        public BaseData Underlying { get; set; }
+
+        /// <summary>
+        /// Gets or sets the contracts selected by the universe
+        /// </summary>
+        public IReadOnlyCollection<Symbol> FilteredContracts { get; set; }
 
         /// <summary>
         /// Gets the data list
@@ -68,8 +78,10 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="endTime">The end time of this data</param>
         /// <param name="symbol">A common identifier for all data in this packet</param>
         /// <param name="data">The data to add to this collection</param>
-        public BaseDataCollection(DateTime time, DateTime endTime, Symbol symbol, IEnumerable<BaseData> data = null)
-            : this(time, endTime, symbol, data != null ? data.ToList() : new List<BaseData>())
+        /// <param name="underlying">The associated underlying price data if any</param>
+        /// <param name="filteredContracts">The contracts selected by the universe</param>
+        public BaseDataCollection(DateTime time, DateTime endTime, Symbol symbol, IEnumerable<BaseData> data = null, BaseData underlying = null, IReadOnlyCollection<Symbol> filteredContracts = null)
+            : this(time, endTime, symbol, data != null ? data.ToList() : new List<BaseData>(), underlying, filteredContracts)
         {
         }
 
@@ -80,11 +92,15 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="endTime">The end time of this data</param>
         /// <param name="symbol">A common identifier for all data in this packet</param>
         /// <param name="data">The data to add to this collection</param>
-        public BaseDataCollection(DateTime time, DateTime endTime, Symbol symbol, List<BaseData> data)
+        /// <param name="underlying">The associated underlying price data if any</param>
+        /// <param name="filteredContracts">The contracts selected by the universe</param>
+        public BaseDataCollection(DateTime time, DateTime endTime, Symbol symbol, List<BaseData> data, BaseData underlying, IReadOnlyCollection<Symbol> filteredContracts)
         {
             Symbol = symbol;
             Time = time;
             _endTime = endTime;
+            Underlying = underlying;
+            FilteredContracts = filteredContracts;
             Data = data ?? new List<BaseData>();
         }
 
@@ -115,7 +131,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>A clone of the current object</returns>
         public override BaseData Clone()
         {
-            return new BaseDataCollection(Time, EndTime, Symbol, Data);
+            return new BaseDataCollection(Time, EndTime, Symbol, Data, Underlying, FilteredContracts);
         }
 
         /// <summary>

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -180,20 +180,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 }
                                 else
                                 {
-                                    if (packetBaseDataCollection is OptionChainUniverseDataCollection)
-                                    {
-                                        var current = packetBaseDataCollection as OptionChainUniverseDataCollection;
-                                        collection = new OptionChainUniverseDataCollection(frontierUtc, subscription.Configuration.Symbol, packetData, current?.Underlying);
-                                    }
-                                    else if (packetBaseDataCollection is FuturesChainUniverseDataCollection)
-                                    {
-                                        collection = new FuturesChainUniverseDataCollection(frontierUtc, subscription.Configuration.Symbol, packetData);
-                                    }
-                                    else
-                                    {
-                                        collection = new BaseDataCollection(frontierUtc, frontierUtc, subscription.Configuration.Symbol, packetData);
-                                    }
-
+                                    collection = new BaseDataCollection(frontierUtc, frontierUtc, subscription.Configuration.Symbol, packetData, packetBaseDataCollection?.Underlying);
                                     if (universeData == null)
                                     {
                                         universeData = new Dictionary<Universe, BaseDataCollection>();

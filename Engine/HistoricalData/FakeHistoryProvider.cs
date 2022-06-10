@@ -19,6 +19,7 @@ using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Lean.Engine.DataFeeds.Queues;
 
 namespace QuantConnect.Lean.Engine.HistoricalData
@@ -52,7 +53,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
         {
             var single = requests.FirstOrDefault();
-            if(single == null)
+            if (single == null)
             {
                 yield break;
             }
@@ -89,6 +90,34 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                             Bid = new Bar(_historyCount, _historyCount, _historyCount, _historyCount),
                             Period = single.Resolution.ToTimeSpan()
                         };
+                    }
+                    else if (single.DataType == typeof(ZipEntryName))
+                    {
+                        if (single.Symbol.SecurityType == SecurityType.Future)
+                        {
+                            data = new ZipEntryName
+                            {
+                                Symbol = Symbol.CreateFuture(single.Symbol.ID.Symbol, single.Symbol.ID.Market, currentLocalTime.AddDays(20)),
+                                Time = currentLocalTime
+                            };
+                        }
+                        else if (single.Symbol.SecurityType.IsOption())
+                        {
+                            data = new ZipEntryName
+                            {
+                                Symbol = Symbol.CreateOption(single.Symbol.Underlying.ID.Symbol,
+                                    single.Symbol.ID.Market,
+                                    single.Symbol.Underlying.SecurityType.DefaultOptionStyle(),
+                                    default(OptionRight),
+                                    0m,
+                                    currentLocalTime.AddDays(20)),
+                                Time = currentLocalTime
+                            };
+                        }
+                        else
+                        {
+                            yield break;
+                        }
                     }
                     else
                     {

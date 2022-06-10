@@ -17,7 +17,6 @@
 using System;
 using NUnit.Framework;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -34,7 +33,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
         [Test, Category("TravisExclude")]
         public void DoesNotLeakMemory()
         {
-            var symbol = Symbols.AAPL;
+            var symbol = Symbols.SPY_Option_Chain;
             var config = new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, TickType.Trade, false);
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
@@ -47,8 +46,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             );
 
             var fileProvider = TestGlobals.DataProvider;
-            using var cache = new ZipDataCacheProvider(fileProvider);
-            var factory = new BaseDataSubscriptionEnumeratorFactory(false, TestGlobals.MapFileProvider, cache);
+            var cache = TestGlobals.DataCacheProvider;
+            var factory = new BaseDataSubscriptionEnumeratorFactory(new BacktestingOptionChainProvider(cache, TestGlobals.MapFileProvider), new BacktestingFutureChainProvider(cache));
 
             GC.Collect();
             var ramUsageBeforeLoop = OS.TotalPhysicalMemoryUsed;
