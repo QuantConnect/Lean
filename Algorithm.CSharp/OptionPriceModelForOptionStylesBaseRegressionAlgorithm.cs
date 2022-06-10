@@ -16,6 +16,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using QuantConnect.Interfaces;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities.Option;
@@ -26,7 +27,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// Base regression algorithm excersizing for exercising different style options with option price models that migth
     /// or might not support them. Also, if the option style is supported, greeks are asserted to be accesible and have valid values.
     /// </summary>
-    public abstract class OptionPriceModelForOptionStylesBaseRegressionAlgorithm : QCAlgorithm
+    public abstract class OptionPriceModelForOptionStylesBaseRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         protected OptionStyle _optionStyle = OptionStyle.European;
         protected bool _optionStyleIsSupported;
@@ -108,5 +109,30 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        abstract public long DataPoints { get; }
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        abstract public int AlgorithmHistoryDataPoints { get; }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        abstract public Dictionary<string, string> ExpectedStatistics { get; }
     }
 }

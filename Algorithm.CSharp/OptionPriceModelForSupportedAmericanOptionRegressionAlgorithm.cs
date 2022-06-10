@@ -13,11 +13,7 @@
  * limitations under the License.
 */
 
-using System;
-using System.Linq;
 using System.Collections.Generic;
-using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities.Option;
 
@@ -27,7 +23,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// Regression algorithm excersizing an equity covered American style option, using an option price model
     /// that supports American style options and asserting that the option price model is used.
     /// </summary>
-    public class OptionPriceModelForSupportedAmericanOptionRegressionAlgorithm : OptionPriceModelForOptionStylesBaseRegressionAlgorithm, IRegressionAlgorithmDefinition
+    public class OptionPriceModelForSupportedAmericanOptionRegressionAlgorithm : OptionPriceModelForOptionStylesBaseRegressionAlgorithm
     {
         public override void Initialize()
         {
@@ -46,29 +42,19 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
-        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
-        /// </summary>
-        public bool CanRunLocally { get; } = true;
-
-        /// <summary>
-        /// This is used by the regression test system to indicate which languages this algorithm is written in.
-        /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
-
-        /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 911426;
+        public override long DataPoints => 911426;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public override int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "0"},
             {"Average Win", "0%"},

@@ -64,14 +64,8 @@ namespace QuantConnect.Securities.Option
         /// <param name="dividendYieldEstimator">The underlying dividend yield estimator</param>
         /// <param name="allowedOptionStyles">List of option styles supported by the pricing model. It defaults to both American and European option styles</param>
         public QLOptionPriceModel(PricingEngineFunc pricingEngineFunc, IQLUnderlyingVolatilityEstimator underlyingVolEstimator, IQLRiskFreeRateEstimator riskFreeRateEstimator, IQLDividendYieldEstimator dividendYieldEstimator, OptionStyle[] allowedOptionStyles = null)
-        {
-            _pricingEngineFunc = (option, process) => pricingEngineFunc(process);
-            _underlyingVolEstimator = underlyingVolEstimator ?? new ConstantQLUnderlyingVolatilityEstimator();
-            _riskFreeRateEstimator = riskFreeRateEstimator ?? new ConstantQLRiskFreeRateEstimator();
-            _dividendYieldEstimator = dividendYieldEstimator ?? new ConstantQLDividendYieldEstimator();
-
-            AllowedOptionStyles = allowedOptionStyles ?? _defaultAllowedOptionStyles;
-        }
+            : this((option, process) => pricingEngineFunc(process), underlyingVolEstimator, riskFreeRateEstimator, dividendYieldEstimator, allowedOptionStyles)
+        {}
         /// <summary>
         /// Method constructs QuantLib option price model with necessary estimators of underlying volatility, risk free rate, and underlying dividend yield
         /// </summary>
@@ -87,10 +81,7 @@ namespace QuantConnect.Securities.Option
             _riskFreeRateEstimator = riskFreeRateEstimator ?? new ConstantQLRiskFreeRateEstimator();
             _dividendYieldEstimator = dividendYieldEstimator ?? new ConstantQLDividendYieldEstimator();
 
-            if (allowedOptionStyles != null)
-            {
-                AllowedOptionStyles = allowedOptionStyles;
-            }
+            AllowedOptionStyles = allowedOptionStyles ?? _defaultAllowedOptionStyles;
         }
 
         /// <summary>
@@ -106,7 +97,7 @@ namespace QuantConnect.Securities.Option
         {
             if (!AllowedOptionStyles.Contains(contract.Symbol.ID.OptionStyle))
             {
-               throw new ArgumentException($"{contract.Symbol.ID.OptionStyle} style options are not supported by {this.GetType().Name}");
+               throw new ArgumentException($"{contract.Symbol.ID.OptionStyle} style options are not supported by option price model '{this.GetType().Name}'");
             }
 
             try
@@ -163,13 +154,11 @@ namespace QuantConnect.Securities.Option
                 {
                     try
                     {
-                        var g = (decimal)greek();
-                        return g;
+                        return (decimal)greek();
                     }
                     catch (Exception)
                     {
-                        var v = EnableGreekApproximation ? (decimal)reevalFunc() : 0.0m;
-                        return v;
+                        return EnableGreekApproximation ? (decimal)reevalFunc() : 0.0m;
                     }
                 };
 
