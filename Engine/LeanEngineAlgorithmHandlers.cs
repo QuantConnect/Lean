@@ -76,6 +76,11 @@ namespace QuantConnect.Lean.Engine
         public IDataProvider DataProvider { get; }
 
         /// <summary>
+        /// Gets the data file provider used to retrieve security data if it is not on the file system
+        /// </summary>
+        public IDataCacheProvider DataCacheProvider { get; }
+
+        /// <summary>
         /// Gets the alpha handler used to process algorithm generated insights
         /// </summary>
         public IAlphaHandler Alphas { get; }
@@ -104,6 +109,7 @@ namespace QuantConnect.Lean.Engine
         /// <param name="alphas">The alpha handler used to process generated insights</param>
         /// <param name="objectStore">The object store used for persistence</param>
         /// <param name="dataPermissionsManager">The data permission manager to use</param>
+        /// <param name="liveMode">True for live mode, false otherwise</param>
         public LeanEngineAlgorithmHandlers(IResultHandler results,
             ISetupHandler setup,
             IDataFeed dataFeed,
@@ -114,7 +120,8 @@ namespace QuantConnect.Lean.Engine
             IDataProvider dataProvider,
             IAlphaHandler alphas,
             IObjectStore objectStore,
-            IDataPermissionManager dataPermissionsManager
+            IDataPermissionManager dataPermissionsManager,
+            bool liveMode
             )
         {
             if (results == null)
@@ -173,6 +180,7 @@ namespace QuantConnect.Lean.Engine
             Alphas = alphas;
             ObjectStore = objectStore;
             DataPermissionsManager = dataPermissionsManager;
+            DataCacheProvider = new ZipDataCacheProvider(DataProvider, isDataEphemeral: liveMode);
         }
 
         /// <summary>
@@ -206,7 +214,8 @@ namespace QuantConnect.Lean.Engine
                 composer.GetExportedValueByTypeName<IDataProvider>(dataProviderTypeName),
                 composer.GetExportedValueByTypeName<IAlphaHandler>(alphaHandlerTypeName),
                 composer.GetExportedValueByTypeName<IObjectStore>(objectStoreTypeName),
-                composer.GetExportedValueByTypeName<IDataPermissionManager>(dataPermissionManager)
+                composer.GetExportedValueByTypeName<IDataPermissionManager>(dataPermissionManager),
+                Config.GetBool("live-mode")
                 );
 
             result.FactorFileProvider.Initialize(result.MapFileProvider, result.DataProvider);
@@ -230,6 +239,7 @@ namespace QuantConnect.Lean.Engine
         {
             Log.Trace("LeanEngineAlgorithmHandlers.Dispose(): start...");
 
+            DataCacheProvider.DisposeSafely();
             Setup.DisposeSafely();
             ObjectStore.DisposeSafely();
 
