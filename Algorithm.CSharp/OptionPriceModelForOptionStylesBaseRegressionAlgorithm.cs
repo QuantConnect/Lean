@@ -108,12 +108,19 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 // Greeks shpould be valid if they were successfuly accessed for supported option style
-                if (_optionStyleIsSupported
-                    && ((contract.Right == OptionRight.Call && (greeks.Delta < 0m || greeks.Delta > 1m || greeks.Rho <= 0m))
-                        || (contract.Right == OptionRight.Put && (greeks.Delta < -1m || greeks.Delta > 0m || greeks.Rho >= 0m))
-                        || greeks.Theta == 0m || greeks.Vega <= 0m || greeks.Gamma <= 0m))
+                if (_optionStyleIsSupported)
                 {
-                    throw new Exception($"Expected greeks to have valid values. Greeks were: Delta: {greeks.Delta}, Rho: {greeks.Rho}, Theta: {greeks.Theta}, Vega: {greeks.Vega}, Gamma: {greeks.Gamma}");
+                    if (greeks.Delta == 0m && greeks.Gamma == 0m && greeks.Theta == 0m && greeks.Vega == 0m && greeks.Rho == 0m)
+                    {
+                        throw new Exception($"Expected greeks to not be zero simultaneously for {contract.Symbol.Value}, an {_option.Style} style option, using {_option?.PriceModel.GetType().Name}, but they were");
+                    }
+
+                    if (((contract.Right == OptionRight.Call && (greeks.Delta < 0m || greeks.Delta > 1m || greeks.Rho < 0m))
+                        || (contract.Right == OptionRight.Put && (greeks.Delta < -1m || greeks.Delta > 0m || greeks.Rho > 0m))
+                        || greeks.Vega < 0m || greeks.Gamma < 0m))
+                    {
+                        throw new Exception($"Expected greeks to have valid values. Greeks were: Delta: {greeks.Delta}, Rho: {greeks.Rho}, Theta: {greeks.Theta}, Vega: {greeks.Vega}, Gamma: {greeks.Gamma}");
+                    }
                 }
             }
         }

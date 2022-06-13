@@ -14,7 +14,6 @@
 */
 
 using System.Collections.Generic;
-using QuantConnect.Interfaces;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
