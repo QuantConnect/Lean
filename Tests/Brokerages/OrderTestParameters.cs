@@ -16,6 +16,7 @@
 using System;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Brokerages
 {
@@ -28,6 +29,7 @@ namespace QuantConnect.Tests.Brokerages
         public SecurityType SecurityType { get; private set; }
         public IOrderProperties Properties { get; private set; }
         public OrderSubmissionData OrderSubmissionData { get; internal set; }
+        public SymbolPropertiesDatabase SPDB { get; internal set; }
 
         protected OrderTestParameters(Symbol symbol, IOrderProperties properties = null, OrderSubmissionData orderSubmissionData = null)
         {
@@ -35,6 +37,12 @@ namespace QuantConnect.Tests.Brokerages
             SecurityType = symbol.ID.SecurityType;
             Properties = properties;
             OrderSubmissionData = orderSubmissionData;
+            SPDB = SymbolPropertiesDatabase.FromDataFolder();
+        }
+
+        protected static int GetDecimalPlaces(decimal minumumPriceVariation)
+        {
+            return BitConverter.GetBytes(decimal.GetBits(minumumPriceVariation)[3])[2];
         }
 
         public MarketOrder CreateLongMarketOrder(decimal quantity)
