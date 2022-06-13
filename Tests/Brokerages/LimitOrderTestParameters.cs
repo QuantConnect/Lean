@@ -16,6 +16,7 @@
 using System;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Brokerages
 {
@@ -51,16 +52,18 @@ namespace QuantConnect.Tests.Brokerages
         {
             // limit orders will process even if they go beyond the market price
 
+            var symbolProperties = SPDB.GetSymbolProperties(order.Symbol.ID.Market, order.Symbol, order.SecurityType, order.PriceCurrency);
+            var roundOffPlaces = GetDecimalPlaces(symbolProperties.MinimumPriceVariation);
             var limit = (LimitOrder) order;
             if (order.Quantity > 0)
             {
                 // for limit buys we need to increase the limit price
-                limit.LimitPrice = lastMarketPrice*1.05m;
+                limit.LimitPrice = Math.Round(lastMarketPrice *1.05m, roundOffPlaces);
             }
             else
             {
                 // for limit sells we need to decrease the limit price
-                limit.LimitPrice =  lastMarketPrice/ 1.05m;
+                limit.LimitPrice = Math.Round(lastMarketPrice / 1.05m, roundOffPlaces);
             }
             return true;
         }
