@@ -57,24 +57,11 @@ namespace QuantConnect.Tests.Brokerages
             {
                 // for stop buys we need to decrease the stop price
                 stop.StopPrice = Math.Min(stop.StopPrice, Math.Max(stop.StopPrice / 2, Math.Round(lastMarketPrice, roundOffPlaces, MidpointRounding.AwayFromZero)));
-
-                //change behaviour for forex type unit tests
-                if (order.SecurityType == SecurityType.Forex || order.SecurityType == SecurityType.Crypto)
-                {
-                    stop.StopPrice = Math.Min(stop.StopPrice, Math.Max(stop.StopPrice / 2, Math.Round(lastMarketPrice, roundOffPlaces, MidpointRounding.AwayFromZero)));
-                }
             }
             else
             {
                 // for stop sells we need to increase the stop price
                 stop.StopPrice = Math.Max(stop.StopPrice, Math.Min(stop.StopPrice * 2, Math.Round(lastMarketPrice, roundOffPlaces, MidpointRounding.AwayFromZero)));
-
-
-                //change behaviour for forex type unit tests
-                if (order.SecurityType == SecurityType.Forex || order.SecurityType == SecurityType.Crypto)
-                {
-                    stop.StopPrice = Math.Max(stop.StopPrice, Math.Min(stop.StopPrice * 2, Math.Round(lastMarketPrice, roundOffPlaces, MidpointRounding.AwayFromZero)));
-                }
             }
             stop.LimitPrice = stop.StopPrice;
             return stop.StopPrice != previousStop;

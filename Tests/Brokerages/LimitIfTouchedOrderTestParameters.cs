@@ -66,26 +66,12 @@ namespace QuantConnect.Tests.Brokerages
                 // for buys we need to decrease the trigger price
                 stop.TriggerPrice = Math.Min(stop.TriggerPrice,
                     Math.Max(stop.TriggerPrice / 2, Math.Round(lastMarketPrice, roundOffPlaces, MidpointRounding.AwayFromZero)));
-
-                //change behaviour for forex type unit tests
-                if (order.SecurityType == SecurityType.Forex || order.SecurityType == SecurityType.Crypto)
-                {
-                    stop.TriggerPrice = Math.Min(stop.TriggerPrice,
-                        Math.Max(stop.TriggerPrice / 2, Math.Round(lastMarketPrice, roundOffPlaces, MidpointRounding.AwayFromZero)));
-                }
             }
             else
             {
                 // for sells we need to increase the trigger price
                 stop.TriggerPrice = Math.Max(stop.TriggerPrice,
                     Math.Min(stop.TriggerPrice * 2, Math.Round(lastMarketPrice, roundOffPlaces, MidpointRounding.AwayFromZero)));
-
-                //change behaviour for forex type unit tests
-                if (order.SecurityType == SecurityType.Forex || order.SecurityType == SecurityType.Crypto)
-                {
-                    stop.TriggerPrice = Math.Max(stop.TriggerPrice,
-                        Math.Min(stop.TriggerPrice * 2, Math.Round(lastMarketPrice, roundOffPlaces, MidpointRounding.AwayFromZero)));
-                }
             }
 
             stop.LimitPrice = stop.TriggerPrice;
