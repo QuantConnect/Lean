@@ -26,6 +26,7 @@ using Moq;
 using QLNet;
 using Cash = QuantConnect.Securities.Cash;
 using Option = QuantConnect.Securities.Option.Option;
+using Log = QuantConnect.Logging.Log;
 
 namespace QuantConnect.Tests.Common
 {
@@ -41,44 +42,20 @@ namespace QuantConnect.Tests.Common
             const decimal riskFreeRate = 0.01m;
             var tz = TimeZones.NewYork;
             var evaluationDate = new DateTime(2015, 2, 19);
-            var SPY_C_192_Feb19_2016E = Symbol.CreateOption("SPY", Market.USA, OptionStyle.European, OptionRight.Call, 192m, new DateTime(2016, 02, 19));
-            var SPY_P_192_Feb19_2016E = Symbol.CreateOption("SPY", Market.USA, OptionStyle.European, OptionRight.Put, 192m, new DateTime(2016, 02, 19));
+            var spy = Symbols.SPY;
+            var SPY_C_192_Feb19_2016E = GetOptionSymbol(spy, OptionStyle.European, OptionRight.Call);
+            var SPY_P_192_Feb19_2016E = GetOptionSymbol(spy, OptionStyle.European, OptionRight.Put);
 
             // setting up underlying
-            var equity = new Equity(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
-                new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
-            equity.SetMarketPrice(new Tick { Value = underlyingPrice });
-            equity.VolatilityModel = new DummyVolatilityModel(underlyingVol);
+            var equity = GetEquity(spy, underlyingPrice, underlyingVol, tz);
 
             // setting up European style call option
-            var contractCall = new OptionContract(SPY_C_192_Feb19_2016E, Symbols.SPY) { Time = evaluationDate };
-            var optionCall = new Option(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(typeof(TradeBar), SPY_C_192_Feb19_2016E, Resolution.Minute, tz, tz, true, false, false),
-                new Cash(Currencies.USD, 0, 1m),
-                new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
-            optionCall.Underlying = equity;
+            var contractCall = GetOptionContract(SPY_C_192_Feb19_2016E, spy, evaluationDate);
+            var optionCall = GetOption(SPY_C_192_Feb19_2016E, equity, tz);
 
             // setting up European style put option
-            var contractPut = new OptionContract(SPY_P_192_Feb19_2016E, Symbols.SPY) { Time = evaluationDate };
-            var optionPut = new Option(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(typeof(TradeBar), SPY_P_192_Feb19_2016E, Resolution.Minute, tz, tz, true, false, false),
-                new Cash(Currencies.USD, 0, 1m),
-                new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
-            optionPut.Underlying = equity;
+            var contractPut = GetOptionContract(SPY_P_192_Feb19_2016E, spy, evaluationDate);
+            var optionPut = GetOption(SPY_P_192_Feb19_2016E, equity, tz);
 
             // running evaluation
             var priceModel = OptionPriceModels.BlackScholes();
@@ -103,32 +80,16 @@ namespace QuantConnect.Tests.Common
             const decimal riskFreeRate = 0.01m;
             var tz = TimeZones.NewYork;
             var evaluationDate = new DateTime(2015, 2, 19);
-            var SPY_C_192_Feb19_2016E = Symbol.CreateOption("SPY", Market.USA, OptionStyle.European, OptionRight.Call, 192m, new DateTime(2016, 02, 19));
+            var spy = Symbols.SPY;
+            var SPY_C_192_Feb19_2016E = GetOptionSymbol(spy, OptionStyle.European, OptionRight.Call);
 
             // setting up underlying
-            var equity = new Equity(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
-                new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
-            equity.SetMarketPrice(new Tick { Value = underlyingPrice });
-            equity.VolatilityModel = new DummyVolatilityModel(underlyingVol);
+            var equity = GetEquity(spy, underlyingPrice, underlyingVol, tz);
 
-            // setting up European style option
-            var contract = new OptionContract(SPY_C_192_Feb19_2016E, Symbols.SPY) { Time = evaluationDate };
-            var optionCall = new Option(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(typeof(TradeBar), SPY_C_192_Feb19_2016E, Resolution.Minute, tz, tz, true, false, false),
-                new Cash(Currencies.USD, 0, 1m),
-                new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
+            // setting up European style call option
+            var contract = GetOptionContract(SPY_C_192_Feb19_2016E, spy, evaluationDate);
+            var optionCall = GetOption(SPY_C_192_Feb19_2016E, equity, tz);
             optionCall.SetMarketPrice(new Tick { Value = price });
-            optionCall.Underlying = equity;
 
             // running evaluation
             var priceModel = OptionPriceModels.BlackScholes();
@@ -151,39 +112,15 @@ namespace QuantConnect.Tests.Common
             const decimal underlyingVol = 0.25m;
             const decimal riskFreeRate = 0.01m;
             var tz = TimeZones.NewYork;
+            var spy = Symbols.SPY;
             var evaluationDate = new DateTime(2015, 2, 19);
+            var SPY_C_192_Feb19_2016E = GetOptionSymbol(spy, OptionStyle.American, OptionRight.Call);
 
-            var equity = new Equity(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
-                new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
-            equity.SetMarketPrice(new Tick { Value = underlyingPrice });
-            equity.VolatilityModel = new DummyVolatilityModel(underlyingVol);
+            var equity = GetEquity(spy, underlyingPrice, underlyingVol, tz);
 
             var contract = new OptionContract(Symbols.SPY_C_192_Feb19_2016, Symbols.SPY) { Time = evaluationDate };
-            var optionCall = new Option(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(
-                    typeof(TradeBar),
-                    Symbols.SPY_C_192_Feb19_2016,
-                    Resolution.Minute,
-                    tz,
-                    tz,
-                    true,
-                    false,
-                    false
-                ),
-                new Cash(Currencies.USD, 0, 1m),
-                new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
+            var optionCall = GetOption(SPY_C_192_Feb19_2016E, equity, tz);
             optionCall.SetMarketPrice(new Tick { Value = price });
-            optionCall.Underlying = equity;
 
             var priceModel = OptionPriceModels.BaroneAdesiWhaley();
             var results = priceModel.Evaluate(optionCall, null, contract);
@@ -209,40 +146,16 @@ namespace QuantConnect.Tests.Common
             const decimal underlyingPrice = 200m;
             const decimal underlyingVol = 0.25m;
             var tz = TimeZones.NewYork;
+            var spy = Symbols.SPY;
             var evaluationDate1 = new DateTime(2015, 2, 19);
             var evaluationDate2 = new DateTime(2015, 2, 20);
+            var SPY_C_192_Feb19_2016E = GetOptionSymbol(spy, OptionStyle.American, OptionRight.Call);
 
-            var equity = new Equity(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
-                new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
-            equity.SetMarketPrice(new Tick { Value = underlyingPrice });
-            equity.VolatilityModel = new DummyVolatilityModel(underlyingVol);
+            var equity = GetEquity(spy, underlyingPrice, underlyingVol, tz);
 
-            var contract = new OptionContract(Symbols.SPY_C_192_Feb19_2016, Symbols.SPY) { Time = evaluationDate1 };
-            var optionCall = new Option(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(
-                    typeof(TradeBar),
-                    Symbols.SPY_C_192_Feb19_2016,
-                    Resolution.Minute,
-                    tz,
-                    tz,
-                    true,
-                    false,
-                    false
-                ),
-                new Cash(Currencies.USD, 0, 1m),
-                new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
+            var contract = GetOptionContract(SPY_C_192_Feb19_2016E, spy, evaluationDate1);
+            var optionCall = GetOption(SPY_C_192_Feb19_2016E, equity, tz);
             optionCall.SetMarketPrice(new Tick { Value = price });
-            optionCall.Underlying = equity;
 
             var priceModel = OptionPriceModels.BaroneAdesiWhaley();
             var results = priceModel.Evaluate(optionCall, null, contract);
@@ -279,38 +192,14 @@ namespace QuantConnect.Tests.Common
             const decimal underlyingVol = 0.15m;
             var tz = TimeZones.NewYork;
             var evaluationDate = new DateTime(2016, 1, 19);
+            var spy = Symbols.SPY;
 
-            var equity = new Equity(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
-                new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
-            equity.SetMarketPrice(new Tick { Value = underlyingPrice });
-            equity.VolatilityModel = new DummyVolatilityModel(underlyingVol);
+            var equity = GetEquity(spy, underlyingPrice, underlyingVol, tz);
 
-            var contract = new OptionContract(Symbols.SPY_P_192_Feb19_2016, Symbols.SPY) { Time = evaluationDate };
-            var optionPut = new Option(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(
-                    typeof(TradeBar),
-                    Symbols.SPY_P_192_Feb19_2016,
-                    Resolution.Minute,
-                    tz,
-                    tz,
-                    true,
-                    false,
-                    false
-                ),
-                new Cash(Currencies.USD, 0, 1m),
-                new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
+            var contract = GetOptionContract(Symbols.SPY_P_192_Feb19_2016, spy, evaluationDate);
+
+            var optionPut = GetOption(Symbols.SPY_P_192_Feb19_2016, equity, tz);
             optionPut.SetMarketPrice(new Tick { Value = price });
-            optionPut.Underlying = equity;
 
             var priceModel = (QLOptionPriceModel)OptionPriceModels.CrankNicolsonFD();
             priceModel.EnableGreekApproximation = false;
@@ -354,47 +243,22 @@ namespace QuantConnect.Tests.Common
         {
             const decimal underlyingPrice = 200m;
             const decimal underlyingVol = 0.15m;
-            const decimal riskFreeRate = 0.01m;
             var tz = TimeZones.NewYork;
             var evaluationDate = new DateTime(2015, 2, 19);
-            var SPY_C_192_Feb19_2016E = Symbol.CreateOption("SPY", Market.USA, OptionStyle.European, OptionRight.Call, 192m, new DateTime(2016, 02, 19));
-            var SPY_P_192_Feb19_2016E = Symbol.CreateOption("SPY", Market.USA, OptionStyle.European, OptionRight.Put, 192m, new DateTime(2016, 02, 19));
+            var spy = Symbols.SPY;
+            var SPY_C_192_Feb19_2016E = GetOptionSymbol(spy, OptionStyle.European, OptionRight.Call);
+            var SPY_P_192_Feb19_2016E = GetOptionSymbol(spy, OptionStyle.European, OptionRight.Put);
 
             // setting up underlying
-            var equity = new Equity(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
-                new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
-            equity.SetMarketPrice(new Tick { Value = underlyingPrice });
-            equity.VolatilityModel = new DummyVolatilityModel(underlyingVol);
+            var equity = GetEquity(spy, underlyingPrice, underlyingVol, tz);
 
             // setting up European style call option
-            var contractCall = new OptionContract(SPY_C_192_Feb19_2016E, Symbols.SPY) { Time = evaluationDate };
-            var optionCall = new Option(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(typeof(TradeBar), SPY_C_192_Feb19_2016E, Resolution.Minute, tz, tz, true, false, false),
-                new Cash(Currencies.USD, 0, 1m),
-                new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
-            optionCall.Underlying = equity;
+            var contractCall = GetOptionContract(SPY_C_192_Feb19_2016E, spy, evaluationDate);
+            var optionCall = GetOption(SPY_C_192_Feb19_2016E, equity, tz);
 
             // setting up European style put option
-            var contractPut = new OptionContract(SPY_P_192_Feb19_2016E, Symbols.SPY) { Time = evaluationDate };
-            var optionPut = new Option(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(typeof(TradeBar), SPY_P_192_Feb19_2016E, Resolution.Minute, tz, tz, true, false, false),
-                new Cash(Currencies.USD, 0, 1m),
-                new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
-            optionPut.Underlying = equity;
+            var contractPut = GetOptionContract(SPY_P_192_Feb19_2016E, spy, evaluationDate);
+            var optionPut = GetOption(SPY_P_192_Feb19_2016E, equity, tz);
 
             // running evaluation
             var volatilityModel = new Mock<IQLUnderlyingVolatilityEstimator>();
@@ -408,6 +272,110 @@ namespace QuantConnect.Tests.Common
 
             Assert.AreEqual(OptionPriceModelResult.None, resultsCall);
             Assert.AreEqual(OptionPriceModelResult.None, resultsCall);
+        }
+
+        [Test]
+        [TestCase("BlackScholes", OptionStyle.American, true)]
+        [TestCase("BlackScholes", OptionStyle.European, false)]
+        [TestCase("Integral", OptionStyle.American, true)]
+        [TestCase("Integral", OptionStyle.European, false)]
+        [TestCase("BaroneAdesiWhaley", OptionStyle.American, false)]
+        [TestCase("BaroneAdesiWhaley", OptionStyle.European, true)]
+        [TestCase("BjerksundStensland", OptionStyle.American, false)]
+        [TestCase("BjerksundStensland", OptionStyle.European, true)]
+        public void ThrowsIfOptionStyleIsNotSupportedByQLPricingModel(string qlModelName, OptionStyle optionStyle, bool shouldThrow)
+        {
+            const decimal underlyingPrice = 200m;
+            const decimal underlyingVol = 0.15m;
+            var tz = TimeZones.NewYork;
+            var evaluationDate = new DateTime(2015, 2, 19);
+            var spy = Symbols.SPY;
+            var SPY_C_192_Feb19_2016E = GetOptionSymbol(spy, optionStyle, OptionRight.Call);
+            var SPY_P_192_Feb19_2016E = GetOptionSymbol(spy, optionStyle, OptionRight.Put);
+
+            // setting up underlying
+            var equity = GetEquity(spy, underlyingPrice, underlyingVol, tz);
+
+            // setting up European style call option
+            var contractCall = GetOptionContract(SPY_C_192_Feb19_2016E, spy, evaluationDate);
+            var optionCall = GetOption(SPY_C_192_Feb19_2016E, equity, tz);
+
+            // setting up European style put option
+            var contractPut = GetOptionContract(SPY_P_192_Feb19_2016E, spy, evaluationDate);
+            var optionPut = GetOption(SPY_P_192_Feb19_2016E, equity, tz);
+
+            // running evaluation
+            var priceModel = (IOptionPriceModel)typeof(OptionPriceModels).GetMethod(qlModelName).Invoke(null, new object[]{});
+            TestDelegate call = () => priceModel.Evaluate(optionCall, null, contractCall);
+            TestDelegate put = () => priceModel.Evaluate(optionPut, null, contractPut);
+
+            if (shouldThrow)
+            {
+                Assert.Throws<ArgumentException>(call);
+                Assert.Throws<ArgumentException>(put);
+            }
+            else
+            {
+                Assert.DoesNotThrow(call);
+                Assert.DoesNotThrow(put);
+
+                var results = priceModel.Evaluate(optionCall, null, contractCall);
+                var greeks = results.Greeks;
+
+                Assert.That(greeks.Delta, Is.InRange(0, 1m));
+                Assert.Less(greeks.Theta, 0);
+                Assert.Greater(greeks.Rho, 0m);
+                Assert.Greater(greeks.Vega, 0m);
+
+                results = priceModel.Evaluate(optionPut, null, contractPut);
+                greeks = results.Greeks;
+
+                Assert.That(greeks.Delta, Is.InRange(-1m, 0));
+                Assert.Less(greeks.Theta, 0);
+                Assert.Less(greeks.Rho, 0m);
+                Assert.Greater(greeks.Vega, 0m);
+            }
+        }
+
+        private Symbol GetOptionSymbol(Symbol underlying, OptionStyle optionStyle, OptionRight optionRight)
+        {
+            return Symbol.CreateOption(underlying.Value, Market.USA, optionStyle, optionRight, 192m, new DateTime(2016, 02, 19));
+        }
+
+        private Equity GetEquity(Symbol symbol, decimal underlyingPrice, decimal underlyingVol, NodaTime.DateTimeZone tz)
+        {
+            var equity = new Equity(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, tz, tz, true, false, false),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
+            equity.SetMarketPrice(new Tick { Value = underlyingPrice });
+            equity.VolatilityModel = new DummyVolatilityModel(underlyingVol);
+
+            return equity;
+        }
+
+        public OptionContract GetOptionContract(Symbol symbol, Symbol underlying, DateTime evaluationDate)
+        {
+            return new OptionContract(symbol, underlying) { Time = evaluationDate };
+        }
+
+        public Option GetOption(Symbol symbol, Equity underlying, NodaTime.DateTimeZone tz)
+        {
+            var option = new Option(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, tz, tz, true, false, false),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
+            option.Underlying = underlying;
+
+            return option;
         }
 
         /// <summary>
