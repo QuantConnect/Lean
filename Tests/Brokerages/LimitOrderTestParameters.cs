@@ -58,12 +58,12 @@ namespace QuantConnect.Tests.Brokerages
             if (order.Quantity > 0)
             {
                 // for limit buys we need to increase the limit price
-                limit.LimitPrice = Math.Round(lastMarketPrice *1.05m, roundOffPlaces);
+                limit.LimitPrice = Math.Round(lastMarketPrice *1.02m, roundOffPlaces);
             }
             else
             {
                 // for limit sells we need to decrease the limit price
-                limit.LimitPrice = Math.Round(lastMarketPrice / 1.05m, roundOffPlaces);
+                limit.LimitPrice = Math.Round(lastMarketPrice / 1.02m, roundOffPlaces);
             }
             return true;
         }

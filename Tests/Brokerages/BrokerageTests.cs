@@ -505,6 +505,7 @@ namespace QuantConnect.Tests.Brokerages
             var filledResetEvent = new ManualResetEvent(false);
             EventHandler<OrderEvent> brokerageOnOrderStatusChanged = (sender, args) =>
             {
+                order.Status = args.Status;
                 if (args.Status == OrderStatus.Filled)
                 {
                     filledResetEvent.Set();
@@ -533,12 +534,18 @@ namespace QuantConnect.Tests.Brokerages
                 var updateOrder = parameters.ModifyOrderToFill(Brokerage, order, marketPrice);
                 if (updateOrder)
                 {
-                    if (order.Status == OrderStatus.Filled) break;
-
+                    if (order.Status == OrderStatus.Filled)
+                    {
+                        break;
+                    }
+                        
                     Log.Trace("BrokerageTests.ModifyOrderUntilFilled(): " + order);
                     if (!Brokerage.UpdateOrder(order))
                     {
-                        Assert.Fail("Brokerage failed to update the order");
+                        if (order.Status != OrderStatus.Filled)
+                        {
+                            Assert.Fail("Brokerage failed to update the order");
+                        }
                     }
                 }
             }
@@ -556,7 +563,7 @@ namespace QuantConnect.Tests.Brokerages
         /// <param name="allowFailedSubmission">Allow failed order submission</param>
         /// <returns>The same order that was submitted.</returns>
         protected Order PlaceOrderWaitForStatus(Order order, OrderStatus expectedStatus = OrderStatus.Filled,
-                                                double secondsTimeout = 10.0, bool allowFailedSubmission = false)
+                                                double secondsTimeout = 30.0, bool allowFailedSubmission = false)
         {
             var requiredStatusEvent = new ManualResetEvent(false);
             var desiredStatusEvent = new ManualResetEvent(false);
