@@ -505,6 +505,7 @@ namespace QuantConnect.Tests.Brokerages
             var filledResetEvent = new ManualResetEvent(false);
             EventHandler<OrderEvent> brokerageOnOrderStatusChanged = (sender, args) =>
             {
+                order.Status = args.Status;
                 if (args.Status == OrderStatus.Filled)
                 {
                     filledResetEvent.Set();
@@ -533,12 +534,18 @@ namespace QuantConnect.Tests.Brokerages
                 var updateOrder = parameters.ModifyOrderToFill(Brokerage, order, marketPrice);
                 if (updateOrder)
                 {
-                    if (order.Status == OrderStatus.Filled) break;
-
+                    if (order.Status == OrderStatus.Filled)
+                    {
+                        break;
+                    }
+                        
                     Log.Trace("BrokerageTests.ModifyOrderUntilFilled(): " + order);
                     if (!Brokerage.UpdateOrder(order))
                     {
-                        Assert.Fail("Brokerage failed to update the order");
+                        if (order.Status != OrderStatus.Filled)
+                        {
+                            Assert.Fail("Brokerage failed to update the order");
+                        }
                     }
                 }
             }
