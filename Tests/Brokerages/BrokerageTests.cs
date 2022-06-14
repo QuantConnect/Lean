@@ -563,7 +563,7 @@ namespace QuantConnect.Tests.Brokerages
         /// <param name="allowFailedSubmission">Allow failed order submission</param>
         /// <returns>The same order that was submitted.</returns>
         protected Order PlaceOrderWaitForStatus(Order order, OrderStatus expectedStatus = OrderStatus.Filled,
-                                                double secondsTimeout = 10.0, bool allowFailedSubmission = false)
+                                                double secondsTimeout = 30.0, bool allowFailedSubmission = false)
         {
             var requiredStatusEvent = new ManualResetEvent(false);
             var desiredStatusEvent = new ManualResetEvent(false);
