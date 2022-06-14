@@ -102,8 +102,8 @@ namespace QuantConnect.Securities.Option
 
             try
             {
-                // expired options has no price
-                if (contract.Time > contract.Expiry)
+                // expired options have no price
+                if (contract.Time.Date > contract.Expiry.Date)
                 {
                     return OptionPriceModelResult.None;
                 }
