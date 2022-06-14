@@ -55,6 +55,11 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         public OptionStyle[] AllowedOptionStyles { get; }
 
+        static QLOptionPriceModel()
+        {
+            QLNet.Settings.includeReferenceDateEvents = true;
+        }
+
         /// <summary>
         /// Method constructs QuantLib option price model with necessary estimators of underlying volatility, risk free rate, and underlying dividend yield
         /// </summary>
@@ -102,8 +107,10 @@ namespace QuantConnect.Securities.Option
 
             try
             {
+                var securityExchangeHours = security.Exchange.Hours;
+
                 // expired options have no price
-                if (contract.Time.Date > contract.Expiry.Date)
+                if (contract.Time > securityExchangeHours.GetNextMarketClose(contract.Expiry, false))
                 {
                     return OptionPriceModelResult.None;
                 }
@@ -113,8 +120,8 @@ namespace QuantConnect.Securities.Option
                 var dayCounter = new Actual365Fixed();
                 var optionSecurity = (Option)security;
 
-                var settlementDate = contract.Time.Date.AddDays(Option.DefaultSettlementDays);
-                var maturityDate = contract.Expiry.Date.AddDays(Option.DefaultSettlementDays);
+                var settlementDate = AddDays(contract.Time.Date, Option.DefaultSettlementDays, securityExchangeHours);
+                var maturityDate = AddDays(contract.Expiry.Date, Option.DefaultSettlementDays, securityExchangeHours);
                 var underlyingQuoteValue = new SimpleQuote((double)optionSecurity.Underlying.Price);
 
                 var dividendYieldValue = new SimpleQuote(_dividendYieldEstimator.Estimate(security, slice, contract));
@@ -140,7 +147,7 @@ namespace QuantConnect.Securities.Option
                             new VanillaOption(payoff, new AmericanExercise(settlementDate, maturityDate)) :
                             new VanillaOption(payoff, new EuropeanExercise(maturityDate));
 
-                Settings.setEvaluationDate(settlementDate);
+                QLNet.Settings.setEvaluationDate(settlementDate);
 
                 // preparing pricing engine QL object
                 option.setPricingEngine(_pricingEngineFunc(contract.Symbol, stochasticProcess));
@@ -220,9 +227,9 @@ namespace QuantConnect.Securities.Option
                 {
                     var step = 1.0 / 365.0;
 
-                    Settings.setEvaluationDate(settlementDate.AddDays(-1));
+                    Settings.setEvaluationDate(security.Exchange.Hours.GetPreviousTradingDay(settlementDate));
                     var npvMinus = EvaluateOption(option);
-                    Settings.setEvaluationDate(settlementDate);
+                    QLNet.Settings.setEvaluationDate(settlementDate);
 
                     return (npv - npvMinus) / step;
                 };
@@ -277,6 +284,18 @@ namespace QuantConnect.Securities.Option
                 Log.Debug($"QLOptionPriceModel.EvaluateOption() error: {err.Message}");
                 return 0.0;
             }
+        }
+
+        private static DateTime AddDays(DateTime date, int days, SecurityExchangeHours marketHours)
+        {
+            var forwardDate = date.AddDays(Option.DefaultSettlementDays);
+
+            if (!marketHours.IsDateOpen(forwardDate))
+            {
+                forwardDate = marketHours.GetNextTradingDay(forwardDate);
+            }
+
+            return forwardDate;
         }
     }
 }

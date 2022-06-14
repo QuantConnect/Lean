@@ -23,6 +23,10 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// Regression algorithm excersizing an equity covered option asserting that greeks can be accessed
+    /// and have are not all zero, the same day as the contract expiration date.
+    /// </summary>
     public class OptionExpiryDateTodayRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _optionSymbol;
@@ -30,23 +34,23 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void Initialize() {
             SetStartDate(2014, 06, 9);
-            SetEndDate(2014, 06, 20);
+            SetEndDate(2014, 06, 15);
 
-            var option = AddOption("AAPL");
-            _optionSymbol = option.Symbol;
+            var option = AddOption("AAPL", Resolution.Minute);
             option.SetFilter((universeFilter) =>
             {
                 return universeFilter.IncludeWeeklys().CallsOnly().Strikes(-1, 1).Expiration(0, 10);
             });
             option.PriceModel = OptionPriceModels.BaroneAdesiWhaley();
+            _optionSymbol = option.Symbol;
+
             SetWarmUp(TimeSpan.FromDays(4));
 
             _triedGreeksCalculation = false;
-            QLNet.Settings.includeReferenceDateEvents = true;
         }
 
         public override void OnData(Slice slice) {
-            if (IsWarmingUp || Portfolio.Invested) {
+            if (IsWarmingUp || Time.Hour > 10) {
                 return;
             }
 
@@ -58,8 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var chain = kvp.Value;
                 // Find the call options expiring today
                 var contracts = chain
-                    .Where(contract => contract.Expiry.Date == Time.Date.AddDays(1) && contract.Strike < chain.Underlying.Price)
-                    .OrderByDescending(x => x.Strike)
+                    .Where(contract => contract.Expiry.Date == Time.Date && contract.Strike < chain.Underlying.Price)
                     .ToList();
 
                 if (contracts.Count == 0) {
@@ -73,10 +76,8 @@ namespace QuantConnect.Algorithm.CSharp
                     var greeks = contract.Greeks;
                     if (greeks.Delta == 0m && greeks.Gamma == 0m && greeks.Theta == 0m && greeks.Vega == 0m && greeks.Rho == 0m)
                     {
-                        throw new Exception($"Expected greeks to not be zero simultaneously for {contract.Symbol}");
+                        throw new Exception($"Expected greeks to not be zero simultaneously for {contract.Symbol} at contract expiration date");
                     }
-
-                    Log($"[{Time}] [{contract.Expiry}] delta {contract.Greeks.Delta}, gamma {contract.Greeks.Gamma}, theta {contract.Greeks.Theta}, vega {contract.Greeks.Vega}, rho {contract.Greeks.Rho}");
                 }
             }
         }
@@ -87,8 +88,6 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception("Expected to have tried greeks calculation");
             }
         }
-
-
 
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
@@ -103,7 +102,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 9456757;
+        public long DataPoints => 5201819;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -131,8 +130,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-2.864"},
-            {"Tracking Error", "0.058"},
+            {"Information Ratio", "5.176"},
+            {"Tracking Error", "0.071"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
