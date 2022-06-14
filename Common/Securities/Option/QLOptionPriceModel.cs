@@ -55,8 +55,12 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         public OptionStyle[] AllowedOptionStyles { get; }
 
+        /// <summary>
+        /// Static constructor for the <see cref="QLOptionPriceModel"/> class
+        /// </summary>
         static QLOptionPriceModel()
         {
+            // Required for QL consider the option as not expired on the expiration date
             QLNet.Settings.includeReferenceDateEvents = true;
         }
 
