@@ -48,7 +48,6 @@ namespace QuantConnect.Algorithm.CSharp
             SetWarmUp(TimeSpan.FromDays(3));
 
             _triedGreeksCalculation = false;
-            QLNet.Settings.includeReferenceDateEvents = true;
         }
 
         public override void OnData(Slice slice)
