@@ -112,7 +112,6 @@ namespace QuantConnect.Securities.Option
                 .GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
 
             var currentTime = currentTimeUtc.ConvertFromUtc(exchangeHours.TimeZone);
-            var oldexpiryTime = exchangeHours.GetNextMarketClose(symbol.ID.Date, false);
 
             // Ideally we can calculate expiry on the date of the symbol ID, but if that exchange is not open on that day we 
             // will consider expired on the last trading day close before this; Example in AddOptionContractExpiresRegressionAlgorithm
@@ -122,8 +121,15 @@ namespace QuantConnect.Securities.Option
 
             var expiryTime = exchangeHours.GetNextMarketClose(expiryDay, false);
 
+            // Once bug 6189 was solved in ´GetNextMarketClose()´ there was found possible bugs on some futures symbol.ID.Date or delisting/liquidation handle event.
+            // Specifically see 'DelistingFutureOptionRegressionAlgorithm' where Symbol.ID.Date: 4/1/2012 00:00 ExpiryTime: 4/2/2012 16:00. Related to #6062 and #5487
+            // So let's limit the expiry time to up to end of day of expiration
+            if (expiryTime >= symbol.ID.Date.AddDays(1).Date)
+            {
+                expiryTime = symbol.ID.Date.AddDays(1).Date;
+            }
+
             return currentTime >= expiryTime;
         }
-
     }
 }

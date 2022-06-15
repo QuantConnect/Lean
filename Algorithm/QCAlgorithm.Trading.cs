@@ -935,8 +935,20 @@ namespace QuantConnect.Algorithm
                 }
             }
 
-            if (request.OrderType == OrderType.MarketOnClose)
+            if (request.OrderType == OrderType.MarketOnOpen)
             {
+                if (security.Exchange.Hours.IsMarketAlwaysOpen)
+                {
+                    throw new InvalidOperationException($"Market never closes for this symbol {security.Symbol}, can no submit a {nameof(OrderType.MarketOnOpen)} order.");
+                }
+            }
+            else if (request.OrderType == OrderType.MarketOnClose)
+            {
+                if (security.Exchange.Hours.IsMarketAlwaysOpen)
+                {
+                    throw new InvalidOperationException($"Market never closes for this symbol {security.Symbol}, can no submit a {nameof(OrderType.MarketOnClose)} order.");
+                }
+
                 var nextMarketClose = security.Exchange.Hours.GetNextMarketClose(security.LocalTime, false);
 
                 // Enforce MarketOnClose submission buffer

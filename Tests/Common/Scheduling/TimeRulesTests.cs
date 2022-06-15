@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -109,6 +109,74 @@ namespace QuantConnect.Tests.Common.Scheduling
                 Assert.AreEqual(TimeSpan.FromHours(4 + 5), time.TimeOfDay);
             }
             Assert.AreEqual(1, count);
+        }
+
+        [Test]
+        public void RegularMarketOpenNoDeltaForContinuousSchedules()
+        {
+            var rules = GetFutureTimeRules(TimeZones.Utc);
+            var rule = rules.AfterMarketOpen(Symbols.ES_Future_Chain, 0);
+            var times = rule.CreateUtcEventTimes(new[] {
+                new DateTime(2022, 01, 01),
+                new DateTime(2022, 01, 02),
+                new DateTime(2022, 01, 03),
+                new DateTime(2022, 01, 04),
+                new DateTime(2022, 01, 05),
+                new DateTime(2022, 01, 06),
+                new DateTime(2022, 01, 07),
+                new DateTime(2022, 01, 08),
+                new DateTime(2022, 01, 09)
+            });
+
+            var expectedMarketOpenDates = new[] {
+                new DateTime(2022, 01, 02, 23, 0, 0),
+                new DateTime(2022, 01, 03, 21, 30, 0),
+                new DateTime(2022, 01, 04, 21, 30, 0),
+                new DateTime(2022, 01, 05, 21, 30, 0),
+                new DateTime(2022, 01, 06, 21, 30, 0),
+                new DateTime(2022, 01, 07, 21, 30, 0),
+                new DateTime(2022, 01, 09, 23, 0, 0)
+            };
+            int count = 0;
+            foreach (var time in times)
+            {
+                Assert.AreEqual(expectedMarketOpenDates[count], time);
+                count++;
+            }
+            Assert.AreEqual(7, count);
+        }
+
+        [Test]
+        public void ExtendedMarketCloseNoDeltaForContinuousSchedules()
+        {
+            var rules = GetTimeRules(TimeZones.Utc);
+            var rule = rules.BeforeMarketClose(Symbols.SPY, 0, true);
+            var times = rule.CreateUtcEventTimes(new[] {
+                new DateTime(2022, 01, 01),
+                new DateTime(2022, 01, 02),
+                new DateTime(2022, 01, 03),
+                new DateTime(2022, 01, 04),
+                new DateTime(2022, 01, 05),
+                new DateTime(2022, 01, 06),
+                new DateTime(2022, 01, 07),
+                new DateTime(2022, 01, 08),
+                new DateTime(2022, 01, 09)
+            });
+
+            var expectedMarketOpenDates = new[] {
+                new DateTime(2022, 01, 04, 01, 00, 00),
+                new DateTime(2022, 01, 05, 01, 00, 00),
+                new DateTime(2022, 01, 06, 01, 00, 00),
+                new DateTime(2022, 01, 07, 01, 00, 00),
+                new DateTime(2022, 01, 08, 01, 00, 00)
+            };
+            int count = 0;
+            foreach (var time in times)
+            {
+                Assert.AreEqual(expectedMarketOpenDates[count], time);
+                count++;
+            }
+            Assert.AreEqual(5, count);
         }
 
         [Test]
@@ -239,6 +307,29 @@ namespace QuantConnect.Tests.Common.Scheduling
             var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Daily, marketHourDbEntry.DataTimeZone, securityExchangeHours.TimeZone, true, false, false);
             manager.Add(
                 Symbols.SPY,
+                new Security(
+                    securityExchangeHours,
+                    config,
+                    new Cash(Currencies.USD, 0, 1m),
+                    SymbolProperties.GetDefault(Currencies.USD),
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
+                )
+            );
+            var rules = new TimeRules(manager, dateTimeZone);
+            return rules;
+        }
+
+        private static TimeRules GetFutureTimeRules(DateTimeZone dateTimeZone)
+        {
+            var timeKeeper = new TimeKeeper(_utcNow, new List<DateTimeZone>());
+            var manager = new SecurityManager(timeKeeper);
+            var marketHourDbEntry = MarketHoursDatabase.FromDataFolder().GetEntry(Market.CME, "ES", SecurityType.Future);
+            var securityExchangeHours = marketHourDbEntry.ExchangeHours;
+            var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.ES_Future_Chain, Resolution.Daily, marketHourDbEntry.DataTimeZone, securityExchangeHours.TimeZone, true, false, false);
+            manager.Add(
+                Symbols.ES_Future_Chain,
                 new Security(
                     securityExchangeHours,
                     config,

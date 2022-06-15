@@ -15,78 +15,78 @@
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Orders;
 using QuantConnect.Interfaces;
 using QuantConnect.Data;
+using QuantConnect.Data.Consolidators;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This algorithm asserts that the minimum order size is respected at the moment of
-    /// place an order or update an order
+    /// Regression algorithm using a consolidator to check GetNextMarketClose() and GetNextMarketOpen()
+    /// are returning the correct market close and open times
     /// </summary>
-    public class MinimumOrderSizeRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class FutureMarketOpenConsolidatorRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private bool _sentOrders;
+        private static List<DateTime> _expectedOpens = new List<DateTime>(){
+            new DateTime(2013, 10, 06, 18, 00, 0),
+            new DateTime(2013, 10, 07, 16, 30, 0),
+            new DateTime(2013, 10, 08, 16, 30, 0),
+            new DateTime(2013, 10, 09, 16, 30, 0),
+            new DateTime(2013, 10, 10, 16, 30, 0),
+            new DateTime(2013, 10, 11, 16, 30, 0),
+            new DateTime(2013, 10, 13, 18, 00, 0),
+        };
+        private static List<DateTime> _expectedCloses = new List<DateTime>(){
+            new DateTime(2013, 10, 07, 16, 15, 0),
+            new DateTime(2013, 10, 08, 16, 15, 0),
+            new DateTime(2013, 10, 09, 16, 15, 0),
+            new DateTime(2013, 10, 10, 16, 15, 0),
+            new DateTime(2013, 10, 11, 16, 15, 0),
+            new DateTime(2013, 10, 14, 16, 15, 0),
+            new DateTime(2013, 10, 14, 16, 15, 0),
+        };
+
+        private Queue<DateTime> _expectedOpensQueue = new Queue<DateTime>(_expectedOpens);
+        private Queue<DateTime> _expectedClosesQueue = new Queue<DateTime>(_expectedCloses);
+
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 1);
-            SetEndDate(2013, 10, 1);
-            SetBrokerageModel(Brokerages.BrokerageName.Bitfinex, AccountType.Cash);
-            AddCrypto("BTCUSD", Resolution.Hour);
-        }
+            SetStartDate(2013, 10, 06);
+            SetEndDate(2013, 10, 14);
 
-        public override void OnData(Slice slice)
-        {
-            if (!_sentOrders)
+            var es = AddSecurity(SecurityType.Future, "ES");
+
+            Consolidate<BaseData>(es.Symbol, dataTime =>
             {
-                _sentOrders = true;
+                var start = es.Exchange.Hours.GetPreviousMarketOpen(dataTime, false);
+                var end = es.Exchange.Hours.GetNextMarketClose(start, false);
 
-                // Place an order that will fail because of the size
-                var invalidOrder = MarketOrder("BTCUSD", 0.00002);
-                if (invalidOrder.Status != OrderStatus.Invalid)
+                // market might open at 16:30 and close again at 17:00 but we are not interested in using the close so we skip it here
+                while (end.Date == start.Date)
                 {
-                    throw new Exception("Invalid order expected, order size is less than allowed");
+                    end = es.Exchange.Hours.GetNextMarketClose(end, false);
                 }
 
-                // Update an order that fails because of the size
-                var validOrderOne = LimitOrder("BTCUSD", 0.0002, Securities["BTCUSD"].Price - 0.1m,  "NotUpdated");
-                validOrderOne.Update(new UpdateOrderFields()
-                {
-                    Quantity = 0.00002m,
-                    Tag = "Updated"
-                });
-
-                // Place and update an order that will succeed
-                var validOrderTwo = LimitOrder("BTCUSD", 0.0002, Securities["BTCUSD"].Price - 0.1m, "NotUpdated");
-                validOrderTwo.Update(new UpdateOrderFields()
-                {
-                    Quantity = 0.002m,
-                    Tag = "Updated"
-                });
-            }
+                var period = end - start;
+                // based on the given data time we return the start time of it's bar and the expected period size
+                return new CalendarInfo(start, period);
+            }, bar => Assert(bar));
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        public void Assert(BaseData bar)
         {
-            var order = Transactions.GetOrderById(orderEvent.OrderId);
+            var open = _expectedOpensQueue.Dequeue();
+            var close = _expectedClosesQueue.Dequeue();
 
-            // Update of validOrderOne is expected to fail
-            if( (order.Id == 2) && (order.LastUpdateTime != null) && (order.Tag == "Updated"))
+            if (open != bar.Time || close != bar.EndTime)
             {
-                throw new Exception("Order update expected to fail");
+                throw new Exception($"Bar span was expected to be from {open} to {close}. " +
+                    $"\n But was from {bar.Time} to {bar.EndTime}.");
             }
 
-            // Update of validOrdertwo is expected to succeed
-            if ((order.Id == 3) && (order.LastUpdateTime != null) && (order.Tag == "NotUpdated"))
-            {
-                throw new Exception("Order update expected to succeed");
-            }
+            Logging.Log.Debug($"Consolidator Event span. Start {bar.Time} End : {bar.EndTime}");
         }
 
-        /// <summary>
-        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
-        /// </summary>
         public bool CanRunLocally { get; } = true;
 
         /// <summary>
@@ -97,19 +97,19 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 54;
+        public long DataPoints => 94112;
 
-        /// <summary>
+        /// </summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 4;
+        public int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "2"},
+            {"Total Trades", "0"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
@@ -125,12 +125,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
+            {"Information Ratio", "-3.108"},
+            {"Tracking Error", "0.163"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", "BTCUSD E3"},
+            {"Lowest Capacity Asset", ""},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
@@ -150,7 +150,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "9ada3df9647e0e638d12ba0b14eabe05"}
+            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
         };
     }
 }

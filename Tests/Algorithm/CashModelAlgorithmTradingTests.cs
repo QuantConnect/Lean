@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -629,12 +629,12 @@ namespace QuantConnect.Tests.Algorithm
         }
 
 
-        [Test]
-        public void OrderQuantityConversionTest()
+        [TestCase(SecurityType.Forex)]
+        [TestCase(SecurityType.Crypto)]
+        public void OrderQuantityConversionTest(SecurityType securityType)
         {
-            Security security;
-            var algo = GetAlgorithm(out security, 0);
-
+            var algo = GetAlgorithm(out var security, 0, securityType);
+            var symbol = security.Symbol;
             algo.Portfolio.SetCash(150000);
 
             var mock = new Mock<ITransactionHandler>();
@@ -643,52 +643,67 @@ namespace QuantConnect.Tests.Algorithm
             mock.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>())).Returns(new List<Order>());
             algo.Transactions.SetOrderProcessor(mock.Object);
 
-            algo.Buy(_symbol, 1);
-            algo.Buy(_symbol, 1.0);
-            algo.Buy(_symbol, 1.0m);
-            algo.Buy(_symbol, 1.0f);
+            algo.Buy(symbol, 1);
+            algo.Buy(symbol, 1.0);
+            algo.Buy(symbol, 1.0m);
+            algo.Buy(symbol, 1.0f);
 
-            algo.Sell(_symbol, 1);
-            algo.Sell(_symbol, 1.0);
-            algo.Sell(_symbol, 1.0m);
-            algo.Sell(_symbol, 1.0f);
+            algo.Sell(symbol, 1);
+            algo.Sell(symbol, 1.0);
+            algo.Sell(symbol, 1.0m);
+            algo.Sell(symbol, 1.0f);
 
-            algo.Order(_symbol, 1);
-            algo.Order(_symbol, 1.0);
-            algo.Order(_symbol, 1.0m);
-            algo.Order(_symbol, 1.0f);
+            algo.Order(symbol, 1);
+            algo.Order(symbol, 1.0);
+            algo.Order(symbol, 1.0m);
+            algo.Order(symbol, 1.0f);
 
-            algo.MarketOrder(_symbol, 1);
-            algo.MarketOrder(_symbol, 1.0);
-            algo.MarketOrder(_symbol, 1.0m);
-            algo.MarketOrder(_symbol, 1.0f);
+            algo.MarketOrder(symbol, 1);
+            algo.MarketOrder(symbol, 1.0);
+            algo.MarketOrder(symbol, 1.0m);
+            algo.MarketOrder(symbol, 1.0f);
 
-            algo.MarketOnOpenOrder(_symbol, 1);
-            algo.MarketOnOpenOrder(_symbol, 1.0);
-            algo.MarketOnOpenOrder(_symbol, 1.0m);
+            int expected = 32;
+            if (securityType == SecurityType.Crypto)
+            {
+                expected -= 6;
 
-            algo.MarketOnCloseOrder(_symbol, 1);
-            algo.MarketOnCloseOrder(_symbol, 1.0);
-            algo.MarketOnCloseOrder(_symbol, 1.0m);
+                Assert.Throws<InvalidOperationException>(() => algo.MarketOnCloseOrder(symbol, 1));
+                Assert.Throws<InvalidOperationException>(() => algo.MarketOnCloseOrder(symbol, 1.0));
+                Assert.Throws<InvalidOperationException>(() => algo.MarketOnCloseOrder(symbol, 1.0m));
 
-            algo.LimitOrder(_symbol, 1, 1);
-            algo.LimitOrder(_symbol, 1.0, 1);
-            algo.LimitOrder(_symbol, 1.0m, 1);
+                Assert.Throws<InvalidOperationException>(() => algo.MarketOnOpenOrder(symbol, 1));
+                Assert.Throws<InvalidOperationException>(() => algo.MarketOnOpenOrder(symbol, 1.0));
+                Assert.Throws<InvalidOperationException>(() => algo.MarketOnOpenOrder(symbol, 1.0m));
+            }
+            else
+            {
+                algo.MarketOnOpenOrder(symbol, 1);
+                algo.MarketOnOpenOrder(symbol, 1.0);
+                algo.MarketOnOpenOrder(symbol, 1.0m);
 
-            algo.StopMarketOrder(_symbol, 1, 1);
-            algo.StopMarketOrder(_symbol, 1.0, 1);
-            algo.StopMarketOrder(_symbol, 1.0m, 1);
+                algo.MarketOnCloseOrder(symbol, 1);
+                algo.MarketOnCloseOrder(symbol, 1.0);
+                algo.MarketOnCloseOrder(symbol, 1.0m);
+            }
 
-            algo.SetHoldings(_symbol, 1);
-            algo.SetHoldings(_symbol, 1.0);
-            algo.SetHoldings(_symbol, 1.0m);
-            algo.SetHoldings(_symbol, 1.0f);
+            algo.LimitOrder(symbol, 1, 1);
+            algo.LimitOrder(symbol, 1.0, 1);
+            algo.LimitOrder(symbol, 1.0m, 1);
 
-            const int expected = 32;
+            algo.StopMarketOrder(symbol, 1, 1);
+            algo.StopMarketOrder(symbol, 1.0, 1);
+            algo.StopMarketOrder(symbol, 1.0m, 1);
+
+            algo.SetHoldings(symbol, 1);
+            algo.SetHoldings(symbol, 1.0);
+            algo.SetHoldings(symbol, 1.0m);
+            algo.SetHoldings(symbol, 1.0f);
+
             Assert.AreEqual(expected, algo.Transactions.LastOrderId);
         }
 
-        private static QCAlgorithm GetAlgorithm(out Security security, decimal fee)
+        private static QCAlgorithm GetAlgorithm(out Security security, decimal fee, SecurityType securityType = SecurityType.Crypto)
         {
             SymbolCache.Clear();
             // Initialize algorithm
@@ -698,18 +713,34 @@ namespace QuantConnect.Tests.Algorithm
             algo.SetBrokerageModel(BrokerageName.GDAX, AccountType.Cash);
             algo.Transactions.SetOrderProcessor(new FakeOrderProcessor());
             algo.SetFinishedWarmingUp();
-            security = algo.AddSecurity(SecurityType.Crypto, "BTCUSD");
+            var cashSymbol = string.Empty;
+            if (securityType == SecurityType.Crypto)
+            {
+                cashSymbol = "BTC";
+                security = algo.AddSecurity(securityType, "BTCUSD");
+            }
+            else if(securityType == SecurityType.Forex)
+            {
+                cashSymbol = "EUR";
+                security = algo.AddSecurity(securityType, "EURUSD");
+                // set BPM to cash, since it's not the default
+                security.BuyingPowerModel = new CashBuyingPowerModel();
+            }
+            else
+            {
+                throw new NotImplementedException("Unexpected security type");
+            }
             security.FeeModel = new ConstantFeeModel(fee);
             //Set price to $25
-            Update(algo.Portfolio.CashBook, security, 25);
+            Update(algo.Portfolio.CashBook, security, 25, cashSymbol);
             return algo;
         }
 
-        private static void Update(CashBook cashBook, Security security, decimal close)
+        private static void Update(CashBook cashBook, Security security, decimal close, string cashSymbol = "BTC")
         {
             security.SetMarketPrice(new TradeBar
             {
-                Time = DateTime.Now,
+                Time = new DateTime(2022, 3, 15, 8, 0, 0),
                 Symbol = security.Symbol,
                 Open = close,
                 High = close,
@@ -717,7 +748,10 @@ namespace QuantConnect.Tests.Algorithm
                 Close = close
             });
 
-            cashBook[_cashSymbol].ConversionRate = close;
+            if (cashBook.TryGetValue(cashSymbol, out var cash))
+            {
+                cash.ConversionRate = close;
+            }
         }
     }
 }
