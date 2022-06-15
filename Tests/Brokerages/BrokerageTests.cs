@@ -55,10 +55,9 @@ namespace QuantConnect.Tests.Brokerages
             _brokerage = null;
             _orderProvider = null;
             _securityProvider = null;
-            Thread.Sleep(1000);
+            Thread.Sleep(500);
             CancelOpenOrders();
             LiquidateHoldings();
-            Thread.Sleep(1000);
         }
 
         [TearDown]
@@ -71,10 +70,8 @@ namespace QuantConnect.Tests.Brokerages
                 Log.Trace("--- TEARDOWN ---");
                 Log.Trace("");
                 Log.Trace("");
-                Thread.Sleep(1000);
                 CancelOpenOrders();
                 LiquidateHoldings();
-                Thread.Sleep(1000);
             }
             finally
             {
