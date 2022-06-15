@@ -319,26 +319,27 @@ namespace QuantConnect.Securities.Future
             // Trading shall terminate on the business day immediately preceding the day on which the USDA announces the <DAIRY_PRODUCT> price for that contract month. (LTD 12:10 p.m.)
             var contractMonth = new DateTime(time.Year, time.Month, 1);
             var lastTradeTs = lastTradeTime ?? new TimeSpan(17, 10, 0);
+            var entry = MarketHoursDatabase.FromDataFolder().GetEntry(Market.CME, "DC", SecurityType.FutureOption);
 
-            DateTime publicationDate;
-            if (FuturesExpiryFunctions.DairyReportDates.TryGetValue(contractMonth, out publicationDate))
+            DateTime expirationDate;
+            if (FuturesExpiryFunctions.DairyReportDates.TryGetValue(contractMonth, out expirationDate))
             {
+                expirationDate = expirationDate.Add(lastTradeTs);
                 do
                 {
-                    publicationDate = publicationDate.AddDays(-1);
+                    expirationDate = expirationDate.AddDays(-1);
                 }
-                while (USHoliday.Dates.Contains(publicationDate) || publicationDate.DayOfWeek == DayOfWeek.Saturday);
+                while (!entry.ExchangeHours.IsOpen(expirationDate.ConvertFromUtc(entry.ExchangeHours.TimeZone), extendedMarket: true));
             }
             else
             {
-                publicationDate = contractMonth.AddMonths(1);
+                expirationDate = contractMonth.AddMonths(1).Add(lastTradeTs);
             }
 
             // The USDA price announcements are erratic in their publication date. You can view the calendar the USDA announces prices here: https://www.ers.usda.gov/calendar/
             // More specifically, the report you should be looking for has the name "National Dairy Products Sales Report".
             // To get the report dates found in FuturesExpiryFunctions.DairyReportDates, visit this website: https://mpr.datamart.ams.usda.gov/menu.do?path=Products\Dairy\All%20Dairy\(DY_CL102)%20National%20Dairy%20Products%20Prices%20-%20Monthly
-
-            return publicationDate.Add(lastTradeTs);
+            return expirationDate;
         }
 
         /// <summary>

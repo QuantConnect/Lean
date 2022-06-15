@@ -127,6 +127,7 @@ namespace QuantConnect.Securities.Option
             if (expiryTime >= symbol.ID.Date.AddDays(1).Date)
             {
                 expiryTime = symbol.ID.Date.AddDays(1).Date;
+                Logging.Log.Error($"IsOptionContractExpired(): limiting unexpected option expiration time for symbol {symbol}. Symbol.ID.Date {symbol.ID.Date}. ExpiryTime: {expiryTime}");
             }
 
             return currentTime >= expiryTime;

@@ -16,6 +16,7 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
+using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Tests.Common.Securities.Futures
@@ -259,17 +260,34 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             Assert.AreEqual(calculatedOutput, false);
         }
 
-        [TestCase("01/05/2019", "01/30/2019", "17:10:00")]
-        [TestCase("01/31/2019", "01/30/2019", "12:00:00")]
-        [TestCase("03/01/2012", "04/02/2012", "17:10:00")]
-        public void DairyReportDates_ShouldNormalizeDateTimeAndReturnCorrectReportDate(string contractMonth, string reportDate, string lastTradeTime)
+        [Test]
+        public void DairyReportDates()
+        {
+            var date = new DateTime(2012, 1, 1);
+            var end = new DateTime(2022, 6, 1);
+            var exchange = MarketHoursDatabase.FromDataFolder().GetEntry(Market.CME, "DC", SecurityType.FutureOption);
+            do
+            {
+                var expiration = FuturesExpiryUtilityFunctions.DairyLastTradeDate(date);
+
+                expiration = expiration.ConvertFromUtc(exchange.ExchangeHours.TimeZone);
+
+                Assert.IsTrue(exchange.ExchangeHours.IsOpen(expiration, extendedMarket: true), $"Failed for date {date}- Expiration {expiration}");
+
+                date = date.AddMonths(1);
+            } while (date < end);
+        }
+
+        [TestCase("01/05/2019", "01/29/2019", "17:10:00")]
+        [TestCase("01/31/2019", "01/29/2019", "12:00:00")]
+        [TestCase("03/01/2012", "03/30/2012", "17:10:00")]
+        public void DairyReportDates_ShouldNormalizeDateTimeAndReturnCorrectReportDate(string contractMonth, string expectedStr, string lastTradeTime)
         {
             var actual = FuturesExpiryUtilityFunctions.DairyLastTradeDate(
                 Parse.DateTimeExact(contractMonth, "MM/dd/yyyy"),
                 Parse.TimeSpan(lastTradeTime));
 
-            var expected = Parse.DateTimeExact(reportDate, "MM/dd/yyyy")
-                .AddDays(-1).Add(Parse.TimeSpan(lastTradeTime));
+            var expected = Parse.DateTimeExact(expectedStr, "MM/dd/yyyy").Add(Parse.TimeSpan(lastTradeTime));
 
             Assert.AreEqual(expected, actual);
         }
