@@ -111,10 +111,8 @@ namespace QuantConnect.Securities.Option
 
             try
             {
-                var securityExchangeHours = security.Exchange.Hours;
-
                 // expired options have no price
-                if (contract.Time > securityExchangeHours.GetNextMarketClose(contract.Expiry, false))
+                if (contract.Time.Date > contract.Expiry.Date)
                 {
                     return OptionPriceModelResult.None;
                 }
@@ -124,6 +122,7 @@ namespace QuantConnect.Securities.Option
                 var dayCounter = new Actual365Fixed();
                 var optionSecurity = (Option)security;
 
+                var securityExchangeHours = security.Exchange.Hours;
                 var settlementDate = AddDays(contract.Time.Date, Option.DefaultSettlementDays, securityExchangeHours);
                 var maturityDate = AddDays(contract.Expiry.Date, Option.DefaultSettlementDays, securityExchangeHours);
                 var underlyingQuoteValue = new SimpleQuote((double)optionSecurity.Underlying.Price);
@@ -292,7 +291,7 @@ namespace QuantConnect.Securities.Option
 
         private static DateTime AddDays(DateTime date, int days, SecurityExchangeHours marketHours)
         {
-            var forwardDate = date.AddDays(Option.DefaultSettlementDays);
+            var forwardDate = date.AddDays(days);
 
             if (!marketHours.IsDateOpen(forwardDate))
             {

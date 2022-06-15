@@ -32,7 +32,8 @@ namespace QuantConnect.Algorithm.CSharp
         private Symbol _optionSymbol;
         private bool _triedGreeksCalculation;
 
-        public override void Initialize() {
+        public override void Initialize()
+        {
             SetStartDate(2014, 06, 9);
             SetEndDate(2014, 06, 15);
 
@@ -44,18 +45,23 @@ namespace QuantConnect.Algorithm.CSharp
             option.PriceModel = OptionPriceModels.BaroneAdesiWhaley();
             _optionSymbol = option.Symbol;
 
-            SetWarmUp(TimeSpan.FromDays(4));
+            SetWarmUp(TimeSpan.FromDays(3));
 
             _triedGreeksCalculation = false;
+            QLNet.Settings.includeReferenceDateEvents = true;
         }
 
-        public override void OnData(Slice slice) {
-            if (IsWarmingUp || Time.Hour > 10) {
+        public override void OnData(Slice slice)
+        {
+            if (IsWarmingUp || Time.Hour > 10)
+            {
                 return;
             }
 
-            foreach (var kvp in slice.OptionChains) {
-                if (kvp.Key != _optionSymbol) {
+            foreach (var kvp in slice.OptionChains)
+            {
+                if (kvp.Key != _optionSymbol)
+                {
                     continue;
                 }
 
@@ -65,7 +71,8 @@ namespace QuantConnect.Algorithm.CSharp
                     .Where(contract => contract.Expiry.Date == Time.Date && contract.Strike < chain.Underlying.Price)
                     .ToList();
 
-                if (contracts.Count == 0) {
+                if (contracts.Count == 0)
+                {
                     return;
                 }
 
@@ -76,13 +83,14 @@ namespace QuantConnect.Algorithm.CSharp
                     var greeks = contract.Greeks;
                     if (greeks.Delta == 0m && greeks.Gamma == 0m && greeks.Theta == 0m && greeks.Vega == 0m && greeks.Rho == 0m)
                     {
-                        throw new Exception($"Expected greeks to not be zero simultaneously for {contract.Symbol} at contract expiration date");
+                        throw new Exception($"Expected greeks to not be zero simultaneously for {contract.Symbol} at contract expiration date {contract.Expiry}");
                     }
                 }
             }
         }
 
-        public override void OnEndOfAlgorithm() {
+        public override void OnEndOfAlgorithm()
+        {
             if (!_triedGreeksCalculation)
             {
                 throw new Exception("Expected to have tried greeks calculation");
@@ -102,7 +110,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 5201819;
+        public long DataPoints => 5201032;
 
         /// <summary>
         /// Data Points count of the algorithm history
