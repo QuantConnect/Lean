@@ -42,10 +42,8 @@ class SetEquityDataNormalizationModeOnAddEquity(QCAlgorithm):
 
     def OnData(self, slice):
         for equity, (minExpectedPrice, maxExpectedPrice) in self._priceRanges.items():
-
-            if equity.HasData:
-                if equity.Price < minExpectedPrice or equity.Price > maxExpectedPrice:
-                    raise Exception(f"{equity.Symbol}: Price {equity.Price} is out of expected range [{minExpectedPrice}, {maxExpectedPrice}]")
+            if equity.HasData and (equity.Price < minExpectedPrice or equity.Price > maxExpectedPrice):
+                raise Exception(f"{equity.Symbol}: Price {equity.Price} is out of expected range [{minExpectedPrice}, {maxExpectedPrice}]")
 
     def CheckEquityDataNormalizationMode(self, equity, expectedNormalizationMode):
         subscriptions = [x for x in self.SubscriptionManager.Subscriptions if x.Symbol == equity.Symbol]

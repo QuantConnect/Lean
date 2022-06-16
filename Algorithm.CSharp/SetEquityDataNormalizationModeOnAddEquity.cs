@@ -59,12 +59,9 @@ namespace QuantConnect.Algorithm.CSharp
                 var minExpectedPrice = kvp.Value.Item1;
                 var maxExpectedPrice = kvp.Value.Item2;
 
-                if (equity.HasData)
+                if (equity.HasData && (equity.Price < minExpectedPrice || equity.Price > maxExpectedPrice))
                 {
-                    if (equity.Price < minExpectedPrice || equity.Price > maxExpectedPrice)
-                    {
-                        throw new Exception($"{equity.Symbol}: Price {equity.Price} is  out of expected range [{minExpectedPrice}, {maxExpectedPrice}]");
-                    }
+                    throw new Exception($"{equity.Symbol}: Price {equity.Price} is  out of expected range [{minExpectedPrice}, {maxExpectedPrice}]");
                 }
             }
         }
