@@ -29,29 +29,44 @@ namespace QuantConnect.Algorithm.CSharp
     public class SetEquityDataNormalizationModeOnAddEquity : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private readonly DataNormalizationMode _spyNormalizationMode = DataNormalizationMode.Raw;
-        private readonly DataNormalizationMode _googNormalizationMode = DataNormalizationMode.Adjusted;
-        private readonly DataNormalizationMode _aaplNormalizationMode = DataNormalizationMode.TotalReturn;
-        private Equity _spyEquity;
-        private Equity _googEquity;
-        private Equity _aaplEquity;
+        private readonly DataNormalizationMode _ibmNormalizationMode = DataNormalizationMode.Adjusted;
+        private readonly DataNormalizationMode _aigNormalizationMode = DataNormalizationMode.TotalReturn;
+        private Dictionary<Equity, Tuple<decimal, decimal>> _priceRanges = new Dictionary<Equity, Tuple<decimal, decimal>>();
 
         public override void Initialize()
         {
             SetStartDate(2013, 10, 7);
             SetEndDate(2013, 10, 7);
 
-            _spyEquity = AddEquity("SPY", Resolution.Minute, dataNormalizationMode: _spyNormalizationMode);
-            CheckEquityDataNormalizationMode(_spyEquity, _spyNormalizationMode);
+            var spyEquity = AddEquity("SPY", Resolution.Minute, dataNormalizationMode: _spyNormalizationMode);
+            CheckEquityDataNormalizationMode(spyEquity, _spyNormalizationMode);
+            _priceRanges.Add(spyEquity, new Tuple<decimal, decimal>(167.28m, 168.37m));
 
-            _googEquity = AddEquity("GOOG", Resolution.Minute, dataNormalizationMode: _googNormalizationMode);
-            CheckEquityDataNormalizationMode(_googEquity, _googNormalizationMode);
+            var ibmEquity = AddEquity("IBM", Resolution.Minute, dataNormalizationMode: _ibmNormalizationMode);
+            CheckEquityDataNormalizationMode(ibmEquity, _ibmNormalizationMode);
+            _priceRanges.Add(ibmEquity, new Tuple<decimal, decimal>(135.864131052m, 136.819606508m));
 
-            _aaplEquity = AddEquity("AAPL", Resolution.Minute, dataNormalizationMode: _aaplNormalizationMode);
-            CheckEquityDataNormalizationMode(_aaplEquity, _aaplNormalizationMode);
+            var aigEquity = AddEquity("AIG", Resolution.Minute, dataNormalizationMode: _aigNormalizationMode);
+            CheckEquityDataNormalizationMode(aigEquity, _aigNormalizationMode);
+            _priceRanges.Add(aigEquity, new Tuple<decimal, decimal>(48.73m, 49.10m));
         }
 
         public override void OnData(Slice slice)
         {
+            foreach (var kvp in _priceRanges)
+            {
+                var equity = kvp.Key;
+                var minExpectedPrice = kvp.Value.Item1;
+                var maxExpectedPrice = kvp.Value.Item2;
+
+                if (equity.HasData)
+                {
+                    if (equity.Price < minExpectedPrice || equity.Price > maxExpectedPrice)
+                    {
+                        throw new Exception($"{equity.Symbol}: Price {equity.Price} is  out of expected range [{minExpectedPrice}, {maxExpectedPrice}]");
+                    }
+                }
+            }
         }
 
         private void CheckEquityDataNormalizationMode(Equity equity, DataNormalizationMode expectedNormalizationMode)
@@ -71,12 +86,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+        public Language[] Languages { get; } = { Language.CSharp };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 5227479;
+        public long DataPoints => 2355;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -104,8 +119,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "5.176"},
-            {"Tracking Error", "0.071"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
@@ -113,8 +128,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
+            {"Sortino Ratio", "0"},
+            {"Return Over Maximum Drawdown", "0"},
             {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
