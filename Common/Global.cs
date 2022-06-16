@@ -721,8 +721,8 @@ namespace QuantConnect
         /// The contract maps on the first date of the delivery month of the front month. If the contract expires prior to this date,
         /// then it rolls on the contract's last trading date instead.
         /// </summary>
-        /// <remarks>For example Crude Oil WTI (CL) 'DEC 2021 CLZ1' contract expires on Nov 19 2021, so mapping date will be it's expiration date</remarks>
-        /// <remarks>Another example Corn 'DEC 2021 ZCZ1' contract expires on Dec 14 2021, so mapping date will be Dec 1st</remarks>
+        /// <remarks>For example, the Crude Oil WTI (CL) 'DEC 2021 CLZ1' contract expires on November, 19 2021, so the mapping date will be its expiration date.</remarks>
+        /// <remarks>Another example is the Corn 'DEC 2021 ZCZ1' contract, which expires on December, 14 2021, so the mapping date will be December 1, 2021.</remarks>
         FirstDayMonth,
         /// <summary>
         /// The contract maps when the back month contract has a higher volume that the current front month.
