@@ -105,10 +105,11 @@ namespace QuantConnect.Tests.Algorithm
             }
         }
 
-        [TestCaseSource(nameof(DataNormalizationModes))]
+        [TestCaseSource(nameof(GetDataNormalizationModes))]
         public void AddsEquityWithExpectedDataNormalizationMode(DataNormalizationMode dataNormalizationMode)
         {
             var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_dataFeed, algorithm));
             var equity = algorithm.AddEquity("AAPL", dataNormalizationMode: dataNormalizationMode);
             Assert.That(algorithm.SubscriptionManager.Subscriptions.Where(x => x.Symbol == equity.Symbol).Select(x => x.DataNormalizationMode),
                 Has.All.EqualTo(dataNormalizationMode));
@@ -151,6 +152,9 @@ namespace QuantConnect.Tests.Algorithm
             }
         }
 
-        private static DataNormalizationMode[] DataNormalizationModes => (DataNormalizationMode[])Enum.GetValues(typeof(DataNormalizationMode));
+        private static DataNormalizationMode[] GetDataNormalizationModes()
+        {
+            return (DataNormalizationMode[])Enum.GetValues(typeof(DataNormalizationMode));
+        }
     }
 }
