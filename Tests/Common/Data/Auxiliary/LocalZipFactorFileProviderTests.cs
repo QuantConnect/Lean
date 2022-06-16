@@ -85,7 +85,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         {
             public bool Enabled = true;
             public readonly ManualResetEvent CacheCleared = new (false);
-            protected override TimeSpan CacheRefreshPeriod => TimeSpan.FromMilliseconds(500);
+            protected override TimeSpan CacheRefreshPeriod => TimeSpan.FromMilliseconds(300);
 
             protected override void StartExpirationTask()
             {
