@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Securities;
@@ -104,6 +105,15 @@ namespace QuantConnect.Tests.Algorithm
             }
         }
 
+        [TestCaseSource(nameof(DataNormalizationModes))]
+        public void AddsEquityWithExpectedDataNormalizationMode(DataNormalizationMode dataNormalizationMode)
+        {
+            var algorithm = new QCAlgorithm();
+            var equity = algorithm.AddEquity("AAPL", dataNormalizationMode: dataNormalizationMode);
+            Assert.That(algorithm.SubscriptionManager.Subscriptions.Where(x => x.Symbol == equity.Symbol).Select(x => x.DataNormalizationMode),
+                Has.All.EqualTo(dataNormalizationMode));
+        }
+
         private static TestCaseData[] TestAddSecurityWithSymbol
         {
             get
@@ -140,5 +150,7 @@ namespace QuantConnect.Tests.Algorithm
                 return result.ToArray();
             }
         }
+
+        private static DataNormalizationMode[] DataNormalizationModes => (DataNormalizationMode[])Enum.GetValues(typeof(DataNormalizationMode));
     }
 }

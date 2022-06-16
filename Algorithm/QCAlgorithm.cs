@@ -1723,11 +1723,13 @@ namespace QuantConnect.Algorithm
         /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
         /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
         /// <param name="extendedMarketHours">True to send data during pre and post market sessions. Default is <value>false</value></param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the equity</param>
         /// <returns>The new <see cref="Equity"/> security</returns>
         [DocumentationAttribute(AddingData)]
-        public Equity AddEquity(string ticker, Resolution? resolution = null, string market = null, bool fillDataForward = true, decimal leverage = Security.NullLeverage, bool extendedMarketHours = false)
+        public Equity AddEquity(string ticker, Resolution? resolution = null, string market = null, bool fillDataForward = true,
+            decimal leverage = Security.NullLeverage, bool extendedMarketHours = false, DataNormalizationMode? dataNormalizationMode = null)
         {
-            return AddSecurity<Equity>(SecurityType.Equity, ticker, resolution, market, fillDataForward, leverage, extendedMarketHours);
+            return AddSecurity<Equity>(SecurityType.Equity, ticker, resolution, market, fillDataForward, leverage, extendedMarketHours, normalizationMode: dataNormalizationMode);
         }
 
         /// <summary>
