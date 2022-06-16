@@ -56,15 +56,6 @@ namespace QuantConnect.Securities.Option
         public OptionStyle[] AllowedOptionStyles { get; }
 
         /// <summary>
-        /// Static constructor for the <see cref="QLOptionPriceModel"/> class
-        /// </summary>
-        static QLOptionPriceModel()
-        {
-            // Required for QL consider the option as not expired on the expiration date
-            QLNet.Settings.includeReferenceDateEvents = true;
-        }
-
-        /// <summary>
         /// Method constructs QuantLib option price model with necessary estimators of underlying volatility, risk free rate, and underlying dividend yield
         /// </summary>
         /// <param name="pricingEngineFunc">Function modeled stochastic process, and returns new pricing engine to run calculations for that option</param>
@@ -91,6 +82,9 @@ namespace QuantConnect.Securities.Option
             _dividendYieldEstimator = dividendYieldEstimator ?? new ConstantQLDividendYieldEstimator();
 
             AllowedOptionStyles = allowedOptionStyles ?? _defaultAllowedOptionStyles;
+
+            // Required for QL to consider the option as not expired on the expiration date
+            QLNet.Settings.includeReferenceDateEvents = true;
         }
 
         /// <summary>
