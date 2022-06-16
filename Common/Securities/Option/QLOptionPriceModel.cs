@@ -83,7 +83,10 @@ namespace QuantConnect.Securities.Option
 
             AllowedOptionStyles = allowedOptionStyles ?? _defaultAllowedOptionStyles;
 
-            // Required for QL to consider the option as not expired on the expiration date
+            // Required for QL to consider the option as not expired on the expiration date.
+            // This is done in the constructor instead of a static contructor because QLNet.Settings attributes are ThreadStatic,
+            // so doing it in a static constructor would only set it for the first thread that instantiates QLOptionPriceModel or
+            // accesses any of its static members.
             QLNet.Settings.includeReferenceDateEvents = true;
         }
 
