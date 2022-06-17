@@ -194,7 +194,7 @@ namespace QuantConnect.Tests.Python
                     "class ImplementingClass():\n" +
                     "   def __init__(self):\n" +
                     "       self.EventCalled = False\n" +
-                    "       self.Consolidator = CustomConsolidator(timedelta(minutes=1))\n" +
+                    "       self.Consolidator = CustomConsolidator(timedelta(minutes=2))\n" +
                     "       self.Consolidator.DataConsolidated += self.ConsolidatorEvent\n" +
                     "   def ConsolidatorEvent(self, sender, bar):\n" +
                     "       self.EventCalled = True\n" +
@@ -226,7 +226,7 @@ namespace QuantConnect.Tests.Python
                 };
 
                 wrapper.Update(bar1);
-                wrapper.Scan(time.AddMinutes(1));
+                wrapper.Scan(time.AddMinutes(2));
                 implementingClass.GetAttr("EventCalled").TryConvert(out called);
                 Assert.True(called);
             }
