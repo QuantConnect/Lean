@@ -27,14 +27,13 @@ namespace QuantConnect.Tests.Common.Data
         public void AggregatesNewCountQuoteBarProperly()
         {
             QuoteBar quoteBar = null;
-            var creator = new QuoteBarConsolidator(4);
+            using var creator = new QuoteBarConsolidator(4);
             creator.DataConsolidated += (sender, args) =>
             {
                 quoteBar = args;
             };
 
             var time = DateTime.Today;
-            var period = TimeSpan.FromMinutes(1);
             var bar1 = new QuoteBar
             {
                 Time = time,
@@ -44,49 +43,49 @@ namespace QuantConnect.Tests.Common.Data
                 Ask = null,
                 LastAskSize = 0,
                 Value = 1,
-                Period = period
+                Period = Time.OneMinute
             };
             creator.Update(bar1);
             Assert.IsNull(quoteBar);
 
             var bar2 = new QuoteBar
             {
-                Time = time + TimeSpan.FromMinutes(1),
+                Time = bar1.EndTime,
                 Symbol = Symbols.SPY,
                 Bid = new Bar(1.1m, 2.2m, 0.9m, 2.1m),
                 LastBidSize = 3,
                 Ask = new Bar(2.2m, 4.4m, 3.3m, 3.3m),
                 LastAskSize = 0,
                 Value = 1,
-                Period = period
+                Period = Time.OneMinute
             };
             creator.Update(bar2);
             Assert.IsNull(quoteBar);
 
             var bar3 = new QuoteBar
             {
-                Time = time + TimeSpan.FromMinutes(2),
+                Time = bar2.EndTime,
                 Symbol = Symbols.SPY,
                 Bid = new Bar(1, 2, 0.5m, 1.75m),
                 LastBidSize = 3,
                 Ask = null,
                 LastAskSize = 0,
                 Value = 1,
-                Period = period
+                Period = Time.OneMinute
             };
             creator.Update(bar3);
             Assert.IsNull(quoteBar);
 
             var bar4 = new QuoteBar
             {
-                Time = time + TimeSpan.FromMinutes(3),
+                Time = bar3.EndTime,
                 Symbol = Symbols.SPY,
                 Bid = null,
                 LastBidSize = 0,
                 Ask = new Bar(1, 7, 0.5m, 4.4m),
                 LastAskSize = 4,
                 Value = 1,
-                Period = period
+                Period = Time.OneMinute
             };
             creator.Update(bar4);
             Assert.IsNotNull(quoteBar);
@@ -102,20 +101,23 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(bar3.LastBidSize, quoteBar.LastBidSize);
             Assert.AreEqual(bar4.LastAskSize, quoteBar.LastAskSize);
             Assert.AreEqual(bar1.Value, quoteBar.Value);
+
+            Assert.AreEqual(bar1.Time, quoteBar.Time);
+            Assert.AreEqual(bar4.EndTime, quoteBar.EndTime);
+            Assert.AreEqual(TimeSpan.FromMinutes(4), quoteBar.Period);
         }
 
         [Test]
         public void AggregatesNewTimeSpanQuoteBarProperly()
         {
             QuoteBar quoteBar = null;
-            var creator = new QuoteBarConsolidator(TimeSpan.FromMinutes(2));
+            using var creator = new QuoteBarConsolidator(TimeSpan.FromMinutes(2));
             creator.DataConsolidated += (sender, args) =>
             {
                 quoteBar = args;
             };
 
             var time = DateTime.Today;
-            var period = TimeSpan.FromMinutes(1);
             var bar1 = new QuoteBar
             {
                 Time = time,
@@ -125,21 +127,21 @@ namespace QuantConnect.Tests.Common.Data
                 Ask = null,
                 LastAskSize = 0,
                 Value = 1,
-                Period = period
+                Period = Time.OneMinute
             };
             creator.Update(bar1);
             Assert.IsNull(quoteBar);
 
             var bar2 = new QuoteBar
             {
-                Time = time + TimeSpan.FromMinutes(1),
+                Time = bar1.EndTime,
                 Symbol = Symbols.SPY,
                 Bid = new Bar(1.1m, 2.2m, 0.9m, 2.1m),
                 LastBidSize = 3,
                 Ask = new Bar(2.2m, 4.4m, 3.3m, 3.3m),
                 LastAskSize = 0,
                 Value = 1,
-                Period = period
+                Period = Time.OneMinute
             };
             creator.Update(bar2);
             Assert.IsNull(quoteBar);
@@ -147,14 +149,14 @@ namespace QuantConnect.Tests.Common.Data
             // pushing another bar to force the fire
             var bar3 = new QuoteBar
             {
-                Time = time + TimeSpan.FromMinutes(2),
+                Time = bar2.EndTime,
                 Symbol = Symbols.SPY,
                 Bid = new Bar(1, 2, 0.5m, 1.75m),
                 LastBidSize = 3,
                 Ask = null,
                 LastAskSize = 0,
                 Value = 1,
-                Period = period
+                Period = Time.OneMinute
             };
             creator.Update(bar3);
 
@@ -164,7 +166,7 @@ namespace QuantConnect.Tests.Common.Data
             
             Assert.AreEqual(bar1.Symbol, quoteBar.Symbol);
             Assert.AreEqual(bar1.Time, quoteBar.Time);
-            Assert.AreEqual(time + TimeSpan.FromMinutes(2), quoteBar.EndTime);
+            Assert.AreEqual(bar2.EndTime, quoteBar.EndTime);
             Assert.AreEqual(TimeSpan.FromMinutes(2), quoteBar.Period);
 
             // Bid
@@ -187,7 +189,7 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void DoesNotConsolidateDifferentSymbols()
         {
-            var consolidator = new QuoteBarConsolidator(2);
+            using var consolidator = new QuoteBarConsolidator(2);
 
             var time = DateTime.Today;
             var period = TimeSpan.FromMinutes(1);
@@ -219,14 +221,14 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.Update(bar1);
 
             Exception ex = Assert.Throws<InvalidOperationException>(() => consolidator.Update(bar2));
-            Assert.IsTrue(ex.Message.Contains("is not the same"));
+            Assert.IsTrue(ex.Message.Contains("is not the same", StringComparison.InvariantCultureIgnoreCase));
         }
 
         [Test]
         public void LastCloseAndCurrentOpenPriceShouldBeSameConsolidatedOnTimeSpan()
         {
             QuoteBar quoteBar = null;
-            var creator = new QuoteBarConsolidator(TimeSpan.FromMinutes(2));
+            using var creator = new QuoteBarConsolidator(TimeSpan.FromMinutes(2));
             creator.DataConsolidated += (sender, args) =>
             {
                 quoteBar = args;
