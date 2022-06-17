@@ -102,6 +102,8 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(bar4.LastAskSize, quoteBar.LastAskSize);
             Assert.AreEqual(bar1.Value, quoteBar.Value);
 
+            Assert.AreEqual(bar1.Time, quoteBar.Time);
+            Assert.AreEqual(bar4.EndTime, quoteBar.EndTime);
             Assert.AreEqual(TimeSpan.FromMinutes(4), quoteBar.Period);
         }
 
@@ -164,7 +166,7 @@ namespace QuantConnect.Tests.Common.Data
             
             Assert.AreEqual(bar1.Symbol, quoteBar.Symbol);
             Assert.AreEqual(bar1.Time, quoteBar.Time);
-            Assert.AreEqual(time + TimeSpan.FromMinutes(2), quoteBar.EndTime);
+            Assert.AreEqual(bar2.EndTime, quoteBar.EndTime);
             Assert.AreEqual(TimeSpan.FromMinutes(2), quoteBar.Period);
 
             // Bid
