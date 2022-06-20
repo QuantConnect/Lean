@@ -443,7 +443,7 @@ class Test(PythonData):
         [Test]
         public void SubscriptionHistoryRequestWithDifferentDataMappingMode()
         {
-            var dataMappingModes = ((DataMappingMode[])Enum.GetValues(typeof(DataMappingMode))).ToList();
+            var dataMappingModes = GetAllDataMappingModes();
             _algorithm = GetAlgorithm(new DateTime(2013, 10, 07));
 
             var symbol = _algorithm.AddFuture(Futures.Indices.SP500EMini, Resolution.Minute, dataMappingMode: dataMappingModes.First()).Symbol;
@@ -459,10 +459,15 @@ class Test(PythonData):
             {
                 for (int j = 1; j < historyResults.Count; j++)
                 {
-                    Assert.AreEqual(historyResults[j][i].Time, historyResults[0][i].Time,
-                        $"Times {historyResults[j][i].Time} and {historyResults[0][i].Time} are not equal for histories with DataMappingMode {dataMappingModes[j]} and {dataMappingModes[0]}");
-                    Assert.AreNotEqual(historyResults[j][i].Close, historyResults[0][i].Close,
-                        $"Closes {historyResults[j][i].Close} and {historyResults[0][i].Close} are equal for history with DataMappingMode {dataMappingModes[j]} and {dataMappingModes[0]}");
+                    var expectedTime = historyResults[0][i].Time;
+                    var expectedClose = historyResults[0][i].Close;
+                    var currentTime = historyResults[j][i].Time;
+                    var currentClose = historyResults[j][i].Close;
+
+                    Assert.AreEqual(currentTime, expectedTime,
+                        $"Times {currentTime} and {expectedTime} are not equal for histories with DataMappingMode {dataMappingModes[j]} and {dataMappingModes[0]}");
+                    Assert.AreNotEqual(currentClose, expectedClose,
+                        $"Closes {currentClose} and {expectedClose} are equal for history with DataMappingMode {dataMappingModes[j]} and {dataMappingModes[0]}");
                 }
             }
         }
