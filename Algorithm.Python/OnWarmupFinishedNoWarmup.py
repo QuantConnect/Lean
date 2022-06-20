@@ -14,23 +14,20 @@
 from AlgorithmImports import *
 
 ### <summary>
-### Regression algorithm asserting 'OnWarmupFinished' is being called
+###  Regression algorithm asserting "OnWarmupFinished" is called even if no warmup period is set
 ### </summary>
-class OnWarmupFinishedRegressionAlgorithm(QCAlgorithm):
+class OnWarmupFinishedNoWarmup(QCAlgorithm):
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(2013,10, 8)  #Set Start Date
-        self.SetEndDate(2013,10,11)    #Set End Date
-        self.SetCash(100000)           #Set Strategy Cash
-
+        self.SetStartDate(2013,10, 7)
+        self.SetEndDate(2013,10,11)
         self.AddEquity("SPY", Resolution.Minute)
-        self.SetWarmup(timedelta(days = 1))
         self._onWarmupFinished = 0
-    
+
     def OnWarmupFinished(self):
         self._onWarmupFinished += 1
-    
+
     def OnEndOfAlgorithm(self):
         if self._onWarmupFinished != 1:
             raise Exception(f"Unexpected OnWarmupFinished call count {self._onWarmupFinished}")

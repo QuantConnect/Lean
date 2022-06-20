@@ -726,6 +726,9 @@ namespace QuantConnect.Lean.Engine
             else
             {
                 results.SendStatusUpdate(AlgorithmStatus.Running);
+                // let's be polite, and call warmup finished even though there was no warmup period and avoid algorithms having to handle it instead.
+                // we trigger this callback here and not internally in the algorithm so that we can go through python if required
+                algorithm.OnWarmupFinished();
             }
 
             // bellow we compare with slice.Time which is in UTC

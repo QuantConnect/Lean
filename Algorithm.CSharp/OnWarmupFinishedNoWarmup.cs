@@ -14,28 +14,27 @@
 */
 
 using System;
-using System.Collections.Generic;
 using QuantConnect.Interfaces;
+using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm asserting <see cref="OnWarmupFinished"/> is being called
+    /// Regression algorithm asserting <see cref="OnWarmupFinished"/> is called even if no warmup period is set
     /// </summary>
-    public class OnWarmupFinishedRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class OnWarmupFinishedNoWarmup : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private int _onWarmupFinished;
+
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 08);
+            SetStartDate(2013, 10, 07);
             SetEndDate(2013, 10, 11);
-            SetCash(100000);
 
             AddEquity("SPY", Resolution.Minute);
-            SetWarmup(TimeSpan.FromDays(1));
         }
 
         public override void OnWarmupFinished()
@@ -92,8 +91,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-57.739"},
-            {"Tracking Error", "0.178"},
+            {"Information Ratio", "-8.91"},
+            {"Tracking Error", "0.223"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
