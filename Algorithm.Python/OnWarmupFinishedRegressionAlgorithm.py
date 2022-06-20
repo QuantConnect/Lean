@@ -26,10 +26,11 @@ class OnWarmupFinishedRegressionAlgorithm(QCAlgorithm):
 
         self.AddEquity("SPY", Resolution.Minute)
         self.SetWarmup(timedelta(days = 1))
+        self._onWarmupFinished = 0
     
     def OnWarmupFinished(self):
-        self._onWarmupFinished = True
+        self._onWarmupFinished += 1
     
     def OnEndOfAlgorithm(self):
-        if not self._onWarmupFinished:
-            raise Exception('OnWarmupFinished was not called!')
+        if self._onWarmupFinished != 1:
+            raise Exception(f"Unexpected OnWarmupFinished call count {self._onWarmupFinished}")

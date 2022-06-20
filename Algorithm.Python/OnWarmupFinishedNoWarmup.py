@@ -22,12 +22,12 @@ class OnWarmupFinishedNoWarmup(QCAlgorithm):
 
         self.SetStartDate(2013,10, 7)
         self.SetEndDate(2013,10,11)
-        self._onWarmupFinished = False
         self.AddEquity("SPY", Resolution.Minute)
+        self._onWarmupFinished = 0
 
     def OnWarmupFinished(self):
-        self._onWarmupFinished = True
+        self._onWarmupFinished += 1
 
     def OnEndOfAlgorithm(self):
-        if not self._onWarmupFinished:
-            raise ValueError("OnWarmupFinished was never called!")
+        if self._onWarmupFinished != 1:
+            raise Exception(f"Unexpected OnWarmupFinished call count {self._onWarmupFinished}")

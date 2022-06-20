@@ -24,7 +24,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class OnWarmupFinishedRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private bool _onWarmupFinished;
+        private int _onWarmupFinished;
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -40,14 +40,14 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnWarmupFinished()
         {
-            _onWarmupFinished = true;
+            _onWarmupFinished++;
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (!_onWarmupFinished)
+            if (_onWarmupFinished != 1)
             {
-                throw new Exception($"OnWarmupFinished was not called!");
+                throw new Exception($"Unexpected {nameof(OnWarmupFinished)} call count {_onWarmupFinished}!");
             }
         }
 
