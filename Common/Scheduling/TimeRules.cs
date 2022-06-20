@@ -15,10 +15,10 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using NodaTime;
+using System.Linq;
 using QuantConnect.Securities;
+using System.Collections.Generic;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Scheduling
@@ -55,7 +55,16 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Specifies an event should fire at the current time
         /// </summary>
-        public ITimeRule Now => new FuncTimeRule("Now", dates => dates.Select(date => date.Add(_securities.UtcTime.TimeOfDay)));
+        public ITimeRule Now => new FuncTimeRule("Now", dates => {
+            return dates.Select(date =>
+            {
+                // we ignore the given date and just use the current time, why? if the algorithm used 'DateRules.Today'
+                // we get the algorithms first 'Date', which during warmup might not be a complete date, depending on the warmup period
+                // and since Today returns dates we might get a time in the past which get's ignored. See 'WarmupTrainRegressionAlgorithm'
+                // which reproduces GH issue #6410
+                return _securities.UtcTime;
+            });
+        });
 
         /// <summary>
         /// Convenience property for running a scheduled event at midnight in the algorithm time zone

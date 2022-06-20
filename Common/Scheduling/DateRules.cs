@@ -81,7 +81,9 @@ namespace QuantConnect.Scheduling
         /// using _securities.UtcTime instead of 'start' since ScheduleManager backs it up a day
         /// </summary>
         public IDateRule Today => new FuncDateRule("TodayOnly",
-            (start, e) => new[] {_securities.UtcTime.ConvertFromUtc(_timeZone).Date}
+            (start, e) => {
+                return new[] { _securities.UtcTime.ConvertFromUtc(_timeZone).Date };
+            }
         );
 
         /// <summary>

@@ -13,60 +13,45 @@
  * limitations under the License.
 */
 
-using System;
 using QuantConnect.Interfaces;
+using System;
 using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Example algorithm showing how to use QCAlgorithm.Train method
-    /// <meta name="tag" content="using quantconnect" />
-    /// <meta name="tag" content="training" />
+    /// Regression algorithm asserting "Train" works as expected when enabling warmup, see GH issue #6410
     /// </summary>
-    public class TrainingExampleAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class WarmupTrainRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Queue<DateTime> _trainTimes = new();
-        public override void Initialize()
-        {
-            SetStartDate(2013, 10, 7);
-            SetEndDate(2013, 10, 14);
-
-            AddEquity("SPY", Resolution.Daily);
-
-            // Set TrainingMethod to be executed immediately
-            Train(TrainingMethod);
-
-            // Set TrainingMethod to be executed at 8:00 am every Sunday
-            Train(DateRules.Every(DayOfWeek.Sunday), TimeRules.At(8, 0), TrainingMethod);
-        }
-
-        private void TrainingMethod()
-        {
-            Log($"Start training at {Time}");
-            // Use the historical data to train the machine learning model
-            var history = History("SPY", 200, Resolution.Daily);
-
-            // ML code:
-
-
-            // let's keep this to assert in the end of the algorithm
-            _trainTimes.Enqueue(Time);
-        }
+        private int _trained;
 
         /// <summary>
-        /// Let's assert the behavior of our traning schedule
+        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
+        public override void Initialize()
+        {
+            SetStartDate(2018, 1, 1);
+            SetEndDate(2018, 1, 5);
+            foreach (var symbol in new string[] { "EURUSD", "USDJPY" })
+            {
+                AddForex(symbol, Resolution.Minute, Market.Oanda);
+            }
+
+            Train(TrainMethod);
+            SetWarmUp(100);
+        }
+
+        private void TrainMethod()
+        {
+            _trained++;
+        }
+
         public override void OnEndOfAlgorithm()
         {
-            if (_trainTimes.Count != 2)
+            if(_trained != 1)
             {
-                throw new Exception($"Unexpected train count: {_trainTimes.Count}");
-            }
-            if (_trainTimes.Dequeue() != StartDate
-                || _trainTimes.Dequeue() != new DateTime(2013, 10, 13, 8, 0, 0))
-            {
-                throw new Exception($"Unexpected train times!");
+                throw new Exception($"Unexpected train count {_trained}");
             }
         }
 
@@ -83,12 +68,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 56;
+        public long DataPoints => 36;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public int AlgorithmHistoryDataPoints => 7522;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -111,8 +96,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-7.357"},
-            {"Tracking Error", "0.161"},
+            {"Information Ratio", "-175.891"},
+            {"Tracking Error", "0.021"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
