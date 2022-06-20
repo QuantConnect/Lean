@@ -241,11 +241,14 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             {
                 try
                 {
-                    // try convert does not work for timespan
-                    timeSpan = rebalance.As<TimeSpan>();
-                    if (timeSpan != default(TimeSpan))
+                    using (Py.GIL())
                     {
-                        _rebalancingFunc = time => time.Add(timeSpan);
+                        // try convert does not work for timespan
+                        timeSpan = rebalance.As<TimeSpan>();
+                        if (timeSpan != default(TimeSpan))
+                        {
+                            _rebalancingFunc = time => time.Add(timeSpan);
+                        }
                     }
                 }
                 catch
