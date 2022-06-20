@@ -233,11 +233,12 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="span">The span over which to request data. This is a calendar span, so take into consideration weekends and such</param>
         /// <param name="resolution">The resolution to request</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <returns>An enumerable of slice containing data over the most recent span for all configured securities</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<Slice> History(TimeSpan span, Resolution? resolution = null)
+        public IEnumerable<Slice> History(TimeSpan span, Resolution? resolution = null, DataMappingMode? dataMappingMode = null)
         {
-            return History(Securities.Keys, Time - span, Time, resolution).Memoize();
+            return History(Securities.Keys, Time - span, Time, resolution, dataMappingMode: dataMappingMode).Memoize();
         }
 
         /// <summary>
@@ -247,11 +248,12 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <returns>An enumerable of slice containing data over the most recent span for all configured securities</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<Slice> History(int periods, Resolution? resolution = null)
+        public IEnumerable<Slice> History(int periods, Resolution? resolution = null, DataMappingMode? dataMappingMode = null)
         {
-            return History(Securities.Keys, periods, resolution).Memoize();
+            return History(Securities.Keys, periods, resolution, dataMappingMode).Memoize();
         }
 
         /// <summary>
@@ -261,12 +263,13 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<DataDictionary<T>> History<T>(TimeSpan span, Resolution? resolution = null)
+        public IEnumerable<DataDictionary<T>> History<T>(TimeSpan span, Resolution? resolution = null, DataMappingMode? dataMappingMode = null)
             where T : IBaseData
         {
-            return History<T>(Securities.Keys, span, resolution).Memoize();
+            return History<T>(Securities.Keys, span, resolution, dataMappingMode).Memoize();
         }
 
         /// <summary>
@@ -277,12 +280,14 @@ namespace QuantConnect.Algorithm
         /// <param name="symbols">The symbols to retrieve historical data for</param>
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, TimeSpan span, Resolution? resolution = null)
+        public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, TimeSpan span, Resolution? resolution = null,
+            DataMappingMode? dataMappingMode = null)
             where T : IBaseData
         {
-            return History<T>(symbols, Time - span, Time, resolution).Memoize();
+            return History<T>(symbols, Time - span, Time, resolution, dataMappingMode).Memoize();
         }
 
         /// <summary>
@@ -294,9 +299,11 @@ namespace QuantConnect.Algorithm
         /// <param name="symbols">The symbols to retrieve historical data for</param>
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null)
+        public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null,
+            DataMappingMode? dataMappingMode = null)
             where T : IBaseData
         {
             var requests = symbols.Select(x =>
@@ -307,7 +314,7 @@ namespace QuantConnect.Algorithm
                 var exchange = GetExchangeHours(x);
                 var res = GetResolution(x, resolution);
                 var start = _historyRequestFactory.GetStartTimeAlgoTz(x, periods, res, exchange, config.DataTimeZone);
-                return _historyRequestFactory.CreateHistoryRequest(config, start, Time, exchange, res);
+                return _historyRequestFactory.CreateHistoryRequest(config, start, Time, exchange, res, dataMappingMode);
             });
 
             return History(requests.Where(x => x != null)).Get<T>().Memoize();
@@ -321,9 +328,11 @@ namespace QuantConnect.Algorithm
         /// <param name="start">The start time in the algorithm's time zone</param>
         /// <param name="end">The end time in the algorithm's time zone</param>
         /// <param name="resolution">The resolution to request</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null)
+        public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null,
+            DataMappingMode? dataMappingMode = null)
             where T : IBaseData
         {
             var requests = symbols.Select(x =>
@@ -331,7 +340,7 @@ namespace QuantConnect.Algorithm
                 var config = GetMatchingSubscription(x, typeof(T));
                 if (config == null) return null;
 
-                return _historyRequestFactory.CreateHistoryRequest(config, start, end, GetExchangeHours(x), resolution);
+                return _historyRequestFactory.CreateHistoryRequest(config, start, end, GetExchangeHours(x), resolution, dataMappingMode);
             });
 
             return History(requests.Where(x => x != null)).Get<T>().Memoize();
@@ -344,12 +353,13 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">The symbol to retrieve historical data for</param>
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<T> History<T>(Symbol symbol, TimeSpan span, Resolution? resolution = null)
+        public IEnumerable<T> History<T>(Symbol symbol, TimeSpan span, Resolution? resolution = null, DataMappingMode? dataMappingMode = null)
             where T : IBaseData
         {
-            return History<T>(symbol, Time - span, Time, resolution).Memoize();
+            return History<T>(symbol, Time - span, Time, resolution, dataMappingMode).Memoize();
         }
 
         /// <summary>
@@ -359,9 +369,10 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">The symbol to retrieve historical data for</param>
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<TradeBar> History(Symbol symbol, int periods, Resolution? resolution = null)
+        public IEnumerable<TradeBar> History(Symbol symbol, int periods, Resolution? resolution = null, DataMappingMode? dataMappingMode = null)
         {
             if (symbol == null) throw new ArgumentException(_symbolEmptyErrorMessage);
 
@@ -369,7 +380,7 @@ namespace QuantConnect.Algorithm
             var marketHours = GetMarketHours(symbol);
             var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, marketHours.ExchangeHours, marketHours.DataTimeZone);
 
-            return History(symbol, start, Time, resolution);
+            return History(symbol, start, Time, resolution, dataMappingMode);
         }
 
         /// <summary>
@@ -380,9 +391,10 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">The symbol to retrieve historical data for</param>
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<T> History<T>(Symbol symbol, int periods, Resolution? resolution = null)
+        public IEnumerable<T> History<T>(Symbol symbol, int periods, Resolution? resolution = null, DataMappingMode? dataMappingMode = null)
             where T : IBaseData
         {
             if (resolution == Resolution.Tick) throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
@@ -390,7 +402,7 @@ namespace QuantConnect.Algorithm
             var config = GetHistoryRequestConfig(symbol, typeof(T), resolution);
             resolution = GetResolution(symbol, resolution);
             var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, GetExchangeHours(symbol), config.DataTimeZone);
-            return History<T>(symbol, start, Time, resolution).Memoize();
+            return History<T>(symbol, start, Time, resolution, dataMappingMode).Memoize();
         }
 
         /// <summary>
@@ -400,14 +412,16 @@ namespace QuantConnect.Algorithm
         /// <param name="start">The start time in the algorithm's time zone</param>
         /// <param name="end">The end time in the algorithm's time zone</param>
         /// <param name="resolution">The resolution to request</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<T> History<T>(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null)
+        public IEnumerable<T> History<T>(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null,
+            DataMappingMode? dataMappingMode = null)
             where T : IBaseData
         {
             var config = GetHistoryRequestConfig(symbol, typeof(T), resolution);
 
-            var request = _historyRequestFactory.CreateHistoryRequest(config, start, end, GetExchangeHours(symbol), resolution);
+            var request = _historyRequestFactory.CreateHistoryRequest(config, start, end, GetExchangeHours(symbol), resolution, dataMappingMode);
             return History(request).Get<T>(symbol).Memoize();
         }
 
@@ -417,11 +431,12 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">The symbol to retrieve historical data for</param>
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<TradeBar> History(Symbol symbol, TimeSpan span, Resolution? resolution = null)
+        public IEnumerable<TradeBar> History(Symbol symbol, TimeSpan span, Resolution? resolution = null, DataMappingMode? dataMappingMode = null)
         {
-            return History(symbol, Time - span, Time, resolution);
+            return History(symbol, Time - span, Time, resolution, dataMappingMode);
         }
 
         /// <summary>
@@ -431,9 +446,11 @@ namespace QuantConnect.Algorithm
         /// <param name="start">The start time in the algorithm's time zone</param>
         /// <param name="end">The end time in the algorithm's time zone</param>
         /// <param name="resolution">The resolution to request</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<TradeBar> History(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null)
+        public IEnumerable<TradeBar> History(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null,
+            DataMappingMode? dataMappingMode = null)
         {
             var securityType = symbol.ID.SecurityType;
             if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
@@ -448,7 +465,7 @@ namespace QuantConnect.Algorithm
                                                     " Please use the generic version with Tick type parameter or provide a list of Symbols to use the Slice history request API.");
             }
 
-            return History(new[] { symbol }, start, end, resolutionToUse).Get(symbol).Memoize();
+            return History(new[] { symbol }, start, end, resolutionToUse, dataMappingMode: dataMappingMode).Get(symbol).Memoize();
         }
 
         /// <summary>
@@ -459,11 +476,13 @@ namespace QuantConnect.Algorithm
         /// <param name="symbols">The symbols to retrieve historical data for</param>
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, TimeSpan span, Resolution? resolution = null)
+        public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, TimeSpan span, Resolution? resolution = null,
+            DataMappingMode? dataMappingMode = null)
         {
-            return History(symbols, Time - span, Time, resolution).Memoize();
+            return History(symbols, Time - span, Time, resolution, dataMappingMode: dataMappingMode).Memoize();
         }
 
         /// <summary>
@@ -474,12 +493,14 @@ namespace QuantConnect.Algorithm
         /// <param name="symbols">The symbols to retrieve historical data for</param>
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null)
+        public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null,
+            DataMappingMode? dataMappingMode = null)
         {
             if (resolution == Resolution.Tick) throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
-            return History(CreateBarCountHistoryRequests(symbols, periods, resolution)).Memoize();
+            return History(CreateBarCountHistoryRequests(symbols, periods, resolution, dataMappingMode)).Memoize();
         }
 
         /// <summary>
@@ -491,11 +512,13 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The resolution to request</param>
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null, bool? fillForward = null, bool? extendedMarket = null)
+        public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null,
+            bool? fillForward = null, bool? extendedMarket = null, DataMappingMode? dataMappingMode = null)
         {
-            return History(CreateDateRangeHistoryRequests(symbols, start, end, resolution, fillForward, extendedMarket)).Memoize();
+            return History(CreateDateRangeHistoryRequests(symbols, start, end, resolution, fillForward, extendedMarket, dataMappingMode)).Memoize();
         }
 
         /// <summary>
@@ -642,7 +665,7 @@ namespace QuantConnect.Algorithm
             }
             return config;
         }
-        
+
         [DocumentationAttribute(HistoricalData)]
         private IEnumerable<Slice> History(IEnumerable<HistoryRequest> requests, DateTimeZone timeZone)
         {
@@ -682,7 +705,8 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Helper method to create history requests from a date range
         /// </summary>
-        private IEnumerable<HistoryRequest> CreateDateRangeHistoryRequests(IEnumerable<Symbol> symbols, DateTime startAlgoTz, DateTime endAlgoTz, Resolution? resolution = null, bool? fillForward = null, bool? extendedMarket = null)
+        private IEnumerable<HistoryRequest> CreateDateRangeHistoryRequests(IEnumerable<Symbol> symbols, DateTime startAlgoTz, DateTime endAlgoTz,
+            Resolution? resolution = null, bool? fillForward = null, bool? extendedMarket = null, DataMappingMode? dataMappingMode = null)
         {
             return symbols.Where(HistoryRequestValid).SelectMany(x =>
             {
@@ -690,7 +714,7 @@ namespace QuantConnect.Algorithm
 
                 foreach (var config in GetMatchingSubscriptions(x, typeof(BaseData), resolution))
                 {
-                    var request = _historyRequestFactory.CreateHistoryRequest(config, startAlgoTz, endAlgoTz, GetExchangeHours(x), resolution);
+                    var request = _historyRequestFactory.CreateHistoryRequest(config, startAlgoTz, endAlgoTz, GetExchangeHours(x), resolution, dataMappingMode);
 
                     // apply overrides
                     var res = GetResolution(x, resolution);
@@ -707,7 +731,8 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Helper methods to create a history request for the specified symbols and bar count
         /// </summary>
-        private IEnumerable<HistoryRequest> CreateBarCountHistoryRequests(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null)
+        private IEnumerable<HistoryRequest> CreateBarCountHistoryRequests(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null,
+            DataMappingMode? dataMappingMode = null)
         {
             return symbols.Where(HistoryRequestValid).SelectMany(x =>
             {
@@ -722,7 +747,7 @@ namespace QuantConnect.Algorithm
                 var start = _historyRequestFactory.GetStartTimeAlgoTz(x, periods, res, exchange, configs.First().DataTimeZone);
                 var end = Time;
 
-                return configs.Select(config => _historyRequestFactory.CreateHistoryRequest(config, start, end, exchange, res));
+                return configs.Select(config => _historyRequestFactory.CreateHistoryRequest(config, start, end, exchange, res, dataMappingMode));
             });
         }
 
