@@ -2625,7 +2625,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Indicators)]
         public void WarmUpIndicator(Symbol symbol, IndicatorBase<IndicatorDataPoint> indicator, TimeSpan period, Func<IBaseData, decimal> selector = null)
         {
-            var history = GetIndicatorWarmUpHistory(symbol, indicator, period);
+            var history = GetIndicatorWarmUpHistory(symbol, indicator, period, out var identityConsolidator);
             if (history == Enumerable.Empty<Slice>()) return;
 
             // assign default using cast
@@ -2637,7 +2637,7 @@ namespace QuantConnect.Algorithm
                 indicator.Update(input);
             };
 
-            WarmUpIndicatorImpl(symbol, period, onDataConsolidated, history);
+            WarmUpIndicatorImpl(symbol, period, onDataConsolidated, history, identityConsolidator);
         }
 
         /// <summary>
@@ -2669,7 +2669,7 @@ namespace QuantConnect.Algorithm
         public void WarmUpIndicator<T>(Symbol symbol, IndicatorBase<T> indicator, TimeSpan period, Func<IBaseData, T> selector = null)
             where T : class, IBaseData
         {
-            var history = GetIndicatorWarmUpHistory(symbol, indicator, period);
+            var history = GetIndicatorWarmUpHistory(symbol, indicator, period, out var identityConsolidator);
             if (history == Enumerable.Empty<Slice>()) return;
 
             // assign default using cast
@@ -2681,16 +2681,19 @@ namespace QuantConnect.Algorithm
                 indicator.Update(selector(bar));
             };
 
-            WarmUpIndicatorImpl(symbol, period, onDataConsolidated, history);
+            WarmUpIndicatorImpl(symbol, period, onDataConsolidated, history, identityConsolidator);
         }
 
-        private IEnumerable<Slice> GetIndicatorWarmUpHistory(Symbol symbol, IIndicator indicator, TimeSpan timeSpan)
+        private IEnumerable<Slice> GetIndicatorWarmUpHistory(Symbol symbol, IIndicator indicator, TimeSpan timeSpan, out bool identityConsolidator)
         {
+            identityConsolidator = false;
             var periods = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
 
             if (periods.HasValue && periods != 0)
             {
                 var resolution = timeSpan.ToHigherResolutionEquivalent(false);
+                // if they are the same, means we can use an identity consolidator
+                identityConsolidator = resolution.ToTimeSpan() == timeSpan;
                 var resolutionTicks = resolution.ToTimeSpan().Ticks;
                 if (resolutionTicks != 0)
                 {
@@ -2717,10 +2720,14 @@ namespace QuantConnect.Algorithm
             return Enumerable.Empty<Slice>();
         }
 
-        private void WarmUpIndicatorImpl<T>(Symbol symbol, TimeSpan period, Action<T> handler, IEnumerable<Slice> history)
+        private void WarmUpIndicatorImpl<T>(Symbol symbol, TimeSpan period, Action<T> handler, IEnumerable<Slice> history, bool identityConsolidator)
             where T : class, IBaseData
         {
             IDataConsolidator consolidator;
+            if (identityConsolidator)
+            {
+                period = TimeSpan.Zero;
+            }
             if (SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol).Count > 0)
             {
                 consolidator = Consolidate(symbol, period, handler);
@@ -2800,20 +2807,26 @@ namespace QuantConnect.Algorithm
         {
             var tickType = dataType != null ? LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType) : (TickType?)null;
             var subscription = GetSubscription(symbol, tickType);
+            var subscriptionTimeSpan = subscription.Resolution.ToTimeSpan();
 
             // if not specified, default to the subscription resolution
             if (!timeSpan.HasValue)
             {
-                timeSpan = subscription.Resolution.ToTimeSpan();
+                timeSpan = subscriptionTimeSpan;
             }
 
             // verify this consolidator will give reasonable results, if someone asks for second consolidation but we have minute
             // data we won't be able to do anything good, we'll call it second, but it would really just be minute!
-            if (timeSpan.Value < subscription.Resolution.ToTimeSpan())
+            if (timeSpan.Value < subscriptionTimeSpan)
             {
                 throw new ArgumentException($"Unable to create {symbol} consolidator because {symbol} is registered for " +
                     Invariant($"{subscription.Resolution.ToStringInvariant()} data. Consolidators require higher resolution data to produce lower resolution data.")
                 );
+            }
+            else if (timeSpan.Value == subscriptionTimeSpan)
+            {
+                // input and expected output share the same time span, means we just want an identity consolidator
+                timeSpan = TimeSpan.Zero;
             }
 
             return CreateConsolidator(timeSpan.Value, subscription.Type, subscription.TickType);
@@ -2833,6 +2846,11 @@ namespace QuantConnect.Algorithm
             // we use IsAssignableFrom instead of IsSubclassOf so that we can account for types that are able to be cast to TradeBar
             if (typeof(TradeBar).IsAssignableFrom(consolidatorInputType))
             {
+                // Use IdentityDataConsolidator when data are not meant to consolidated into bars
+                if (period.Ticks == 0)
+                {
+                    return new IdentityDataConsolidator<TradeBar>();
+                }
                 return new TradeBarConsolidator(period);
             }
 
@@ -2840,6 +2858,11 @@ namespace QuantConnect.Algorithm
             // we use IsAssignableFrom instead of IsSubclassOf so that we can account for types that are able to be cast to QuoteBar
             if (typeof(QuoteBar).IsAssignableFrom(consolidatorInputType))
             {
+                // Use IdentityDataConsolidator when data are not meant to consolidated into bars
+                if (period.Ticks == 0)
+                {
+                    return new IdentityDataConsolidator<QuoteBar>();
+                }
                 return new QuoteBarConsolidator(period);
             }
 
@@ -2869,9 +2892,19 @@ namespace QuantConnect.Algorithm
             // if our type can be used as a DynamicData then we'll use the DynamicDataConsolidator
             if (typeof(DynamicData).IsAssignableFrom(consolidatorInputType))
             {
+                // Use IdentityDataConsolidator when data are not meant to consolidated into bars
+                if (period.Ticks == 0)
+                {
+                    return new DynamicDataConsolidator(1);
+                }
                 return new DynamicDataConsolidator(period);
             }
 
+            // Use IdentityDataConsolidator when data are not meant to consolidated into bars
+            if (period.Ticks == 0)
+            {
+                return new IdentityDataConsolidator<BaseData>();
+            }
             // no matter what we can always consolidate based on the time-value pair of BaseData
             return new BaseDataConsolidator(period);
         }

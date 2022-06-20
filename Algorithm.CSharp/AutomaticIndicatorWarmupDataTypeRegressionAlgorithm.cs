@@ -67,7 +67,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // Test case: custom IndicatorBase<QuoteBar> indicator using Future subscribed symbol
             var indicator = new CustomIndicator();
-            var consolidator = CreateConsolidator(TimeSpan.FromMinutes(1), typeof(QuoteBar));
+            var consolidator = CreateConsolidator(TimeSpan.FromMinutes(2), typeof(QuoteBar));
             RegisterIndicator(_symbol, indicator, consolidator);
 
             AssertIndicatorState(indicator, isReady: false);

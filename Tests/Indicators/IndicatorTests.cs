@@ -220,8 +220,11 @@ namespace QuantConnect.Tests.Indicators
                 }
             }
 
-            // All indicators should have the same EndTime
-            Assert.AreEqual(1, indicatorTimeList.Distinct().Count());
+            // All indicators should have the same EndTime, with xx:31:00 & xx:32:00
+            Assert.AreEqual(6, indicatorTimeList.Count);
+            Assert.AreEqual(2, indicatorTimeList.Distinct().Count());
+            Assert.AreEqual(3, indicatorTimeList.Count(x => x.Minute == 31));
+            Assert.AreEqual(3, indicatorTimeList.Count(x => x.Minute == 32));
         }
 
         private static void TestComparisonOperators<TValue>()
