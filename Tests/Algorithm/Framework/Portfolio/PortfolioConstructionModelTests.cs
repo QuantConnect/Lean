@@ -314,6 +314,7 @@ def RebalanceFunc(dateRules):
             Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 10, 2), new Insight[0]));
         }
 
+        [TestCase(Language.Python, 2)]
         [TestCase(Language.Python, 1)]
         [TestCase(Language.Python, 0)]
         [TestCase(Language.CSharp, 0)]
@@ -334,6 +335,16 @@ from System import *
 def RebalanceFunc(timeSpan):
     return timeSpan").GetAttr("RebalanceFunc");
                         constructionModel.SetRebalancingFunc(func(TimeSpan.FromMinutes(20)));
+                    }
+                    else if(version == 2)
+                    {
+                        dynamic func = PyModule.FromString("RebalanceFunc",
+                            @"
+from datetime import timedelta
+
+def RebalanceFunc(constructionModel):
+    return constructionModel.SetRebalancingFunc(timedelta(minutes = 20))").GetAttr("RebalanceFunc");
+                        func(constructionModel);
                     }
                     else
                     {
