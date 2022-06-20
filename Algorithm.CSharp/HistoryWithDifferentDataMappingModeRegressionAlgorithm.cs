@@ -33,8 +33,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2013, 10, 7);
             SetEndDate(2013, 10, 8);
-            var aapl = AddFuture(Futures.Indices.SP500EMini, Resolution.Daily);
-            _futureSymbol = aapl.Symbol;
+            _futureSymbol = AddFuture(Futures.Indices.SP500EMini, Resolution.Daily).Symbol;
         }
 
         public override void OnEndOfAlgorithm()
@@ -42,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
             var dataMappingModes = ((DataMappingMode[])Enum.GetValues(typeof(DataMappingMode))).ToList();
             var historyResults = dataMappingModes.Select(x =>
             {
-                return History(_futureSymbol, 60, Resolution.Minute, dataMappingMode: x).ToList();
+                return History(_futureSymbol, StartDate, EndDate, Resolution.Hour, dataMappingMode: x).ToList();
             }).ToList();
 
             if (historyResults.Any(x => x.Count != historyResults[0].Count))
@@ -53,12 +52,9 @@ namespace QuantConnect.Algorithm.CSharp
             // Check that close prices at each time are different for different data mapping modes
             for (int j = 0; j < historyResults[0].Count; j++)
             {
-                for (int i = 1; i < historyResults.Count; i++)
+                if (historyResults.GetRange(1, historyResults.Count - 1).Any(result => result[j].Close == historyResults[0][j].Close))
                 {
-                    if (historyResults[i][j].Close == historyResults[0][j].Close)
-                    {
-                        throw new Exception($"History() returned equal close prices for different data mapping modes at time {historyResults[i][j].Time}");
-                    }
+                    throw new Exception($"History() returned equal close prices for different data mapping modes at time {historyResults[0][j].Time}");
                 }
             }
         }
@@ -71,7 +67,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp };
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
@@ -81,7 +77,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 360;
+        public int AlgorithmHistoryDataPoints => 270;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
