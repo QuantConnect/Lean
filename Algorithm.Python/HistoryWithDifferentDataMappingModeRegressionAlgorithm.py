@@ -27,7 +27,7 @@ class HistoryWithDifferentDataMappingModeRegressionAlgorithm(QCAlgorithm):
     def OnEndOfAlgorithm(self):
         dataMappingModes = [DataMappingMode(x) for x in Enum.GetValues(DataMappingMode)]
         historyResults = [
-            self.History(self._futureSymbol, self.StartDate, self.EndDate, Resolution.Hour, dataMappingMode=x)
+            self.History([self._futureSymbol], self.StartDate, self.EndDate, Resolution.Hour, dataMappingMode=x)
                 .droplevel(0, axis=0)
                 .loc[self._futureSymbol
                 ].close

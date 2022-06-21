@@ -844,13 +844,12 @@ namespace QuantConnect.Algorithm
         /// <param name="tickers">The symbols to retrieve historical data for</param>
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
-        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <returns>A python dictionary with pandas DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject tickers, int periods, Resolution? resolution = null, DataMappingMode? dataMappingMode = null)
+        public PyObject History(PyObject tickers, int periods, Resolution? resolution = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
-            return PandasConverter.GetDataFrame(History(symbols, periods, resolution, dataMappingMode));
+            return PandasConverter.GetDataFrame(History(symbols, periods, resolution));
         }
 
         /// <summary>
@@ -860,13 +859,12 @@ namespace QuantConnect.Algorithm
         /// <param name="tickers">The symbols to retrieve historical data for</param>
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
-        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <returns>A python dictionary with pandas DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject tickers, TimeSpan span, Resolution? resolution = null, DataMappingMode? dataMappingMode = null)
+        public PyObject History(PyObject tickers, TimeSpan span, Resolution? resolution = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
-            return PandasConverter.GetDataFrame(History(symbols, span, resolution, dataMappingMode));
+            return PandasConverter.GetDataFrame(History(symbols, span, resolution));
         }
 
         /// <summary>
@@ -895,13 +893,12 @@ namespace QuantConnect.Algorithm
         /// <param name="start">The start time in the algorithm's time zone</param>
         /// <param name="end">The end time in the algorithm's time zone</param>
         /// <param name="resolution">The resolution to request</param>
-        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <returns>A python dictionary with pandas DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject tickers, DateTime start, DateTime end, Resolution? resolution = null, DataMappingMode? dataMappingMode = null)
+        public PyObject History(PyObject tickers, DateTime start, DateTime end, Resolution? resolution = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
-            return PandasConverter.GetDataFrame(History(symbols, start, end, resolution, dataMappingMode: dataMappingMode));
+            return PandasConverter.GetDataFrame(History(symbols, start, end, resolution));
         }
 
         /// <summary>
@@ -912,11 +909,9 @@ namespace QuantConnect.Algorithm
         /// <param name="start">The start time in the algorithm's time zone</param>
         /// <param name="end">The end time in the algorithm's time zone</param>
         /// <param name="resolution">The resolution to request</param>
-        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject type, PyObject tickers, DateTime start, DateTime end, Resolution? resolution = null,
-            DataMappingMode? dataMappingMode = null)
+        public PyObject History(PyObject type, PyObject tickers, DateTime start, DateTime end, Resolution? resolution = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
             var requestedType = type.CreateType();
@@ -928,7 +923,7 @@ namespace QuantConnect.Algorithm
                         .FirstOrDefault(s => s.Type.BaseType == requestedType.BaseType);
                 if (config == null) return null;
 
-                return _historyRequestFactory.CreateHistoryRequest(config, start, end, GetExchangeHours(x), resolution, dataMappingMode);
+                return _historyRequestFactory.CreateHistoryRequest(config, start, end, GetExchangeHours(x), resolution);
             });
 
             return PandasConverter.GetDataFrame(History(requests.Where(x => x != null)).Memoize());
@@ -943,10 +938,9 @@ namespace QuantConnect.Algorithm
         /// <param name="tickers">The symbols to retrieve historical data for</param>
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
-        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject type, PyObject tickers, int periods, Resolution? resolution = null, DataMappingMode? dataMappingMode = null)
+        public PyObject History(PyObject type, PyObject tickers, int periods, Resolution? resolution = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
             var requestedType = type.CreateType();
@@ -961,7 +955,7 @@ namespace QuantConnect.Algorithm
                 var res = GetResolution(x, resolution);
                 var exchange = GetExchangeHours(x);
                 var start = _historyRequestFactory.GetStartTimeAlgoTz(x, periods, res, exchange, config.DataTimeZone);
-                return _historyRequestFactory.CreateHistoryRequest(config, start, Time, exchange, res, dataMappingMode);
+                return _historyRequestFactory.CreateHistoryRequest(config, start, Time, exchange, res);
             });
 
             return PandasConverter.GetDataFrame(History(requests.Where(x => x != null)).Memoize());
@@ -975,12 +969,11 @@ namespace QuantConnect.Algorithm
         /// <param name="tickers">The symbols to retrieve historical data for</param>
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
-        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject type, PyObject tickers, TimeSpan span, Resolution? resolution = null, DataMappingMode? dataMappingMode = null)
+        public PyObject History(PyObject type, PyObject tickers, TimeSpan span, Resolution? resolution = null)
         {
-            return History(type, tickers, Time - span, Time, resolution, dataMappingMode);
+            return History(type, tickers, Time - span, Time, resolution);
         }
 
         /// <summary>
@@ -991,11 +984,9 @@ namespace QuantConnect.Algorithm
         /// <param name="start">The start time in the algorithm's time zone</param>
         /// <param name="end">The end time in the algorithm's time zone</param>
         /// <param name="resolution">The resolution to request</param>
-        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject type, Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null,
-            DataMappingMode? dataMappingMode = null)
+        public PyObject History(PyObject type, Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null)
         {
             var security = Securities[symbol];
             // verify the types match
@@ -1008,7 +999,7 @@ namespace QuantConnect.Algorithm
                 throw new ArgumentException("The specified security is not of the requested type. Symbol: " + symbol.ToString() + " Requested Type: " + requestedType.Name + " Actual Type: " + actualType);
             }
 
-            var request = _historyRequestFactory.CreateHistoryRequest(config, start, end, GetExchangeHours(symbol), resolution, dataMappingMode);
+            var request = _historyRequestFactory.CreateHistoryRequest(config, start, end, GetExchangeHours(symbol), resolution);
             return PandasConverter.GetDataFrame(History(request).Memoize());
         }
 
@@ -1021,17 +1012,16 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">The symbol to retrieve historical data for</param>
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
-        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject type, Symbol symbol, int periods, Resolution? resolution = null, DataMappingMode? dataMappingMode = null)
+        public PyObject History(PyObject type, Symbol symbol, int periods, Resolution? resolution = null)
         {
             if (resolution == Resolution.Tick) throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
 
             var res = GetResolution(symbol, resolution);
             var marketHours = GetMarketHours(symbol);
             var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, res, marketHours.ExchangeHours, marketHours.DataTimeZone);
-            return History(type, symbol, start, Time, resolution, dataMappingMode);
+            return History(type, symbol, start, Time, resolution);
         }
 
         /// <summary>
@@ -1042,12 +1032,11 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">The symbol to retrieve historical data for</param>
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
-        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject type, Symbol symbol, TimeSpan span, Resolution? resolution = null, DataMappingMode? dataMappingMode = null)
+        public PyObject History(PyObject type, Symbol symbol, TimeSpan span, Resolution? resolution = null)
         {
-            return History(type, symbol, Time - span, Time, resolution, dataMappingMode);
+            return History(type, symbol, Time - span, Time, resolution);
         }
 
         /// <summary>

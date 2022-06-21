@@ -16,7 +16,6 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 
@@ -39,9 +38,10 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnEndOfAlgorithm()
         {
             var dataMappingModes = ((DataMappingMode[])Enum.GetValues(typeof(DataMappingMode))).ToList();
+
             var historyResults = dataMappingModes.Select(x =>
             {
-                return History(_futureSymbol, StartDate, EndDate, Resolution.Hour, dataMappingMode: x).ToList();
+                return History(new [] { _futureSymbol }, StartDate, EndDate, Resolution.Hour, dataMappingMode: x).ToList();
             }).ToList();
 
             if (historyResults.Any(x => x.Count != historyResults[0].Count))
@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
             // Check that close prices at each time are different for different data mapping modes
             for (int j = 0; j < historyResults[0].Count; j++)
             {
-                if (historyResults.GetRange(1, historyResults.Count - 1).Any(result => result[j].Close == historyResults[0][j].Close))
+                if (historyResults.GetRange(1, historyResults.Count - 1).Any(result => result[j].Bars[_futureSymbol].Close == historyResults[0][j].Bars[_futureSymbol].Close))
                 {
                     throw new Exception($"History() returned equal close prices for different data mapping modes at time {historyResults[0][j].Time}");
                 }

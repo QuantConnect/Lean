@@ -445,11 +445,12 @@ class Test(PythonData):
         {
             var dataMappingModes = GetAllDataMappingModes();
             _algorithm = GetAlgorithm(new DateTime(2013, 10, 07));
-
             var symbol = _algorithm.AddFuture(Futures.Indices.SP500EMini, Resolution.Minute, dataMappingMode: dataMappingModes.First()).Symbol;
+            var historyStart = _algorithm.Time.Subtract(TimeSpan.FromMinutes(120));
+            var historyEnd = _algorithm.Time;
 
             var historyResults = dataMappingModes
-                .Select(x => _algorithm.History(symbol, 120, Resolution.Minute, x).ToList())
+                .Select(x => _algorithm.History(new [] { symbol }, historyStart, historyEnd, Resolution.Minute, dataMappingMode: x).ToList())
                 .ToList();
 
             var expectedBarsCount = historyResults.First().Count;
@@ -460,9 +461,9 @@ class Test(PythonData):
                 for (int j = 1; j < historyResults.Count; j++)
                 {
                     var expectedTime = historyResults[0][i].Time;
-                    var expectedClose = historyResults[0][i].Close;
+                    var expectedClose = historyResults[0][i].Bars[symbol].Close;
                     var currentTime = historyResults[j][i].Time;
-                    var currentClose = historyResults[j][i].Close;
+                    var currentClose = historyResults[j][i].Bars[symbol].Close;
 
                     Assert.AreEqual(currentTime, expectedTime,
                         $"Times {currentTime} and {expectedTime} are not equal for histories with DataMappingMode {dataMappingModes[j]} and {dataMappingModes[0]}");
