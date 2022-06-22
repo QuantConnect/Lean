@@ -26,22 +26,21 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class HistoryWithDifferentDataMappingModeRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _futureSymbol;
+        private Symbol _continuousContractSymbol;
 
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 7);
-            SetEndDate(2013, 10, 8);
-            _futureSymbol = AddFuture(Futures.Indices.SP500EMini, Resolution.Daily).Symbol;
+            SetStartDate(2013, 10, 6);
+            SetEndDate(2014, 1, 1);
+            _continuousContractSymbol = AddFuture(Futures.Indices.SP500EMini, Resolution.Daily).Symbol;
         }
 
         public override void OnEndOfAlgorithm()
         {
             var dataMappingModes = ((DataMappingMode[])Enum.GetValues(typeof(DataMappingMode))).ToList();
-
-            var historyResults = dataMappingModes.Select(x =>
+            var historyResults = dataMappingModes.Select(dataMappingMode =>
             {
-                return History(new [] { _futureSymbol }, StartDate, EndDate, Resolution.Hour, dataMappingMode: x).ToList();
+                return History(new [] { _continuousContractSymbol }, StartDate, EndDate, Resolution.Daily, dataMappingMode: dataMappingMode).ToList();
             }).ToList();
 
             if (historyResults.Any(x => x.Count != historyResults[0].Count))
@@ -49,12 +48,42 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception("History results bar count did not match");
             }
 
+            // Check that all history results have a mapping date at some point in the history
+            HashSet<DateTime> mappingDates = new HashSet<DateTime>();
+            for (int i = 0; i < historyResults.Count; i++)
+            {
+                var underlying = historyResults[i].First().Bars.Keys.First().Underlying;
+                int mappingsCount = 0;
+
+                foreach (var slice in historyResults[i])
+                {
+                    var dataUnderlying = slice.Bars.Keys.First().Underlying;
+                    if (dataUnderlying != underlying)
+                    {
+                        underlying = dataUnderlying;
+                        mappingsCount++;
+                        mappingDates.Add(slice.Time.Date);
+                    }
+                }
+
+                if (mappingsCount == 0)
+                {
+                    throw new Exception($"History results for {dataMappingModes[i]} data mapping mode did not contain any mappings");
+                }
+            }
+
+            if (mappingDates.Count < dataMappingModes.Count)
+            {
+                throw new Exception($"History results should have had different mapping dates for each data mapping mode");
+            }
+
             // Check that close prices at each time are different for different data mapping modes
             for (int j = 0; j < historyResults[0].Count; j++)
             {
-                if (historyResults.GetRange(1, historyResults.Count - 1).Any(result => result[j].Bars[_futureSymbol].Close == historyResults[0][j].Bars[_futureSymbol].Close))
+                var closePrices = historyResults.Select(hr => hr[j].Bars.First().Value.Close).ToHashSet();
+                if (closePrices.Count != dataMappingModes.Count)
                 {
-                    throw new Exception($"History() returned equal close prices for different data mapping modes at time {historyResults[0][j].Time}");
+                    throw new Exception($"History results close prices should have been different for each data mapping mode at each time");
                 }
             }
         }
@@ -72,12 +101,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 54;
+        public long DataPoints => 1337;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 270;
+        public int AlgorithmHistoryDataPoints => 450;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -100,8 +129,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "5.91"},
-            {"Tracking Error", "0.13"},
+            {"Information Ratio", "-3.681"},
+            {"Tracking Error", "0.086"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},

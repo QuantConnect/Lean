@@ -667,7 +667,7 @@ namespace QuantConnect.Algorithm
                     filteredRequests[i] = new HistoryRequest(startTimeUtc, endTimeUtc,
                         request.DataType, request.Symbol, request.Resolution, request.ExchangeHours,
                         request.DataTimeZone, request.FillForwardResolution, request.IncludeExtendedMarketHours,
-                        request.IsCustomData, request.DataNormalizationMode, request.TickType);
+                        request.IsCustomData, request.DataNormalizationMode, request.TickType, request.DataMappingMode);
 
                     if (!sentMessage)
                     {
