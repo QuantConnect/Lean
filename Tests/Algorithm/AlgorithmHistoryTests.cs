@@ -444,31 +444,55 @@ class Test(PythonData):
         public void SubscriptionHistoryRequestWithDifferentDataMappingMode()
         {
             var dataMappingModes = GetAllDataMappingModes();
-            _algorithm = GetAlgorithm(new DateTime(2013, 10, 07));
-            var symbol = _algorithm.AddFuture(Futures.Indices.SP500EMini, Resolution.Minute, dataMappingMode: dataMappingModes.First()).Symbol;
-            var historyStart = _algorithm.Time.Subtract(TimeSpan.FromMinutes(120));
-            var historyEnd = _algorithm.Time;
+            var historyStart = new DateTime(2013, 10, 6);
+            var historyEnd = new DateTime(2014, 1, 1);
+            var resolution = Resolution.Daily;
+            _algorithm = GetAlgorithm(historyEnd);
+            var symbol = _algorithm.AddFuture(Futures.Indices.SP500EMini, resolution, dataMappingMode: dataMappingModes.First()).Symbol;
 
             var historyResults = dataMappingModes
-                .Select(x => _algorithm.History(new [] { symbol }, historyStart, historyEnd, Resolution.Minute, dataMappingMode: x).ToList())
+                .Select(x => _algorithm.History(new [] { symbol }, historyStart, historyEnd, resolution, dataMappingMode: x).ToList())
                 .ToList();
 
             var expectedBarsCount = historyResults.First().Count;
             Assert.That(historyResults, Has.All.Not.Empty.And.All.Count.EqualTo(expectedBarsCount));
 
-            for (int i = 0; i < expectedBarsCount; i++)
+            // Check that all history results have a mapping date at some point in the history
+            HashSet<DateTime> mappingDates = new HashSet<DateTime>();
+            for (int i = 0; i < historyResults.Count; i++)
             {
-                for (int j = 1; j < historyResults.Count; j++)
-                {
-                    var expectedTime = historyResults[0][i].Time;
-                    var expectedClose = historyResults[0][i].Bars[symbol].Close;
-                    var currentTime = historyResults[j][i].Time;
-                    var currentClose = historyResults[j][i].Bars[symbol].Close;
+                var underlying = historyResults[i].First().Bars.Keys.First().Underlying;
+                int mappingsCount = 0;
 
-                    Assert.AreEqual(currentTime, expectedTime,
-                        $"Times {currentTime} and {expectedTime} are not equal for histories with DataMappingMode {dataMappingModes[j]} and {dataMappingModes[0]}");
-                    Assert.AreNotEqual(currentClose, expectedClose,
-                        $"Closes {currentClose} and {expectedClose} are equal for history with DataMappingMode {dataMappingModes[j]} and {dataMappingModes[0]}");
+                foreach (var slice in historyResults[i])
+                {
+                    var dataUnderlying = slice.Bars.Keys.First().Underlying;
+                    if (dataUnderlying != underlying)
+                    {
+                        underlying = dataUnderlying;
+                        mappingsCount++;
+                        mappingDates.Add(slice.Time.Date);
+                    }
+                }
+
+                if (mappingsCount == 0)
+                {
+                    throw new Exception($"History results for {dataMappingModes[i]} data mapping mode did not contain any mappings");
+                }
+            }
+
+            if (mappingDates.Count < dataMappingModes.Length)
+            {
+                throw new Exception($"History results should have had different mapping dates for each data mapping mode");
+            }
+
+            // Check that close prices at each time are different for different data mapping modes
+            for (int j = 0; j < historyResults[0].Count; j++)
+            {
+                var closePrices = historyResults.Select(hr => hr[j].Bars.First().Value.Close).ToHashSet();
+                if (closePrices.Count != dataMappingModes.Length)
+                {
+                    throw new Exception($"History results close prices should have been different for each data mapping mode at each time");
                 }
             }
         }
