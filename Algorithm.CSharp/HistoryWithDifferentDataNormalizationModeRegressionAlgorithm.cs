@@ -64,7 +64,7 @@ namespace QuantConnect.Algorithm.CSharp
                 .Select(x => History(new [] { symbol }, start, end, resolution, dataNormalizationMode: x).ToList())
                 .ToList();
 
-            if (historyResults.Count == 0 || historyResults.Any(x => x.Count != historyResults.First().Count))
+            if (historyResults.Any(x => x.Count == 0 || x.Count != historyResults.First().Count))
             {
                 throw new Exception($"History results for {symbol} have different number of bars");
             }
@@ -75,7 +75,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var closePrices = historyResults.Select(hr => hr[j].Bars.First().Value.Close).ToHashSet();
                 if (closePrices.Count != dataNormalizationModes.Length)
                 {
-                    throw new Exception("History results for " + symbol + " have different close prices at the same time");
+                    throw new Exception($"History results for {symbol} have different close prices at the same time");
                 }
             }
         }
@@ -88,7 +88,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp };
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
