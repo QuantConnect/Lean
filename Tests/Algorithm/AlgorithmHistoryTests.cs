@@ -454,8 +454,7 @@ class Test(PythonData):
                 .Select(x => _algorithm.History(new [] { symbol }, historyStart, historyEnd, resolution, dataMappingMode: x).ToList())
                 .ToList();
 
-            var expectedBarsCount = historyResults.First().Count;
-            Assert.That(historyResults, Has.All.Not.Empty.And.All.Count.EqualTo(expectedBarsCount));
+            CheckThatHistoryResultsHaveEqualBarCount(historyResults);
 
             // Check that all history results have a mapping date at some point in the history
             HashSet<DateTime> mappingDates = new HashSet<DateTime>();
@@ -486,15 +485,109 @@ class Test(PythonData):
                 throw new Exception($"History results should have had different mapping dates for each data mapping mode");
             }
 
-            // Check that close prices at each time are different for different data mapping modes
-            for (int j = 0; j < historyResults[0].Count; j++)
+            CheckThatHistoryResultsHaveDifferentClosePrices(historyResults, dataMappingModes.Length,
+                $"History results close prices should have been different for each data mapping mode at each time");
+        }
+
+        [TestCase(DataNormalizationMode.BackwardsRatio)]
+        [TestCase(DataNormalizationMode.BackwardsPanamaCanal)]
+        [TestCase(DataNormalizationMode.ForwardPanamaCanal)]
+        public void HistoryThrowsForUnsupportedDataNormalizationMode_Equity(DataNormalizationMode dataNormalizationMode)
+        {
+            _algorithm = GetAlgorithmWithEquity(new DateTime(2014, 6, 6));
+            Assert.AreEqual(2, _algorithm.SubscriptionManager.Subscriptions.ToList().Count);
+            var equity = _algorithm.SubscriptionManager.Subscriptions.First();
+            Assert.AreEqual(SecurityType.Equity, equity.SecurityType);
+
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
             {
-                var closePrices = historyResults.Select(hr => hr[j].Bars.First().Value.Close).ToHashSet();
-                if (closePrices.Count != dataMappingModes.Length)
-                {
-                    throw new Exception($"History results close prices should have been different for each data mapping mode at each time");
-                }
-            }
+                _algorithm.History(new [] { equity.Symbol }, _algorithm.Time.AddDays(-1), _algorithm.Time, equity.Resolution,
+                    dataNormalizationMode: dataNormalizationMode).ToList();
+            });
+        }
+
+        [TestCase(DataNormalizationMode.Adjusted)]
+        [TestCase(DataNormalizationMode.SplitAdjusted)]
+        [TestCase(DataNormalizationMode.TotalReturn)]
+        public void HistoryThrowsForUnsupportedDataNormalizationMode_Future(DataNormalizationMode dataNormalizationMode)
+        {
+            _algorithm = GetAlgorithmWithFuture(new DateTime(2014, 1, 1));
+            Assert.IsNotEmpty(_algorithm.SubscriptionManager.Subscriptions);
+            var future = _algorithm.SubscriptionManager.Subscriptions.First();
+            Assert.AreEqual(SecurityType.Future, future.SecurityType);
+
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+            {
+                _algorithm.History(new [] { future.Symbol }, _algorithm.StartDate, _algorithm.Time, future.Resolution,
+                    dataNormalizationMode: dataNormalizationMode).ToList();
+            });
+        }
+
+        [TestCase(DataNormalizationMode.Raw)]
+        [TestCase(DataNormalizationMode.Adjusted)]
+        [TestCase(DataNormalizationMode.SplitAdjusted)]
+        [TestCase(DataNormalizationMode.TotalReturn)]
+        public void HistoryDoesNotThrowForSupportedDataNormalizationMode_Equity(DataNormalizationMode dataNormalizationMode)
+        {
+            _algorithm = GetAlgorithmWithEquity(new DateTime(2014, 6, 6));
+            Assert.AreEqual(2, _algorithm.SubscriptionManager.Subscriptions.ToList().Count);
+            var equity = _algorithm.SubscriptionManager.Subscriptions.First();
+            Assert.AreEqual(SecurityType.Equity, equity.SecurityType);
+
+            Assert.DoesNotThrow(() =>
+            {
+                _algorithm.History(new [] { equity.Symbol }, _algorithm.Time.AddDays(-1), _algorithm.Time, equity.Resolution,
+                    dataNormalizationMode: dataNormalizationMode).ToList();
+            });
+        }
+
+        [TestCase(DataNormalizationMode.Raw)]
+        [TestCase(DataNormalizationMode.BackwardsRatio)]
+        [TestCase(DataNormalizationMode.BackwardsPanamaCanal)]
+        [TestCase(DataNormalizationMode.ForwardPanamaCanal)]
+        public void HistoryDoesNotThrowForSupportedDataNormalizationMode_Future(DataNormalizationMode dataNormalizationMode)
+        {
+            _algorithm = GetAlgorithmWithFuture(new DateTime(2014, 1, 1));
+            Assert.IsNotEmpty(_algorithm.SubscriptionManager.Subscriptions);
+            var future = _algorithm.SubscriptionManager.Subscriptions.First();
+            Assert.AreEqual(SecurityType.Future, future.SecurityType);
+
+            Assert.DoesNotThrow(() =>
+            {
+                _algorithm.History(new [] { future.Symbol }, _algorithm.StartDate, _algorithm.Time, future.Resolution,
+                    dataNormalizationMode: dataNormalizationMode).ToList();
+            });
+        }
+
+        [Test]
+        public void SubscriptionHistoryRequestWithDifferentDataNormalizationModes_Equity()
+        {
+            var dataNormalizationModes = new DataNormalizationMode[]{
+                DataNormalizationMode.Raw,
+                DataNormalizationMode.Adjusted,
+                DataNormalizationMode.SplitAdjusted
+            };
+            _algorithm = GetAlgorithmWithEquity(new DateTime(2014, 6, 6));
+            var equity = _algorithm.SubscriptionManager.Subscriptions.First();
+
+            CheckHistoryResultsForDataNormalizationModes(_algorithm, equity.Symbol, _algorithm.Time.AddDays(-1), _algorithm.Time, equity.Resolution,
+                dataNormalizationModes);
+        }
+
+        [Test]
+        public void SubscriptionHistoryRequestWithDifferentDataNormalizationModes_Future()
+        {
+            var dataNormalizationModes = new DataNormalizationMode[]{
+                DataNormalizationMode.Raw,
+                DataNormalizationMode.BackwardsRatio,
+                DataNormalizationMode.BackwardsPanamaCanal,
+                DataNormalizationMode.ForwardPanamaCanal
+            };
+            _algorithm = GetAlgorithmWithFuture(new DateTime(2014, 1, 1));
+            var future = _algorithm.SubscriptionManager.Subscriptions.First();
+
+            CheckHistoryResultsForDataNormalizationModes(_algorithm, future.Symbol, new DateTime(2013, 10, 6), _algorithm.Time, future.Resolution,
+                dataNormalizationModes);
         }
 
         private QCAlgorithm GetAlgorithm(DateTime dateTime)
@@ -565,9 +658,68 @@ class Test(PythonData):
             }
         }
 
+        private QCAlgorithm GetAlgorithmWithEquity(DateTime dateTime)
+        {
+            var resolution = Resolution.Minute;
+            var algorithm = GetAlgorithm(dateTime);
+            algorithm.AddEquity("AAPL", resolution);
+
+            return algorithm;
+        }
+
+        private QCAlgorithm GetAlgorithmWithFuture(DateTime dateTime)
+        {
+            var resolution = Resolution.Daily;
+            var algorithm = GetAlgorithm(dateTime);
+            algorithm.AddFuture(Futures.Indices.SP500EMini, resolution);
+
+            return algorithm;
+        }
+
+        /// <summary>
+        /// Helper method to check that all history results have the same bar count
+        /// </summary>
+        private static void CheckThatHistoryResultsHaveEqualBarCount(List<List<Slice>> historyResults)
+        {
+            var expectedBarsCount = historyResults.First().Count;
+            Assert.That(historyResults, Has.All.Not.Empty.And.All.Count.EqualTo(expectedBarsCount));
+        }
+
+        /// <summary>
+        /// Helper method to check that, for each history result, close prices at each time are different
+        /// </summary>
+        private static void CheckThatHistoryResultsHaveDifferentClosePrices(List<List<Slice>> historyResults, int expectedPricesCount, string message)
+        {
+            for (int j = 0; j < historyResults[0].Count; j++)
+            {
+                var closePrices = historyResults.Select(hr => hr[j].Bars.First().Value.Close).ToHashSet();
+                Assert.AreEqual(expectedPricesCount, closePrices.Count, message);
+            }
+        }
+
+        /// <summary>
+        /// Helper method to perform history checks on different data normalization modes
+        /// </summary>
+        private static void CheckHistoryResultsForDataNormalizationModes(QCAlgorithm algorithm, Symbol symbol, DateTime start,
+            DateTime end, Resolution resolution, DataNormalizationMode[] dataNormalizationModes)
+        {
+            var historyResults = dataNormalizationModes
+                .Select(x => algorithm.History(new [] { symbol }, start, end, resolution, dataNormalizationMode: x).ToList())
+                .ToList();
+
+            CheckThatHistoryResultsHaveEqualBarCount(historyResults);
+            CheckThatHistoryResultsHaveDifferentClosePrices(historyResults, dataNormalizationModes.Length,
+                $"History results close prices should have been different for each data normalization mode at each time");
+        }
+
         private static DataMappingMode[] GetAllDataMappingModes()
         {
             return (DataMappingMode[])Enum.GetValues(typeof(DataMappingMode));
+        }
+
+        private static DataNormalizationMode[] GetAllDataNormalizationModes()
+        {
+            return (DataNormalizationMode[])Enum.GetValues(typeof(DataNormalizationMode));
         }
     }
 }
