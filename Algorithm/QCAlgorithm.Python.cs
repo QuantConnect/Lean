@@ -877,13 +877,15 @@ namespace QuantConnect.Algorithm
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
         /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <returns>A python dictionary with a pandas DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public PyObject History(PyObject tickers, DateTime start, DateTime end, Resolution? resolution = null, bool? fillForward = null,
-            bool? extendedMarket = null, DataMappingMode? dataMappingMode = null)
+            bool? extendedMarket = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
-            return PandasConverter.GetDataFrame(History(symbols, start, end, resolution, fillForward, extendedMarket, dataMappingMode));
+            return PandasConverter.GetDataFrame(
+                History(symbols, start, end, resolution, fillForward, extendedMarket, dataMappingMode, dataNormalizationMode));
         }
 
         /// <summary>

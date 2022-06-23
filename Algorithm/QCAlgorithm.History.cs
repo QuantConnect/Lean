@@ -492,12 +492,15 @@ namespace QuantConnect.Algorithm
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
         /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null,
-            bool? fillForward = null, bool? extendedMarket = null, DataMappingMode? dataMappingMode = null)
+            bool? fillForward = null, bool? extendedMarket = null, DataMappingMode? dataMappingMode = null,
+            DataNormalizationMode? dataNormalizationMode = null)
         {
-            return History(CreateDateRangeHistoryRequests(symbols, start, end, resolution, fillForward, extendedMarket, dataMappingMode)).Memoize();
+            return History(CreateDateRangeHistoryRequests(
+                symbols, start, end, resolution, fillForward, extendedMarket, dataMappingMode, dataNormalizationMode)).Memoize();
         }
 
         /// <summary>
@@ -685,7 +688,8 @@ namespace QuantConnect.Algorithm
         /// Helper method to create history requests from a date range
         /// </summary>
         private IEnumerable<HistoryRequest> CreateDateRangeHistoryRequests(IEnumerable<Symbol> symbols, DateTime startAlgoTz, DateTime endAlgoTz,
-            Resolution? resolution = null, bool? fillForward = null, bool? extendedMarket = null, DataMappingMode? dataMappingMode = null)
+            Resolution? resolution = null, bool? fillForward = null, bool? extendedMarket = null, DataMappingMode? dataMappingMode = null,
+            DataNormalizationMode? dataNormalizationMode = null)
         {
             return symbols.Where(HistoryRequestValid).SelectMany(x =>
             {
@@ -693,7 +697,8 @@ namespace QuantConnect.Algorithm
 
                 foreach (var config in GetMatchingSubscriptions(x, typeof(BaseData), resolution))
                 {
-                    var request = _historyRequestFactory.CreateHistoryRequest(config, startAlgoTz, endAlgoTz, GetExchangeHours(x), resolution, dataMappingMode);
+                    var request = _historyRequestFactory.CreateHistoryRequest(
+                        config, startAlgoTz, endAlgoTz, GetExchangeHours(x), resolution, dataMappingMode, dataNormalizationMode);
 
                     // apply overrides
                     var res = GetResolution(x, resolution);
@@ -711,7 +716,7 @@ namespace QuantConnect.Algorithm
         /// Helper methods to create a history request for the specified symbols and bar count
         /// </summary>
         private IEnumerable<HistoryRequest> CreateBarCountHistoryRequests(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null,
-            DataMappingMode? dataMappingMode = null)
+            DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null)
         {
             return symbols.Where(HistoryRequestValid).SelectMany(x =>
             {
@@ -726,7 +731,8 @@ namespace QuantConnect.Algorithm
                 var start = _historyRequestFactory.GetStartTimeAlgoTz(x, periods, res, exchange, configs.First().DataTimeZone);
                 var end = Time;
 
-                return configs.Select(config => _historyRequestFactory.CreateHistoryRequest(config, start, end, exchange, res, dataMappingMode));
+                return configs.Select(config =>
+                    _historyRequestFactory.CreateHistoryRequest(config, start, end, exchange, res, dataMappingMode, dataNormalizationMode));
             });
         }
 
