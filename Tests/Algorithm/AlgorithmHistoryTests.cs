@@ -693,15 +693,12 @@ class Test(PythonData):
             for (int j = 0; j < historyResults[0].Count; j++)
             {
                 var closePrices = historyResults.Select(hr => hr[j].Bars.First().Value.Close).ToHashSet();
-                if (closePrices.Count != expectedPricesCount)
-                {
-                    throw new Exception(message);
-                }
+                Assert.AreEqual(expectedPricesCount, closePrices.Count, message);
             }
         }
 
         /// <summary>
-        /// Helper method to check that, for each history result, close prices at each time are different
+        /// Helper method to perform history checks on different data normalization modes
         /// </summary>
         private static void CheckHistoryResultsForDataNormalizationModes(QCAlgorithm algorithm, Symbol symbol, DateTime start,
             DateTime end, Resolution resolution, DataNormalizationMode[] dataNormalizationModes)
