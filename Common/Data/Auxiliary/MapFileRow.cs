@@ -72,7 +72,18 @@ namespace QuantConnect.Data.Auxiliary
         {
             return dataProvider.ReadLines(file)
                 .Where(l => !string.IsNullOrWhiteSpace(l))
-                .Select(s => Parse(s, market, securityType));
+                .Select(s => {
+                    try
+                    {
+                        return Parse(s, market, securityType);
+                    }
+                    catch (ArgumentException)
+                    {
+                        // skip unrecognized mapping modes for backwards compatibility
+                        return null;
+                    }
+                })
+                .Where(row => row != null);
         }
 
         /// <summary>

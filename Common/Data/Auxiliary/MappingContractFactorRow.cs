@@ -1,4 +1,4 @@
-﻿/*
+/*
 * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 *
@@ -85,7 +85,11 @@ namespace QuantConnect.Data.Auxiliary
             // parse factor file lines
             foreach (var line in lines)
             {
-                rows.Add(JsonConvert.DeserializeObject<MappingContractFactorRow>(line));
+                var row = JsonConvert.DeserializeObject<MappingContractFactorRow>(line);
+                if(!row.DataMappingMode.HasValue || Enum.IsDefined(typeof(DataMappingMode), row.DataMappingMode.Value))
+                {
+                    rows.Add(row);
+                }
             }
 
             if (rows.Count > 0)
