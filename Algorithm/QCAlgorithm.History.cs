@@ -694,8 +694,6 @@ namespace QuantConnect.Algorithm
             Resolution? resolution = null, bool? fillForward = null, bool? extendedMarket = null, DataMappingMode? dataMappingMode = null,
             DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
         {
-            uint? depthOffset = contractDepthOffset.HasValue ? (uint)Math.Abs(contractDepthOffset.Value) : null;
-
             return symbols.Where(HistoryRequestValid).SelectMany(x =>
             {
                 var requests = new List<HistoryRequest>();
@@ -703,7 +701,7 @@ namespace QuantConnect.Algorithm
                 foreach (var config in GetMatchingSubscriptions(x, typeof(BaseData), resolution))
                 {
                     var request = _historyRequestFactory.CreateHistoryRequest(config, startAlgoTz, endAlgoTz, GetExchangeHours(x), resolution,
-                        dataMappingMode, dataNormalizationMode, depthOffset);
+                        dataMappingMode, dataNormalizationMode, contractDepthOffset);
 
                     // apply overrides
                     var res = GetResolution(x, resolution);
@@ -723,8 +721,6 @@ namespace QuantConnect.Algorithm
         private IEnumerable<HistoryRequest> CreateBarCountHistoryRequests(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null,
             DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
         {
-            uint? depthOffset = contractDepthOffset.HasValue ? (uint)Math.Abs(contractDepthOffset.Value) : null;
-
             return symbols.Where(HistoryRequestValid).SelectMany(x =>
             {
                 var res = GetResolution(x, resolution);
@@ -739,7 +735,7 @@ namespace QuantConnect.Algorithm
                 var end = Time;
 
                 return configs.Select(config => _historyRequestFactory.CreateHistoryRequest(config, start, end, exchange, res, dataMappingMode,
-                    dataNormalizationMode, depthOffset));
+                    dataNormalizationMode, contractDepthOffset));
             });
         }
 

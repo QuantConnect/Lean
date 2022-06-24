@@ -57,7 +57,7 @@ namespace QuantConnect.Data
             Resolution? resolution,
             DataMappingMode? dataMappingMode = null,
             DataNormalizationMode? dataNormalizationMode = null,
-            uint? contractDepthOffset = null)
+            int? contractDepthOffset = null)
         {
             resolution ??= subscription.Resolution;
 
@@ -93,7 +93,7 @@ namespace QuantConnect.Data
 
             if (contractDepthOffset != null)
             {
-                request.ContractDepthOffset = contractDepthOffset.Value;
+                request.ContractDepthOffset = (uint)Math.Abs(contractDepthOffset.Value);
             }
 
             return request;

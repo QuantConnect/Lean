@@ -89,6 +89,8 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     throw new Exception($"History results for contractDepthOffset={contractDepthOffsets[i]} did not contain any mappings");
                 }
+
+                underlyingsPerHistory.Add(underlyings);
             }
 
             // Check that underlyings are different for each history result (because we're using different contract depth offsets)
