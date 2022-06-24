@@ -16,6 +16,7 @@
 
 using System;
 using System.Threading;
+using Python.Runtime;
 using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine;
 using QuantConnect.Logging;
@@ -132,6 +133,21 @@ namespace QuantConnect.Lean.Launcher
             leanEngineAlgorithmHandlers.DisposeSafely();
             Log.LogHandler.DisposeSafely();
             OS.CpuPerformanceCounter.DisposeSafely();
+
+            if (PythonEngine.IsInitialized)
+            {
+                try
+                {
+                    using (Py.GIL())
+                    {
+                        PythonEngine.Shutdown();
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e, "Exception shutting down python");
+                }
+            }
 
             Log.Trace("Program.Main(): Exiting Lean...");
             Environment.Exit(exitCode);
