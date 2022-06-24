@@ -616,10 +616,7 @@ class Test(PythonData):
                 foreach (var slice in history)
                 {
                     var underlying = slice.Keys.Single().Underlying;
-                    if (!underlyings.Contains(underlying))
-                    {
-                        underlyings.Add(underlying);
-                    }
+                    underlyings.Add(underlying);
                 }
 
                 Assert.GreaterOrEqual(underlyings.Count, 2, "History result did not contain any mappings");
