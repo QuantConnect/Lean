@@ -34,7 +34,7 @@ class BasicTemplateFuturesDailyAlgorithm(QCAlgorithm):
 
         # set our expiry filter for this futures chain
         # SetFilter method accepts timedelta objects or integer for days.
-        # The following statements yield the same filtering criteria 
+        # The following statements yield the same filtering criteria
         futureSP500.SetFilter(timedelta(0), timedelta(182))
         futureGold.SetFilter(0, 182)
 
@@ -47,7 +47,7 @@ class BasicTemplateFuturesDailyAlgorithm(QCAlgorithm):
 
                 # if there is any contract, trade the front contract
                 if len(contracts) == 0: continue
-                front = sorted(contracts, key = lambda x: x.Expiry, reverse=True)[0]
+                front = sorted(contracts, key = lambda x: x.Expiry)[0]
 
                 self.contractSymbol = front.Symbol
                 if self.IsMarketOpen(self.contractSymbol):
