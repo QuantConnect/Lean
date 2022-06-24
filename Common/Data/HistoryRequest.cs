@@ -93,7 +93,7 @@ namespace QuantConnect.Data
         /// The continuous contract desired offset from the current front month.
         /// For example, 0 (default) will use the front month, 1 will use the back month contract
         /// </summary>
-        public uint ContractDepthOffset { get; }
+        public uint ContractDepthOffset { get; set; }
 
         /// <summary>
         /// Gets the tradable days specified by this request, in the security's data time zone
