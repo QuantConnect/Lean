@@ -138,10 +138,8 @@ namespace QuantConnect.Lean.Launcher
             {
                 try
                 {
-                    using (Py.GIL())
-                    {
-                        PythonEngine.Shutdown();
-                    }
+                    var pyGIle = Py.GIL();
+                    PythonEngine.Shutdown();
                 }
                 catch (Exception e)
                 {
