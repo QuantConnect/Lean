@@ -438,11 +438,16 @@ namespace QuantConnect.Tests.Common.Data
             };
 
             var reference = new DateTime(2015, 04, 13);
+            var bar = new TradeBar { Time = reference, Period = Time.OneDay };
+            consolidator.Update(bar);
 
-            consolidator.Update(new TradeBar { Time = reference, Period = Time.OneDay });
+            Assert.IsNull(consolidated);
+            consolidator.Scan(bar.EndTime);
+            Assert.IsNotNull(consolidated);
 
             Assert.IsNotNull(consolidated);
             Assert.AreEqual(reference, consolidated.Time);
+            Assert.AreEqual(Time.OneDay, consolidated.Period);
         }
 
         [Test]

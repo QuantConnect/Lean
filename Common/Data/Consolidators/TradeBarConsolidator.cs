@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -97,7 +97,7 @@ namespace QuantConnect.Data.Consolidators
             {
                 workingBar = new TradeBar
                 {
-                    Time = GetRoundedBarTime(data.Time),
+                    Time = GetRoundedBarTime(data),
                     Symbol = data.Symbol,
                     Open = data.Open,
                     High = data.High,

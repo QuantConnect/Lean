@@ -49,6 +49,62 @@ namespace QuantConnect.Tests.Common.Data
         }
 
         [Test]
+        public void MultipleResolutionConsolidation()
+        {
+            QuoteBar quoteBar = null;
+            using var creator = new QuoteBarConsolidator(Time.OneDay);
+            creator.DataConsolidated += (sender, args) =>
+            {
+                quoteBar = args;
+            };
+
+            var time = new DateTime(2022, 6, 6);
+            var bar1 = new QuoteBar
+            {
+                Time = time,
+                Symbol = Symbols.SPY,
+                Bid = new Bar(1, 2, 0.75m, 1.25m),
+                LastBidSize = 3,
+                Ask = null,
+                LastAskSize = 0,
+                Value = 1,
+                Period = TimeSpan.FromDays(1)
+            };
+            creator.Update(bar1);
+            Assert.IsNull(quoteBar);
+            creator.Scan(bar1.EndTime);
+            Assert.IsNotNull(quoteBar);
+            quoteBar = null;
+
+            // now let's send in other resolution data
+            var previousBar = bar1;
+            for (int i = 0; i <= 24; i++)
+            {
+                previousBar = new QuoteBar
+                {
+                    Time = previousBar.EndTime,
+                    Symbol = Symbols.SPY,
+                    Bid = new Bar(1, 2, 0.75m, 1.25m),
+                    LastBidSize = 3,
+                    Ask = null,
+                    LastAskSize = 0,
+                    Value = 1,
+                    Period = TimeSpan.FromHours(1)
+                };
+                creator.Update(previousBar);
+
+                if (i < 24)
+                {
+                    Assert.IsNull(quoteBar, $"{i} {previousBar.EndTime}");
+                }
+                else
+                {
+                    Assert.IsNotNull(quoteBar, $"{i} {previousBar.EndTime}");
+                }
+            }
+        }
+
+        [Test]
         public void GentlyHandlesPeriodAndDataAreSameResolution()
         {
             QuoteBar quoteBar = null;
@@ -71,6 +127,8 @@ namespace QuantConnect.Tests.Common.Data
                 Period = TimeSpan.FromDays(1)
             };
             creator.Update(bar1);
+            Assert.IsNull(quoteBar);
+            creator.Scan(bar1.EndTime);
             Assert.IsNotNull(quoteBar);
 
             Assert.AreEqual(bar1.Symbol, quoteBar.Symbol);

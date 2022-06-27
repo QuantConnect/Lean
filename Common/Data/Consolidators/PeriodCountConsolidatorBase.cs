@@ -154,14 +154,7 @@ namespace QuantConnect.Data.Consolidators
                 // only do this check once
                 _validateTimeSpan = true;
                 var dataLength = data.EndTime - data.Time;
-                if (dataLength == _period)
-                {
-                    // if the user is consolidating period 'X' with data of length 'X', be gentle, and transform into a bar of count 1 consolidation, we want to avoid issues like #3062
-                    _maxCount = 1;
-                    _periodSpecification = new BarCountPeriodSpecification();
-                    _period = _periodSpecification.Period;
-                }
-                else if (dataLength > _period)
+                if (dataLength > _period)
                 {
                     throw new ArgumentException($"For Symbol {data.Symbol} can not consolidate bars of period: {_period}, using data of the same or higher period: {data.EndTime - data.Time}");
                 }
@@ -194,7 +187,7 @@ namespace QuantConnect.Data.Consolidators
             if (_period.HasValue)
             {
                 // we're in time span mode and initialized
-                if (_workingBar != null && data.Time - _workingBar.Time >= _period.Value && GetRoundedBarTime(data.Time) > _lastEmit)
+                if (_workingBar != null && data.Time - _workingBar.Time >= _period.Value && GetRoundedBarTime(data) > _lastEmit)
                 {
                     fireDataConsolidated = true;
                 }
@@ -303,6 +296,24 @@ namespace QuantConnect.Data.Consolidators
             }
 
             return startTime;
+        }
+
+        /// <summary>
+        /// Gets a rounded-down bar start time. Called by AggregateBar in derived classes.
+        /// </summary>
+        /// <param name="inputData">The input data point</param>
+        /// <returns>The rounded bar start time</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected DateTime GetRoundedBarTime(IBaseData inputData)
+        {
+            var potentialStartTime = GetRoundedBarTime(inputData.Time);
+            if(_period.HasValue && potentialStartTime + _period < inputData.EndTime)
+            {
+                // whops! the end time we were giving is beyond our potential end time, so let's use the giving bars star time instead
+                potentialStartTime = inputData.Time;
+            }
+
+            return potentialStartTime;
         }
 
         /// <summary>
