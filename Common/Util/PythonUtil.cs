@@ -228,7 +228,7 @@ namespace QuantConnect.Util
                 var inspect = lazyInspect.Value;
                 if (inspect.isfunction(pyObject))
                 {
-                    var args = inspect.getargspec(pyObject).args as PyObject;
+                    var args = inspect.getfullargspec(pyObject).args as PyObject;
                     var pyList = new PyList(args);
                     length = pyList.Length();
                     pyList.Dispose();
@@ -238,7 +238,7 @@ namespace QuantConnect.Util
 
                 if (inspect.ismethod(pyObject))
                 {
-                    var args = inspect.getargspec(pyObject).args as PyObject;
+                    var args = inspect.getfullargspec(pyObject).args as PyObject;
                     var pyList = new PyList(args);
                     length = pyList.Length() - 1;
                     pyList.Dispose();
