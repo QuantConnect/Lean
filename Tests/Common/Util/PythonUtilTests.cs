@@ -24,6 +24,50 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class PythonUtilTests
     {
+        [TestCase(false)]
+        [TestCase(true)]
+        public void ToActionFailure(bool typeAnnotations)
+        {
+            using (Py.GIL())
+            {
+                var action = PyModule.FromString("ToAction", @"
+from AlgorithmImports import *
+
+def Test1():
+    pass
+def Test2() -> None:
+    pass
+");
+                var testMethod = action.GetAttr(typeAnnotations ? "Test2" : "Test1");
+                var result = PythonUtil.ToAction<SecurityType>(testMethod);
+                Assert.IsNull(result);
+            }
+        }
+        [TestCase(false)]
+        [TestCase(true)]
+        public void ToActionSuccess(bool typeAnnotations)
+        {
+            using (Py.GIL())
+            {
+                var action = PyModule.FromString("ToAction", @"
+from AlgorithmImports import *
+
+def Test1(securityType):
+    if securityType != SecurityType.Equity:
+        raise ValueError('Unexpected SecurityType!')
+
+def Test2(securityType: SecurityType) -> None:
+    if securityType != SecurityType.Equity:
+        raise ValueError('Unexpected SecurityType!')
+");
+                var testMethod = action.GetAttr(typeAnnotations ? "Test2" : "Test1");
+                var result = PythonUtil.ToAction<SecurityType>(testMethod);
+
+                Assert.IsNotNull(action);
+                Assert.DoesNotThrow(() => result(SecurityType.Equity));
+            }
+        }
+
         [Test]
         public void ConvertToSymbolsTest()
         {
