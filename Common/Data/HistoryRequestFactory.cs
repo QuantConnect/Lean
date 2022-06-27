@@ -47,6 +47,8 @@ namespace QuantConnect.Data
         /// <param name="resolution">The resolution to use. If null will use <see cref="SubscriptionDataConfig.Resolution"/></param>
         /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
+        /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
+        /// For example, 0 (default) will use the front month, 1 will use the back month contract</param>
         /// <returns>The new <see cref="HistoryRequest"/></returns>
         public HistoryRequest CreateHistoryRequest(SubscriptionDataConfig subscription,
             DateTime startAlgoTz,
@@ -54,7 +56,8 @@ namespace QuantConnect.Data
             SecurityExchangeHours exchangeHours,
             Resolution? resolution,
             DataMappingMode? dataMappingMode = null,
-            DataNormalizationMode? dataNormalizationMode = null)
+            DataNormalizationMode? dataNormalizationMode = null,
+            int? contractDepthOffset = null)
         {
             resolution ??= subscription.Resolution;
 
@@ -86,6 +89,11 @@ namespace QuantConnect.Data
             if (dataNormalizationMode != null)
             {
                 request.DataNormalizationMode = dataNormalizationMode.Value;
+            }
+
+            if (contractDepthOffset != null)
+            {
+                request.ContractDepthOffset = (uint)Math.Abs(contractDepthOffset.Value);
             }
 
             return request;

@@ -482,11 +482,11 @@ class Test(PythonData):
 
             if (mappingDates.Count < dataMappingModes.Length)
             {
-                throw new Exception($"History results should have had different mapping dates for each data mapping mode");
+                throw new Exception("History results should have had different mapping dates for each data mapping mode");
             }
 
             CheckThatHistoryResultsHaveDifferentClosePrices(historyResults, dataMappingModes.Length,
-                $"History results close prices should have been different for each data mapping mode at each time");
+                "History results close prices should have been different for each data mapping mode at each time");
         }
 
         [TestCase(DataNormalizationMode.BackwardsRatio)]
@@ -588,6 +588,49 @@ class Test(PythonData):
 
             CheckHistoryResultsForDataNormalizationModes(_algorithm, future.Symbol, new DateTime(2013, 10, 6), _algorithm.Time, future.Resolution,
                 dataNormalizationModes);
+        }
+
+        [Test]
+        public void SubscriptionHistoryRequestForContinuousContractsWithDifferentDepthOffsets()
+        {
+            var start = new DateTime(2013, 10, 6);
+            var end = new DateTime(2014, 1, 1);
+            _algorithm = GetAlgorithmWithFuture(end);
+            var future = _algorithm.SubscriptionManager.Subscriptions.First();
+
+            Func<int, List<Slice>> getHistoryForContractDepthOffset = (contractDepthOffset) =>
+            {
+                return _algorithm.History(new [] { future.Symbol }, start, end, future.Resolution, contractDepthOffset: contractDepthOffset).ToList();
+            };
+
+            var frontMonthHistory = getHistoryForContractDepthOffset(0);
+            var backMonthHistory1 = getHistoryForContractDepthOffset(1);
+            var backMonthHistory2 = getHistoryForContractDepthOffset(2);
+            Assert.IsNotEmpty(frontMonthHistory);
+            Assert.IsNotEmpty(backMonthHistory1);
+            Assert.IsNotEmpty(backMonthHistory2);
+
+            Func<List<Slice>, HashSet<Symbol>> getHistoryUnderlyings = (history) =>
+            {
+                HashSet<Symbol> underlyings = new();
+                foreach (var slice in history)
+                {
+                    var underlying = slice.Keys.Single().Underlying;
+                    underlyings.Add(underlying);
+                }
+
+                Assert.GreaterOrEqual(underlyings.Count, 2, "History result did not contain any mappings");
+
+                return underlyings;
+            };
+
+            var frontMonthHistoryUnderlyings = getHistoryUnderlyings(frontMonthHistory);
+            var backMonthHistory1Underlyings = getHistoryUnderlyings(backMonthHistory1);
+            var backMonthHistory2Underlyings = getHistoryUnderlyings(backMonthHistory2);
+
+            Assert.AreNotEqual(frontMonthHistoryUnderlyings, backMonthHistory2Underlyings);
+            Assert.AreNotEqual(frontMonthHistoryUnderlyings, backMonthHistory2Underlyings);
+            Assert.AreNotEqual(backMonthHistory1Underlyings, backMonthHistory2Underlyings);
         }
 
         private QCAlgorithm GetAlgorithm(DateTime dateTime)
@@ -709,7 +752,7 @@ class Test(PythonData):
 
             CheckThatHistoryResultsHaveEqualBarCount(historyResults);
             CheckThatHistoryResultsHaveDifferentClosePrices(historyResults, dataNormalizationModes.Length,
-                $"History results close prices should have been different for each data normalization mode at each time");
+                "History results close prices should have been different for each data normalization mode at each time");
         }
 
         private static DataMappingMode[] GetAllDataMappingModes()
