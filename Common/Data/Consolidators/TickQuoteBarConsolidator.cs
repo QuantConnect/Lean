@@ -91,7 +91,7 @@ namespace QuantConnect.Data.Consolidators
         {
             if (workingBar == null)
             {
-                workingBar = new QuoteBar(GetRoundedBarTime(data.Time), data.Symbol, null, decimal.Zero, null, decimal.Zero, Period);
+                workingBar = new QuoteBar(GetRoundedBarTime(data), data.Symbol, null, decimal.Zero, null, decimal.Zero, Period);
 
                 // open ask and bid should match previous close ask and bid
                 if (Consolidated != null)

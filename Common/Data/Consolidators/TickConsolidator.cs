@@ -91,7 +91,7 @@ namespace QuantConnect.Data.Consolidators
         {
             if (workingBar == null)
             {
-                workingBar = new TradeBar(GetRoundedBarTime(data.Time),
+                workingBar = new TradeBar(GetRoundedBarTime(data),
                     data.Symbol,
                     data.Value,
                     data.Value,
