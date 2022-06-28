@@ -53,19 +53,16 @@ namespace QuantConnect.Algorithm.CSharp
                 Volume = data.Volume,
             };
 
-            var aaplHistory = History<CustomData>("AAPL", StartDate, EndDate, Resolution.Minute).Select(getRawCustomData);
-            var spyHistory = History<CustomData>("SPY", StartDate, EndDate, Resolution.Minute).Select(getRawCustomData);
+            var aaplHistory = History<CustomData>("AAPL", StartDate, EndDate, Resolution.Minute).Select(getRawCustomData).ToList();
+            var spyHistory = History<CustomData>("SPY", StartDate, EndDate, Resolution.Minute).Select(getRawCustomData).ToList();
 
-            var a = aaplHistory.ToList();
-            var b = spyHistory.ToList();
-
-            if (a.Count == 0 || b.Count == 0)
+            if (aaplHistory.Count == 0 || spyHistory.Count == 0)
             {
                 throw new Exception("At least one of the history results is empty");
             }
 
-            // Check that both b contain the same data, since CustomData fetches APPL data regardless of the symbol
-            if (!a.SequenceEqual(spyHistory))
+            // Check that both results contain the same data, since CustomData fetches APPL data regardless of the symbol
+            if (!aaplHistory.SequenceEqual(spyHistory))
             {
                 throw new Exception("Histories are not equal");
             }

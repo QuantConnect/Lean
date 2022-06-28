@@ -14,7 +14,8 @@
 from AlgorithmImports import *
 
 ### <summary>
-### Regression test illustrating how history from custom data sources can be requested.
+### Regression test illustrating how history from custom data sources can be requested. The <see cref="QCAlgorithm.History"/> method used in this
+### example also allows to specify other parameters than just the resolution, such as the data normalization mode, the data mapping mode, etc.
 ### </summary>
 class HistoryWithCustomDataSourceRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
@@ -26,9 +27,9 @@ class HistoryWithCustomDataSourceRegressionAlgorithm(QCAlgorithm):
 
     def OnEndOfAlgorithm(self):
         aaplHistory = self.History(CustomData, self.aapl, self.StartDate, self.EndDate, Resolution.Minute,
-            dataNormalizationMode=DataNormalizationMode.Raw).droplevel(0, axis=0)
+            fillForward=False, extendedMarket=False, dataNormalizationMode=DataNormalizationMode.Raw).droplevel(0, axis=0)
         spyHistory = self.History(CustomData, self.spy, self.StartDate, self.EndDate, Resolution.Minute,
-            dataNormalizationMode=DataNormalizationMode.Raw).droplevel(0, axis=0)
+            fillForward=False, extendedMarket=False, dataNormalizationMode=DataNormalizationMode.Raw).droplevel(0, axis=0)
 
         if aaplHistory.size == 0 or spyHistory.size == 0:
             raise Exception("At least one of the history results is empty")
