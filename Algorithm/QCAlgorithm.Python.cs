@@ -892,6 +892,43 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Gets the historical data for the specified symbols between the specified dates. The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="type">The data type of the symbols</param>
+        /// <param name="tickers">The symbols to retrieve historical data for</param>
+        /// <param name="start">The start time in the algorithm's time zone</param>
+        /// <param name="end">The end time in the algorithm's time zone</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
+        /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
+        /// For example, 0 (default) will use the front month, 1 will use the back month contract</param>
+        /// <returns>A python dictionary with a pandas DataFrame containing the requested historical data</returns>
+        [DocumentationAttribute(HistoricalData)]
+        public PyObject History(PyObject type, PyObject tickers, DateTime start, DateTime end, Resolution? resolution = null,
+            bool? fillForward = null, bool? extendedMarket = null, DataMappingMode? dataMappingMode = null,
+            DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
+        {
+            var symbols = tickers.ConvertToSymbolEnumerable();
+            var requestedType = type.CreateType();
+
+            var requests = symbols.Select(x =>
+            {
+                var security = Securities[x];
+                var config = security.Subscriptions.OrderByDescending(s => s.Resolution)
+                        .FirstOrDefault(s => s.Type.BaseType == requestedType.BaseType);
+                if (config == null) return null;
+
+                return _historyRequestFactory.CreateHistoryRequest(config, start, end, GetExchangeHours(x), resolution, dataMappingMode,
+                    dataNormalizationMode, contractDepthOffset);
+            });
+
+            return PandasConverter.GetDataFrame(History(requests.Where(x => x != null)).Memoize());
+        }
+
+        /// <summary>
         /// Gets the historical data for the specified symbol between the specified dates. The symbol must exist in the Securities collection.
         /// </summary>
         /// <param name="tickers">The symbols to retrieve historical data for</param>
