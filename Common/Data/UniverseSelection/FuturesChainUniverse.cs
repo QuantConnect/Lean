@@ -42,7 +42,7 @@ namespace QuantConnect.Data.UniverseSelection
             : base(future.SubscriptionDataConfig)
         {
             Future = future;
-            _universeSettings = universeSettings;
+            _universeSettings = new UniverseSettings(universeSettings) { DataNormalizationMode = DataNormalizationMode.Raw };
         }
 
         /// <summary>
