@@ -928,18 +928,8 @@ namespace QuantConnect.Algorithm
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
             var requestedType = type.CreateType();
-            var requests = symbols.Select(x =>
-            {
-                var request =  CreateDateRangeHistoryRequest(type, x, start, end, resolution, dataMappingMode, dataNormalizationMode,
-                    contractDepthOffset);
-
-                // apply overrides
-                if (fillForward.HasValue) request.FillForwardResolution = fillForward.Value ? request.Resolution : (Resolution?)null;
-                if (extendedMarket.HasValue) request.IncludeExtendedMarketHours = extendedMarket.Value;
-
-                return request;
-
-            });
+            var requests = CreateDateRangeHistoryRequests(symbols, requestedType, start, end, resolution, fillForward, extendedMarket,
+                dataMappingMode, dataNormalizationMode, contractDepthOffset);
 
             return PandasConverter.GetDataFrame(History(requests.Where(x => x != null)).Memoize());
         }
@@ -959,7 +949,7 @@ namespace QuantConnect.Algorithm
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
             var requestedType = type.CreateType();
-            var requests = symbols.Select(x => CreateBarCountHistoryRequest(type, x, periods, resolution));
+            var requests = CreateBarCountHistoryRequests(symbols, requestedType, periods, resolution);
 
             return PandasConverter.GetDataFrame(History(requests.Where(x => x != null)).Memoize());
         }
@@ -991,12 +981,11 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(HistoricalData)]
         public PyObject History(PyObject type, Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null)
         {
-            var request = CreateDateRangeHistoryRequest(type, symbol, start, end, resolution);
+            var requestedType = type.CreateType();
+            var request = CreateDateRangeHistoryRequests(new [] {  symbol }, requestedType, start, end, resolution).FirstOrDefault();
             if (request == null)
             {
-                var security = Securities[symbol];
-                var requestedType = type.CreateType();
-                var actualType = security.Subscriptions.Select(x => x.Type.Name).DefaultIfEmpty("[None]").FirstOrDefault();
+                var actualType = Securities[symbol].Subscriptions.Select(x => x.Type.Name).DefaultIfEmpty("[None]").FirstOrDefault();
                 throw new ArgumentException("The specified security is not of the requested type. Symbol: " + symbol.ToString() + " Requested Type: " + requestedType.Name + " Actual Type: " + actualType);
             }
 
@@ -1394,42 +1383,6 @@ namespace QuantConnect.Algorithm
             }
 
             return pythonIndicator;
-        }
-
-        private SubscriptionDataConfig GetMatchingSubscription(PyObject type, Symbol symbol, Resolution? resolution = null)
-        {
-            var security = Securities[symbol];
-            // verify the types match
-            var requestedType = type.CreateType();
-            return security.Subscriptions.OrderByDescending(s => s.Resolution)
-                .FirstOrDefault(s => s.Type.BaseType == requestedType.BaseType);
-        }
-
-        private HistoryRequest CreateDateRangeHistoryRequest(PyObject type, Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null,
-            DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
-        {
-            var config = GetMatchingSubscription(type, symbol, resolution);
-            if (config == null) return null;
-
-            var res = GetResolution(symbol, resolution);
-            var exchange = GetExchangeHours(symbol);
-
-            return _historyRequestFactory.CreateHistoryRequest(config, start, end, GetExchangeHours(symbol), res, dataMappingMode,
-                dataNormalizationMode, contractDepthOffset);
-        }
-
-        private HistoryRequest CreateBarCountHistoryRequest(PyObject type, Symbol symbol, int periods, Resolution? resolution = null,
-            DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
-        {
-            var config = GetMatchingSubscription(type, symbol, resolution);
-            if (config == null) return null;
-
-            var res = GetResolution(symbol, resolution);
-            var exchange = GetExchangeHours(symbol);
-            var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, res, exchange, config.DataTimeZone);
-
-            return _historyRequestFactory.CreateHistoryRequest(config, start, Time, GetExchangeHours(symbol), res, dataMappingMode,
-                dataNormalizationMode, contractDepthOffset);
         }
     }
 }
