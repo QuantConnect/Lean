@@ -711,12 +711,11 @@ namespace QuantConnect.Algorithm
 
                 foreach (var config in GetMatchingSubscriptions(x, requestedType, resolution))
                 {
-                    var res = GetResolution(x, resolution);
-                    var request = _historyRequestFactory.CreateHistoryRequest(config, startAlgoTz, endAlgoTz, GetExchangeHours(x), res,
+                    var request = _historyRequestFactory.CreateHistoryRequest(config, startAlgoTz, endAlgoTz, GetExchangeHours(x), resolution,
                         dataMappingMode, dataNormalizationMode, contractDepthOffset);
 
                     // apply overrides
-                    if (fillForward.HasValue) request.FillForwardResolution = fillForward.Value ? res : (Resolution?)null;
+                    if (fillForward.HasValue) request.FillForwardResolution = fillForward.Value ? GetResolution(x, resolution) : (Resolution?)null;
                     if (extendedMarket.HasValue) request.IncludeExtendedMarketHours = extendedMarket.Value;
 
                     requests.Add(request);

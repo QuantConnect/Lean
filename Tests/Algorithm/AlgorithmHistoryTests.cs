@@ -68,33 +68,70 @@ namespace QuantConnect.Tests.Algorithm
             _cacheProvider.DisposeSafely();
         }
 
-        [TestCase(Resolution.Daily)]
-        [TestCase(Resolution.Hour)]
-        [TestCase(Resolution.Minute)]
-        [TestCase(Resolution.Second)]
-        public void TickResolutionSubscriptionHistoryRequestOtherResolution(Resolution resolution)
+        [TestCase(Resolution.Daily, Language.CSharp)]
+        [TestCase(Resolution.Hour, Language.CSharp)]
+        [TestCase(Resolution.Minute, Language.CSharp)]
+        [TestCase(Resolution.Second, Language.CSharp)]
+        [TestCase(Resolution.Daily, Language.Python)]
+        [TestCase(Resolution.Hour, Language.Python)]
+        [TestCase(Resolution.Minute, Language.Python)]
+        [TestCase(Resolution.Second, Language.Python)]
+        public void TickResolutionSubscriptionHistoryRequestOtherResolution(Resolution resolution, Language language)
         {
             var start = new DateTime(2013, 10, 07);
-            _algorithm = GetAlgorithm(start.AddDays(1));
+            _algorithm = GetAlgorithm(start.AddDays(2));
 
             _algorithm.AddEquity(Symbols.SPY, Resolution.Tick);
-            // Trades and quotes
-            var result = _algorithm.History(new [] { Symbols.SPY }, start, _algorithm.Time, resolution).ToList();
 
-            Assert.IsNotEmpty(result);
-            Assert.IsTrue(result.All(slice =>
+            if (language == Language.CSharp)
             {
-                foreach (var bar in slice.Bars.Values)
-                {
-                    return (bar.EndTime - bar.Time) == resolution.ToTimeSpan();
-                }
-                foreach (var bar in slice.QuoteBars.Values)
-                {
-                    return (bar.EndTime - bar.Time) == resolution.ToTimeSpan();
-                }
+                // Trades and quotes
+                var result = _algorithm.History(new [] { Symbols.SPY }, start, _algorithm.Time, resolution).ToList();
 
-                return false;
-            }));
+                Assert.IsNotEmpty(result);
+                Assert.IsTrue(result.All(slice =>
+                {
+                    foreach (var bar in slice.Bars.Values)
+                    {
+                        return (bar.EndTime - bar.Time) == resolution.ToTimeSpan();
+                    }
+                    foreach (var bar in slice.QuoteBars.Values)
+                    {
+                        return (bar.EndTime - bar.Time) == resolution.ToTimeSpan();
+                    }
+
+                    return false;
+                }));
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    var getHistoryTimes = PyModule.FromString("testModule",
+                        @"
+from AlgorithmImports import *
+from QuantConnect.Tests import *
+from datetime import datetime
+
+def getHistoryTimes(algorithm, symbol, start, resolution):
+    return algorithm.History(symbol, start, algorithm.Time, resolution).loc[symbol].index.tolist()
+        ").GetAttr("getHistoryTimes");
+
+                    _algorithm.SetPandasConverter();
+                    var symbol = Symbols.SPY.ToPython();
+
+                    var result = getHistoryTimes.Invoke(_algorithm.ToPython(), symbol, start.ToPython(), resolution.ToPython()).As<List<DateTime>>();
+                    Assert.IsNotEmpty(result);
+
+                    var prevDateTime = result[0].Subtract(resolution.ToTimeSpan());
+                    Assert.IsTrue(result.Any(time =>
+                    {
+                        var timeSpan = time - prevDateTime;
+                        prevDateTime = time;
+                        return timeSpan == resolution.ToTimeSpan();
+                    }));
+                }
+            }
         }
 
         [Test]
@@ -116,6 +153,64 @@ namespace QuantConnect.Tests.Algorithm
 
             // (Trades and quotes).Count > Trades * 2
             Assert.Greater(result.Count, result2.Count * 2);
+        }
+
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void TickResolutionHistoryRequest2(Language language)
+        {
+            var start = new DateTime(2013, 10, 07);
+            _algorithm = GetAlgorithm(start.AddDays(1));
+
+            if (language == Language.CSharp)
+            {
+                // Trades and quotes
+                var result = _algorithm.History(new [] { Symbols.SPY }, start.AddHours(9.8), start.AddHours(10), Resolution.Tick).ToList();
+
+                // Just Trades
+                var result2 = _algorithm.History<Tick>(Symbols.SPY, start.AddHours(9.8), start.AddHours(10), Resolution.Tick).ToList();
+
+                Assert.IsNotEmpty(result);
+                Assert.IsNotEmpty(result2);
+
+                Assert.IsTrue(result2.All(tick => tick.TickType == TickType.Trade));
+
+                // (Trades and quotes).Count > Trades * 2
+                Assert.Greater(result.Count, result2.Count * 2);
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    var pythonModule = PyModule.FromString("testModule",
+                        @"
+from AlgorithmImports import *
+from QuantConnect.Tests import *
+from datetime import timedelta
+
+def getTradesAndQuotesHistory(algorithm, symbol, start):
+    return algorithm.History([symbol], start + timedelta(hours=12), start + timedelta(hours=12.2), Resolution.Second).loc[symbol].to_dict()
+
+def getTradesOnlyHistory(algorithm, symbol, start):
+    return algorithm.History(Tick, symbol, start + timedelta(hours=9.8), start + timedelta(hours=10), Resolution.Tick).loc[symbol].to_dict()
+        ");
+                    var getTradesAndQuotesHistory = pythonModule.GetAttr("getTradesAndQuotesHistory");
+                    var getTradesOnlyHistory = pythonModule.GetAttr("getTradesOnlyHistory");
+                    _algorithm.SetPandasConverter();
+                    var pySymbol = Symbols.SPY.ToPython();
+                    var pyAlgorithm = _algorithm.ToPython();
+                    var pyStart = start.ToPython();
+
+                    var result = getTradesAndQuotesHistory.Invoke(pyAlgorithm, pySymbol, pyStart).ConvertToDictionary<string, object>();
+                    var result2 = getTradesOnlyHistory.Invoke(pyAlgorithm, pySymbol, pyStart).ConvertToDictionary<string, object>();
+
+                    Assert.IsNotEmpty(result);
+                    Assert.IsNotEmpty(result2);
+
+                    CollectionAssert.AreNotEquivalent(result.Keys, result2.Keys);
+                    CollectionAssert.IsNotSubsetOf(result2.Keys, result.Keys);
+                }
+            }
         }
 
         [Test]
@@ -631,6 +726,54 @@ class Test(PythonData):
             Assert.AreNotEqual(frontMonthHistoryUnderlyings, backMonthHistory2Underlyings);
             Assert.AreNotEqual(frontMonthHistoryUnderlyings, backMonthHistory2Underlyings);
             Assert.AreNotEqual(backMonthHistory1Underlyings, backMonthHistory2Underlyings);
+        }
+
+        [Test]
+        public void GetHistoryWithCustomData()
+        {
+            var algorithm = GetAlgorithm(new DateTime(2013, 10, 8));
+            algorithm.SetPandasConverter();
+
+            Symbol symbol;
+            using (Py.GIL())
+            {
+                var customDataType = PyModule.FromString("testModule",
+                    @"
+from AlgorithmImports import *
+from QuantConnect.Tests import *
+
+class Test(PythonData):
+    def GetSource(self, config, date, isLiveMode):
+        fileName = LeanData.GenerateZipFileName(Symbols.SPY, date, config.Resolution, config.TickType)
+        source = f'{Globals.DataFolder}equity/usa/minute/spy/{fileName}'
+        return SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv)
+
+    def Reader(self, config, line, date, isLiveMode):
+
+        data = line.split(',')
+
+        result = Test()
+        result.DataType = MarketDataType.Base
+        result.Symbol = config.Symbol
+        result.Time = date + timedelta(milliseconds=int(data[0]))
+        result.Value = 1
+
+        return result
+        ").GetAttr("Test");
+                symbol = algorithm.AddData(customDataType, "SPY").Symbol;
+                using var pySymbol = symbol.ToPython();
+                var history = algorithm.History(customDataType, pySymbol, algorithm.StartDate, algorithm.EndDate, Resolution.Minute,
+                    dataNormalizationMode: DataNormalizationMode.Raw);
+                Assert.Greater(history.GetAttr("loc")[pySymbol].GetAttr("size").As<int>(), 0);
+
+                var str = history.GetAttr("loc")[pySymbol].GetAttr("to_string").Invoke().As<string>();
+
+                Assert.IsTrue(false, str);
+            }
+
+            var lastKnownPrices = algorithm.GetLastKnownPrices(symbol).ToList();
+            Assert.AreEqual(1, lastKnownPrices.Count);
+            Assert.AreEqual(1, lastKnownPrices.Count(data => data.GetType() == typeof(PythonData)));
         }
 
         private QCAlgorithm GetAlgorithm(DateTime dateTime)

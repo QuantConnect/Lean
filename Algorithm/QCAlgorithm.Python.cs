@@ -985,7 +985,7 @@ namespace QuantConnect.Algorithm
             var request = CreateDateRangeHistoryRequests(new [] {  symbol }, requestedType, start, end, resolution).FirstOrDefault();
             if (request == null)
             {
-                var actualType = Securities[symbol].Subscriptions.Select(x => x.Type.Name).DefaultIfEmpty("[None]").FirstOrDefault();
+                var actualType = GetMatchingSubscription(symbol, typeof(BaseData)).Type;
                 throw new ArgumentException("The specified security is not of the requested type. Symbol: " + symbol.ToString() + " Requested Type: " + requestedType.Name + " Actual Type: " + actualType);
             }
 
