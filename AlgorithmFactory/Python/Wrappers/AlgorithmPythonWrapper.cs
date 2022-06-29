@@ -508,12 +508,13 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public bool GetLocked() => _baseAlgorithm.GetLocked();
 
         /// <summary>
-        /// Gets the parameter with the specified name. If a parameter
-        /// with the specified name does not exist, null is returned
+        /// Gets the parameter with the specified name. If a parameter with the specified name does not exist,
+        /// the given default value is returned if any, else null
         /// </summary>
         /// <param name="name">The name of the parameter to get</param>
-        /// <returns>The value of the specified parameter, or null if not found</returns>
-        public string GetParameter(string name) => _baseAlgorithm.GetParameter(name);
+        /// <param name="defaultValue">The default value to return</param>
+        /// <returns>The value of the specified parameter, or defaultValue if not found or null if there's no default value</returns>
+        public string GetParameter(string name, string defaultValue = null) => _baseAlgorithm.GetParameter(name, defaultValue);
 
         /// <summary>
         /// Initialise the Algorithm and Prepare Required Data:

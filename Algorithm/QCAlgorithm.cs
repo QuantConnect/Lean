@@ -649,16 +649,16 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Gets the parameter with the specified name. If a parameter
-        /// with the specified name does not exist, null is returned
+        /// Gets the parameter with the specified name. If a parameter with the specified name does not exist,
+        /// the given default value is returned if any, else null
         /// </summary>
         /// <param name="name">The name of the parameter to get</param>
-        /// <returns>The value of the specified parameter, or null if not found</returns>
+        /// <param name="defaultValue">The default value to return</param>
+        /// <returns>The value of the specified parameter, or defaultValue if not found or null if there's no default value</returns>
         [DocumentationAttribute(ParameterAndOptimization)]
-        public string GetParameter(string name)
+        public string GetParameter(string name, string defaultValue = null)
         {
-            string value;
-            return _parameters.TryGetValue(name, out value) ? value : null;
+            return _parameters.TryGetValue(name, out var value) ? value : defaultValue;
         }
 
         /// <summary>
