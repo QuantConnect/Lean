@@ -930,8 +930,7 @@ namespace QuantConnect.Algorithm
             var requestedType = type.CreateType();
             var requests = CreateDateRangeHistoryRequests(symbols, requestedType, start, end, resolution, fillForward, extendedMarket,
                 dataMappingMode, dataNormalizationMode, contractDepthOffset);
-
-            return PandasConverter.GetDataFrame(History(requests.Where(x => x != null)).Memoize());
+            return PandasConverter.GetDataFrame(History(requests.Where(x => x != null)));
         }
 
         /// <summary>
