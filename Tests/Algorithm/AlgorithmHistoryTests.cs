@@ -134,27 +134,6 @@ def getHistoryTimes(algorithm, symbol, start, resolution):
             }
         }
 
-        [Test]
-        public void TickResolutionHistoryRequest()
-        {
-            var start = new DateTime(2013, 10, 07);
-            _algorithm = GetAlgorithm(start.AddDays(1));
-
-            // Trades and quotes
-            var result = _algorithm.History(new [] { Symbols.SPY }, start.AddHours(9.8), start.AddHours(10), Resolution.Tick).ToList();
-
-            // Just Trades
-            var result2 = _algorithm.History<Tick>(Symbols.SPY, start.AddHours(9.8), start.AddHours(10), Resolution.Tick).ToList();
-
-            Assert.IsNotEmpty(result);
-            Assert.IsNotEmpty(result2);
-
-            Assert.IsTrue(result2.All(tick => tick.TickType == TickType.Trade));
-
-            // (Trades and quotes).Count > Trades * 2
-            Assert.Greater(result.Count, result2.Count * 2);
-        }
-
         [TestCase(Language.CSharp)]
         [TestCase(Language.Python)]
         public void TickResolutionHistoryRequest2(Language language)
@@ -201,8 +180,8 @@ def getTradesOnlyHistory(algorithm, symbol, start):
                     var pyAlgorithm = _algorithm.ToPython();
                     var pyStart = start.ToPython();
 
-                    var result = getTradesAndQuotesHistory.Invoke(pyAlgorithm, pySymbol, pyStart).ConvertToDictionary<string, object>();
-                    var result2 = getTradesOnlyHistory.Invoke(pyAlgorithm, pySymbol, pyStart).ConvertToDictionary<string, object>();
+                    var result = getTradesAndQuotesHistory.Invoke(pyAlgorithm, pySymbol, pyStart).ConvertToDictionary<string, dynamic>();
+                    var result2 = getTradesOnlyHistory.Invoke(pyAlgorithm, pySymbol, pyStart).ConvertToDictionary<string, dynamic>();
 
                     Assert.IsNotEmpty(result);
                     Assert.IsNotEmpty(result2);
@@ -233,14 +212,31 @@ def getTradesOnlyHistory(algorithm, symbol, start):
                 () => _algorithm.History(Symbols.SPY, DateTime.UtcNow.AddDays(-1), DateTime.UtcNow, Resolution.Tick).ToList());
         }
 
-        [TestCase(Resolution.Second)]
-        [TestCase(Resolution.Minute)]
-        [TestCase(Resolution.Hour)]
-        [TestCase(Resolution.Daily)]
-        public void TimeSpanHistoryRequestIsCorrectlyBuilt(Resolution resolution)
+        [TestCase(Resolution.Second, Language.CSharp)]
+        [TestCase(Resolution.Minute, Language.CSharp)]
+        [TestCase(Resolution.Hour, Language.CSharp)]
+        [TestCase(Resolution.Daily, Language.CSharp)]
+        [TestCase(Resolution.Second, Language.Python)]
+        [TestCase(Resolution.Minute, Language.Python)]
+        [TestCase(Resolution.Hour, Language.Python)]
+        [TestCase(Resolution.Daily, Language.Python)]
+        public void TimeSpanHistoryRequestIsCorrectlyBuilt(Resolution resolution, Language language)
         {
             _algorithm.SetStartDate(2013, 10, 07);
-            _algorithm.History(Symbols.SPY, TimeSpan.FromSeconds(2), resolution);
+
+            if (language == Language.CSharp)
+            {
+                _algorithm.History(Symbols.SPY, TimeSpan.FromSeconds(2), resolution);
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    _algorithm.SetPandasConverter();
+                    _algorithm.History(Symbols.SPY.ToPython(), TimeSpan.FromSeconds(2), resolution);
+                }
+            }
+
             Resolution? fillForwardResolution = null;
             if (resolution != Resolution.Tick)
             {
@@ -258,14 +254,31 @@ def getTradesOnlyHistory(algorithm, symbol, start):
             Assert.AreEqual(TickType.Trade, _testHistoryProvider.HistryRequests.First().TickType);
         }
 
-        [TestCase(Resolution.Second)]
-        [TestCase(Resolution.Minute)]
-        [TestCase(Resolution.Hour)]
-        [TestCase(Resolution.Daily)]
-        public void BarCountHistoryRequestIsCorrectlyBuilt(Resolution resolution)
+        [TestCase(Resolution.Second, Language.CSharp)]
+        [TestCase(Resolution.Minute, Language.CSharp)]
+        [TestCase(Resolution.Hour, Language.CSharp)]
+        [TestCase(Resolution.Daily, Language.CSharp)]
+        [TestCase(Resolution.Second, Language.Python)]
+        [TestCase(Resolution.Minute, Language.Python)]
+        [TestCase(Resolution.Hour, Language.Python)]
+        [TestCase(Resolution.Daily, Language.Python)]
+        public void BarCountHistoryRequestIsCorrectlyBuilt(Resolution resolution, Language language)
         {
             _algorithm.SetStartDate(2013, 10, 07);
-            _algorithm.History(Symbols.SPY, 10, resolution);
+
+            if (language == Language.CSharp)
+            {
+                _algorithm.History(Symbols.SPY, 10, resolution);
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    _algorithm.SetPandasConverter();
+                    _algorithm.History(Symbols.SPY.ToPython(), 10, resolution);
+                }
+            }
+
             Resolution? fillForwardResolution = null;
             if (resolution != Resolution.Tick)
             {
@@ -283,11 +296,26 @@ def getTradesOnlyHistory(algorithm, symbol, start):
             Assert.AreEqual(TickType.Trade, _testHistoryProvider.HistryRequests.First().TickType);
         }
 
-        [Test]
-        public void TickHistoryRequestIgnoresFillForward()
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void TickHistoryRequestIgnoresFillForward(Language language)
         {
             _algorithm.SetStartDate(2013, 10, 07);
-            _algorithm.History(new [] {Symbols.SPY}, new DateTime(1,1,1,1,1,1), new DateTime(1, 1, 1, 1, 1, 2), Resolution.Tick, fillForward: true);
+
+            if (language == Language.CSharp)
+            {
+                _algorithm.History(new [] {Symbols.SPY}, new DateTime(1,1,1,1,1,1), new DateTime(1, 1, 1, 1, 1, 2), Resolution.Tick,
+                    fillForward: true);
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    _algorithm.SetPandasConverter();
+                    _algorithm.History(new PyList(new [] {Symbols.SPY.ToPython()}), new DateTime(1,1,1,1,1,1), new DateTime(1, 1, 1, 1, 1, 2),
+                        Resolution.Tick, fillForward: true);
+                }
+            }
 
             Assert.AreEqual(2, _testHistoryProvider.HistryRequests.Count);
             Assert.AreEqual(Symbols.SPY, _testHistoryProvider.HistryRequests.First().Symbol);
