@@ -437,9 +437,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         historyWarmup = new SubscriptionRequest(warmupRequest, startTimeUtc: warmupHistoryStartDate);
                     }
 
+                    var lastPointTracker = new LastPointTracker();
+
                     var synchronizedWarmupEnumerator = TryAddFillForwardEnumerator(warmupRequest,
                         // we concatenate the file based and history based warmup enumerators, dropping duplicate time stamps
-                        new ConcatEnumerator(true, GetFileBasedWarmupEnumerator(warmupRequest), GetHistoryWarmupEnumerator(historyWarmup)) { CanEmitNull = false },
+                        new ConcatEnumerator(true, GetFileBasedWarmupEnumerator(warmupRequest, lastPointTracker), GetHistoryWarmupEnumerator(historyWarmup, lastPointTracker)) { CanEmitNull = false },
                         // if required by the original request, we will fill forward the Synced warmup data
                         request.Configuration.FillDataForward);
 
@@ -453,14 +455,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// File based warmup enumerator
         /// </summary>
-        private IEnumerator<BaseData> GetFileBasedWarmupEnumerator(SubscriptionRequest warmup)
+        private IEnumerator<BaseData> GetFileBasedWarmupEnumerator(SubscriptionRequest warmup, LastPointTracker lastPointTracker)
         {
             IEnumerator<BaseData> result = null;
             try
             {
                 result = new FilterEnumerator<BaseData>(CreateEnumerator(warmup),
-                    // don't let future data past, nor fill forward, that will be handled after merging with the history request response
-                    data => data == null || data.EndTime < warmup.EndTimeLocal && !data.IsFillForward);
+                    data =>
+                    {
+                        // don't let future data past, nor fill forward, that will be handled after merging with the history request response
+                        if (data == null || data.EndTime < warmup.EndTimeLocal && !data.IsFillForward)
+                        {
+                            if (data != null)
+                            {
+                                lastPointTracker.LastDataPoint = data;
+                            }
+                            return true;
+                        }
+                        return false;
+                    });
             }
             catch (Exception e)
             {
@@ -472,30 +485,43 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// History based warmup enumerator
         /// </summary>
-        private IEnumerator<BaseData> GetHistoryWarmupEnumerator(SubscriptionRequest warmup)
+        private IEnumerator<BaseData> GetHistoryWarmupEnumerator(SubscriptionRequest warmup, LastPointTracker lastPointTracker)
         {
             IEnumerator<BaseData> result = null;
             try
             {
                 if (warmup.IsUniverseSubscription)
                 {
-                    result = CreateUniverseEnumerator(warmup, createUnderlyingEnumerator: GetHistoryWarmupEnumerator);
+                    result = CreateUniverseEnumerator(warmup, createUnderlyingEnumerator: (req) => GetHistoryWarmupEnumerator(req, lastPointTracker));
                 }
                 else
                 {
-                    var historyRequest = new Data.HistoryRequest(warmup.Configuration, warmup.ExchangeHours, warmup.StartTimeUtc, warmup.EndTimeUtc);
-                    result = _algorithm.HistoryProvider.GetHistory(new[] { historyRequest }, _algorithm.TimeZone).Select(slice =>
+                    result = new[] { warmup }.SelectMany(_ =>
                     {
-                        try
+                        var startTimeUtc = warmup.StartTimeUtc;
+                        if (lastPointTracker?.LastDataPoint != null)
                         {
-                            var data = slice.Get(historyRequest.DataType);
-                            return (BaseData)data[warmup.Configuration.Symbol];
+                            var utcLastPointTime = lastPointTracker.LastDataPoint.EndTime.ConvertToUtc(warmup.ExchangeHours.TimeZone);
+                            if(utcLastPointTime > startTimeUtc)
+                            {
+                                Log.Trace($"GetHistoryWarmupEnumerator(): Adjusting history warmup start time to {utcLastPointTime} from {startTimeUtc} for {warmup.Configuration}");
+                                startTimeUtc = utcLastPointTime;
+                            }
                         }
-                        catch (Exception e)
+                        var historyRequest = new Data.HistoryRequest(warmup.Configuration, warmup.ExchangeHours, startTimeUtc, warmup.EndTimeUtc);
+                        return _algorithm.HistoryProvider.GetHistory(new[] { historyRequest }, _algorithm.TimeZone).Select(slice =>
                         {
-                            Log.Error(e, $"History warmup: {warmup.Configuration}");
-                        }
-                        return null;
+                            try
+                            {
+                                var data = slice.Get(historyRequest.DataType);
+                                return (BaseData)data[warmup.Configuration.Symbol];
+                            }
+                            catch (Exception e)
+                            {
+                                Log.Error(e, $"History warmup: {warmup.Configuration}");
+                            }
+                            return null;
+                        });
                     }).GetEnumerator();
                 }
 
@@ -547,6 +573,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 EnumeratorFinished += (_, _) => enqueueable.Stop();
             }
+        }
+
+        private class LastPointTracker
+        {
+            public BaseData LastDataPoint { get; set; }
         }
     }
 }
