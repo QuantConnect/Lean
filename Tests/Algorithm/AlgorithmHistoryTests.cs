@@ -661,7 +661,6 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
                         .ConvertToDictionary<string, PyObject>();
 
                     var dataFrameSymbols = result["symbol"].ConvertToDictionary<int, string>().Values.ToHashSet();
-                    // TODO: FIx this!!!!
                     CollectionAssert.AreEquivalent(dataFrameSymbols, new[] { optionSymbol.ID.ToString(), optionSymbol2.ID.ToString() });
 
                     Assert.That(result, Does.Not.ContainKey("openinterest"));
@@ -1025,65 +1024,51 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
             }
         }
 
-        [TestCase(Language.CSharp)]
-        [TestCase(Language.Python)]
-        public void GetHistoryWithCustomData(Language language)
+        [Test]
+        public void GetHistoryWithCustomData_CSharp()
         {
             var algorithm = GetAlgorithm(new DateTime(2013, 10, 8));
+            var symbol = algorithm.AddData<CustomData>("SPY").Symbol;
+            var history = algorithm.History<CustomData>(symbol, algorithm.StartDate, algorithm.EndDate, Resolution.Minute);
 
-            if (language == Language.CSharp)
-            {
-                var symbol = algorithm.AddData<CustomData>("SPY").Symbol;
-                var history = algorithm.History<CustomData>(symbol, algorithm.StartDate, algorithm.EndDate, Resolution.Minute);
+            Assert.IsNotEmpty(history);
+            Assert.That(history, Has.All.Property("DataType").EqualTo(MarketDataType.Base));
+            Assert.IsTrue(_testHistoryProvider.HistryRequests.All(x => x.IsCustomData));
+        }
 
-                Assert.IsNotEmpty(history);
-                Assert.That(history, Has.All.Property("DataType").EqualTo(MarketDataType.Base));
-                Assert.IsTrue(_testHistoryProvider.HistryRequests.All(x => x.IsCustomData));
-            }
-            else
+        [Test]
+        public void GetHistoryWithCustomDataAndNormalizationMode()
+        {
+            var dataNormalizationModes = new DataNormalizationMode[]{
+                DataNormalizationMode.Raw,
+                DataNormalizationMode.Adjusted,
+                DataNormalizationMode.SplitAdjusted
+            };
+            var start = new DateTime(2014, 6, 5);
+            var end = start.AddDays(1);
+            var algorithm = GetAlgorithm(end);
+
+            using (Py.GIL())
             {
-                using (Py.GIL())
-                {
-                    var customDataType = PyModule.FromString("testModule",
-                        @"
+                var getHistory = PyModule.FromString("testModule",
+                    @"
 from AlgorithmImports import *
-from QuantConnect.Tests import *
 
-class TestCustomData(PythonData):
-    def GetSource(self, config, date, isLiveMode):
-        fileName = LeanData.GenerateZipFileName(Symbols.SPY, date, config.Resolution, config.TickType)
-        source = f'{Globals.DataFolder}equity/usa/minute/spy/{fileName}'
-        return SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv)
+def getHistory(algorithm, symbol, start, end, resolution, dataNormalizationMode):
+    return algorithm.History(TradeBar, symbol, start, end, resolution, dataNormalizationMode=dataNormalizationMode)
+        ").GetAttr("getHistory");
 
-    def Reader(self, config, line, date, isLiveMode):
+                algorithm.SetPandasConverter();
+                var symbol = algorithm.AddEquity("AAPL", Resolution.Minute).Symbol.ToPython();
+                var historyResults = dataNormalizationModes.Select(dataNormalizationMode =>
+                {
+                    return getHistory.Invoke(algorithm.ToPython(), symbol, start.ToPython(), end.ToPython(), Resolution.Minute.ToPython(),
+                        dataNormalizationMode.ToPython());
+                }).ToList();
 
-        data = line.split(',')
-
-        result = TestCustomData()
-        result.DataType = MarketDataType.Base
-        result.Symbol = config.Symbol
-        result.Time = date + timedelta(milliseconds=int(data[0]))
-        result.Value = 1
-
-        return result
-        ").GetAttr("TestCustomData");
-
-                    algorithm.SetPandasConverter();
-                    var symbol = algorithm.AddData(customDataType, "SPY").Symbol.ToPython();
-                    var history = algorithm.History(customDataType, symbol, algorithm.StartDate, algorithm.EndDate, Resolution.Minute,
-                        dataNormalizationMode: DataNormalizationMode.Raw);
-
-                    var symbolHistory = history.GetAttr("loc")[symbol];
-                    Assert.Greater(symbolHistory.GetAttr("shape")[0].As<int>(), 0);
-
-                    var valuesDict = symbolHistory
-                        .GetAttr("to_dict")
-                        .Invoke()
-                        .ConvertToDictionary<string, PyObject>()["value"]
-                        .ConvertToDictionary<DateTime, decimal>();
-                    Assert.IsNotEmpty(valuesDict);
-                    Assert.That(valuesDict.Values, Has.All.EqualTo(1));
-                }
+                CheckThatHistoryResultsHaveEqualBarCount(historyResults);
+                CheckThatHistoryResultsHaveDifferentPrices(historyResults,
+                    "History results prices should have been different for each data normalization mode at each time");
             }
         }
 
@@ -1231,26 +1216,6 @@ class TestCustomData(PythonData):
             CheckThatHistoryResultsHaveEqualBarCount(historyResults);
             CheckThatHistoryResultsHaveDifferentPrices(historyResults,
                 "History results prices should have been different for each data normalization mode at each time");
-        }
-
-        /// <summary>
-        /// Helper method to perform history checks on different data normalization modes for Python
-        /// </summary>
-        private static void CheckHistoryResultsForDataNormalizationModes(QCAlgorithm algorithm, PyObject symbol, DateTime start,
-            DateTime end, Resolution resolution, DataNormalizationMode[] dataNormalizationModes)
-        {
-            using (Py.GIL())
-            {
-                algorithm.SetPandasConverter();
-                using var symbols = new PyList(new [] { symbol });
-                var historyResults = dataNormalizationModes
-                    .Select(x => algorithm.History(symbols, start, end, resolution, dataNormalizationMode: x))
-                    .ToList();
-
-                CheckThatHistoryResultsHaveEqualBarCount(historyResults);
-                CheckThatHistoryResultsHaveDifferentPrices(historyResults,
-                    "History results prices should have been different for each data normalization mode at each time");
-            }
         }
 
         private static DataMappingMode[] GetAllDataMappingModes()
