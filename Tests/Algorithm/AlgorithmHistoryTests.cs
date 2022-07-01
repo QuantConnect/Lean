@@ -1060,15 +1060,55 @@ def getHistory(algorithm, symbol, start, end, resolution, dataNormalizationMode)
 
                 algorithm.SetPandasConverter();
                 var symbol = algorithm.AddEquity("AAPL", Resolution.Minute).Symbol.ToPython();
-                var historyResults = dataNormalizationModes.Select(dataNormalizationMode =>
-                {
-                    return getHistory.Invoke(algorithm.ToPython(), symbol, start.ToPython(), end.ToPython(), Resolution.Minute.ToPython(),
-                        dataNormalizationMode.ToPython());
-                }).ToList();
+                var pyAlgorithm = algorithm.ToPython();
+                var pyStart = start.ToPython();
+                var pyEnd = end.ToPython();
+                var pyResolution = Resolution.Minute.ToPython();
+                var historyResults = dataNormalizationModes
+                    .Select(dataNormalizationMode =>
+                        getHistory.Invoke(pyAlgorithm, symbol, pyStart, pyEnd, pyResolution, dataNormalizationMode.ToPython()))
+                    .ToList();
 
                 CheckThatHistoryResultsHaveEqualBarCount(historyResults);
                 CheckThatHistoryResultsHaveDifferentPrices(historyResults,
                     "History results prices should have been different for each data normalization mode at each time");
+            }
+        }
+
+        [Test]
+        public void GetHistoryWithCustomDataAndDataMappingMode()
+        {
+            var dataMappingModes = GetAllDataMappingModes();
+            var historyStart = new DateTime(2013, 10, 6);
+            var historyEnd = new DateTime(2014, 1, 1);
+            var resolution = Resolution.Daily;
+            var algorithm = GetAlgorithm(historyEnd);
+            var symbol = algorithm.AddFuture(Futures.Indices.SP500EMini, resolution, dataMappingMode: dataMappingModes.First()).Symbol;
+
+            using (Py.GIL())
+            {
+                var getHistory = PyModule.FromString("testModule",
+                    @"
+from AlgorithmImports import *
+
+def getHistory(algorithm, symbol, start, end, resolution, dataMappingMode):
+    return algorithm.History(TradeBar, symbol, start, end, resolution, dataMappingMode=dataMappingMode)
+        ").GetAttr("getHistory");
+
+                algorithm.SetPandasConverter();
+                using var symbols = symbol.ToPython();
+                var pyAlgorithm = algorithm.ToPython();
+                var pyStart = historyStart.ToPython();
+                var pyEnd = historyEnd.ToPython();
+                var pyResolution = resolution.ToPython();
+                var historyResults = dataMappingModes
+                    .Select(dataMappingMode =>
+                        getHistory.Invoke(pyAlgorithm, symbols, pyStart, pyEnd, pyResolution, dataMappingMode.ToPython()))
+                    .ToList();
+
+                CheckThatHistoryResultsHaveEqualBarCount(historyResults);
+                CheckThatHistoryResultsHaveDifferentPrices(historyResults,
+                    "History results prices should have been different for each data mapping mode at each time");
             }
         }
 
