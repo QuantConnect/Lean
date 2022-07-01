@@ -919,6 +919,7 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
 
             using (Py.GIL())
             {
+                _algorithm.SetPandasConverter();
                 dynamic symbol = language == Language.CSharp ? equity.Symbol : equity.Symbol.ToPython();
                 CheckHistoryResultsForDataNormalizationModes(_algorithm, symbol, _algorithm.Time.AddDays(-1), _algorithm.Time, equity.Resolution,
                     dataNormalizationModes);
@@ -940,6 +941,7 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
 
             using (Py.GIL())
             {
+                _algorithm.SetPandasConverter();
                 dynamic symbol = language == Language.CSharp ? future.Symbol : future.Symbol.ToPython();
                 CheckHistoryResultsForDataNormalizationModes(_algorithm, symbol, new DateTime(2013, 10, 6), _algorithm.Time, future.Resolution,
                     dataNormalizationModes);
@@ -1019,7 +1021,7 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
                 var historyResults = new List<PyObject>{ frontMonthHistory, backMonthHistory1, backMonthHistory2 };
                 CheckThatHistoryResultsHaveEqualBarCount(historyResults);
                 CheckThatHistoryResultsHaveDifferentPrices(historyResults,
-                    "History results prices should have been different for each data mapping mode at each time");
+                    "History results prices should have been different for each contract depth offset at each time");
                 }
             }
         }
@@ -1050,13 +1052,13 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
 
             using (Py.GIL())
             {
-                var getHistory = PyModule.FromString("testModule",
+                var getHistoryForDataNormalizationMode = PyModule.FromString("testModule",
                     @"
 from AlgorithmImports import *
 
-def getHistory(algorithm, symbol, start, end, resolution, dataNormalizationMode):
+def getHistoryForDataNormalizationMode(algorithm, symbol, start, end, resolution, dataNormalizationMode):
     return algorithm.History(TradeBar, symbol, start, end, resolution, dataNormalizationMode=dataNormalizationMode)
-        ").GetAttr("getHistory");
+        ").GetAttr("getHistoryForDataNormalizationMode");
 
                 algorithm.SetPandasConverter();
                 var symbol = algorithm.AddEquity("AAPL", Resolution.Minute).Symbol.ToPython();
@@ -1066,7 +1068,7 @@ def getHistory(algorithm, symbol, start, end, resolution, dataNormalizationMode)
                 var pyResolution = Resolution.Minute.ToPython();
                 var historyResults = dataNormalizationModes
                     .Select(dataNormalizationMode =>
-                        getHistory.Invoke(pyAlgorithm, symbol, pyStart, pyEnd, pyResolution, dataNormalizationMode.ToPython()))
+                        getHistoryForDataNormalizationMode.Invoke(pyAlgorithm, symbol, pyStart, pyEnd, pyResolution, dataNormalizationMode.ToPython()))
                     .ToList();
 
                 CheckThatHistoryResultsHaveEqualBarCount(historyResults);
@@ -1087,13 +1089,13 @@ def getHistory(algorithm, symbol, start, end, resolution, dataNormalizationMode)
 
             using (Py.GIL())
             {
-                var getHistory = PyModule.FromString("testModule",
+                var getHistoryForDataMappingMode = PyModule.FromString("testModule",
                     @"
 from AlgorithmImports import *
 
-def getHistory(algorithm, symbol, start, end, resolution, dataMappingMode):
+def getHistoryForDataMappingMode(algorithm, symbol, start, end, resolution, dataMappingMode):
     return algorithm.History(TradeBar, symbol, start, end, resolution, dataMappingMode=dataMappingMode)
-        ").GetAttr("getHistory");
+        ").GetAttr("getHistoryForDataMappingMode");
 
                 algorithm.SetPandasConverter();
                 using var symbols = symbol.ToPython();
@@ -1103,12 +1105,52 @@ def getHistory(algorithm, symbol, start, end, resolution, dataMappingMode):
                 var pyResolution = resolution.ToPython();
                 var historyResults = dataMappingModes
                     .Select(dataMappingMode =>
-                        getHistory.Invoke(pyAlgorithm, symbols, pyStart, pyEnd, pyResolution, dataMappingMode.ToPython()))
+                        getHistoryForDataMappingMode.Invoke(pyAlgorithm, symbols, pyStart, pyEnd, pyResolution, dataMappingMode.ToPython()))
                     .ToList();
 
                 CheckThatHistoryResultsHaveEqualBarCount(historyResults);
                 CheckThatHistoryResultsHaveDifferentPrices(historyResults,
                     "History results prices should have been different for each data mapping mode at each time");
+            }
+        }
+
+        [Test]
+        public void GetHistoryWithCustomDataAndContractDepthOffset()
+        {
+            var start = new DateTime(2013, 10, 6);
+            var end = new DateTime(2014, 1, 1);
+            var  algorithm = GetAlgorithmWithFuture(end);
+            var future = algorithm.SubscriptionManager.Subscriptions.First();
+
+            using (Py.GIL())
+            {
+                var getHistoryForContractDepthOffset = PyModule.FromString("testModule",
+                    @"
+from AlgorithmImports import *
+
+def getHistoryForContractDepthOffset(algorithm, symbol, start, end, resolution, contractDepthOffset):
+    return algorithm.History(QuoteBar, symbol, start, end, resolution, contractDepthOffset=contractDepthOffset)
+        ").GetAttr("getHistoryForContractDepthOffset");
+
+                algorithm.SetPandasConverter();
+                using var symbols = new PyList(new [] { future.Symbol.ToPython() });
+                var pyAlgorithm = algorithm.ToPython();
+                var pyStart = start.ToPython();
+                var pyEnd = end.ToPython();
+                var pyResolution = future.Resolution.ToPython();
+
+                var frontMonthHistory = getHistoryForContractDepthOffset.Invoke(pyAlgorithm, symbols, pyStart, pyEnd, pyResolution, 0.ToPython());
+                var backMonthHistory1 = getHistoryForContractDepthOffset.Invoke(pyAlgorithm, symbols, pyStart, pyEnd, pyResolution, 1.ToPython());
+                var backMonthHistory2 = getHistoryForContractDepthOffset.Invoke(pyAlgorithm, symbols, pyStart, pyEnd, pyResolution, 2.ToPython());
+
+                Assert.Greater(frontMonthHistory.GetAttr("shape")[0].As<int>(), 0);
+                Assert.Greater(backMonthHistory1.GetAttr("shape")[0].As<int>(), 0);
+                Assert.Greater(backMonthHistory2.GetAttr("shape")[0].As<int>(), 0);
+
+                var historyResults = new List<PyObject>{ frontMonthHistory, backMonthHistory1, backMonthHistory2 };
+                CheckThatHistoryResultsHaveEqualBarCount(historyResults);
+                CheckThatHistoryResultsHaveDifferentPrices(historyResults,
+                    "History results prices should have been different for each contract depth offset at each time");
             }
         }
 
@@ -1251,6 +1293,21 @@ def getHistory(algorithm, symbol, start, end, resolution, dataMappingMode):
         {
             var historyResults = dataNormalizationModes
                 .Select(x => algorithm.History(new [] { symbol }, start, end, resolution, dataNormalizationMode: x).ToList())
+                .ToList();
+
+            CheckThatHistoryResultsHaveEqualBarCount(historyResults);
+            CheckThatHistoryResultsHaveDifferentPrices(historyResults,
+                "History results prices should have been different for each data normalization mode at each time");
+        }
+
+        /// <summary>
+        /// Helper method to perform history checks on different data normalization modes
+        /// </summary>
+        private static void CheckHistoryResultsForDataNormalizationModes(QCAlgorithm algorithm, PyObject symbol, DateTime start,
+            DateTime end, Resolution resolution, DataNormalizationMode[] dataNormalizationModes)
+        {
+            var historyResults = dataNormalizationModes
+                .Select(x => algorithm.History(symbol, start, end, resolution, dataNormalizationMode: x))
                 .ToList();
 
             CheckThatHistoryResultsHaveEqualBarCount(historyResults);
