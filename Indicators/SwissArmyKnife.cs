@@ -23,25 +23,25 @@ namespace QuantConnect.Indicators
     public enum SwissArmyKnifeTool
     {
         /// <summary>
-        /// Two Pole Gaussian Filter
+        /// Two Pole Gaussian Filter (0)
         /// </summary>
         Gauss,
         /// <summary>
-        /// Two Pole Butterworth Filter
+        /// Two Pole Butterworth Filter (1)
         /// </summary>
         Butter,
         /// <summary>
-        /// High Pass Filter
+        /// High Pass Filter (2)
         /// </summary>
         HighPass,
         /// <summary>
-        /// Two Pole High Pass Filter
+        /// Two Pole High Pass Filter (3)
         /// </summary>
         TwoPoleHighPass,
         /// <summary>
-        /// BandPass Filter
+        /// BandPass Filter (4)
         /// </summary>
-        BandPass,
+        BandPass
     }
 
     /// <summary>

@@ -287,22 +287,22 @@ namespace QuantConnect.Indicators
     public enum PivotPointType
     {
         /// <summary>
-        /// Low pivot point
+        /// Low pivot point (-1)
         /// </summary>
         Low = -1,
 
         /// <summary>
-        /// No pivot point
+        /// No pivot point (0)
         /// </summary>
         None = 0,
 
         /// <summary>
-        /// High pivot point
+        /// High pivot point (1)
         /// </summary>
         High = 1,
 
         /// <summary>
-        /// Both high and low pivot point
+        /// Both high and low pivot point (2)
         /// </summary>
         Both = 2
     }

@@ -26,12 +26,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     public enum InsightScoreType
     {
         /// <summary>
-        /// Directional accuracy
+        /// Directional accuracy (0)
         /// </summary>
         Direction,
 
         /// <summary>
-        /// Magnitude accuracy
+        /// Magnitude accuracy (1)
         /// </summary>
         Magnitude
     }

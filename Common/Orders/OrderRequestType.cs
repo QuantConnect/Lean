@@ -21,17 +21,17 @@ namespace QuantConnect.Orders
     public enum OrderRequestType
     {
         /// <summary>
-        /// The request is a <see cref="SubmitOrderRequest"/>
+        /// The request is a <see cref="SubmitOrderRequest"/> (0)
         /// </summary>
         Submit,
 
         /// <summary>
-        /// The request is a <see cref="UpdateOrderRequest"/>
+        /// The request is a <see cref="UpdateOrderRequest"/> (1)
         /// </summary>
         Update,
 
         /// <summary>
-        /// The request is a <see cref="CancelOrderRequest"/>
+        /// The request is a <see cref="CancelOrderRequest"/> (2)
         /// </summary>
         Cancel
     }
