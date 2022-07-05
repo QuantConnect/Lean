@@ -16,6 +16,7 @@
 
 using System;
 using System.Linq;
+using System.IO;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Securities;
@@ -108,11 +109,79 @@ namespace QuantConnect.Tests.Algorithm
         [TestCaseSource(nameof(GetDataNormalizationModes))]
         public void AddsEquityWithExpectedDataNormalizationMode(DataNormalizationMode dataNormalizationMode)
         {
-            var algorithm = new QCAlgorithm();
-            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_dataFeed, algorithm));
-            var equity = algorithm.AddEquity("AAPL", dataNormalizationMode: dataNormalizationMode);
-            Assert.That(algorithm.SubscriptionManager.Subscriptions.Where(x => x.Symbol == equity.Symbol).Select(x => x.DataNormalizationMode),
+            var equity = _algo.AddEquity("AAPL", dataNormalizationMode: dataNormalizationMode);
+            Assert.That(_algo.SubscriptionManager.Subscriptions.Where(x => x.Symbol == equity.Symbol).Select(x => x.DataNormalizationMode),
                 Has.All.EqualTo(dataNormalizationMode));
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void AddFutureWithExtendedMarketHours(bool extendedMarketHours)
+        {
+            var future = _algo.AddFuture("ES", Resolution.Minute, extendedMarketHours: extendedMarketHours);
+            Assert.That(_algo.SubscriptionManager.Subscriptions.Where(x => x.Symbol == future.Symbol).Select(x => x.ExtendedMarketHours),
+                Has.All.EqualTo(extendedMarketHours));
+        }
+
+        [Test]
+        public void AddFutureWithExtendedMarketHours33333333333333333333333333333333()
+        {
+            string file = Path.Combine("TestData", "SampleMarketHoursDatabase.json");
+            var marketHoursDatabase = MarketHoursDatabase.FromFile(file);
+            var securityService = new SecurityService(
+                _algo.Portfolio.CashBook,
+                marketHoursDatabase,
+                SymbolPropertiesDatabase.FromDataFolder(),
+                _algo,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCacheProvider(_algo.Portfolio));
+            _algo.Securities.SetSecurityService(securityService);
+
+            var future = _algo.AddFuture("VX", Resolution.Minute, extendedMarketHours: true);
+
+            var now = new DateTime(2022, 6, 26, 17, 0, 0);
+            Assert.AreEqual(DayOfWeek.Sunday, now.DayOfWeek);
+            var regularMarketStartTime = new TimeSpan(8, 30, 0);
+            var regularMarketEndTime = new TimeSpan(16, 0, 0);
+            var extendedMarketStartTime = new TimeSpan(17, 0, 0);
+            while (now.DayOfWeek < DayOfWeek.Saturday)
+            {
+                while (now.TimeOfDay < regularMarketStartTime)
+                {
+                    Assert.IsFalse(future.Exchange.Hours.IsOpen(now, false));
+                    Assert.IsTrue(future.Exchange.Hours.IsOpen(now, true));
+                    now = now.AddMinutes(1);
+                }
+
+                while (now.TimeOfDay < regularMarketEndTime)
+                {
+                    Assert.IsTrue(future.Exchange.Hours.IsOpen(now, false));
+                    Assert.IsTrue(future.Exchange.Hours.IsOpen(now, true));
+                    now = now.AddMinutes(1);
+                }
+
+                while (now.TimeOfDay < extendedMarketStartTime)
+                {
+                    Assert.IsFalse(future.Exchange.Hours.IsOpen(now, false));
+                    Assert.IsFalse(future.Exchange.Hours.IsOpen(now, true));
+                    now = now.AddMinutes(1);
+                }
+
+                var endOfDay = now.AddDays(1).Date;
+                if (now.DayOfWeek < DayOfWeek.Friday)
+                {
+                    while (now < endOfDay)
+                    {
+                        Assert.IsFalse(future.Exchange.Hours.IsOpen(now, false));
+                        Assert.IsTrue(future.Exchange.Hours.IsOpen(now, true), $"{now} {endOfDay}");
+                        now = now.AddMinutes(1);
+                    }
+                }
+                else
+                {
+                    now = endOfDay;
+                }
+            }
         }
 
         private static TestCaseData[] TestAddSecurityWithSymbol
