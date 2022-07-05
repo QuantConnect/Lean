@@ -51,17 +51,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         _currentDownloads.TryRemove(key, out _);
                         return base.Fetch(key);
                     }
-
-                    // this is rare
-                    _currentDownloads.TryGetValue(key, out var existingKey);
-                    lock (existingKey ?? new object())
-                    {
-                        return base.Fetch(key);
-                    }
                 }
             }
 
-            return base.Fetch(key);
+            // even though we should not download in this path, we need to wait for any download in progress to be finished
+            // in this case it would be present in the '_currentDownloads' collection with it's lock taken
+            _currentDownloads.TryGetValue(key, out var existingKey);
+            lock (existingKey ?? new object())
+            {
+                return base.Fetch(key);
+            }
         }
 
         /// <summary>
