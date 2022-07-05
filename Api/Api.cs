@@ -38,6 +38,7 @@ namespace QuantConnect.Api
     /// </summary>
     public class Api : IApi, IDownloadProvider
     {
+        private readonly HttpClient _client = new HttpClient();
         private string _dataFolder;
 
         /// <summary>
@@ -877,9 +878,7 @@ namespace QuantConnect.Api
             {
                 // Download the file
                 var uri = new Uri(dataLink.Url);
-
-                using var client = new HttpClient();
-                using var dataStream = client.GetStreamAsync(uri);
+                using var dataStream = _client.GetStreamAsync(uri);
 
                 using var fileStream = new FileStream(filePath, FileMode.Create);
                 dataStream.Result.CopyTo(fileStream);
@@ -997,7 +996,7 @@ namespace QuantConnect.Api
         /// <filterpriority>2</filterpriority>
         public virtual void Dispose()
         {
-            // NOP
+            _client.DisposeSafely();
         }
 
         /// <summary>
