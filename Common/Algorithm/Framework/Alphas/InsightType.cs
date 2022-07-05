@@ -25,12 +25,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     public enum InsightType
     {
         /// <summary>
-        /// The insight is for a security's price
+        /// The insight is for a security's price (0)
         /// </summary>
         Price,
 
         /// <summary>
-        /// The insight is for a security's price volatility
+        /// The insight is for a security's price volatility (1)
         /// </summary>
         Volatility
     }

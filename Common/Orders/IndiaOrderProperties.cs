@@ -33,17 +33,17 @@ namespace QuantConnect.Orders
         public enum IndiaProductType
         {
             /// <summary>
-            /// Margin Intraday Square Off 
+            /// Margin Intraday Square Off (0)
             /// </summary>
             MIS,
 
             /// <summary>
-            /// Cash and Carry 
+            /// Cash and Carry (1)
             /// </summary>
             CNC,
 
             /// <summary>
-            /// Normal
+            /// Normal (2)
             /// </summary>
             NRML
         }

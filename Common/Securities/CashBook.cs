@@ -437,15 +437,15 @@ namespace QuantConnect.Securities
         public enum UpdateType
         {
             /// <summary>
-            /// A new <see cref="Cash.Symbol"/> was added
+            /// A new <see cref="Cash.Symbol"/> was added (0)
             /// </summary>
             Added,
             /// <summary>
-            /// One or more <see cref="Cash"/> instances were removed
+            /// One or more <see cref="Cash"/> instances were removed (1)
             /// </summary>
             Removed,
             /// <summary>
-            /// An existing <see cref="Cash.Symbol"/> was updated
+            /// An existing <see cref="Cash.Symbol"/> was updated (2)
             /// </summary>
             Updated
         }

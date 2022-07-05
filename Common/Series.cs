@@ -307,21 +307,21 @@ namespace QuantConnect
     /// </summary>
     public enum SeriesType
     {
-        /// Line Plot for Value Types
+        /// Line Plot for Value Types (0)
         Line,
-        /// Scatter Plot for Chart Distinct Types
+        /// Scatter Plot for Chart Distinct Types (1)
         Scatter,
-        /// Charts
+        /// Charts (2)
         Candle,
-        /// Bar chart.
+        /// Bar chart (3)
         Bar,
-        /// Flag indicators
+        /// Flag indicators (4)
         Flag,
-        /// 100% area chart showing relative proportions of series values at each time index
+        /// 100% area chart showing relative proportions of series values at each time index (5)
         StackedArea,
-        /// Pie chart
+        /// Pie chart (6)
         Pie,
-        /// Treemap Plot
+        /// Treemap Plot (7)
         Treemap
     }
 
@@ -331,23 +331,23 @@ namespace QuantConnect
     [JsonConverter(typeof(StringEnumConverter))]
     public enum ScatterMarkerSymbol
     {
-        /// Circle symbol
+        /// Circle symbol (0)
         [EnumMember(Value = "none")]
         None,
-        /// Circle symbol
+        /// Circle symbol (1)
         [EnumMember(Value = "circle")]
         Circle,
-        /// Square symbol
+        /// Square symbol (2)
         [EnumMember(Value = "square")]
         Square,
-        /// Diamond symbol
+        /// Diamond symbol (3)
         [EnumMember(Value = "diamond")]
         Diamond,
-        /// Triangle symbol
+        /// Triangle symbol (4)
         [EnumMember(Value = "triangle")]
         Triangle,
-        /// Triangle-down symbol
+        /// Triangle-down symbol (5)
         [EnumMember(Value = "triangle-down")]
-        TriangleDown,
+        TriangleDown
     }
 }

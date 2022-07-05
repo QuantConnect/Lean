@@ -21,22 +21,22 @@ namespace QuantConnect.Indicators
     public enum IndicatorStatus
     {
         /// <summary>
-        /// The indicator successfully calculated a value for the input data
+        /// The indicator successfully calculated a value for the input data (0)
         /// </summary>
         Success,
 
         /// <summary>
-        /// The indicator detected an invalid input data point or tradebar
+        /// The indicator detected an invalid input data point or tradebar (1)
         /// </summary>
         InvalidInput,
 
         /// <summary>
-        /// The indicator encountered a math error during calculations
+        /// The indicator encountered a math error during calculations (2)
         /// </summary>
         MathError,
 
         /// <summary>
-        /// The indicator value is not ready
+        /// The indicator value is not ready (3)
         /// </summary>
         ValueNotReady
     }
