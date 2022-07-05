@@ -68,15 +68,15 @@ namespace QuantConnect.Tests.Algorithm
             _cacheProvider.DisposeSafely();
         }
 
-        [TestCase(Resolution.Daily, Language.CSharp)]
-        [TestCase(Resolution.Hour, Language.CSharp)]
-        [TestCase(Resolution.Minute, Language.CSharp)]
-        [TestCase(Resolution.Second, Language.CSharp)]
-        [TestCase(Resolution.Daily, Language.Python)]
-        [TestCase(Resolution.Hour, Language.Python)]
-        [TestCase(Resolution.Minute, Language.Python)]
-        [TestCase(Resolution.Second, Language.Python)]
-        public void TickResolutionSubscriptionHistoryRequestOtherResolution(Resolution resolution, Language language)
+        [TestCase(Resolution.Daily, Language.CSharp, 2)]
+        [TestCase(Resolution.Hour, Language.CSharp, 14)]
+        [TestCase(Resolution.Minute, Language.CSharp, 780)]
+        [TestCase(Resolution.Second, Language.CSharp, 45676)]
+        [TestCase(Resolution.Daily, Language.Python, 2)]
+        [TestCase(Resolution.Hour, Language.Python, 14)]
+        [TestCase(Resolution.Minute, Language.Python, 780)]
+        [TestCase(Resolution.Second, Language.Python, 33948)]
+        public void TickResolutionSubscriptionHistoryRequestOtherResolution(Resolution resolution, Language language, int expectedHistoryCount)
         {
             var start = new DateTime(2013, 10, 07);
             _algorithm = GetAlgorithm(start.AddDays(2));
@@ -88,7 +88,7 @@ namespace QuantConnect.Tests.Algorithm
                 // Trades and quotes
                 var result = _algorithm.History(new [] { Symbols.SPY }, start, _algorithm.Time, resolution).ToList();
 
-                Assert.IsNotEmpty(result);
+                Assert.AreEqual(expectedHistoryCount, result.Count);
                 Assert.IsTrue(result.All(slice =>
                 {
                     foreach (var bar in slice.Bars.Values)
@@ -107,25 +107,23 @@ namespace QuantConnect.Tests.Algorithm
             {
                 using (Py.GIL())
                 {
-                    var getHistoryTimes = PyModule.FromString("testModule",
+                    var getHistory = PyModule.FromString("testModule",
                         @"
 from AlgorithmImports import *
-from QuantConnect.Tests import *
-from datetime import datetime
 
-def getHistoryTimes(algorithm, symbol, start, resolution):
-    return algorithm.History(symbol, start, algorithm.Time, resolution).loc[symbol].index.tolist()
-        ").GetAttr("getHistoryTimes");
+def getHistory(algorithm, symbol, start, resolution):
+    return algorithm.History(symbol, start, algorithm.Time, resolution).loc[symbol]
+        ").GetAttr("getHistory");
 
                     _algorithm.SetPandasConverter();
 
-                    var result = getHistoryTimes
-                        .Invoke(_algorithm.ToPython(), Symbols.SPY.ToPython(), start.ToPython(), resolution.ToPython())
-                        .As<List<DateTime>>();
-                    Assert.IsNotEmpty(result);
+                    var result = getHistory.Invoke(_algorithm.ToPython(), Symbols.SPY.ToPython(), start.ToPython(), resolution.ToPython());
+                    Assert.AreEqual(expectedHistoryCount, result.GetAttr("shape")[0].As<int>());
 
-                    var prevDateTime = result[0].Subtract(resolution.ToTimeSpan());
-                    Assert.IsTrue(result.Any(time =>
+                    var times = result.GetAttr("index").GetAttr("tolist").Invoke().As<List<DateTime>>();
+
+                    var prevDateTime = times[0].Subtract(resolution.ToTimeSpan());
+                    Assert.IsTrue(times.Any(time =>
                     {
                         var timeSpan = time - prevDateTime;
                         prevDateTime = time;
@@ -165,8 +163,6 @@ def getHistoryTimes(algorithm, symbol, start, resolution):
                     var pythonModule = PyModule.FromString("testModule",
                         @"
 from AlgorithmImports import *
-from QuantConnect.Tests import *
-from datetime import timedelta
 
 def getTradesAndQuotesHistory(algorithm, symbol, start):
     return algorithm.History([symbol], start + timedelta(hours=12), start + timedelta(hours=12.2), Resolution.Second).loc[symbol].to_dict()
@@ -521,7 +517,6 @@ class Test(PythonData):
             {
                 var openInterests = _algorithm.History<OpenInterest>(optionSymbol, start, end, historyResolution).ToList();
 
-                Assert.IsNotEmpty(openInterests);
                 Assert.AreEqual(2, openInterests.Count);
                 Assert.AreEqual(new DateTime(2014, 06, 05, 6, 31, 0), openInterests[0].Time);
                 Assert.AreEqual(optionSymbol, openInterests[0].Symbol);
@@ -535,8 +530,6 @@ class Test(PythonData):
                     var getOpenInterestHistory = PyModule.FromString("testModule",
                         @"
 from AlgorithmImports import *
-from QuantConnect.Tests import *
-from datetime import datetime
 
 def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
     return algorithm.History(OpenInterest, symbol, start, end, resolution).reset_index().to_dict()
@@ -580,7 +573,7 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
             {
                 var result = _algorithm.History(new[] { optionSymbol }, start, end, historyResolution, fillForward:false).ToList();
 
-                Assert.IsNotEmpty(result);
+                Assert.AreEqual(53, result.Count);
                 Assert.IsTrue(result.Any(slice => slice.ContainsKey(optionSymbol)));
 
                 var openInterests = result.Select(slice => slice.Get(typeof(OpenInterest)) as DataDictionary<OpenInterest>).Where(dataDictionary => dataDictionary.Count > 0).ToList();
@@ -594,21 +587,19 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
                     var getOpenInterestHistory = PyModule.FromString("testModule",
                         @"
 from AlgorithmImports import *
-from QuantConnect.Tests import *
-from datetime import datetime
 
 def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
-    return algorithm.History(symbol, start, end, resolution).to_dict()
+    return algorithm.History(symbol, start, end, resolution)
         ").GetAttr("getOpenInterestHistory");
 
                     _algorithm.SetPandasConverter();
                     using var symbols = new PyList(new [] {optionSymbol.ToPython()});
-                    var openInterests = getOpenInterestHistory
-                        .Invoke(_algorithm.ToPython(), symbols, start.ToPython(), end.ToPython(),
-                            historyResolution.ToPython())
-                        .ConvertToDictionary<string, dynamic>();
+                    var openInterests = getOpenInterestHistory.Invoke(_algorithm.ToPython(), symbols, start.ToPython(), end.ToPython(),
+                        historyResolution.ToPython());
+                    Assert.AreEqual(780, openInterests.GetAttr("shape")[0].As<int>());
 
-                    Assert.That(openInterests, Does.Not.ContainKey("openinterest"));
+                    var dataFrameDict = openInterests.GetAttr("to_dict").Invoke().ConvertToDictionary<string, dynamic>();
+                    Assert.That(dataFrameDict, Does.Not.ContainKey("openinterest"));
                 }
             }
         }
@@ -631,8 +622,7 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
             {
                 var result = _algorithm.History(new[] { optionSymbol, optionSymbol2 }, start, end, historyResolution, fillForward: false).ToList();
 
-                Assert.IsNotEmpty(result);
-
+                Assert.AreEqual(415, result.Count);
                 Assert.IsTrue(result.Any(slice => slice.ContainsKey(optionSymbol)));
                 Assert.IsTrue(result.Any(slice => slice.ContainsKey(optionSymbol2)));
 
@@ -647,23 +637,25 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
                     var getOpenInterestHistory = PyModule.FromString("testModule",
                         @"
 from AlgorithmImports import *
-from QuantConnect.Tests import *
-from datetime import datetime
 
 def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
-    return algorithm.History(symbol, start, end, resolution).reset_index().to_dict()
+    return algorithm.History(symbol, start, end, resolution)
         ").GetAttr("getOpenInterestHistory");
 
                     _algorithm.SetPandasConverter();
                     using var symbols = new PyList(new [] { optionSymbol.ToPython(), optionSymbol2.ToPython() });
                     var result = getOpenInterestHistory
-                        .Invoke(_algorithm.ToPython(), symbols, start.ToPython(), end.ToPython(), historyResolution.ToPython())
-                        .ConvertToDictionary<string, PyObject>();
+                        .Invoke(_algorithm.ToPython(), symbols, start.ToPython(), end.ToPython(), historyResolution.ToPython());
+                    Assert.AreEqual(1170, result.GetAttr("shape")[0].As<int>());
 
-                    var dataFrameSymbols = result["symbol"].ConvertToDictionary<int, string>().Values.ToHashSet();
+                    var dataFrameDict = result
+                        .GetAttr("reset_index").Invoke()
+                        .GetAttr("to_dict").Invoke()
+                        .ConvertToDictionary<string, PyObject>();
+                    var dataFrameSymbols = dataFrameDict["symbol"].ConvertToDictionary<int, string>().Values.ToHashSet();
                     CollectionAssert.AreEquivalent(dataFrameSymbols, new[] { optionSymbol.ID.ToString(), optionSymbol2.ID.ToString() });
 
-                    Assert.That(result, Does.Not.ContainKey("openinterest"));
+                    Assert.That(dataFrameDict, Does.Not.ContainKey("openinterest"));
                 }
             }
         }
@@ -678,6 +670,7 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
             var resolution = Resolution.Daily;
             _algorithm = GetAlgorithm(historyEnd);
             var symbol = _algorithm.AddFuture(Futures.Indices.SP500EMini, resolution, dataMappingMode: dataMappingModes.First()).Symbol;
+            var expectedHistoryCount = 74;
 
             if (language == Language.CSharp)
             {
@@ -685,7 +678,7 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
                     .Select(x => _algorithm.History(new [] { symbol }, historyStart, historyEnd, resolution, dataMappingMode: x).ToList())
                     .ToList();
 
-                CheckThatHistoryResultsHaveEqualBarCount(historyResults);
+                CheckThatHistoryResultsHaveEqualBarCount(historyResults, expectedHistoryCount);
 
                 // Check that all history results have a mapping date at some point in the history
                 HashSet<DateTime> mappingDates = new HashSet<DateTime>();
@@ -729,7 +722,7 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
                         .Select(x => _algorithm.History(symbols, historyStart, historyEnd, resolution, dataMappingMode: x))
                         .ToList();
 
-                    CheckThatHistoryResultsHaveEqualBarCount(historyResults);
+                    CheckThatHistoryResultsHaveEqualBarCount(historyResults, expectedHistoryCount);
                     CheckThatHistoryResultsHaveDifferentPrices(historyResults,
                         "History results prices should have been different for each data mapping mode at each time");
                 }
@@ -922,7 +915,7 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
                 _algorithm.SetPandasConverter();
                 dynamic symbol = language == Language.CSharp ? equity.Symbol : equity.Symbol.ToPython();
                 CheckHistoryResultsForDataNormalizationModes(_algorithm, symbol, _algorithm.Time.AddDays(-1), _algorithm.Time, equity.Resolution,
-                    dataNormalizationModes);
+                    dataNormalizationModes, expectedHistoryCount: 390);
             }
         }
 
@@ -944,7 +937,7 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
                 _algorithm.SetPandasConverter();
                 dynamic symbol = language == Language.CSharp ? future.Symbol : future.Symbol.ToPython();
                 CheckHistoryResultsForDataNormalizationModes(_algorithm, symbol, new DateTime(2013, 10, 6), _algorithm.Time, future.Resolution,
-                    dataNormalizationModes);
+                    dataNormalizationModes, expectedHistoryCount: 74);
             }
         }
 
@@ -956,6 +949,7 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
             var end = new DateTime(2014, 1, 1);
             _algorithm = GetAlgorithmWithFuture(end);
             var future = _algorithm.SubscriptionManager.Subscriptions.First();
+            var expectedHistoryCount = 74;
 
             if (language == Language.CSharp)
             {
@@ -967,9 +961,6 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
                 var frontMonthHistory = getHistoryForContractDepthOffset(0);
                 var backMonthHistory1 = getHistoryForContractDepthOffset(1);
                 var backMonthHistory2 = getHistoryForContractDepthOffset(2);
-                Assert.IsNotEmpty(frontMonthHistory);
-                Assert.IsNotEmpty(backMonthHistory1);
-                Assert.IsNotEmpty(backMonthHistory2);
 
                 Func<List<Slice>, HashSet<Symbol>> getHistoryUnderlyings = (history) =>
                 {
@@ -994,7 +985,7 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
                 Assert.AreNotEqual(backMonthHistory1Underlyings, backMonthHistory2Underlyings);
 
                 var historyResults = new List<List<Slice>>{ frontMonthHistory, backMonthHistory1, backMonthHistory2 };
-                CheckThatHistoryResultsHaveEqualBarCount(historyResults);
+                CheckThatHistoryResultsHaveEqualBarCount(historyResults, expectedHistoryCount);
                 CheckThatHistoryResultsHaveDifferentPrices(historyResults,
                     "History results prices should have been different for each data mapping mode at each time");
             }
@@ -1019,7 +1010,7 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
                     Assert.Greater(backMonthHistory2.GetAttr("shape")[0].As<int>(), 0);
 
                 var historyResults = new List<PyObject>{ frontMonthHistory, backMonthHistory1, backMonthHistory2 };
-                CheckThatHistoryResultsHaveEqualBarCount(historyResults);
+                CheckThatHistoryResultsHaveEqualBarCount(historyResults, expectedHistoryCount);
                 CheckThatHistoryResultsHaveDifferentPrices(historyResults,
                     "History results prices should have been different for each contract depth offset at each time");
                 }
@@ -1031,9 +1022,9 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
         {
             var algorithm = GetAlgorithm(new DateTime(2013, 10, 8));
             var symbol = algorithm.AddData<CustomData>("SPY").Symbol;
-            var history = algorithm.History<CustomData>(symbol, algorithm.StartDate, algorithm.EndDate, Resolution.Minute);
+            var history = algorithm.History<CustomData>(symbol, algorithm.StartDate, algorithm.EndDate, Resolution.Minute).ToList();
 
-            Assert.IsNotEmpty(history);
+            Assert.That(history, Has.Count.EqualTo(1539));
             Assert.That(history, Has.All.Property("DataType").EqualTo(MarketDataType.Base));
             Assert.IsTrue(_testHistoryProvider.HistryRequests.All(x => x.IsCustomData));
         }
@@ -1071,7 +1062,7 @@ def getHistoryForDataNormalizationMode(algorithm, symbol, start, end, resolution
                         getHistoryForDataNormalizationMode.Invoke(pyAlgorithm, symbol, pyStart, pyEnd, pyResolution, dataNormalizationMode.ToPython()))
                     .ToList();
 
-                CheckThatHistoryResultsHaveEqualBarCount(historyResults);
+                CheckThatHistoryResultsHaveEqualBarCount(historyResults, expectedHistoryCount: 390);
                 CheckThatHistoryResultsHaveDifferentPrices(historyResults,
                     "History results prices should have been different for each data normalization mode at each time");
             }
@@ -1108,7 +1099,7 @@ def getHistoryForDataMappingMode(algorithm, symbol, start, end, resolution, data
                         getHistoryForDataMappingMode.Invoke(pyAlgorithm, symbols, pyStart, pyEnd, pyResolution, dataMappingMode.ToPython()))
                     .ToList();
 
-                CheckThatHistoryResultsHaveEqualBarCount(historyResults);
+                CheckThatHistoryResultsHaveEqualBarCount(historyResults, expectedHistoryCount: 74);
                 CheckThatHistoryResultsHaveDifferentPrices(historyResults,
                     "History results prices should have been different for each data mapping mode at each time");
             }
@@ -1148,7 +1139,7 @@ def getHistoryForContractDepthOffset(algorithm, symbol, start, end, resolution, 
                 Assert.Greater(backMonthHistory2.GetAttr("shape")[0].As<int>(), 0);
 
                 var historyResults = new List<PyObject>{ frontMonthHistory, backMonthHistory1, backMonthHistory2 };
-                CheckThatHistoryResultsHaveEqualBarCount(historyResults);
+                CheckThatHistoryResultsHaveEqualBarCount(historyResults, expectedHistoryCount: 74);
                 CheckThatHistoryResultsHaveDifferentPrices(historyResults,
                     "History results prices should have been different for each contract depth offset at each time");
             }
@@ -1243,20 +1234,18 @@ def getHistoryForContractDepthOffset(algorithm, symbol, start, end, resolution, 
         /// <summary>
         /// Helper method to check that all history results have the same bar count
         /// </summary>
-        private static void CheckThatHistoryResultsHaveEqualBarCount(List<List<Slice>> historyResults)
+        private static void CheckThatHistoryResultsHaveEqualBarCount(List<List<Slice>> historyResults, int expectedHistoryCount)
         {
-            var expectedBarsCount = historyResults.First().Count;
-            Assert.That(historyResults, Has.All.Not.Empty.And.All.Count.EqualTo(expectedBarsCount));
+            Assert.That(historyResults, Has.All.Not.Empty.And.All.Count.EqualTo(expectedHistoryCount));
         }
 
         /// <summary>
         /// Helper method to check that all history data frame results have the same bar count
         /// </summary>
-        private static void CheckThatHistoryResultsHaveEqualBarCount(List<PyObject> historyResults)
+        private static void CheckThatHistoryResultsHaveEqualBarCount(List<PyObject> historyResults, int expectedHistoryCount)
         {
-            var expectedBarsCount = historyResults.First().GetAttr("shape")[0].As<int>();
-            Assert.Greater(expectedBarsCount, 0);
-            Assert.IsTrue(historyResults.All(x => x.GetAttr("shape")[0].As<int>() == expectedBarsCount));
+            Assert.Greater(expectedHistoryCount, 0);
+            Assert.IsTrue(historyResults.All(x => x.GetAttr("shape")[0].As<int>() == expectedHistoryCount));
         }
 
         /// <summary>
@@ -1289,13 +1278,13 @@ def getHistoryForContractDepthOffset(algorithm, symbol, start, end, resolution, 
         /// Helper method to perform history checks on different data normalization modes
         /// </summary>
         private static void CheckHistoryResultsForDataNormalizationModes(QCAlgorithm algorithm, Symbol symbol, DateTime start,
-            DateTime end, Resolution resolution, DataNormalizationMode[] dataNormalizationModes)
+            DateTime end, Resolution resolution, DataNormalizationMode[] dataNormalizationModes, int expectedHistoryCount)
         {
             var historyResults = dataNormalizationModes
                 .Select(x => algorithm.History(new [] { symbol }, start, end, resolution, dataNormalizationMode: x).ToList())
                 .ToList();
 
-            CheckThatHistoryResultsHaveEqualBarCount(historyResults);
+            CheckThatHistoryResultsHaveEqualBarCount(historyResults, expectedHistoryCount);
             CheckThatHistoryResultsHaveDifferentPrices(historyResults,
                 "History results prices should have been different for each data normalization mode at each time");
         }
@@ -1304,13 +1293,13 @@ def getHistoryForContractDepthOffset(algorithm, symbol, start, end, resolution, 
         /// Helper method to perform history checks on different data normalization modes
         /// </summary>
         private static void CheckHistoryResultsForDataNormalizationModes(QCAlgorithm algorithm, PyObject symbol, DateTime start,
-            DateTime end, Resolution resolution, DataNormalizationMode[] dataNormalizationModes)
+            DateTime end, Resolution resolution, DataNormalizationMode[] dataNormalizationModes, int expectedHistoryCount)
         {
             var historyResults = dataNormalizationModes
                 .Select(x => algorithm.History(symbol, start, end, resolution, dataNormalizationMode: x))
                 .ToList();
 
-            CheckThatHistoryResultsHaveEqualBarCount(historyResults);
+            CheckThatHistoryResultsHaveEqualBarCount(historyResults, expectedHistoryCount);
             CheckThatHistoryResultsHaveDifferentPrices(historyResults,
                 "History results prices should have been different for each data normalization mode at each time");
         }
