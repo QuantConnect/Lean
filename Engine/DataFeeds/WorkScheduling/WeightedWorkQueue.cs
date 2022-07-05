@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,14 +15,17 @@
 */
 
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Threading;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
 {
     internal class WeightedWorkQueue
     {
+        private int _pointer;
+        private bool _removed;
         private readonly List<WorkItem> _workQueue;
 
         /// <summary>
@@ -45,36 +48,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
         }
 
         /// <summary>
-        /// Updates the weights and sorts the work in the queue
-        /// </summary>
-        public void Sort()
-        {
-            var notifyWork = false;
-            lock (_workQueue)
-            {
-                for (var i = 0; i < _workQueue.Count; i++)
-                {
-                    _workQueue[i].UpdateWeight();
-                    if (_workQueue[i].Weight < WeightedWorkScheduler.MaxWorkWeight)
-                    {
-                        notifyWork = true;
-                    }
-                }
-                _workQueue.Sort(WorkItem.Compare);
-            }
-            if (notifyWork)
-            {
-                _workAvailableEvent.Set();
-            }
-        }
-
-        /// <summary>
         /// This is the worker thread loop.
         /// It will first try to take a work item from the new work queue else will check his own queue.
         /// </summary>
         public void WorkerThread(ConcurrentQueue<WorkItem> newWork, AutoResetEvent newWorkEvent)
         {
             var waitHandles = new WaitHandle[] { _workAvailableEvent, newWorkEvent };
+            var waitedPreviousLoop = 0;
             while (true)
             {
                 WorkItem workItem;
@@ -84,7 +64,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
                     if (workItem == null)
                     {
                         // no work to do, lets sleep and try again
-                        WaitHandle.WaitAny(waitHandles, 100);
+                        WaitHandle.WaitAny(waitHandles, Math.Min(1 + (waitedPreviousLoop * 10), 250));
+                        waitedPreviousLoop++;
                         continue;
                     }
                 }
@@ -95,6 +76,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
 
                 try
                 {
+                    waitedPreviousLoop = 0;
                     if (!workItem.Work(WeightedWorkScheduler.WorkBatchSize))
                     {
                         Remove(workItem);
@@ -114,10 +96,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
         /// <param name="work">The work to add</param>
         private void Add(WorkItem work)
         {
-            lock (_workQueue)
-            {
-                _workQueue.Add(work);
-            }
+            _workQueue.Add(work);
         }
 
         /// <summary>
@@ -126,33 +105,55 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
         /// <param name="workItem">The work item to remove</param>
         private void Remove(WorkItem workItem)
         {
-            lock (_workQueue)
-            {
-                _workQueue.Remove(workItem);
-            }
+            _workQueue.Remove(workItem);
+            _removed = true;
         }
 
         /// <summary>
-        /// Gets the next work item to execute, null if none is available
+        /// Gets the next work item to process
         /// </summary>
-        private WorkItem Get()
+        /// <returns>The work item to process, null if none available</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected WorkItem Get()
         {
-            WorkItem potentialWorkItem = null;
-            lock (_workQueue)
+            var count = _workQueue.Count;
+            if (count == 0)
             {
-                if (_workQueue.Count != 0)
-                {
-                    potentialWorkItem = _workQueue[_workQueue.Count - 1];
+                return null;
+            }
+            var countFactor = (10 + 10 / count) / 10;
 
-                    // if the weight is at its maximum value return null
-                    // this is useful to space out in time this work
-                    if (potentialWorkItem.Weight == WeightedWorkScheduler.MaxWorkWeight)
+            if (_removed)
+            {
+                // if we removed an item don't really trust the pointer any more
+                _removed = false;
+                _pointer = Math.Min(_pointer, count - 1);
+            }
+
+            var initial = _pointer;
+            do
+            {
+                var item = _workQueue[_pointer++];
+                if (_pointer >= count)
+                {
+                    _pointer = 0;
+
+                    // this will only really make a difference if there are many work items
+                    if (25 > count)
                     {
-                        potentialWorkItem = null;
+                        // if we looped around let's sort the queue leave the jobs with less points at the start
+                        _workQueue.Sort(WorkItem.Compare);
                     }
                 }
-            }
-            return potentialWorkItem;
+
+                if (item.UpdateWeight() < WeightedWorkScheduler.MaxWorkWeight * countFactor)
+                {
+                    return item;
+                }
+            } while (initial != _pointer);
+
+            // no work item is ready, pointer still will keep it's same value
+            return null;
         }
     }
 }

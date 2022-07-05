@@ -18,6 +18,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
 {
@@ -59,7 +60,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
             _newWorkEvent = new AutoResetEvent(false);
 
             var work = new List<WeightedWorkQueue>();
-            var queueManager = new Thread(() =>
+            Task.Run(() =>
             {
                 MaxWorkWeight = Configuration.Config.GetInt("data-feed-max-work-weight", 400);
                 Logging.Log.Trace($"WeightedWorkScheduler(): will use {WorkersCount} workers and MaxWorkWeight is {MaxWorkWeight}");
@@ -76,22 +77,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
                     };
                     thread.Start();
                 }
-
-                // make sure that the WorkQueue are kept sorted and the weights up to date
-                while (true)
-                {
-                    Thread.Sleep(TimeSpan.FromMilliseconds(1));
-                    for (var i = 0; i < work.Count; i++)
-                    {
-                        work[i].Sort();
-                    }
-                }
-            })
-            {
-                IsBackground = true,
-                Name = "WeightedWorkManager"
-            };
-            queueManager.Start();
+            });
         }
 
         /// <summary>
