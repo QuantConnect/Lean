@@ -78,7 +78,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Gets the raw price
         /// </summary>
-        public decimal Price => Value; 
+        public override decimal Price => Value; 
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CoarseFundamental"/> class

@@ -122,7 +122,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// As this is a backtesting platform we'll provide an alias of value as price.
         /// </summary>
-        public decimal Price => Value;
+        public virtual decimal Price => Value;
 
         /// <summary>
         /// Constructor for initialising the dase data class
