@@ -74,6 +74,11 @@ namespace QuantConnect.Data.UniverseSelection
             get { return Time + QuantConnect.Time.OneDay; }
             set { Time = value - QuantConnect.Time.OneDay; }
         }
+        
+        /// <summary>
+        /// Gets the raw price
+        /// </summary>
+        public override decimal Price => Value; 
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CoarseFundamental"/> class
