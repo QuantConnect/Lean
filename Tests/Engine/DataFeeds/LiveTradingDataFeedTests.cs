@@ -1237,13 +1237,21 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsTrue(fineWasCalled);
         }
 
-        [Test]
-        public void FineCoarseFundamentalDataGetsPipedCorrectlyWarmup()
+        [TestCase(false)]
+        [TestCase(true)]
+        public void FineCoarseFundamentalDataGetsPipedCorrectlyWarmup(bool useWarmupResolution)
         {
             _startDate = new DateTime(2014, 3, 27);
             CustomMockedFileBaseData.StartDate = _startDate;
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
-            _algorithm.SetWarmup(1, Resolution.Daily);
+            if (useWarmupResolution)
+            {
+                _algorithm.SetWarmup(1, Resolution.Daily);
+            }
+            else
+            {
+                _algorithm.SetWarmup(TimeSpan.FromDays(1));
+            }
 
             var fineWasCalled = false;
             var fineWasCalledDuringWarmup = false;

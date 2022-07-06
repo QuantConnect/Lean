@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
                 dataMappingMode: DataMappingMode.OpenInterest,
                 contractDepthOffset: 1
             );
-            SetWarmup(1, Resolution.Daily);
+            SetWarmup(TimeSpan.FromHours(24 + 4));
         }
 
         /// <summary>

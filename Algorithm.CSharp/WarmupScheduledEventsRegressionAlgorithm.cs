@@ -81,7 +81,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             });
 
-            SetWarmUp(9, Resolution.Hour);
+            SetWarmUp(60 * 8 + 30);
         }
 
         public override void OnEndOfAlgorithm()

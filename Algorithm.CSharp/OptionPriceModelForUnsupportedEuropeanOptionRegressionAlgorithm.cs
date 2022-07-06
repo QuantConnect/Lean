@@ -38,7 +38,7 @@ namespace QuantConnect.Algorithm.CSharp
             // BaroneAdesiWhaley model does not support European style options
             option.PriceModel = OptionPriceModels.BaroneAdesiWhaley();
 
-            SetWarmup(7, Resolution.Daily);
+            SetWarmup(TimeSpan.FromHours(24 * 9 + 23));
 
             Init(option, optionStyleIsSupported: false);
         }
@@ -46,7 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 1406;
+        public override long DataPoints => 1404;
 
         /// <summary>
         /// Data Points count of the algorithm history

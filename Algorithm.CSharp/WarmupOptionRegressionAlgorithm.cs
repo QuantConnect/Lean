@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
             _optionSymbol = option.Symbol;
 
             option.SetFilter(u => u.Strikes(-5, +5).Expiration(0, 180).IncludeWeeklys());
-            SetWarmUp(1, Resolution.Daily);
+            SetWarmUp(TimeSpan.FromDays(1));
         }
 
         /// <summary>

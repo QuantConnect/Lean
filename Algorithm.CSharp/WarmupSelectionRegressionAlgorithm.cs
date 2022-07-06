@@ -57,7 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 04, 07);
 
             AddUniverse(CoarseSelectionFunction);
-            SetWarmup(2, Resolution.Daily);
+            SetWarmup(2);
         }
 
         // sort the data by daily dollar volume and take the top 'NumberOfSymbols'

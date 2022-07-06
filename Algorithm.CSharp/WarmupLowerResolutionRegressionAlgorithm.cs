@@ -14,45 +14,97 @@
 */
 
 using System;
+using QuantConnect.Data;
+using QuantConnect.Interfaces;
+using QuantConnect.Data.Market;
 using System.Collections.Generic;
-using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm excersizing an equity covered American style option, using an option price model
-    /// that supports American style options and asserting that the option price model is used.
+    /// Regression algorithm asserting warming up with a lower resolution for speed is repected
     /// </summary>
-    public class OptionPriceModelForSupportedAmericanOptionRegressionAlgorithm : OptionPriceModelForOptionStylesBaseRegressionAlgorithm
+    public class WarmupLowerResolutionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private bool _warmedUpTradeBars;
+        private bool _warmedUpQuoteBars;
+
         public override void Initialize()
         {
-            SetStartDate(2014, 6, 9);
-            SetEndDate(2014, 6, 9);
+            SetStartDate(2013, 10, 08);
+            SetEndDate(2013, 10, 09);
 
-            var option = AddOption("AAPL", Resolution.Minute);
-            // BaroneAdesiWhaley model supports American style options
-            option.PriceModel = OptionPriceModels.BaroneAdesiWhaley();
-
-            SetWarmup(TimeSpan.FromDays(4));
-
-            Init(option, optionStyleIsSupported: true);
+            AddEquity("SPY", Resolution.Second);
+            SetWarmUp(TimeSpan.FromDays(1), Resolution.Minute);
         }
+        public override void OnData(Slice data)
+        {
+            var tradeBars = data.Get<TradeBar>();
+            tradeBars.TryGetValue("SPY", out var trade);
+
+            var quoteBars = data.Get<QuoteBar>();
+            quoteBars.TryGetValue("SPY", out var quote);
+
+            var expectedPeriod = TimeSpan.FromSeconds(1);
+            if (IsWarmingUp)
+            {
+                expectedPeriod = TimeSpan.FromMinutes(1);
+                if (trade != null && trade.IsFillForward || quote != null && quote.IsFillForward)
+                {
+                    throw new Exception("Unexpected fill forwarded data!");
+                }
+            }
+
+            if (trade != null)
+            {
+                _warmedUpTradeBars |= IsWarmingUp;
+                if (trade.Period != expectedPeriod)
+                {
+                    throw new Exception($"Unexpected period for trade data point {trade.Period} expected {expectedPeriod}. IsWarmingUp: {IsWarmingUp}");
+                }
+            }
+            if (quote != null)
+            {
+                _warmedUpQuoteBars |= IsWarmingUp;
+                if (quote.Period != expectedPeriod)
+                {
+                    throw new Exception($"Unexpected period for quote data point {quote.Period} expected {expectedPeriod}. IsWarmingUp: {IsWarmingUp}");
+                }
+            }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            if(!_warmedUpTradeBars || !_warmedUpQuoteBars)
+            {
+                throw new Exception("Did not assert data during warmup!");
+            }
+        }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 1781481;
+        public long DataPoints => 95175;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public override int AlgorithmHistoryDataPoints => 0;
+        public int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "0"},
             {"Average Win", "0%"},

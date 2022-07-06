@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
             var futureSP500 = AddFuture(RootSP500);
             futureSP500.SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
 
-            SetWarmUp(1, Resolution.Daily);
+            SetWarmUp(TimeSpan.FromHours(24 + 4));
         }
 
         /// <summary>

@@ -37,7 +37,7 @@ namespace QuantConnect.Algorithm.CSharp
             // BlackSholes model does not support American style options
             option.PriceModel = OptionPriceModels.BlackScholes();
 
-            SetWarmup(2, Resolution.Daily);
+            SetWarmup(TimeSpan.FromDays(4));
 
             Init(option, optionStyleIsSupported: false);
         }

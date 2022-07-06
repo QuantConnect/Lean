@@ -27,6 +27,6 @@ class OptionPriceModelForSupportedEuropeanOptionRegressionAlgorithm(OptionPriceM
         # BlackScholes model supports European style options
         option.PriceModel = OptionPriceModels.BlackScholes()
 
-        self.SetWarmup(7, Resolution.Daily)
+        self.SetWarmup(TimeSpan.FromHours(24 * 9 + 23));
 
         self.Init(option, optionStyleIsSupported=True)

@@ -27,6 +27,6 @@ class OptionPriceModelForUnsupportedAmericanOptionRegressionAlgorithm(OptionPric
         # BlackSholes model does not support American style options
         option.PriceModel = OptionPriceModels.BlackScholes()
 
-        self.SetWarmup(2, Resolution.Daily)
+        self.SetWarmup(TimeSpan.FromDays(4));
 
         self.Init(option, optionStyleIsSupported=False)
