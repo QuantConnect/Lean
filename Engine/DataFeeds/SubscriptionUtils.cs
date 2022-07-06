@@ -158,8 +158,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         return 0;
                     }
-                    var count = enqueueable.Count;
-                    return count > WeightedWorkScheduler.MaxWorkWeight ? WeightedWorkScheduler.MaxWorkWeight : count;
+                    return enqueueable.Count;
                 }
             );
 
