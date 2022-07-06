@@ -114,17 +114,18 @@ namespace QuantConnect.Tests.Algorithm
                 Has.All.EqualTo(dataNormalizationMode));
         }
 
-        [TestCase(true)]
-        [TestCase(false)]
-        public void AddFutureWithExtendedMarketHours(bool extendedMarketHours)
+        [Test]
+        public void ProperlyAddsFutureWithExtendedMarketHours(
+            [Values(true, false)] bool extendedMarketHours,
+            [ValueSource(nameof(FuturesTestCases))] Func<QCAlgorithm, Security> getFuture)
         {
-            var future = _algo.AddFuture("ES", Resolution.Minute, extendedMarketHours: extendedMarketHours);
+            var future = _algo.AddFuture(Futures.Indices.VIX, Resolution.Minute, extendedMarketHours: extendedMarketHours);
             Assert.That(_algo.SubscriptionManager.Subscriptions.Where(x => x.Symbol == future.Symbol).Select(x => x.ExtendedMarketHours),
                 Has.All.EqualTo(extendedMarketHours));
         }
 
-        [Test]
-        public void AddFutureWithExtendedMarketHours33333333333333333333333333333333()
+        [TestCaseSource(nameof(FuturesTestCases))]
+        public void AddFutureWithExtendedMarketHours(Func<QCAlgorithm, Security> getFuture)
         {
             string file = Path.Combine("TestData", "SampleMarketHoursDatabase.json");
             var marketHoursDatabase = MarketHoursDatabase.FromFile(file);
@@ -137,33 +138,55 @@ namespace QuantConnect.Tests.Algorithm
                 new SecurityCacheProvider(_algo.Portfolio));
             _algo.Securities.SetSecurityService(securityService);
 
-            var future = _algo.AddFuture("VX", Resolution.Minute, extendedMarketHours: true);
+            var future = getFuture(_algo);
 
             var now = new DateTime(2022, 6, 26, 17, 0, 0);
             Assert.AreEqual(DayOfWeek.Sunday, now.DayOfWeek);
             var regularMarketStartTime = new TimeSpan(8, 30, 0);
-            var regularMarketEndTime = new TimeSpan(16, 0, 0);
-            var extendedMarketStartTime = new TimeSpan(17, 0, 0);
+            var regularMarketEndTime = new TimeSpan(15, 0, 0);
+            var firstExtendedMarketStartTime = regularMarketEndTime;
+            var firstExtendedMarketEndTime = new TimeSpan(16, 0, 0);
+            var secondExtendedMarketStartTime = new TimeSpan(17, 0, 0);
+
+            Action<DateTime> checkExtendedHours = (date) =>
+            {
+                Assert.IsFalse(future.Exchange.Hours.IsOpen(now, false));
+                Assert.IsTrue(future.Exchange.Hours.IsOpen(now, true));
+            };
+            Action<DateTime> checkRegularHours = (date) =>
+            {
+                Assert.IsTrue(future.Exchange.Hours.IsOpen(now, false));
+                Assert.IsTrue(future.Exchange.Hours.IsOpen(now, true));
+            };
+            Action<DateTime> checkClosed = (date) =>
+            {
+                Assert.IsFalse(future.Exchange.Hours.IsOpen(now, false));
+                Assert.IsFalse(future.Exchange.Hours.IsOpen(now, true));
+            };
+
             while (now.DayOfWeek < DayOfWeek.Saturday)
             {
                 while (now.TimeOfDay < regularMarketStartTime)
                 {
-                    Assert.IsFalse(future.Exchange.Hours.IsOpen(now, false));
-                    Assert.IsTrue(future.Exchange.Hours.IsOpen(now, true));
+                    checkExtendedHours(now);
                     now = now.AddMinutes(1);
                 }
 
                 while (now.TimeOfDay < regularMarketEndTime)
                 {
-                    Assert.IsTrue(future.Exchange.Hours.IsOpen(now, false));
-                    Assert.IsTrue(future.Exchange.Hours.IsOpen(now, true));
+                    checkRegularHours(now);
                     now = now.AddMinutes(1);
                 }
 
-                while (now.TimeOfDay < extendedMarketStartTime)
+                while (now.TimeOfDay >= firstExtendedMarketStartTime && now.TimeOfDay < firstExtendedMarketEndTime)
                 {
-                    Assert.IsFalse(future.Exchange.Hours.IsOpen(now, false));
-                    Assert.IsFalse(future.Exchange.Hours.IsOpen(now, true));
+                    checkExtendedHours(now);
+                    now = now.AddMinutes(1);
+                }
+
+                while (now.TimeOfDay < secondExtendedMarketStartTime)
+                {
+                    checkClosed(now);
                     now = now.AddMinutes(1);
                 }
 
@@ -172,8 +195,7 @@ namespace QuantConnect.Tests.Algorithm
                 {
                     while (now < endOfDay)
                     {
-                        Assert.IsFalse(future.Exchange.Hours.IsOpen(now, false));
-                        Assert.IsTrue(future.Exchange.Hours.IsOpen(now, true), $"{now} {endOfDay}");
+                        checkExtendedHours(now);
                         now = now.AddMinutes(1);
                     }
                 }
@@ -181,6 +203,12 @@ namespace QuantConnect.Tests.Algorithm
                 {
                     now = endOfDay;
                 }
+            }
+
+            while (now.DayOfWeek < DayOfWeek.Sunday)
+            {
+                checkClosed(now);
+                now = now.AddMinutes(1);
             }
         }
 
@@ -224,6 +252,19 @@ namespace QuantConnect.Tests.Algorithm
         private static DataNormalizationMode[] GetDataNormalizationModes()
         {
             return (DataNormalizationMode[])Enum.GetValues(typeof(DataNormalizationMode));
+        }
+
+        private static Func<QCAlgorithm, Security>[] FuturesTestCases
+        {
+            get
+            {
+                return new Func<QCAlgorithm, Security>[]
+                {
+                    (algo) => algo.AddFuture(Futures.Indices.VIX, Resolution.Minute, extendedMarketHours: true),
+                    (algo) => algo.AddFutureContract(Symbol.CreateFuture(Futures.Indices.VIX, Market.CFE, new DateTime(2022, 8, 1)),
+                        Resolution.Minute, extendedMarketHours: true)
+                };
+            }
         }
     }
 }

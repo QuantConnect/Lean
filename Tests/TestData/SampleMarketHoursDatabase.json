@@ -338,9 +338,14 @@
           "state": "premarket"
         },
         {
-          "start": "8:30:00",
-          "end": "16:00:00",
+          "start": "08:30:00",
+          "end": "15:00:00",
           "state": "market"
+        },
+        {
+          "start": "15:00:00",
+          "end": "16:00:00",
+          "state": "postmarket"
         },
         {
           "start": "17:00:00",
@@ -355,9 +360,14 @@
           "state": "premarket"
         },
         {
-          "start": "8:30:00",
-          "end": "16:00:00",
+          "start": "08:30:00",
+          "end": "15:00:00",
           "state": "market"
+        },
+        {
+          "start": "15:00:00",
+          "end": "16:00:00",
+          "state": "postmarket"
         },
         {
           "start": "17:00:00",
@@ -372,9 +382,14 @@
           "state": "premarket"
         },
         {
-          "start": "8:30:00",
-          "end": "16:00:00",
+          "start": "08:30:00",
+          "end": "15:00:00",
           "state": "market"
+        },
+        {
+          "start": "15:00:00",
+          "end": "16:00:00",
+          "state": "postmarket"
         },
         {
           "start": "17:00:00",
@@ -389,9 +404,14 @@
           "state": "premarket"
         },
         {
-          "start": "8:30:00",
-          "end": "16:00:00",
+          "start": "08:30:00",
+          "end": "15:00:00",
           "state": "market"
+        },
+        {
+          "start": "15:00:00",
+          "end": "16:00:00",
+          "state": "postmarket"
         },
         {
           "start": "17:00:00",
@@ -406,9 +426,14 @@
           "state": "premarket"
         },
         {
-          "start": "8:30:00",
-          "end": "16:00:00",
+          "start": "08:30:00",
+          "end": "15:00:00",
           "state": "market"
+        },
+        {
+          "start": "15:00:00",
+          "end": "16:00:00",
+          "state": "postmarket"
         }
       ],
       "saturday": [],

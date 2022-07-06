@@ -453,9 +453,11 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
         /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
         /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
+        /// <param name="extendedMarketHours">Show the after market data as well</param>
         /// <returns>The new <see cref="Future"/> security</returns>
-        public Future AddFutureContract(Symbol symbol, Resolution? resolution = null, bool fillDataForward = true, decimal leverage = 0m)
-            => _baseAlgorithm.AddFutureContract(symbol, resolution, fillDataForward, leverage);
+        public Future AddFutureContract(Symbol symbol, Resolution? resolution = null, bool fillDataForward = true, decimal leverage = 0m,
+            bool extendedMarketHours = false)
+            => _baseAlgorithm.AddFutureContract(symbol, resolution, fillDataForward, leverage, extendedMarketHours);
 
         /// <summary>
         /// Creates and adds a new single <see cref="Option"/> contract to the algorithm

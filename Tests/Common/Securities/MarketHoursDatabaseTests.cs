@@ -30,7 +30,7 @@ namespace QuantConnect.Tests.Common.Securities
             string file = Path.Combine("TestData", "SampleMarketHoursDatabase.json");
             var exchangeHours = GetMarketHoursDatabase(file);
 
-            Assert.AreEqual(2, exchangeHours.ExchangeHoursListing.Count);
+            Assert.AreEqual(3, exchangeHours.ExchangeHoursListing.Count);
         }
 
         [Test]
@@ -231,7 +231,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // Assert our hours match the result
             Assert.AreEqual(hours, entry.ExchangeHours);
-            
+
             // Fetch the entry to ensure we can access it with the ticker
             var fetchedEntry = database.GetEntry(Market.USA, ticker, SecurityType.Base);
             Assert.AreSame(entry, fetchedEntry);
