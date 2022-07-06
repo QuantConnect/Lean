@@ -76,7 +76,7 @@ namespace QuantConnect.Data.UniverseSelection
         }
         
         /// <summary>
-        /// G
+        /// Gets the raw price
         /// </summary>
         public decimal Price => Value; 
 
