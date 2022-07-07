@@ -446,7 +446,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var lastPointTracker = new LastPointTracker();
 
                     Ref<TimeSpan> fillForwardSpanRef = null;
-                    if (_algorithm.Settings.WarmupResolution.HasValue)
+                    if (_algorithm.Settings.WarmupResolution.HasValue && !request.IsUniverseSubscription)
                     {
                         fillForwardSpanRef = Ref.Create(_algorithm.Settings.WarmupResolution.Value.ToTimeSpan());
                     }
