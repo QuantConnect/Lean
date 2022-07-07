@@ -24,7 +24,7 @@ using QuantConnect.Securities.Future;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// TODO: SUMARY
+    /// This regression algorithm asserts that futures have data at extended market hours when this is enabled.
     /// </summary>
     public class FuturesExtendedMarketHoursRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
@@ -42,6 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             _es = AddFuture(Futures.Indices.SP500EMini, Resolution.Hour, fillDataForward: true, extendedMarketHours: true);
             _es.SetFilter(0, 180);
+
             _gc = AddFuture(Futures.Metals.Gold, Resolution.Hour, fillDataForward: true, extendedMarketHours: false);
             _gc.SetFilter(0, 180);
         }
@@ -56,14 +57,14 @@ namespace QuantConnect.Algorithm.CSharp
             var esIsInRegularHours = _es.Exchange.Hours.IsOpen(Time, false);
             var esIsInExtendedHours = !esIsInRegularHours && _es.Exchange.Hours.IsOpen(Time, true);
             var sliceHasESData = sliceSymbols.Any(symbol => symbol == _es.Symbol || symbol.Canonical == _es.Symbol);
-            _esRanOnRegularHours = _esRanOnRegularHours || (esIsInRegularHours && sliceHasESData);
-            _esRanOnExtendedHours = _esRanOnExtendedHours || (esIsInExtendedHours && sliceHasESData);
+            _esRanOnRegularHours |= esIsInRegularHours && sliceHasESData;
+            _esRanOnExtendedHours |= esIsInExtendedHours && sliceHasESData;
 
             var gcIsInRegularHours = _gc.Exchange.Hours.IsOpen(Time, false);
             var gcIsInExtendedHours = !gcIsInRegularHours && _gc.Exchange.Hours.IsOpen(Time, true);
             var sliceHasGCData = sliceSymbols.Any(symbol => symbol == _gc.Symbol || symbol.Canonical == _gc.Symbol);
-            _gcRanOnRegularHours = _gcRanOnRegularHours || (gcIsInRegularHours && sliceHasGCData);
-            _gcRanOnExtendedHours = _gcRanOnExtendedHours || (gcIsInExtendedHours && sliceHasGCData);
+            _gcRanOnRegularHours |= gcIsInRegularHours && sliceHasGCData;
+            _gcRanOnExtendedHours |= gcIsInExtendedHours && sliceHasGCData;
         }
 
         public override void OnEndOfAlgorithm()
@@ -102,7 +103,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 9643;
+        public long DataPoints => 3203;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -114,34 +115,34 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "4"},
+            {"Total Trades", "0"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "7.848%"},
-            {"Drawdown", "0.100%"},
+            {"Compounding Annual Return", "0%"},
+            {"Drawdown", "0%"},
             {"Expectancy", "0"},
-            {"Net Profit", "0.100%"},
-            {"Sharpe Ratio", "8.342"},
-            {"Probabilistic Sharpe Ratio", "83.750%"},
+            {"Net Profit", "0%"},
+            {"Sharpe Ratio", "0"},
+            {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
             {"Alpha", "0"},
-            {"Beta", "0.033"},
-            {"Annual Standard Deviation", "0.008"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-8.908"},
-            {"Tracking Error", "0.215"},
-            {"Treynor Ratio", "1.992"},
-            {"Total Fees", "$4.00"},
-            {"Estimated Strategy Capacity", "$6000000.00"},
-            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Fitness Score", "0.011"},
+            {"Information Ratio", "-2.564"},
+            {"Tracking Error", "0.214"},
+            {"Treynor Ratio", "0"},
+            {"Total Fees", "$0.00"},
+            {"Estimated Strategy Capacity", "$0"},
+            {"Lowest Capacity Asset", ""},
+            {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "38.493"},
-            {"Return Over Maximum Drawdown", "236.57"},
-            {"Portfolio Turnover", "0.011"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
+            {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -155,7 +156,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "65e705bf0e78139c376903d4ff241afc"}
+            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
         };
     }
 }
