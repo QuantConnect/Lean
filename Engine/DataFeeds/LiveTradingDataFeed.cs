@@ -458,6 +458,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         request.Configuration.FillDataForward,
                         fillForwardSpanRef);
 
+                    // don't let future data past. We let null pass because that's letting the next enumerator know we've ended because we always return true in live
+                    synchronizedWarmupEnumerator = new FilterEnumerator<BaseData>(synchronizedWarmupEnumerator, data => data == null || data.EndTime <= warmupRequest.EndTimeLocal);
+
                     // the order here is important, concat enumerator will keep the last enumerator given and dispose of the rest
                     liveEnumerator = new ConcatEnumerator(true, synchronizedWarmupEnumerator, liveEnumerator);
                 }
@@ -473,7 +476,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IEnumerator<BaseData> result = null;
             try
             {
-                result = new FilterEnumerator<BaseData>(CreateEnumerator(warmup, null),
+                result = new FilterEnumerator<BaseData>(CreateEnumerator(warmup),
                     data =>
                     {
                         // don't let future data past, nor fill forward, that will be handled after merging with the history request response
@@ -503,7 +506,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IEnumerator<BaseData> result;
             if (warmup.IsUniverseSubscription)
             {
-                result = CreateUniverseEnumerator(warmup, createUnderlyingEnumerator: (req, t) => GetHistoryWarmupEnumerator(req, lastPointTracker), null);
+                // we ignore the fill forward time span argument because we will fill forwared the concatenated file and history based enumerators next in the stack
+                result = CreateUniverseEnumerator(warmup, createUnderlyingEnumerator: (req, _) => GetHistoryWarmupEnumerator(req, lastPointTracker));
             }
             else
             {

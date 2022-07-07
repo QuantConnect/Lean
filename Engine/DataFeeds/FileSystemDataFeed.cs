@@ -91,7 +91,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Creates a file based data enumerator for the given subscription request
         /// </summary>
         /// <remarks>Protected so it can be used by the <see cref="LiveTradingDataFeed"/> to warmup requests</remarks>
-        protected IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, Ref<TimeSpan> fillForwardSpan)
+        protected IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, Ref<TimeSpan> fillForwardSpan = null)
         {
             return request.IsUniverseSubscription ? CreateUniverseEnumerator(request, CreateDataEnumerator, fillForwardSpan) : CreateDataEnumerator(request, fillForwardSpan);
         }
@@ -145,14 +145,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         fillForwardSpan = Ref.Create(_algorithm.Settings.WarmupResolution.Value.ToTimeSpan());
                     }
                     warmupEnumerator = CreateEnumerator(warmupRequest, fillForwardSpan);
+                    // don't let future data past
+                    warmupEnumerator = new FilterEnumerator<BaseData>(warmupEnumerator, data => data.EndTime <= warmupRequest.EndTimeLocal);
                 }
                 enumerator = new ConcatEnumerator(true, warmupEnumerator,
                     // after the warmup enumerator we concatenate the 'normal' one
-                    CreateEnumerator(new SubscriptionRequest(request, startTimeUtc: nonWarmupRequestStartUtc), null));
+                    CreateEnumerator(new SubscriptionRequest(request, startTimeUtc: nonWarmupRequestStartUtc)));
             }
             else
             {
-                enumerator = CreateEnumerator(request, null);
+                enumerator = CreateEnumerator(request);
             }
 
             if (request.IsUniverseSubscription && request.Universe is UserDefinedUniverse)
@@ -172,7 +174,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
         }
 
-        protected IEnumerator<BaseData> CreateUniverseEnumerator(SubscriptionRequest request, Func<SubscriptionRequest, Ref<TimeSpan>, IEnumerator<BaseData>> createUnderlyingEnumerator, Ref<TimeSpan> fillForwardSpan)
+        protected IEnumerator<BaseData> CreateUniverseEnumerator(SubscriptionRequest request, Func<SubscriptionRequest, Ref<TimeSpan>, IEnumerator<BaseData>> createUnderlyingEnumerator, Ref<TimeSpan> fillForwardSpan = null)
         {
             ISubscriptionEnumeratorFactory factory = _subscriptionFactory;
             if (request.Universe is ITimeTriggeredUniverse)
@@ -290,6 +292,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var fillForwardResolution = _subscriptions.UpdateAndGetFillForwardResolution(request.Configuration);
                 if (fillForwardSpan != null)
                 {
+                    // if we are giving a FFspan we use it instead of the collection based one. This is useful during warmup when the warmup resolution has been set
                     fillForwardResolution = fillForwardSpan;
                 }
 

@@ -22,9 +22,9 @@ using System.Collections.Generic;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm asserting warming up with a lower resolution for speed is repected
+    /// Regression algorithm asserting warming up with a lower resolution for speed is respected
     /// </summary>
-    public class WarmupLowerResolutionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class WarmupLowerResolutionTimeSpanRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private bool _warmedUpTradeBars;
         private bool _warmedUpQuoteBars;
@@ -37,6 +37,7 @@ namespace QuantConnect.Algorithm.CSharp
             AddEquity("SPY", Resolution.Second);
             SetWarmUp(TimeSpan.FromDays(1), Resolution.Minute);
         }
+
         public override void OnData(Slice data)
         {
             var tradeBars = data.Get<TradeBar>();
