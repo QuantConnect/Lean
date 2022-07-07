@@ -15,34 +15,29 @@
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
 {
-    /// <summary>
-    /// Regression algorithm excersizing an equity covered American style option, using an option price model
-    /// that supports American style options and asserting that the option price model is used.
-    /// </summary>
-    public class OptionPriceModelForSupportedAmericanOptionRegressionAlgorithm : OptionPriceModelForOptionStylesBaseRegressionAlgorithm
+    internal class WarmupMinuteResolutionRegressionAlgorithm : WarmupDailyResolutionRegressionAlgorithm
     {
         public override void Initialize()
         {
-            SetStartDate(2014, 6, 9);
-            SetEndDate(2014, 6, 9);
+            SetStartDate(2013, 10, 08);
+            SetEndDate(2013, 10, 09);
 
-            var option = AddOption("AAPL", Resolution.Minute);
-            // BaroneAdesiWhaley model supports American style options
-            option.PriceModel = OptionPriceModels.BaroneAdesiWhaley();
+            AddEquity("SPY", Resolution.Second);
+            ExpectedDataSpan = Resolution.Second.ToTimeSpan();
 
-            SetWarmup(TimeSpan.FromDays(4));
+            SetWarmUp(TimeSpan.FromDays(3), Resolution.Minute);
+            ExpectedWarmupDataSpan = Resolution.Minute.ToTimeSpan();
 
-            Init(option, optionStyleIsSupported: true);
+            Sma = SMA("SPY", 2);
         }
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 1781482;
+        public override long DataPoints => 95176;
 
         /// <summary>
         /// Data Points count of the algorithm history

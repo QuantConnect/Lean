@@ -74,6 +74,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // the start of the data and end of the data (usually used with Bars).
             // The time delta ensures that the time collected from `EndTime` has
             // no look-ahead bias, and is point-in-time.
+            // when fill forwarding time and endtime might not respect the configuration increment, here we will enforce it
             if (data.Time != data.EndTime)
             {
                 data.Time = data.Time.ExchangeRoundDownInTimeZone(configuration.Increment, exchangeHours, configuration.DataTimeZone, configuration.ExtendedMarketHours);

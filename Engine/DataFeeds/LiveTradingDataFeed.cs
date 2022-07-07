@@ -427,7 +427,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var warmupRequest = new SubscriptionRequest(request, endTimeUtc: _timeProvider.GetUtcNow(),
                     // we will not fill forward each warmup enumerators separately but concatenated bellow
                     configuration: new SubscriptionDataConfig(request.Configuration, fillForward: false,
-                    resolution: request.IsUniverseSubscription ? request.Configuration.Resolution : _algorithm.Settings.WarmupResolution));
+                    resolution: _algorithm.Settings.WarmupResolution));
                 if (warmupRequest.TradableDays.Any()
                     // since we change the resolution, let's validate it's still valid configuration (example daily equity quotes are not!)
                     && LeanData.IsValidConfiguration(warmupRequest.Configuration.SecurityType, warmupRequest.Configuration.Resolution, warmupRequest.Configuration.TickType))
@@ -446,7 +446,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var lastPointTracker = new LastPointTracker();
 
                     Ref<TimeSpan> fillForwardSpanRef = null;
-                    if (_algorithm.Settings.WarmupResolution.HasValue && !request.IsUniverseSubscription)
+                    if (_algorithm.Settings.WarmupResolution.HasValue)
                     {
                         fillForwardSpanRef = Ref.Create(_algorithm.Settings.WarmupResolution.Value.ToTimeSpan());
                     }

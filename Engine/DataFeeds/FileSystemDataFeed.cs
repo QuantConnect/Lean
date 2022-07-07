@@ -122,7 +122,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public virtual Subscription CreateSubscription(SubscriptionRequest request)
         {
             IEnumerator<BaseData> enumerator;
-            if(_algorithm.IsWarmingUp && !request.IsUniverseSubscription)
+            if(_algorithm.IsWarmingUp)
             {
                 var nonWarmupRequestStartUtc = _algorithm.StartDate.ConvertToUtc(_algorithm.TimeZone);
 
@@ -146,7 +146,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                     warmupEnumerator = CreateEnumerator(warmupRequest, fillForwardSpan);
                     // don't let future data past
-                    warmupEnumerator = new FilterEnumerator<BaseData>(warmupEnumerator, data => data.EndTime <= warmupRequest.EndTimeLocal);
+                    warmupEnumerator = new FilterEnumerator<BaseData>(warmupEnumerator, data => data == null || data.EndTime <= warmupRequest.EndTimeLocal);
                 }
                 enumerator = new ConcatEnumerator(true, warmupEnumerator,
                     // after the warmup enumerator we concatenate the 'normal' one
