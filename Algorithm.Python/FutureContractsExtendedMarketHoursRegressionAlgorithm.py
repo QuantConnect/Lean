@@ -16,16 +16,16 @@ from AlgorithmImports import *
 ### <summary>
 ### This regression algorithm asserts that futures have data at extended market hours when this is enabled.
 ### </summary>
-class FuturesExtendedMarketHoursRegressionAlgorithm(QCAlgorithm):
+class FutureContractsExtendedMarketHoursRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
         self.SetStartDate(2013, 10, 6)
         self.SetEndDate(2013, 10, 11)
 
-        self._es = self.AddFuture(Futures.Indices.SP500EMini, Resolution.Hour, fillDataForward=True, extendedMarketHours=True)
-        self._es.SetFilter(0, 180)
+        esFutureSymbol = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, DateTime(2013, 12, 20))
+        self._es = self.AddFutureContract(esFutureSymbol, Resolution.Hour, fillDataForward=True, extendedMarketHours=True)
 
-        self._gc = self.AddFuture(Futures.Metals.Gold, Resolution.Hour, fillDataForward=True, extendedMarketHours=False)
-        self._gc.SetFilter(0, 180)
+        gcFutureSymbol = Symbol.CreateFuture(Futures.Metals.Gold, Market.COMEX, DateTime(2013, 10, 29))
+        self._gc = self.AddFutureContract(gcFutureSymbol, Resolution.Hour, fillDataForward=True, extendedMarketHours=False)
 
         self._esRanOnRegularHours = False
         self._esRanOnExtendedHours = False
