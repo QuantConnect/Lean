@@ -30,6 +30,7 @@ using QuantConnect.Optimizer.Parameters;
 using QuantConnect.Orders;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
+using QuantConnect.Notifications;
 
 namespace QuantConnect.Api
 {
@@ -367,6 +368,15 @@ namespace QuantConnect.Api
             return result;
         }
 
+        /// <summary>
+        /// Sends a notification
+        /// </summary>
+        /// <param name="notification">The notification to send</param>
+        /// <returns><see cref="RestResponse"/> containing success response and errors</returns>
+        public virtual RestResponse SendNotification(Notification notification)
+        {
+            throw new NotImplementedException($"{nameof(Api)} does not support sending notifications");
+        }
 
         /// <summary>
         /// Create a new backtest request and get the id.

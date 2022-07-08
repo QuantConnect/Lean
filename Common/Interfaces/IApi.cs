@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using QuantConnect.Api;
+using QuantConnect.Notifications;
 using QuantConnect.Optimizer.Objectives;
 using QuantConnect.Optimizer.Parameters;
 using QuantConnect.Statistics;
@@ -411,13 +412,12 @@ namespace QuantConnect.Interfaces
         /// <returns></returns>
         RestResponse StopLiveAlgorithm(int projectId);
 
-        //Status StatusRead(int projectId, string algorithmId);
-        //RestResponse StatusUpdate(int projectId, string algorithmId, AlgorithmStatus status, string message = "");
-        //LogControl LogAllowanceRead();
-        //void LogAllowanceUpdate(string backtestId, string url, int length);
-        //void StatisticsUpdate(int projectId, string algorithmId, decimal unrealized, decimal fees, decimal netProfit, decimal holdings, decimal equity, decimal netReturn, decimal volume, int trades, double sharpe);
-        //void NotifyOwner(int projectId, string algorithmId, string subject, string body);
-        //IEnumerable<MarketHoursSegment> MarketHours(int projectId, DateTime time, Symbol symbol);
+        /// <summary>
+        /// Sends a notification
+        /// </summary>
+        /// <param name="notification">The notification to send</param>
+        /// <returns><see cref="RestResponse"/> containing success response and errors</returns>
+        RestResponse SendNotification(Notification notification);
 
         /// <summary>
         /// Get the algorithm current status, active or cancelled from the user

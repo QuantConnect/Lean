@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -37,12 +37,13 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Initialize the Messaging System Plugin. 
         /// </summary>
-        void Initialize();
+        /// <param name="initializeParameters">The parameters required for initialization</param>
+        void Initialize(MessagingHandlerInitializeParameters initializeParameters);
 
         /// <summary>
         /// Set the user communication channel
         /// </summary>
-        /// <param name="job"></param>
+        /// <param name="job">The job packet</param>
         void SetAuthentication(AlgorithmNodePacket job);
 
         /// <summary>

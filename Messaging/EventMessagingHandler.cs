@@ -43,7 +43,8 @@ namespace QuantConnect.Messaging
         /// <summary>
         /// Initialize the Messaging System Plugin. 
         /// </summary>
-        public void Initialize()
+        /// <param name="initializeParameters">The parameters required for initialization</param>
+        public void Initialize(MessagingHandlerInitializeParameters initializeParameters)
         {
             _queue = new Queue<Packet>();
 
