@@ -31,10 +31,10 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class AddFutureContractWithContinuousRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _currentMappedSymbol;
         private Future _continuousContract;
         private Future _futureContract;
-        private bool _ended;
+        private List<OrderTicket> _orderTickets = new List<OrderTicket>();
+        private DateTime? _endedAt = null;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -45,12 +45,14 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 10);
 
             _continuousContract = AddFuture(Futures.Indices.SP500EMini,
+                extendedMarketHours: true,
                 dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
                 dataMappingMode: DataMappingMode.LastTradingDay,
                 contractDepthOffset: 0
             );
 
-            _futureContract = AddFutureContract(FutureChainProvider.GetFutureContractList(_continuousContract.Symbol, Time).First());
+            _futureContract = AddFutureContract(FutureChainProvider.GetFutureContractList(_continuousContract.Symbol, Time).First(),
+                extendedMarketHours: true);
         }
 
         /// <summary>
@@ -59,9 +61,13 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            if (_ended)
+            if (_endedAt.HasValue && this.UtcTime > _endedAt.Value)
             {
                 throw new Exception($"Algorithm should of ended!");
+            }
+            if (_orderTickets.Any())
+            {
+                return;
             }
             if (data.Keys.Count > 2)
             {
@@ -74,13 +80,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (!Portfolio.Invested)
             {
-                Buy(_futureContract.Symbol, 1);
-                Buy(_continuousContract.Mapped, 1);
-
-                RemoveSecurity(_futureContract.Symbol);
-                RemoveSecurity(_continuousContract.Symbol);
-
-                _ended = true;
+                _orderTickets.Add(Buy(_futureContract.Symbol, 1));
+                _orderTickets.Add(Buy(_continuousContract.Mapped, 1));
             }
         }
 
@@ -88,6 +89,16 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (orderEvent.Status == OrderStatus.Filled)
             {
+                if (orderEvent.Direction == OrderDirection.Buy && _orderTickets.All(ticket => ticket.Status == OrderStatus.Filled))
+                {
+                    RemoveSecurity(_futureContract.Symbol);
+                    RemoveSecurity(_continuousContract.Symbol);
+                }
+                else if (orderEvent.Direction == OrderDirection.Sell && Transactions.GetOrders().All(order => order.Status == OrderStatus.Filled))
+                {
+                    _endedAt = orderEvent.UtcTime;
+                }
+
                 Log($"{orderEvent}");
             }
         }
@@ -116,7 +127,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 59;
+        public long DataPoints => 13066;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -130,32 +141,32 @@ namespace QuantConnect.Algorithm.CSharp
         {
             {"Total Trades", "3"},
             {"Average Win", "0%"},
-            {"Average Loss", "-0.03%"},
-            {"Compounding Annual Return", "-2.503%"},
-            {"Drawdown", "0.000%"},
+            {"Average Loss", "-0.06%"},
+            {"Compounding Annual Return", "-4.391%"},
+            {"Drawdown", "0.100%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "-0.032%"},
-            {"Sharpe Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
+            {"Net Profit", "-0.057%"},
+            {"Sharpe Ratio", "-7.796"},
+            {"Probabilistic Sharpe Ratio", "1.216%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
+            {"Alpha", "-0.037"},
+            {"Beta", "0.008"},
+            {"Annual Standard Deviation", "0.005"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-0.678"},
-            {"Tracking Error", "0.243"},
-            {"Treynor Ratio", "0"},
+            {"Information Ratio", "-0.831"},
+            {"Tracking Error", "0.241"},
+            {"Treynor Ratio", "-4.655"},
             {"Total Fees", "$7.40"},
-            {"Estimated Strategy Capacity", "$2100000.00"},
+            {"Estimated Strategy Capacity", "$1800000.00"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
-            {"Fitness Score", "0.419"},
+            {"Fitness Score", "0.417"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-81.557"},
-            {"Portfolio Turnover", "0.837"},
+            {"Return Over Maximum Drawdown", "-80.734"},
+            {"Portfolio Turnover", "0.835"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -169,7 +180,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "68775c18eb40c1bde212653faec4016e"}
+            {"OrderListHash", "302beb71a3cbed98c233c568b730705d"}
         };
     }
 }

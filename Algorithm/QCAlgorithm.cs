@@ -1908,17 +1908,19 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">Resolution of the option contract, i.e. the granularity of the data</param>
         /// <param name="fillDataForward">If true, this will fill in missing data points with the previous data point</param>
         /// <param name="leverage">The leverage to apply to the option contract</param>
+        /// <param name="extendedMarketHours">Show the after market data as well</param>
         /// <returns>Option security</returns>
         /// <exception cref="ArgumentException">Symbol is canonical (i.e. a generic Symbol returned from <see cref="AddFuture"/> or <see cref="AddOption(string, Resolution?, string, bool, decimal)"/>)</exception>
         [DocumentationAttribute(AddingData)]
-        public Option AddFutureOptionContract(Symbol symbol, Resolution? resolution = null, bool fillDataForward = true, decimal leverage = Security.NullLeverage)
+        public Option AddFutureOptionContract(Symbol symbol, Resolution? resolution = null, bool fillDataForward = true,
+            decimal leverage = Security.NullLeverage, bool extendedMarketHours = false)
         {
             if (symbol.IsCanonical())
             {
                 throw new ArgumentException("Expected non-canonical Symbol (i.e. a Symbol representing a specific Future contract");
             }
 
-            return AddOptionContract(symbol, resolution, fillDataForward, leverage);
+            return AddOptionContract(symbol, resolution, fillDataForward, leverage, extendedMarketHours);
         }
 
         /// <summary>
@@ -1982,9 +1984,11 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
         /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
         /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
+        /// <param name="extendedMarketHours">Show the after market data as well</param>
         /// <returns>The new <see cref="Option"/> security</returns>
         [DocumentationAttribute(AddingData)]
-        public Option AddOptionContract(Symbol symbol, Resolution? resolution = null, bool fillDataForward = true, decimal leverage = Security.NullLeverage)
+        public Option AddOptionContract(Symbol symbol, Resolution? resolution = null, bool fillDataForward = true,
+            decimal leverage = Security.NullLeverage, bool extendedMarketHours = false)
         {
             if(symbol == null || !symbol.SecurityType.IsOption() || symbol.Underlying == null)
             {
@@ -1998,7 +2002,7 @@ namespace QuantConnect.Algorithm
             List<SubscriptionDataConfig> underlyingConfigs;
             if (!Securities.TryGetValue(underlying, out underlyingSecurity) || !underlyingSecurity.IsTradable)
             {
-                underlyingSecurity = AddSecurity(underlying, resolution, fillDataForward, leverage, UniverseSettings.ExtendedMarketHours);
+                underlyingSecurity = AddSecurity(underlying, resolution, fillDataForward, leverage, extendedMarketHours);
                 underlyingConfigs = SubscriptionManager.SubscriptionDataConfigService
                     .GetSubscriptionDataConfigs(underlying);
             }
@@ -2019,7 +2023,8 @@ namespace QuantConnect.Algorithm
                 }
             }
 
-            var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, fillDataForward, dataNormalizationMode: DataNormalizationMode.Raw);
+            var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, fillDataForward, extendedMarketHours,
+                dataNormalizationMode: DataNormalizationMode.Raw);
             var option = (Option)Securities.CreateSecurity(symbol, configs, leverage, underlying: underlyingSecurity);
 
             underlyingConfigs.SetDataNormalizationMode(DataNormalizationMode.Raw);
@@ -2033,7 +2038,11 @@ namespace QuantConnect.Algorithm
             Universe universe;
             if (!UniverseManager.TryGetValue(universeSymbol, out universe))
             {
-                var settings = new UniverseSettings(UniverseSettings) { DataNormalizationMode = DataNormalizationMode.Raw, Resolution = underlyingConfigs.GetHighestResolution() };
+                var settings = new UniverseSettings(UniverseSettings) {
+                    DataNormalizationMode = DataNormalizationMode.Raw,
+                    Resolution = underlyingConfigs.GetHighestResolution(),
+                    ExtendedMarketHours = extendedMarketHours
+                };
                 universe = _pendingUniverseAdditions.FirstOrDefault(u => u.Configuration.Symbol == universeSymbol)
                            ?? AddUniverse(new OptionContractUniverse(new SubscriptionDataConfig(configs.First(), symbol: universeSymbol), settings));
             }
