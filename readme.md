@@ -132,9 +132,12 @@ The mailing list for the project can be found on [LEAN Forum][6]. Please use thi
 
 ## Contributors and Pull Requests ##
 
-Contributions are warmly very welcomed but we ask you to read the existing code to see how it is formatted, commented and ensure contributions match the existing style. All code submissions must include accompanying tests. Please see the [contributor guide lines][7].
+Contributions are warmly very welcomed but we ask you to read the existing code to see how it is formatted, commented and ensure contributions match the existing style. All code submissions must include accompanying tests. Please see the [contributor guide lines][7]. All accepted pull requests will get a 2mo free Prime subscription on QuantConnect. Once your pull-request has been merged write to us at support@quantconnect.com with a link to your PR to claim your free live trading. QC <3 Open Source.
 
-All accepted pull requests will get a 2mo free Prime subscription on QuantConnect. Once your pull-request has been merged write to us at support@quantconnect.com with a link to your PR to claim your free live trading. QC <3 Open Source.
+A huge thank-you all our contributors!
+<a href="https://github.com/QuantConnect/Lean/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=QuantConnect/Lean" />
+</a>
 
 ## Acknowledgements ##
 
