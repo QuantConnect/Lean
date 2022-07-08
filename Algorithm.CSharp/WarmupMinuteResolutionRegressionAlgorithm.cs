@@ -22,8 +22,8 @@ namespace QuantConnect.Algorithm.CSharp
     {
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 08);
-            SetEndDate(2013, 10, 09);
+            SetStartDate(2013, 10, 10);
+            SetEndDate(2013, 10, 11);
 
             AddEquity("SPY", Resolution.Second);
             ExpectedDataSpan = Resolution.Second.ToTimeSpan();
@@ -37,7 +37,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 95176;
+        public override long DataPoints => 97516;
 
         /// <summary>
         /// Data Points count of the algorithm history

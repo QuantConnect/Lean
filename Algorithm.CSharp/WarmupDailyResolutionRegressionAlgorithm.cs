@@ -37,8 +37,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 08);
-            SetEndDate(2013, 10, 09);
+            SetStartDate(2013, 10, 10);
+            SetEndDate(2013, 10, 11);
 
             AddEquity("SPY", Resolution.Hour);
             ExpectedDataSpan = Resolution.Hour.ToTimeSpan();
@@ -71,6 +71,16 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     throw new Exception("Unexpected fill forwarded data!");
                 }
+            }
+
+            // let's assert the data's time are what we expect
+            if (trade != null && trade.EndTime.Ticks % expectedPeriod.Ticks != 0)
+            {
+                throw new Exception($"Unexpected data end time! {trade.EndTime}");
+            }
+            if (quote != null && quote.EndTime.Ticks % expectedPeriod.Ticks != 0)
+            {
+                throw new Exception($"Unexpected data end time! {quote.EndTime}");
             }
 
             if (trade != null)
@@ -124,7 +134,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 35;
+        public virtual long DataPoints => 38;
 
         /// <summary>
         /// Data Points count of the algorithm history

@@ -445,18 +445,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // this is much more efficient since these duplicated points will be dropped by the filter righ away causing memory usage spikes
                     var lastPointTracker = new LastPointTracker();
 
-                    Ref<TimeSpan> fillForwardSpanRef = null;
-                    if (_algorithm.Settings.WarmupResolution.HasValue)
-                    {
-                        fillForwardSpanRef = Ref.Create(_algorithm.Settings.WarmupResolution.Value.ToTimeSpan());
-                    }
-
                     var synchronizedWarmupEnumerator = TryAddFillForwardEnumerator(warmupRequest,
                         // we concatenate the file based and history based warmup enumerators, dropping duplicate time stamps
                         new ConcatEnumerator(true, GetFileBasedWarmupEnumerator(warmupRequest, lastPointTracker), GetHistoryWarmupEnumerator(historyWarmup, lastPointTracker)) { CanEmitNull = false },
                         // if required by the original request, we will fill forward the Synced warmup data
                         request.Configuration.FillDataForward,
-                        fillForwardSpanRef);
+                        _algorithm.Settings.WarmupResolution);
 
                     // don't let future data past. We let null pass because that's letting the next enumerator know we've ended because we always return true in live
                     synchronizedWarmupEnumerator = new FilterEnumerator<BaseData>(synchronizedWarmupEnumerator, data => data == null || data.EndTime <= warmupRequest.EndTimeLocal);
