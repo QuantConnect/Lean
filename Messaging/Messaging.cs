@@ -42,7 +42,8 @@ namespace QuantConnect.Messaging
         /// <summary>
         /// Initialize the messaging system
         /// </summary>
-        public void Initialize()
+        /// <param name="initializeParameters">The parameters required for initialization</param>
+        public void Initialize(MessagingHandlerInitializeParameters initializeParameters)
         {
             //
         }
