@@ -27,6 +27,6 @@ class OptionPriceModelForSupportedAmericanOptionRegressionAlgorithm(OptionPriceM
         # BaroneAdesiWhaley model supports American style options
         option.PriceModel = OptionPriceModels.BaroneAdesiWhaley()
 
-        self.SetWarmup(TimeSpan.FromDays(4));
+        self.SetWarmup(2, Resolution.Daily)
 
         self.Init(option, optionStyleIsSupported=True)

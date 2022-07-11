@@ -27,6 +27,6 @@ class OptionPriceModelForUnsupportedEuropeanOptionRegressionAlgorithm(OptionPric
         # BaroneAdesiWhaley model does not support European style options
         option.PriceModel = OptionPriceModels.BaroneAdesiWhaley()
 
-        self.SetWarmup(TimeSpan.FromHours(24 * 9 + 23));
+        self.SetWarmup(7, Resolution.Daily)
 
         self.Init(option, optionStyleIsSupported=False)

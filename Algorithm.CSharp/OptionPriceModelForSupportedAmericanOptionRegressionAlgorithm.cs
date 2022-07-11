@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using QuantConnect.Securities.Option;
 
@@ -34,7 +33,7 @@ namespace QuantConnect.Algorithm.CSharp
             // BaroneAdesiWhaley model supports American style options
             option.PriceModel = OptionPriceModels.BaroneAdesiWhaley();
 
-            SetWarmup(TimeSpan.FromDays(4));
+            SetWarmup(2, Resolution.Daily);
 
             Init(option, optionStyleIsSupported: true);
         }
@@ -42,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 1781482;
+        public override long DataPoints => 861931;
 
         /// <summary>
         /// Data Points count of the algorithm history

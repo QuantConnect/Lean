@@ -13,12 +13,7 @@
  * limitations under the License.
 */
 
-using System;
-using System.Linq;
 using System.Collections.Generic;
-using QuantConnect.Data;
-using QuantConnect.Data.Market;
-using QuantConnect.Interfaces;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -38,7 +33,7 @@ namespace QuantConnect.Algorithm.CSharp
             // BlackScholes model supports European style options
             option.PriceModel = OptionPriceModels.BlackScholes();
 
-            SetWarmup(TimeSpan.FromHours(24 * 9 + 23));
+            SetWarmup(7, Resolution.Daily);
 
             Init(option, optionStyleIsSupported: true);
         }
@@ -46,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 1405;
+        public override long DataPoints => 211;
 
         /// <summary>
         /// Data Points count of the algorithm history

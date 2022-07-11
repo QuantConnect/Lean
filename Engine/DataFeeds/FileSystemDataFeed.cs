@@ -144,9 +144,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // don't let future data past
                     warmupEnumerator = new FilterEnumerator<BaseData>(warmupEnumerator, data => data == null || data.EndTime <= warmupRequest.EndTimeLocal);
                 }
-                enumerator = new ConcatEnumerator(true, warmupEnumerator,
-                    // after the warmup enumerator we concatenate the 'normal' one
-                    CreateEnumerator(new SubscriptionRequest(request, startTimeUtc: pivotTimeUtc)));
+
+                var normalEnumerator = CreateEnumerator(new SubscriptionRequest(request, startTimeUtc: pivotTimeUtc));
+                // don't let pre start data pass, since we adjust start so they overlap 1 day let's not let this data pass, we just want it for fill forwarding after the target start
+                // this is also useful to drop any initial selection point which was already emitted during warmup
+                normalEnumerator = new FilterEnumerator<BaseData>(normalEnumerator, data => data == null || data.EndTime >= warmupRequest.EndTimeLocal);
+
+                // after the warmup enumerator we concatenate the 'normal' one
+                enumerator = new ConcatEnumerator(true, warmupEnumerator, normalEnumerator);
             }
             else
             {

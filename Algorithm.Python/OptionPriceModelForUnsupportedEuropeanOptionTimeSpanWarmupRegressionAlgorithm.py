@@ -12,21 +12,14 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from OptionPriceModelForOptionStylesBaseRegressionAlgorithm import OptionPriceModelForOptionStylesBaseRegressionAlgorithm
+from OptionPriceModelForUnsupportedEuropeanOptionRegressionAlgorithm import OptionPriceModelForUnsupportedEuropeanOptionRegressionAlgorithm
 
 ### <summary>
 ### Regression algorithm excersizing an equity covered European style option, using an option price model
-### that supports European style options and asserting that the option price model is used.
+### that does not support European style options and asserting that the option price model is not used.
 ### </summary>
-class OptionPriceModelForSupportedEuropeanOptionRegressionAlgorithm(OptionPriceModelForOptionStylesBaseRegressionAlgorithm):
+class OptionPriceModelForUnsupportedEuropeanOptionTimeSpanWarmupRegressionAlgorithm(OptionPriceModelForUnsupportedEuropeanOptionRegressionAlgorithm):
     def Initialize(self):
-        self.SetStartDate(2021, 1, 14)
-        self.SetEndDate(2021, 1, 14)
-
-        option = self.AddIndexOption("SPX", Resolution.Hour)
-        # BlackScholes model supports European style options
-        option.PriceModel = OptionPriceModels.BlackScholes()
-
-        self.SetWarmup(7, Resolution.Daily)
-
-        self.Init(option, optionStyleIsSupported=True)
+        OptionPriceModelForUnsupportedEuropeanOptionRegressionAlgorithm.Initialize(self)
+        
+        self.SetWarmup(TimeSpan.FromHours(24 * 9 + 23))

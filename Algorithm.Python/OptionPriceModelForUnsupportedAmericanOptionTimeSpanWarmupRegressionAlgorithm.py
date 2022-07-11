@@ -12,21 +12,14 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from OptionPriceModelForOptionStylesBaseRegressionAlgorithm import OptionPriceModelForOptionStylesBaseRegressionAlgorithm
+from OptionPriceModelForUnsupportedAmericanOptionRegressionAlgorithm import OptionPriceModelForUnsupportedAmericanOptionRegressionAlgorithm
 
 ### <summary>
 ### Regression algorithm excersizing an equity covered American style option, using an option price model
 ### that supports American style options and asserting that the option price model is used.
 ### </summary>
-class OptionPriceModelForUnsupportedAmericanOptionRegressionAlgorithm(OptionPriceModelForOptionStylesBaseRegressionAlgorithm):
+class OptionPriceModelForUnsupportedAmericanOptionTimeSpanWarmupRegressionAlgorithm(OptionPriceModelForUnsupportedAmericanOptionRegressionAlgorithm):
     def Initialize(self):
-        self.SetStartDate(2014, 6, 9)
-        self.SetEndDate(2014, 6, 9)
-
-        option = self.AddOption("AAPL", Resolution.Minute)
-        # BlackSholes model does not support American style options
-        option.PriceModel = OptionPriceModels.BlackScholes()
-
-        self.SetWarmup(2, Resolution.Daily)
-
-        self.Init(option, optionStyleIsSupported=False)
+        OptionPriceModelForUnsupportedAmericanOptionRegressionAlgorithm.Initialize(self)
+        
+        self.SetWarmup(TimeSpan.FromDays(4))
