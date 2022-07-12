@@ -861,7 +861,7 @@ namespace QuantConnect.Algorithm
             {
                 if (!_isMarketOnOpenOrderRestrictedForFuturesWarningSent)
                 {
-                    Debug("Warning: Market-On-Open orders are not allowed for futures.");
+                    Debug("Warning: Market-On-Open orders are not allowed for futures. Consider using limit orders for futures during extended market hours.");
                     _isMarketOnOpenOrderRestrictedForFuturesWarningSent = true;
                 }
 

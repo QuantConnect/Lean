@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
@@ -36,8 +37,37 @@ namespace QuantConnect.Tests.Brokerages
 
         private static SubscriptionDataConfig CreateConfig(string symbol, string market, SecurityType securityType = SecurityType.Crypto, Resolution resolution = Resolution.Minute)
         {
-            return new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create(symbol, securityType, market), resolution, TimeZones.Utc, TimeZones.Utc,
-            false, true, false);
+            Symbol actualSymbol;
+            switch (securityType)
+            {
+                case SecurityType.FutureOption:
+                    actualSymbol = Symbol.CreateOption(
+                        QuantConnect.Symbol.CreateFuture(symbol, Market.CME, new DateTime(2020, 4, 28)),
+                        Market.CME,
+                        OptionStyle.European,
+                        OptionRight.Call,
+                        1000,
+                        new DateTime(2020, 3, 26));
+                    break;
+
+                case SecurityType.Option:
+                case SecurityType.IndexOption:
+                    actualSymbol = Symbol.CreateOption(
+                        // QuantConnect.Symbol.Create(symbol, SecurityType.Future, Market.CME),
+                        symbol,
+                        Market.CME,
+                        OptionStyle.European,
+                        OptionRight.Call,
+                        1000,
+                        new DateTime(2020, 3, 26));
+                    break;
+
+                default:
+                    actualSymbol = Symbol.Create(symbol, securityType, market);
+                    break;
+            }
+
+            return new SubscriptionDataConfig(typeof(TradeBar), actualSymbol, resolution, TimeZones.Utc, TimeZones.Utc, false, true, false);
         }
     }
 }
