@@ -127,6 +127,58 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [Test]
+        public void FutureLiveHoldingsFutureMapping()
+        {
+            _startDate = new DateTime(2013, 10, 10);
+            _manualTimeProvider.SetCurrentTimeUtc(_startDate);
+
+            var endDate = _startDate.AddDays(1);
+            _algorithm.SetBenchmark(x => 1);
+            _algorithm.SetWarmup(2, Resolution.Daily);
+            _algorithm.UniverseSettings.Resolution = Resolution.Hour;
+            var feed = RunDataFeed();
+            // after algorithm initialization let's set the time provider time to reflect warmup window
+            _manualTimeProvider.SetCurrentTimeUtc(_algorithm.UtcTime);
+
+            var es = _algorithm.AddFuture("ES");
+            // allow time for the exchange to pick up the selection point
+            Thread.Sleep(50);
+            var assertedHoldings = false;
+            var securityChanges = 0;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
+            {
+                // let's wait till it's remapped
+                if (securityChanges == 3)
+                {
+                    Assert.IsNotNull(_algorithm.Securities.Values.SingleOrDefault(sec => sec.IsTradable));
+                    Assert.AreEqual(3, _algorithm.Securities.Values.Count);
+
+                    var result = LiveTradingResultHandler.GetHoldings(_algorithm.Securities.Values);
+                    // old future mapped contract is removed
+                    Assert.AreEqual(2, result.Count);
+                    Assert.IsTrue(result.TryGetValue(es.Symbol.Value, out var holding));
+                    Assert.IsTrue(result.TryGetValue(es.Mapped.Value, out holding));
+
+                    Assert.AreEqual(0, LiveTradingResultHandler.GetHoldings(_algorithm.Securities.Values, onlyInvested: true).Count);
+
+                    // we got what we wanted shortcut unit test
+                    _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                    assertedHoldings = true;
+                }
+
+                if (ts.SecurityChanges != SecurityChanges.None)
+                {
+                    securityChanges++;
+                }
+            },
+            endDate: _startDate.AddDays(120),
+            secondsTimeStep: 60 * 60 * 24 * 10);
+
+            Assert.IsTrue(assertedHoldings);
+            Assert.AreEqual(3, securityChanges);
+        }
+
+        [Test]
         public void FutureLiveHoldings()
         {
             _startDate = new DateTime(2013, 10, 10);
@@ -148,7 +200,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 if (ts.SecurityChanges != SecurityChanges.None)
                 {
+                    Assert.IsNotNull(_algorithm.Securities.Values.SingleOrDefault(sec => sec.IsTradable));
                     var result = LiveTradingResultHandler.GetHoldings(_algorithm.Securities.Values);
+
                     Assert.AreEqual(2, result.Count);
                     Assert.IsTrue(result.TryGetValue(es.Symbol.Value, out var holding));
                     Assert.IsTrue(result.TryGetValue(es.Mapped.Value, out holding));

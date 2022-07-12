@@ -19,7 +19,6 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
 using Python.Runtime;
-using QuantConnect.Data.Market;
 using QuantConnect.Util;
 
 namespace QuantConnect.Securities.Future
@@ -30,11 +29,24 @@ namespace QuantConnect.Securities.Future
     /// <seealso cref="Security"/>
     public class Future : Security, IDerivativeSecurity, IContinuousSecurity
     {
+        private bool _isTradable;
+
         /// <summary>
         /// Gets or sets whether or not this security should be considered tradable
         /// </summary>
         /// <remarks>Canonical futures are not tradable</remarks>
-        public override bool IsTradable => !Symbol.IsCanonical();
+        public override bool IsTradable
+        {
+            get
+            {
+                // once a future is removed it is no longer tradable
+                return _isTradable && !Symbol.IsCanonical();
+            }
+            set
+            {
+                _isTradable = value;
+            }
+        }
 
         /// <summary>
         /// The default number of days required to settle a futures sale

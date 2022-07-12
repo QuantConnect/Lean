@@ -1251,8 +1251,10 @@ namespace QuantConnect.Lean.Engine.Results
 
             foreach (var security in securities
                 // If we are invested we send it always, if not, we send non internal, non canonical and tradable securities. When securities are removed they are marked as non tradable.
-                // Continuous futures are different because it's mapped securities are internal and the continuous contract is canonical and non tradable but we want to send them anyways
-                .Where(s => s.Invested || !onlyInvested && (!s.IsInternalFeed() && s.IsTradable && !s.Symbol.IsCanonical() || s.Symbol.SecurityType == QuantConnect.SecurityType.Future))
+                .Where(s => s.Invested || !onlyInvested && (!s.IsInternalFeed() && s.IsTradable && !s.Symbol.IsCanonical()
+                    // Continuous futures are different because it's mapped securities are internal and the continuous contract is canonical and non tradable but we want to send them anyways
+                    // but we don't want to sent non canonical, non tradable futures, these would be the future chain assets, or continuous mapped contracts that have been removed
+                    || s.Symbol.SecurityType == QuantConnect.SecurityType.Future && (s.Symbol.IsCanonical() || s.IsTradable)))
                 .OrderBy(x => x.Symbol.Value))
             {
                 DictionarySafeAdd(holdings, security.Symbol.Value, new Holding(security), "holdings");
