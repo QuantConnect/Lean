@@ -29,6 +29,7 @@ namespace QuantConnect.Algorithm
     {
         private int _maxOrders = 10000;
         private bool _isMarketOnOpenOrderWarningSent;
+        private bool _isMarketOnOpenOrderRestrictedForFuturesWarningSent;
 
         /// <summary>
         /// Transaction Manager - Process transaction fills and order management.
@@ -249,8 +250,6 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket MarketOrder(Security security, decimal quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            var request = CreateSubmitOrderRequest(OrderType.Market, security, quantity, tag, orderProperties ?? DefaultOrderProperties?.Clone());
-
             // check the exchange is open before sending a market order, if it's not open
             // then convert it into a market on open order (not supported for futures)
             if (!security.Exchange.ExchangeOpen)
@@ -267,6 +266,8 @@ namespace QuantConnect.Algorithm
                 }
                 return mooTicket;
             }
+
+            var request = CreateSubmitOrderRequest(OrderType.Market, security, quantity, tag, orderProperties ?? DefaultOrderProperties?.Clone());
 
             // If warming up, do not submit
             if (IsWarmingUp)
@@ -858,6 +859,12 @@ namespace QuantConnect.Algorithm
             if (security.Type is SecurityType.Future or SecurityType.FutureOption && request.OrderType == OrderType.MarketOnOpen &&
                 !security.Exchange.ExchangeOpen)
             {
+                if (!_isMarketOnOpenOrderRestrictedForFuturesWarningSent)
+                {
+                    Debug("Warning: Market-On-Open orders are not allowed for futures.");
+                    _isMarketOnOpenOrderRestrictedForFuturesWarningSent = true;
+                }
+
                 return OrderResponse.Error(request, OrderResponseErrorCode.ExchangeNotOpen,
                     $"{request.OrderType} orders not supported for {security.Type} when exchange is not open."
                 );
