@@ -53,7 +53,7 @@ namespace QuantConnect.Tests.Brokerages
             // limit orders will process even if they go beyond the market price
 
             var symbolProperties = SPDB.GetSymbolProperties(order.Symbol.ID.Market, order.Symbol, order.SecurityType, order.PriceCurrency);
-            var roundOffPlaces = GetDecimalPlaces(symbolProperties.MinimumPriceVariation);
+            var roundOffPlaces = symbolProperties.MinimumPriceVariation.GetDecimalPlaces();
             var limit = (LimitOrder) order;
             if (order.Quantity > 0)
             {

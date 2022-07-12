@@ -1210,6 +1210,16 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Helper method to determine the amount of decimal places associated with the given decimal
+        /// </summary>
+        /// <param name="input">The value to get the decimal count from</param>
+        /// <returns>The quantity of decimal places</returns>
+        public static int GetDecimalPlaces(this decimal input)
+        {
+            return BitConverter.GetBytes(decimal.GetBits(input)[3])[2];
+        }
+
+        /// <summary>
         /// Extension method for faster string to decimal conversion.
         /// </summary>
         /// <param name="str">String to be converted to positive decimal value</param>

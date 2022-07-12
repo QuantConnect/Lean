@@ -40,11 +40,6 @@ namespace QuantConnect.Tests.Brokerages
             SPDB = SymbolPropertiesDatabase.FromDataFolder();
         }
 
-        protected static int GetDecimalPlaces(decimal minumumPriceVariation)
-        {
-            return BitConverter.GetBytes(decimal.GetBits(minumumPriceVariation)[3])[2];
-        }
-
         public MarketOrder CreateLongMarketOrder(decimal quantity)
         {
             return new MarketOrder(Symbol, Math.Abs(quantity), DateTime.Now, properties: Properties)
