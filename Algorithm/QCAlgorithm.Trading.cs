@@ -249,8 +249,10 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket MarketOrder(Security security, decimal quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
+            var request = CreateSubmitOrderRequest(OrderType.Market, security, quantity, tag, orderProperties ?? DefaultOrderProperties?.Clone());
+
             // check the exchange is open before sending a market order, if it's not open
-            // then convert it into a market on open order
+            // then convert it into a market on open order (not supported for futures)
             if (!security.Exchange.ExchangeOpen)
             {
                 var mooTicket = MarketOnOpenOrder(security.Symbol, quantity, tag);
@@ -265,8 +267,6 @@ namespace QuantConnect.Algorithm
                 }
                 return mooTicket;
             }
-
-            var request = CreateSubmitOrderRequest(OrderType.Market, security, quantity, tag, orderProperties ?? DefaultOrderProperties?.Clone());
 
             // If warming up, do not submit
             if (IsWarmingUp)
@@ -851,6 +851,15 @@ namespace QuantConnect.Algorithm
             {
                 return OrderResponse.Error(request, OrderResponseErrorCode.ExchangeNotOpen,
                     $"{request.OrderType} order and exchange not open."
+                );
+            }
+
+            //Check the exchange is open before sending a market on open order for futures
+            if (security.Type is SecurityType.Future or SecurityType.FutureOption && request.OrderType == OrderType.MarketOnOpen &&
+                !security.Exchange.ExchangeOpen)
+            {
+                return OrderResponse.Error(request, OrderResponseErrorCode.ExchangeNotOpen,
+                    $"{request.OrderType} orders not supported for {security.Type} when exchange is not open."
                 );
             }
 
