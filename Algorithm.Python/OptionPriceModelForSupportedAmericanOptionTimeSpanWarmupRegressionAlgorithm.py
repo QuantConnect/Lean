@@ -21,5 +21,7 @@ from OptionPriceModelForSupportedAmericanOptionRegressionAlgorithm import Option
 class OptionPriceModelForSupportedAmericanOptionTimeSpanWarmupRegressionAlgorithm(OptionPriceModelForSupportedAmericanOptionRegressionAlgorithm):
     def Initialize(self):
         OptionPriceModelForSupportedAmericanOptionRegressionAlgorithm.Initialize(self)
-        
+
+        # We want to match the start time of the base algorithm: Base algorithm warmup is 2 bar of daily resolution.
+        # So to match the same start time we go back 4 days, we need to account for a single weekend. This is calculated by 'Time.GetStartTimeForTradeBars'
         self.SetWarmup(TimeSpan.FromDays(4))

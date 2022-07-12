@@ -134,7 +134,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     && LeanData.IsValidConfiguration(warmupRequest.Configuration.SecurityType, warmupRequest.Configuration.Resolution, warmupRequest.Configuration.TickType))
                 {
                     // let them overlap a day if possible to avoid data gaps since each request will FFed it's own since they are different resolutions
-                    pivotTimeUtc = pivotTimeUtc.AddDays(-1);
+                    pivotTimeUtc = Time.GetStartTimeForTradeBars(request.Security.Exchange.Hours,
+                        _algorithm.StartDate.ConvertTo(_algorithm.TimeZone, request.Security.Exchange.TimeZone),
+                        Time.OneDay,
+                        1,
+                        false,
+                        warmupRequest.Configuration.DataTimeZone)
+                        .ConvertToUtc(request.Security.Exchange.TimeZone);
                     if (pivotTimeUtc < warmupRequest.StartTimeUtc)
                     {
                         pivotTimeUtc = warmupRequest.StartTimeUtc;

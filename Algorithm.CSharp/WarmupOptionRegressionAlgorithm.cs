@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
             _optionSymbol = option.Symbol;
 
             option.SetFilter(u => u.Strikes(-5, +5).Expiration(0, 180).IncludeWeeklys());
-            SetWarmUp(1, Resolution.Daily);
+            SetWarmUp(TimeSpan.FromDays(1));
         }
 
         /// <summary>
@@ -62,6 +62,9 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (atmContract != null)
                 {
+                    // during warmup, using daily resolution (with the same TZ as the algorithm) the last bar.EndTime of warmup
+                    // overlaps with the algorithm start time, considered not to be in warmup anymore.
+                    // This bar would also be emitted by lean if no warmup was set and daily resolution used, see 'BasicTemplateDailyAlgorithm'
                     if (Time <= StartDate)
                     {
                         if(atmContract.LastPrice == 0)
@@ -82,8 +85,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            var start = new DateTime(2015, 12, 24, 0, 0, 0);
-            var end = new DateTime(2015, 12, 24, 0, 0, 0);
+            var start = new DateTime(2015, 12, 23, 9, 31, 0);
+            var end = new DateTime(2015, 12, 23, 16, 0, 0);
             var count = 0;
             do
             {
@@ -92,7 +95,7 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new Exception($"Unexpected time {OptionWarmupTimes[count]} expected {start}");
                 }
                 count++;
-                start = start.AddDays(1);
+                start = start.AddMinutes(1);
             }
             while (start < end);
         }
@@ -110,7 +113,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 1037073;
+        public virtual long DataPoints => 1111660;
 
         /// <summary>
         /// Data Points count of the algorithm history

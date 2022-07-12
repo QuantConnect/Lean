@@ -23,6 +23,10 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             base.Initialize();
+
+            // We want to match the start time of the base algorithm: Base algorithm warmup is 24 bars of hour resolution.
+            // So to match the same start time we go back 5 days + a few hours, we need to account for weekends. This is calculated by 'Time.GetStartTimeForTradeBars'
+            // Each day has 7 hour bars => 3 complete days 21 hours + 2 weekend days + 3 hours of the previous day (24 PM - 11 hours = 13 PM - 13/14/15 hour bars)
             SetWarmUp(24 * 5 + 11);
         }
 

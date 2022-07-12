@@ -21,19 +21,19 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm asserting the behavior of option warmup
     /// </summary>
-    public class WarmupOptionTimeSpanRegressionAlgorithm : WarmupOptionRegressionAlgorithm
+    public class WarmupOptionResolutionRegressionAlgorithm : WarmupOptionRegressionAlgorithm
     {
         public override void Initialize()
         {
             base.Initialize();
 
-            SetWarmUp(TimeSpan.FromDays(1));
+            SetWarmUp(1, Resolution.Daily);
         }
 
         public override void OnEndOfAlgorithm()
         {
-            var start = new DateTime(2015, 12, 23, 9, 31, 0);
-            var end = new DateTime(2015, 12, 23, 16, 0, 0);
+            var start = new DateTime(2015, 12, 24, 0, 0, 0);
+            var end = new DateTime(2015, 12, 24, 0, 0, 0);
             var count = 0;
             do
             {
@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new Exception($"Unexpected time {OptionWarmupTimes[count]} expected {start}");
                 }
                 count++;
-                start = start.AddMinutes(1);
+                start = start.AddDays(1);
             }
             while (start < end);
         }
@@ -50,6 +50,6 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 1111660;
+        public override long DataPoints => 1037073;
     }
 }

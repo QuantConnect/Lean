@@ -25,6 +25,9 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             base.Initialize();
+            // We want to match the start time of the base algorithm. ES futures data time zone is UTC, algorithm time zone is new york (default).
+            // Base algorithm warmup is 1 bar of daily resolution starts at 8 PM new york time of T-1. So to match the same start time
+            // we go back a 1 day + 4 hours. This is calculated by 'Time.GetStartTimeForTradeBars'
             SetWarmup(TimeSpan.FromHours(24 + 4));
         }
 

@@ -221,11 +221,13 @@ namespace QuantConnect.Tests.Algorithm
 
         [TestCase(false)]
         [TestCase(true)]
-        public void WarmupStartDate_Equity(bool withResolution)
+        public void WarmupStartDate_Equity_BarCount(bool withResolution)
         {
             var algo = new AlgorithmStub(new NullDataFeed { ShouldThrow = false });
             algo.SetStartDate(2013, 10, 01);
             algo.AddEquity("AAPL");
+            // since SPY is a smaller resolution, won't affect in the bar count case, only the smallest warmup start time will be used
+            algo.AddEquity("SPY", Resolution.Tick);
             DateTime expected;
             if (withResolution)
             {
@@ -241,6 +243,54 @@ namespace QuantConnect.Tests.Algorithm
             algo.PostInitialize();
 
             // before than the case with no asset because takes into account 100 tradable dates of AAPL
+            Assert.AreEqual(expected, algo.Time);
+        }
+
+        [TestCase(0)]
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(3)]
+        [TestCase(4)]
+        [TestCase(5)]
+        public void WarmupStart_Equivalents(int testCase)
+        {
+            var algo = new AlgorithmStub(new NullDataFeed { ShouldThrow = false });
+            algo.SetStartDate(2013, 10, 01);
+            algo.AddEquity("AAPL", Resolution.Daily);
+            // since SPY is a smaller resolution, won't affect in the bar count case, only the smallest warmup start time will be used
+            algo.AddEquity("SPY", Resolution.Tick);
+            var expected = new DateTime(2013, 09, 20);
+            if (testCase == 0)
+            {
+                algo.SetWarmUp(7, Resolution.Daily);
+            }
+            else if (testCase == 1)
+            {
+                algo.SetWarmUp(7);
+            }
+            else if (testCase == 2)
+            {
+                algo.SetWarmUp(7);
+                algo.Settings.WarmupResolution = Resolution.Daily;
+            }
+            else if (testCase == 3)
+            {
+                // account for 2 weeknds
+                algo.SetWarmUp(TimeSpan.FromDays(11), Resolution.Daily);
+            }
+            else if (testCase == 4)
+            {
+                // account for 2 weeknds
+                algo.SetWarmUp(TimeSpan.FromDays(11));
+                algo.Settings.WarmupResolution = Resolution.Daily;
+            }
+            else if (testCase == 5)
+            {
+                // account for 2 weeknds
+                algo.SetWarmUp(TimeSpan.FromDays(11));
+            }
+            algo.PostInitialize();
+
             Assert.AreEqual(expected, algo.Time);
         }
 
