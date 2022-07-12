@@ -207,7 +207,7 @@ namespace QuantConnect.Lean.Engine.Results
                     //Profit loss changes, get the banner statistics, summary information on the performance for the headers.
                     var deltaStatistics = new Dictionary<string, string>();
                     var serverStatistics = GetServerStatistics(utcNow);
-                    var holdings = GetHoldings();
+                    var holdings = GetHoldings(Algorithm.Securities.Values);
 
                     //Add the algorithm statistics first.
                     Log.Debug("LiveTradingResultHandler.Update(): Build run time stats");
@@ -793,7 +793,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                     var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
                     var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
-                    var holdings = GetHoldings(onlyInvested: true);
+                    var holdings = GetHoldings(Algorithm.Securities.Values, onlyInvested: true);
                     var statisticsResults = GenerateStatisticsResults(charts, profitLoss);
                     var runtime = GetAlgorithmRuntimeStatistics(statisticsResults.Summary);
 
@@ -1242,16 +1242,19 @@ namespace QuantConnect.Lean.Engine.Results
             }
         }
 
-        private Dictionary<string, Holding> GetHoldings(bool onlyInvested = false)
+        /// <summary>
+        /// Helper method to fetch the algorithm holdings
+        /// </summary>
+        public static Dictionary<string, Holding> GetHoldings(IEnumerable<Security> securities, bool onlyInvested = false)
         {
             var holdings = new Dictionary<string, Holding>();
 
-            foreach (var kvp in Algorithm.Securities
-                // we send non internal, non canonical and tradable securities. When securities are removed they are marked as non tradable
-                .Where(pair => pair.Value.IsTradable && !pair.Value.IsInternalFeed() && (!pair.Key.IsCanonical() || pair.Key.SecurityType == QuantConnect.SecurityType.Future) && (!onlyInvested || pair.Value.Invested))
-                .OrderBy(x => x.Key.Value))
+            foreach (var security in securities
+                // If we are invested we send it always, if not, we send non internal, non canonical and tradable securities. When securities are removed they are marked as non tradable.
+                // Continuous futures are different because it's mapped securities are internal and the continuous contract is canonical and non tradable but we want to send them anyways
+                .Where(s => s.Invested || !onlyInvested && (!s.IsInternalFeed() && s.IsTradable && !s.Symbol.IsCanonical() || s.Symbol.SecurityType == QuantConnect.SecurityType.Future))
+                .OrderBy(x => x.Symbol.Value))
             {
-                var security = kvp.Value;
                 DictionarySafeAdd(holdings, security.Symbol.Value, new Holding(security), "holdings");
             }
 

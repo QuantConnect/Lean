@@ -3383,6 +3383,29 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Helper method to process an algorithms security changes, will add and remove securities according to them
+        /// </summary>
+        public static void ProcessSecurityChanges(this IAlgorithm algorithm, SecurityChanges securityChanges)
+        {
+            foreach (var security in securityChanges.AddedSecurities)
+            {
+                security.IsTradable = true;
+
+                // uses TryAdd, so don't need to worry about duplicates here
+                algorithm.Securities.Add(security);
+            }
+
+            var activeSecurities = algorithm.UniverseManager.ActiveSecurities;
+            foreach (var security in securityChanges.RemovedSecurities)
+            {
+                if (!activeSecurities.ContainsKey(security.Symbol))
+                {
+                    security.IsTradable = false;
+                }
+            }
+        }
+
+        /// <summary>
         /// Helper method to set an algorithm runtime exception in a normalized fashion
         /// </summary>
         public static void SetRuntimeError(this IAlgorithm algorithm, Exception exception, string context)
