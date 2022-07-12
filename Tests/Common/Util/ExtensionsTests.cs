@@ -43,6 +43,21 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class ExtensionsTests
     {
+        [TestCase("1000", 0)]
+        [TestCase("0", 0)]
+        [TestCase("1", 0)]
+        [TestCase("1.0", 1)]
+        [TestCase("0.01", 2)]
+        [TestCase("0.001", 3)]
+        [TestCase("0.0001", 4)]
+        [TestCase("0.00001", 5)]
+        [TestCase("0.000001", 6)]
+        public void GetDecimalPlaces(string decimalInput, int expectedResult)
+        {
+            var value = decimal.Parse(decimalInput, NumberStyles.Any, CultureInfo.InvariantCulture);
+            Assert.AreEqual(expectedResult, value.GetDecimalPlaces());
+        }
+
         [TestCase(0, 10, 110)]
         [TestCase(900, 10, 110)]
         [TestCase(500, 10, 10)]

@@ -245,22 +245,7 @@ namespace QuantConnect.Lean.Engine
 
                 if (timeSlice.SecurityChanges != SecurityChanges.None)
                 {
-                    foreach (var security in timeSlice.SecurityChanges.AddedSecurities)
-                    {
-                        security.IsTradable = true;
-
-                        // uses TryAdd, so don't need to worry about duplicates here
-                        algorithm.Securities.Add(security);
-                    }
-
-                    var activeSecurities = algorithm.UniverseManager.ActiveSecurities;
-                    foreach (var security in timeSlice.SecurityChanges.RemovedSecurities)
-                    {
-                        if (!activeSecurities.ContainsKey(security.Symbol))
-                        {
-                            security.IsTradable = false;
-                        }
-                    }
+                    algorithm.ProcessSecurityChanges(timeSlice.SecurityChanges);
 
                     leanManager.OnSecuritiesChanged(timeSlice.SecurityChanges);
                     realtime.OnSecuritiesChanged(timeSlice.SecurityChanges);

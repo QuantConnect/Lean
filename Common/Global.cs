@@ -120,17 +120,7 @@ namespace QuantConnect
             CurrencySymbol = Currencies.GetCurrencySymbol(security.QuoteCurrency.Symbol);
             ConversionRate = security.QuoteCurrency.ConversionRate;
 
-            var rounding = 2;
-            if (holding.Type == SecurityType.Forex || holding.Type == SecurityType.Cfd || holding.Type == SecurityType.Index)
-            {
-                rounding = 5;
-            }
-            //do not round crypto
-            else if (holding.Type == SecurityType.Crypto)
-            {
-                rounding = 28;
-            }
-
+            var rounding = security.SymbolProperties.MinimumPriceVariation.GetDecimalPlaces();
 
             AveragePrice = Math.Round(holding.AveragePrice, rounding);
             MarketPrice = Math.Round(holding.Price, rounding);

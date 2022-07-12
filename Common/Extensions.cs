@@ -1210,6 +1210,16 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Helper method to determine the amount of decimal places associated with the given decimal
+        /// </summary>
+        /// <param name="input">The value to get the decimal count from</param>
+        /// <returns>The quantity of decimal places</returns>
+        public static int GetDecimalPlaces(this decimal input)
+        {
+            return BitConverter.GetBytes(decimal.GetBits(input)[3])[2];
+        }
+
+        /// <summary>
         /// Extension method for faster string to decimal conversion.
         /// </summary>
         /// <param name="str">String to be converted to positive decimal value</param>
@@ -3379,6 +3389,29 @@ namespace QuantConnect
                     throw new ApplicationException(
                         $"The skies are falling and the oceans are rising! Math.Sign({quantity}) returned {sign} :/"
                     );
+            }
+        }
+
+        /// <summary>
+        /// Helper method to process an algorithms security changes, will add and remove securities according to them
+        /// </summary>
+        public static void ProcessSecurityChanges(this IAlgorithm algorithm, SecurityChanges securityChanges)
+        {
+            foreach (var security in securityChanges.AddedSecurities)
+            {
+                security.IsTradable = true;
+
+                // uses TryAdd, so don't need to worry about duplicates here
+                algorithm.Securities.Add(security);
+            }
+
+            var activeSecurities = algorithm.UniverseManager.ActiveSecurities;
+            foreach (var security in securityChanges.RemovedSecurities)
+            {
+                if (!activeSecurities.ContainsKey(security.Symbol))
+                {
+                    security.IsTradable = false;
+                }
             }
         }
 
