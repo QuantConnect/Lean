@@ -1254,7 +1254,7 @@ namespace QuantConnect.Lean.Engine.Results
                 .Where(s => s.Invested || !onlyInvested && (!s.IsInternalFeed() && s.IsTradable && !s.Symbol.IsCanonical()
                     // Continuous futures are different because it's mapped securities are internal and the continuous contract is canonical and non tradable but we want to send them anyways
                     // but we don't want to sent non canonical, non tradable futures, these would be the future chain assets, or continuous mapped contracts that have been removed
-                    || s.Symbol.SecurityType == QuantConnect.SecurityType.Future && (s.Symbol.IsCanonical() && subscriptionDataConfigService.GetSubscriptionDataConfigs(s.Symbol).Any() || s.IsTradable)))
+                    || s.Symbol.SecurityType == QuantConnect.SecurityType.Future && (s.IsTradable || s.Symbol.IsCanonical() && subscriptionDataConfigService.GetSubscriptionDataConfigs(s.Symbol).Any())))
                 .OrderBy(x => x.Symbol.Value))
             {
                 DictionarySafeAdd(holdings, security.Symbol.Value, new Holding(security), "holdings");

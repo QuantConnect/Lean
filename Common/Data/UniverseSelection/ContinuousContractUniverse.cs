@@ -132,22 +132,22 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         public static List<SubscriptionDataConfig> AddConfigurations(ISubscriptionDataConfigService subscriptionService, UniverseSettings universeSettings, Symbol symbol)
         {
-            var addConfigs = (bool internalConfig, List<Tuple<Type, TickType>> configDataTypes) => {
-                return subscriptionService.Add(symbol,
-                universeSettings.Resolution,
-                universeSettings.FillForward,
-                universeSettings.ExtendedMarketHours,
-                dataNormalizationMode: universeSettings.DataNormalizationMode,
-                // we need to provider the data types we want, else since it's canonical it would assume the default ZipEntry type used in universe chain
-                subscriptionDataTypes: configDataTypes,
-                dataMappingMode: universeSettings.DataMappingMode,
-                contractDepthOffset: (uint)Math.Abs(universeSettings.ContractDepthOffset),
-                isInternalFeed: internalConfig);
-            };
-            var result = addConfigs(!symbol.IsCanonical(), universeSettings.SubscriptionDataTypes.Where(x => x.Item2 != TickType.OpenInterest).ToList());
-            result.AddRange(addConfigs(true, universeSettings.SubscriptionDataTypes.Where(x => x.Item2 == TickType.OpenInterest).ToList()));
-
-            return result;
+            List<SubscriptionDataConfig> configs = new(universeSettings.SubscriptionDataTypes.Count);
+            foreach (var pair in universeSettings.SubscriptionDataTypes)
+            {
+                configs.AddRange(subscriptionService.Add(symbol,
+                    universeSettings.Resolution,
+                    universeSettings.FillForward,
+                    universeSettings.ExtendedMarketHours,
+                    dataNormalizationMode: universeSettings.DataNormalizationMode,
+                    // we need to provider the data types we want, else since it's canonical it would assume the default ZipEntry type used in universe chain
+                    subscriptionDataTypes: new List<Tuple<Type, TickType>> { pair },
+                    dataMappingMode: universeSettings.DataMappingMode,
+                    contractDepthOffset: (uint)Math.Abs(universeSettings.ContractDepthOffset),
+                    // open interest is internal and the underlying mapped contracts of the continuous canonical
+                    isInternalFeed: !symbol.IsCanonical() || pair.Item2 == TickType.OpenInterest));
+            }
+            return configs;
         }
 
         /// <summary>
