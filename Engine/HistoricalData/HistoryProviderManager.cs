@@ -18,6 +18,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Logging;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
@@ -89,6 +90,8 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 historyProvider.ReaderErrorDetected += (sender, args) => { OnReaderErrorDetected(args); };
                 _historyProviders.Add(historyProvider);
             }
+
+            Log.Trace($"HistoryProviderManager.Initialize(): history providers [{string.Join(",", _historyProviders.Select(x => x.GetType().Name))}]");
         }
 
         /// <summary>
