@@ -355,8 +355,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // the subscription could of ended but might still be part of the universe
             if (subscription.RemovedFromUniverse.Value)
             {
-                SubscriptionDataConfig config;
-                _subscriptionManagerSubscriptions.TryRemove(subscription.Configuration, out config);
+                _subscriptionManagerSubscriptions.TryRemove(subscription.Configuration, out var _);
             }
         }
 

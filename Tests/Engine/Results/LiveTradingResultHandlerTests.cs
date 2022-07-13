@@ -40,7 +40,7 @@ namespace QuantConnect.Tests.Engine.Results
             algorithm.AddFuture(Futures.Indices.SP500EMini);
             var equity = algorithm.AddEquity("SPY");
             equity.Holdings.SetHoldings(1, 10);
-            var result = LiveTradingResultHandler.GetHoldings(algorithm.Securities.Values, invested);
+            var result = LiveTradingResultHandler.GetHoldings(algorithm.Securities.Values, algorithm.SubscriptionManager.SubscriptionDataConfigService, invested);
 
             if (invested)
             {
@@ -64,7 +64,7 @@ namespace QuantConnect.Tests.Engine.Results
             var algorithm = new AlgorithmStub();
             algorithm.AddFuture(Futures.Indices.SP500EMini);
             algorithm.AddEquity("SPY");
-            var result = LiveTradingResultHandler.GetHoldings(algorithm.Securities.Values, invested);
+            var result = LiveTradingResultHandler.GetHoldings(algorithm.Securities.Values, algorithm.SubscriptionManager.SubscriptionDataConfigService, invested);
 
             if (invested)
             {
@@ -87,7 +87,7 @@ namespace QuantConnect.Tests.Engine.Results
             var algorithm = new AlgorithmStub();
             algorithm.AddEquity("SPY");
             algorithm.AddOption("SPY");
-            var result = LiveTradingResultHandler.GetHoldings(algorithm.Securities.Values, invested);
+            var result = LiveTradingResultHandler.GetHoldings(algorithm.Securities.Values, algorithm.SubscriptionManager.SubscriptionDataConfigService, invested);
 
             if (invested)
             {

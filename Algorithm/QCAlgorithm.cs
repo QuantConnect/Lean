@@ -1667,26 +1667,25 @@ namespace QuantConnect.Algorithm
                 if (!UniverseManager.TryGetValue(symbol, out universe) && _pendingUniverseAdditions.All(u => u.Configuration.Symbol != symbol))
                 {
                     var canonicalConfig = configs.First();
-                    var settings = new UniverseSettings(canonicalConfig.Resolution, leverage, true, false, TimeSpan.Zero);
+                    var settings = new UniverseSettings(canonicalConfig.Resolution, leverage, fillDataForward, false, TimeSpan.Zero);
                     if (symbol.SecurityType.IsOption())
                     {
                         universe = new OptionChainUniverse((Option)security, settings, LiveMode);
                     }
                     else
                     {
-                        // add the expected configurations of the canonical symbol, will allow it to warmup and indicators register to them
+                        // add the expected configurations of the canonical symbol right away, will allow it to warmup and indicators register to them
                         var dataTypes = SubscriptionManager.LookupSubscriptionConfigDataTypes(SecurityType.Future,
                             GetResolution(symbol, resolution), isCanonical: false);
-                        var continuousConfigs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol,
-                            resolution,
-                            fillDataForward,
-                            extendedMarketHours,
-                            isFilteredSubscription: true,
-                            subscriptionDataTypes: dataTypes,
-                            dataNormalizationMode: dataNormalizationMode ?? UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType),
-                            dataMappingMode: dataMappingMode ?? UniverseSettings.DataMappingMode,
-                            contractDepthOffset: contractOffset
-                        );
+                        var continuousUniverseSettings = new UniverseSettings(settings)
+                        {
+                            ExtendedMarketHours = extendedMarketHours,
+                            DataMappingMode = dataMappingMode ?? UniverseSettings.DataMappingMode,
+                            DataNormalizationMode = dataNormalizationMode ?? UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType),
+                            ContractDepthOffset = (int)contractOffset,
+                            SubscriptionDataTypes = dataTypes,
+                        };
+                        ContinuousContractUniverse.AddConfigurations(SubscriptionManager.SubscriptionDataConfigService, continuousUniverseSettings, security.Symbol);
 
                         // let's add a MHDB entry for the continuous symbol using the associated security
                         var continuousContractSymbol = ContinuousContractUniverse.CreateSymbol(security.Symbol);
@@ -1694,14 +1693,7 @@ namespace QuantConnect.Algorithm
                             continuousContractSymbol.ID.Symbol,
                             continuousContractSymbol.ID.SecurityType,
                             security.Exchange.Hours);
-                        AddUniverse(new ContinuousContractUniverse(security, new UniverseSettings(settings)
-                            {
-                                DataMappingMode = continuousConfigs.First().DataMappingMode,
-                                DataNormalizationMode = continuousConfigs.DataNormalizationMode(),
-                                ContractDepthOffset = (int)continuousConfigs.First().ContractDepthOffset,
-                                SubscriptionDataTypes = dataTypes
-                            }, LiveMode,
-                            new SubscriptionDataConfig(canonicalConfig, symbol: continuousContractSymbol)));
+                        AddUniverse(new ContinuousContractUniverse(security, continuousUniverseSettings, LiveMode, new SubscriptionDataConfig(canonicalConfig, symbol: continuousContractSymbol)));
 
                         universe = new FuturesChainUniverse((Future)security, settings);
                     }

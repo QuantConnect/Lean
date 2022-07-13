@@ -207,7 +207,7 @@ namespace QuantConnect.Lean.Engine.Results
                     //Profit loss changes, get the banner statistics, summary information on the performance for the headers.
                     var deltaStatistics = new Dictionary<string, string>();
                     var serverStatistics = GetServerStatistics(utcNow);
-                    var holdings = GetHoldings(Algorithm.Securities.Values);
+                    var holdings = GetHoldings(Algorithm.Securities.Values, Algorithm.SubscriptionManager.SubscriptionDataConfigService);
 
                     //Add the algorithm statistics first.
                     Log.Debug("LiveTradingResultHandler.Update(): Build run time stats");
@@ -793,7 +793,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                     var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
                     var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
-                    var holdings = GetHoldings(Algorithm.Securities.Values, onlyInvested: true);
+                    var holdings = GetHoldings(Algorithm.Securities.Values, Algorithm.SubscriptionManager.SubscriptionDataConfigService, onlyInvested: true);
                     var statisticsResults = GenerateStatisticsResults(charts, profitLoss);
                     var runtime = GetAlgorithmRuntimeStatistics(statisticsResults.Summary);
 
@@ -1245,7 +1245,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Helper method to fetch the algorithm holdings
         /// </summary>
-        public static Dictionary<string, Holding> GetHoldings(IEnumerable<Security> securities, bool onlyInvested = false)
+        public static Dictionary<string, Holding> GetHoldings(IEnumerable<Security> securities, ISubscriptionDataConfigService subscriptionDataConfigService, bool onlyInvested = false)
         {
             var holdings = new Dictionary<string, Holding>();
 
@@ -1254,7 +1254,7 @@ namespace QuantConnect.Lean.Engine.Results
                 .Where(s => s.Invested || !onlyInvested && (!s.IsInternalFeed() && s.IsTradable && !s.Symbol.IsCanonical()
                     // Continuous futures are different because it's mapped securities are internal and the continuous contract is canonical and non tradable but we want to send them anyways
                     // but we don't want to sent non canonical, non tradable futures, these would be the future chain assets, or continuous mapped contracts that have been removed
-                    || s.Symbol.SecurityType == QuantConnect.SecurityType.Future && (s.Symbol.IsCanonical() || s.IsTradable)))
+                    || s.Symbol.SecurityType == QuantConnect.SecurityType.Future && (s.Symbol.IsCanonical() && subscriptionDataConfigService.GetSubscriptionDataConfigs(s.Symbol).Any() || s.IsTradable)))
                 .OrderBy(x => x.Symbol.Value))
             {
                 DictionarySafeAdd(holdings, security.Symbol.Value, new Holding(security), "holdings");
