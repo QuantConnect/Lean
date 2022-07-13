@@ -31,10 +31,10 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class AddFutureContractWithContinuousRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private Symbol _currentMappedSymbol;
         private Future _continuousContract;
         private Future _futureContract;
-        private List<OrderTicket> _orderTickets = new List<OrderTicket>();
-        private DateTime? _endedAt = null;
+        private bool _ended;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -45,10 +45,10 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 10);
 
             _continuousContract = AddFuture(Futures.Indices.SP500EMini,
-                extendedMarketHours: true,
                 dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
                 dataMappingMode: DataMappingMode.LastTradingDay,
-                contractDepthOffset: 0
+                contractDepthOffset: 0,
+                extendedMarketHours: true
             );
 
             _futureContract = AddFutureContract(FutureChainProvider.GetFutureContractList(_continuousContract.Symbol, Time).First(),
@@ -61,14 +61,29 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            if (_endedAt.HasValue && this.UtcTime > _endedAt.Value)
+            if (_ended)
             {
                 throw new Exception($"Algorithm should of ended!");
             }
-            if (_orderTickets.Any())
+
+            var orders = Transactions.GetOrders().ToList();
+            if (orders.Any())
             {
+                if (orders.Count != 2)
+                {
+                    throw new Exception($"Expected 2 orders but got {orders.Count}");
+                }
+
+                if (orders.All(x => x.Status == OrderStatus.Filled) && _futureContract.Exchange.ExchangeOpen && _futureContract.Exchange.ExchangeOpen)
+                {
+                    RemoveSecurity(_futureContract.Symbol);
+                    RemoveSecurity(_continuousContract.Symbol);
+                    _ended = true;
+                }
+
                 return;
             }
+
             if (data.Keys.Count > 2)
             {
                 throw new Exception($"Getting data for more than 2 symbols! {string.Join(",", data.Keys.Select(symbol => symbol))}");
@@ -80,8 +95,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (!Portfolio.Invested)
             {
-                _orderTickets.Add(Buy(_futureContract.Symbol, 1));
-                _orderTickets.Add(Buy(_continuousContract.Mapped, 1));
+                // Very high limit price so the order is filled in the next time slice where market is open
+                LimitOrder(_futureContract.Symbol, 1, Securities[_futureContract.Symbol].Price * 2m);
+                LimitOrder(_continuousContract.Mapped, 1, Securities[_continuousContract.Mapped].Price * 2m);
             }
         }
 
@@ -89,16 +105,6 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (orderEvent.Status == OrderStatus.Filled)
             {
-                if (orderEvent.Direction == OrderDirection.Buy && _orderTickets.All(ticket => ticket.Status == OrderStatus.Filled))
-                {
-                    RemoveSecurity(_futureContract.Symbol);
-                    RemoveSecurity(_continuousContract.Symbol);
-                }
-                else if (orderEvent.Direction == OrderDirection.Sell && Transactions.GetOrders().All(order => order.Status == OrderStatus.Filled))
-                {
-                    _endedAt = orderEvent.UtcTime;
-                }
-
                 Log($"{orderEvent}");
             }
         }
@@ -141,32 +147,32 @@ namespace QuantConnect.Algorithm.CSharp
         {
             {"Total Trades", "3"},
             {"Average Win", "0%"},
-            {"Average Loss", "-0.06%"},
-            {"Compounding Annual Return", "-4.391%"},
-            {"Drawdown", "0.100%"},
+            {"Average Loss", "-0.68%"},
+            {"Compounding Annual Return", "-41.466%"},
+            {"Drawdown", "1.100%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "-0.057%"},
-            {"Sharpe Ratio", "-7.796"},
+            {"Net Profit", "-0.682%"},
+            {"Sharpe Ratio", "-6.861"},
             {"Probabilistic Sharpe Ratio", "1.216%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.037"},
-            {"Beta", "0.008"},
-            {"Annual Standard Deviation", "0.005"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-0.831"},
-            {"Tracking Error", "0.241"},
-            {"Treynor Ratio", "-4.655"},
+            {"Alpha", "-0.27"},
+            {"Beta", "0.063"},
+            {"Annual Standard Deviation", "0.038"},
+            {"Annual Variance", "0.001"},
+            {"Information Ratio", "-1.844"},
+            {"Tracking Error", "0.23"},
+            {"Treynor Ratio", "-4.097"},
             {"Total Fees", "$7.40"},
-            {"Estimated Strategy Capacity", "$1800000.00"},
+            {"Estimated Strategy Capacity", "$13000000.00"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
-            {"Fitness Score", "0.417"},
+            {"Fitness Score", "0.419"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-80.734"},
-            {"Portfolio Turnover", "0.835"},
+            {"Return Over Maximum Drawdown", "-57.657"},
+            {"Portfolio Turnover", "0.838"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -180,7 +186,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "302beb71a3cbed98c233c568b730705d"}
+            {"OrderListHash", "05e434fa1937f69b2e0ab3440d5a39a9"}
         };
     }
 }
