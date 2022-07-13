@@ -299,7 +299,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         public static IEnumerable<TickAggregator> CreateAggregators(RandomDataGeneratorSettings settings, TickType[] tickTypes)
         {
             // create default aggregators for tick type/resolution
-            foreach (var tickAggregator in TickAggregator.ForTickTypes(settings.Resolution, tickTypes))
+            foreach (var tickAggregator in TickAggregator.ForTickTypes(settings.SecurityType, settings.Resolution, tickTypes))
             {
                 yield return tickAggregator;
             }
@@ -311,11 +311,11 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 // prefer trades for coarse - in practice equity only does trades, but leaving this as configurable
                 if (tickTypes.Contains(TickType.Trade))
                 {
-                    yield return TickAggregator.ForTickTypes(Resolution.Daily, TickType.Trade).Single();
+                    yield return TickAggregator.ForTickTypes(settings.SecurityType, Resolution.Daily, TickType.Trade).Single();
                 }
                 else
                 {
-                    yield return TickAggregator.ForTickTypes(Resolution.Daily, TickType.Quote).Single();
+                    yield return TickAggregator.ForTickTypes(settings.SecurityType, Resolution.Daily, TickType.Quote).Single();
                 }
             }
         }

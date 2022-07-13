@@ -503,6 +503,17 @@ namespace QuantConnect.Util
             return false;
         }
 
+        /// <summary>
+        /// Helper method to determine if a configuration set is valid
+        /// </summary>
+        public static bool IsValidConfiguration(SecurityType securityType, Resolution resolution, TickType tickType)
+        {
+            if (securityType == SecurityType.Equity && (resolution == Resolution.Daily || resolution == Resolution.Hour))
+            {
+                return tickType != TickType.Quote;
+            }
+            return true;
+        }
 
         /// <summary>
         /// Generates the full zip file path rooted in the <paramref name="dataDirectory"/>
