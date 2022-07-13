@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -233,27 +233,11 @@ namespace QuantConnect.Data
 
             TickType = tickType ?? LeanData.GetCommonTickTypeForCommonDataTypes(objectType, SecurityType);
 
-            switch (resolution)
+            Increment = resolution.ToTimeSpan();
+            if (Resolution.Tick == resolution)
             {
-                case Resolution.Tick:
-                    //Ticks are individual sales and fillforward doesn't apply.
-                    Increment = TimeSpan.FromSeconds(0);
-                    FillDataForward = false;
-                    break;
-                case Resolution.Second:
-                    Increment = TimeSpan.FromSeconds(1);
-                    break;
-                case Resolution.Minute:
-                    Increment = TimeSpan.FromMinutes(1);
-                    break;
-                case Resolution.Hour:
-                    Increment = TimeSpan.FromHours(1);
-                    break;
-                case Resolution.Daily:
-                    Increment = TimeSpan.FromDays(1);
-                    break;
-                default:
-                    throw new InvalidEnumArgumentException(Invariant($"Unexpected Resolution: {resolution}"));
+                //Ticks are individual sales and fillforward doesn't apply.
+                FillDataForward = false;
             }
         }
 

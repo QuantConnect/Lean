@@ -1841,23 +1841,24 @@ namespace QuantConnect
         /// </summary>
         /// <param name="resolution">The resolution to be converted</param>
         /// <returns>A TimeSpan instance that represents the resolution specified</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TimeSpan ToTimeSpan(this Resolution resolution)
         {
             switch (resolution)
             {
                 case Resolution.Tick:
                     // ticks can be instantaneous
-                    return TimeSpan.FromTicks(0);
+                    return TimeSpan.Zero;
                 case Resolution.Second:
-                    return TimeSpan.FromSeconds(1);
+                    return Time.OneSecond;
                 case Resolution.Minute:
-                    return TimeSpan.FromMinutes(1);
+                    return Time.OneMinute;
                 case Resolution.Hour:
-                    return TimeSpan.FromHours(1);
+                    return Time.OneHour;
                 case Resolution.Daily:
-                    return TimeSpan.FromDays(1);
+                    return Time.OneDay;
                 default:
-                    throw new ArgumentOutOfRangeException("resolution");
+                    throw new ArgumentOutOfRangeException(nameof(resolution));
             }
         }
 
@@ -3130,6 +3131,10 @@ namespace QuantConnect
         /// <returns>Enumeration of lines in file</returns>
         public static IEnumerable<string> ReadLines(this IDataProvider dataProvider, string file)
         {
+            if(dataProvider == null)
+            {
+                throw new ArgumentException($"The provided '{nameof(IDataProvider)}' instance is null. Are you missing some initialization step?");
+            }
             var stream = dataProvider.Fetch(file);
             if (stream == null)
             {
