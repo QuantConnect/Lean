@@ -856,8 +856,7 @@ namespace QuantConnect.Algorithm
             }
 
             //Check the exchange is open before sending a market on open order for futures
-            if (security.Type is SecurityType.Future or SecurityType.FutureOption && request.OrderType == OrderType.MarketOnOpen &&
-                !security.Exchange.ExchangeOpen)
+            if (security.Type is SecurityType.Future or SecurityType.FutureOption && request.OrderType == OrderType.MarketOnOpen)
             {
                 if (!_isMarketOnOpenOrderRestrictedForFuturesWarningSent)
                 {
@@ -866,7 +865,7 @@ namespace QuantConnect.Algorithm
                 }
 
                 return OrderResponse.Error(request, OrderResponseErrorCode.ExchangeNotOpen,
-                    $"{request.OrderType} orders not supported for {security.Type} when exchange is not open."
+                    $"{request.OrderType} orders not supported for {security.Type}."
                 );
             }
 

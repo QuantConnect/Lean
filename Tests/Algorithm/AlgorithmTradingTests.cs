@@ -1420,6 +1420,18 @@ namespace QuantConnect.Tests.Algorithm
             Assert.That(ticket, Has.Property("Status").EqualTo(OrderStatus.New));
         }
 
+        [Test]
+        public void MarketOnOpenOrdersNotSupportedForFutures()
+        {
+            var algo = GetAlgorithm(out _, 1, 0);
+            var es20h20 = algo.AddFutureContract(
+                QuantConnect.Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 3, 20)),
+                Resolution.Minute);
+
+            var ticket = algo.MarketOnOpenOrder(es20h20.Symbol, 1);
+            Assert.That(ticket, Has.Property("Status").EqualTo(OrderStatus.Invalid));
+        }
+
         private class TestShortableProvider : IShortableProvider
         {
             public Dictionary<Symbol, long> AllShortableSymbols(DateTime localTime)
