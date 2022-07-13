@@ -15,62 +15,36 @@
 */
 
 using System;
-using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Future;
+using System.Collections.Generic;
+using QuantConnect.Data.Auxiliary;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.All)]
     public class DataQueueFuturesChainUniverseDataCollectionEnumeratorTests
     {
-        [Test]
-        public void RefreshesFutureChainUniverseOnDateChange()
+        [TestCase(Resolution.Tick)]
+        [TestCase(Resolution.Second)]
+        [TestCase(Resolution.Minute)]
+        [TestCase(Resolution.Hour)]
+        [TestCase(Resolution.Daily)]
+        public void RefreshesFutureChainUniverseOnDateChange(Resolution resolution)
         {
-            var startTime = new DateTime(2018, 10, 17, 10, 0, 0);
+            var startTime = new DateTime(2018, 10, 17, 5, 0, 0);
             var timeProvider = new ManualTimeProvider(startTime);
 
             var symbolUniverse = new TestDataQueueUniverseProvider(timeProvider);
 
             var canonicalSymbol = Symbol.Create(Futures.Indices.VIX, SecurityType.Future, Market.CFE, "/VX");
 
-            var quoteCurrency = new Cash(Currencies.USD, 0, 1);
-            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.CFE, canonicalSymbol, SecurityType.Future);
-            var config = new SubscriptionDataConfig(
-                typeof(ZipEntryName),
-                canonicalSymbol,
-                Resolution.Minute,
-                TimeZones.Utc,
-                TimeZones.Chicago,
-                true,
-                false,
-                false,
-                false,
-                TickType.Quote,
-                false,
-                DataNormalizationMode.Raw
-            );
-
-            var future = new Future(
-                canonicalSymbol,
-                exchangeHours,
-                quoteCurrency,
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache()
-            );
-
-            var universeSettings = new UniverseSettings(Resolution.Minute, 0, true, false, TimeSpan.Zero);
-            using var universe = new FuturesChainUniverse(future, universeSettings);
-            var request = new SubscriptionRequest(true, universe, future, config, startTime, Time.EndOfTime);
+            var request = GetRequest(canonicalSymbol, startTime, resolution);
             var enumerator = new DataQueueFuturesChainUniverseDataCollectionEnumerator(request, symbolUniverse, timeProvider);
 
             Assert.IsTrue(enumerator.MoveNext());
@@ -108,6 +82,33 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             Assert.AreEqual(2, symbolUniverse.TotalLookupCalls);
 
             enumerator.Dispose();
+            request.Universe.Dispose();
+        }
+
+        private static SubscriptionRequest GetRequest(Symbol canonicalSymbol, DateTime startTime, Resolution resolution)
+        {
+            var entry = MarketHoursDatabase.FromDataFolder().GetEntry(canonicalSymbol.ID.Market, canonicalSymbol, canonicalSymbol.SecurityType);
+            var config = new SubscriptionDataConfig(
+                typeof(ZipEntryName),
+                canonicalSymbol,
+                resolution,
+                entry.DataTimeZone,
+                entry.ExchangeHours.TimeZone,
+                true,
+                false,
+                false,
+                false,
+                TickType.Quote,
+                false,
+                DataNormalizationMode.Raw
+            );
+
+            var algo = new AlgorithmStub();
+            var future = algo.AddFuture(canonicalSymbol.Value);
+
+            var universeSettings = new UniverseSettings(resolution, 0, true, false, TimeSpan.Zero);
+            var universe = new FuturesChainUniverse(future, universeSettings);
+            return new SubscriptionRequest(true, universe, future, config, startTime, Time.EndOfTime);
         }
 
         private class TestDataQueueUniverseProvider : IDataQueueUniverseProvider
@@ -134,14 +135,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             public IEnumerable<Symbol> LookupSymbols(Symbol symbol, bool includeExpired, string securityCurrency = null)
             {
                 TotalLookupCalls++;
-
                 return _timeProvider.GetUtcNow().Date.Day >= 18 ? _symbolList2 : _symbolList1;
             }
 
-            public bool CanPerformSelection()
-            {
-                return true;
-            }
+            public bool CanPerformSelection() => true;
         }
     }
 }
