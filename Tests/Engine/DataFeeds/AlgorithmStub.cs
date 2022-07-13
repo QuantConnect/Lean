@@ -14,11 +14,12 @@
  *
 */
 
-using System.Collections.Generic;
 using QuantConnect.Algorithm;
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
+using System.Collections.Generic;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -37,12 +38,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 DataManager = new DataManagerStub(this);
                 SubscriptionManager.SetDataManager(DataManager);
             }
+            Transactions.SetOrderProcessor(new FakeOrderProcessor());
         }
 
         public AlgorithmStub(IDataFeed dataFeed)
         {
             DataManager = new DataManagerStub(dataFeed, this);
             SubscriptionManager.SetDataManager(DataManager);
+            Transactions.SetOrderProcessor(new FakeOrderProcessor());
         }
 
         public void AddSecurities(Resolution resolution = Resolution.Second, List<string> equities = null, List<string> forex = null, List<string> crypto = null)

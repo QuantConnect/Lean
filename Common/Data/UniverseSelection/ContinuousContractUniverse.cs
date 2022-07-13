@@ -102,17 +102,8 @@ namespace QuantConnect.Data.UniverseSelection
             DateTime maximumEndTimeUtc,
             ISubscriptionDataConfigService subscriptionService)
         {
-            var isInternal = !security.Symbol.IsCanonical();
-            var result = subscriptionService.Add(security.Symbol,
-                UniverseSettings.Resolution,
-                UniverseSettings.FillForward,
-                UniverseSettings.ExtendedMarketHours,
-                dataNormalizationMode: UniverseSettings.DataNormalizationMode,
-                subscriptionDataTypes: UniverseSettings.SubscriptionDataTypes,
-                dataMappingMode: UniverseSettings.DataMappingMode,
-                contractDepthOffset: (uint)Math.Abs(UniverseSettings.ContractDepthOffset),
-                isInternalFeed: isInternal);
-            return result.Select(config => new SubscriptionRequest(isUniverseSubscription: false,
+            var configs = AddConfigurations(subscriptionService, UniverseSettings, security.Symbol);
+            return configs.Select(config => new SubscriptionRequest(isUniverseSubscription: false,
                 universe: this,
                 security: security,
                 configuration: new SubscriptionDataConfig(config, isInternalFeed: config.IsInternalFeed || config.TickType == TickType.OpenInterest),
@@ -134,6 +125,29 @@ namespace QuantConnect.Data.UniverseSelection
                 .Where(tradeableDay => _liveMode || tradeableDay >= startTimeLocal)
                 // in live trading we delay selection so that we make sure auxiliary data is ready
                 .Select(time => _liveMode ? time.Add(Time.LiveAuxiliaryDataOffset) : time);
+        }
+
+        /// <summary>
+        /// Helper method to add and get the required configurations associated with a continuous universe
+        /// </summary>
+        public static List<SubscriptionDataConfig> AddConfigurations(ISubscriptionDataConfigService subscriptionService, UniverseSettings universeSettings, Symbol symbol)
+        {
+            List<SubscriptionDataConfig> configs = new(universeSettings.SubscriptionDataTypes.Count);
+            foreach (var pair in universeSettings.SubscriptionDataTypes)
+            {
+                configs.AddRange(subscriptionService.Add(symbol,
+                    universeSettings.Resolution,
+                    universeSettings.FillForward,
+                    universeSettings.ExtendedMarketHours,
+                    dataNormalizationMode: universeSettings.DataNormalizationMode,
+                    // we need to provider the data types we want, else since it's canonical it would assume the default ZipEntry type used in universe chain
+                    subscriptionDataTypes: new List<Tuple<Type, TickType>> { pair },
+                    dataMappingMode: universeSettings.DataMappingMode,
+                    contractDepthOffset: (uint)Math.Abs(universeSettings.ContractDepthOffset),
+                    // open interest is internal and the underlying mapped contracts of the continuous canonical
+                    isInternalFeed: !symbol.IsCanonical() || pair.Item2 == TickType.OpenInterest));
+            }
+            return configs;
         }
 
         /// <summary>

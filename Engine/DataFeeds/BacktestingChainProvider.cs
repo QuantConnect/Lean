@@ -79,7 +79,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (!_loggedPreviousTradableDate)
                     {
                         _loggedPreviousTradableDate = true;
-                        Log.Trace($"BacktestingCacheProvider.GetSymbols(): {date} is not a tradable date for {canonicalSymbol}. When requesting contracts " +
+                        Log.Trace($"BacktestingCacheProvider.GetSymbols(): {date} is not a tradable date for {canonicalSymbol}. When requesting contracts" +
                             $" for non tradable dates, will return contracts of previous tradable date.");
                     }
 
