@@ -118,7 +118,7 @@ namespace QuantConnect.Brokerages
             if (security.Type is SecurityType.Future or SecurityType.FutureOption && order.Type == OrderType.MarketOnOpen)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NorSupported",
-                    "MarketOnOpen orders are not supported for futures.");
+                    "MarketOnOpen orders are not supported for futures and future options.");
                 return false;
             }
 

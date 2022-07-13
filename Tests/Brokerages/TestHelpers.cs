@@ -41,25 +41,13 @@ namespace QuantConnect.Tests.Brokerages
             switch (securityType)
             {
                 case SecurityType.FutureOption:
-                    actualSymbol = Symbol.CreateOption(
-                        QuantConnect.Symbol.CreateFuture(symbol, Market.CME, new DateTime(2020, 4, 28)),
-                        Market.CME,
-                        OptionStyle.European,
-                        OptionRight.Call,
-                        1000,
-                        new DateTime(2020, 3, 26));
+                    actualSymbol = Symbols.CreateFutureOptionSymbol(Symbols.CreateFutureSymbol(symbol, new DateTime(2020, 4, 28)), OptionRight.Call,
+                        1000, new DateTime(2020, 3, 26));
                     break;
 
                 case SecurityType.Option:
                 case SecurityType.IndexOption:
-                    actualSymbol = Symbol.CreateOption(
-                        // QuantConnect.Symbol.Create(symbol, SecurityType.Future, Market.CME),
-                        symbol,
-                        Market.CME,
-                        OptionStyle.European,
-                        OptionRight.Call,
-                        1000,
-                        new DateTime(2020, 3, 26));
+                    actualSymbol = Symbols.CreateOptionSymbol(symbol, OptionRight.Call, 1000, new DateTime(2020, 3, 26));
                     break;
 
                 default:
