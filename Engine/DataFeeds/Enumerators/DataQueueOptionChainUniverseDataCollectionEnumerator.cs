@@ -113,8 +113,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 }
 
                 var localTime = _timeProvider.GetUtcNow()
-                    .RoundDown(_subscriptionRequest.Configuration.Increment)
-                    .ConvertFromUtc(_subscriptionRequest.Configuration.ExchangeTimeZone);
+                    .ConvertFromUtc(_subscriptionRequest.Configuration.ExchangeTimeZone)
+                    .RoundDown(_subscriptionRequest.Configuration.Increment);
 
                 // loading the list of futures contracts and converting them into zip entries
                 var symbols = _universeProvider.LookupSymbols(_subscriptionRequest.Security.Symbol, false);
@@ -143,6 +143,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     Current = _currentData;
                 }
 
+                Current = (BaseDataCollection)Current.Clone(fillForward: true);
                 Current.Underlying = Underlying.Current;
                 Current.Time = Underlying.Current.EndTime;
                 Current.EndTime = Underlying.Current.EndTime;

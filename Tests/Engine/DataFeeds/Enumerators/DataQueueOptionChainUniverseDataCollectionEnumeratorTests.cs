@@ -15,12 +15,15 @@
 */
 
 using System;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Securities.Option;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
@@ -28,8 +31,31 @@ using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 {
     [TestFixture, Parallelizable(ParallelScope.All)]
-    public class DataQueueFuturesChainUniverseDataCollectionEnumeratorTests
+    public class DataQueueOptionChainUniverseDataCollectionEnumeratorTests
     {
+        [TestCase(Resolution.Tick)]
+        [TestCase(Resolution.Second)]
+        [TestCase(Resolution.Minute)]
+        [TestCase(Resolution.Hour)]
+        [TestCase(Resolution.Daily)]
+        public void NullUnderlying(Resolution resolution)
+        {
+            var startTime = new DateTime(2018, 10, 17, 5, 0, 0);
+            var timeProvider = new ManualTimeProvider(startTime);
+
+            var symbolUniverse = new TestDataQueueUniverseProvider(timeProvider);
+
+            var canonicalSymbol = Symbols.SPY_Option_Chain;
+            var request = GetRequest(canonicalSymbol, startTime, resolution);
+            using var underlying = new EnqueueableEnumerator<BaseData>();
+            using var enumerator = new DataQueueOptionChainUniverseDataCollectionEnumerator(request, underlying, symbolUniverse, timeProvider);
+
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsNull(enumerator.Current);
+
+            request.Universe.Dispose();
+        }
+
         [TestCase(Resolution.Tick, "20181017 05:00", 5)]
         [TestCase(Resolution.Second, "20181017 05:00", 5)]
         [TestCase(Resolution.Minute, "20181017 05:00", 5)]
@@ -41,7 +67,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         [TestCase(Resolution.Minute, "20181017 10:00", 10)]
         [TestCase(Resolution.Hour, "20181017 10:00", 10)]
         [TestCase(Resolution.Daily, "20181017 10:00", 10)]
-        public void RefreshesFutureChainUniverseOnDateChange(Resolution resolution, string dateTime, int expectedStartHour)
+        public void RefreshesUniverseChainOnDateChange(Resolution resolution, string dateTime, int expectedStartHour)
         {
             var startTime = Time.ParseDate(dateTime);
             Assert.AreEqual(expectedStartHour, startTime.Hour);
@@ -49,44 +75,69 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             var symbolUniverse = new TestDataQueueUniverseProvider(timeProvider);
 
-            var canonicalSymbol = Symbol.Create(Futures.Indices.VIX, SecurityType.Future, Market.CFE, "/VX");
-
+            var canonicalSymbol = Symbols.SPY_Option_Chain;
             var request = GetRequest(canonicalSymbol, startTime, resolution);
-            var enumerator = new DataQueueFuturesChainUniverseDataCollectionEnumerator(request, symbolUniverse, timeProvider);
+            var underlyingSymbol = (request.Security as Option).Underlying.Symbol;
+            using var underlying = new EnqueueableEnumerator<BaseData>();
+            using var enumerator = new DataQueueOptionChainUniverseDataCollectionEnumerator(request, underlying, symbolUniverse, timeProvider);
 
+            underlying.Enqueue(new Tick(timeProvider.GetUtcNow().ConvertFromUtc(request.Security.Exchange.TimeZone), underlyingSymbol, 9, 10));
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNotNull(enumerator.Current);
             Assert.AreEqual(1, symbolUniverse.TotalLookupCalls);
             var data = enumerator.Current;
             Assert.IsNotNull(data);
             Assert.AreEqual(1, data.Data.Count);
+            Assert.IsFalse(enumerator.Current.IsFillForward);
 
             timeProvider.Advance(Time.OneSecond);
-
-            Assert.IsTrue(enumerator.MoveNext());
-            Assert.IsNull(enumerator.Current);
-            Assert.AreEqual(1, symbolUniverse.TotalLookupCalls);
-
-            timeProvider.Advance(Time.OneMinute);
-
-            Assert.IsTrue(enumerator.MoveNext());
-            Assert.IsNull(enumerator.Current);
-            Assert.AreEqual(1, symbolUniverse.TotalLookupCalls);
-
-            timeProvider.Advance(Time.OneDay);
+            underlying.Enqueue(new Tick(timeProvider.GetUtcNow().ConvertFromUtc(request.Security.Exchange.TimeZone), underlyingSymbol, 9, 10));
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNotNull(enumerator.Current);
+            Assert.AreEqual(1, symbolUniverse.TotalLookupCalls);
+            // fill forwarding the chain selection, but time should advance
+            Assert.AreEqual(data.Data.Single().Symbol, enumerator.Current.Data.Single().Symbol);
+            Assert.IsTrue(enumerator.Current.EndTime > data.EndTime);
+            Assert.IsTrue(enumerator.Current.IsFillForward);
+            data = enumerator.Current;
+
+            timeProvider.Advance(Time.OneMinute);
+            underlying.Enqueue(new Tick(timeProvider.GetUtcNow().ConvertFromUtc(request.Security.Exchange.TimeZone), underlyingSymbol, 9, 10));
+
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsNotNull(enumerator.Current);
+            Assert.AreEqual(1, symbolUniverse.TotalLookupCalls);
+            // fill forwarding the chain selection, but time should advance
+            Assert.AreEqual(data.Data.Single().Symbol, enumerator.Current.Data.Single().Symbol);
+            Assert.IsTrue(enumerator.Current.EndTime > data.EndTime);
+            Assert.IsTrue(enumerator.Current.IsFillForward);
+            data = enumerator.Current;
+
+            timeProvider.Advance(Time.OneDay);
+            underlying.Enqueue(new Tick(timeProvider.GetUtcNow().ConvertFromUtc(request.Security.Exchange.TimeZone), underlyingSymbol, 9, 10));
+
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsNotNull(enumerator.Current);
+            // selection should of have changed
+            Assert.AreNotEqual(data.Data.Single().Symbol, enumerator.Current.Data.Single().Symbol);
+            Assert.IsTrue(enumerator.Current.EndTime > data.EndTime);
+            Assert.IsFalse(enumerator.Current.IsFillForward);
+            data = enumerator.Current;
             Assert.AreEqual(2, symbolUniverse.TotalLookupCalls);
             data = enumerator.Current;
             Assert.IsNotNull(data);
-            Assert.AreEqual(2, data.Data.Count);
+            Assert.AreEqual(1, data.Data.Count);
 
             timeProvider.Advance(Time.OneMinute);
+            underlying.Enqueue(new Tick(timeProvider.GetUtcNow().ConvertFromUtc(request.Security.Exchange.TimeZone), underlyingSymbol, 9, 10));
 
             Assert.IsTrue(enumerator.MoveNext());
-            Assert.IsNull(enumerator.Current);
             Assert.AreEqual(2, symbolUniverse.TotalLookupCalls);
+            // fill forwarding the chain selection, but time should advance
+            Assert.AreEqual(data.Data.Single().Symbol, enumerator.Current.Data.Single().Symbol);
+            Assert.IsTrue(enumerator.Current.EndTime > data.EndTime);
+            Assert.IsTrue(enumerator.Current.IsFillForward);
 
             enumerator.Dispose();
             request.Universe.Dispose();
@@ -111,25 +162,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             );
 
             var algo = new AlgorithmStub();
-            var future = algo.AddFuture(canonicalSymbol.Value);
+            var underlying = algo.AddEquity("SPY");
+            var option = algo.AddOption(underlying.Symbol);
+            option.Underlying = underlying;
 
             var universeSettings = new UniverseSettings(resolution, 0, true, false, TimeSpan.Zero);
-            var universe = new FuturesChainUniverse(future, universeSettings);
-            return new SubscriptionRequest(true, universe, future, config, startTime, Time.EndOfTime);
+            var universe = new OptionChainUniverse(option, universeSettings, liveMode: false);
+            return new SubscriptionRequest(true, universe, option, config, startTime, Time.EndOfTime);
         }
 
         private class TestDataQueueUniverseProvider : IDataQueueUniverseProvider
         {
-            private readonly Symbol[] _symbolList1 =
-            {
-                Symbol.CreateFuture(Futures.Indices.VIX, Market.CFE, new DateTime(2018, 10, 31))
-            };
-            private readonly Symbol[] _symbolList2 =
-            {
-                Symbol.CreateFuture(Futures.Indices.VIX, Market.CFE, new DateTime(2018, 10, 31)),
-                Symbol.CreateFuture(Futures.Indices.VIX, Market.CFE, new DateTime(2018, 11, 30)),
-            };
-
+            private readonly Symbol[] _symbolList1 = { Symbols.SPY_C_192_Feb19_2016 };
+            private readonly Symbol[] _symbolList2 = { Symbols.SPY_P_192_Feb19_2016 };
             private readonly ITimeProvider _timeProvider;
 
             public int TotalLookupCalls { get; set; }
