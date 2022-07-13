@@ -56,14 +56,21 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             request.Universe.Dispose();
         }
 
-        [TestCase(Resolution.Tick)]
-        [TestCase(Resolution.Second)]
-        [TestCase(Resolution.Minute)]
-        [TestCase(Resolution.Hour)]
-        [TestCase(Resolution.Daily)]
-        public void RefreshesUniverseChainOnDateChange(Resolution resolution)
+        [TestCase(Resolution.Tick, "20181017 05:00", 5)]
+        [TestCase(Resolution.Second, "20181017 05:00", 5)]
+        [TestCase(Resolution.Minute, "20181017 05:00", 5)]
+        [TestCase(Resolution.Hour, "20181017 05:00", 5)]
+        [TestCase(Resolution.Daily, "20181017 05:00", 5)]
+
+        [TestCase(Resolution.Tick, "20181017 10:00", 10)]
+        [TestCase(Resolution.Second, "20181017 10:00", 10)]
+        [TestCase(Resolution.Minute, "20181017 10:00", 10)]
+        [TestCase(Resolution.Hour, "20181017 10:00", 10)]
+        [TestCase(Resolution.Daily, "20181017 10:00", 10)]
+        public void RefreshesUniverseChainOnDateChange(Resolution resolution, string dateTime, int expectedStartHour)
         {
-            var startTime = new DateTime(2018, 10, 17, 5, 0, 0);
+            var startTime = Time.ParseDate(dateTime);
+            Assert.AreEqual(expectedStartHour, startTime.Hour);
             var timeProvider = new ManualTimeProvider(startTime);
 
             var symbolUniverse = new TestDataQueueUniverseProvider(timeProvider);

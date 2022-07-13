@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -38,20 +38,23 @@ namespace QuantConnect.Securities
         /// <returns>True if the type was previously not registered</returns>
         public bool RegisterType(Type type)
         {
-            Type existingType;
-            if (_types.TryGetValue(type.Name, out existingType))
+            lock (_types)
             {
-                if (existingType != type)
+                Type existingType;
+                if (_types.TryGetValue(type.Name, out existingType))
                 {
-                    // shouldn't happen but we want to know if it does
-                    throw new InvalidOperationException(
-                        $"Two different types were detected trying to register the same type name: {existingType} - {type}");
+                    if (existingType != type)
+                    {
+                        // shouldn't happen but we want to know if it does
+                        throw new InvalidOperationException(
+                            $"Two different types were detected trying to register the same type name: {existingType} - {type}");
+                    }
+                    return true;
                 }
-                return true;
-            }
 
-            _types[type.Name] = type;
-            return false;
+                _types[type.Name] = type;
+                return false;
+            }
         }
 
         /// <summary>
@@ -60,7 +63,10 @@ namespace QuantConnect.Securities
         /// <returns>True if the type was previously registered</returns>
         public bool UnregisterType(Type type)
         {
-            return _types.Remove(type.Name);
+            lock (_types)
+            {
+                return _types.Remove(type.Name);
+            }
         }
 
         /// <summary>
@@ -68,7 +74,10 @@ namespace QuantConnect.Securities
         /// </summary>
         public bool TryGetType(string name, out Type type)
         {
-            return _types.TryGetValue(name, out type);
+            lock (_types)
+            {
+                return _types.TryGetValue(name, out type);
+            }
         }
     }
 }
