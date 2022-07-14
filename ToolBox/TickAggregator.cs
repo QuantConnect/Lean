@@ -1,8 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
+using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox
 {
@@ -66,11 +68,11 @@ namespace QuantConnect.ToolBox
         /// Creates the correct <see cref="TickAggregator"/> instances for the specified tick types and resolution.
         /// <see cref="QuantConnect.TickType.OpenInterest"/> will ignore <paramref name="resolution"/> and use <see cref="QuantConnect.Resolution.Daily"/>
         /// </summary>
-        public static IEnumerable<TickAggregator> ForTickTypes(Resolution resolution, params TickType[] tickTypes)
+        public static IEnumerable<TickAggregator> ForTickTypes(SecurityType securityType, Resolution resolution, params TickType[] tickTypes)
         {
             if (resolution == Resolution.Tick)
             {
-                foreach (var tickType in tickTypes)
+                foreach (var tickType in tickTypes.Where(t => LeanData.IsValidConfiguration(securityType, resolution, t)))
                 {
                     // OI is special
                     if (tickType == TickType.OpenInterest)
@@ -85,7 +87,7 @@ namespace QuantConnect.ToolBox
                 yield break;
             }
 
-            foreach (var tickType in tickTypes)
+            foreach (var tickType in tickTypes.Where(t => LeanData.IsValidConfiguration(securityType, resolution, t)))
             {
                 switch (tickType)
                 {
