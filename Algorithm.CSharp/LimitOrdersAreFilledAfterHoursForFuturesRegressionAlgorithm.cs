@@ -48,14 +48,10 @@ namespace QuantConnect.Algorithm.CSharp
                 contractDepthOffset: 0
             );
             _futureContract = AddFutureContract(FutureChainProvider.GetFutureContractList(_continuousContract.Symbol, Time).First());
-
-            // Schedule.On(DateRules.EveryDay(), TimeRules.At(18, 0, 0), PlaceLimitOrders);
         }
 
         public override void OnWarmupFinished()
         {
-            base.OnWarmupFinished();
-
             // Right after warm up we should be outside regular market hours
             if (_futureContract.Exchange.ExchangeOpen)
             {
@@ -81,14 +77,19 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (Time.TimeOfDay.Hours > 17 && !Portfolio.Invested)
             {
-                PlaceLimitOrders();
+                // Limit order should be allowed for futures outside of regular market hours.
+                // Use a very high limit price so the limit orders get filled immediately
+                var futureContractLimitOrder = LimitOrder(_futureContract.Symbol, 1, _futureContract.Price * 2m);
+                var continuousContractLimitOrder = LimitOrder(_continuousContract.Mapped, 1, _continuousContract.Price * 2m);
+                if (futureContractLimitOrder.Status == OrderStatus.Invalid || continuousContractLimitOrder.Status == OrderStatus.Invalid)
+                {
+                    throw new Exception($"Limit order should be allowed for futures outside of regular market hours");
+                }
             }
         }
 
         public override void OnEndOfAlgorithm()
         {
-            base.OnEndOfAlgorithm();
-
             if (Transactions.GetOrders().Any(order => order.Status != OrderStatus.Filled ))
             {
                 throw new Exception("Not all orders were filled");
@@ -102,29 +103,6 @@ namespace QuantConnect.Algorithm.CSharp
                 (orderEvent.UtcTime.TimeOfDay >= new TimeSpan(13, 30, 0) && orderEvent.UtcTime.TimeOfDay < new TimeSpan(21, 0, 0)))
             {
                 throw new Exception($"Order should have been filled during extended market hours");
-            }
-        }
-
-        private void PlaceLimitOrders()
-        {
-            // if (Transactions.GetOrders().Any())
-            // {
-            //     return;
-            // }
-
-            // Make sure market is open at 18:00
-            // if (!_futureContract.Exchange.ExchangeOpen)
-            // {
-            //     throw new Exception($"Market should be closed at 17:00 for {_futureContract.Symbol}");
-            // }
-
-            // Limit order should be allowed for futures outside of regular market hours.
-            // Use a very high limit price so the limit orders get filled immediately
-            var futureContractLimitOrder = LimitOrder(_futureContract.Symbol, 1, _futureContract.Price * 2m);
-            var continuousContractLimitOrder = LimitOrder(_continuousContract.Mapped, 1, _continuousContract.Price * 2m);
-            if (futureContractLimitOrder.Status == OrderStatus.Invalid || continuousContractLimitOrder.Status == OrderStatus.Invalid)
-            {
-                throw new Exception($"Limit order should be allowed for futures outside of regular market hours");
             }
         }
 

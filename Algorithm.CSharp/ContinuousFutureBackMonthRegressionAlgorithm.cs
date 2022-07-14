@@ -97,13 +97,16 @@ namespace QuantConnect.Algorithm.CSharp
                 _lastDateLog = Time;
 
                 Log($"{Time}- {Securities[_continuousContract.Symbol].GetLastData()}");
-                if (Portfolio.Invested)
+                if (_continuousContract.Exchange.ExchangeOpen)
                 {
-                    Liquidate();
-                }
-                else
-                {
-                    Buy(_continuousContract.Mapped, 1);
+                    if (Portfolio.Invested)
+                    {
+                        Liquidate();
+                    }
+                    else
+                    {
+                        Buy(_continuousContract.Mapped, 1);
+                    }
                 }
 
                 if(Time.Month == 1 && Time.Year == 2013)

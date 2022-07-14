@@ -38,7 +38,6 @@ class BasicTemplateFuturesDailyAlgorithm(QCAlgorithm):
         futureSP500.SetFilter(timedelta(0), timedelta(182))
         futureGold.SetFilter(0, 182)
 
-
     def OnData(self,slice):
         if not self.Portfolio.Invested:
             for chain in slice.FutureChains:
@@ -50,7 +49,10 @@ class BasicTemplateFuturesDailyAlgorithm(QCAlgorithm):
                 front = sorted(contracts, key = lambda x: x.Expiry)[0]
 
                 self.contractSymbol = front.Symbol
-                if self.IsMarketOpen(self.contractSymbol):
+                # if found and exchange is open, trade it. Exchange could be closed, for example for a bar after 6:00pm on a friday, when futures
+                # markets are closed.
+                if self.Securities[self.contractSymbol].Exchange.ExchangeOpen:
                     self.MarketOrder(front.Symbol , 1)
-        else:
+        # same as before, we have to check if exchange is actually open because market-on-open orders are not supported for futures.
+        elif all([x.Exchange.ExchangeOpen for x in self.Securities.Values]):
             self.Liquidate()
