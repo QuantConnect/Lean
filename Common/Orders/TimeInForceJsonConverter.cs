@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -88,14 +88,24 @@ namespace QuantConnect.Orders
         /// </returns>
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            var jObject = JObject.Load(reader);
+            var jObject = JToken.Load(reader);
 
             Type type;
-            var jToken = jObject["$type"];
-            if (jToken != null)
+            var array = jObject as JArray;
+            if (array != null)
             {
+                if (array.Count != 0)
+                {
+                    throw new InvalidOperationException($"Unexpected time in force value: {jObject}");
+                }
+                // default value if not present. for php [] & {} are the same representation of empty object
+                type = typeof(GoodTilCanceledTimeInForce);
+            }
+            else if (jObject["$type"] != null)
+            {
+                var jToken = jObject["$type"];
                 var typeName = jToken.ToString();
-                type = Type.GetType(typeName);
+                type = Type.GetType(typeName, throwOnError: false, ignoreCase: true);
                 if (type == null)
                 {
                     throw new InvalidOperationException($"Unable to find the type: {typeName}");

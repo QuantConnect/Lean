@@ -15,10 +15,10 @@
 
 using System;
 using System.IO;
-using System.Linq;
-using System.Threading;
 using System.Web;
+using System.Linq;
 using NUnit.Framework;
+using System.Threading;
 using QuantConnect.Api;
 
 namespace QuantConnect.Tests.API
@@ -134,7 +134,7 @@ namespace QuantConnect.Tests.API
         {
             var language = Language.CSharp;
             var code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs");
-            var algorithmName = "main.cs";
+            var algorithmName = "Main.cs";
             var projectName = $"{DateTime.UtcNow.ToStringInvariant("u")} Test {TestAccount} Lang {language}";
 
             Perform_CreateCompileBackTest_Tests(projectName, language, algorithmName, code);
@@ -173,10 +173,10 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(readProject.Success);
             Assert.IsTrue(readProject.Projects.First().Name == projectName);
 
-            // Test set a project file for the project
+            // Test change project file name and content
             var file = new ProjectFile { Name = algorithmName, Code = code };
-            var addProjectFile = ApiClient.AddProjectFile(project.Projects.First().ProjectId, file.Name, file.Code);
-            Assert.IsTrue(addProjectFile.Success);
+            var updateProjectFileContent = ApiClient.UpdateProjectFileContent(project.Projects.First().ProjectId, file.Name, file.Code);
+            Assert.IsTrue(updateProjectFileContent.Success);
 
             // Download the project again to validate its got the new file
             var verifyRead = ApiClient.ReadProject(project.Projects.First().ProjectId);
@@ -213,6 +213,11 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(backtestRead.Statistics["Total Trades"] == "1");
             Assert.IsTrue(backtestRead.Charts["Benchmark"].Series.Count > 0);
 
+            // In the same way, read the orders returned in the backtest
+            var backtestOrdersRead = ApiClient.ReadBacktestOrders(project.Projects.First().ProjectId, backtest.BacktestId, 0, 1);
+            Assert.IsTrue(backtestOrdersRead.Any());
+            Assert.AreEqual(Symbols.SPY.Value, backtestOrdersRead.First().Symbol.Value);
+
             // Verify we have the backtest in our project
             var listBacktests = ApiClient.ListBacktests(project.Projects.First().ProjectId);
             Assert.IsTrue(listBacktests.Success);
@@ -240,6 +245,39 @@ namespace QuantConnect.Tests.API
             // Test delete the project we just created
             var deleteProject = ApiClient.DeleteProject(project.Projects.First().ProjectId);
             Assert.IsTrue(deleteProject.Success);
+        }
+
+        [Test]
+        public void ReadBacktestOrders()
+        {
+            // Project settings
+            var language = Language.CSharp;
+            var code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs");
+            var algorithmName = "Main.cs";
+            var projectName = $"{DateTime.UtcNow.ToStringInvariant("u")} Test {TestAccount} Lang {language}";
+
+            // Create a default project
+            var project = ApiClient.CreateProject(projectName, language, TestOrganization);
+            var file = new ProjectFile { Name = algorithmName, Code = code };
+            var updateProjectFileContent = ApiClient.UpdateProjectFileContent(project.Projects.First().ProjectId, file.Name, file.Code);
+            var compileCreate = ApiClient.CreateCompile(project.Projects.First().ProjectId);
+            var compileSuccess = WaitForCompilerResponse(project.Projects.First().ProjectId, compileCreate.CompileId);
+            var backtestName = $"{DateTime.Now.ToStringInvariant("u")} API Backtest";
+            var backtest = ApiClient.CreateBacktest(project.Projects.First().ProjectId, compileSuccess.CompileId, backtestName);
+
+            // Read ongoing backtest
+            var backtestRead = ApiClient.ReadBacktest(project.Projects.First().ProjectId, backtest.BacktestId);
+            Assert.IsTrue(backtestRead.Success);
+
+            // Now wait until the backtest is completed and request the orders again
+            backtestRead = WaitForBacktestCompletion(project.Projects.First().ProjectId, backtest.BacktestId);
+            var backtestOrdersRead = ApiClient.ReadBacktestOrders(project.Projects.First().ProjectId, backtest.BacktestId);
+            Assert.IsTrue(backtestOrdersRead.Any());
+            Assert.AreEqual(Symbols.SPY.Value, backtestOrdersRead.First().Symbol.Value);
+
+            // Delete the backtest we just created
+            var deleteBacktest = ApiClient.DeleteBacktest(project.Projects.First().ProjectId, backtest.BacktestId);
+            var deleteProject = ApiClient.DeleteProject(project.Projects.First().ProjectId);
         }
 
         /// <summary>
