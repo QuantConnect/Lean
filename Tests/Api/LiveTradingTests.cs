@@ -16,13 +16,13 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Api;
-using QuantConnect.Brokerages;
-using QuantConnect.Brokerages.Paper;
-using QuantConnect.Configuration;
+using System.Threading;
 using QuantConnect.Orders;
+using QuantConnect.Brokerages;
+using QuantConnect.Configuration;
+using System.Collections.Generic;
 
 namespace QuantConnect.Tests.API
 {
@@ -386,9 +386,9 @@ namespace QuantConnect.Tests.API
             var projectId = RunLiveAlgorithm(settings, file, false);
 
             // Wait to receive the orders
-            var readLiveOrders = WaitForReadLiveOrdersResponse(projectId, 10);
-            Assert.IsTrue(readLiveOrders.Orders.Any());
-            Assert.AreEqual(Symbols.SPY.Value, readLiveOrders.Orders.First().Symbol);
+            var readLiveOrders = WaitForReadLiveOrdersResponse(projectId, 60 * 5);
+            Assert.IsTrue(readLiveOrders.Any());
+            Assert.AreEqual(Symbols.SPY, readLiveOrders.First().Symbol);
 
             // Liquidate live algorithm; will also stop algorithm
             var liquidateLive = ApiClient.LiquidateLiveAlgorithm(projectId);
@@ -425,15 +425,14 @@ namespace QuantConnect.Tests.API
         /// <param name="projectId">Id of the project</param>
         /// <param name="seconds">Seconds to allow for receive an order</param>
         /// <returns></returns>
-        private OrdersResponseWrapper WaitForReadLiveOrdersResponse(int projectId, int seconds)
+        private List<Order> WaitForReadLiveOrdersResponse(int projectId, int seconds)
         {
-            var readLiveOrders = new OrdersResponseWrapper();
-            var finish = DateTime.UtcNow.AddMinutes(seconds);
-            while (DateTime.UtcNow < finish)
+            var readLiveOrders = new List<Order>();
+            var finish = DateTime.UtcNow.AddSeconds(seconds);
+            while (DateTime.UtcNow < finish && !readLiveOrders.Any())
             {
-                Thread.Sleep(60000);
-                readLiveOrders = ApiClient.ReadLiveOrders(0, 1, projectId);
-                if (readLiveOrders.Orders.Any()) break;
+                Thread.Sleep(10000);
+                readLiveOrders = ApiClient.ReadLiveOrders(projectId);
             }
             return readLiveOrders;
         }

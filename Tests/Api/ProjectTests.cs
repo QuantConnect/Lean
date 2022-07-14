@@ -15,10 +15,10 @@
 
 using System;
 using System.IO;
-using System.Linq;
-using System.Threading;
 using System.Web;
+using System.Linq;
 using NUnit.Framework;
+using System.Threading;
 using QuantConnect.Api;
 
 namespace QuantConnect.Tests.API
@@ -215,9 +215,8 @@ namespace QuantConnect.Tests.API
 
             // In the same way, read the orders returned in the backtest
             var backtestOrdersRead = ApiClient.ReadBacktestOrders(project.Projects.First().ProjectId, backtest.BacktestId, 0, 1);
-            Assert.IsTrue(backtestOrdersRead.Success);
-            Assert.IsTrue(backtestOrdersRead.Orders.Any());
-            Assert.AreEqual(Symbols.SPY.Value, backtestOrdersRead.Orders.First().Symbol.Value);
+            Assert.IsTrue(backtestOrdersRead.Any());
+            Assert.AreEqual(Symbols.SPY.Value, backtestOrdersRead.First().Symbol.Value);
 
             // Verify we have the backtest in our project
             var listBacktests = ApiClient.ListBacktests(project.Projects.First().ProjectId);
@@ -272,10 +271,9 @@ namespace QuantConnect.Tests.API
 
             // Now wait until the backtest is completed and request the orders again
             backtestRead = WaitForBacktestCompletion(project.Projects.First().ProjectId, backtest.BacktestId);
-            var backtestOrdersRead = ApiClient.ReadBacktestOrders(project.Projects.First().ProjectId, backtest.BacktestId, 0, 1);
-            Assert.IsTrue(backtestOrdersRead.Success);
-            Assert.IsTrue(backtestOrdersRead.Orders.Any());
-            Assert.AreEqual(Symbols.SPY.Value, backtestOrdersRead.Orders.First().Symbol.Value);
+            var backtestOrdersRead = ApiClient.ReadBacktestOrders(project.Projects.First().ProjectId, backtest.BacktestId);
+            Assert.IsTrue(backtestOrdersRead.Any());
+            Assert.AreEqual(Symbols.SPY.Value, backtestOrdersRead.First().Symbol.Value);
 
             // Delete the backtest we just created
             var deleteBacktest = ApiClient.DeleteBacktest(project.Projects.First().ProjectId, backtest.BacktestId);

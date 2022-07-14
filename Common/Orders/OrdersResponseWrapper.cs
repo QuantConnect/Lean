@@ -28,6 +28,6 @@ namespace QuantConnect.Orders
         /// Collection of summarized Orders objects
         /// </summary>
         [JsonProperty(PropertyName = "orders")]
-        public List<Order> Orders { get; set; }
+        public List<Order> Orders { get; set; } = new();
     }
 }
