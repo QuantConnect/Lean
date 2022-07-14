@@ -16,7 +16,6 @@
 using System;
 using NodaTime;
 using QuantConnect.Util;
-using System.ComponentModel;
 using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Data.Consolidators;
@@ -217,7 +216,6 @@ namespace QuantConnect.Data
             Resolution = resolution;
             _sid = symbol.ID;
             Symbol = symbol;
-            FillDataForward = fillForward;
             ExtendedMarketHours = extendedHours;
             PriceScaleFactor = 1;
             IsInternalFeed = isInternalFeed;
@@ -234,11 +232,8 @@ namespace QuantConnect.Data
             TickType = tickType ?? LeanData.GetCommonTickTypeForCommonDataTypes(objectType, SecurityType);
 
             Increment = resolution.ToTimeSpan();
-            if (Resolution.Tick == resolution)
-            {
-                //Ticks are individual sales and fillforward doesn't apply.
-                FillDataForward = false;
-            }
+            //Ticks are individual sales and fillforward doesn't apply.
+            FillDataForward = resolution == Resolution.Tick ? false : fillForward;
         }
 
         /// <summary>
