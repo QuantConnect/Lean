@@ -666,7 +666,7 @@ namespace QuantConnect
     public enum DataNormalizationMode
     {
         /// <summary>
-        /// No modifications to the asset price at all. Dividends are paid in cash and splits are applied directly to your portfolio quantity. (0)
+        /// No modifications to the asset price at all. For Equities, dividends are paid in cash and splits are applied directly to your portfolio quantity. (0)
         /// </summary>
         Raw,
         /// <summary>
@@ -682,17 +682,17 @@ namespace QuantConnect
         /// </summary>
         TotalReturn,
         /// <summary>
-        /// Eliminates price jumps between two consecutive contracts, adding a factor based on the difference of their prices (4)
+        /// Eliminates price jumps between two consecutive contracts, adding a factor based on the difference of their prices. The first contract has the true price. Factor 0. (4)
         /// </summary>
         /// <remarks>First contract is the true one, factor 0</remarks>
         ForwardPanamaCanal,
         /// <summary>
-        /// Eliminates price jumps between two consecutive contracts, adding a factor based on the difference of their prices (5)
+        /// Eliminates price jumps between two consecutive contracts, adding a factor based on the difference of their prices. The last contract has the true price. Factor 0. (5)
         /// </summary>
         /// <remarks>Last contract is the true one, factor 0</remarks>
         BackwardsPanamaCanal,
         /// <summary>
-        /// Eliminates price jumps between two consecutive contracts, multiplying the prices by their ratio (6)
+        /// Eliminates price jumps between two consecutive contracts, multiplying the prices by their ratio. The last contract has the true price. Factor 1. (6)
         /// </summary>
         /// <remarks>Last contract is the true one, factor 1</remarks>
         BackwardsRatio
