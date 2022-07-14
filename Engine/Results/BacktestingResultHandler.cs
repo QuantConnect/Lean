@@ -145,7 +145,7 @@ namespace QuantConnect.Lean.Engine.Results
             try
             {
                 //Sometimes don't run the update, if not ready or we're ending.
-                if (Algorithm?.Transactions == null || ExitTriggered)
+                if (Algorithm?.Transactions == null || ExitTriggered || !Algorithm.GetLocked())
                 {
                     return;
                 }
