@@ -666,33 +666,33 @@ namespace QuantConnect
     public enum DataNormalizationMode
     {
         /// <summary>
-        /// The raw price with dividends added to cash book (0)
+        /// No modifications to the asset price at all. For Equities, dividends are paid in cash and splits are applied directly to your portfolio quantity. (0)
         /// </summary>
         Raw,
         /// <summary>
-        /// The adjusted prices with splits and dividends factored in (1)
+        /// Splits and dividends are backward-adjusted into the price of the asset. The price today is identical to the current market price. (1)
         /// </summary>
         Adjusted,
         /// <summary>
-        /// The adjusted prices with only splits factored in, dividends paid out to the cash book (2)
+        /// Equity splits are applied to the price adjustment but dividends are paid in cash to your portfolio. This normalization mode allows you to manage dividend payments (e.g. reinvestment) while still giving a smooth time series of prices for indicators. (2)
         /// </summary>
         SplitAdjusted,
         /// <summary>
-        /// The split adjusted price plus dividends (3)
+        /// Equity splits are applied to the price adjustment and the value of all future dividend payments is added to the initial asset price. (3)
         /// </summary>
         TotalReturn,
         /// <summary>
-        /// Eliminates price jumps between two consecutive contracts, adding a factor based on the difference of their prices (4)
+        /// Eliminates price jumps between two consecutive contracts, adding a factor based on the difference of their prices. The first contract has the true price. Factor 0. (4)
         /// </summary>
         /// <remarks>First contract is the true one, factor 0</remarks>
         ForwardPanamaCanal,
         /// <summary>
-        /// Eliminates price jumps between two consecutive contracts, adding a factor based on the difference of their prices (5)
+        /// Eliminates price jumps between two consecutive contracts, adding a factor based on the difference of their prices. The last contract has the true price. Factor 0. (5)
         /// </summary>
         /// <remarks>Last contract is the true one, factor 0</remarks>
         BackwardsPanamaCanal,
         /// <summary>
-        /// Eliminates price jumps between two consecutive contracts, multiplying the prices by their ratio (6)
+        /// Eliminates price jumps between two consecutive contracts, multiplying the prices by their ratio. The last contract has the true price. Factor 1. (6)
         /// </summary>
         /// <remarks>Last contract is the true one, factor 1</remarks>
         BackwardsRatio
