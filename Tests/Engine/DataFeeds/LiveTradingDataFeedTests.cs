@@ -29,6 +29,7 @@ using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
@@ -1657,6 +1658,114 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsFalse(emittedData);
         }
 
+        [TestCase(false)]
+        [TestCase(true)]
+        public void SkipLiveDividend(bool warmup)
+        {
+            var symbol = Symbols.AAPL;
+            if (warmup)
+            {
+                _startDate = new DateTime(2014, 8, 10);
+                _manualTimeProvider.SetCurrentTimeUtc(_startDate);
+                _algorithm.SetWarmup(5);
+            }
+
+            var startPortfolioValue = _algorithm.Portfolio.TotalPortfolioValue;
+            var feed = RunDataFeed(Resolution.Daily, equities: new List<string> { symbol.Value },
+                    getNextTicksFunction: delegate
+                    {
+                        if (warmup)
+                        {
+                            return Enumerable.Empty<BaseData>();
+                        }
+                        return Enumerable.Range(1, 2)
+                            .Select(
+                                x => x % 2 == 0
+                                    ? (BaseData)new Tick { Symbol = symbol, TickType = TickType.Trade }
+                                    : new Dividend { Symbol = symbol, Value = 2 })
+                            .ToList();
+                    });
+
+            var emittedDividend = false;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
+            {
+                if (ts.Slice.Dividends.ContainsKey(symbol))
+                {
+                    Assert.AreEqual(warmup, _algorithm.IsWarmingUp);
+
+                    emittedDividend = true;
+                    // we got what we wanted shortcut unit test
+                    _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                }
+            }, secondsTimeStep: warmup ? 60 * 60 : 60 * 60 * 5,
+            endDate: _startDate.AddDays(30));
+
+            Assert.IsTrue(emittedDividend);
+            // we do not handle dividends in live trading, we leave it for the cash sync
+            Assert.AreEqual(startPortfolioValue, _algorithm.Portfolio.TotalPortfolioValue);
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void LiveSplitHandling(bool warmup)
+        {
+            var symbol = Symbols.AAPL;
+            if (warmup)
+            {
+                _startDate = new DateTime(2014, 06, 10);
+                _manualTimeProvider.SetCurrentTimeUtc(_startDate);
+                _algorithm.SetWarmup(6);
+            }
+
+            var startPortfolioValue = _algorithm.Portfolio.TotalPortfolioValue;
+            var feed = RunDataFeed(Resolution.Daily, equities: new List<string> { symbol.Value },
+                    getNextTicksFunction: delegate
+                    {
+                        if (warmup)
+                        {
+                            return Enumerable.Empty<BaseData>();
+                        }
+                        var time = _manualTimeProvider.GetUtcNow();
+                        return Enumerable.Range(1, 2)
+                            .Select(
+                                x => x % 2 == 0
+                                    ? (BaseData)new Tick { Symbol = symbol, TickType = TickType.Trade, Value = 2 }
+                                    : new Split(symbol, time.ConvertFromUtc(TimeZones.NewYork), 2, 10, SplitType.SplitOccurred))
+                            .ToList();
+                    });
+
+            var holdings = _algorithm.Securities[symbol].Holdings;
+            holdings.SetHoldings(10, quantity: 100);
+
+            var emittedSplit = false;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
+            {
+                if (ts.Slice.Splits.TryGetValue(symbol, out var split) && split.Type == SplitType.SplitOccurred)
+                {
+                    Assert.AreEqual(warmup, _algorithm.IsWarmingUp);
+
+                    emittedSplit = true;
+                    // we got what we wanted shortcut unit test
+                    _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                }
+            }, secondsTimeStep: warmup ? 60 * 60 : 60 * 60 * 5,
+            endDate: _startDate.AddDays(30));
+
+            Assert.IsTrue(emittedSplit);
+            Assert.AreEqual(startPortfolioValue, _algorithm.Portfolio.TotalPortfolioValue);
+            if (!warmup)
+            {
+                Assert.AreEqual(10, holdings.Quantity);
+                Assert.AreEqual(100, holdings.AveragePrice);
+            }
+            else
+            {
+                // during warmup they shouldn't change
+                Assert.AreEqual(100, holdings.Quantity);
+                Assert.AreEqual(10, holdings.AveragePrice);
+            }
+        }
+
         [Test]
         public void HandlesAuxiliaryDataAtTickResolution()
         {
@@ -1854,13 +1963,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 if (!noOutput)
                 {
                     ConsoleWriteLine("\r\n" + $"Now (EDT): {DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork):o}" +
-                                     $". TimeSlice.Time (EDT): {timeSlice.Time.ConvertFromUtc(TimeZones.NewYork):o}");
+                                     $". TimeSlice.Time (EDT): {timeSlice.Time.ConvertFromUtc(TimeZones.NewYork):o}. HasData {timeSlice.Slice?.HasData}");
                 }
 
                 if (timeSlice.IsTimePulse)
                 {
                     continue;
                 }
+
+                AlgorithmManager.HandleDividends(timeSlice, _algorithm, liveMode: true);
+                AlgorithmManager.HandleSplits(timeSlice, _algorithm, liveMode: true);
+
                 if (!startedReceivingata
                     && (timeSlice.Slice.Count != 0
                         || sendUniverseData && timeSlice.UniverseData.Count > 0))
