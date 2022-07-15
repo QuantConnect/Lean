@@ -477,6 +477,31 @@ namespace QuantConnect.Tests.Common.Util
         }
 
         [Test]
+        // We assert the behavior of noda time convert to utc around daylight saving start and end
+        // Even though start and end un exchange TZ are 1.01:00:00 long (1 day & 1 hour) in utc it's always 1 day
+        public void ConvertToUtcAndDayLightSavings()
+        {
+            {
+                // day light savings starts
+                var start = new DateTime(2011, 3, 12, 19, 0, 0);
+                var end = new DateTime(2011, 3, 13, 20, 0, 0);
+
+                var utcStart = start.ConvertToUtc(TimeZones.NewYork);
+                var utcEnd = end.ConvertToUtc(TimeZones.NewYork);
+                Assert.AreEqual(Time.OneDay, utcEnd - utcStart);
+            }
+            {
+                // day light savings ends
+                var start = new DateTime(2011, 11, 5, 20, 0, 0);
+                var end = new DateTime(2011, 11, 6, 19, 0, 0);
+
+                var utcStart = start.ConvertToUtc(TimeZones.NewYork);
+                var utcEnd = end.ConvertToUtc(TimeZones.NewYork);
+                Assert.AreEqual(Time.OneDay, utcEnd - utcStart);
+            }
+        }
+
+        [Test]
         // this unit test reproduces a fixed infinite loop situation, due to a daylight saving time change, GH issue 3707.
         public void RoundDownInTimeZoneAroundDaylightTimeChanges()
         {

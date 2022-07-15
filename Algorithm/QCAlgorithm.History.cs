@@ -81,7 +81,7 @@ namespace QuantConnect.Algorithm
 
             _warmupBarCount = null;
             _warmupTimeSpan = timeSpan;
-            _warmupResolution = resolution;
+            Settings.WarmupResolution = resolution;
         }
 
         /// <summary>
@@ -137,7 +137,7 @@ namespace QuantConnect.Algorithm
 
             _warmupTimeSpan = null;
             _warmupBarCount = barCount;
-            _warmupResolution = resolution;
+            Settings.WarmupResolution = resolution;
         }
 
         /// <summary>
@@ -182,7 +182,7 @@ namespace QuantConnect.Algorithm
                 var symbols = Securities.Keys;
                 if (symbols.Count != 0)
                 {
-                    var startTimeUtc = CreateBarCountHistoryRequests(symbols, _warmupBarCount.Value, _warmupResolution)
+                    var startTimeUtc = CreateBarCountHistoryRequests(symbols, _warmupBarCount.Value, Settings.WarmupResolution)
                         .DefaultIfEmpty()
                         .Min(request => request == null ? default : request.StartTimeUtc);
                     if(startTimeUtc != default)
@@ -193,9 +193,9 @@ namespace QuantConnect.Algorithm
                 }
 
                 var defaultResolutionToUse = UniverseSettings.Resolution;
-                if (_warmupResolution.HasValue)
+                if (Settings.WarmupResolution.HasValue)
                 {
-                    defaultResolutionToUse = _warmupResolution.Value;
+                    defaultResolutionToUse = Settings.WarmupResolution.Value;
                 }
 
                 // if the algorithm has no added security, let's take a look at the universes to determine
@@ -206,9 +206,9 @@ namespace QuantConnect.Algorithm
                 {
                     var config = universe.Configuration;
                     var resolution = universe.Configuration.Resolution;
-                    if (_warmupResolution.HasValue)
+                    if (Settings.WarmupResolution.HasValue)
                     {
-                        resolution = _warmupResolution.Value;
+                        resolution = Settings.WarmupResolution.Value;
                     }
                     var exchange = MarketHoursDatabase.GetExchangeHours(config);
                     var start = _historyRequestFactory.GetStartTimeAlgoTz(config.Symbol, _warmupBarCount.Value, resolution, exchange, config.DataTimeZone);

@@ -86,5 +86,11 @@ namespace QuantConnect.Interfaces
         /// Gets the minimum time span elapsed to consider a market fill price as stale (defaults to one hour)
         /// </summary>
         TimeSpan StalePriceTimeSpan { get; set; }
+
+        /// <summary>
+        /// The warmup resolution to use if any
+        /// </summary>
+        /// <remarks>This allows improving the warmup speed by setting it to a lower resolution than the one added in the algorithm</remarks>
+        Resolution? WarmupResolution { get; set; }
     }
 }

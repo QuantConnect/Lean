@@ -14,99 +14,110 @@
 */
 
 using System;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Indicators;
+using QuantConnect.Data.Market;
 using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm reproducing GH issue 1046. Where scheduled events wouldn't work during warmup
+    /// Regression algorithm asserting warming up with a lower resolution for speed is respected
     /// </summary>
-    public class WarmupScheduledEventsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class WarmupDailyResolutionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Queue<DateTime> _onEndOfDayScheduledEvents = new(new[]
-        {
-            new DateTime(2013, 10, 04, 15, 50, 0),
-            new DateTime(2013, 10, 07, 15, 50, 0),
+        private long _previousSampleCount;
+        private bool _warmedUpTradeBars;
+        private bool _warmedUpQuoteBars;
 
-            new DateTime(2013, 10, 08, 15, 50, 0),
-        });
+        protected SimpleMovingAverage Sma { get; set; }
+        protected TimeSpan ExpectedDataSpan { get; set; }
+        protected TimeSpan ExpectedWarmupDataSpan { get; set; }
 
-        private Queue<DateTime> _scheduledEvents = new (new[]
-        {
-            new DateTime(2013, 10, 04, 18, 0, 0),
-            new DateTime(2013, 10, 05, 0, 0, 0),
-            new DateTime(2013, 10, 05, 6, 0, 0),
-            new DateTime(2013, 10, 05, 12, 0, 0),
-            new DateTime(2013, 10, 05, 18, 0, 0),
-            new DateTime(2013, 10, 06, 0, 0, 0),
-            new DateTime(2013, 10, 06, 6, 0, 0),
-            new DateTime(2013, 10, 06, 12, 0, 0),
-            new DateTime(2013, 10, 06, 18, 0, 0),
-            new DateTime(2013, 10, 07, 0, 0, 0),
-            new DateTime(2013, 10, 07, 6, 0, 0),
-            new DateTime(2013, 10, 07, 12, 0, 0),
-            new DateTime(2013, 10, 07, 18, 0, 0),
-
-            new DateTime(2013, 10, 08, 0, 0, 0),
-            new DateTime(2013, 10, 08, 6, 0, 0),
-            new DateTime(2013, 10, 08, 12, 0, 0)
-        });
-
-        /// <summary>
-        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
-        /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 08);
-            SetEndDate(2013, 10, 08);
+            SetStartDate(2013, 10, 10);
+            SetEndDate(2013, 10, 11);
 
-            AddEquity("SPY", Resolution.Minute, fillDataForward: false);
+            AddEquity("SPY", Resolution.Hour);
+            ExpectedDataSpan = Resolution.Hour.ToTimeSpan();
 
-            Schedule.On(DateRules.EveryDay(), TimeRules.Every(TimeSpan.FromHours(6)), () =>
+            SetWarmUp(TimeSpan.FromDays(3), Resolution.Daily);
+            ExpectedWarmupDataSpan = Resolution.Daily.ToTimeSpan();
+
+            Sma = SMA("SPY", 2);
+        }
+
+        public override void OnData(Slice data)
+        {
+            if (Sma.Samples <= _previousSampleCount)
             {
-                Debug($"Scheduled event happening at {Time}. IsWarmingUp: {IsWarmingUp}");
-                if (!LiveMode)
+                throw new Exception("Indicator was not updated!");
+            }
+            _previousSampleCount = Sma.Samples;
+
+            var tradeBars = data.Get<TradeBar>();
+            tradeBars.TryGetValue("SPY", out var trade);
+
+            var quoteBars = data.Get<QuoteBar>();
+            quoteBars.TryGetValue("SPY", out var quote);
+
+            var expectedPeriod = ExpectedDataSpan;
+            if (Time <= StartDate)
+            {
+                expectedPeriod = ExpectedWarmupDataSpan;
+                if (trade != null && trade.IsFillForward || quote != null && quote.IsFillForward)
                 {
-                    var expected = _scheduledEvents.Dequeue();
-                    if (expected != Time)
-                    {
-                        throw new Exception($"Unexpected scheduled event time: {Time}. Expected {expected}");
-                    }
-
-                    if (expected.Day > 7 && IsWarmingUp)
-                    {
-                        throw new Exception("Algorithm should be warming up on the 7th!");
-                    }
+                    throw new Exception("Unexpected fill forwarded data!");
                 }
-            });
+            }
 
-            SetWarmUp(9, Resolution.Hour);
+            // let's assert the data's time are what we expect
+            if (trade != null && trade.EndTime.Ticks % expectedPeriod.Ticks != 0)
+            {
+                throw new Exception($"Unexpected data end time! {trade.EndTime}");
+            }
+            if (quote != null && quote.EndTime.Ticks % expectedPeriod.Ticks != 0)
+            {
+                throw new Exception($"Unexpected data end time! {quote.EndTime}");
+            }
+
+            if (trade != null)
+            {
+                _warmedUpTradeBars |= IsWarmingUp;
+                if (trade.Period != expectedPeriod)
+                {
+                    throw new Exception($"Unexpected period for trade data point {trade.Period} expected {expectedPeriod}. IsWarmingUp: {IsWarmingUp}");
+                }
+            }
+            if (quote != null)
+            {
+                _warmedUpQuoteBars |= IsWarmingUp;
+                if (quote.Period != expectedPeriod)
+                {
+                    throw new Exception($"Unexpected period for quote data point {quote.Period} expected {expectedPeriod}. IsWarmingUp: {IsWarmingUp}");
+                }
+            }
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (_scheduledEvents.Count != 0)
+            if (!_warmedUpTradeBars)
             {
-                throw new Exception("Some scheduled event was not fired!");
+                throw new Exception("Did not assert data during warmup!");
             }
-            if (_onEndOfDayScheduledEvents.Count != 0)
-            {
-                throw new Exception("Some OnEndOfDay scheduled event was not fired!");
-            }
-        }
 
-        public override void OnEndOfDay(Symbol symbol)
-        {
-            Debug($"OnEndOfDay scheduled event happening at {Time}. IsWarmingUp: {IsWarmingUp}");
-            var expected = _onEndOfDayScheduledEvents.Dequeue();
-            if (expected != Time)
+            if (ExpectedWarmupDataSpan == QuantConnect.Time.OneDay)
             {
-                throw new Exception($"Unexpected OnEndOfDay scheduled event time: {Time}. Expected {expected}");
+                if (_warmedUpQuoteBars)
+                {
+                    throw new Exception("We should of not gotten any quote bar during warmup for daily resolution!");
+                }
             }
-            if (expected.Day > 7 && IsWarmingUp)
+            else if (!_warmedUpQuoteBars)
             {
-                throw new Exception("Algorithm should be warming up on the 7th!");
+                throw new Exception("Did not assert data during warmup!");
             }
         }
 
@@ -123,12 +134,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 819;
+        public virtual long DataPoints => 37;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public virtual int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm

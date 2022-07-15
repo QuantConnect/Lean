@@ -13,35 +13,31 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
-using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
 {
-    /// <summary>
-    /// Regression algorithm excersizing an index covered European style option, using an option price model
-    /// that supports European style options and asserting that the option price model is used.
-    /// </summary>
-    public class OptionPriceModelForSupportedEuropeanOptionRegressionAlgorithm : OptionPriceModelForOptionStylesBaseRegressionAlgorithm
+    internal class WarmupMinuteResolutionRegressionAlgorithm : WarmupDailyResolutionRegressionAlgorithm
     {
         public override void Initialize()
         {
-            SetStartDate(2021, 1, 14);
-            SetEndDate(2021, 1, 14);
+            SetStartDate(2013, 10, 10);
+            SetEndDate(2013, 10, 11);
 
-            var option = AddIndexOption("SPX", Resolution.Hour);
-            // BlackScholes model supports European style options
-            option.PriceModel = OptionPriceModels.BlackScholes();
+            AddEquity("SPY", Resolution.Second);
+            ExpectedDataSpan = Resolution.Second.ToTimeSpan();
 
-            SetWarmup(7, Resolution.Daily);
+            SetWarmUp(TimeSpan.FromDays(3), Resolution.Minute);
+            ExpectedWarmupDataSpan = Resolution.Minute.ToTimeSpan();
 
-            Init(option, optionStyleIsSupported: true);
+            Sma = SMA("SPY", 2);
         }
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 211;
+        public override long DataPoints => 97515;
 
         /// <summary>
         /// Data Points count of the algorithm history

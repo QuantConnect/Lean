@@ -11,103 +11,106 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
 */
 
 using System;
+using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm reproducing GH issue 1046. Where scheduled events wouldn't work during warmup
+    /// Regression algorithm asserting warming up with a lower resolution for speed is respected using options
     /// </summary>
-    public class WarmupScheduledEventsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class WarmupLowerResolutionOptionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Queue<DateTime> _onEndOfDayScheduledEvents = new(new[]
-        {
-            new DateTime(2013, 10, 04, 15, 50, 0),
-            new DateTime(2013, 10, 07, 15, 50, 0),
+        private List<DateTime> _optionWarmupTimes = new();
+        private const string UnderlyingTicker = "AAPL";
+        private Symbol _optionSymbol;
 
-            new DateTime(2013, 10, 08, 15, 50, 0),
-        });
-
-        private Queue<DateTime> _scheduledEvents = new (new[]
-        {
-            new DateTime(2013, 10, 04, 18, 0, 0),
-            new DateTime(2013, 10, 05, 0, 0, 0),
-            new DateTime(2013, 10, 05, 6, 0, 0),
-            new DateTime(2013, 10, 05, 12, 0, 0),
-            new DateTime(2013, 10, 05, 18, 0, 0),
-            new DateTime(2013, 10, 06, 0, 0, 0),
-            new DateTime(2013, 10, 06, 6, 0, 0),
-            new DateTime(2013, 10, 06, 12, 0, 0),
-            new DateTime(2013, 10, 06, 18, 0, 0),
-            new DateTime(2013, 10, 07, 0, 0, 0),
-            new DateTime(2013, 10, 07, 6, 0, 0),
-            new DateTime(2013, 10, 07, 12, 0, 0),
-            new DateTime(2013, 10, 07, 18, 0, 0),
-
-            new DateTime(2013, 10, 08, 0, 0, 0),
-            new DateTime(2013, 10, 08, 6, 0, 0),
-            new DateTime(2013, 10, 08, 12, 0, 0)
-        });
-
-        /// <summary>
-        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
-        /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 08);
-            SetEndDate(2013, 10, 08);
+            SetStartDate(2014, 06, 09);
+            SetEndDate(2014, 06, 09);
 
-            AddEquity("SPY", Resolution.Minute, fillDataForward: false);
+            var option = AddOption(UnderlyingTicker);
+            _optionSymbol = option.Symbol;
 
-            Schedule.On(DateRules.EveryDay(), TimeRules.Every(TimeSpan.FromHours(6)), () =>
+            option.SetFilter(u => u.Strikes(-5, +5).Expiration(0, 180).IncludeWeeklys());
+            SetWarmUp(TimeSpan.FromDays(3), Resolution.Daily);
+        }
+
+        /// <summary>
+        /// Event - v3.0 DATA EVENT HANDLER: (Pattern) Basic template for user to override for receiving all subscription data in a single event
+        /// </summary>
+        /// <param name="slice">The current slice of data keyed by symbol string</param>
+        public override void OnData(Slice slice)
+        {
+            if (IsWarmingUp)
             {
-                Debug($"Scheduled event happening at {Time}. IsWarmingUp: {IsWarmingUp}");
-                if (!LiveMode)
+                foreach (var data in slice.Values)
                 {
-                    var expected = _scheduledEvents.Dequeue();
-                    if (expected != Time)
+                    var dataSpan = data.EndTime - data.Time;
+                    if (dataSpan != QuantConnect.Time.OneDay)
                     {
-                        throw new Exception($"Unexpected scheduled event time: {Time}. Expected {expected}");
-                    }
-
-                    if (expected.Day > 7 && IsWarmingUp)
-                    {
-                        throw new Exception("Algorithm should be warming up on the 7th!");
+                        throw new Exception($"Unexpected bar span! {data}: {dataSpan}");
                     }
                 }
-            });
+            }
 
-            SetWarmUp(9, Resolution.Hour);
+            if (slice.OptionChains.TryGetValue(_optionSymbol, out var chain))
+            {
+                // we find at the money (ATM) put contract with farthest expiration
+                var atmContract = chain
+                    .OrderByDescending(x => x.Expiry)
+                    .ThenBy(x => Math.Abs(chain.Underlying.Price - x.Strike))
+                    .ThenByDescending(x => x.Right)
+                    .FirstOrDefault();
+
+                if (atmContract != null)
+                {
+                    if (IsWarmingUp)
+                    {
+                        if (atmContract.LastPrice == 0)
+                        {
+                            throw new Exception("Contract price is not set!");
+                        }
+                        _optionWarmupTimes.Add(Time);
+                    }
+                    else if (!Portfolio.Invested && IsMarketOpen(_optionSymbol))
+                    {
+                        // if found, trade it
+                        MarketOrder(atmContract.Symbol, 1);
+                        MarketOnCloseOrder(atmContract.Symbol, -1);
+                    }
+                }
+            }
+        }
+
+        public override void OnSecuritiesChanged(SecurityChanges changes)
+        {
+            Debug($"{Time}-{changes}");
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (_scheduledEvents.Count != 0)
+            var start = new DateTime(2014, 06, 07, 0, 0, 0);
+            var end = new DateTime(2014, 06, 07, 0, 0, 0);
+            var count = 0;
+            do
             {
-                throw new Exception("Some scheduled event was not fired!");
+                if (_optionWarmupTimes[count] != start)
+                {
+                    throw new Exception($"Unexpected time {_optionWarmupTimes[count]} expected {start}");
+                }
+                count++;
+                start = start.AddDays(1);
             }
-            if (_onEndOfDayScheduledEvents.Count != 0)
-            {
-                throw new Exception("Some OnEndOfDay scheduled event was not fired!");
-            }
-        }
-
-        public override void OnEndOfDay(Symbol symbol)
-        {
-            Debug($"OnEndOfDay scheduled event happening at {Time}. IsWarmingUp: {IsWarmingUp}");
-            var expected = _onEndOfDayScheduledEvents.Dequeue();
-            if (expected != Time)
-            {
-                throw new Exception($"Unexpected OnEndOfDay scheduled event time: {Time}. Expected {expected}");
-            }
-            if (expected.Day > 7 && IsWarmingUp)
-            {
-                throw new Exception("Algorithm should be warming up on the 7th!");
-            }
+            while (start < end);
         }
 
         /// <summary>
@@ -123,7 +126,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 819;
+        public long DataPoints => 983246;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -133,9 +136,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "0"},
+            {"Total Trades", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
@@ -154,9 +157,9 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
+            {"Total Fees", "$2.00"},
+            {"Estimated Strategy Capacity", "$5000.00"},
+            {"Lowest Capacity Asset", "AAPL 2ZTXYMUME0LUU|AAPL R735QTJ8XC9X"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
@@ -176,7 +179,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
+            {"OrderListHash", "efc14c7d9579c082d72aecd0977ed522"}
         };
     }
 }

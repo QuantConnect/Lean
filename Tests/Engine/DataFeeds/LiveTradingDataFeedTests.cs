@@ -82,15 +82,25 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _dataQueueHandler?.DisposeSafely();
         }
 
-        [Test]
-        public void WarmupOptionSelection()
+        [TestCase(false)]
+        [TestCase(true)]
+        public void WarmupOptionSelection(bool useWarmupResolution)
         {
             _startDate = new DateTime(2014, 6, 9);
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
 
             var endDate = _startDate.AddDays(1);
             _algorithm.SetBenchmark(x => 1);
-            _algorithm.SetWarmup(2, Resolution.Daily);
+
+            if (useWarmupResolution)
+            {
+                _algorithm.SetWarmup(2, Resolution.Daily);
+            }
+            else
+            {
+                _algorithm.SetWarmup(TimeSpan.FromDays(2));
+            }
+
             _algorithm.UniverseSettings.Resolution = Resolution.Hour;
             var feed = RunDataFeed();
             // after algorithm initialization let's set the time provider time to reflect warmup window
@@ -230,15 +240,23 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsTrue(assertedHoldings);
         }
 
-        [Test]
-        public void WarmupFutureSelection()
+        [TestCase(false)]
+        [TestCase(true)]
+        public void WarmupFutureSelection(bool useWarmupResolution)
         {
             _startDate = new DateTime(2013, 10, 10);
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
 
             var endDate = _startDate.AddDays(1);
             _algorithm.SetBenchmark(x => 1);
-            _algorithm.SetWarmup(2, Resolution.Daily);
+            if (useWarmupResolution)
+            {
+                _algorithm.SetWarmup(2, Resolution.Daily);
+            }
+            else
+            {
+                _algorithm.SetWarmup(TimeSpan.FromDays(2));
+            }
             _algorithm.UniverseSettings.Resolution = Resolution.Hour;
             var feed = RunDataFeed();
             // after algorithm initialization let's set the time provider time to reflect warmup window
@@ -273,8 +291,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreNotEqual(0, countLive);
         }
 
-        [Test]
-        public void WarmupExpiredAsset()
+        [TestCase(false)]
+        [TestCase(true)]
+        public void WarmupExpiredAsset(bool useWarmupResolution)
         {
             _startDate = new DateTime(2014, 6, 14);
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
@@ -282,7 +301,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var endDate = _startDate.AddDays(1);
             _algorithm.SetBenchmark(x => 1);
             _algorithm.UniverseSettings.Resolution = Resolution.Daily;
-            _algorithm.SetWarmup(10, Resolution.Daily);
+            if (useWarmupResolution)
+            {
+                _algorithm.SetWarmup(10, Resolution.Daily);
+            }
+            else
+            {
+                _algorithm.SetWarmup(TimeSpan.FromDays(10));
+            }
             var feed = RunDataFeed();
             // after algorithm initialization let's set the time provider time to reflect warmup window
             _manualTimeProvider.SetCurrentTimeUtc(_algorithm.UtcTime);
@@ -311,15 +337,23 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsTrue(emittedData);
         }
 
-        [Test]
-        public void WarmupAddSecurity()
+        [TestCase(false)]
+        [TestCase(true)]
+        public void WarmupAddSecurity(bool useWarmupResolution)
         {
             _startDate = new DateTime(2014, 5, 8);
             CustomMockedFileBaseData.StartDate = _startDate;
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
 
             var endDate = _startDate.AddDays(10);
-            _algorithm.SetWarmup(1, Resolution.Daily);
+            if (useWarmupResolution)
+            {
+                _algorithm.SetWarmup(1, Resolution.Daily);
+            }
+            else
+            {
+                _algorithm.SetWarmup(TimeSpan.FromDays(1));
+            }
             var feed = RunDataFeed(forex: new List<string> { Symbols.EURUSD.ToString() }, resolution: Resolution.Minute);
 
             var emittedData = false;
@@ -1237,13 +1271,21 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsTrue(fineWasCalled);
         }
 
-        [Test]
-        public void FineCoarseFundamentalDataGetsPipedCorrectlyWarmup()
+        [TestCase(false)]
+        [TestCase(true)]
+        public void FineCoarseFundamentalDataGetsPipedCorrectlyWarmup(bool useWarmupResolution)
         {
             _startDate = new DateTime(2014, 3, 27);
             CustomMockedFileBaseData.StartDate = _startDate;
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
-            _algorithm.SetWarmup(1, Resolution.Daily);
+            if (useWarmupResolution)
+            {
+                _algorithm.SetWarmup(1, Resolution.Daily);
+            }
+            else
+            {
+                _algorithm.SetWarmup(TimeSpan.FromDays(1));
+            }
 
             var fineWasCalled = false;
             var fineWasCalledDuringWarmup = false;

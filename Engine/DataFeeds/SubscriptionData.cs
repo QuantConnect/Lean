@@ -74,9 +74,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // the start of the data and end of the data (usually used with Bars).
             // The time delta ensures that the time collected from `EndTime` has
             // no look-ahead bias, and is point-in-time.
-            if (data.Time != data.EndTime)
+            // When fill forwarding time and endtime might not respect the original ends times, here we will enforce it
+            // note we do this after fetching the 'emitTimeUtc' which should use the end time set by the fill forward enumerator
+            var barSpan = data.EndTime - data.Time;
+            if (barSpan != TimeSpan.Zero)
             {
-                data.Time = data.Time.ExchangeRoundDownInTimeZone(configuration.Increment, exchangeHours, configuration.DataTimeZone, configuration.ExtendedMarketHours);
+                if (barSpan != configuration.Increment)
+                {
+                    // when we detect a difference let's refetch the span in utc using noda time 'ConvertToUtc' that will not take into account day light savings difference
+                    // we don't do this always above because it's expensive, only do it if we need to.
+                    // Behavior asserted by tests 'FillsForwardBarsAroundDaylightMovementForDifferentResolutions_Algorithm' && 'ConvertToUtcAndDayLightSavings'.
+                    // Note: we don't use 'configuration.Increment' because during warmup, if the warmup resolution is set, we will emit data respecting it instead of the 'configuration'
+                    barSpan = data.EndTime.ConvertToUtc(configuration.ExchangeTimeZone) - data.Time.ConvertToUtc(configuration.ExchangeTimeZone);
+                }
+                data.Time = data.Time.ExchangeRoundDownInTimeZone(barSpan, exchangeHours, configuration.DataTimeZone, configuration.ExtendedMarketHours);
             }
 
             if (factor.HasValue && (configuration.SecurityType != SecurityType.Equity || (factor.Value != 1 || configuration.SumOfDividends != 0)))

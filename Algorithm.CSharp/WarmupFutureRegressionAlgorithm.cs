@@ -28,11 +28,12 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class WarmupFutureRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private List<DateTime> _continuousWarmupTimes = new();
-        private List<DateTime> _chainWarmupTimes = new();
         // S&P 500 EMini futures
         private const string RootSP500 = Futures.Indices.SP500EMini;
         public Symbol SP500 = QuantConnect.Symbol.Create(RootSP500, SecurityType.Future, Market.CME);
+
+        protected List<DateTime> ContinuousWarmupTimes { get; } = new();
+        protected List<DateTime> ChainWarmupTimes { get; } = new();
 
         /// <summary>
         /// Initialize your algorithm and add desired assets.
@@ -60,7 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     throw new Exception("Continuous contract price is not set!");
                 }
-                _continuousWarmupTimes.Add(Time);
+                ContinuousWarmupTimes.Add(Time);
             }
 
             foreach (var chain in slice.FutureChains)
@@ -81,7 +82,7 @@ namespace QuantConnect.Algorithm.CSharp
                         {
                             throw new Exception("Contract price is not set!");
                         }
-                        _chainWarmupTimes.Add(Time);
+                        ChainWarmupTimes.Add(Time);
                     }
                     else if (!Portfolio.Invested && IsMarketOpen(contract.Symbol))
                     {
@@ -93,11 +94,11 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            AssertDataTime(new DateTime(2013, 10, 07, 0, 0, 0), new DateTime(2013, 10, 08, 0, 0, 0), _chainWarmupTimes);
-            AssertDataTime(new DateTime(2013, 10, 07, 0, 0, 0), new DateTime(2013, 10, 08, 0, 0, 0), _continuousWarmupTimes);
+            AssertDataTime(new DateTime(2013, 10, 07, 20, 0, 0), new DateTime(2013, 10, 08, 20, 0, 0), ChainWarmupTimes);
+            AssertDataTime(new DateTime(2013, 10, 07, 20, 0, 0), new DateTime(2013, 10, 08, 20, 0, 0), ContinuousWarmupTimes);
         }
 
-        private void AssertDataTime(DateTime start, DateTime end, List<DateTime> times)
+        protected void AssertDataTime(DateTime start, DateTime end, List<DateTime> times)
         {
             var count = 0;
             do
@@ -111,7 +112,14 @@ namespace QuantConnect.Algorithm.CSharp
                     // if the market is closed there will be no data, so stop moving the index counter
                     count++;
                 }
-                start = start.AddMinutes(1);
+                if (Settings.WarmupResolution.HasValue)
+                {
+                    start = start.Add(Settings.WarmupResolution.Value.ToTimeSpan());
+                }
+                else
+                {
+                    start = start.AddMinutes(1);
+                }
             }
             while (start < end);
         }
@@ -129,7 +137,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 86905;
+        public virtual long DataPoints => 65577;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -139,7 +147,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "1"},
             {"Average Win", "0%"},
