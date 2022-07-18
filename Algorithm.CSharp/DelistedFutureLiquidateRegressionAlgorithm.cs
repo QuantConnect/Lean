@@ -30,6 +30,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class DelistedFutureLiquidateRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _contractSymbol;
+        protected virtual Resolution Resolution => Resolution.Minute;
 
         /// <summary>
         /// Initialize your algorithm and add desired assets.
@@ -39,7 +40,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 08);
             SetEndDate(2013, 12, 30);
 
-            var futureSP500 = AddFuture(Futures.Indices.SP500EMini);
+            var futureSP500 = AddFuture(Futures.Indices.SP500EMini, Resolution);
             futureSP500.SetFilter(0, 182);
         }
 
@@ -91,7 +92,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1224778;
+        public virtual long DataPoints => 1224778;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -101,7 +102,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "2"},
             {"Average Win", "1.64%"},
