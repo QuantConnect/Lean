@@ -14,38 +14,35 @@
 */
 
 using System;
-using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Orders;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Securities.Future;
-using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Continuous Futures History Regression algorithm. Asserting and showcasing the behavior of adding a continuous future
+    /// Continuous Futures Regression algorithm reproducing GH issue #6490 asserting limit if touched order works as expected
     /// </summary>
-    public class ContinuousFutureHistoryRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ContinuousFutureLimitIfTouchedOrderRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private OrderTicket _ticket;
         private Future _continuousContract;
-        private bool _warmedUp;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 10);
-            SetEndDate(2013, 10, 11);
+            SetStartDate(2013, 10, 6);
+            SetEndDate(2013, 10, 10);
 
             _continuousContract = AddFuture(Futures.Indices.SP500EMini,
                 dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
-                dataMappingMode: DataMappingMode.OpenInterest,
-                contractDepthOffset: 1
+                dataMappingMode: DataMappingMode.LastTradingDay
             );
-            SetWarmup(1, Resolution.Daily);
         }
 
         /// <summary>
@@ -54,50 +51,17 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            if (IsWarmingUp)
+            if (_ticket == null)
             {
-                // warm up data
-                _warmedUp = true;
-
-                if (!_continuousContract.HasData)
-                {
-                    throw new Exception($"ContinuousContract did not get any data during warmup!");
-                }
-
-                var backMonthExpiration =   data.Keys.Single().Underlying.ID.Date;
-                var frontMonthExpiration = FuturesExpiryFunctions.FuturesExpiryFunction(_continuousContract.Symbol)(Time.AddMonths(1));
-                if (backMonthExpiration <= frontMonthExpiration.Date)
-                {
-                    throw new Exception($"Unexpected current mapped contract expiration {backMonthExpiration}" +
-                        $" @ {Time} it should be AFTER front month expiration {frontMonthExpiration}");
-                }
-            }
-            if (data.Keys.Count != 1)
-            {
-                throw new Exception($"We are getting data for more than one symbols! {string.Join(",", data.Keys.Select(symbol => symbol))}");
-            }
-
-            if (!Portfolio.Invested && !IsWarmingUp)
-            {
-                Buy(_continuousContract.Mapped, 1);
+                _ticket = LimitIfTouchedOrder(_continuousContract.Mapped, -1, _continuousContract.Price, _continuousContract.Price);
             }
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (!_warmedUp)
+            if (_ticket == null || _ticket.Status != OrderStatus.Filled)
             {
-                throw new Exception("Algorithm didn't warm up!");
-            }
-        }
-
-        public override void OnSecuritiesChanged(SecurityChanges changes)
-        {
-            Debug($"{Time}-{changes}");
-            if (changes.AddedSecurities.Any(security => security.Symbol != _continuousContract.Symbol)
-                || changes.RemovedSecurities.Any(security => security.Symbol != _continuousContract.Symbol))
-            {
-                throw new Exception($"We got an unexpected security changes {changes}");
+                throw new Exception("Order ticket was not placed or filled!");
             }
         }
 
@@ -114,7 +78,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 26112;
+        public long DataPoints => 64065;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -124,36 +88,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
+            {"Compounding Annual Return", "-98.962%"},
+            {"Drawdown", "6.200%"},
             {"Expectancy", "0"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
+            {"Net Profit", "-6.066%"},
+            {"Sharpe Ratio", "-2.143"},
+            {"Probabilistic Sharpe Ratio", "32.231%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
+            {"Alpha", "-0.237"},
+            {"Beta", "-0.662"},
+            {"Annual Standard Deviation", "0.161"},
+            {"Annual Variance", "0.026"},
+            {"Information Ratio", "-1.265"},
+            {"Tracking Error", "0.403"},
+            {"Treynor Ratio", "0.523"},
             {"Total Fees", "$1.85"},
-            {"Estimated Strategy Capacity", "$290000000.00"},
+            {"Estimated Strategy Capacity", "$710000000.00"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
-            {"Fitness Score", "0.408"},
+            {"Fitness Score", "0.018"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
-            {"Portfolio Turnover", "0.408"},
+            {"Sortino Ratio", "-2.218"},
+            {"Return Over Maximum Drawdown", "-16.972"},
+            {"Portfolio Turnover", "0.165"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -167,7 +131,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "10cf3584cd0131898df3f19d26df0649"}
+            {"OrderListHash", "de931c9003e11617ffc012f9ee41093e"}
         };
     }
 }

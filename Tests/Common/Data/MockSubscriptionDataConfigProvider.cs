@@ -13,9 +13,11 @@
  * limitations under the License.
  *
 */
-using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using System.Collections.Generic;
+
 namespace QuantConnect.Tests.Common.Data
 {
     internal class MockSubscriptionDataConfigProvider : ISubscriptionDataConfigProvider
@@ -31,7 +33,7 @@ namespace QuantConnect.Tests.Common.Data
         }
         public List<SubscriptionDataConfig> GetSubscriptionDataConfigs(Symbol symbol, bool includeInternalConfigs = false)
         {
-            return SubscriptionDataConfigs;
+            return SubscriptionDataConfigs.Where(config => !config.IsInternalFeed || includeInternalConfigs).ToList();
         }
     }
 }
