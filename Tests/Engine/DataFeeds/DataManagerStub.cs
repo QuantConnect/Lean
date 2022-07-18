@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -25,6 +25,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     {
         public ISecurityService SecurityService { get; }
         public IAlgorithm Algorithm { get; }
+        public IDataFeed DataFeed { get; }
 
         public DataManagerStub()
             : this(new QCAlgorithm())
@@ -104,6 +105,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             SecurityService = securityService;
             algorithm.Securities.SetSecurityService(securityService);
             Algorithm = algorithm;
+            DataFeed = dataFeed;
         }
     }
 }

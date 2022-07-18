@@ -74,14 +74,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(HistoricalData)]
         public void SetWarmup(TimeSpan timeSpan, Resolution? resolution)
         {
-            if (_locked)
-            {
-                throw new InvalidOperationException("QCAlgorithm.SetWarmup(): This method cannot be used after algorithm initialized");
-            }
-
-            _warmupBarCount = null;
-            _warmupTimeSpan = timeSpan;
-            Settings.WarmupResolution = resolution;
+            SetWarmup(null, timeSpan, resolution);
         }
 
         /// <summary>
@@ -130,14 +123,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(HistoricalData)]
         public void SetWarmup(int barCount, Resolution? resolution)
         {
-            if (_locked)
-            {
-                throw new InvalidOperationException("QCAlgorithm.SetWarmup(): This method cannot be used after algorithm initialized");
-            }
-
-            _warmupTimeSpan = null;
-            _warmupBarCount = barCount;
-            Settings.WarmupResolution = resolution;
+            SetWarmup(barCount, null, resolution);
         }
 
         /// <summary>
@@ -921,6 +907,21 @@ namespace QuantConnect.Algorithm
         private bool HistoryRequestValid(Symbol symbol)
         {
             return symbol.SecurityType == SecurityType.Future || !UniverseManager.ContainsKey(symbol) && !symbol.IsCanonical();
+        }
+
+        /// <summary>
+        /// Will set warmup settings validating the algorithm has not finished initialization yet
+        /// </summary>
+        private void SetWarmup(int? barCount, TimeSpan? timeSpan, Resolution? resolution)
+        {
+            if (_locked)
+            {
+                throw new InvalidOperationException("QCAlgorithm.SetWarmup(): This method cannot be used after algorithm initialized");
+            }
+
+            _warmupTimeSpan = timeSpan;
+            _warmupBarCount = barCount;
+            Settings.WarmupResolution = resolution;
         }
     }
 }

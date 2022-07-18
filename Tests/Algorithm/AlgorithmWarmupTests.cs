@@ -294,6 +294,69 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(expected, algo.Time);
         }
 
+        [Test]
+        public void WarmupResolutionPython()
+        {
+            using (Py.GIL())
+            {
+                dynamic algo = PyModule.FromString("testModule",
+                    @"
+from AlgorithmImports import *
+from QuantConnect.Tests.Engine.DataFeeds import *
+
+class TestAlgo(AlgorithmStub):
+    def Initialize(self):
+        self.DataFeed.ShouldThrow = False
+
+        self.SetStartDate(2013, 10, 1)
+        self.AddEquity(""AAPL"")
+        self.SetWarmUp(60)
+").GetAttr("TestAlgo").Invoke();
+
+                algo.Initialize();
+                algo.PostInitialize();
+
+                // the last trading hour of the previous day
+                Assert.AreEqual(new DateTime(2013, 09, 30, 15, 0, 0), (DateTime)algo.Time);
+            }
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void WarmupResolutionPythonPassThrough(bool passThrough)
+        {
+            using (Py.GIL())
+            {
+                dynamic algo = PyModule.FromString("testModule",
+                    @"
+from AlgorithmImports import *
+from QuantConnect.Tests.Engine.DataFeeds import *
+
+class TestAlgo(AlgorithmStub):
+    def __init__(self, passThrough):
+        self.passThrough = passThrough
+
+    def Initialize(self):
+        self.DataFeed.ShouldThrow = False
+
+        self.SetStartDate(2013, 10, 1)
+        self.AddEquity(""AAPL"")
+        self.SetWarmUp(10)
+        if self.passThrough:
+            self.Settings.WarmUpResolution = Resolution.Daily
+        else:
+            self.Settings.WarmupResolution = Resolution.Daily
+").GetAttr("TestAlgo").Invoke(passThrough.ToPython());
+
+                algo.Initialize();
+                algo.PostInitialize();
+
+                Assert.AreEqual(passThrough, (bool)algo.passThrough);
+                // 10 daily bars including 2 weekends
+                Assert.AreEqual(new DateTime(2013, 09, 17), (DateTime)algo.Time);
+            }
+        }
+
         private class TestSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
         {
             public static TestWarmupAlgorithm TestAlgorithm { get; set; }

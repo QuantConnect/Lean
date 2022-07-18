@@ -30,12 +30,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     {
         public List<SecurityChanges> SecurityChangesRecord = new List<SecurityChanges>();
         public DataManager DataManager;
-
+        public IDataFeed DataFeed;
         public AlgorithmStub(bool createDataManager = true)
         {
             if (createDataManager)
             {
-                DataManager = new DataManagerStub(this);
+                var dataManagerStub = new DataManagerStub(this);
+                DataManager = dataManagerStub;
+                DataFeed = dataManagerStub.DataFeed;
                 SubscriptionManager.SetDataManager(DataManager);
             }
             Transactions.SetOrderProcessor(new FakeOrderProcessor());
@@ -43,6 +45,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         public AlgorithmStub(IDataFeed dataFeed)
         {
+            DataFeed = dataFeed;
             DataManager = new DataManagerStub(dataFeed, this);
             SubscriptionManager.SetDataManager(DataManager);
             Transactions.SetOrderProcessor(new FakeOrderProcessor());
