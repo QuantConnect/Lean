@@ -19,7 +19,7 @@ using System.Collections.Generic;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm which reproduces GH issue 4446
+    /// Regression algorithm which reproduces GH issue 4446, in the case of daily resolution.
     /// </summary>
     public class DelistedFutureLiquidateDailyRegressionAlgorithm : DelistedFutureLiquidateRegressionAlgorithm
     {
