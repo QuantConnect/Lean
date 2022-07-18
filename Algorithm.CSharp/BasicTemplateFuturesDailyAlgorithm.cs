@@ -85,8 +85,7 @@ namespace QuantConnect.Algorithm.CSharp
                     }
                 }
             }
-            // same as before, we have to check if exchange is actually open because market-on-open orders are not supported for futures.
-            else if (Securities.Values.All(x => x.Exchange.ExchangeOpen))
+            else
             {
                 Liquidate();
             }

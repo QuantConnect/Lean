@@ -856,7 +856,7 @@ namespace QuantConnect.Algorithm
             }
 
             //Check the exchange is open before sending a market on open order for futures
-            if (security.Type is SecurityType.Future or SecurityType.FutureOption && request.OrderType == OrderType.MarketOnOpen)
+            if ((security.Type == SecurityType.Future || security.Type == SecurityType.FutureOption) && request.OrderType == OrderType.MarketOnOpen)
             {
                 if (!_isMarketOnOpenOrderRestrictedForFuturesWarningSent)
                 {

@@ -115,7 +115,7 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
         public virtual bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
-            if (security.Type is SecurityType.Future or SecurityType.FutureOption && order.Type == OrderType.MarketOnOpen)
+            if ((security.Type == SecurityType.Future || security.Type == SecurityType.FutureOption) && order.Type == OrderType.MarketOnOpen)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NorSupported",
                     "MarketOnOpen orders are not supported for futures and future options.");
