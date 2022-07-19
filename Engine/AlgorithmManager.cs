@@ -259,11 +259,8 @@ namespace QuantConnect.Lean.Engine
 
                     security.Update(update.Data, update.DataType, update.ContainsFillForwardData);
 
-                    if (!update.IsInternalConfig)
-                    {
-                        // Send market price updates to the TradeBuilder
-                        algorithm.TradeBuilder.SetMarketPrice(security.Symbol, security.Price);
-                    }
+                    // Send market price updates to the TradeBuilder
+                    algorithm.TradeBuilder.SetMarketPrice(security.Symbol, security.Price);
                 }
 
                 //Update the securities properties with any universe data
