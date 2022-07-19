@@ -54,7 +54,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // set our expiry filter for this futures chain
             // SetFilter method accepts TimeSpan objects or integer for days.
-            // The following statements yield the same filtering criteria 
+            // The following statements yield the same filtering criteria
             futureSP500.SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
             futureGold.SetFilter(0, 182);
         }
@@ -76,8 +76,9 @@ namespace QuantConnect.Algorithm.CSharp
                         select futuresContract
                     ).FirstOrDefault();
 
-                    // if found, trade it
-                    if (contract != null && IsMarketOpen(contract.Symbol))
+                    // if found and exchange is open, trade it. Exchange could be closed, for example for a bar after 6:00pm on a friday, when futures
+                    // markets are closed.
+                    if (contract != null && Securities[contract.Symbol].Exchange.ExchangeOpen)
                     {
                         _contractSymbol = contract.Symbol;
                         MarketOrder(_contractSymbol, 1);
@@ -164,7 +165,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "909088689d7030fa33c5da3c15fba98e"}
+            {"OrderListHash", "48bfc4d255420cb589e00cf582554e0a"}
         };
     }
 }

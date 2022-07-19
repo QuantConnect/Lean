@@ -97,13 +97,16 @@ namespace QuantConnect.Algorithm.CSharp
                 _lastDateLog = Time;
 
                 Log($"{Time}- {Securities[_continuousContract.Symbol].GetLastData()}");
-                if (Portfolio.Invested)
+                if (_continuousContract.Exchange.ExchangeOpen)
                 {
-                    Liquidate();
-                }
-                else
-                {
-                    Buy(_continuousContract.Mapped, 1);
+                    if (Portfolio.Invested)
+                    {
+                        Liquidate();
+                    }
+                    else
+                    {
+                        Buy(_continuousContract.Mapped, 1);
+                    }
                 }
 
                 if(Time.Month == 1 && Time.Year == 2013)
@@ -200,7 +203,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "5fc26c7f1f2d9fff97d36a5b58853840"}
+            {"OrderListHash", "8ad040c62ad255e4f9cd423364147e85"}
         };
     }
 }

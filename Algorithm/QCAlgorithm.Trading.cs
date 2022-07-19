@@ -29,6 +29,7 @@ namespace QuantConnect.Algorithm
     {
         private int _maxOrders = 10000;
         private bool _isMarketOnOpenOrderWarningSent;
+        private bool _isMarketOnOpenOrderRestrictedForFuturesWarningSent;
 
         /// <summary>
         /// Transaction Manager - Process transaction fills and order management.
@@ -250,7 +251,7 @@ namespace QuantConnect.Algorithm
         public OrderTicket MarketOrder(Security security, decimal quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
             // check the exchange is open before sending a market order, if it's not open
-            // then convert it into a market on open order
+            // then convert it into a market on open order (not supported for futures)
             if (!security.Exchange.ExchangeOpen)
             {
                 var mooTicket = MarketOnOpenOrder(security.Symbol, quantity, tag);
@@ -851,6 +852,20 @@ namespace QuantConnect.Algorithm
             {
                 return OrderResponse.Error(request, OrderResponseErrorCode.ExchangeNotOpen,
                     $"{request.OrderType} order and exchange not open."
+                );
+            }
+
+            //Check the exchange is open before sending a market on open order for futures
+            if ((security.Type == SecurityType.Future || security.Type == SecurityType.FutureOption) && request.OrderType == OrderType.MarketOnOpen)
+            {
+                if (!_isMarketOnOpenOrderRestrictedForFuturesWarningSent)
+                {
+                    Debug("Warning: Market-On-Open orders are not allowed for futures and future options. Consider using limit orders during extended market hours.");
+                    _isMarketOnOpenOrderRestrictedForFuturesWarningSent = true;
+                }
+
+                return OrderResponse.Error(request, OrderResponseErrorCode.ExchangeNotOpen,
+                    $"{request.OrderType} orders not supported for {security.Type}."
                 );
             }
 

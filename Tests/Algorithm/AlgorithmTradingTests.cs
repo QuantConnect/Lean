@@ -1387,6 +1387,51 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(expected, algo.Transactions.LastOrderId);
         }
 
+        [Test]
+        public void MarketOrderNotSupportedForFuturesOnExtendedMarketHours()
+        {
+            var algo = GetAlgorithm(out _, 1, 0);
+
+            var mockOrderProcessor = new Mock<ITransactionHandler>();
+            var mockRequest = new Mock<SubmitOrderRequest>(null, null, null, null, null, null, null, null, null, null);
+            var mockTicket = new OrderTicket(algo.Transactions, mockRequest.Object);
+            mockOrderProcessor.Setup(m => m.Process(It.IsAny<OrderRequest>())).Returns(mockTicket);
+            mockOrderProcessor.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns(mockTicket);
+            algo.Transactions.SetOrderProcessor(mockOrderProcessor.Object);
+
+            var es20h20 = algo.AddFutureContract(
+                QuantConnect.Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 3, 20)),
+                Resolution.Minute);
+
+            //Set price to $25
+            Update(es20h20, 25);
+            algo.Portfolio.SetCash(150000);
+
+            algo.SetDateTime(new DateTime(2013, 10, 6));  // Sunday
+            var ticket = algo.Buy(es20h20.Symbol, 1);
+            Assert.That(ticket, Has.Property("Status").EqualTo(OrderStatus.Invalid));
+            ticket = algo.Sell(es20h20.Symbol, 1);
+            Assert.That(ticket, Has.Property("Status").EqualTo(OrderStatus.Invalid));
+
+            algo.SetDateTime(new DateTime(2013, 10, 7));  // Monday
+            ticket = algo.Buy(es20h20.Symbol, 1);
+            Assert.That(ticket, Has.Property("Status").EqualTo(OrderStatus.New));
+            ticket = algo.Sell(es20h20.Symbol, 1);
+            Assert.That(ticket, Has.Property("Status").EqualTo(OrderStatus.New));
+        }
+
+        [Test]
+        public void MarketOnOpenOrdersNotSupportedForFutures()
+        {
+            var algo = GetAlgorithm(out _, 1, 0);
+            var es20h20 = algo.AddFutureContract(
+                QuantConnect.Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 3, 20)),
+                Resolution.Minute);
+
+            var ticket = algo.MarketOnOpenOrder(es20h20.Symbol, 1);
+            Assert.That(ticket, Has.Property("Status").EqualTo(OrderStatus.Invalid));
+        }
+
         private class TestShortableProvider : IShortableProvider
         {
             public Dictionary<Symbol, long> AllShortableSymbols(DateTime localTime)
