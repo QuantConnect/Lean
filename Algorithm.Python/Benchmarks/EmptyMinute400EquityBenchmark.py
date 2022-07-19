@@ -16,8 +16,8 @@ from AlgorithmImports import *
 class EmptyMinute400EquityBenchmark(QCAlgorithm):
 
     def Initialize(self):
-        self.SetStartDate(2015, 10, 1)
-        self.SetEndDate(2015, 11, 15)    
+        self.SetStartDate(2015, 9, 1)
+        self.SetEndDate(2015, 12, 1)
 
         for symbol in Symbols().Equity.All()[:400]:
             self.AddSecurity(SecurityType.Equity, symbol)

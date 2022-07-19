@@ -1,34 +1,27 @@
-/*
- * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
- * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-using System;
-using QuantConnect.Data;
+from AlgorithmImports import *
 
-namespace QuantConnect.Algorithm.CSharp.Benchmarks
-{
-    /// <summary>
-    /// Benchmark Algorithm: Loading and synchronization of 500 equity minute symbols and their options.
-    /// </summary>
-    public class EmptyEquityAndOptions500Benchmark : QCAlgorithm
-    {
-        public override void Initialize()
-        {
-            SetStartDate(2022, 5, 11);
-            SetEndDate(2022, 5, 16);
+### <summary>
+### Benchmark Algorithm: Loading and synchronization of 500 equity minute symbols and their options.
+### </summary>
+class EmptyEquityAndOptions400Benchmark(QCAlgorithm):
 
-            var equity_symbols = new[] {
+    def Initialize(self):
+        self.SetStartDate(2022, 5, 11)
+        self.SetEndDate(2022, 5, 12)
+        self.equity_symbols = [
 
 "MARK", "TSN", "DT", "RDW", "CVE", "NXPI", "FIVN", "CLX", "SPXL", "BKSY", "NUGT", "CF", "NEGG",
 "RH", "SIRI", "ITUB", "CSX", "AUR", "LIDR", "CMPS", "DHI", "GLW", "NTES", "CIFR", "S", "HSBC",
@@ -61,35 +54,18 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
 "POSH", "HIMS", "LIFE", "XENE", "ADM", "ROST", "MIR", "NRG", "AAP", "SSYS", "KBH", "KKR", "PLAN",
 "DUK", "WIMI", "DBRG", "WSM", "LTHM", "OVV", "CFLT", "EWT", "UNFI", "TX", "EMR", "IMGN", "K",
 "ONON", "UNIT", "LEVI", "ADTX", "UPWK", "DBA", "VOO", "FATH", "URI", "MPW", "JNUG", "RDFN",
-"OSCR", "WOLF", "SYF", "GOGL", "HES", "PHM", "CWEB", "ALDX", "BTWN", "AFL", "PPL", "CIM",
-"RETA", "FAZ", "TFC", "VIRT", "KDP", "UCO", "FINV", "KMPH", "DNUT", "BIG", "WBX", "VBIV", "IOVA",
-"RSKD", "FTNT", "MNST", "TOST", "KL", "RBOT", "YANG", "ERJ", "FUV", "EAT", "GDS", "SD", "ADP",
-"O", "MGI", "ZIOP", "AKAM", "ZG", "PAYA", "AEM", "LIT", "TD", "REE", "ALPP", "VLD", "AYX", "ACM",
-"QFIN", "ALGN", "VERU", "HRL", "CFX", "ABEV", "HUYA", "UP", "QDEL", "TXRH", "COMP", "WHR",
-"GCI", "HAS", "CARR", "BG", "ONDS", "TGTX", "VNQ", "IRM", "BAX", "CTXS", "SRPT", "HUN", "VEEV",
-"SVFA", "CVM", "ADMP", "NDAQ", "IPOD", "ALT", "EW", "DLO", "NLS", "LU", "WEBR", "ANET", "INFY",
-"OGI", "VSCO", "PERI", "AVPT", "VTI", "SAM", "ATHN", "EXPI", "CDE", "RF", "HIG", "XPO", "DQ",
-"RVLV", "LAUR", "ABCL", "NOV", "AVXL", "ALLK", "TUR"
+"OSCR", "WOLF", "SYF", "GOGL", "HES", "PHM", "CWEB", "ALDX", "BTWN", "AFL", "PPL", "CIM"
 
-            };
-            Settings.DataSubscriptionLimit = 1000000;
-            SetWarmUp(TimeSpan.FromDays(1));
-            foreach(var ticker in equity_symbols)
-            {
-                var option = AddOption(ticker);
-                option.SetFilter(1, 7, 0, 90);
-            }
+        ]
 
-            AddEquity("SPY");
-        }
+        self.Settings.DataSubscriptionLimit = 1000000
+        self.SetWarmUp(TimeSpan.FromDays(1))
+        for ticker in  self.equity_symbols:
+            option = self.AddOption(ticker)
+            option.SetFilter(1, 7, timedelta(0), timedelta(90))
+        
+        self.AddEquity("SPY")
 
-        public override void OnData(Slice slice)
-        {
-            if (IsWarmingUp)
-            {
-                return;
-            }
-            Quit("The end!");
-        }
-    }
-}
+    def OnData(self, slice):
+        if self.IsWarmingUp: return
+        self.Quit("The end!")

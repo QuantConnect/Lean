@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -30,8 +30,8 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
     {
         public override void Initialize()
         {
-            SetStartDate(2015, 10, 1);
-            SetEndDate(2015, 11, 15);
+            SetStartDate(2015, 9, 1);
+            SetEndDate(2015, 12, 1);
             foreach (var symbol in Symbols.Equity.All.Take(400))
             {
                 AddSecurity(SecurityType.Equity, symbol);

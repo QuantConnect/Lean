@@ -18,8 +18,8 @@ class StatelessCoarseUniverseSelectionBenchmark(QCAlgorithm):
     def Initialize(self):
         self.UniverseSettings.Resolution = Resolution.Daily
 
-        self.SetStartDate(2017, 11, 1)
-        self.SetEndDate(2018, 1, 1)
+        self.SetStartDate(2017, 1, 1)
+        self.SetEndDate(2019, 1, 1)
         self.SetCash(50000)
 
         self.AddUniverse(self.CoarseSelectionFunction)
