@@ -130,45 +130,8 @@ dotnet build pythonnet.sln
 ------
 
 # Python Autocomplete Imports
-Copy and paste these imports to the top of your Python file to enable a development experience equal to the cloud (these imports are exactly the same as the ones used in the QuantConnect Terminal).
+Adding `from AlgorithmImports import *` to the top of your Python file is enough to enable autocomplete and import the required types for the algorithm at runtime.
 
-```python
-from QuantConnect import *
-from QuantConnect.Parameters import *
-from QuantConnect.Benchmarks import *
-from QuantConnect.Brokerages import *
-from QuantConnect.Util import *
-from QuantConnect.Interfaces import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Algorithm.Framework import *
-from QuantConnect.Algorithm.Framework.Selection import *
-from QuantConnect.Algorithm.Framework.Alphas import *
-from QuantConnect.Algorithm.Framework.Portfolio import *
-from QuantConnect.Algorithm.Framework.Execution import *
-from QuantConnect.Algorithm.Framework.Risk import *
-from QuantConnect.Indicators import *
-from QuantConnect.Data import *
-from QuantConnect.Data.Consolidators import *
-from QuantConnect.Data.Custom import *
-from QuantConnect.Data.Fundamental import *
-from QuantConnect.Data.Market import *
-from QuantConnect.Data.UniverseSelection import *
-from QuantConnect.Notifications import *
-from QuantConnect.Orders import *
-from QuantConnect.Orders.Fees import *
-from QuantConnect.Orders.Fills import *
-from QuantConnect.Orders.Slippage import *
-from QuantConnect.Scheduling import *
-from QuantConnect.Securities import *
-from QuantConnect.Securities.Equity import *
-from QuantConnect.Securities.Forex import *
-from QuantConnect.Securities.Interfaces import *
-from datetime import date, datetime, timedelta
-from QuantConnect.Python import *
-from QuantConnect.Storage import *
-QCAlgorithmFramework = QCAlgorithm
-QCAlgorithmFrameworkBridge = QCAlgorithm
-```
 
 # Known Issues
 - Python can sometimes have issues when paired with our quantconnect stubs package on Windows. This issue can cause modules not to be found because `site-packages` directory is not present in the python path. If you have the required modules installed and are seeing errors about them not being found, please try the following steps:
