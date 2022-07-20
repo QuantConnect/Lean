@@ -1,0 +1,39 @@
+name: Benchmarks
+
+on:
+  push:
+    branches: ['*']
+    tags: ['*']
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: self-hosted
+    container:
+        image: quantconnect/lean:foundation
+        volumes:
+          - /nas:/Data
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Checkout Lean Master
+        uses: actions/checkout@v2
+        with:
+          repository: QuantConnect/Lean
+          path: LeanMaster
+          ref: 'master'
+      - name: Build Lean Master
+        run: dotnet build --verbosity q /p:Configuration=Release /p:WarningLevel=1 LeanMaster/QuantConnect.Lean.sln
+
+      - name: Run Benchmarks Master
+        run: cp run_benchmarks.py LeanMaster/run_benchmarks.py && cd LeanMaster && python run_benchmarks.py /Data && cd ../
+
+      - name: Build
+        run: dotnet build --verbosity q /p:Configuration=Release /p:WarningLevel=1 QuantConnect.Lean.sln
+
+      - name: Run Benchmarks
+        run: python run_benchmarks.py /Data
+
+      - name: Compare Benchmarks
+        run: python compare_benchmarks.py LeanMaster/benchmark_results.json benchmark_results.json

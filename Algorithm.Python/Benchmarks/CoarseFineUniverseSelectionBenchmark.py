@@ -12,16 +12,13 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-AddReference("System.Collections")
-
-from System.Collections.Generic import List
 
 class CoarseFineUniverseSelectionBenchmark(QCAlgorithm):
 
     def Initialize(self):
 
         self.SetStartDate(2017, 11, 1)
-        self.SetEndDate(2018, 1, 1)
+        self.SetEndDate(2018, 3, 1)
         self.SetCash(50000)
 
         self.UniverseSettings.Resolution = Resolution.Minute

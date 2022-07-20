@@ -23,7 +23,7 @@ class EmptySingleSecuritySecondEquityBenchmark(QCAlgorithm):
 
     def Initialize(self):
         self.SetStartDate(2008, 1, 1)
-        self.SetEndDate(2009, 1, 1)    
+        self.SetEndDate(2008, 6, 1)
         self.SetBenchmark(lambda x: 1)
         self.AddEquity("SPY", Resolution.Second)
     

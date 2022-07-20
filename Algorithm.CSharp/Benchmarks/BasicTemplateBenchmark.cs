@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -28,7 +28,7 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
         public override void Initialize()
         {
             SetStartDate(2000, 01, 01);
-            SetEndDate(2017, 01, 01);
+            SetEndDate(2022, 01, 01);
             SetBenchmark(dt => 1m);
             AddEquity("SPY");
         }

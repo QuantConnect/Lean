@@ -18,7 +18,7 @@ class ScheduledEventsBenchmark(QCAlgorithm):
     def Initialize(self):
 
         self.SetStartDate(2011, 1, 1)
-        self.SetEndDate(2018, 1, 1)
+        self.SetEndDate(2022, 1, 1)
         self.SetCash(100000)
         self.AddEquity("SPY")
 

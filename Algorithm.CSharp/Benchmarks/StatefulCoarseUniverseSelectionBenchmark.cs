@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -29,8 +29,8 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
         {
             UniverseSettings.Resolution = Resolution.Daily;
 
-            SetStartDate(2017, 11, 01);
-            SetEndDate(2018, 01, 01);
+            SetStartDate(2017, 1, 01);
+            SetEndDate(2019, 1, 01);
             SetCash(50000);
 
             AddUniverse(CoarseSelectionFunction);
