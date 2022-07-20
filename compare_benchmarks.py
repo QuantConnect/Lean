@@ -17,7 +17,7 @@ for language in ["CSharp", "Python"]:
 		newResult = newBenchmark[language][key]
 
 		# allow 5% noise
-		expectedValue = value["average-dps"] * 0.95
+		expectedValue = value["average-dps"] * 0.90
 		if expectedValue > newResult["average-dps"]:
 			failed = True
 			print(f'Performance benchmark Failed for algorithm {key} language {language}. Was {str(newResult["average-dps"])} expected as low as {str(expectedValue)}')
