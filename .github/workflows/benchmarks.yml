@@ -22,6 +22,7 @@ jobs:
         with:
           repository: QuantConnect/Lean
           path: LeanMaster
+          ref: 'master'
       - name: Build Lean Master
         run: dotnet build --verbosity q /p:Configuration=Release /p:WarningLevel=1 LeanMaster/QuantConnect.Lean.sln
 

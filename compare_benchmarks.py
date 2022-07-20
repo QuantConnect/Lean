@@ -10,6 +10,10 @@ failed = False
 for language in ["CSharp", "Python"]:
 
 	for key, value in referenceBenchmark[language].items():
+		if key not in newBenchmark[language]:
+			failed = True
+			print(f'Performance benchmark {key} language {language} was not found in new results')
+			continue
 		newResult = newBenchmark[language][key]
 
 		# allow 5% noise
