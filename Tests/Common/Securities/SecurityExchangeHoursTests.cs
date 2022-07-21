@@ -292,7 +292,7 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
-        public void GetNextMarketOpenForRegularHoursFromCloseDay()
+        public void GetNextMarketOpenForRegularHoursFromClosedDay()
         {
             var exchangeHours = CreateUsFutureSecurityExchangeHoursWithExtendedHours();
 
@@ -312,7 +312,7 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
-        public void GetNextMarketOpenWithExtendedHoursFromCloseDay()
+        public void GetNextMarketOpenWithExtendedHoursFromClosedDay()
         {
             var exchangeHours = CreateUsFutureSecurityExchangeHoursWithExtendedHours();
 

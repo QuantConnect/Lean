@@ -139,24 +139,27 @@ namespace QuantConnect.Securities
         /// <returns>The market's opening time of day</returns>
         public TimeSpan? GetMarketOpen(TimeSpan time, bool extendedMarket, TimeSpan? previousDayLastSegment = null)
         {
-            var previousSegment = previousDayLastSegment.HasValue && previousDayLastSegment.Value == Time.OneDay ? previousDayLastSegment.Value : (TimeSpan?)null;
+            var previousSegment = previousDayLastSegment;
+            bool prevSegmentIsFromPrevDay = true;
             for (var i = 0; i < Segments.Count; i++)
             {
                 var segment = Segments[i];
                 if (segment.State == MarketHoursState.Closed || segment.End <= time)
                 {
                     previousSegment = segment.End;
+                    prevSegmentIsFromPrevDay = false;
                     continue;
                 }
 
                 if (segment.State == MarketHoursState.Market || extendedMarket)
                 {
-                    if (!IsContinuousMarketOpen(previousSegment, segment.Start))
+                    if (!IsContinuousMarketOpen(previousSegment, segment.Start, prevSegmentIsFromPrevDay))
                     {
                         return segment.Start;
                     }
 
                     previousSegment = segment.End;
+                    prevSegmentIsFromPrevDay = false;
                 }
             }
 
@@ -306,12 +309,21 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="previousSegmentEnd">Previous segment end time before the current segment</param>
         /// <param name="nextSegmentStart">The next segment start time</param>
+        /// <param name="prevSegmentIsFromPrevDay">Indicated whether the previous segment is from the previous day or not
+        /// (then it is from the same day as the next segment). Defaults to true</param>
         /// <returns>True if indeed the given segment is part of the last segment. False otherwise</returns>
-        public static bool IsContinuousMarketOpen(TimeSpan? previousSegmentEnd, TimeSpan? nextSegmentStart)
+        public static bool IsContinuousMarketOpen(TimeSpan? previousSegmentEnd, TimeSpan? nextSegmentStart, bool prevSegmentIsFromPrevDay = true)
         {
             if (previousSegmentEnd != null && nextSegmentStart != null)
             {
-                return ((previousSegmentEnd.Value == Time.OneDay && nextSegmentStart.Value == TimeSpan.Zero) || previousSegmentEnd.Value == nextSegmentStart.Value);
+                if (prevSegmentIsFromPrevDay)
+                {
+                    // midnight passing to the next day
+                    return previousSegmentEnd.Value == Time.OneDay && nextSegmentStart.Value == TimeSpan.Zero;
+                }
+
+                // passing from one segment to another in the same day
+                return previousSegmentEnd.Value == nextSegmentStart.Value;
             }
             return false;
         }
