@@ -24,7 +24,7 @@ namespace QuantConnect.Indicators
     /// The Least Squares Moving Average (LSMA) first calculates a least squares regression line
     /// over the preceding time periods, and then projects it forward to the current period. In
     /// essence, it calculates what the value would be if the regression line continued.
-    /// Source: https://rtmath.net/helpFinAnalysis/html/b3fab79c-f4b2-40fb-8709-fdba43cdb363.htm
+    /// Source: https://rtmath.net/assets/docs/finanalysis/html/b3fab79c-f4b2-40fb-8709-fdba43cdb363.htm
     /// </summary>
     public class LeastSquaresMovingAverage : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
