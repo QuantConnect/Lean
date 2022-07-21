@@ -79,14 +79,18 @@ namespace QuantConnect.Api
                 writer.WriteStartArray();
                 foreach (var keyValuePair in optimizationBacktest.Statistics.OrderBy(pair => pair.Key))
                 {
-                    var statistic = keyValuePair.Value.Replace("%", string.Empty).Replace("$", string.Empty);
+                    var statistic = keyValuePair.Value.Replace("%", string.Empty);
+                    foreach (var currencySymbol in Currencies.CurrencySymbols.Values)
+                    {
+                        statistic = statistic.Replace(currencySymbol, string.Empty);
+                    }
+
                     if (string.IsNullOrEmpty(statistic))
                     {
                         continue;
                     }
 
-                    decimal result;
-                    if (decimal.TryParse(statistic, NumberStyles.Any, CultureInfo.InvariantCulture, out result))
+                    if (decimal.TryParse(statistic, NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
                     {
                         writer.WriteValue(result);
                     }

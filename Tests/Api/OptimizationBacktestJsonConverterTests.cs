@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -71,7 +70,7 @@ namespace QuantConnect.Tests.API
                 { "Tracking Error", "0.233" },
                 { "Treynor Ratio", "-0.558" },
                 { "Total Fees", "$1390.49" },
-                { "Estimated Strategy Capacity", "$6300000.00" },
+                { "Estimated Strategy Capacity", "₿6300000.00" },
             };
 
             optimizationBacktest.Equity = new Series
