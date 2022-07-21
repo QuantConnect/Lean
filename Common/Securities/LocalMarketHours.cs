@@ -146,11 +146,18 @@ namespace QuantConnect.Securities
                 var segment = Segments[i];
                 if (segment.State == MarketHoursState.Closed || segment.End <= time)
                 {
-                    previousSegment = segment.End;
-                    prevSegmentIsFromPrevDay = false;
+                    // update prev segment end time only if the current segment could have been taken into account
+                    // (regular hours or, when enabled, extended hours segment)
+                    if (segment.State == MarketHoursState.Market || extendedMarket)
+                    {
+                        previousSegment = segment.End;
+                        prevSegmentIsFromPrevDay = false;
+                    }
+
                     continue;
                 }
 
+                // let's try this segment if it's regular market hours or if it is extended market hours and extended market is allowed
                 if (segment.State == MarketHoursState.Market || extendedMarket)
                 {
                     if (!IsContinuousMarketOpen(previousSegment, segment.Start, prevSegmentIsFromPrevDay))
