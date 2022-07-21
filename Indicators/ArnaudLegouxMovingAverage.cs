@@ -23,7 +23,7 @@ namespace QuantConnect.Indicators
     /// but still being smooth to reduce noises.
     /// Is a weighted moving average, which weights have a Normal shape;
     /// the parameters Sigma and Offset affect the kurtosis and skewness of the weights respectively.
-    /// Source: http://www.arnaudlegoux.com/index.html
+    /// Source: https://www.cjournal.cz/files/308.pdf
     /// </summary>
     /// <seealso cref="IndicatorDataPoint" />
     public class ArnaudLegouxMovingAverage : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
