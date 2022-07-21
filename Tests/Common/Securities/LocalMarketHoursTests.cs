@@ -88,6 +88,42 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(expected, LocalMarketHours.IsContinuousMarketOpen(previousSegmentEnd, nextSegmentStart));
         }
 
+        [Test]
+        public void GetsMarketOpenForRegularHours()
+        {
+            var marketHours = new LocalMarketHours(DayOfWeek.Monday, new MarketHoursSegment[]
+            {
+                new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(0, 0, 0), new TimeSpan(8, 0, 0)),
+                new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(8, 0, 0), new TimeSpan(16, 0, 0)),
+                new MarketHoursSegment(MarketHoursState.PostMarket, new TimeSpan(17, 0, 0), new TimeSpan(1, 0, 0, 0))
+            });
+            var prevDayLastSegmentEnd = new TimeSpan(1, 0, 0, 0);
+
+            Assert.AreEqual(new TimeSpan(8, 0, 0), marketHours.GetMarketOpen(new TimeSpan(0, 0, 0), false, prevDayLastSegmentEnd));
+            Assert.AreEqual(null, marketHours.GetMarketOpen(new TimeSpan(8, 0, 0), false, prevDayLastSegmentEnd));
+            Assert.AreEqual(null, marketHours.GetMarketOpen(new TimeSpan(16, 0, 0), false, prevDayLastSegmentEnd));
+            Assert.AreEqual(null, marketHours.GetMarketOpen(new TimeSpan(17, 0, 0), false, prevDayLastSegmentEnd));
+            Assert.AreEqual(null, marketHours.GetMarketOpen(new TimeSpan(18, 0, 0), false, prevDayLastSegmentEnd));
+        }
+
+        [Test]
+        public void GetsMarketOpenWithExtendedHours()
+        {
+            var marketHours = new LocalMarketHours(DayOfWeek.Monday, new MarketHoursSegment[]
+            {
+                new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(0, 0, 0), new TimeSpan(8, 0, 0)),
+                new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(8, 0, 0), new TimeSpan(16, 0, 0)),
+                new MarketHoursSegment(MarketHoursState.PostMarket, new TimeSpan(17, 0, 0), new TimeSpan(1, 0, 0, 0))
+            });
+            var prevDayLastSegmentEnd = new TimeSpan(1, 0, 0, 0);
+
+            Assert.AreEqual(new TimeSpan(17, 0, 0), marketHours.GetMarketOpen(new TimeSpan(0, 0, 0), true, prevDayLastSegmentEnd));
+            Assert.AreEqual(new TimeSpan(17, 0, 0), marketHours.GetMarketOpen(new TimeSpan(8, 0, 0), true, prevDayLastSegmentEnd));
+            Assert.AreEqual(new TimeSpan(17, 0, 0), marketHours.GetMarketOpen(new TimeSpan(16, 0, 0), true, prevDayLastSegmentEnd));
+            Assert.AreEqual(new TimeSpan(17, 0, 0), marketHours.GetMarketOpen(new TimeSpan(17, 0, 0), true, prevDayLastSegmentEnd));
+            Assert.AreEqual(new TimeSpan(17, 0, 0), marketHours.GetMarketOpen(new TimeSpan(18, 0, 0), true, prevDayLastSegmentEnd));
+        }
+
         private static LocalMarketHours GetUsEquityWeekDayMarketHours()
         {
             return new LocalMarketHours(DayOfWeek.Friday, USEquityPreOpen, USEquityOpen, USEquityClose, USEquityPostClose);

@@ -139,7 +139,7 @@ namespace QuantConnect.Securities
         /// <returns>The market's opening time of day</returns>
         public TimeSpan? GetMarketOpen(TimeSpan time, bool extendedMarket, TimeSpan? previousDayLastSegment = null)
         {
-            var previousSegment = previousDayLastSegment;
+            var previousSegment = previousDayLastSegment.HasValue && previousDayLastSegment.Value == Time.OneDay ? previousDayLastSegment.Value : (TimeSpan?)null;
             for (var i = 0; i < Segments.Count; i++)
             {
                 var segment = Segments[i];
@@ -149,16 +149,7 @@ namespace QuantConnect.Securities
                     continue;
                 }
 
-                if (extendedMarket && _hasPreMarket)
-                {
-                    if (segment.State == MarketHoursState.PreMarket && !IsContinuousMarketOpen(previousSegment, segment.Start))
-                    {
-                        return segment.Start;
-                    }
-
-                    previousSegment = segment.End;
-                }
-                else if (segment.State == MarketHoursState.Market)
+                if (segment.State == MarketHoursState.Market || extendedMarket)
                 {
                     if (!IsContinuousMarketOpen(previousSegment, segment.Start))
                     {
@@ -320,11 +311,7 @@ namespace QuantConnect.Securities
         {
             if (previousSegmentEnd != null && nextSegmentStart != null)
             {
-                if (previousSegmentEnd.Value == Time.OneDay)
-                {
-                    // midnight passing to the next day
-                    return nextSegmentStart.Value == TimeSpan.Zero;
-                }
+                return ((previousSegmentEnd.Value == Time.OneDay && nextSegmentStart.Value == TimeSpan.Zero) || previousSegmentEnd.Value == nextSegmentStart.Value);
             }
             return false;
         }
