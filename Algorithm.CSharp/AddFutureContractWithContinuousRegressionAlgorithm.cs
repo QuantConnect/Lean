@@ -66,24 +66,6 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception($"Algorithm should of ended!");
             }
 
-            var orders = Transactions.GetOrders().ToList();
-            if (orders.Any())
-            {
-                if (orders.Count != 2)
-                {
-                    throw new Exception($"Expected 2 orders but got {orders.Count}");
-                }
-
-                if (orders.All(x => x.Status == OrderStatus.Filled) && _futureContract.Exchange.ExchangeOpen && _futureContract.Exchange.ExchangeOpen)
-                {
-                    RemoveSecurity(_futureContract.Symbol);
-                    RemoveSecurity(_continuousContract.Symbol);
-                    _ended = true;
-                }
-
-                return;
-            }
-
             if (data.Keys.Count > 2)
             {
                 throw new Exception($"Getting data for more than 2 symbols! {string.Join(",", data.Keys.Select(symbol => symbol))}");
@@ -93,11 +75,15 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception($"Expecting 3 universes (chain, continuous and user defined) but have {UniverseManager.Count}");
             }
 
-            if (!Portfolio.Invested)
+            if (!Portfolio.Invested && IsMarketOpen(_futureContract.Symbol))
             {
-                // Very high limit price so the order is filled in the next time slice where market is open
-                LimitOrder(_futureContract.Symbol, 1, Securities[_futureContract.Symbol].Price * 2m);
-                LimitOrder(_continuousContract.Mapped, 1, Securities[_continuousContract.Mapped].Price * 2m);
+                Buy(_futureContract.Symbol, 1);
+                Buy(_continuousContract.Mapped, 1);
+
+                RemoveSecurity(_futureContract.Symbol);
+                RemoveSecurity(_continuousContract.Symbol);
+
+                _ended = true;
             }
         }
 
@@ -147,32 +133,32 @@ namespace QuantConnect.Algorithm.CSharp
         {
             {"Total Trades", "3"},
             {"Average Win", "0%"},
-            {"Average Loss", "-0.68%"},
-            {"Compounding Annual Return", "-41.466%"},
-            {"Drawdown", "1.100%"},
+            {"Average Loss", "-0.03%"},
+            {"Compounding Annual Return", "-2.503%"},
+            {"Drawdown", "0.000%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "-0.682%"},
-            {"Sharpe Ratio", "-6.861"},
+            {"Net Profit", "-0.032%"},
+            {"Sharpe Ratio", "-7.857"},
             {"Probabilistic Sharpe Ratio", "1.216%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.27"},
-            {"Beta", "0.063"},
-            {"Annual Standard Deviation", "0.038"},
-            {"Annual Variance", "0.001"},
-            {"Information Ratio", "-1.844"},
-            {"Tracking Error", "0.23"},
-            {"Treynor Ratio", "-4.097"},
+            {"Alpha", "-0.021"},
+            {"Beta", "0.004"},
+            {"Annual Standard Deviation", "0.003"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "-0.765"},
+            {"Tracking Error", "0.241"},
+            {"Treynor Ratio", "-4.691"},
             {"Total Fees", "$7.40"},
-            {"Estimated Strategy Capacity", "$13000000.00"},
+            {"Estimated Strategy Capacity", "$1800000.00"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
-            {"Fitness Score", "0.419"},
+            {"Fitness Score", "0.417"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-57.657"},
-            {"Portfolio Turnover", "0.838"},
+            {"Return Over Maximum Drawdown", "-81.557"},
+            {"Portfolio Turnover", "0.834"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -186,7 +172,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "05e434fa1937f69b2e0ab3440d5a39a9"}
+            {"OrderListHash", "3e892199a268ee1162ca47efb27daac9"}
         };
     }
 }
