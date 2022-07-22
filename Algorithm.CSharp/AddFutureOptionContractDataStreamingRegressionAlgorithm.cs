@@ -100,7 +100,7 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            if (data.ContainsKey(_es20h20) && data.ContainsKey(_es19m20))
+            if (data.ContainsKey(_es20h20) && data.ContainsKey(_es19m20) && IsMarketOpen(_es20h20))
             {
                 SetHoldings(_es20h20, 0.2);
                 SetHoldings(_es19m20, 0.2);
@@ -165,7 +165,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 168361;
+        public long DataPoints => 212159;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -203,7 +203,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-111.953"},
+            {"Return Over Maximum Drawdown", "-119.569"},
             {"Portfolio Turnover", "2.152"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -218,7 +218,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "de57c44078c6cba05b7cc2d8802eb0b9"}
+            {"OrderListHash", "1a26d6bde18536cfd3bad486e778b9c2"}
         };
     }
 }
