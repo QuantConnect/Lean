@@ -496,7 +496,7 @@ namespace QuantConnect.Securities
                 }
                 marketHours = new LocalMarketHours(localDateTime.DayOfWeek, newSegments);
             }
-            
+
             // If the lateOpenTime is between a segment, change the start time with it
             // and add it before the segments previous to the lateOpenTime
             // Otherwise, just take the segments previous to the lateOpenTime
