@@ -28,7 +28,8 @@ class BasicTemplateContinuousFutureAlgorithm(QCAlgorithm):
         self._continuousContract = self.AddFuture(Futures.Indices.SP500EMini,
                                                   dataNormalizationMode = DataNormalizationMode.BackwardsRatio,
                                                   dataMappingMode = DataMappingMode.LastTradingDay,
-                                                  contractDepthOffset= 0)
+                                                  contractDepthOffset = 0,
+                                                  extendedMarketHours = True)
 
         self._fast = self.SMA(self._continuousContract.Symbol, 3, Resolution.Daily)
         self._slow = self.SMA(self._continuousContract.Symbol, 10, Resolution.Daily)
@@ -43,6 +44,9 @@ class BasicTemplateContinuousFutureAlgorithm(QCAlgorithm):
         for changedEvent in data.SymbolChangedEvents.Values:
             if changedEvent.Symbol == self._continuousContract.Symbol:
                 self.Log(f"SymbolChanged event: {changedEvent}")
+
+        if not self.IsMarketOpen(self._continuousContract.Symbol):
+            return
 
         if not self.Portfolio.Invested:
             if self._fast.Current.Value > self._slow.Current.Value:

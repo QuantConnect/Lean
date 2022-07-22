@@ -1687,7 +1687,7 @@ namespace QuantConnect.Algorithm
             // Short-circuit to AddOptionContract because it will add the underlying if required
             if (!isCanonical && symbol.SecurityType.IsOption())
             {
-                return AddOptionContract(symbol, resolution, fillDataForward, leverage);
+                return AddOptionContract(symbol, resolution, fillDataForward, leverage, extendedMarketHours);
             }
 
             var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol,

@@ -48,7 +48,8 @@ namespace QuantConnect.Algorithm.CSharp
             _continuousContract = AddFuture(Futures.Indices.SP500EMini,
                 dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
                 dataMappingMode: DataMappingMode.LastTradingDay,
-                contractDepthOffset: 0
+                contractDepthOffset: 0,
+                extendedMarketHours: true
             );
 
             _fast = SMA(_continuousContract.Symbol, 3, Resolution.Daily);
@@ -68,6 +69,11 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     throw new Exception($"{Time} unexpected symbol changed event {changedEvent}!");
                 }
+            }
+
+            if (!IsMarketOpen(_continuousContract.Symbol))
+            {
+                return;
             }
 
             if (!Portfolio.Invested)
@@ -117,7 +123,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 875590;
+        public long DataPoints => 884815;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -142,12 +148,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
             {"Alpha", "-0"},
-            {"Beta", "0"},
+            {"Beta", "-0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-2.753"},
+            {"Information Ratio", "-2.752"},
             {"Tracking Error", "0.082"},
-            {"Treynor Ratio", "-8.269"},
+            {"Treynor Ratio", "1.883"},
             {"Total Fees", "$3.70"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
@@ -170,7 +176,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "d5bb3821a9a78b9fbef422c0f6bb6b4c"}
+            {"OrderListHash", "adb237703e65b93da5961c0085109732"}
         };
     }
 }
