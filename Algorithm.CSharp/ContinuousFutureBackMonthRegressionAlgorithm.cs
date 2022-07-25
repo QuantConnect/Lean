@@ -47,7 +47,8 @@ namespace QuantConnect.Algorithm.CSharp
                 AddFuture(Futures.Indices.SP500EMini,
                     dataNormalizationMode: DataNormalizationMode.BackwardsPanamaCanal,
                     dataMappingMode: DataMappingMode.OpenInterest,
-                    contractDepthOffset: 5
+                    contractDepthOffset: 5,
+                    extendedMarketHours: true
                 );
                 throw new Exception("Expected out of rage exception. We don't support that many back months");
             }
@@ -59,7 +60,8 @@ namespace QuantConnect.Algorithm.CSharp
             _continuousContract = AddFuture(Futures.Indices.SP500EMini,
                 dataNormalizationMode: DataNormalizationMode.BackwardsPanamaCanal,
                 dataMappingMode: DataMappingMode.OpenInterest,
-                contractDepthOffset: 1
+                contractDepthOffset: 1,
+                extendedMarketHours: true
             );
         }
 
@@ -92,21 +94,18 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
 
-            if (_lastDateLog.Month != Time.Month && _continuousContract.HasData)
+            if (_lastDateLog.Month != Time.Month && _continuousContract.HasData && _continuousContract.Exchange.ExchangeOpen)
             {
                 _lastDateLog = Time;
 
                 Log($"{Time}- {Securities[_continuousContract.Symbol].GetLastData()}");
-                if (_continuousContract.Exchange.ExchangeOpen)
+                if (Portfolio.Invested)
                 {
-                    if (Portfolio.Invested)
-                    {
-                        Liquidate();
-                    }
-                    else
-                    {
-                        Buy(_continuousContract.Mapped, 1);
-                    }
+                    Liquidate();
+                }
+                else
+                {
+                    Buy(_continuousContract.Mapped, 1);
                 }
 
                 if(Time.Month == 1 && Time.Year == 2013)
@@ -163,33 +162,33 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "3"},
-            {"Average Win", "1.20%"},
+            {"Average Win", "1.51%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "2.354%"},
+            {"Compounding Annual Return", "2.982%"},
             {"Drawdown", "1.600%"},
             {"Expectancy", "0"},
-            {"Net Profit", "1.180%"},
-            {"Sharpe Ratio", "0.763"},
-            {"Probabilistic Sharpe Ratio", "39.832%"},
+            {"Net Profit", "1.493%"},
+            {"Sharpe Ratio", "0.984"},
+            {"Probabilistic Sharpe Ratio", "48.777%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "100%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.006"},
-            {"Beta", "0.099"},
-            {"Annual Standard Deviation", "0.022"},
+            {"Alpha", "-0"},
+            {"Beta", "0.094"},
+            {"Annual Standard Deviation", "0.021"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-2.729"},
-            {"Tracking Error", "0.076"},
-            {"Treynor Ratio", "0.167"},
+            {"Information Ratio", "-2.663"},
+            {"Tracking Error", "0.077"},
+            {"Treynor Ratio", "0.221"},
             {"Total Fees", "$5.55"},
-            {"Estimated Strategy Capacity", "$67000000.00"},
+            {"Estimated Strategy Capacity", "$110000000.00"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
-            {"Fitness Score", "0.01"},
+            {"Fitness Score", "0.011"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "0.511"},
-            {"Return Over Maximum Drawdown", "1.905"},
-            {"Portfolio Turnover", "0.016"},
+            {"Sortino Ratio", "0.651"},
+            {"Return Over Maximum Drawdown", "3.397"},
+            {"Portfolio Turnover", "0.015"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -203,7 +202,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "468572bbb8256bd47d381757b66da0d0"}
+            {"OrderListHash", "df1c6004c23e3b85a743ec07eacff511"}
         };
     }
 }
