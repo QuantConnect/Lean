@@ -30,7 +30,8 @@ class ContinuousFutureRegressionAlgorithm(QCAlgorithm):
         self._continuousContract = self.AddFuture(Futures.Indices.SP500EMini,
                                                   dataNormalizationMode = DataNormalizationMode.BackwardsRatio,
                                                   dataMappingMode = DataMappingMode.LastTradingDay,
-                                                  contractDepthOffset= 0)
+                                                  contractDepthOffset= 0,
+                                                  extendedMarketHours=True)
         self._currentMappedSymbol = self._continuousContract.Symbol
 
     def OnData(self, data):
@@ -51,7 +52,7 @@ class ContinuousFutureRegressionAlgorithm(QCAlgorithm):
                 if self._currentMappedSymbol == self._continuousContract.Mapped:
                     raise ValueError(f"Continuous contract current symbol did not change! {self._continuousContract.Mapped}")
 
-        if self._lastDateLog != self.Time.month and currentlyMappedSecurity.HasData:
+        if self._lastDateLog != self.Time.month and currentlyMappedSecurity.HasData and self._continuousContract.Exchange.ExchangeOpen:
             self._lastDateLog = self.Time.month
 
             self.Log(f"{self.Time}- {currentlyMappedSecurity.GetLastData()}")
