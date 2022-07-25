@@ -20,17 +20,16 @@ from AlgorithmImports import *
 ### <meta name="tag" content="benchmarks" />
 ### <meta name="tag" content="futures" />
 class BasicTemplateFuturesDailyAlgorithm(QCAlgorithm):
-
     def Initialize(self):
         self.SetStartDate(2013, 10, 8)
         self.SetEndDate(2014, 10, 10)
         self.SetCash(1000000)
 
-        self.contractSymbol = None
+        resolution = self.GetResolution()
 
         # Subscribe and set our expiry filter for the futures chain
-        self.futureSP500 = self.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, extendedMarketHours = True)
-        self.futureGold = self.AddFuture(Futures.Metals.Gold, Resolution.Daily, extendedMarketHours = True)
+        self.futureSP500 = self.AddFuture(Futures.Indices.SP500EMini, resolution, extendedMarketHours = True)
+        self.futureGold = self.AddFuture(Futures.Metals.Gold, resolution, extendedMarketHours = True)
 
         # set our expiry filter for this futures chain
         # SetFilter method accepts timedelta objects or integer for days.
@@ -46,18 +45,24 @@ class BasicTemplateFuturesDailyAlgorithm(QCAlgorithm):
 
                 # if there is any contract, trade the front contract
                 if len(contracts) == 0: continue
-                front = sorted(contracts, key = lambda x: x.Expiry)[0]
+                contract = sorted(contracts, key = lambda x: x.Expiry)[0]
 
-                self.contractSymbol = front.Symbol
                 # if found, trade it.
-                # MOO are not allowed for futures, so to make sure, use limit order instead. We use a very big limit price here
-                # to make the order fill on next bar.
-                self.LimitOrder(front.Symbol, 1, front.AskPrice * 2)
+                if self.Securities[contract.Symbol].Exchange.ExchangeOpen:
+                    self.MarketOrder(contract.Symbol, 1)
+                else:
+                    # MOO are not allowed for futures, so to make sure, use limit order instead. We use a very big limit price here
+                    # to make the order fill on next bar.
+                    self.LimitOrder(contract.Symbol, 1, contract.AskPrice * 2)
         else:
-            # we could use Liquidate(), but since MOO are not allowed, we make sure we can place the orders by selling assets
-            # using limit orders instead
-            for holdings in sorted(self.Portfolio.values(), key=lambda x: x.Symbol):
-                if holdings.Quantity == 0: continue
+            if any([not self.Securities[x.Symbol].Exchange.ExchangeOpen for x in self.Portfolio.values()]):
+                for holdings in sorted(self.Portfolio.values(), key=lambda x: x.Symbol):
+                    if holdings.Quantity == 0: continue
 
-                # use a very low limit price here to make the order fill on next bar.
-                self.LimitOrder(holdings.Symbol, -holdings.Quantity, 1.0)
+                    # use a very low limit price here to make the order fill on next bar.
+                    self.LimitOrder(holdings.Symbol, -holdings.Quantity, 1.0)
+            else:
+                self.Liquidate()
+
+    def GetResolution(self):
+        return Resolution.Daily

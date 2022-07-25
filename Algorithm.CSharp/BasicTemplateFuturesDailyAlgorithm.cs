@@ -33,7 +33,6 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="futures" />
     public class BasicTemplateFuturesDailyAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _contractSymbol;
         protected virtual Resolution Resolution => Resolution.Daily;
 
         // S&P 500 EMini futures
@@ -87,26 +86,37 @@ namespace QuantConnect.Algorithm.CSharp
                     // if found, trade it
                     if (contract != null)
                     {
-                        _contractSymbol = contract.Symbol;
-                        // MOO are not allowed for futures, so to make sure, use limit order instead. We use a very big limit price here
-                        // to make the order fill on next bar.
-                        LimitOrder(_contractSymbol, 1, contract.AskPrice * 2);
+                        if (Securities[contract.Symbol].Exchange.ExchangeOpen)
+                        {
+                            MarketOrder(contract.Symbol, 1);
+                        }
+                        else
+                        {
+                            // MOO are not allowed for futures, so to make sure, use limit order instead. We use a very big limit price here
+                            // to make the order fill on next bar.
+                            LimitOrder(contract.Symbol, 1, contract.AskPrice * 2);
+                        }
                     }
                 }
             }
             else
             {
-                // we could use Liquidate(), but since MOO are not allowed, we make sure we can place the orders by selling assets
-                // using limit orders instead
-                foreach (var holdings in Portfolio.Values.OrderBy(x => x.Symbol))
+                if (Portfolio.Values.Any(x => !Securities[x.Symbol].Exchange.ExchangeOpen))
                 {
-                    if (holdings.Quantity == 0)
+                    foreach (var holdings in Portfolio.Values.OrderBy(x => x.Symbol))
                     {
-                        continue;
-                    }
+                        if (holdings.Quantity == 0)
+                        {
+                            continue;
+                        }
 
-                    // use a very low limit price here to make the order fill on next bar.
-                    LimitOrder(holdings.Symbol, -holdings.Quantity, 1m);
+                        // use a very low limit price here to make the order fill on next bar.
+                        LimitOrder(holdings.Symbol, -holdings.Quantity, 1m);
+                    }
+                }
+                else
+                {
+                    Liquidate();
                 }
             }
 
