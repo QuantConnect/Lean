@@ -25,6 +25,7 @@ class BasicTemplateFuturesFrameworkAlgorithm(QCAlgorithm):
     def Initialize(self):
 
         self.UniverseSettings.Resolution = Resolution.Minute
+        self.UniverseSettings.ExtendedMarketHours = True
 
         self.SetStartDate(2013, 10, 7)
         self.SetEndDate(2013, 10, 11)
