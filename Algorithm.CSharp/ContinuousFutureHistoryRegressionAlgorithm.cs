@@ -43,7 +43,8 @@ namespace QuantConnect.Algorithm.CSharp
             _continuousContract = AddFuture(Futures.Indices.SP500EMini,
                 dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
                 dataMappingMode: DataMappingMode.OpenInterest,
-                contractDepthOffset: 1
+                contractDepthOffset: 1,
+                extendedMarketHours: true
             );
             SetWarmup(1, Resolution.Daily);
         }
@@ -77,7 +78,7 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception($"We are getting data for more than one symbols! {string.Join(",", data.Keys.Select(symbol => symbol))}");
             }
 
-            if (!Portfolio.Invested && !IsWarmingUp)
+            if (!Portfolio.Invested && !IsWarmingUp && _continuousContract.Exchange.ExchangeOpen)
             {
                 Buy(_continuousContract.Mapped, 1);
             }
@@ -146,14 +147,14 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$1.85"},
-            {"Estimated Strategy Capacity", "$290000000.00"},
+            {"Estimated Strategy Capacity", "$2500000000.00"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
-            {"Fitness Score", "0.408"},
+            {"Fitness Score", "0.414"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
             {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
-            {"Portfolio Turnover", "0.408"},
+            {"Portfolio Turnover", "0.414"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -167,7 +168,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "10cf3584cd0131898df3f19d26df0649"}
+            {"OrderListHash", "4b6856b9c2bd689455bd94d31be6f5e2"}
         };
     }
 }
