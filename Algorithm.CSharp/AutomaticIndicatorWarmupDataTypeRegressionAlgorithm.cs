@@ -40,7 +40,9 @@ namespace QuantConnect.Algorithm.CSharp
             var SP500 = QuantConnect.Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME);
             _symbol = FutureChainProvider.GetFutureContractList(SP500, StartDate).First();
 
-            // Test case: custom IndicatorBase<QuoteBar> indicator using Future unsubscribed symbol
+            // Test case: custom IndicatorBase<QuoteBar> indicator using Future unsubscribed symbol.
+            // This is required only to include extended market hours in history data
+            UniverseSettings.ExtendedMarketHours = true;
             var indicator1 = new CustomIndicator();
             AssertIndicatorState(indicator1, isReady: false);
             WarmUpIndicator(_symbol, indicator1);
@@ -51,6 +53,8 @@ namespace QuantConnect.Algorithm.CSharp
             AssertIndicatorState(sma1, isReady: false);
             WarmUpIndicator(_symbol, sma1);
             AssertIndicatorState(sma1, isReady: true);
+            // No need for this anymore, since the future contract will be added with extended market hours
+            UniverseSettings.ExtendedMarketHours = false;
 
             // Test case: SimpleMovingAverage<IndicatorDataPoint> using Equity unsubscribed symbol
             var spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
@@ -60,7 +64,7 @@ namespace QuantConnect.Algorithm.CSharp
             AssertIndicatorState(sma, isReady: true);
 
             // We add the symbol
-            AddFutureContract(_symbol);
+            AddFutureContract(_symbol, extendedMarketHours: true);
             AddEquity("SPY");
             // force spy for use Raw data mode so that it matches the used when unsubscribed which uses the universe settings
             SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(spy).SetDataNormalizationMode(DataNormalizationMode.Raw);
@@ -113,7 +117,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            if (!Portfolio.Invested)
+            if (!Portfolio.Invested && Securities[_symbol].Exchange.ExchangeOpen)
             {
                 SetHoldings(_symbol, 0.5);
             }
@@ -151,7 +155,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 84;
+        public int AlgorithmHistoryDataPoints => 1502;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -161,31 +165,31 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-100.000%"},
-            {"Drawdown", "19.800%"},
+            {"Compounding Annual Return", "-99.994%"},
+            {"Drawdown", "19.300%"},
             {"Expectancy", "0"},
-            {"Net Profit", "-10.353%"},
-            {"Sharpe Ratio", "-1.379"},
+            {"Net Profit", "-7.741%"},
+            {"Sharpe Ratio", "-1.417"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "3.004"},
-            {"Beta", "5.322"},
-            {"Annual Standard Deviation", "0.725"},
-            {"Annual Variance", "0.525"},
-            {"Information Ratio", "-0.42"},
-            {"Tracking Error", "0.589"},
-            {"Treynor Ratio", "-0.188"},
+            {"Alpha", "2.898"},
+            {"Beta", "5.181"},
+            {"Annual Standard Deviation", "0.706"},
+            {"Annual Variance", "0.498"},
+            {"Information Ratio", "-0.435"},
+            {"Tracking Error", "0.569"},
+            {"Treynor Ratio", "-0.193"},
             {"Total Fees", "$20.35"},
-            {"Estimated Strategy Capacity", "$13000000.00"},
+            {"Estimated Strategy Capacity", "$180000000.00"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
-            {"Fitness Score", "0.125"},
+            {"Fitness Score", "0.135"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-2.162"},
-            {"Return Over Maximum Drawdown", "-8.144"},
-            {"Portfolio Turnover", "3.184"},
+            {"Sortino Ratio", "-1.841"},
+            {"Return Over Maximum Drawdown", "-10.345"},
+            {"Portfolio Turnover", "3.091"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -199,7 +203,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "7ff48adafe9676f341e64ac9388d3c2c"}
+            {"OrderListHash", "5b1f6b50ad578321b66b0bb2e971d704"}
         };
     }
 }
