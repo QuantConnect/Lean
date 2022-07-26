@@ -45,8 +45,8 @@ class FuturesAndFuturesOptionsExpiryTimeAndLiquidationRegressionAlgorithm(QCAlgo
             datetime(2020, 6, 19)
         )
 
-        self.esFuture = self.AddFutureContract(es, Resolution.Minute).Symbol
-        self.esFutureOption = self.AddFutureOptionContract(esOption, Resolution.Minute).Symbol
+        self.esFuture = self.AddFutureContract(es, Resolution.Minute, extendedMarketHours=True).Symbol
+        self.esFutureOption = self.AddFutureOptionContract(esOption, Resolution.Minute, extendedMarketHours=True).Symbol
 
     def OnData(self, data: Slice):
         for delisting in data.Delistings.Values:
@@ -65,6 +65,7 @@ class FuturesAndFuturesOptionsExpiryTimeAndLiquidationRegressionAlgorithm(QCAlgo
                 raise AssertionError(f"Delisting notice received at an unexpected date: {self.Time} - expected {delisting.Time}")
 
         if not self.invested and \
+            self.Securities[self.esFuture].Exchange.ExchangeOpen and \
             (self.esFuture in data.Bars or self.esFuture in data.QuoteBars) and \
             (self.esFutureOption in data.Bars or self.esFutureOption in data.QuoteBars):
 
