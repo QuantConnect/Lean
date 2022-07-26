@@ -31,14 +31,14 @@ namespace QuantConnect.Tests.ToolBox.AlphaVantageDownloader
         private const string API_KEY = "TESTKEY";
         private const string BASE_URL = "https://www.alphavantage.co/";
 
-        private Mock<IRestClient> _avClient;
+        private Mock<RestClient> _avClient;
         private AlphaVantageDataDownloader _downloader;
         private readonly TradeBarComparer _tradeBarComparer = new TradeBarComparer();
 
         [SetUp]
         public void SetUp()
         {
-            _avClient = new Mock<IRestClient>();
+            _avClient = new Mock<RestClient>();
             _avClient.SetupAllProperties();
 
             _downloader = new AlphaVantageDataDownloader(_avClient.Object, API_KEY);
@@ -65,9 +65,9 @@ namespace QuantConnect.Tests.ToolBox.AlphaVantageDownloader
                 new TradeBar(DateTime.Parse("2021-04-06"), symbol, 135.58m, 135.64m, 134.09m, 134.22m, 3620964),
             };
 
-            IRestRequest request = null;
-            _avClient.Setup(m => m.Execute(It.IsAny<IRestRequest>(), It.IsAny<Method>()))
-                .Callback((IRestRequest r, Method m) => request = r)
+            RestRequest request = null;
+            _avClient.Setup(m => m.Execute(It.IsAny<RestRequest>(), It.IsAny<Method>()))
+                .Callback((RestRequest r, Method m) => request = r)
                 .Returns(new RestResponse
                 {
                     StatusCode = HttpStatusCode.OK,
@@ -82,7 +82,7 @@ namespace QuantConnect.Tests.ToolBox.AlphaVantageDownloader
 
             _avClient.Verify();
             var requestUrl = BuildUrl(request);
-            Assert.AreEqual(Method.GET, request.Method);
+            Assert.AreEqual(Method.Get, request.Method);
             Assert.AreEqual($"{BASE_URL}query?symbol=AAPL&datatype=csv&function=TIME_SERIES_DAILY", requestUrl);
 
             Assert.IsInstanceOf<IEnumerable<TradeBar>>(result);
@@ -107,9 +107,9 @@ namespace QuantConnect.Tests.ToolBox.AlphaVantageDownloader
                 new TradeBar(DateTime.Parse("2021-04-06"), symbol, 135.58m, 135.64m, 134.09m, 134.22m, 3620964),
             };
 
-            IRestRequest request = null;
-            _avClient.Setup(m => m.Execute(It.IsAny<IRestRequest>(), It.IsAny<Method>()))
-                .Callback((IRestRequest r, Method m) => request = r)
+            RestRequest request = null;
+            _avClient.Setup(m => m.Execute(It.IsAny<RestRequest>(), It.IsAny<Method>()))
+                .Callback((RestRequest r, Method m) => request = r)
                 .Returns(new RestResponse
                 {
                     StatusCode = HttpStatusCode.OK,
@@ -124,7 +124,7 @@ namespace QuantConnect.Tests.ToolBox.AlphaVantageDownloader
 
             _avClient.Verify();
             var requestUrl = BuildUrl(request);
-            Assert.AreEqual(Method.GET, request.Method);
+            Assert.AreEqual(Method.Get, request.Method);
             Assert.AreEqual($"{BASE_URL}query?symbol=AAPL&datatype=csv&function=TIME_SERIES_DAILY&outputsize=full", requestUrl);
 
             Assert.IsInstanceOf<IEnumerable<TradeBar>>(result);
@@ -163,8 +163,8 @@ namespace QuantConnect.Tests.ToolBox.AlphaVantageDownloader
 
             var requestCount = 0;
             var requestUrls = new List<string>();
-            _avClient.Setup(m => m.Execute(It.IsAny<IRestRequest>(), It.IsAny<Method>()))
-                .Callback((IRestRequest r, Method m) => requestUrls.Add(BuildUrl(r)))
+            _avClient.Setup(m => m.Execute(It.IsAny<RestRequest>(), It.IsAny<Method>()))
+                .Callback((RestRequest r, Method m) => requestUrls.Add(BuildUrl(r)))
                 .Returns(() => new RestResponse
                 {
                     StatusCode = HttpStatusCode.OK,
@@ -210,7 +210,7 @@ namespace QuantConnect.Tests.ToolBox.AlphaVantageDownloader
             var start = DateTime.UtcNow.AddMonths(-2);
             var end = DateTime.UtcNow;
 
-            _avClient.Setup(m => m.Execute(It.IsAny<IRestRequest>(), It.IsAny<Method>()))
+            _avClient.Setup(m => m.Execute(It.IsAny<RestRequest>(), It.IsAny<Method>()))
                 .Returns(() => new RestResponse
                 {
                     StatusCode = HttpStatusCode.OK,
@@ -236,20 +236,20 @@ namespace QuantConnect.Tests.ToolBox.AlphaVantageDownloader
         [Test]
         public void AuthenticatorAddsApiKeyToRequest()
         {
-            var request = new Mock<IRestRequest>();
+            var request = new Mock<RestRequest>();
             var authenticator = _avClient.Object.Authenticator;
 
             Assert.NotNull(authenticator);
             authenticator.Authenticate(_avClient.Object, request.Object);
-            request.Verify(m => m.AddOrUpdateParameter("apikey", API_KEY));
+            request.Verify(m => m.AddOrUpdateParameter(new GetOrPostParameter("apikey", API_KEY, true)));
         }
 
-        private string BuildUrl(IRestRequest request)
+        private static string BuildUrl(RestRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
-            var client = new RestClient(BASE_URL);
+            using var client = new RestClient(BASE_URL);
             var uri = client.BuildUri(request);
 
             return uri.ToString();

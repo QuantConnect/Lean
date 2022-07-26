@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,9 +15,9 @@
 
 using System;
 using Newtonsoft.Json;
-using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Util;
 using RestSharp;
 using RestSharp.Authenticators;
 
@@ -26,16 +26,29 @@ namespace QuantConnect.Api
     /// <summary>
     /// API Connection and Hash Manager
     /// </summary>
-    public class ApiConnection
+    public class ApiConnection : IDisposable
     {
-        /// <summary>
-        /// Authorized client to use for requests.
-        /// </summary>
-        public RestClient Client;
-
         // Authorization Credentials
         private readonly string _userId;
         private readonly string _token;
+        private RestClient _client;
+
+        /// <summary>
+        /// Authorized client to use for requests.
+        /// </summary>
+        public RestClient Client
+        {
+            get
+            {
+                return _client;
+            }
+            set
+            {
+                // clean up if the client is overriden
+                _client.DisposeSafely();
+                _client = value;
+            }
+        }
 
         /// <summary>
         /// Create a new Api Connection Class.
@@ -56,7 +69,7 @@ namespace QuantConnect.Api
         {
             get
             {
-                var request = new RestRequest("authenticate", Method.GET);
+                var request = new RestRequest("authenticate", Method.Get);
                 AuthenticationResponse response;
                 if (TryRequest(request, out response))
                 {
@@ -127,6 +140,14 @@ namespace QuantConnect.Api
                 return false;
             }
             return true;
+        }
+
+        /// <summary>
+        /// Disposes of the underlying rest client
+        /// </summary>
+        public void Dispose()
+        {
+            Client.DisposeSafely();
         }
     }
 }
