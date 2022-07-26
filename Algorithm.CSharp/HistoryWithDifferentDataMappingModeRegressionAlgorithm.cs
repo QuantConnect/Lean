@@ -32,7 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2013, 10, 6);
             SetEndDate(2014, 1, 1);
-            _continuousContractSymbol = AddFuture(Futures.Indices.SP500EMini, Resolution.Daily).Symbol;
+            _continuousContractSymbol = AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, extendedMarketHours: true).Symbol;
         }
 
         public override void OnEndOfAlgorithm()
@@ -40,7 +40,7 @@ namespace QuantConnect.Algorithm.CSharp
             var dataMappingModes = ((DataMappingMode[])Enum.GetValues(typeof(DataMappingMode))).ToList();
             var historyResults = dataMappingModes.Select(dataMappingMode =>
             {
-                return History(new [] { _continuousContractSymbol }, StartDate, EndDate, Resolution.Daily, dataMappingMode: dataMappingMode).ToList();
+                return History(new [] { _continuousContractSymbol }, StartDate, EndDate, Resolution.Daily, dataMappingMode: dataMappingMode, extendedMarket: true).ToList();
             }).ToList();
 
             if (historyResults.Any(x => x.Count != historyResults[0].Count))
