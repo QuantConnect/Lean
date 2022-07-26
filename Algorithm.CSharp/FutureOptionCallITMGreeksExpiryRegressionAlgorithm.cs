@@ -37,6 +37,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void Initialize()
         {
+            UniverseSettings.ExtendedMarketHours = true;
+
             SetStartDate(2020, 1, 5);
             SetEndDate(2020, 6, 30);
 
@@ -45,13 +47,14 @@ namespace QuantConnect.Algorithm.CSharp
                     Futures.Indices.SP500EMini,
                     Market.CME,
                     new DateTime(2020, 6, 19)),
-                Resolution.Minute);
+                Resolution.Minute,
+                extendedMarketHours: true);
 
             // We must set the volatility model on the underlying, since the defaults are
             // too strict to calculate greeks with when we only have data for a single day
             _es19m20.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(
-                60, 
-                Resolution.Minute, 
+                60,
+                Resolution.Minute,
                 TimeSpan.FromMinutes(1));
 
             // Select a future option expiring ITM, and adds it to the algorithm.
@@ -59,7 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
                 .Where(x => x.ID.StrikePrice <= 3200m && x.ID.OptionRight == OptionRight.Call)
                 .OrderByDescending(x => x.ID.StrikePrice)
                 .Take(1)
-                .Single(), Resolution.Minute);
+                .Single(), Resolution.Minute, extendedMarketHours: true);
 
             _esOption.PriceModel = OptionPriceModels.BjerksundStensland();
 
@@ -129,9 +132,19 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (!_invested)
             {
-                // the margin requirement for the FOPs is less than the one of the underlying so we can't allocate all our buying power
-                // into FOPs else we won't be able to exercise
-                SetHoldings(data.OptionChains.Values.First().Contracts.Values.First().Symbol, 0.25);
+                var contract = data.OptionChains.Values.First().Contracts.Values.First();
+
+                if (_es19m20.Exchange.ExchangeOpen)
+                {
+                    // the margin requirement for the FOPs is less than the one of the underlying so we can't allocate all our buying power
+                    // into FOPs else we won't be able to exercise
+                    SetHoldings(contract.Symbol, 0.25);
+                }
+                else
+                {
+                    // Very high limit price to make the order fill with the next bar
+                    LimitOrder(contract.Symbol, CalculateOrderQuantity(contract.Symbol, 0.25), contract.AskPrice * 2);
+                }
                 _invested = true;
             }
         }
@@ -179,11 +192,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             {"Total Trades", "3"},
             {"Average Win", "8.93%"},
-            {"Average Loss", "-34.88%"},
-            {"Compounding Annual Return", "-50.632%"},
+            {"Average Loss", "-34.94%"},
+            {"Compounding Annual Return", "-50.721%"},
             {"Drawdown", "29.100%"},
             {"Expectancy", "-0.372"},
-            {"Net Profit", "-29.072%"},
+            {"Net Profit", "-29.134%"},
             {"Sharpe Ratio", "-0.978"},
             {"Probabilistic Sharpe Ratio", "0.012%"},
             {"Loss Rate", "50%"},
@@ -195,15 +208,15 @@ namespace QuantConnect.Algorithm.CSharp
             {"Annual Variance", "0.12"},
             {"Information Ratio", "-0.714"},
             {"Tracking Error", "0.505"},
-            {"Treynor Ratio", "-19.672"},
+            {"Treynor Ratio", "-19.669"},
             {"Total Fees", "$9.25"},
             {"Estimated Strategy Capacity", "$50000000.00"},
             {"Lowest Capacity Asset", "ES XFH59UPBIJ7O|ES XFH59UK0MYO1"},
             {"Fitness Score", "0.055"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-0.155"},
-            {"Return Over Maximum Drawdown", "-1.743"},
+            {"Sortino Ratio", "-0.156"},
+            {"Return Over Maximum Drawdown", "-1.742"},
             {"Portfolio Turnover", "0.152"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -218,7 +231,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "ed0cbd8487dd45519e5d0225e51ba29c"}
+            {"OrderListHash", "faa5ad0a724150094ee5b57796913a10"}
         };
     }
 }
