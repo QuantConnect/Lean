@@ -50,10 +50,10 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2022, 02, 01);
             SetEndDate(2022, 02, 08);
-            var esFuture = AddFuture("ES").Symbol;
+            var esFuture = AddFuture("ES", extendedMarketHours: true).Symbol;
 
             Schedule.On(DateRules.EveryDay(esFuture),
-                TimeRules.AfterMarketOpen(esFuture),
+                TimeRules.AfterMarketOpen(esFuture, extendedMarketOpen: true),
                 EveryDayAfterMarketOpen);
 
             Schedule.On(DateRules.EveryDay(esFuture),
