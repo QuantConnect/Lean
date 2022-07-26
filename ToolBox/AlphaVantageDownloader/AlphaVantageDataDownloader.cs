@@ -34,7 +34,7 @@ namespace QuantConnect.ToolBox.AlphaVantageDownloader
     public class AlphaVantageDataDownloader : IDataDownloader, IDisposable
     {
         private readonly MarketHoursDatabase _marketHoursDatabase;
-        private readonly IRestClient _avClient;
+        private readonly RestClient _avClient;
         private readonly RateGate _rateGate;
         private bool _disposed;
 
@@ -51,11 +51,11 @@ namespace QuantConnect.ToolBox.AlphaVantageDownloader
         /// </summary>
         /// <param name="restClient">The <see cref="RestClient"/> to use</param>
         /// <param name="apiKey">API key</param>
-        public AlphaVantageDataDownloader(IRestClient restClient, string apiKey)
+        public AlphaVantageDataDownloader(RestClient restClient, string apiKey)
         {
             _avClient = restClient;
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
-            _avClient.BaseUrl = new Uri("https://www.alphavantage.co/");
+            _avClient.Options.BaseUrl = new Uri("https://www.alphavantage.co/");
             _avClient.Authenticator = new AlphaVantageAuthenticator(apiKey);
 
             _rateGate = new RateGate(5, TimeSpan.FromMinutes(1)); // Free API is limited to 5 requests/minute
@@ -79,7 +79,10 @@ namespace QuantConnect.ToolBox.AlphaVantageDownloader
                 return Enumerable.Empty<BaseData>();
             }
 
-            var request = new RestRequest("query", DataFormat.Json);
+            var request = new RestRequest("query")
+            {
+                RequestFormat = DataFormat.Json
+            };
             request.AddParameter("symbol", symbol.Value);
             request.AddParameter("datatype", "csv");
 

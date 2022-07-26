@@ -56,7 +56,7 @@ namespace QuantConnect.Api
         {
             get
             {
-                var request = new RestRequest("authenticate", Method.GET);
+                var request = new RestRequest("authenticate", Method.Get);
                 AuthenticationResponse response;
                 if (TryRequest(request, out response))
                 {
