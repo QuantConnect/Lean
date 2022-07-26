@@ -43,6 +43,20 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class ExtensionsTests
     {
+        [Test]
+        public void ToMD5()
+        {
+            var result = "pinochopinochopino   ".ToMD5();
+            Assert.AreEqual("261db8a511d4c433fe58f8b9870fc88e", result);
+        }
+
+        [Test]
+        public void ToSha256()
+        {
+            var result = "pinochopinochopino   ".ToSHA256();
+            Assert.AreEqual("327a5a3b33aef00daf26e414542e12bf4205adb716475fa22e53a178e5d8baca", result);
+        }
+
         [TestCase("1000", 0)]
         [TestCase("0", 0)]
         [TestCase("1", 0)]
