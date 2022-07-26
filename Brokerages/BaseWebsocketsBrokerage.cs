@@ -46,7 +46,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// The rest client instance
         /// </summary>
-        protected IRestClient RestClient { get; set; }
+        protected RestClient RestClient { get; set; }
 
         /// <summary>
         /// standard json parsing settings
@@ -81,7 +81,7 @@ namespace QuantConnect.Brokerages
         /// <param name="restClient">instance of rest client</param>
         /// <param name="apiKey">api key</param>
         /// <param name="apiSecret">api secret</param>
-        protected void Initialize(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret)
+        protected void Initialize(string wssUrl, IWebSocket websocket, RestClient restClient, string apiKey, string apiSecret)
         {
             if (IsInitialized)
             {

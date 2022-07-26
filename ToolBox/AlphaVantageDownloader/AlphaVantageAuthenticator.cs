@@ -16,37 +16,34 @@
 using RestSharp;
 using RestSharp.Authenticators;
 using System;
+using System.Threading.Tasks;
 
 namespace QuantConnect.ToolBox.AlphaVantageDownloader
 {
     /// <summary>
     /// Implements authentication for Alpha Vantage API
     /// </summary>
-    internal class AlphaVantageAuthenticator : IAuthenticator
+    internal class AlphaVantageAuthenticator : AuthenticatorBase
     {
-        private readonly string _apiKey;
-
         /// <summary>
         /// Construct authenticator
         /// </summary>
         /// <param name="apiKey">API key</param>
         /// <remarks>See https://www.alphavantage.co/support/#api-key to get a free key.</remarks>
-        public AlphaVantageAuthenticator(string apiKey)
+        public AlphaVantageAuthenticator(string apiKey) : base(apiKey)
         {
             if (string.IsNullOrEmpty(apiKey))
             {
                 throw new ArgumentNullException(nameof(apiKey));
             }
-
-            _apiKey = apiKey;
         }
 
         /// <summary>
-        /// Authenticate request
+        /// Returns the authentication parameter
         /// </summary>
-        /// <param name="client">The <see cref="IRestClient"/></param>
-        /// <param name="request">The <see cref="IRestRequest"/></param>
-        public void Authenticate(IRestClient client, IRestRequest request)
-            => request.AddOrUpdateParameter("apikey", _apiKey);
+        protected override ValueTask<Parameter> GetAuthenticationParameter(string accessToken)
+        {
+            return new ValueTask<Parameter>(new GetOrPostParameter("apikey", accessToken));
+        }
     }
 }

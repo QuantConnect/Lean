@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,7 +15,6 @@
 
 using System;
 using Newtonsoft.Json;
-using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using RestSharp;
@@ -56,7 +55,7 @@ namespace QuantConnect.Api
         {
             get
             {
-                var request = new RestRequest("authenticate", Method.GET);
+                var request = new RestRequest("authenticate", Method.Get);
                 AuthenticationResponse response;
                 if (TryRequest(request, out response))
                 {
