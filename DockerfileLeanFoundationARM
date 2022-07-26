@@ -32,7 +32,9 @@ RUN mkdir -p /root/ibgateway && \
     bbe -e 's|# INSTALL4J_JAVA_HOME_OVERRIDE=|INSTALL4J_JAVA_HOME_OVERRIDE="/usr/lib/jvm/java-1.8.0-openjdk-arm64"|' -e "s|-lt \"152\"|-lt \"$java_patch_version\"|" -e "s|-gt \"152\"|-gt \"$java_patch_version\"|" ibgateway-latest-standalone-linux-x64.v10.12.2d.sh > ibgateway-stable-standalone-linux-custom-jvm.sh && \
     chmod 777 ibgateway-stable-standalone-linux-custom-jvm.sh && \
     ./ibgateway-stable-standalone-linux-custom-jvm.sh -q -dir /root/ibgateway && \
-    rm ibgateway-latest-standalone-linux-x64.v10.12.2d.sh ibgateway-stable-standalone-linux-custom-jvm.sh
+    rm ibgateway-latest-standalone-linux-x64.v10.12.2d.sh ibgateway-stable-standalone-linux-custom-jvm.sh && \
+    sed -i "s/-lt \"152\"/-lt \"$java_patch_version\"/" /root/ibgateway/ibgateway && \
+    sed -i "s/-gt \"152\"/-gt \"$java_patch_version\"/" /root/ibgateway/ibgateway
 
 # Install dotnet 5 sdk & runtime
 # The .deb packages don't support ARM, the install script does
