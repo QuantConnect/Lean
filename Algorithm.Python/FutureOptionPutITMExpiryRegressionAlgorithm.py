@@ -35,13 +35,14 @@ class FutureOptionPutITMExpiryRegressionAlgorithm(QCAlgorithm):
                 Market.CME,
                 datetime(2020, 6, 19)
             ),
-            Resolution.Minute).Symbol
+            Resolution.Minute,
+            extendedMarketHours=True).Symbol
 
         # Select a future option expiring ITM, and adds it to the algorithm.
         self.esOption = self.AddFutureOptionContract(
             list(
                 sorted([x for x in self.OptionChainProvider.GetOptionContractList(self.es19m20, self.Time) if x.ID.StrikePrice >= 3300.0 and x.ID.OptionRight == OptionRight.Put], key=lambda x: x.ID.StrikePrice)
-            )[0], Resolution.Minute).Symbol
+            )[0], Resolution.Minute, extendedMarketHours=True).Symbol
 
         self.expectedContract = Symbol.CreateOption(self.es19m20, Market.CME, OptionStyle.American, OptionRight.Put, 3300.0, datetime(2020, 6, 19))
         if self.esOption != self.expectedContract:
