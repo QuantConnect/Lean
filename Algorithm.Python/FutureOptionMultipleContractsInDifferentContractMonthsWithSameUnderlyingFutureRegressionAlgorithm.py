@@ -26,15 +26,22 @@ class FutureOptionMultipleContractsInDifferentContractMonthsWithSameUnderlyingFu
             self._createOption(datetime(2020, 2, 25), OptionRight.Put, 1545.0): False
         }
 
+
+        # Required for FOPs to use extended hours, until GH #6491 is addressed
+        self.UniverseSettings.ExtendedMarketHours = True
+
         self.SetStartDate(2020, 1, 4)
         self.SetEndDate(2020, 1, 6)
 
-        goldFutures = self.AddFuture("GC", Resolution.Minute, Market.COMEX)
-        goldFutures.SetFilter(0, 365)
+        self._goldFutures = self.AddFuture("GC", Resolution.Minute, Market.COMEX, extendedMarketHours=True)
+        self._goldFutures.SetFilter(0, 365)
 
-        self.AddFutureOption(goldFutures.Symbol)
+        self.AddFutureOption(self._goldFutures.Symbol)
 
     def OnData(self, data: Slice):
+        if not self._goldFutures.Exchange.ExchangeOpen:
+            return
+
         for symbol in data.QuoteBars.Keys:
             if symbol in self.expectedSymbols:
                 invested = self.expectedSymbols[symbol]
