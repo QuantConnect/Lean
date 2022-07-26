@@ -33,6 +33,7 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private Future _continuousContract;
         private Future _futureContract;
+        private bool _invested;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -45,9 +46,10 @@ namespace QuantConnect.Algorithm.CSharp
             _continuousContract = AddFuture(Futures.Indices.SP500EMini,
                 dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
                 dataMappingMode: DataMappingMode.LastTradingDay,
-                contractDepthOffset: 0
+                contractDepthOffset: 0,
+                extendedMarketHours: true
             );
-            _futureContract = AddFutureContract(FutureChainProvider.GetFutureContractList(_continuousContract.Symbol, Time).First());
+            _futureContract = AddFutureContract(FutureChainProvider.GetFutureContractList(_continuousContract.Symbol, Time).First(), extendedMarketHours: true);
         }
 
         public override void OnWarmupFinished()
@@ -75,7 +77,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
-            if (Time.TimeOfDay.Hours > 17 && !Portfolio.Invested)
+            if (Time.TimeOfDay.Hours > 17 && !_invested)
             {
                 // Limit order should be allowed for futures outside of regular market hours.
                 // Use a very high limit price so the limit orders get filled immediately
@@ -85,6 +87,8 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     throw new Exception($"Limit order should be allowed for futures outside of regular market hours");
                 }
+
+                _invested = true;
             }
         }
 
