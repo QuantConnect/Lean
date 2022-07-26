@@ -54,11 +54,11 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 06);
             SetEndDate(2013, 10, 14);
 
-            var es = AddSecurity(SecurityType.Future, "ES");
+            var es = AddSecurity(SecurityType.Future, "ES", extendedMarketHours: true);
 
             Consolidate<BaseData>(es.Symbol, dataTime =>
             {
-                var start = es.Exchange.Hours.GetPreviousMarketOpen(dataTime, false);
+                var start = es.Exchange.Hours.GetPreviousMarketOpen(dataTime, true);
                 var end = es.Exchange.Hours.GetNextMarketClose(start, false);
 
                 // market might open at 16:30 and close again at 17:00 but we are not interested in using the close so we skip it here
