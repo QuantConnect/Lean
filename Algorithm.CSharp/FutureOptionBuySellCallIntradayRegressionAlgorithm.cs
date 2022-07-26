@@ -48,20 +48,22 @@ namespace QuantConnect.Algorithm.CSharp
                     Futures.Indices.SP500EMini,
                     Market.CME,
                     new DateTime(2020, 3, 20)),
-                Resolution.Minute).Symbol;
+                Resolution.Minute,
+                extendedMarketHours: true).Symbol;
 
             var es20m20 = AddFutureContract(
                 QuantConnect.Symbol.CreateFuture(
                     Futures.Indices.SP500EMini,
                     Market.CME,
                     new DateTime(2020, 6, 19)),
-                Resolution.Minute).Symbol;
+                Resolution.Minute,
+                extendedMarketHours: true).Symbol;
 
             // Select a future option expiring ITM, and adds it to the algorithm.
             var esOptions = OptionChainProvider.GetOptionContractList(es20m20, Time)
                 .Concat(OptionChainProvider.GetOptionContractList(es20h20, Time))
                 .Where(x => x.ID.StrikePrice == 3200m && x.ID.OptionRight == OptionRight.Call)
-                .Select(x => AddFutureOptionContract(x, Resolution.Minute).Symbol)
+                .Select(x => AddFutureOptionContract(x, Resolution.Minute, extendedMarketHours: true).Symbol)
                 .ToList();
 
             var expectedContracts = new[]
@@ -80,7 +82,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
 
-            Schedule.On(DateRules.Tomorrow, TimeRules.AfterMarketOpen(es20m20, 1), () =>
+            Schedule.On(DateRules.Tomorrow, TimeRules.AfterMarketOpen(es20m20, 1, true), () =>
             {
                 MarketOrder(esOptions[0], 1);
                 MarketOrder(esOptions[1], -1);

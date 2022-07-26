@@ -39,7 +39,8 @@ class FutureOptionBuySellCallIntradayRegressionAlgorithm(QCAlgorithm):
                 Market.CME,
                 datetime(2020, 3, 20)
             ),
-            Resolution.Minute).Symbol
+            Resolution.Minute,
+            extendedMarketHours=True).Symbol
 
         self.es19m20 = self.AddFutureContract(
             Symbol.CreateFuture(
@@ -47,11 +48,15 @@ class FutureOptionBuySellCallIntradayRegressionAlgorithm(QCAlgorithm):
                 Market.CME,
                 datetime(2020, 6, 19)
             ),
-            Resolution.Minute).Symbol
+            Resolution.Minute,
+            extendedMarketHours=True).Symbol
 
         # Select a future option expiring ITM, and adds it to the algorithm.
         self.esOptions = [
-            self.AddFutureOptionContract(i, Resolution.Minute).Symbol for i in (self.OptionChainProvider.GetOptionContractList(self.es19m20, self.Time) + self.OptionChainProvider.GetOptionContractList(self.es20h20, self.Time)) if i.ID.StrikePrice == 3200.0 and i.ID.OptionRight == OptionRight.Call
+            self.AddFutureOptionContract(i, Resolution.Minute, extendedMarketHours=True).Symbol
+            for i in (self.OptionChainProvider.GetOptionContractList(self.es19m20, self.Time) +
+                self.OptionChainProvider.GetOptionContractList(self.es20h20, self.Time))
+            if i.ID.StrikePrice == 3200.0 and i.ID.OptionRight == OptionRight.Call
         ]
 
         self.expectedContracts = [
@@ -63,7 +68,7 @@ class FutureOptionBuySellCallIntradayRegressionAlgorithm(QCAlgorithm):
             if esOption not in self.expectedContracts:
                 raise AssertionError(f"Contract {esOption} was not found in the chain")
 
-        self.Schedule.On(self.DateRules.Tomorrow, self.TimeRules.AfterMarketOpen(self.es19m20, 1), self.ScheduleCallbackBuy)
+        self.Schedule.On(self.DateRules.Tomorrow, self.TimeRules.AfterMarketOpen(self.es19m20, 1, True), self.ScheduleCallbackBuy)
         self.Schedule.On(self.DateRules.Tomorrow, self.TimeRules.Noon, self.ScheduleCallbackLiquidate)
 
     def ScheduleCallbackBuy(self):
