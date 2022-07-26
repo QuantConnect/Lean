@@ -55,14 +55,15 @@ namespace QuantConnect.Algorithm.CSharp
                     Futures.Indices.SP500EMini,
                     Market.CME,
                     new DateTime(2020, 6, 19)),
-                Resolution.Minute).Symbol;
+                Resolution.Minute,
+                extendedMarketHours: true).Symbol;
 
             // Select a future option expiring ITM, and adds it to the algorithm.
             _esOption = AddFutureOptionContract(OptionChainProvider.GetOptionContractList(_es19m20, Time)
                 .Where(x => x.ID.StrikePrice <= 3150m && x.ID.OptionRight == OptionRight.Put)
                 .OrderByDescending(x => x.ID.StrikePrice)
                 .Take(1)
-                .Single(), Resolution.Minute).Symbol;
+                .Single(), Resolution.Minute, extendedMarketHours: true).Symbol;
 
             _expectedContract = QuantConnect.Symbol.CreateOption(_es19m20, Market.CME, OptionStyle.American, OptionRight.Put, 3150m, new DateTime(2020, 6, 19));
             if (_esOption != _expectedContract)
@@ -206,7 +207,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0.378"},
             {"Treynor Ratio", "-23.592"},
             {"Total Fees", "$1.85"},
-            {"Estimated Strategy Capacity", "$180000000.00"},
+            {"Estimated Strategy Capacity", "$360000000.00"},
             {"Lowest Capacity Asset", "ES 31EL5FBZBMXES|ES XFH59UK0MYO1"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
@@ -227,7 +228,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "76a3f4adc886f92b2f996d7e45e77dad"}
+            {"OrderListHash", "ba0a7b3b8373c83706b54fb164d4337d"}
         };
     }
 }
