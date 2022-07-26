@@ -56,14 +56,15 @@ namespace QuantConnect.Algorithm.CSharp
                     Futures.Indices.SP500EMini,
                     Market.CME,
                     new DateTime(2020, 6, 19)),
-                Resolution.Minute).Symbol;
+                Resolution.Minute,
+                extendedMarketHours: true).Symbol;
 
             // Select a future option call expiring OTM, and adds it to the algorithm.
             _esOption = AddFutureOptionContract(OptionChainProvider.GetOptionContractList(_es19m20, Time)
                 .Where(x => x.ID.StrikePrice >= 3300m && x.ID.OptionRight == OptionRight.Call)
                 .OrderBy(x => x.ID.StrikePrice)
                 .Take(1)
-                .Single(), Resolution.Minute).Symbol;
+                .Single(), Resolution.Minute, extendedMarketHours: true).Symbol;
 
             _expectedContract = QuantConnect.Symbol.CreateOption(_es19m20, Market.CME, OptionStyle.American, OptionRight.Call, 3300m, new DateTime(2020, 6, 19));
             if (_esOption != _expectedContract)
@@ -71,6 +72,7 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception($"Contract {_expectedContract} was not found in the chain");
             }
 
+            // Place order after regular market opens
             Schedule.On(DateRules.Tomorrow, TimeRules.AfterMarketOpen(_es19m20, 1), () =>
             {
                 MarketOrder(_esOption, 1);
@@ -207,7 +209,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0.376"},
             {"Treynor Ratio", "-23.833"},
             {"Total Fees", "$1.85"},
-            {"Estimated Strategy Capacity", "$99000000.00"},
+            {"Estimated Strategy Capacity", "$200000000.00"},
             {"Lowest Capacity Asset", "ES XFH59UPHGV9G|ES XFH59UK0MYO1"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
@@ -228,7 +230,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "498c9958139b70d42ebecc65c4eceeee"}
+            {"OrderListHash", "9f7617e0eb2555c52cdf9d103fa3de71"}
         };
     }
 }

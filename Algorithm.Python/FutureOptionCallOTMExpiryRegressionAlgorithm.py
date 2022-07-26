@@ -39,7 +39,8 @@ class FutureOptionCallOTMExpiryRegressionAlgorithm(QCAlgorithm):
                 Futures.Indices.SP500EMini,
                 Market.CME,
                 datetime(2020, 6, 19)),
-            Resolution.Minute).Symbol
+            Resolution.Minute,
+            extendedMarketHours=True).Symbol
 
         # Select a future option expiring ITM, and adds it to the algorithm.
         self.esOption = self.AddFutureOptionContract(
@@ -48,12 +49,13 @@ class FutureOptionCallOTMExpiryRegressionAlgorithm(QCAlgorithm):
                     [x for x in self.OptionChainProvider.GetOptionContractList(self.es19m20, self.Time) if x.ID.StrikePrice >= 3300.0 and x.ID.OptionRight == OptionRight.Call],
                     key=lambda x: x.ID.StrikePrice
                 )
-            )[0], Resolution.Minute).Symbol
+            )[0], Resolution.Minute, extendedMarketHours=True).Symbol
 
         self.expectedContract = Symbol.CreateOption(self.es19m20, Market.CME, OptionStyle.American, OptionRight.Call, 3300.0, datetime(2020, 6, 19))
         if self.esOption != self.expectedContract:
             raise AssertionError(f"Contract {self.expectedContract} was not found in the chain")
 
+        # Place order after regular market opens
         self.Schedule.On(self.DateRules.Tomorrow, self.TimeRules.AfterMarketOpen(self.es19m20, 1), self.ScheduledMarketOrder)
 
     def ScheduledMarketOrder(self):
@@ -70,7 +72,7 @@ class FutureOptionCallOTMExpiryRegressionAlgorithm(QCAlgorithm):
             if delisting.Type == DelistingType.Delisted:
                 if delisting.Time != datetime(2020, 6, 20):
                     raise AssertionError(f"Delisting happened at unexpected date: {delisting.Time}")
-        
+
 
     def OnOrderEvent(self, orderEvent: OrderEvent):
         if orderEvent.Status != OrderStatus.Filled:
@@ -83,7 +85,7 @@ class FutureOptionCallOTMExpiryRegressionAlgorithm(QCAlgorithm):
         security = self.Securities[orderEvent.Symbol]
         if security.Symbol == self.es19m20:
             raise AssertionError("Invalid state: did not expect a position for the underlying to be opened, since this contract expires OTM")
-        
+
         # Expected contract is ES19M20 Call Option expiring OTM @ 3300
         if (security.Symbol == self.expectedContract):
             self.AssertFutureOptionContractOrder(orderEvent, security)
@@ -91,7 +93,7 @@ class FutureOptionCallOTMExpiryRegressionAlgorithm(QCAlgorithm):
             raise AssertionError(f"Received order event for unknown Symbol: {orderEvent.Symbol}")
 
         self.Log(f"{orderEvent}")
-        
+
 
     def AssertFutureOptionContractOrder(self, orderEvent: OrderEvent, option: Security):
         if orderEvent.Direction == OrderDirection.Buy and option.Holdings.Quantity != 1:
