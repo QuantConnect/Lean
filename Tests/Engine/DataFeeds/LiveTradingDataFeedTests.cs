@@ -917,7 +917,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var timeZone = _algorithm.Securities[symbol].Exchange.TimeZone;
             RestApiBaseData last = null;
 
-            var cancellationTokenSource = new CancellationTokenSource();
+            using var cancellationTokenSource = new CancellationTokenSource();
             foreach (var ts in _synchronizer.StreamData(cancellationTokenSource.Token))
             {
                 if (!ts.Slice.ContainsKey(symbol)) return;
@@ -2314,7 +2314,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 throw new TimeoutException("Timeout waiting for IDQH to start");
             }
-            var cancellationTokenSource = new CancellationTokenSource();
+            using var cancellationTokenSource = new CancellationTokenSource();
 
             // for tick resolution, we advance one hour at a time for less unit test run time
             TimeSpan advanceTimeSpan;
@@ -2806,7 +2806,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider,
                 dataManager, _synchronizer, new TestDataChannelProvider());
 
-            var cancellationTokenSource = new CancellationTokenSource();
+            using var cancellationTokenSource = new CancellationTokenSource();
 
             algorithm.PostInitialize();
 

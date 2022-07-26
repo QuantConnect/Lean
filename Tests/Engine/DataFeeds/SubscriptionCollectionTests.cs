@@ -40,7 +40,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void EnumerationWhileUpdatingDoesNotThrow()
         {
-            var cts = new CancellationTokenSource();
+            using var cts = new CancellationTokenSource();
             var subscriptions = new SubscriptionCollection();
             var start = DateTime.UtcNow;
             var end = start.AddSeconds(10);

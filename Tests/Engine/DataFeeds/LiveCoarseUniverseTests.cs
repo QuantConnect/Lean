@@ -21,7 +21,6 @@ using System.Threading;
 using Moq;
 using NUnit.Framework;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
@@ -93,7 +92,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             algorithm.PostInitialize();
 
-            var cancellationTokenSource = new CancellationTokenSource();
+            using var cancellationTokenSource = new CancellationTokenSource();
 
             Exception exceptionThrown = null;
 

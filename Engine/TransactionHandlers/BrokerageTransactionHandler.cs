@@ -670,6 +670,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             _processingThread?.StopSafely(timeout, _cancellationTokenSource);
             IsActive = false;
+            _cancellationTokenSource.DisposeSafely();
         }
 
         /// <summary>

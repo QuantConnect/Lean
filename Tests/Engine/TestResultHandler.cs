@@ -24,6 +24,7 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine
 {
@@ -190,6 +191,7 @@ namespace QuantConnect.Tests.Engine
         public override void Exit()
         {
             _cancellationTokenSource.Cancel();
+            _cancellationTokenSource.DisposeSafely();
         }
 
         public void ProcessSynchronousEvents(bool forceProcess = false)
