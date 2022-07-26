@@ -20,12 +20,12 @@ class HistoryWithDifferentContinuousContractDepthOffsetsRegressionAlgorithm(QCAl
     def Initialize(self):
         self.SetStartDate(2013, 10, 6)
         self.SetEndDate(2014, 1, 1)
-        self._continuousContractSymbol = self.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily).Symbol
+        self._continuousContractSymbol = self.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, extendedMarketHours=True).Symbol
 
     def OnEndOfAlgorithm(self):
         contractDepthOffsets = range(3)
         historyResults = [
-            self.History([self._continuousContractSymbol], self.StartDate, self.EndDate, Resolution.Daily, contractDepthOffset=contractDepthOffset)
+            self.History([self._continuousContractSymbol], self.StartDate, self.EndDate, Resolution.Daily, contractDepthOffset=contractDepthOffset, extendedMarket=True)
                 .droplevel(0, axis=0)
                 .loc[self._continuousContractSymbol]
                 .close
