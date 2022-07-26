@@ -44,7 +44,8 @@ namespace QuantConnect.Algorithm.CSharp
             var esIsInRegularHours = _es.Exchange.Hours.IsOpen(Time, false);
             var esIsInExtendedHours = !esIsInRegularHours && _es.Exchange.Hours.IsOpen(Time, true);
 
-            var currentTimeIsRegularHours = Time.TimeOfDay >= new TimeSpan(9, 30, 0) && Time.TimeOfDay < new TimeSpan(17, 0, 0);
+            var currentTimeIsRegularHours = (Time.TimeOfDay >= new TimeSpan(9, 30, 0) && Time.TimeOfDay < new TimeSpan(16, 15, 0)) ||
+                (Time.TimeOfDay >= new TimeSpan(16, 30, 0) && Time.TimeOfDay < new TimeSpan(17, 0, 0));
             var currentTimeIsExtendedHours = !currentTimeIsRegularHours
                 && (Time.TimeOfDay < new TimeSpan(9, 30, 0) || Time.TimeOfDay >= new TimeSpan(18, 0, 0));
 
@@ -67,7 +68,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 97442;
+        public long DataPoints => 109256;
 
         /// <summary>
         /// Data Points count of the algorithm history

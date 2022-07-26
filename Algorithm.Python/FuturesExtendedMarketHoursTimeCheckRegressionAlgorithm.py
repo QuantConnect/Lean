@@ -28,9 +28,9 @@ class FuturesExtendedMarketHoursTimeCheckRegressionAlgorithm(QCAlgorithm):
         esIsInRegularHours = self._es.Exchange.Hours.IsOpen(self.Time, False)
         esIsInExtendedHours = not esIsInRegularHours and self._es.Exchange.Hours.IsOpen(self.Time, True)
 
-        time = self.Time.time()
-        currentTimeIsRegularHours = time >= time(9, 30, 0) and time < time(17, 0, 0)
-        currentTimeIsExtendedHours = not currentTimeIsRegularHours and (time < time(9, 30, 0) or time >= time(18, 0, 0))
+        timeOfDay = self.Time.time()
+        currentTimeIsRegularHours = (timeOfDay >= time(9, 30, 0) and timeOfDay < time(16, 15, 0)) or (timeOfDay >= time(16, 30, 0) and timeOfDay < time(17, 0, 0))
+        currentTimeIsExtendedHours = not currentTimeIsRegularHours and (timeOfDay < time(9, 30, 0) or timeOfDay >= time(18, 0, 0))
 
         if esIsInRegularHours != currentTimeIsRegularHours or esIsInExtendedHours != currentTimeIsExtendedHours:
             raise Exception("At {Time}, {_es.Symbol} is either in regular hours but current time is in extended hours, or viceversa")
