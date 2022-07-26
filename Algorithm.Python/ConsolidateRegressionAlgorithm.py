@@ -26,7 +26,7 @@ class ConsolidateRegressionAlgorithm(QCAlgorithm):
 
         SP500 = Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME)
         self._symbol = _symbol = self.FutureChainProvider.GetFutureContractList(SP500, self.StartDate)[0]
-        self.AddFutureContract(_symbol)
+        self.AddFutureContract(_symbol, extendedMarketHours=True)
 
         self._consolidationCount = [0, 0, 0, 0, 0, 0]
 

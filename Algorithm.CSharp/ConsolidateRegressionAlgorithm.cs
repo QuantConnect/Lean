@@ -44,7 +44,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             var SP500 = QuantConnect.Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME);
             _symbol = FutureChainProvider.GetFutureContractList(SP500, StartDate).First();
-            AddFutureContract(_symbol);
+            AddFutureContract(_symbol, extendedMarketHours: true);
 
             _consolidationCount = new List<int> { 0, 0, 0, 0, 0, 0, 0, 0 };
 
@@ -174,14 +174,14 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$20.35"},
-            {"Estimated Strategy Capacity", "$19000000.00"},
+            {"Estimated Strategy Capacity", "$180000000.00"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
-            {"Fitness Score", "0.138"},
+            {"Fitness Score", "0.159"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-1.727"},
-            {"Return Over Maximum Drawdown", "-12.061"},
-            {"Portfolio Turnover", "4.916"},
+            {"Sortino Ratio", "-1.398"},
+            {"Return Over Maximum Drawdown", "-10.495"},
+            {"Portfolio Turnover", "4.989"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -195,7 +195,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "7c841ca58a4385f42236838e5bf0c382"}
+            {"OrderListHash", "5318b28060fd914906276ef8f56f9cc9"}
         };
     }
 }
