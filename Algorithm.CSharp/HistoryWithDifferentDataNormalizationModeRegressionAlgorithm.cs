@@ -36,7 +36,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 1, 1);
 
             _aaplEquitySymbol = AddEquity("AAPL", Resolution.Daily).Symbol;
-            _esFutureSymbol = AddFuture(Futures.Indices.SP500EMini, Resolution.Daily).Symbol;
+            _esFutureSymbol = AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, extendedMarketHours: true).Symbol;
         }
 
         public override void OnEndOfAlgorithm()
@@ -46,7 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
                 DataNormalizationMode.Adjusted,
                 DataNormalizationMode.SplitAdjusted
             };
-            CheckHistoryResultsForDataNormalizationModes(_aaplEquitySymbol, StartDate, EndDate, Resolution.Daily, equityDataNormalizationModes);
+            CheckHistoryResultsForDataNormalizationModes(_aaplEquitySymbol, StartDate, EndDate, Resolution.Daily, equityDataNormalizationModes, false);
 
             var futureDataNormalizationModes = new DataNormalizationMode[]{
                 DataNormalizationMode.Raw,
@@ -54,14 +54,14 @@ namespace QuantConnect.Algorithm.CSharp
                 DataNormalizationMode.BackwardsPanamaCanal,
                 DataNormalizationMode.ForwardPanamaCanal
             };
-            CheckHistoryResultsForDataNormalizationModes(_esFutureSymbol, StartDate, EndDate, Resolution.Daily, futureDataNormalizationModes);
+            CheckHistoryResultsForDataNormalizationModes(_esFutureSymbol, StartDate, EndDate, Resolution.Daily, futureDataNormalizationModes, true);
         }
 
         private void CheckHistoryResultsForDataNormalizationModes(Symbol symbol, DateTime start, DateTime end, Resolution resolution,
-            DataNormalizationMode[] dataNormalizationModes)
+            DataNormalizationMode[] dataNormalizationModes, bool extendedMarket = false)
         {
             var historyResults = dataNormalizationModes
-                .Select(x => History(new [] { symbol }, start, end, resolution, dataNormalizationMode: x).ToList())
+                .Select(x => History(new [] { symbol }, start, end, resolution, dataNormalizationMode: x, extendedMarket: extendedMarket).ToList())
                 .ToList();
 
             if (historyResults.Any(x => x.Count == 0 || x.Count != historyResults.First().Count))
