@@ -645,7 +645,7 @@ namespace QuantConnect.Tests.Common.Securities
             algorithm.Transactions.SetOrderProcessor(orderProcessor);
 
             var ticker = QuantConnect.Securities.Futures.Financials.EuroDollar;
-            var futureSecurity = algorithm.AddFuture(ticker);
+            var futureSecurity = algorithm.AddFuture(ticker, extendedMarketHours: true);
             Update(futureSecurity, 100, algorithm);
             var localTime = new DateTime(2020, 2, 3);
             var utcTime = localTime.ConvertToUtc(futureSecurity.Exchange.TimeZone);
@@ -654,8 +654,8 @@ namespace QuantConnect.Tests.Common.Securities
             // this is important
             _futureMarginModel.EnableIntradayMargins = true;
 
-            // Open market
-            futureSecurity.Exchange.SetLocalDateTimeFrontier(localTime);
+            // Open market at 10am
+            futureSecurity.Exchange.SetLocalDateTimeFrontier(localTime.AddHours(10));
 
             var quantity = algorithm.CalculateOrderQuantity(futureSecurity.Symbol, target);
             var request = GetOrderRequest(futureSecurity.Symbol, quantity);
