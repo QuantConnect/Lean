@@ -769,7 +769,8 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
             var historyEnd = new DateTime(2014, 1, 1);
             var resolution = Resolution.Daily;
             _algorithm = GetAlgorithm(historyEnd);
-            var symbol = _algorithm.AddFuture(Futures.Indices.SP500EMini, resolution, dataMappingMode: dataMappingModes.First()).Symbol;
+            var symbol = _algorithm.AddFuture(Futures.Indices.SP500EMini, resolution, dataMappingMode: dataMappingModes.First(),
+                extendedMarketHours: true).Symbol;
             var expectedHistoryCount = 74;
 
             if (language == Language.CSharp)
@@ -1176,7 +1177,8 @@ def getHistoryForDataNormalizationMode(algorithm, symbol, start, end, resolution
             var historyEnd = new DateTime(2014, 1, 1);
             var resolution = Resolution.Daily;
             var algorithm = GetAlgorithm(historyEnd);
-            var symbol = algorithm.AddFuture(Futures.Indices.SP500EMini, resolution, dataMappingMode: dataMappingModes.First()).Symbol;
+            var symbol = algorithm.AddFuture(Futures.Indices.SP500EMini, resolution, dataMappingMode: dataMappingModes.First(),
+                extendedMarketHours: true).Symbol;
 
             using (Py.GIL())
             {
@@ -1328,7 +1330,7 @@ def getHistoryForContractDepthOffset(algorithm, symbol, start, end, resolution, 
         {
             var resolution = Resolution.Daily;
             var algorithm = GetAlgorithm(dateTime);
-            algorithm.AddFuture(Futures.Indices.SP500EMini, resolution);
+            algorithm.AddFuture(Futures.Indices.SP500EMini, resolution, extendedMarketHours: true);
 
             return algorithm;
         }
