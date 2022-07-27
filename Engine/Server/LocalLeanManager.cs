@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,7 +13,9 @@
  * limitations under the License.
 */
 
+using QuantConnect.Util;
 using QuantConnect.Packets;
+using QuantConnect.Commands;
 using QuantConnect.Interfaces;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds.Transport;
@@ -25,7 +27,10 @@ namespace QuantConnect.Lean.Engine.Server
     /// </summary>
     public class LocalLeanManager : ILeanManager
     {
+        private IAlgorithm _algorithm;
+        private ICommandQueueHandler _commandQueue;
         private LeanEngineSystemHandlers _systemHandlers;
+        private LeanEngineAlgorithmHandlers _algorithmHandlers;
 
         /// <summary>
         /// Empty implementation of the ILeanManager interface
@@ -36,6 +41,7 @@ namespace QuantConnect.Lean.Engine.Server
         /// <param name="algorithmManager">The Algorithm manager</param>
         public void Initialize(LeanEngineSystemHandlers systemHandlers, LeanEngineAlgorithmHandlers algorithmHandlers, AlgorithmNodePacket job, AlgorithmManager algorithmManager)
         {
+            _algorithmHandlers = algorithmHandlers;
             _systemHandlers = systemHandlers;
         }
 
@@ -45,16 +51,18 @@ namespace QuantConnect.Lean.Engine.Server
         /// <param name="algorithm">The IAlgorithm instance being run</param>
         public void SetAlgorithm(IAlgorithm algorithm)
         {
+            _algorithm = algorithm;
+            _commandQueue = _algorithm.LiveMode ? new FileCommandQueueHandler() : new EmptyCommandQueueHandler();
             algorithm.SetApi(_systemHandlers.Api);
             RemoteFileSubscriptionStreamReader.SetDownloadProvider((Api.Api)_systemHandlers.Api);
         }
 
         /// <summary>
-        /// Update ILeanManager with the IAlgorithm instance
+        /// Execute the commands using the IAlgorithm instance
         /// </summary>
         public void Update()
         {
-            // NOP
+            _commandQueue.Consume(_algorithm, _algorithmHandlers.Results.Messages);
         }
 
         /// <summary>
@@ -86,7 +94,7 @@ namespace QuantConnect.Lean.Engine.Server
         /// </summary>
         public void Dispose()
         {
-            // NOP
+            _commandQueue.DisposeSafely();
         }
     }
 }
