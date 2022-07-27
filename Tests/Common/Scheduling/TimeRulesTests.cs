@@ -117,6 +117,37 @@ namespace QuantConnect.Tests.Common.Scheduling
             var rules = GetFutureTimeRules(TimeZones.Utc);
             var rule = rules.AfterMarketOpen(Symbols.ES_Future_Chain, 0);
             var times = rule.CreateUtcEventTimes(new[] {
+                new DateTime(2022, 01, 03),
+                new DateTime(2022, 01, 04),
+                new DateTime(2022, 01, 05),
+                new DateTime(2022, 01, 06),
+                new DateTime(2022, 01, 07),
+                new DateTime(2022, 01, 10)
+            });
+
+            var expectedMarketOpenDates = new[] {
+                new DateTime(2022, 01, 03, 14, 30, 0),
+                new DateTime(2022, 01, 04, 14, 30, 0),
+                new DateTime(2022, 01, 05, 14, 30, 0),
+                new DateTime(2022, 01, 06, 14, 30, 0),
+                new DateTime(2022, 01, 07, 14, 30, 0),
+                new DateTime(2022, 01, 10, 14, 30, 0)
+            };
+            int count = 0;
+            foreach (var time in times)
+            {
+                Assert.AreEqual(expectedMarketOpenDates[count], time);
+                count++;
+            }
+            Assert.AreEqual(6, count);
+        }
+
+        [Test]
+        public void ExtendedMarketOpenNoDeltaForContinuousSchedules()
+        {
+            var rules = GetFutureTimeRules(TimeZones.Utc, true);
+            var rule = rules.AfterMarketOpen(Symbols.ES_Future_Chain, 0, true);
+            var times = rule.CreateUtcEventTimes(new[] {
                 new DateTime(2022, 01, 01),
                 new DateTime(2022, 01, 02),
                 new DateTime(2022, 01, 03),
@@ -321,13 +352,14 @@ namespace QuantConnect.Tests.Common.Scheduling
             return rules;
         }
 
-        private static TimeRules GetFutureTimeRules(DateTimeZone dateTimeZone)
+        private static TimeRules GetFutureTimeRules(DateTimeZone dateTimeZone, bool extendedMarket = false)
         {
             var timeKeeper = new TimeKeeper(_utcNow, new List<DateTimeZone>());
             var manager = new SecurityManager(timeKeeper);
             var marketHourDbEntry = MarketHoursDatabase.FromDataFolder().GetEntry(Market.CME, "ES", SecurityType.Future);
             var securityExchangeHours = marketHourDbEntry.ExchangeHours;
-            var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.ES_Future_Chain, Resolution.Daily, marketHourDbEntry.DataTimeZone, securityExchangeHours.TimeZone, true, false, false);
+            var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.ES_Future_Chain, Resolution.Daily, marketHourDbEntry.DataTimeZone,
+                securityExchangeHours.TimeZone, true, extendedMarket, false);
             manager.Add(
                 Symbols.ES_Future_Chain,
                 new Security(
