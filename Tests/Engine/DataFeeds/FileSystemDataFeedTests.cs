@@ -230,8 +230,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             using var synchronizer = new Synchronizer();
             synchronizer.Initialize(algorithm, algorithm.DataManager);
 
-            feed.Initialize(algorithm, job, resultHandler, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider, algorithm.DataManager, synchronizer, dataPermissionManager.DataChannelProvider);
-            var future = algorithm.AddFuture("ES", fillDataForward: fillForward);
+            feed.Initialize(algorithm, job, resultHandler, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider,
+                algorithm.DataManager, synchronizer, dataPermissionManager.DataChannelProvider);
+            var future = algorithm.AddFuture("ES", fillDataForward: fillForward, extendedMarketHours: true);
             future.SetFilter(0, 300);
             algorithm.PostInitialize();
 
@@ -245,7 +246,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     var nyTime = timeSlice.Time.ConvertFromUtc(algorithm.TimeZone);
 
                     var currentExpectedTime = new TimeSpan(0, 0, 0).Add(TimeSpan.FromMinutes(count % (24 * 60)));
-                    while (!future.Exchange.DateTimeIsOpen(nyTime.Date.Add(currentExpectedTime).AddMinutes(-1)))
+                    while (!future.Exchange.Hours.IsOpen(nyTime.Date.Add(currentExpectedTime).AddMinutes(-1), true))
                     {
                         // skip closed market times
                         currentExpectedTime = new TimeSpan(0, 0, 0).Add(TimeSpan.FromMinutes(++count % (24 * 60)));
