@@ -332,7 +332,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 if (liveJob.BrokerageData.TryGetValue(MaxAllocationLimitConfig, out maxCashLimitStr))
                 {
                     var maxCashLimit = decimal.Parse(maxCashLimitStr, NumberStyles.Any, CultureInfo.InvariantCulture);
-                    
+
                     // If allocation exceeded by more than $10,000; block deployment
                     if (algorithm.Portfolio.TotalPortfolioValue > (maxCashLimit + 10000m))
                     {
@@ -492,12 +492,12 @@ namespace QuantConnect.Lean.Engine.Setup
                 if (symbol.SecurityType.IsOption())
                 {
                     // add current option contract to the system
-                    security = algorithm.AddOptionContract(symbol, resolution, fillForward, leverage);
+                    security = algorithm.AddOptionContract(symbol, resolution, fillForward, leverage, extendedHours);
                 }
                 else if (symbol.SecurityType == SecurityType.Future)
                 {
                     // add current future contract to the system
-                    security = algorithm.AddFutureContract(symbol, resolution, fillForward, leverage);
+                    security = algorithm.AddFutureContract(symbol, resolution, fillForward, leverage, extendedHours);
                 }
                 else
                 {

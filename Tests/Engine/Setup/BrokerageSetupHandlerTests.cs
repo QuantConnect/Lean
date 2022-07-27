@@ -207,7 +207,7 @@ namespace QuantConnect.Tests.Engine.Setup
             foreach (var symbol in algorithm.Securities.Keys)
             {
                 var config = algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol).First();
-                
+
                 // Assert Resolution and FillForward settings persisted
                 Assert.AreEqual(algorithm.UniverseSettings.Resolution, config.Resolution);
                 Assert.AreEqual(algorithm.UniverseSettings.FillForward, config.FillDataForward);
