@@ -291,64 +291,13 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(new DateTime(2013, 11, 29), nextMarketOpen);
         }
 
-        [Test]
-        public void GetNextMarketOpenForRegularHoursFromClosedDay()
+        [TestCaseSource(nameof(GetNextMarketOpenTestCases))]
+        public void GetNextMarketOpen(DateTime startTime, DateTime expectedNextMarketOpen, bool extendedMarket)
         {
             var exchangeHours = CreateUsFutureSecurityExchangeHoursWithExtendedHours();
 
-            var startTime = new DateTime(2022, 1, 1); // Saturday
-            var nextMarketOpen = exchangeHours.GetNextMarketOpen(startTime, false);
-            Assert.AreEqual(new DateTime(2022, 1, 3, 9, 30, 0), nextMarketOpen);
-        }
-
-        [Test]
-        public void GetNextMarketOpenForRegularHours()
-        {
-            var exchangeHours = CreateUsFutureSecurityExchangeHoursWithExtendedHours();
-
-            var startTime = new DateTime(2022, 1, 3, 8, 0, 0); // Monday
-            var nextMarketOpen = exchangeHours.GetNextMarketOpen(startTime, false);
-            Assert.AreEqual(new DateTime(2022, 1, 3, 9, 30, 0), nextMarketOpen);
-        }
-
-        [Test]
-        public void GetNextMarketOpenWithExtendedHoursFromClosedDay()
-        {
-            var exchangeHours = CreateUsFutureSecurityExchangeHoursWithExtendedHours();
-
-            var startTime = new DateTime(2022, 1, 1); // Saturday
-            var nextMarketOpen = exchangeHours.GetNextMarketOpen(startTime, true);
-            Assert.AreEqual(new DateTime(2022, 1, 2, 18, 0, 0), nextMarketOpen);
-        }
-
-        [Test]
-        public void GetNextMarketOpenWithExtendedHours()
-        {
-            var exchangeHours = CreateUsFutureSecurityExchangeHoursWithExtendedHours();
-
-            var startTime = new DateTime(2022, 1, 2, 18, 0, 0); // Sunday
-            var nextMarketOpen = exchangeHours.GetNextMarketOpen(startTime, true);
-            Assert.AreEqual(new DateTime(2022, 1, 3, 18, 0, 0), nextMarketOpen);
-        }
-
-        [Test]
-        public void GetNextMarketOpenWithExtendedHours2()
-        {
-            var exchangeHours = CreateUsFutureSecurityExchangeHoursWithExtendedHours();
-
-            var startTime = new DateTime(2022, 1, 3, 12, 0, 0); // Monday
-            var nextMarketOpen = exchangeHours.GetNextMarketOpen(startTime, true);
-            Assert.AreEqual(new DateTime(2022, 1, 3, 18, 0, 0), nextMarketOpen);
-        }
-
-        [Test]
-        public void GetNextMarketOpenWithExtendedHours3()
-        {
-            var exchangeHours = CreateUsFutureSecurityExchangeHoursWithExtendedHours();
-
-            var startTime = new DateTime(2022, 1, 3, 16, 0, 0); // Monday
-            var nextMarketOpen = exchangeHours.GetNextMarketOpen(startTime, true);
-            Assert.AreEqual(new DateTime(2022, 1, 3, 18, 0, 0), nextMarketOpen);
+            var nextMarketOpen = exchangeHours.GetNextMarketOpen(startTime, extendedMarket);
+            Assert.AreEqual(expectedNextMarketOpen, nextMarketOpen);
         }
 
         [Test]
@@ -432,6 +381,15 @@ namespace QuantConnect.Tests.Common.Securities
             // Because there is a late open at 4am, the next close is the close of the session after that open.
             var nextMarketOpen = exchangeHours.GetNextMarketClose(startTime, false);
             Assert.AreEqual(new DateTime(2018, 12, 10, 17, 30, 0), nextMarketOpen);
+        }
+
+        [TestCaseSource(nameof(GetNextMarketCloseTestCases))]
+        public void GetNextMarketClose(DateTime startTime, DateTime expectedNextMarketClose, bool extendedMarket)
+        {
+            var exchangeHours = CreateUsFutureSecurityExchangeHoursWithExtendedHours();
+
+            var nextMarketClose = exchangeHours.GetNextMarketClose(startTime, extendedMarket);
+            Assert.AreEqual(expectedNextMarketClose, nextMarketClose);
         }
 
         [Test]
@@ -691,6 +649,37 @@ namespace QuantConnect.Tests.Common.Securities
                 sunday, monday, tuesday, wednesday, thursday, friday, saturday
             }.ToDictionary(x => x.DayOfWeek), earlyCloses, lateOpens);
             return exchangeHours;
+        }
+
+        private static TestCaseData[] GetNextMarketOpenTestCases()
+        {
+            return new[]
+            {
+                new TestCaseData(new DateTime(2022, 1, 1), new DateTime(2022, 1, 3, 9, 30, 0), false),
+                new TestCaseData(new DateTime(2022, 1, 3, 8, 0, 0), new DateTime(2022, 1, 3, 9, 30, 0), false),
+                new TestCaseData(new DateTime(2022, 1, 2, 18, 0, 0), new DateTime(2022, 1, 3, 18, 0, 0), true),
+                new TestCaseData(new DateTime(2022, 1, 3, 12, 0, 0), new DateTime(2022, 1, 3, 18, 0, 0), true),
+                new TestCaseData(new DateTime(2022, 1, 3, 16, 0, 0), new DateTime(2022, 1, 3, 18, 0, 0), true),
+                new TestCaseData(new DateTime(2022, 1, 1), new DateTime(2022, 1, 2, 18, 0, 0), true)
+            };
+        }
+
+        private static TestCaseData[] GetNextMarketCloseTestCases()
+        {
+            return new[]
+            {
+                new TestCaseData(new DateTime(2022, 1, 1), new DateTime(2022, 1, 3, 16, 0, 0), false),
+                new TestCaseData(new DateTime(2022, 1, 2), new DateTime(2022, 1, 3, 16, 0, 0), false),
+                new TestCaseData(new DateTime(2022, 1, 3), new DateTime(2022, 1, 3, 16, 0, 0), false),
+                new TestCaseData(new DateTime(2022, 1, 3, 10, 0, 0), new DateTime(2022, 1, 3, 16, 0, 0), false),
+                new TestCaseData(new DateTime(2022, 1, 3, 18, 0, 0), new DateTime(2022, 1, 4, 16, 0, 0), false),
+                new TestCaseData(new DateTime(2022, 1, 1), new DateTime(2022, 1, 3, 16, 0, 0), true),
+                new TestCaseData(new DateTime(2022, 1, 2), new DateTime(2022, 1, 3, 16, 0, 0), true),
+                new TestCaseData(new DateTime(2022, 1, 2, 18, 0, 0), new DateTime(2022, 1, 3, 16, 0, 0), true),
+                new TestCaseData(new DateTime(2022, 1, 3), new DateTime(2022, 1, 3, 16, 0, 0), true),
+                new TestCaseData(new DateTime(2022, 1, 3, 10, 0, 0), new DateTime(2022, 1, 3, 16, 0, 0), true),
+                new TestCaseData(new DateTime(2022, 1, 3, 18, 0, 0), new DateTime(2022, 1, 4, 16, 0, 0), true),
+            };
         }
     }
 }
