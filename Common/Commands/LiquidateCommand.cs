@@ -21,7 +21,7 @@ namespace QuantConnect.Commands
     /// <summary>
     /// Represents a command that will liquidate the entire algorithm
     /// </summary>
-    public sealed class LiquidateCommand : BaseCommand
+    public class LiquidateCommand : BaseCommand
     {
         /// <summary>
         /// Submits orders to liquidate all current holdings in the algorithm

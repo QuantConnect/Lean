@@ -20,7 +20,7 @@ namespace QuantConnect.Commands
     /// <summary>
     /// Represents a command to cancel a specific order by id
     /// </summary>
-    public sealed class CancelOrderCommand : BaseCommand
+    public class CancelOrderCommand : BaseCommand
     {
         /// <summary>
         /// Gets or sets the order id to be cancelled

@@ -24,7 +24,7 @@ using System.Collections.Generic;
 namespace QuantConnect.Tests.Common.Commands
 {
     [TestFixture]
-    public class FileCommandQueueHandlerTests
+    public class FileCommandHandlerTests
     {
         private const string SingleCommandFilePath = "command.json";
         private const string MultiCommandFilePath = "commands.json";
@@ -33,7 +33,7 @@ namespace QuantConnect.Tests.Common.Commands
         public void ReadsSingleCommandFromFile()
         {
             if (File.Exists(SingleCommandFilePath)) File.Delete(SingleCommandFilePath);
-            using var queue = new TestFileCommandQueueHandler(SingleCommandFilePath);
+            using var queue = new TestFileCommandHandler(SingleCommandFilePath);
             Assert.IsEmpty(queue.GetCommandsPublic());
             File.WriteAllText(SingleCommandFilePath, JsonConvert.SerializeObject(new LiquidateCommand(), new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All }));
             Assert.IsInstanceOf(typeof(LiquidateCommand), queue.GetCommandsPublic().Single());
@@ -43,7 +43,7 @@ namespace QuantConnect.Tests.Common.Commands
         public void ReadsMultipleCommandsFromFile()
         {
             if (File.Exists(MultiCommandFilePath)) File.Delete(MultiCommandFilePath);
-            using var queue = new TestFileCommandQueueHandler(MultiCommandFilePath);
+            using var queue = new TestFileCommandHandler(MultiCommandFilePath);
             Assert.IsEmpty(queue.GetCommandsPublic());
             File.WriteAllText(MultiCommandFilePath, JsonConvert.SerializeObject(new List<ICommand>
             {
@@ -64,10 +64,10 @@ namespace QuantConnect.Tests.Common.Commands
             }
         }
 
-        private class TestFileCommandQueueHandler : FileCommandQueueHandler
+        private class TestFileCommandHandler : FileCommandHandler
         {
             public IEnumerable<ICommand> GetCommandsPublic() => base.GetCommands();
-            public TestFileCommandQueueHandler(string commandJsonFilePath) : base(commandJsonFilePath)
+            public TestFileCommandHandler(string commandJsonFilePath) : base(commandJsonFilePath)
             {
             }
         }

@@ -23,28 +23,27 @@ using System.Collections.Generic;
 namespace QuantConnect.Commands
 {
     /// <summary>
-    /// Represents a command queue handler that sources it's commands from
-    /// a file on the local disk
+    /// Represents a command handler that sources it's commands from a file on the local disk
     /// </summary>
-    public class FileCommandQueueHandler : BaseCommandHandler
+    public class FileCommandHandler : BaseCommandHandler
     {
         private readonly string _commandJsonFilePath;
         private readonly Queue<ICommand> _commands = new Queue<ICommand>();
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="FileCommandQueueHandler"/> class
+        /// Initializes a new instance of the <see cref="FileCommandHandler"/> class
         /// using the 'command-json-file' configuration value for the command json file
         /// </summary>
-        public FileCommandQueueHandler()
+        public FileCommandHandler()
             : this(Config.Get("command-json-file", "command.json"))
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="FileCommandQueueHandler"/> class
+        /// Initializes a new instance of the <see cref="FileCommandHandler"/> class
         /// </summary>
         /// <param name="commandJsonFilePath">The file path to the commands json file</param>
-        public FileCommandQueueHandler(string commandJsonFilePath)
+        public FileCommandHandler(string commandJsonFilePath)
         {
             _commandJsonFilePath = commandJsonFilePath;
         }
@@ -76,7 +75,7 @@ namespace QuantConnect.Commands
         {
             if (string.IsNullOrEmpty(command.Id))
             {
-                Log.Error($"FileCommandQueueHandler.Acknowledge(): command Id is null or empty, will skip writting result file");
+                Log.Error($"FileCommandHandler.Acknowledge(): command Id is null or empty, will skip writting result file");
                 return;
             }
             File.WriteAllText($"command-result-{command.Id}.json", JsonConvert.SerializeObject(commandResultPacket));

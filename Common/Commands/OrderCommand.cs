@@ -22,7 +22,7 @@ namespace QuantConnect.Commands
     /// <summary>
     /// Represents a command to submit an order to the algorithm
     /// </summary>
-    public sealed class OrderCommand : BaseCommand
+    public class OrderCommand : BaseCommand
     {
         /// <summary>
         /// Gets or sets the symbol to be ordered

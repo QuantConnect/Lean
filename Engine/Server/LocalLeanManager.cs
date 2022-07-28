@@ -79,7 +79,7 @@ namespace QuantConnect.Lean.Engine.Server
         {
             if (_algorithm.LiveMode)
             {
-                _commandHandler = new FileCommandQueueHandler();
+                _commandHandler = new FileCommandHandler();
                 _commandHandler.Initialize(_job, _algorithm);
             }
         }

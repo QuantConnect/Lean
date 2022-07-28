@@ -18,7 +18,7 @@ namespace QuantConnect.Commands
     /// <summary>
     /// Represents a command that will terminate the algorithm
     /// </summary>
-    public sealed class QuitCommand : AlgorithmStatusCommand
+    public class QuitCommand : AlgorithmStatusCommand
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="QuitCommand"/>
