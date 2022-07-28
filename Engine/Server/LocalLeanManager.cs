@@ -28,7 +28,8 @@ namespace QuantConnect.Lean.Engine.Server
     public class LocalLeanManager : ILeanManager
     {
         private IAlgorithm _algorithm;
-        private ICommandQueueHandler _commandQueue;
+        private AlgorithmNodePacket _job;
+        private ICommandHandler _commandHandler;
         private LeanEngineSystemHandlers _systemHandlers;
         private LeanEngineAlgorithmHandlers _algorithmHandlers;
 
@@ -43,6 +44,7 @@ namespace QuantConnect.Lean.Engine.Server
         {
             _algorithmHandlers = algorithmHandlers;
             _systemHandlers = systemHandlers;
+            _job = job;
         }
 
         /// <summary>
@@ -61,7 +63,13 @@ namespace QuantConnect.Lean.Engine.Server
         /// </summary>
         public void Update()
         {
-            _commandQueue?.Consume(_algorithm, _algorithmHandlers.Results.Messages);
+            if(_commandHandler != null)
+            {
+                foreach (var commandResultPacket in _commandHandler.ProcessCommands())
+                {
+                    _algorithmHandlers.Results.Messages.Enqueue(commandResultPacket);
+                }
+            }
         }
 
         /// <summary>
@@ -71,7 +79,8 @@ namespace QuantConnect.Lean.Engine.Server
         {
             if (_algorithm.LiveMode)
             {
-                _commandQueue = new FileCommandQueueHandler();
+                _commandHandler = new FileCommandQueueHandler();
+                _commandHandler.Initialize(_job, _algorithm);
             }
         }
 
@@ -96,7 +105,7 @@ namespace QuantConnect.Lean.Engine.Server
         /// </summary>
         public void Dispose()
         {
-            _commandQueue.DisposeSafely();
+            _commandHandler.DisposeSafely();
         }
     }
 }

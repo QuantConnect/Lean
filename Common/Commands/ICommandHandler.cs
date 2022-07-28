@@ -14,9 +14,9 @@
 */
 
 using System;
-using System.Collections.Generic;
-using QuantConnect.Interfaces;
 using QuantConnect.Packets;
+using QuantConnect.Interfaces;
+using System.Collections.Generic;
 
 namespace QuantConnect.Commands
 {
@@ -24,7 +24,7 @@ namespace QuantConnect.Commands
     /// Represents a command queue for the algorithm. This is an entry point
     /// for external messages to act upon the running algorithm instance.
     /// </summary>
-    public interface ICommandQueueHandler : IDisposable
+    public interface ICommandHandler : IDisposable
     {
         /// <summary>
         /// Initializes this command queue for the specified job
@@ -34,9 +34,9 @@ namespace QuantConnect.Commands
         void Initialize(AlgorithmNodePacket job, IAlgorithm algorithm);
 
         /// <summary>
-        /// Gets the commands in the queue
+        /// Process any commands in the queue
         /// </summary>
-        /// <returns>The next command in the queue, if present, null if no commands present</returns>
-        IEnumerable<ICommand> GetCommands();
+        /// <returns>The command result packet of each command executed if any</returns>
+        IEnumerable<CommandResultPacket> ProcessCommands();
     }
 }

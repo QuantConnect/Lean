@@ -22,7 +22,7 @@ namespace QuantConnect.Commands
     /// <summary>
     /// Represents a command to submit an order to the algorithm
     /// </summary>
-    public sealed class OrderCommand : ICommand
+    public sealed class OrderCommand : BaseCommand
     {
         /// <summary>
         /// Gets or sets the symbol to be ordered
@@ -58,7 +58,7 @@ namespace QuantConnect.Commands
         /// Runs this command against the specified algorithm instance
         /// </summary>
         /// <param name="algorithm">The algorithm to run this command against</param>
-        public CommandResultPacket Run(IAlgorithm algorithm)
+        public override CommandResultPacket Run(IAlgorithm algorithm)
         {
             var request = new SubmitOrderRequest(OrderType, Symbol.SecurityType, Symbol, Quantity, StopPrice, LimitPrice, DateTime.UtcNow, Tag);
             var ticket = algorithm.Transactions.ProcessRequest(request);

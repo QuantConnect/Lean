@@ -21,13 +21,13 @@ namespace QuantConnect.Commands
     /// <summary>
     /// Represents a command that will liquidate the entire algorithm
     /// </summary>
-    public sealed class LiquidateCommand : ICommand
+    public sealed class LiquidateCommand : BaseCommand
     {
         /// <summary>
         /// Submits orders to liquidate all current holdings in the algorithm
         /// </summary>
         /// <param name="algorithm">The algorithm to be liquidated</param>
-        public CommandResultPacket Run(IAlgorithm algorithm)
+        public override CommandResultPacket Run(IAlgorithm algorithm)
         {
             algorithm.Liquidate();
             return new CommandResultPacket(this, true);

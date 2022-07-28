@@ -20,7 +20,7 @@ namespace QuantConnect.Commands
     /// <summary>
     /// Represents a command that will change the algorithm's status
     /// </summary>
-    public class AlgorithmStatusCommand : ICommand
+    public class AlgorithmStatusCommand : BaseCommand
     {
         /// <summary>
         /// Gets or sets the algorithm status
@@ -48,7 +48,7 @@ namespace QuantConnect.Commands
         /// Sets the algoritm's status to <see cref="Status"/>
         /// </summary>
         /// <param name="algorithm">The algorithm to run this command against</param>
-        public CommandResultPacket Run(IAlgorithm algorithm)
+        public override CommandResultPacket Run(IAlgorithm algorithm)
         {
             algorithm.Status = Status;
             return new CommandResultPacket(this, true);

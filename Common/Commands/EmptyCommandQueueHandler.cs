@@ -13,44 +13,25 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Interfaces;
-using QuantConnect.Packets;
+using System.Collections.Generic;
 
 namespace QuantConnect.Commands
 {
     /// <summary>
-    /// Provides an implementation of <see cref="ICommandQueueHandler"/> that never
+    /// Provides an implementation of <see cref="ICommandHandler"/> that never
     /// returns a command. This is useful for local console backtesting when we don't
     /// really want to issue commands
     /// </summary>
-    public class EmptyCommandQueueHandler : ICommandQueueHandler
+    public class EmptyCommandQueueHandler : BaseCommandHandler
     {
-        /// <summary>
-        /// NOP
-        /// </summary>
-        /// <param name="job">unused</param>
-        /// <param name="algorithm">The algorithm instance</param>
-        public void Initialize(AlgorithmNodePacket job, IAlgorithm algorithm)
-        {
-        }
-
         /// <summary>
         /// Return empty enumerable.
         /// </summary>
         /// <returns>null</returns>
-        public IEnumerable<ICommand> GetCommands()
+        protected override IEnumerable<ICommand> GetCommands()
         {
             return Enumerable.Empty<ICommand>();
-        }
-
-        /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-        /// </summary>
-        /// <filterpriority>2</filterpriority>
-        public void Dispose()
-        {
         }
     }
 }

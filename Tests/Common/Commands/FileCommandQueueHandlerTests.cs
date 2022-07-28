@@ -33,34 +33,42 @@ namespace QuantConnect.Tests.Common.Commands
         public void ReadsSingleCommandFromFile()
         {
             if (File.Exists(SingleCommandFilePath)) File.Delete(SingleCommandFilePath);
-            using var queue = new FileCommandQueueHandler(SingleCommandFilePath);
-            Assert.IsEmpty(queue.GetCommands());
+            using var queue = new TestFileCommandQueueHandler(SingleCommandFilePath);
+            Assert.IsEmpty(queue.GetCommandsPublic());
             File.WriteAllText(SingleCommandFilePath, JsonConvert.SerializeObject(new LiquidateCommand(), new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All }));
-            Assert.IsInstanceOf(typeof(LiquidateCommand), queue.GetCommands().Single());
+            Assert.IsInstanceOf(typeof(LiquidateCommand), queue.GetCommandsPublic().Single());
         }
 
         [Test]
         public void ReadsMultipleCommandsFromFile()
         {
             if (File.Exists(MultiCommandFilePath)) File.Delete(MultiCommandFilePath);
-            using var queue = new FileCommandQueueHandler(MultiCommandFilePath);
-            Assert.IsEmpty(queue.GetCommands());
+            using var queue = new TestFileCommandQueueHandler(MultiCommandFilePath);
+            Assert.IsEmpty(queue.GetCommandsPublic());
             File.WriteAllText(MultiCommandFilePath, JsonConvert.SerializeObject(new List<ICommand>
             {
                 new LiquidateCommand(),
                 new SpecialCommand()
             }, new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All }));
-            var list = queue.GetCommands().ToList();
+            var list = queue.GetCommandsPublic().ToList();
             Assert.IsInstanceOf(typeof(LiquidateCommand), list[0]);
             Assert.IsInstanceOf(typeof(SpecialCommand), list[1]);
-            Assert.IsEmpty(queue.GetCommands());
+            Assert.IsEmpty(queue.GetCommandsPublic());
         }
 
-        private sealed class SpecialCommand : ICommand
+        private sealed class SpecialCommand : BaseCommand
         {
-            public CommandResultPacket Run(IAlgorithm algorithm)
+            public override CommandResultPacket Run(IAlgorithm algorithm)
             {
                 return new CommandResultPacket(this, true);
+            }
+        }
+
+        private class TestFileCommandQueueHandler : FileCommandQueueHandler
+        {
+            public IEnumerable<ICommand> GetCommandsPublic() => base.GetCommands();
+            public TestFileCommandQueueHandler(string commandJsonFilePath) : base(commandJsonFilePath)
+            {
             }
         }
     }

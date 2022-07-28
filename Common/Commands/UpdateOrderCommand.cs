@@ -21,7 +21,7 @@ namespace QuantConnect.Commands
     /// <summary>
     /// Represents a command to update an order by id
     /// </summary>
-    public class UpdateOrderCommand : ICommand
+    public class UpdateOrderCommand : BaseCommand
     {
         /// <summary>
         /// Gets or sets the id of the order to update
@@ -54,7 +54,7 @@ namespace QuantConnect.Commands
         /// Runs this command against the specified algorithm instance
         /// </summary>
         /// <param name="algorithm">The algorithm to run this command against</param>
-        public CommandResultPacket Run(IAlgorithm algorithm)
+        public override CommandResultPacket Run(IAlgorithm algorithm)
         {
             var ticket = algorithm.Transactions.UpdateOrder(new UpdateOrderRequest(algorithm.UtcTime, OrderId, new UpdateOrderFields
             {

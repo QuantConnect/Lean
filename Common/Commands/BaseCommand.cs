@@ -18,19 +18,19 @@ using QuantConnect.Interfaces;
 namespace QuantConnect.Commands
 {
     /// <summary>
-    /// Represents a command that can be run against a single algorithm
+    /// Base command implementation
     /// </summary>
-    public interface ICommand
+    public abstract class BaseCommand : ICommand
     {
         /// <summary>
         /// Unique command id
         /// </summary>
-        string Id { get; set; }
+        public string Id { get; set; }
 
         /// <summary>
         /// Runs this command against the specified algorithm instance
         /// </summary>
         /// <param name="algorithm">The algorithm to run this command against</param>
-        CommandResultPacket Run(IAlgorithm algorithm);
+        public abstract CommandResultPacket Run(IAlgorithm algorithm);
     }
 }

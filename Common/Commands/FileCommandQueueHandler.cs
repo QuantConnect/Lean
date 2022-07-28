@@ -14,13 +14,11 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
-using QuantConnect.Configuration;
-using QuantConnect.Interfaces;
 using QuantConnect.Logging;
-using QuantConnect.Packets;
+using QuantConnect.Configuration;
+using System.Collections.Generic;
 
 namespace QuantConnect.Commands
 {
@@ -28,7 +26,7 @@ namespace QuantConnect.Commands
     /// Represents a command queue handler that sources it's commands from
     /// a file on the local disk
     /// </summary>
-    public class FileCommandQueueHandler : ICommandQueueHandler
+    public class FileCommandQueueHandler : BaseCommandHandler
     {
         private readonly string _commandJsonFilePath;
         private readonly Queue<ICommand> _commands = new Queue<ICommand>();
@@ -52,19 +50,10 @@ namespace QuantConnect.Commands
         }
 
         /// <summary>
-        /// Initializes this command queue for the specified job
-        /// </summary>
-        /// <param name="job">The job that defines what queue to bind to</param>
-        /// <param name="algorithm">The algorithm instance</param>
-        public void Initialize(AlgorithmNodePacket job, IAlgorithm algorithm)
-        {
-        }
-
-        /// <summary>
         /// Gets the next command in the queue
         /// </summary>
         /// <returns>The next command in the queue, if present, null if no commands present</returns>
-        public IEnumerable<ICommand> GetCommands()
+        protected override IEnumerable<ICommand> GetCommands()
         {
             if (File.Exists(_commandJsonFilePath))
             {
@@ -76,6 +65,21 @@ namespace QuantConnect.Commands
             {
                 yield return _commands.Dequeue();
             }
+        }
+
+        /// <summary>
+        /// Acknowledge a command that has been executed
+        /// </summary>
+        /// <param name="command">The command that was executed</param>
+        /// <param name="commandResultPacket">The result</param>
+        protected override void Acknowledge(ICommand command, CommandResultPacket commandResultPacket)
+        {
+            if (string.IsNullOrEmpty(command.Id))
+            {
+                Log.Error($"FileCommandQueueHandler.Acknowledge(): command Id is null or empty, will skip writting result file");
+                return;
+            }
+            File.WriteAllText($"command-result-{command.Id}.json", JsonConvert.SerializeObject(commandResultPacket));
         }
 
         /// <summary>
@@ -116,14 +120,6 @@ namespace QuantConnect.Commands
             {
                 _commands.Enqueue(item);
             }
-        }
-
-        /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-        /// </summary>
-        /// <filterpriority>2</filterpriority>
-        public void Dispose()
-        {
         }
     }
 }

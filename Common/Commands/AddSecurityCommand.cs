@@ -20,7 +20,7 @@ namespace QuantConnect.Commands
     /// <summary>
     /// Represents a command to add a security to the algorithm
     /// </summary>
-    public class AddSecurityCommand : ICommand
+    public class AddSecurityCommand : BaseCommand
     {
         /// <summary>
         /// The security type of the security
@@ -73,7 +73,7 @@ namespace QuantConnect.Commands
         /// Runs this command against the specified algorithm instance
         /// </summary>
         /// <param name="algorithm">The algorithm to run this command against</param>
-        public CommandResultPacket Run(IAlgorithm algorithm)
+        public override CommandResultPacket Run(IAlgorithm algorithm)
         {
             var security = algorithm.AddSecurity(SecurityType, Symbol, Resolution, Market, FillDataForward, Leverage, ExtendedMarketHours);
             return new Result(this, true, security.Symbol);

@@ -20,7 +20,7 @@ namespace QuantConnect.Commands
     /// <summary>
     /// Represents a command to cancel a specific order by id
     /// </summary>
-    public sealed class CancelOrderCommand : ICommand
+    public sealed class CancelOrderCommand : BaseCommand
     {
         /// <summary>
         /// Gets or sets the order id to be cancelled
@@ -31,7 +31,7 @@ namespace QuantConnect.Commands
         /// Runs this command against the specified algorithm instance
         /// </summary>
         /// <param name="algorithm">The algorithm to run this command against</param>
-        public CommandResultPacket Run(IAlgorithm algorithm)
+        public override CommandResultPacket Run(IAlgorithm algorithm)
         {
             var ticket = algorithm.Transactions.CancelOrder(OrderId);
             return ticket.CancelRequest != null
