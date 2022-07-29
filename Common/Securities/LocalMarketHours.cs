@@ -184,7 +184,17 @@ namespace QuantConnect.Securities
 
                 if (i != Segments.Count - 1)
                 {
-                    nextSegment = Segments[i + 1].Start;
+                    var potentialNextSegment = Segments[i+1];
+
+                    // Check whether we can consider PostMarket or not
+                    if (potentialNextSegment.State != MarketHoursState.Market && !extendedMarket)
+                    {
+                        nextSegment = null;
+                    }
+                    else
+                    {
+                        nextSegment = Segments[i+1].Start;
+                    }
                 }
                 else
                 {
