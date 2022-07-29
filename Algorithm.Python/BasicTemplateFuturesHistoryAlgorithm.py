@@ -29,12 +29,14 @@ class BasicTemplateFuturesHistoryAlgorithm(QCAlgorithm):
         self.SetEndDate(2013, 10, 9)
         self.SetCash(1000000)
 
+        extendedMarketHours = self.GetExtendedMarketHours()
+
         # Subscribe and set our expiry filter for the futures chain
         # find the front contract expiring no earlier than in 90 days
-        futureES = self.AddFuture(Futures.Indices.SP500EMini, Resolution.Minute, extendedMarketHours=True)
+        futureES = self.AddFuture(Futures.Indices.SP500EMini, Resolution.Minute, extendedMarketHours=extendedMarketHours)
         futureES.SetFilter(timedelta(0), timedelta(182))
 
-        futureGC = self.AddFuture(Futures.Metals.Gold, Resolution.Minute, extendedMarketHours=True)
+        futureGC = self.AddFuture(Futures.Metals.Gold, Resolution.Minute, extendedMarketHours=extendedMarketHours)
         futureGC.SetFilter(timedelta(0), timedelta(182))
 
         self.SetBenchmark(lambda x: 1000000)
@@ -49,7 +51,7 @@ class BasicTemplateFuturesHistoryAlgorithm(QCAlgorithm):
         self._successCount += 1
 
     def OnEndOfAlgorithm(self):
-        if self._successCount < 49:
+        if self._successCount < self.GetExpectedHistoryCallCount():
             raise Exception(f'Scheduled Event did not assert history call as many times as expected: {self._successCount}/49')
 
     def OnData(self,slice):
@@ -73,3 +75,9 @@ class BasicTemplateFuturesHistoryAlgorithm(QCAlgorithm):
         # Order fill event handler. On an order fill update the resulting information is passed to this method.
         # Order event details containing details of the events
         self.Log(f'{orderEvent}')
+
+    def GetExtendedMarketHours(self):
+        return False
+
+    def GetExpectedHistoryCallCount(self):
+        return 42
