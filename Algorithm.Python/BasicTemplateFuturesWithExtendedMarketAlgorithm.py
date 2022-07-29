@@ -21,7 +21,7 @@ from AlgorithmImports import *
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="benchmarks" />
 ### <meta name="tag" content="futures" />
-class BasicTemplateFuturesAlgorithm(QCAlgorithm):
+class BasicTemplateFuturesWithExtendedMarketAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         self.SetStartDate(2013, 10, 8)
@@ -31,14 +31,14 @@ class BasicTemplateFuturesAlgorithm(QCAlgorithm):
         self.contractSymbol = None
 
         # Subscribe and set our expiry filter for the futures chain
-        futureSP500 = self.AddFuture(Futures.Indices.SP500EMini)
-        futureGold = self.AddFuture(Futures.Metals.Gold)
+        self.futureSP500 = self.AddFuture(Futures.Indices.SP500EMini, extendedMarketHours = True)
+        self.futureGold = self.AddFuture(Futures.Metals.Gold, extendedMarketHours = True)
 
         # set our expiry filter for this futures chain
         # SetFilter method accepts timedelta objects or integer for days.
         # The following statements yield the same filtering criteria
-        futureSP500.SetFilter(timedelta(0), timedelta(182))
-        futureGold.SetFilter(0, 182)
+        self.futureSP500.SetFilter(timedelta(0), timedelta(182))
+        self.futureGold.SetFilter(0, 182)
 
         benchmark = self.AddEquity("SPY")
         self.SetBenchmark(benchmark.Symbol)
@@ -47,6 +47,9 @@ class BasicTemplateFuturesAlgorithm(QCAlgorithm):
         self.SetSecurityInitializer(lambda security: seeder.SeedSecurity(security))
 
     def OnData(self,slice):
+        if not self.IsMarketOpen(self.futureSP500.Symbol) or not self.IsMarketOpen(self.futureGold.Symbol):
+            return
+
         if not self.Portfolio.Invested:
             for chain in slice.FutureChains:
                  # Get contracts expiring no earlier than in 90 days
