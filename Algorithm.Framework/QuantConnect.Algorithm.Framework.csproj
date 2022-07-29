@@ -66,6 +66,9 @@
     <Content Include="Portfolio\MaximumSharpeRatioPortfolioOptimizer.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Portfolio\MeanReversionPortfolioConstructionModel.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Portfolio\MeanVarianceOptimizationPortfolioConstructionModel.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
