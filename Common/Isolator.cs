@@ -105,12 +105,12 @@ namespace QuantConnect
             // default to always within custom limits
             withinCustomLimits = withinCustomLimits ?? (() => new IsolatorLimitResult(TimeSpan.Zero, string.Empty));
 
-            var message = "";
+            var message = string.Empty;
             var emaPeriod = 60d;
             var memoryUsed = 0L;
             var utcNow = DateTime.UtcNow;
             var end = utcNow + timeSpan;
-            var memoryLogger = utcNow + TimeSpan.FromMinutes(1);
+            var memoryLogger = utcNow + Time.OneMinute;
             var isolatorLimitResult = new IsolatorLimitResult(TimeSpan.Zero, string.Empty);
 
             //Convert to bytes
@@ -144,7 +144,8 @@ namespace QuantConnect
                               $"Used: {PrettyFormatRam(memoryUsed)}, " +
                               $"Sample: {PrettyFormatRam((long)sample)}, " +
                               $"App: {PrettyFormatRam(OS.ApplicationMemoryUsed * 1024 * 1024)}, " +
-                              Invariant($"CurrentTimeStepElapsed: {isolatorLimitResult.CurrentTimeStepElapsed:mm':'ss'.'fff}"));
+                              Invariant($"CurrentTimeStepElapsed: {isolatorLimitResult.CurrentTimeStepElapsed:mm':'ss'.'fff}. ") +
+                              $"CPU: {(int)Math.Ceiling(OS.CpuUsage)}%");
 
                     memoryLogger = utcNow.AddMinutes(1);
                 }
@@ -165,13 +166,13 @@ namespace QuantConnect
                 utcNow = DateTime.UtcNow;
             }
 
-            if (task.IsCompleted == false && message == "")
+            if (task.IsCompleted == false && string.IsNullOrEmpty(message))
             {
                 message = $"Execution Security Error: Operation timed out - {timeSpan.TotalMinutes.ToStringInvariant()} minutes max. Check for recursive loops.";
                 Log.Trace($"Isolator.ExecuteWithTimeLimit(): {message}");
             }
 
-            if (message != "")
+            if (!string.IsNullOrEmpty(message))
             {
                 CancellationTokenSource.Cancel();
                 Log.Error($"Security.ExecuteWithTimeLimit(): {message}");
