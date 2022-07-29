@@ -96,6 +96,14 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(expectedMarketOpen, marketHours.GetMarketOpen(referenceTime, extendedMarket, prevDayLastSegmentEnd));
         }
 
+        [TestCaseSource(nameof(GetMarketCloseTestCases))]
+        public void GetsCorrectMarketClose(TimeSpan referenceTime, bool extendedMarket, TimeSpan nextDayFirstSegmentStart, TimeSpan? expectedMarketClose)
+        {
+            var marketHours = GetFutureWeekDayMarketHours();
+
+            Assert.AreEqual(expectedMarketClose, marketHours.GetMarketClose(referenceTime, extendedMarket, nextDayFirstSegmentStart));
+        }
+
         private static LocalMarketHours GetUsEquityWeekDayMarketHours()
         {
             return new LocalMarketHours(DayOfWeek.Friday, USEquityPreOpen, USEquityOpen, USEquityClose, USEquityPostClose);
@@ -148,6 +156,53 @@ namespace QuantConnect.Tests.Common.Securities
                 new TestCaseData(new TimeSpan(16, 0, 0), true, null, new TimeSpan(17, 0, 0)),
                 new TestCaseData(new TimeSpan(17, 0, 0), true, null, new TimeSpan(17, 0, 0)),
                 new TestCaseData(new TimeSpan(18, 0, 0), true, null, new TimeSpan(17, 0, 0)),
+            };
+        }
+
+        private static TestCaseData[] GetMarketCloseTestCases()
+        {
+            return new[]
+            {
+                // Next day's first segment continues from current day's last segment (see GetFutureWeekDayMarketHours, the last segment ends
+                // with 1.00:00:00, so starting next day at 00:00:00, it means the segments are continouous)
+                new TestCaseData(new TimeSpan(0, 0, 0), false, new TimeSpan(0, 0, 0), new TimeSpan(16, 0, 0)),
+                new TestCaseData(new TimeSpan(12, 0, 0), false, new TimeSpan(0, 0, 0), new TimeSpan(16, 0, 0)),
+                new TestCaseData(new TimeSpan(16, 0, 0), false, new TimeSpan(0, 0, 0), null),
+                new TestCaseData(new TimeSpan(17, 0, 0), false, new TimeSpan(0, 0, 0), null),
+                new TestCaseData(new TimeSpan(18, 0, 0), false, new TimeSpan(0, 0, 0), null),
+                new TestCaseData(new TimeSpan(20, 0, 0), false, new TimeSpan(0, 0, 0), null),
+                new TestCaseData(new TimeSpan(0, 0, 0), true, new TimeSpan(0, 0, 0), new TimeSpan(16, 0, 0)),
+                new TestCaseData(new TimeSpan(12, 0, 0), true, new TimeSpan(0, 0, 0), new TimeSpan(16, 0, 0)),
+                new TestCaseData(new TimeSpan(16, 0, 0), true, new TimeSpan(0, 0, 0), null),
+                new TestCaseData(new TimeSpan(17, 0, 0), true, new TimeSpan(0, 0, 0), null),
+                new TestCaseData(new TimeSpan(18, 0, 0), true, new TimeSpan(0, 0, 0), null),
+                new TestCaseData(new TimeSpan(20, 0, 0), true, new TimeSpan(0, 0, 0), null),
+                // Next day's first segment starts after midnight
+                new TestCaseData(new TimeSpan(0, 0, 0), false, new TimeSpan(18, 0, 0), new TimeSpan(16, 0, 0)),
+                new TestCaseData(new TimeSpan(12, 0, 0), false, new TimeSpan(18, 0, 0), new TimeSpan(16, 0, 0)),
+                new TestCaseData(new TimeSpan(16, 0, 0), false, new TimeSpan(18, 0, 0), null),
+                new TestCaseData(new TimeSpan(17, 0, 0), false, new TimeSpan(18, 0, 0), null),
+                new TestCaseData(new TimeSpan(18, 0, 0), false, new TimeSpan(18, 0, 0), null),
+                new TestCaseData(new TimeSpan(20, 0, 0), false, new TimeSpan(18, 0, 0), null),
+                new TestCaseData(new TimeSpan(0, 0, 0), true, new TimeSpan(18, 0, 0), new TimeSpan(16, 0, 0)),
+                new TestCaseData(new TimeSpan(12, 0, 0), true, new TimeSpan(18, 0, 0), new TimeSpan(16, 0, 0)),
+                new TestCaseData(new TimeSpan(16, 0, 0), true, new TimeSpan(18, 0, 0), new TimeSpan(1, 0, 0, 0)),
+                new TestCaseData(new TimeSpan(17, 0, 0), true, new TimeSpan(18, 0, 0), new TimeSpan(1, 0, 0, 0)),
+                new TestCaseData(new TimeSpan(18, 0, 0), true, new TimeSpan(18, 0, 0), new TimeSpan(1, 0, 0, 0)),
+                new TestCaseData(new TimeSpan(20, 0, 0), true, new TimeSpan(18, 0, 0), new TimeSpan(1, 0, 0, 0)),
+                // No next day's first segment
+                new TestCaseData(new TimeSpan(0, 0, 0), false, null, new TimeSpan(16, 0, 0)),
+                new TestCaseData(new TimeSpan(12, 0, 0), false, null, new TimeSpan(16, 0, 0)),
+                new TestCaseData(new TimeSpan(16, 0, 0), false, null, null),
+                new TestCaseData(new TimeSpan(17, 0, 0), false, null, null),
+                new TestCaseData(new TimeSpan(18, 0, 0), false, null, null),
+                new TestCaseData(new TimeSpan(20, 0, 0), false, null, null),
+                new TestCaseData(new TimeSpan(0, 0, 0), true, null, new TimeSpan(16, 0, 0)),
+                new TestCaseData(new TimeSpan(12, 0, 0), true, null, new TimeSpan(16, 0, 0)),
+                new TestCaseData(new TimeSpan(16, 0, 0), true, null, null),
+                new TestCaseData(new TimeSpan(17, 0, 0), true, null, null),
+                new TestCaseData(new TimeSpan(18, 0, 0), true, null, null),
+                new TestCaseData(new TimeSpan(20, 0, 0), true, null, null),
             };
         }
     }
