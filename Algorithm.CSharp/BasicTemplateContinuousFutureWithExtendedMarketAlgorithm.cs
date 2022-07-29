@@ -28,9 +28,9 @@ using Futures = QuantConnect.Securities.Futures;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Basic Continuous Futures Template Algorithm
+    /// Basic Continuous Futures Template Algorithm with extended market hours
     /// </summary>
-    public class BasicTemplateContinuousFutureAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class BasicTemplateContinuousFutureWithExtendedMarketAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Future _continuousContract;
         private Security _currentContract;
@@ -48,7 +48,8 @@ namespace QuantConnect.Algorithm.CSharp
             _continuousContract = AddFuture(Futures.Indices.SP500EMini,
                 dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
                 dataMappingMode: DataMappingMode.LastTradingDay,
-                contractDepthOffset: 0
+                contractDepthOffset: 0,
+                extendedMarketHours: true
             );
 
             _fast = SMA(_continuousContract.Symbol, 3, Resolution.Daily);
@@ -70,7 +71,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
 
-            if (!_continuousContract.Exchange.ExchangeOpen)
+            if (!IsMarketOpen(_continuousContract.Symbol))
             {
                 return;
             }
@@ -122,7 +123,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 275178;
+        public long DataPoints => 875590;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -160,7 +161,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-1.993"},
+            {"Return Over Maximum Drawdown", "-1.985"},
             {"Portfolio Turnover", "0.01"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -175,7 +176,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "1fd4b49e9450800981c6dead2bbca995"}
+            {"OrderListHash", "adb237703e65b93da5961c0085109732"}
         };
     }
 }

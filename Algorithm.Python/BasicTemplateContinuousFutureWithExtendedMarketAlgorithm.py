@@ -14,9 +14,9 @@
 from AlgorithmImports import *
 
 ### <summary>
-### Basic Continuous Futures Template Algorithm
+### Basic Continuous Futures Template Algorithm with extended market hours
 ### </summary>
-class BasicTemplateContinuousFutureAlgorithm(QCAlgorithm):
+class BasicTemplateContinuousFutureWithExtendedMarketAlgorithm(QCAlgorithm):
     '''Basic template algorithm simply initializes the date range and cash'''
 
     def Initialize(self):
@@ -28,7 +28,8 @@ class BasicTemplateContinuousFutureAlgorithm(QCAlgorithm):
         self._continuousContract = self.AddFuture(Futures.Indices.SP500EMini,
                                                   dataNormalizationMode = DataNormalizationMode.BackwardsRatio,
                                                   dataMappingMode = DataMappingMode.LastTradingDay,
-                                                  contractDepthOffset= 0)
+                                                  contractDepthOffset = 0,
+                                                  extendedMarketHours = True)
 
         self._fast = self.SMA(self._continuousContract.Symbol, 3, Resolution.Daily)
         self._slow = self.SMA(self._continuousContract.Symbol, 10, Resolution.Daily)
@@ -44,7 +45,7 @@ class BasicTemplateContinuousFutureAlgorithm(QCAlgorithm):
             if changedEvent.Symbol == self._continuousContract.Symbol:
                 self.Log(f"SymbolChanged event: {changedEvent}")
 
-        if not self._continuousContract.Exchange.ExchangeOpen:
+        if not self.IsMarketOpen(self._continuousContract.Symbol):
             return
 
         if not self.Portfolio.Invested:
