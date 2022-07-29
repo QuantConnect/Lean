@@ -59,12 +59,12 @@ namespace QuantConnect.Algorithm.CSharp
             Consolidate<BaseData>(es.Symbol, dataTime =>
             {
                 var start = es.Exchange.Hours.GetPreviousMarketOpen(dataTime, true);
-                var end = es.Exchange.Hours.GetNextMarketClose(start, false);
+                var end = es.Exchange.Hours.GetNextMarketClose(start, true);
 
                 // market might open at 16:30 and close again at 17:00 but we are not interested in using the close so we skip it here
                 while (end.Date == start.Date)
                 {
-                    end = es.Exchange.Hours.GetNextMarketClose(end, false);
+                    end = es.Exchange.Hours.GetNextMarketClose(end, true);
                 }
 
                 var period = end - start;

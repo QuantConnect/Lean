@@ -57,7 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
                 EveryDayAfterMarketOpen);
 
             Schedule.On(DateRules.EveryDay(esFuture),
-                TimeRules.BeforeMarketClose(esFuture),
+                TimeRules.BeforeMarketClose(esFuture, extendedMarketClose: true),
                 EveryDayBeforeMarketClose);
         }
 
