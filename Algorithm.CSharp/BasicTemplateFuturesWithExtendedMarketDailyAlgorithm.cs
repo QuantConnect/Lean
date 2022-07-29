@@ -19,19 +19,21 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This regressions tests the BasicTemplateFuturesDailyAlgorithm with hour data
+    /// This example demonstrates how to add futures with daily resolution and extended market hours.
     /// </summary>
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="benchmarks" />
     /// <meta name="tag" content="futures" />
-    public class BasicTemplateFuturesHourlyAlgorithm : BasicTemplateFuturesDailyAlgorithm
+    public class BasicTemplateFuturesWithExtendedMarketDailyAlgorithm : BasicTemplateFuturesDailyAlgorithm
     {
-        protected override Resolution Resolution => Resolution.Hour;
+        protected override bool ExtendedMarketHours => true;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
@@ -41,41 +43,41 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 73252;
+        public override long DataPoints => 13571;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "634"},
-            {"Average Win", "0.02%"},
-            {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "-1.885%"},
-            {"Drawdown", "1.900%"},
-            {"Expectancy", "-0.874"},
-            {"Net Profit", "-1.899%"},
-            {"Sharpe Ratio", "-3.746"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "97%"},
-            {"Win Rate", "3%"},
-            {"Profit-Loss Ratio", "2.62"},
-            {"Alpha", "-0.012"},
-            {"Beta", "-0.004"},
-            {"Annual Standard Deviation", "0.003"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-1.493"},
-            {"Tracking Error", "0.089"},
-            {"Treynor Ratio", "2.923"},
-            {"Total Fees", "$1172.90"},
-            {"Estimated Strategy Capacity", "$4000.00"},
+            {"Total Trades", "53"},
+            {"Average Win", "0.53%"},
+            {"Average Loss", "-1.17%"},
+            {"Compounding Annual Return", "-4.111%"},
+            {"Drawdown", "8.000%"},
+            {"Expectancy", "-0.709"},
+            {"Net Profit", "-4.142%"},
+            {"Sharpe Ratio", "-0.337"},
+            {"Probabilistic Sharpe Ratio", "3.592%"},
+            {"Loss Rate", "80%"},
+            {"Win Rate", "20%"},
+            {"Profit-Loss Ratio", "0.45"},
+            {"Alpha", "-0.023"},
+            {"Beta", "-0.022"},
+            {"Annual Standard Deviation", "0.076"},
+            {"Annual Variance", "0.006"},
+            {"Information Ratio", "-1.236"},
+            {"Tracking Error", "0.119"},
+            {"Treynor Ratio", "1.153"},
+            {"Total Fees", "$94.35"},
+            {"Estimated Strategy Capacity", "$620000.00"},
             {"Lowest Capacity Asset", "ES VP274HSU1AF5"},
-            {"Fitness Score", "0.054"},
+            {"Fitness Score", "0.011"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-2.607"},
-            {"Return Over Maximum Drawdown", "-0.994"},
-            {"Portfolio Turnover", "0.205"},
+            {"Sortino Ratio", "-0.067"},
+            {"Return Over Maximum Drawdown", "-0.515"},
+            {"Portfolio Turnover", "0.024"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -89,7 +91,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "a10e7d7eafb455d3fa57e82fb7ca4b4d"}
+            {"OrderListHash", "ed88cc10fec4f936e1eb838f22983397"}
         };
     }
 }

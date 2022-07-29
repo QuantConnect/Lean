@@ -24,14 +24,14 @@ using QuantConnect.Securities;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This regressions tests the BasicTemplateFuturesDailyAlgorithm with hour data
+    /// This regressions tests the BasicTemplateFuturesDailyAlgorithm with hour data and extended market hours
     /// </summary>
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="benchmarks" />
     /// <meta name="tag" content="futures" />
-    public class BasicTemplateFuturesHourlyAlgorithm : BasicTemplateFuturesDailyAlgorithm
+    public class BasicTemplateFuturesWithExtendedMarketHourlyAlgorithm : BasicTemplateFuturesHourlyAlgorithm
     {
-        protected override Resolution Resolution => Resolution.Hour;
+        protected override bool ExtendedMarketHours => true;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
@@ -41,41 +41,41 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 73252;
+        public override long DataPoints => 205645;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "634"},
+            {"Total Trades", "744"},
             {"Average Win", "0.02%"},
-            {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "-1.885%"},
-            {"Drawdown", "1.900%"},
-            {"Expectancy", "-0.874"},
-            {"Net Profit", "-1.899%"},
-            {"Sharpe Ratio", "-3.746"},
+            {"Average Loss", "-0.02%"},
+            {"Compounding Annual Return", "-5.253%"},
+            {"Drawdown", "5.300%"},
+            {"Expectancy", "-0.935"},
+            {"Net Profit", "-5.291%"},
+            {"Sharpe Ratio", "-1.954"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "97%"},
             {"Win Rate", "3%"},
-            {"Profit-Loss Ratio", "2.62"},
-            {"Alpha", "-0.012"},
-            {"Beta", "-0.004"},
-            {"Annual Standard Deviation", "0.003"},
+            {"Profit-Loss Ratio", "1.41"},
+            {"Alpha", "-0.027"},
+            {"Beta", "-0.031"},
+            {"Annual Standard Deviation", "0.015"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-1.493"},
-            {"Tracking Error", "0.089"},
-            {"Treynor Ratio", "2.923"},
-            {"Total Fees", "$1172.90"},
-            {"Estimated Strategy Capacity", "$4000.00"},
+            {"Information Ratio", "-1.629"},
+            {"Tracking Error", "0.093"},
+            {"Treynor Ratio", "0.986"},
+            {"Total Fees", "$1376.40"},
+            {"Estimated Strategy Capacity", "$2000.00"},
             {"Lowest Capacity Asset", "ES VP274HSU1AF5"},
-            {"Fitness Score", "0.054"},
+            {"Fitness Score", "0.084"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-2.607"},
-            {"Return Over Maximum Drawdown", "-0.994"},
-            {"Portfolio Turnover", "0.205"},
+            {"Sortino Ratio", "-1.199"},
+            {"Return Over Maximum Drawdown", "-0.995"},
+            {"Portfolio Turnover", "0.249"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -89,7 +89,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "a10e7d7eafb455d3fa57e82fb7ca4b4d"}
+            {"OrderListHash", "56b5e2c17150cd52627a64beacccecdc"}
         };
     }
 }

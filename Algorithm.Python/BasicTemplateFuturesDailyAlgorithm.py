@@ -26,10 +26,11 @@ class BasicTemplateFuturesDailyAlgorithm(QCAlgorithm):
         self.SetCash(1000000)
 
         resolution = self.GetResolution()
+        extendedMarketHours = self.GetExtendedMarketHours()
 
         # Subscribe and set our expiry filter for the futures chain
-        self.futureSP500 = self.AddFuture(Futures.Indices.SP500EMini, resolution, extendedMarketHours = True)
-        self.futureGold = self.AddFuture(Futures.Metals.Gold, resolution, extendedMarketHours = True)
+        self.futureSP500 = self.AddFuture(Futures.Indices.SP500EMini, resolution, extendedMarketHours=extendedMarketHours)
+        self.futureGold = self.AddFuture(Futures.Metals.Gold, resolution, extendedMarketHours=extendedMarketHours)
 
         # set our expiry filter for this futures chain
         # SetFilter method accepts timedelta objects or integer for days.
@@ -57,8 +58,6 @@ class BasicTemplateFuturesDailyAlgorithm(QCAlgorithm):
         else:
             if any([not self.Securities[x.Symbol].Exchange.ExchangeOpen for x in self.Portfolio.values()]):
                 for holdings in sorted(self.Portfolio.values(), key=lambda x: x.Symbol):
-                    if holdings.Quantity == 0: continue
-
                     # use a very low limit price here to make the order fill on next bar.
                     self.LimitOrder(holdings.Symbol, -holdings.Quantity, 1.0)
             else:
@@ -66,3 +65,6 @@ class BasicTemplateFuturesDailyAlgorithm(QCAlgorithm):
 
     def GetResolution(self):
         return Resolution.Daily
+
+    def GetExtendedMarketHours(self):
+        return False
