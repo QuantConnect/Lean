@@ -47,12 +47,10 @@ namespace QuantConnect.Algorithm.CSharp
             _continuousContract = AddFuture(Futures.Indices.SP500EMini,
                 dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
                 dataMappingMode: DataMappingMode.LastTradingDay,
-                contractDepthOffset: 0,
-                extendedMarketHours: true
+                contractDepthOffset: 0
             );
 
-            _futureContract = AddFutureContract(FutureChainProvider.GetFutureContractList(_continuousContract.Symbol, Time).First(),
-                extendedMarketHours: true);
+            _futureContract = AddFutureContract(FutureChainProvider.GetFutureContractList(_continuousContract.Symbol, Time).First());
         }
 
         /// <summary>
@@ -65,7 +63,6 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception($"Algorithm should of ended!");
             }
-
             if (data.Keys.Count > 2)
             {
                 throw new Exception($"Getting data for more than 2 symbols! {string.Join(",", data.Keys.Select(symbol => symbol))}");
@@ -119,7 +116,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 13066;
+        public long DataPoints => 63;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -151,7 +148,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0.241"},
             {"Treynor Ratio", "-4.691"},
             {"Total Fees", "$7.40"},
-            {"Estimated Strategy Capacity", "$1800000.00"},
+            {"Estimated Strategy Capacity", "$5500000.00"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
             {"Fitness Score", "0.417"},
             {"Kelly Criterion Estimate", "0"},
@@ -172,7 +169,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "3e892199a268ee1162ca47efb27daac9"}
+            {"OrderListHash", "802a335b5c355e83b8cd2174f053c1b9"}
         };
     }
 }
