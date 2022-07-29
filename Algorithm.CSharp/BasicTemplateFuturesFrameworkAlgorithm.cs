@@ -31,10 +31,12 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class BasicTemplateFuturesFrameworkAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        protected virtual bool ExtendedMarketHours => false;
+
         public override void Initialize()
         {
             UniverseSettings.Resolution = Resolution.Minute;
-            UniverseSettings.ExtendedMarketHours = true;
+            UniverseSettings.ExtendedMarketHours = ExtendedMarketHours;
 
             SetStartDate(2013, 10, 07);
             SetEndDate(2013, 10, 11);
@@ -124,70 +126,70 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
-        public bool CanRunLocally { get; } = true;
+        public virtual bool CanRunLocally { get; } = true;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+        public virtual Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 123378;
+        public virtual long DataPoints => 43411;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public virtual int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-80.161%"},
-            {"Drawdown", "4.000%"},
+            {"Compounding Annual Return", "-81.708%"},
+            {"Drawdown", "4.100%"},
             {"Expectancy", "0"},
-            {"Net Profit", "-2.065%"},
-            {"Sharpe Ratio", "-6.096"},
-            {"Probabilistic Sharpe Ratio", "9.114%"},
+            {"Net Profit", "-2.167%"},
+            {"Sharpe Ratio", "-10.184"},
+            {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-1.19"},
-            {"Beta", "0.245"},
-            {"Annual Standard Deviation", "0.116"},
-            {"Annual Variance", "0.013"},
-            {"Information Ratio", "-13.667"},
-            {"Tracking Error", "0.197"},
-            {"Treynor Ratio", "-2.883"},
+            {"Alpha", "-1.206"},
+            {"Beta", "0.238"},
+            {"Annual Standard Deviation", "0.072"},
+            {"Annual Variance", "0.005"},
+            {"Information Ratio", "-15.399"},
+            {"Tracking Error", "0.176"},
+            {"Treynor Ratio", "-3.077"},
             {"Total Fees", "$3.70"},
             {"Estimated Strategy Capacity", "$17000000.00"},
             {"Lowest Capacity Asset", "GC VL5E74HP3EE5"},
-            {"Fitness Score", "0.003"},
-            {"Kelly Criterion Estimate", "-112.972"},
-            {"Kelly Criterion Probability Value", "0.671"},
-            {"Sortino Ratio", "-14.519"},
-            {"Return Over Maximum Drawdown", "-53.47"},
+            {"Fitness Score", "0.006"},
+            {"Kelly Criterion Estimate", "-50.022"},
+            {"Kelly Criterion Probability Value", "0.711"},
+            {"Sortino Ratio", "-9.895"},
+            {"Return Over Maximum Drawdown", "-50.824"},
             {"Portfolio Turnover", "0.54"},
-            {"Total Insights Generated", "6"},
-            {"Total Insights Closed", "5"},
-            {"Total Insights Analysis Completed", "5"},
-            {"Long Insight Count", "6"},
+            {"Total Insights Generated", "5"},
+            {"Total Insights Closed", "4"},
+            {"Total Insights Analysis Completed", "4"},
+            {"Long Insight Count", "5"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$-96.12923"},
-            {"Total Accumulated Estimated Alpha Value", "$-15.621"},
-            {"Mean Population Estimated Insight Value", "$-3.1242"},
-            {"Mean Population Direction", "0%"},
+            {"Estimated Monthly Alpha Value", "$-4434.791"},
+            {"Total Accumulated Estimated Alpha Value", "$-720.6535"},
+            {"Mean Population Estimated Insight Value", "$-180.1634"},
+            {"Mean Population Direction", "25%"},
             {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Direction", "25%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "ec7e485ea6023c4b8b8a356a3c5f064b"}
+            {"OrderListHash", "323b899ae80aa839e320806411665ce7"}
         };
     }
 }
