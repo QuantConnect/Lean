@@ -26,23 +26,21 @@ class AddFutureOptionContractDataStreamingRegressionAlgorithm(QCAlgorithm):
         self.dataReceived = {}
 
         self.SetStartDate(2020, 1, 4)
-        self.SetEndDate(2020, 1, 6)
+        self.SetEndDate(2020, 1, 8)
 
         self.es20h20 = self.AddFutureContract(
             Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, datetime(2020, 3, 20)),
-            Resolution.Minute,
-            extendedMarketHours=True).Symbol
+            Resolution.Minute).Symbol
 
         self.es19m20 = self.AddFutureContract(
             Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, datetime(2020, 6, 19)),
-            Resolution.Minute,
-            extendedMarketHours=True).Symbol
+            Resolution.Minute).Symbol
 
         optionChains = self.OptionChainProvider.GetOptionContractList(self.es20h20, self.Time + timedelta(days=1))
-        optionChains += self.OptionChainProvider.GetOptionContractList(self.es19m20, self.Time)
+        optionChains += self.OptionChainProvider.GetOptionContractList(self.es19m20, self.Time + timedelta(days=1))
 
         for optionContract in optionChains:
-            self.expectedSymbolsReceived.append(self.AddFutureOptionContract(optionContract, Resolution.Minute, extendedMarketHours=True).Symbol)
+            self.expectedSymbolsReceived.append(self.AddFutureOptionContract(optionContract, Resolution.Minute).Symbol)
 
     def OnData(self, data: Slice):
         if not data.HasData:
@@ -73,8 +71,6 @@ class AddFutureOptionContractDataStreamingRegressionAlgorithm(QCAlgorithm):
             self.invested = True
 
     def OnEndOfAlgorithm(self):
-        super().OnEndOfAlgorithm()
-
         self.symbolsReceived = list(set(self.symbolsReceived))
         self.expectedSymbolsReceived = list(set(self.expectedSymbolsReceived))
 
