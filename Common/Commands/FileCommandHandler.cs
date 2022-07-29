@@ -19,6 +19,7 @@ using Newtonsoft.Json;
 using QuantConnect.Logging;
 using QuantConnect.Configuration;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Commands
 {
@@ -28,14 +29,16 @@ namespace QuantConnect.Commands
     public class FileCommandHandler : BaseCommandHandler
     {
         private readonly string _commandJsonFilePath;
-        private readonly Queue<ICommand> _commands = new Queue<ICommand>();
+        private readonly Queue<ICommand> _commands = new();
+        private const string _defaultCommandFile = "command.json";
+        private const string _commandFilePattern = "command*.json";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FileCommandHandler"/> class
         /// using the 'command-json-file' configuration value for the command json file
         /// </summary>
         public FileCommandHandler()
-            : this(Config.Get("command-json-file", "command.json"))
+            : this(Config.Get("command-json-file", _defaultCommandFile))
         {
         }
 
@@ -54,15 +57,15 @@ namespace QuantConnect.Commands
         /// <returns>The next command in the queue, if present, null if no commands present</returns>
         protected override IEnumerable<ICommand> GetCommands()
         {
-            if (File.Exists(_commandJsonFilePath))
+            foreach(var file in GetCommandFiles())
             {
                 // update the queue by reading the command file
-                ReadCommandFile();
-            }
+                ReadCommandFile(file.FullName);
 
-            while (_commands.Count != 0)
-            {
-                yield return _commands.Dequeue();
+                while (_commands.Count != 0)
+                {
+                    yield return _commands.Dequeue();
+                }
             }
         }
 
@@ -82,15 +85,31 @@ namespace QuantConnect.Commands
         }
 
         /// <summary>
+        /// Gets all the available command files
+        /// </summary>
+        /// <returns>Sorted enumerator of all the available command files</returns>
+        private IEnumerable<FileInfo> GetCommandFiles()
+        {
+            var dir = new DirectoryInfo(Directory.GetCurrentDirectory());
+            var files = dir.GetFiles(_commandFilePattern);
+            if (!files.Any(x => x.FullName == new FileInfo(_commandJsonFilePath).FullName))
+            {
+                var totalFiles = files.Append(new FileInfo(_commandJsonFilePath));
+                return totalFiles.OrderBy(q => q.Name);
+            }
+            return files.OrderBy(q => q.Name);
+        }
+
+        /// <summary>
         /// Reads the commnd file on disk and populates the queue with the commands
         /// </summary>
-        private void ReadCommandFile()
+        private void ReadCommandFile(string commandFilePath)
         {
             object deserialized;
             try
             {
-                if (!File.Exists(_commandJsonFilePath)) return;
-                var contents = File.ReadAllText(_commandJsonFilePath);
+                if (!File.Exists(commandFilePath)) return;
+                var contents = File.ReadAllText(commandFilePath);
                 deserialized = JsonConvert.DeserializeObject(contents, new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All });
             }
             catch (Exception err)
@@ -100,7 +119,7 @@ namespace QuantConnect.Commands
             }
 
             // remove the file when we're done reading it
-            File.Delete(_commandJsonFilePath);
+            File.Delete(commandFilePath);
 
             // try it as an enumerable
             var enumerable = deserialized as IEnumerable<ICommand>;
