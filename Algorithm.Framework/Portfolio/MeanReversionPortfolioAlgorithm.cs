@@ -11,37 +11,203 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
 */
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Algorithm;
+using System.Linq;
+using Accord.Math;
 using QuantConnect.Algorithm.Framework.Alphas;
-using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Indicators;
+using QuantConnect.Util;
 
-namespace QuantConnect.DataLibrary.Tests
+namespace QuantConnect.Algorithm.Framework.Portfolio
 {
     /// <summary>
-    /// Quiver Quantitative is a provider of alternative data.
+    /// Implementation of On-Line Moving Average Reversion (OLMAR)
     /// </summary>
-    public class MeanReversionPortfolioConstructionModelRegressionAlgorithm : QCAlgorithm
+    /// <remarks>Li, B., Hoi, S. C. (2012). On-line portfolio selection with moving average reversion. arXiv preprint arXiv:1206.4626.
+    /// Available at https://arxiv.org/ftp/arxiv/papers/1206/1206.4626.pdf</remarks>
+    /// <remarks>Using windowSize = 1 => Passive Aggressive Mean Reversion (PAMR) Portfolio</remarks>
+    public class MeanReversionPortfolioConstructionModel : PortfolioConstructionModel
     {
-        public override void Initialize()
-        {
-            SetStartDate(2020, 9, 1);
-            SetEndDate(2021, 2, 28);
-            SetCash(100000);
-            
-            SetSecurityInitializer(security => security.SetMarketPrice(GetLastKnownPrice(security)));
+        private double _eps;
+        private int _windowSize;
+        private Resolution _resolution;
+        private Dictionary<Symbol, SymbolData> _symbolData = new();
 
-            foreach (var ticker in new List<string>{"AAPL", "SPY"})
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MeanReversionPortfolioConstructionModel"/> class
+        /// </summary>
+        /// <param name="eps">Reversion threshold</param>
+        /// <param name="windowSize">Window size of mean price</param>
+        /// <param name="resolution">The resolution of the history price and rebalancing</param>
+        public MeanReversionPortfolioConstructionModel(double eps = 1, int windowSize = 20, Resolution resolution = Resolution.Daily)
+            : base()
+        {
+            _eps = eps;
+            _resolution = resolution;
+            _windowSize = windowSize;
+        }
+
+        /// <summary>
+        /// Will determine the target percent for each insight
+        /// </summary>
+        /// <param name="activeInsights">list of active insights</param>
+        /// <return>dictionary of insight and respective target weight</return>
+        protected override Dictionary<Insight, double> DetermineTargetPercent(List<Insight> activeInsights)
+        {
+            var targets = new Dictionary<Insight, double>();
+
+            // If we have no insights or non-ready just return an empty target list
+            if (activeInsights.IsNullOrEmpty() || 
+                !activeInsights.All(x => _symbolData[x.Symbol].IsReady()))
             {
-                AddEquity(ticker, Resolution.Daily);
+                return targets;
+            }
+
+            var m = activeInsights.Count();
+            // Initialize price vector and portfolio weightings vector
+            var b_t = Enumerable.Repeat((double) 1/m, m).ToArray();
+            // Initialize a price vector of the next prices relatives' projection
+            var xTilde = new double[m];
+
+            // Get next price relative predictions
+            // Using the previous price to simulate assumption of instant reversion
+            for (int i = 0; i < activeInsights.Count(); i++)
+            {
+                var insight = activeInsights[i];
+                var symbolData = _symbolData[insight.Symbol];
+
+                xTilde[i] = insight.Magnitude != null ?
+                            1 + (double) insight.Magnitude :
+                            (double)symbolData._sma.Current.Value / (double)symbolData._identity.Current.Value;
+            }
+
+            // Get step size of next portfolio
+            // \bar{x}_{t+1} = 1^T * \tilde{x}_{t+1} / m
+            // \lambda_{t+1} = max( 0, ( b_t * \tilde{x}_{t+1} - \epsilon ) / ||\tilde{x}_{t+1}  - \bar{x}_{t+1} * 1|| ^ 2 )
+            var xBar = xTilde.Average();
+            var assetsMeanDev = xTilde.Select(x => x - xBar).ToArray();
+            var secondNorm = Math.Pow(assetsMeanDev.Euclidean(), 2);
+            double stepSize;
+            
+            if (secondNorm == 0d)
+            {
+                stepSize = 0d;
+            }
+            else
+            {
+                stepSize = (b_t.InnerProduct(xTilde) - _eps) / secondNorm;
+                stepSize = Math.Max(0d, stepSize);
+            }
+
+            // Get next portfolio weightings
+            // b_{t+1} = b_t - step_size * ( \tilde{x}_{t+1}  - \bar{x}_{t+1} * 1 )
+            var b = b_t.Select((x, i) => x - assetsMeanDev[i] * stepSize);
+            // Normalize
+            var bNorm = SimplexProjection(b);
+
+            // update portfolio state
+            for (int i = 0; i < activeInsights.Count(); i++)
+            {
+                targets.Add(activeInsights[i], bNorm[i]);
+            }
+
+            return targets;
+        }
+
+        /// <summary>
+        /// Event fired each time the we add/remove securities from the data feed
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
+        /// <param name="changes">The security additions and removals from the algorithm</param>
+        public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
+        {
+            // clean up data for removed securities
+            foreach (var removed in changes.RemovedSecurities)
+            {
+                _symbolData.Remove(removed.Symbol, out var symbolData);
+                symbolData.Reset();
+            }
+
+            // initialize data for added securities
+            var symbols = changes.AddedSecurities.Select(x => x.Symbol);
+
+            foreach(var symbol in symbols)
+            {
+                if (!_symbolData.ContainsKey(symbol))
+                {
+                    _symbolData.Add(symbol, new SymbolData(algorithm, symbol, _windowSize, _resolution));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Cumulative Sum of a given sequence
+        /// </summary>
+        /// <param name="sequence">sequence to obtain cumulative sum</param>
+        /// <return>cumulative sum</return>
+        private IEnumerable<double> CumulativeSum(IEnumerable<double> sequence)
+        {
+            double sum = 0;
+            foreach(var item in sequence)
+            {
+                sum += item;
+                yield return sum;
+            }        
+        }
+
+        /// <summary>
+        /// Normalize the updated portfolio into weight vector:
+        /// v_{t+1} = arg min || v - v_{t+1} || ^ 2
+        /// </summary>
+        /// <remark>Duchi, J., Shalev-Shwartz, S., Singer, Y., and Chandra, T. (2008, July). 
+        /// Efficient projections onto the l1-ball for learning in high dimensions.
+        /// In Proceedings of the 25th international conference on Machine learning (pp. 272-279).</remark>
+        /// <param name="v">unnormalized weight vector</param>
+        /// <param name="b">total weight</param>
+        /// <return>normalized weight vector</return>
+        private double[] SimplexProjection(IEnumerable<double> v, double b = 1)
+        {
+            // Sort v into u in descending order
+            var u = v.OrderByDescending(x => x).ToArray();
+            var sv = CumulativeSum(u).ToArray();
+
+            var rho = Enumerable.Range(0, v.Count()).Where(i => u[i] > (sv[i] - b) / (i+1)).Last();
+            var theta = (sv[rho] - b) / (rho + 1);
+            var w = v.Select(x => Math.Max(x - theta, 0d)).ToArray();
+            return w;
+        }
+
+        public class SymbolData
+        {
+            public Identity _identity;
+            public SimpleMovingAverage _sma;
+
+            public SymbolData(QCAlgorithm algo, Symbol symbol, int windowSize, Resolution resolution)
+            {
+                // Indicator of price
+                _identity = algo.Identity(symbol, resolution);
+                // Moving average indicator for mean reversion level
+                _sma = algo.SMA(symbol, windowSize);
+
+                // Warmup indicator
+                algo.WarmUpIndicator(symbol, _identity, resolution);
+                algo.WarmUpIndicator(symbol, _sma, resolution);
+            }
+
+            public void Reset()
+            {
+                _identity.Reset();
+                _sma.Reset();
             }
             
-            AddAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromDays(1)));
-            SetPortfolioConstruction(new MeanReversionPortfolioConstructionModel());
+            public bool IsReady()
+            {
+                return (_identity.IsReady & _sma.IsReady);
+            }
         }
     }
 }

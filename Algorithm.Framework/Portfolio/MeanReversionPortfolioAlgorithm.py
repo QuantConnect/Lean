@@ -13,18 +13,139 @@
 
 from AlgorithmImports import *
 
-class MeanReversionPortfolioConstructionModelRegressionAlgorithm(QCAlgorithm):
+### <summary>
+### Implementation of On-Line Moving Average Reversion (OLMAR)
+### </summary>
+### <remarks>Li, B., Hoi, S. C. (2012). On-line portfolio selection with moving average reversion. arXiv preprint arXiv:1206.4626.
+### Available at https://arxiv.org/ftp/arxiv/papers/1206/1206.4626.pdf</remarks>
+### <remarks>Using windowSize = 1 => Passive Aggressive Mean Reversion (PAMR) Portfolio</remarks>
+class MeanReversionPortfolioConstructionModel(PortfolioConstructionModel):
     
-    def Initialize(self):
-        # Set starting date, cash and ending date of the backtest
-        self.SetStartDate(2020, 9, 1)
-        self.SetEndDate(2021, 2, 28)
-        self.SetCash(100000)
+    def __init__(self,
+                 eps = 1,
+                 window_size = 20,
+                 resolution = Resolution.Daily):
+        """Initialize the model
+        Args:
+            eps: Reversion threshold
+            window_size: Window size of mean price calculation
+            resolution: The resolution of the history price and rebalancing
+        """
+        super().__init__()
+        self.eps = eps
+        self.window_size = window_size
+        self.resolution = resolution
 
-        self.SetSecurityInitializer(lambda security: security.SetMarketPrice(self.GetLastKnownPrice(security)))
+        # Initialize a dictionary to store stock data
+        self.symbol_data = {}
+
+    def DetermineTargetPercent(self, activeInsights):
+        """Will determine the target percent for each insight
+        Args:
+            activeInsights: list of active insights
+        Returns:
+            dictionary of insight and respective target weight
+        """
+        targets = {}
+
+        # If we have no insights or non-ready just return an empty target list
+        if len(activeInsights) == 0 or not all([self.symbol_data[x.Symbol].IsReady for x in activeInsights]):
+            return targets
+
+        m = len(activeInsights)
+        # Initialize portfolio weightings vector
+        b_t = np.ones(m) * (1/m)
+        # Initialize a price vector of the next prices relatives' projection
+        x_tilde = np.zeros(m)
+
+        ### Get next price relative predictions
+        # Using the previous price to simulate assumption of instant reversion
+        for i, insight in enumerate(activeInsights):
+            symbol_data = self.symbol_data[insight.Symbol]
+            x_tilde[i] = 1 + insight.Magnitude \
+                if insight.Magnitude is not None \
+                else symbol_data.Sma.Current.Value / symbol_data.Identity.Current.Value
+
+        ### Get step size of next portfolio
+        # \bar{x}_{t+1} = 1^T * \tilde{x}_{t+1} / m
+        # \lambda_{t+1} = max( 0, ( b_t * \tilde{x}_{t+1} - \epsilon ) / ||\tilde{x}_{t+1}  - \bar{x}_{t+1} * 1|| ^ 2 )
+        x_bar = x_tilde.mean()
+        assets_mean_dev = x_tilde - x_bar
+        second_norm = (np.linalg.norm(assets_mean_dev)) ** 2
         
-        # Subscribe to data of the selected stocks
-        self.symbols = [self.AddEquity(ticker, Resolution.Daily).Symbol for ticker in ["SPY", "AAPL"]]
+        if second_norm == 0.0:
+            step_size = 0
+        else:
+            step_size = (np.dot(b_t, x_tilde) - self.eps) / second_norm
+            step_size = max(0, step_size)
 
-        self.AddAlpha(ConstantAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(1)))
-        self.SetPortfolioConstruction(MeanReversionPortfolioConstructionModel())
+        ### Get next portfolio weightings
+        # b_{t+1} = b_t - step_size * ( \tilde{x}_{t+1}  - \bar{x}_{t+1} * 1 )
+        b = b_t - step_size * assets_mean_dev
+        # Normalize
+        b_norm = self.SimplexProjection(b)
+
+        for i, insight in enumerate(activeInsights):
+            targets[insight] = b_norm[i]
+
+        return targets
+
+    def OnSecuritiesChanged(self, algorithm, changes):
+        """Event fired each time the we add/remove securities from the data feed
+        Args:
+            algorithm: The algorithm instance that experienced the change in securities
+            changes: The security additions and removals from the algorithm
+        """
+        # clean up data for removed securities
+        super().OnSecuritiesChanged(algorithm, changes)
+        for removed in changes.RemovedSecurities:
+            symbol_data = self.symbol_data.pop(removed.Symbol, None)
+            symbol_data.Reset()
+
+        # initialize data for added securities
+        symbols = [ x.Symbol for x in changes.AddedSecurities ]
+
+        for symbol in symbols:
+            if symbol not in self.symbol_data:
+                self.symbol_data[symbol] = SymbolData(algorithm, symbol, self.window_size, self.resolution)
+
+    def SimplexProjection(self, v, b=1):
+        """Normalize the updated portfolio into weight vector:
+        v_{t+1} = arg min || v - v_{t+1} || ^ 2
+        
+        Implementation from:
+        Duchi, J., Shalev-Shwartz, S., Singer, Y., & Chandra, T. (2008, July). 
+            Efficient projections onto the l 1-ball for learning in high dimensions.
+            In Proceedings of the 25th international conference on Machine learning 
+            (pp. 272-279).
+        """
+        v = np.asarray(v)
+
+        # Sort v into u in descending order
+        u = np.sort(v)[::-1]
+        sv = np.cumsum(u)
+
+        rho = np.where(u > (sv - b) / np.arange(1, len(v) + 1))[0][-1]
+        theta = (sv[rho] - b) / (rho + 1)
+        w = (v - theta)
+        w[w < 0] = 0
+        return w
+
+class SymbolData:
+    def __init__(self, algo, symbol, window_size, resolution):
+        # Indicator of price
+        self.Identity = algo.Identity(symbol, resolution)
+        # Moving average indicator for mean reversion level
+        self.Sma = algo.SMA(symbol, window_size, resolution)
+        
+        # Warmup indicator
+        algo.WarmUpIndicator(symbol, self.Identity, resolution)
+        algo.WarmUpIndicator(symbol, self.Sma, resolution)
+
+    def Reset(self):
+        self.Identity.Reset()
+        self.Sma.Reset()
+    
+    @property
+    def IsReady(self):
+        return self.Identity.IsReady and self.Sma.IsReady
