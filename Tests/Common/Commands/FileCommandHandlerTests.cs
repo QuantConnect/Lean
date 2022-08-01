@@ -29,6 +29,7 @@ namespace QuantConnect.Tests.Common.Commands
     [TestFixture]
     public class FileCommandHandlerTests
     {
+        // NOTE: command file name should follow the file pattern "command*.json"
         private const string SingleCommandFilePath = "command.json";
         private const string MultiCommandFilePath = "commands.json";
 
