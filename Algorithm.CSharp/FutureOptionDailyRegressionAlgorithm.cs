@@ -44,13 +44,12 @@ namespace QuantConnect.Algorithm.CSharp
                     Futures.Dairy.ClassIIIMilk,
                     Market.CME,
                     new DateTime(2012, 4, 1)),
-                Resolution,
-                extendedMarketHours: true).Symbol;
+                Resolution).Symbol;
 
             // Attempt to fetch a specific future option contract
             DcOption = OptionChainProvider.GetOptionContractList(dc, Time)
                 .Where(x => x.ID.StrikePrice == 17m && x.ID.OptionRight == OptionRight.Call)
-                .Select(x => AddFutureOptionContract(x, Resolution, extendedMarketHours: true).Symbol)
+                .Select(x => AddFutureOptionContract(x, Resolution).Symbol)
                 .FirstOrDefault();
 
             // Validate it is the expected contract

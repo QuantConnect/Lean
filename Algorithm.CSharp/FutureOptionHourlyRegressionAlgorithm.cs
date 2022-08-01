@@ -68,7 +68,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 180;
+        public override long DataPoints => 88;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -102,12 +102,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Fees", "$3.70"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "DC V5E8P9VAH3IC|DC V5E8P9SH0U0X"},
-            {"Fitness Score", "0.01"},
+            {"Fitness Score", "0.021"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-121.319"},
-            {"Portfolio Turnover", "0.021"},
+            {"Return Over Maximum Drawdown", "-136.054"},
+            {"Portfolio Turnover", "0.043"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},

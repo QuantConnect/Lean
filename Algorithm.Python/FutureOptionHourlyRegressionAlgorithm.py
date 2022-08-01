@@ -30,12 +30,11 @@ class FutureOptionHourlyRegressionAlgorithm(QCAlgorithm):
                 Market.CME,
                 datetime(2012, 4, 1)
             ),
-            resolution,
-            extendedMarketHours=True).Symbol
+            resolution).Symbol
 
         # Attempt to fetch a specific ITM future option contract
         dcOptions = [
-            self.AddFutureOptionContract(x, resolution, extendedMarketHours=True).Symbol for x in (self.OptionChainProvider.GetOptionContractList(self.dc, self.Time)) if x.ID.StrikePrice == 17 and x.ID.OptionRight == OptionRight.Call
+            self.AddFutureOptionContract(x, resolution).Symbol for x in (self.OptionChainProvider.GetOptionContractList(self.dc, self.Time)) if x.ID.StrikePrice == 17 and x.ID.OptionRight == OptionRight.Call
         ]
         self.dcOption = dcOptions[0]
 
