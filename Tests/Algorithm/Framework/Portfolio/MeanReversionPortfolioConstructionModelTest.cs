@@ -107,14 +107,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             if (language == Language.CSharp)
             {
-                return new MeanReversionPortfolioConstructionModel(1, 1, resolution);
+                return new MeanReversionPortfolioConstructionModel(reversionThreshold: 1, windowSize: 1, resolution: resolution);
             }
 
             using (Py.GIL())
             {
                 const string name = nameof(MeanReversionPortfolioConstructionModel);
                 var instance = Py.Import(name).GetAttr(name)
-                    .Invoke(1.ToPython(), 1.ToPython(), ((int)resolution).ToPython());
+                    .Invoke(reversionThreshold: 1.ToPython(), windowSize: 1.ToPython(), resolution: ((int)resolution).ToPython());
                 return new PortfolioConstructionModelPythonWrapper(instance);
             }
         }
