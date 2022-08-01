@@ -15,6 +15,7 @@ from AlgorithmImports import *
 from Portfolio.MeanReversionPortfolioConstructionModel import *
 
 class MeanReversionPortfolioAlgorithm(QCAlgorithm):
+    '''Example algorithm of using MeanReversionPortfolioConstructionModel'''
 
     def Initialize(self):
         # Set starting date, cash and ending date of the backtest

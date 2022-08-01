@@ -17,9 +17,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Accord.Math;
+using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
+using QuantConnect.Scheduling;
 using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
@@ -32,23 +34,128 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// <remarks>Using windowSize = 1 => Passive Aggressive Mean Reversion (PAMR) Portfolio</remarks>
     public class MeanReversionPortfolioConstructionModel : PortfolioConstructionModel
     {
-        private int _m = 0;
-        private double[] _b_t;
-        private double _eps;
+        private int _numOfAssets = 0;
+        private double[] _weightVector;
+        private decimal _reversionThreshold;
         private int _windowSize;
         private Resolution _resolution;
-        private Dictionary<Symbol, SymbolData> _symbolData = new();
+        private Dictionary<Symbol, MeanReversionSymbolData> _symbolData = new();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MeanReversionPortfolioConstructionModel"/> class
         /// </summary>
-        /// <param name="eps">Reversion threshold</param>
+        /// <param name="rebalancingDateRules">The date rules used to define the next expected rebalance time
+        /// in UTC</param>
+        /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
+        /// <param name="reversionThreshold">Reversion threshold</param>
         /// <param name="windowSize">Window size of mean price</param>
         /// <param name="resolution">The resolution of the history price and rebalancing</param>
-        public MeanReversionPortfolioConstructionModel(double eps = 1, int windowSize = 20, Resolution resolution = Resolution.Daily)
-            : base()
+        public MeanReversionPortfolioConstructionModel(IDateRule rebalancingDateRules,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort,
+            decimal reversionThreshold = 1, 
+            int windowSize = 20, 
+            Resolution resolution = Resolution.Daily)
+            : this(rebalancingDateRules.ToFunc())
         {
-            _eps = eps;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MeanReversionPortfolioConstructionModel"/> class
+        /// </summary>
+        /// <param name="rebalanceResolution">Rebalancing frequency</param>
+        /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
+        /// <param name="reversionThreshold">Reversion threshold</param>
+        /// <param name="windowSize">Window size of mean price</param>
+        /// <param name="resolution">The resolution of the history price and rebalancing</param>
+        public MeanReversionPortfolioConstructionModel(Resolution rebalanceResolution = Resolution.Daily,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort,
+            decimal reversionThreshold = 1, 
+            int windowSize = 20, 
+            Resolution resolution = Resolution.Daily)
+            : this(rebalanceResolution.ToTimeSpan())
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MeanReversionPortfolioConstructionModel"/> class
+        /// </summary>
+        /// <param name="timeSpan">Rebalancing frequency</param>
+        /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
+        /// <param name="reversionThreshold">Reversion threshold</param>
+        /// <param name="windowSize">Window size of mean price</param>
+        /// <param name="resolution">The resolution of the history price and rebalancing</param>
+        public MeanReversionPortfolioConstructionModel(TimeSpan timeSpan,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort,
+            decimal reversionThreshold = 1, 
+            int windowSize = 20, 
+            Resolution resolution = Resolution.Daily)
+            : this(dt => dt.Add(timeSpan))
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MeanReversionPortfolioConstructionModel"/> class
+        /// </summary>
+        /// <param name="rebalance">Rebalancing func or if a date rule, timedelta will be converted into func.
+        /// For a given algorithm UTC DateTime the func returns the next expected rebalance time
+        /// or null if unknown, in which case the function will be called again in the next loop. Returning current time
+        /// will trigger rebalance. If null will be ignored</param>
+        /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
+        /// <param name="reversionThreshold">Reversion threshold</param>
+        /// <param name="windowSize">Window size of mean price</param>
+        /// <param name="resolution">The resolution of the history price and rebalancing</param>
+        public MeanReversionPortfolioConstructionModel(PyObject rebalance,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort,
+            decimal reversionThreshold = 1, 
+            int windowSize = 20, 
+            Resolution resolution = Resolution.Daily)
+            : this((Func<DateTime, DateTime?>)null)
+        {
+            SetRebalancingFunc(rebalance);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MeanReversionPortfolioConstructionModel"/> class
+        /// </summary>
+        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance UTC time.
+        /// Returning current time will trigger rebalance. If null will be ignored</param>
+        /// will trigger rebalance. If null will be ignored</param>
+        /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
+        /// <param name="reversionThreshold">Reversion threshold</param>
+        /// <param name="windowSize">Window size of mean price</param>
+        /// <param name="resolution">The resolution of the history price and rebalancing</param>
+        public MeanReversionPortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort,
+            decimal reversionThreshold = 1, 
+            int windowSize = 20, 
+            Resolution resolution = Resolution.Daily)
+            : this(rebalancingFunc != null ? (Func<DateTime, DateTime?>)(timeUtc => rebalancingFunc(timeUtc)) : null)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MeanReversionPortfolioConstructionModel"/> class
+        /// </summary>
+        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance time
+        /// or null if unknown, in which case the function will be called again in the next loop. Returning current time
+        /// will trigger rebalance.</param>
+        /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
+        /// <param name="reversionThreshold">Reversion threshold</param>
+        /// <param name="windowSize">Window size of mean price</param>
+        /// <param name="resolution">The resolution of the history price and rebalancing</param>
+        public MeanReversionPortfolioConstructionModel(Func<DateTime, DateTime?> rebalancingFunc,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort,
+            decimal reversionThreshold = 1, 
+            int windowSize = 20, 
+            Resolution resolution = Resolution.Daily)
+            : base(rebalancingFunc)
+        {
+            if (portfolioBias == PortfolioBias.Short)
+            {
+                throw new Exception("Long position must be allowed in MeanReversionPortfolioConstructionModel.");
+            }
+            
+            _reversionThreshold = reversionThreshold;
             _resolution = resolution;
             _windowSize = windowSize;
         }
@@ -69,24 +176,24 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 return targets;
             }
 
-            var m = activeInsights.Count();
-            if (_m != m)
+            var numOfAssets = activeInsights.Count;
+            if (_numOfAssets != numOfAssets)
             {
-                _m = m;
+                _numOfAssets = numOfAssets;
                 // Initialize price vector and portfolio weightings vector
-                _b_t = Enumerable.Repeat((double) 1/_m, _m).ToArray();
+                _weightVector = Enumerable.Repeat((double) 1/_numOfAssets, _numOfAssets).ToArray();
             }
 
             // Get price relatives vs expected price (SMA)
-            var xTilde = GetPriceRelatives(activeInsights);
+            var priceRelatives = GetPriceRelatives(activeInsights);     // \tilde{x}_{t+1}
 
             // Get step size of next portfolio
             // \bar{x}_{t+1} = 1^T * \tilde{x}_{t+1} / m
             // \lambda_{t+1} = max( 0, ( b_t * \tilde{x}_{t+1} - \epsilon ) / ||\tilde{x}_{t+1}  - \bar{x}_{t+1} * 1|| ^ 2 )
-            var xBar = xTilde.Average();
-            var assetsMeanDev = xTilde.Select(x => x - xBar).ToArray();
+            var nextPrediction = priceRelatives.Average();      // \bar{x}_{t+1}
+            var assetsMeanDev = priceRelatives.Select(x => x - nextPrediction).ToArray();
             var secondNorm = Math.Pow(assetsMeanDev.Euclidean(), 2);
-            double stepSize;
+            double stepSize;        // \lambda_{t+1}
             
             if (secondNorm == 0d)
             {
@@ -94,22 +201,22 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             }
             else
             {
-                stepSize = (_b_t.InnerProduct(xTilde) - _eps) / secondNorm;
+                stepSize = (_weightVector.InnerProduct(priceRelatives) - (double)_reversionThreshold) / secondNorm;
                 stepSize = Math.Max(0d, stepSize);
             }
 
             // Get next portfolio weightings
             // b_{t+1} = b_t - step_size * ( \tilde{x}_{t+1}  - \bar{x}_{t+1} * 1 )
-            var b = _b_t.Select((x, i) => x - assetsMeanDev[i] * stepSize);
+            var nextPortfolio = _weightVector.Select((x, i) => x - assetsMeanDev[i] * stepSize);
             // Normalize
-            var bNorm = SimplexProjection(b);
+            var normalizedPortfolioWeightVector = SimplexProjection(nextPortfolio);
             // Save normalized result for the next portfolio step
-            _b_t = bNorm;
+            _weightVector = normalizedPortfolioWeightVector;
 
-            // update portfolio state
-            for (int i = 0; i < activeInsights.Count(); i++)
+            // Update portfolio state
+            for (int i = 0; i < _numOfAssets; i++)
             {
-                targets.Add(activeInsights[i], bNorm[i]);
+                targets.Add(activeInsights[i], normalizedPortfolioWeightVector[i]);
             }
 
             return targets;
@@ -123,19 +230,19 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         protected virtual double[] GetPriceRelatives(List<Insight> activeInsights)
         {
             // Initialize a price vector of the next prices relatives' projection
-            var xTilde = new double[_m];
+            var nextPriceRelatives = new double[_numOfAssets];
 
-            for (int i = 0; i < _m; i++)
+            for (int i = 0; i < _numOfAssets; i++)
             {
                 var insight = activeInsights[i];
                 var symbolData = _symbolData[insight.Symbol];
 
-                xTilde[i] = insight.Magnitude != null ?
+                nextPriceRelatives[i] = insight.Magnitude != null ?
                             1 + (double) insight.Magnitude :
-                            (double)symbolData._identity.Current.Value / (double)symbolData._sma.Current.Value;
+                            (double)symbolData.Identity.Current.Value / (double)symbolData.Sma.Current.Value;
             }
 
-            return xTilde;
+            return nextPriceRelatives;
         }
 
         /// <summary>
@@ -159,7 +266,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             {
                 if (!_symbolData.ContainsKey(symbol))
                 {
-                    _symbolData.Add(symbol, new SymbolData(algorithm, symbol, _windowSize, _resolution));
+                    _symbolData.Add(symbol, new MeanReversionSymbolData(algorithm, symbol, _windowSize, _resolution));
                 }
             }
         }
@@ -201,32 +308,32 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             return w;
         }
 
-        private class SymbolData
+        private class MeanReversionSymbolData
         {
-            public Identity _identity;
-            public SimpleMovingAverage _sma;
+            public Identity Identity;
+            public SimpleMovingAverage Sma;
 
-            public SymbolData(QCAlgorithm algo, Symbol symbol, int windowSize, Resolution resolution)
+            public MeanReversionSymbolData(QCAlgorithm algo, Symbol symbol, int windowSize, Resolution resolution)
             {
                 // Indicator of price
-                _identity = algo.Identity(symbol, resolution);
+                Identity = algo.Identity(symbol, resolution);
                 // Moving average indicator for mean reversion level
-                _sma = algo.SMA(symbol, windowSize);
+                Sma = algo.SMA(symbol, windowSize, resolution);
 
                 // Warmup indicator
-                algo.WarmUpIndicator(symbol, _identity, resolution);
-                algo.WarmUpIndicator(symbol, _sma, resolution);
+                algo.WarmUpIndicator(symbol, Identity, resolution);
+                algo.WarmUpIndicator(symbol, Sma, resolution);
             }
 
             public void Reset()
             {
-                _identity.Reset();
-                _sma.Reset();
+                Identity.Reset();
+                Sma.Reset();
             }
             
             public bool IsReady()
             {
-                return (_identity.IsReady & _sma.IsReady);
+                return (Identity.IsReady & Sma.IsReady);
             }
         }
     }
