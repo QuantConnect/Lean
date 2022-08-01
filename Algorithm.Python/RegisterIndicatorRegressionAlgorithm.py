@@ -25,7 +25,7 @@ class RegisterIndicatorRegressionAlgorithm(QCAlgorithm):
 
         SP500 = Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME)
         self._symbol = _symbol = self.FutureChainProvider.GetFutureContractList(SP500, (self.StartDate + timedelta(days=1)))[0]
-        self.AddFutureContract(_symbol, extendedMarketHours=True)
+        self.AddFutureContract(_symbol)
 
         # this collection will hold all indicators and at the end of the algorithm we will assert that all of them are ready
         self._indicators = []
@@ -95,7 +95,7 @@ class RegisterIndicatorRegressionAlgorithm(QCAlgorithm):
 
     # OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
     def OnData(self, data):
-        if not self.Portfolio.Invested and self.Securities[self._symbol].Exchange.ExchangeOpen:
+        if not self.Portfolio.Invested and data.ContainsKey(self._symbol):
            self.SetHoldings(self._symbol, 0.5)
 
     def OnEndOfAlgorithm(self):
