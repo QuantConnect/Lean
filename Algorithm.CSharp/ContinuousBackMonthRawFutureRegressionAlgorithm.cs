@@ -45,8 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
             _continuousContract = AddFuture(Futures.Indices.SP500EMini,
                 dataNormalizationMode: DataNormalizationMode.Raw,
                 dataMappingMode: DataMappingMode.FirstDayMonth,
-                contractDepthOffset: 1,
-                extendedMarketHours: true
+                contractDepthOffset: 1
             );
         }
 
@@ -80,7 +79,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
 
-            if (_lastDateLog.Month != Time.Month && _continuousContract.HasData && _continuousContract.Exchange.ExchangeOpen)
+            if (_lastDateLog.Month != Time.Month && _continuousContract.HasData)
             {
                 _lastDateLog = Time;
 
@@ -135,7 +134,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 815242;
+        public long DataPoints => 255603;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -148,32 +147,32 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "2"},
-            {"Average Win", "1.51%"},
+            {"Average Win", "1.50%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "3.015%"},
+            {"Compounding Annual Return", "2.994%"},
             {"Drawdown", "1.600%"},
             {"Expectancy", "0"},
-            {"Net Profit", "1.509%"},
-            {"Sharpe Ratio", "0.994"},
-            {"Probabilistic Sharpe Ratio", "49.259%"},
+            {"Net Profit", "1.496%"},
+            {"Sharpe Ratio", "0.814"},
+            {"Probabilistic Sharpe Ratio", "42.523%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "100%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0"},
-            {"Beta", "0.094"},
-            {"Annual Standard Deviation", "0.021"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-2.66"},
-            {"Tracking Error", "0.077"},
-            {"Treynor Ratio", "0.223"},
+            {"Alpha", "-0.005"},
+            {"Beta", "0.114"},
+            {"Annual Standard Deviation", "0.026"},
+            {"Annual Variance", "0.001"},
+            {"Information Ratio", "-2.672"},
+            {"Tracking Error", "0.076"},
+            {"Treynor Ratio", "0.184"},
             {"Total Fees", "$3.70"},
-            {"Estimated Strategy Capacity", "$1300000000.00"},
+            {"Estimated Strategy Capacity", "$2200000000.00"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
             {"Fitness Score", "0.007"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "0.612"},
-            {"Return Over Maximum Drawdown", "3.434"},
+            {"Sortino Ratio", "0.275"},
+            {"Return Over Maximum Drawdown", "2.605"},
             {"Portfolio Turnover", "0.01"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -188,7 +187,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "a9d063ecc622a6270b6a5aa5cd345af9"}
+            {"OrderListHash", "ebeeac4c57ccacef7b458b6160190f5b"}
         };
     }
 }
