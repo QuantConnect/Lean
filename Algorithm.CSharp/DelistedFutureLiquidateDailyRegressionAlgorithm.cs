@@ -25,10 +25,17 @@ namespace QuantConnect.Algorithm.CSharp
     {
         protected override Resolution Resolution => Resolution.Daily;
 
+        protected override void PlaceOrder(Symbol symbol)
+        {
+            // We place a limit order because on daily resolution, data may come at a time when market is closed, so market orders are not allowed.
+            // Also, we use a very high limit price to ensure the order is filled right away with the next bar.
+            LimitOrder(symbol, 1, Securities[symbol].Price * 2m);
+        }
+
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 1637;
+        public override long DataPoints => 1450;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -39,29 +46,29 @@ namespace QuantConnect.Algorithm.CSharp
             {"Average Win", "7.61%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "37.073%"},
-            {"Drawdown", "1.000%"},
+            {"Drawdown", "0.300%"},
             {"Expectancy", "0"},
             {"Net Profit", "7.604%"},
-            {"Sharpe Ratio", "2.561"},
-            {"Probabilistic Sharpe Ratio", "92.196%"},
+            {"Sharpe Ratio", "3.103"},
+            {"Probabilistic Sharpe Ratio", "99.007%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "100%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.199"},
-            {"Beta", "0.131"},
-            {"Annual Standard Deviation", "0.098"},
-            {"Annual Variance", "0.01"},
-            {"Information Ratio", "-1.205"},
-            {"Tracking Error", "0.121"},
-            {"Treynor Ratio", "1.917"},
+            {"Alpha", "0.141"},
+            {"Beta", "0.272"},
+            {"Annual Standard Deviation", "0.081"},
+            {"Annual Variance", "0.006"},
+            {"Information Ratio", "-1.511"},
+            {"Tracking Error", "0.098"},
+            {"Treynor Ratio", "0.918"},
             {"Total Fees", "$1.85"},
-            {"Estimated Strategy Capacity", "$64000000000.00"},
+            {"Estimated Strategy Capacity", "$62000000000.00"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
-            {"Fitness Score", "0.018"},
+            {"Fitness Score", "0.019"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "5.179"},
-            {"Return Over Maximum Drawdown", "38.362"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "112.785"},
             {"Portfolio Turnover", "0.019"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
