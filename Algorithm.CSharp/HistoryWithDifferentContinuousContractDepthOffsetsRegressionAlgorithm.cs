@@ -34,7 +34,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2013, 10, 6);
             SetEndDate(2014, 1, 1);
-            _continuousContractSymbol = AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, extendedMarketHours: true).Symbol;
+            _continuousContractSymbol = AddFuture(Futures.Indices.SP500EMini, Resolution.Daily).Symbol;
         }
 
         public override void OnEndOfAlgorithm()
@@ -42,8 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
             var contractDepthOffsets = Enumerable.Range(0, 3).ToList();
             var historyResults = contractDepthOffsets.Select(contractDepthOffset =>
             {
-                return History(new [] { _continuousContractSymbol }, StartDate, EndDate, Resolution.Daily, contractDepthOffset: contractDepthOffset,
-                    extendedMarket: true).ToList();
+                return History(new [] { _continuousContractSymbol }, StartDate, EndDate, Resolution.Daily, contractDepthOffset: contractDepthOffset).ToList();
             }).ToList();
 
             if (historyResults.Any(x => x.Count == 0 || x.Count != historyResults[0].Count))
@@ -130,12 +129,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1337;
+        public long DataPoints => 1187;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 449;
+        public int AlgorithmHistoryDataPoints => 366;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
