@@ -36,7 +36,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 1, 1);
 
             _aaplEquitySymbol = AddEquity("AAPL", Resolution.Daily).Symbol;
-            _esFutureSymbol = AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, extendedMarketHours: true).Symbol;
+            _esFutureSymbol = AddFuture(Futures.Indices.SP500EMini, Resolution.Daily).Symbol;
         }
 
         public override void OnEndOfAlgorithm()
@@ -46,7 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
                 DataNormalizationMode.Adjusted,
                 DataNormalizationMode.SplitAdjusted
             };
-            CheckHistoryResultsForDataNormalizationModes(_aaplEquitySymbol, StartDate, EndDate, Resolution.Daily, equityDataNormalizationModes, false);
+            CheckHistoryResultsForDataNormalizationModes(_aaplEquitySymbol, StartDate, EndDate, Resolution.Daily, equityDataNormalizationModes);
 
             var futureDataNormalizationModes = new DataNormalizationMode[]{
                 DataNormalizationMode.Raw,
@@ -54,14 +54,14 @@ namespace QuantConnect.Algorithm.CSharp
                 DataNormalizationMode.BackwardsPanamaCanal,
                 DataNormalizationMode.ForwardPanamaCanal
             };
-            CheckHistoryResultsForDataNormalizationModes(_esFutureSymbol, StartDate, EndDate, Resolution.Daily, futureDataNormalizationModes, true);
+            CheckHistoryResultsForDataNormalizationModes(_esFutureSymbol, StartDate, EndDate, Resolution.Daily, futureDataNormalizationModes);
         }
 
         private void CheckHistoryResultsForDataNormalizationModes(Symbol symbol, DateTime start, DateTime end, Resolution resolution,
-            DataNormalizationMode[] dataNormalizationModes, bool extendedMarket = false)
+            DataNormalizationMode[] dataNormalizationModes)
         {
             var historyResults = dataNormalizationModes
-                .Select(x => History(new [] { symbol }, start, end, resolution, dataNormalizationMode: x, extendedMarket: extendedMarket).ToList())
+                .Select(x => History(new [] { symbol }, start, end, resolution, dataNormalizationMode: x).ToList())
                 .ToList();
 
             if (historyResults.Any(x => x.Count == 0 || x.Count != historyResults.First().Count))
@@ -93,12 +93,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1387;
+        public long DataPoints => 1246;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 772;
+        public int AlgorithmHistoryDataPoints => 668;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
