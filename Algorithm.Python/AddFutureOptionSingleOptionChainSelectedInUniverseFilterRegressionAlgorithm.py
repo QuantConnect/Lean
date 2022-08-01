@@ -26,13 +26,10 @@ class AddFutureOptionSingleOptionChainSelectedInUniverseFilterRegressionAlgorith
         self.expectedSymbolsReceived = []
         self.dataReceived = {}
 
-        # Required for FOPs to use extended market hours untill GH issue #6491 is resolved.
-        self.UniverseSettings.ExtendedMarketHours = True
-
         self.SetStartDate(2020, 1, 4)
-        self.SetEndDate(2020, 1, 6)
+        self.SetEndDate(2020, 1, 8)
 
-        self.es = self.AddFuture(Futures.Indices.SP500EMini, Resolution.Minute, Market.CME, extendedMarketHours=True)
+        self.es = self.AddFuture(Futures.Indices.SP500EMini, Resolution.Minute, Market.CME)
         self.es.SetFilter(lambda futureFilter: futureFilter.Expiration(0, 365).ExpirationCycle([3, 6]))
 
         self.AddFutureOption(self.es.Symbol, self.OptionContractUniverseFilterFunction)
