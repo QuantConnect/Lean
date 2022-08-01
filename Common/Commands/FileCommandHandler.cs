@@ -29,6 +29,7 @@ namespace QuantConnect.Commands
     {
         private readonly Queue<ICommand> _commands = new();
         private const string _commandFilePattern = "command*.json";
+        private const string _resultFileBaseName = "result-command";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FileCommandHandler"/> class
@@ -79,7 +80,7 @@ namespace QuantConnect.Commands
                 Log.Error($"FileCommandHandler.Acknowledge(): command Id is null or empty, will skip writting result file");
                 return;
             }
-            var resultFilePath = $"command-result-{command.Id}.json";
+            var resultFilePath = $"{_resultFileBaseName}-{command.Id}.json";
             File.WriteAllText($"{resultFilePath}", JsonConvert.SerializeObject(commandResultPacket));
             Log.Trace($"FileCommandHandler.Acknowledge(): writing result to file {resultFilePath}");
         }
