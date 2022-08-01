@@ -21,21 +21,21 @@ using QuantConnect.Interfaces;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm to check we are getting the correct market open and close times
+    /// Regression algorithm to check we are getting the correct market open and close times when extended market hours are used
     /// </summary>
-    public class FutureMarketOpenAndCloseRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class FutureMarketOpenAndCloseWithExtendedMarketRegressionAlgorithm : FutureMarketOpenAndCloseRegressionAlgorithm
     {
-        protected virtual bool ExtendedMarketHours => false;
-
-        protected virtual List<DateTime> AfterMarketOpen => new List<DateTime>() {
-            new DateTime(2022, 02, 01, 9, 30, 0),
-            new DateTime(2022, 02, 02, 9, 30, 0),
-            new DateTime(2022, 02, 03, 9, 30, 0),
-            new DateTime(2022, 02, 04, 9, 30, 0),
-            new DateTime(2022, 02, 07, 9, 30, 0),
-            new DateTime(2022, 02, 08, 9, 30, 0)
+        protected override bool ExtendedMarketHours => true;
+        protected override List<DateTime> AfterMarketOpen => new List<DateTime>() {
+            new DateTime(2022, 02, 01, 16, 30, 0),
+            new DateTime(2022, 02, 02, 16, 30, 0),
+            new DateTime(2022, 02, 03, 16, 30, 0),
+            new DateTime(2022, 02, 04, 16, 30, 0),
+            new DateTime(2022, 02, 06, 18, 0, 0),
+            new DateTime(2022, 02, 07, 16, 30, 0),
+            new DateTime(2022, 02, 08, 16, 30, 0)
         };
-        protected virtual List<DateTime> BeforeMarketClose => new List<DateTime>()
+        protected override List<DateTime> BeforeMarketClose => new List<DateTime>()
         {
             new DateTime(2022, 02, 01, 16, 15, 0),
             new DateTime(2022, 02, 02, 16, 15, 0),
@@ -44,73 +44,21 @@ namespace QuantConnect.Algorithm.CSharp
             new DateTime(2022, 02, 07, 16, 15, 0),
             new DateTime(2022, 02, 08, 16, 15, 0)
         };
-        private Queue<DateTime> _afterMarketOpenQueue;
-        private Queue<DateTime> _beforeMarketCloseQueue;
-
-        public override void Initialize()
-        {
-            SetStartDate(2022, 02, 01);
-            SetEndDate(2022, 02, 08);
-            var esFuture = AddFuture("ES", extendedMarketHours: ExtendedMarketHours).Symbol;
-
-            _afterMarketOpenQueue = new Queue<DateTime>(AfterMarketOpen);
-            _beforeMarketCloseQueue = new Queue<DateTime>(BeforeMarketClose);
-
-            Schedule.On(DateRules.EveryDay(esFuture),
-                TimeRules.AfterMarketOpen(esFuture, extendedMarketOpen: ExtendedMarketHours),
-                EveryDayAfterMarketOpen);
-
-            Schedule.On(DateRules.EveryDay(esFuture),
-                TimeRules.BeforeMarketClose(esFuture, extendedMarketClose: ExtendedMarketHours),
-                EveryDayBeforeMarketClose);
-        }
-
-        public void EveryDayBeforeMarketClose()
-        {
-            var expectedMarketClose = _beforeMarketCloseQueue.Dequeue();
-            if (Time != expectedMarketClose)
-            {
-                throw new Exception($"Expected market close date was {expectedMarketClose} but received {Time}");
-            }
-        }
-
-        public void EveryDayAfterMarketOpen()
-        {
-            var expectedMarketOpen = _afterMarketOpenQueue.Dequeue();
-            if (Time != expectedMarketOpen)
-            {
-                throw new Exception($"Expected market open date was {expectedMarketOpen} but received {Time}");
-            }
-        }
-
-        public override void OnEndOfAlgorithm()
-        {
-            if (!_afterMarketOpenQueue.Any() || !_beforeMarketCloseQueue.Any())
-            {
-                throw new Exception($"_afterMarketOpenQueue and _beforeMarketCloseQueue should be empty");
-            }
-        }
-        public bool CanRunLocally { get; } = true;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public virtual Language[] Languages { get; } = { Language.CSharp};
+        public override Language[] Languages { get; } = { Language.CSharp};
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 7;
-
-        /// </summary>
-        /// Data Points count of the algorithm history
-        /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public override long DataPoints => 7;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "0"},
             {"Average Win", "0%"},
