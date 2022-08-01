@@ -125,7 +125,7 @@ class MeanReversionPortfolioConstructionModel(PortfolioConstructionModel):
 
         for symbol in symbols:
             if symbol not in self.symbol_data:
-                self.symbol_data[symbol] = SymbolData(algorithm, symbol, self.window_size, self.resolution)
+                self.symbol_data[symbol] = self.SymbolData(algorithm, symbol, self.window_size, self.resolution)
 
     def SimplexProjection(self, v, b=1):
         """Normalize the updated portfolio into weight vector:
@@ -149,21 +149,21 @@ class MeanReversionPortfolioConstructionModel(PortfolioConstructionModel):
         w[w < 0] = 0
         return w
 
-class SymbolData:
-    def __init__(self, algo, symbol, window_size, resolution):
-        # Indicator of price
-        self.Identity = algo.Identity(symbol, resolution)
-        # Moving average indicator for mean reversion level
-        self.Sma = algo.SMA(symbol, window_size, resolution)
-        
-        # Warmup indicator
-        algo.WarmUpIndicator(symbol, self.Identity, resolution)
-        algo.WarmUpIndicator(symbol, self.Sma, resolution)
+    class SymbolData:
+        def __init__(self, algo, symbol, window_size, resolution):
+            # Indicator of price
+            self.Identity = algo.Identity(symbol, resolution)
+            # Moving average indicator for mean reversion level
+            self.Sma = algo.SMA(symbol, window_size, resolution)
+            
+            # Warmup indicator
+            algo.WarmUpIndicator(symbol, self.Identity, resolution)
+            algo.WarmUpIndicator(symbol, self.Sma, resolution)
 
-    def Reset(self):
-        self.Identity.Reset()
-        self.Sma.Reset()
-    
-    @property
-    def IsReady(self):
-        return self.Identity.IsReady and self.Sma.IsReady
+        def Reset(self):
+            self.Identity.Reset()
+            self.Sma.Reset()
+        
+        @property
+        def IsReady(self):
+            return self.Identity.IsReady and self.Sma.IsReady

@@ -201,7 +201,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             return w;
         }
 
-        public class SymbolData
+        private class SymbolData
         {
             public Identity _identity;
             public SimpleMovingAverage _sma;
