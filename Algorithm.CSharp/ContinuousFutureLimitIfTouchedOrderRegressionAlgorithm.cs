@@ -41,8 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             _continuousContract = AddFuture(Futures.Indices.SP500EMini,
                 dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
-                dataMappingMode: DataMappingMode.LastTradingDay,
-                extendedMarketHours: true
+                dataMappingMode: DataMappingMode.LastTradingDay
             );
         }
 
