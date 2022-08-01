@@ -36,6 +36,7 @@ class MeanReversionPortfolioConstructionModel(PortfolioConstructionModel):
         self.window_size = window_size
         self.resolution = resolution
 
+        self.m = 0
         # Initialize a dictionary to store stock data
         self.symbol_data = {}
 
@@ -53,18 +54,13 @@ class MeanReversionPortfolioConstructionModel(PortfolioConstructionModel):
             return targets
 
         m = len(activeInsights)
-        # Initialize portfolio weightings vector
-        b_t = np.ones(m) * (1/m)
-        # Initialize a price vector of the next prices relatives' projection
-        x_tilde = np.zeros(m)
-
-        ### Get next price relative predictions
-        # Using the previous price to simulate assumption of instant reversion
-        for i, insight in enumerate(activeInsights):
-            symbol_data = self.symbol_data[insight.Symbol]
-            x_tilde[i] = 1 + insight.Magnitude \
-                if insight.Magnitude is not None \
-                else symbol_data.Sma.Current.Value / symbol_data.Identity.Current.Value
+        if self.m != m:
+            self.m = m
+            # Initialize portfolio weightings vector
+            self.b_t = np.ones(m) * (1/m)
+            
+        ### Get price relatives vs expected price (SMA)
+        x_tilde = self.GetPriceRelative(activeInsights)
 
         ### Get step size of next portfolio
         # \bar{x}_{t+1} = 1^T * \tilde{x}_{t+1} / m
@@ -76,19 +72,41 @@ class MeanReversionPortfolioConstructionModel(PortfolioConstructionModel):
         if second_norm == 0.0:
             step_size = 0
         else:
-            step_size = (np.dot(b_t, x_tilde) - self.eps) / second_norm
+            step_size = (np.dot(self.b_t, x_tilde) - self.eps) / second_norm
             step_size = max(0, step_size)
 
         ### Get next portfolio weightings
         # b_{t+1} = b_t - step_size * ( \tilde{x}_{t+1}  - \bar{x}_{t+1} * 1 )
-        b = b_t - step_size * assets_mean_dev
+        b = self.b_t - step_size * assets_mean_dev
         # Normalize
         b_norm = self.SimplexProjection(b)
+        # Save normalized result for the next portfolio step
+        self.b_t = b_norm
 
         for i, insight in enumerate(activeInsights):
             targets[insight] = b_norm[i]
 
         return targets
+    
+    def GetPriceRelative(self, activeInsights):
+        """Get price relatives with reference level of SMA
+        Args:
+            activeInsights: list of active insights
+        Returns:
+            array of price relatives vector
+        """
+        # Initialize a price vector of the next prices relatives' projection
+        x_tilde = np.zeros(self.m)
+
+        ### Get next price relative predictions
+        # Using the previous price to simulate assumption of instant reversion
+        for i, insight in enumerate(activeInsights):
+            symbol_data = self.symbol_data[insight.Symbol]
+            x_tilde[i] = 1 + insight.Magnitude \
+                if insight.Magnitude is not None \
+                else symbol_data.Identity.Current.Value / symbol_data.Sma.Current.Value
+        
+        return x_tilde
 
     def OnSecuritiesChanged(self, algorithm, changes):
         """Event fired each time the we add/remove securities from the data feed

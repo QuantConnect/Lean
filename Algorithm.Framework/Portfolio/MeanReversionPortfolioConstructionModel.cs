@@ -32,6 +32,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// <remarks>Using windowSize = 1 => Passive Aggressive Mean Reversion (PAMR) Portfolio</remarks>
     public class MeanReversionPortfolioConstructionModel : PortfolioConstructionModel
     {
+        private int _m = 0;
+        private double[] _b_t;
         private double _eps;
         private int _windowSize;
         private Resolution _resolution;
@@ -68,22 +70,15 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             }
 
             var m = activeInsights.Count();
-            // Initialize price vector and portfolio weightings vector
-            var b_t = Enumerable.Repeat((double) 1/m, m).ToArray();
-            // Initialize a price vector of the next prices relatives' projection
-            var xTilde = new double[m];
-
-            // Get next price relative predictions
-            // Using the previous price to simulate assumption of instant reversion
-            for (int i = 0; i < activeInsights.Count(); i++)
+            if (_m != m)
             {
-                var insight = activeInsights[i];
-                var symbolData = _symbolData[insight.Symbol];
-
-                xTilde[i] = insight.Magnitude != null ?
-                            1 + (double) insight.Magnitude :
-                            (double)symbolData._sma.Current.Value / (double)symbolData._identity.Current.Value;
+                _m = m;
+                // Initialize price vector and portfolio weightings vector
+                _b_t = Enumerable.Repeat((double) 1/_m, _m).ToArray();
             }
+
+            // Get price relatives vs expected price (SMA)
+            var xTilde = GetPriceRelatives(activeInsights);
 
             // Get step size of next portfolio
             // \bar{x}_{t+1} = 1^T * \tilde{x}_{t+1} / m
@@ -99,15 +94,17 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             }
             else
             {
-                stepSize = (b_t.InnerProduct(xTilde) - _eps) / secondNorm;
+                stepSize = (_b_t.InnerProduct(xTilde) - _eps) / secondNorm;
                 stepSize = Math.Max(0d, stepSize);
             }
 
             // Get next portfolio weightings
             // b_{t+1} = b_t - step_size * ( \tilde{x}_{t+1}  - \bar{x}_{t+1} * 1 )
-            var b = b_t.Select((x, i) => x - assetsMeanDev[i] * stepSize);
+            var b = _b_t.Select((x, i) => x - assetsMeanDev[i] * stepSize);
             // Normalize
             var bNorm = SimplexProjection(b);
+            // Save normalized result for the next portfolio step
+            _b_t = bNorm;
 
             // update portfolio state
             for (int i = 0; i < activeInsights.Count(); i++)
@@ -116,6 +113,29 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             }
 
             return targets;
+        }
+
+        /// <summary>
+        /// Get price relatives with reference level of SMA
+        /// </summary>
+        /// <param name="activeInsights">list of active insights</param>
+        /// <return>array of price relatives vector</return>
+        protected virtual double[] GetPriceRelatives(List<Insight> activeInsights)
+        {
+            // Initialize a price vector of the next prices relatives' projection
+            var xTilde = new double[_m];
+
+            for (int i = 0; i < _m; i++)
+            {
+                var insight = activeInsights[i];
+                var symbolData = _symbolData[insight.Symbol];
+
+                xTilde[i] = insight.Magnitude != null ?
+                            1 + (double) insight.Magnitude :
+                            (double)symbolData._identity.Current.Value / (double)symbolData._sma.Current.Value;
+            }
+
+            return xTilde;
         }
 
         /// <summary>
