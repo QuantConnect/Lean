@@ -103,7 +103,7 @@ namespace QuantConnect.Algorithm.CSharp
             var count = 0;
             do
             {
-                if (Securities[SP500].Exchange.Hours.IsOpen(start.AddMinutes(-1), true))
+                if (Securities[SP500].Exchange.Hours.IsOpen(start.AddMinutes(-1), false))
                 {
                     if (times[count] != start)
                     {

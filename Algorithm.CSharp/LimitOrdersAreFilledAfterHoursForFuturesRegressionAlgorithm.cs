@@ -42,6 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2013, 10, 6);
             SetEndDate(2013, 10, 10);
+            // SetCash(100000000);
 
             _continuousContract = AddFuture(Futures.Indices.SP500EMini,
                 dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
@@ -77,7 +78,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
-            if (Time.TimeOfDay.Hours > 17 && !_invested)
+            if (Time.TimeOfDay.Hours > 17 && !Portfolio.Invested)
             {
                 // Limit order should be allowed for futures outside of regular market hours.
                 // Use a very high limit price so the limit orders get filled immediately

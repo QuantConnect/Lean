@@ -14,6 +14,7 @@
 */
 
 using System.Collections.Generic;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -25,10 +26,17 @@ namespace QuantConnect.Algorithm.CSharp
     {
         protected override Resolution Resolution => Resolution.Daily;
 
+        protected override void PlaceOrder(Symbol symbol)
+        {
+            // We place a limit order because on daily resolution, data may come at a time when market is closed, so market orders are not allowed.
+            // Also, we use a very high limit price to ensure the order is filled right away with the next bar.
+            LimitOrder(symbol, 1, Securities[symbol].AskPrice * 2m);
+        }
+
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 15192;
+        public override long DataPoints => 13223;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -51,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-1.067"},
+            {"Information Ratio", "-1.068"},
             {"Tracking Error", "0.107"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
@@ -76,7 +84,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "fac8ea4893504397dad0c7468e795e99"}
+            {"OrderListHash", "350df6bbe235b6b24317a9c1a1ef3a24"}
         };
     }
 }

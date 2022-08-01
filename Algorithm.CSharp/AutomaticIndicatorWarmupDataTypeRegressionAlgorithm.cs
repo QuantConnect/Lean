@@ -34,15 +34,13 @@ namespace QuantConnect.Algorithm.CSharp
         {
             UniverseSettings.DataNormalizationMode = DataNormalizationMode.Raw;
             EnableAutomaticIndicatorWarmUp = true;
-            SetStartDate(2013, 10, 07);
-            SetEndDate(2013, 10, 09);
+            SetStartDate(2013, 10, 08);
+            SetEndDate(2013, 10, 10);
 
             var SP500 = QuantConnect.Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME);
             _symbol = FutureChainProvider.GetFutureContractList(SP500, StartDate).First();
 
-            // Test case: custom IndicatorBase<QuoteBar> indicator using Future unsubscribed symbol.
-            // This is required only to include extended market hours in history data
-            UniverseSettings.ExtendedMarketHours = true;
+            // Test case: custom IndicatorBase<QuoteBar> indicator using Future unsubscribed symbol
             var indicator1 = new CustomIndicator();
             AssertIndicatorState(indicator1, isReady: false);
             WarmUpIndicator(_symbol, indicator1);
@@ -53,8 +51,6 @@ namespace QuantConnect.Algorithm.CSharp
             AssertIndicatorState(sma1, isReady: false);
             WarmUpIndicator(_symbol, sma1);
             AssertIndicatorState(sma1, isReady: true);
-            // No need for this anymore, since the future contract will be added with extended market hours
-            UniverseSettings.ExtendedMarketHours = false;
 
             // Test case: SimpleMovingAverage<IndicatorDataPoint> using Equity unsubscribed symbol
             var spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
@@ -64,7 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
             AssertIndicatorState(sma, isReady: true);
 
             // We add the symbol
-            AddFutureContract(_symbol, extendedMarketHours: true);
+            AddFutureContract(_symbol);
             AddEquity("SPY");
             // force spy for use Raw data mode so that it matches the used when unsubscribed which uses the universe settings
             SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(spy).SetDataNormalizationMode(DataNormalizationMode.Raw);
@@ -150,12 +146,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 14531;
+        public long DataPoints => 6291;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 1502;
+        public int AlgorithmHistoryDataPoints => 84;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -165,31 +161,31 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-99.994%"},
-            {"Drawdown", "19.300%"},
+            {"Compounding Annual Return", "740050.669%"},
+            {"Drawdown", "15.900%"},
             {"Expectancy", "0"},
-            {"Net Profit", "-7.741%"},
-            {"Sharpe Ratio", "-1.417"},
+            {"Net Profit", "6.834%"},
+            {"Sharpe Ratio", "203371534970.089"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "2.898"},
-            {"Beta", "5.181"},
-            {"Annual Standard Deviation", "0.706"},
-            {"Annual Variance", "0.498"},
-            {"Information Ratio", "-0.435"},
-            {"Tracking Error", "0.569"},
-            {"Treynor Ratio", "-0.193"},
+            {"Alpha", "455512150082.735"},
+            {"Beta", "9.228"},
+            {"Annual Standard Deviation", "2.24"},
+            {"Annual Variance", "5.017"},
+            {"Information Ratio", "228087504290.401"},
+            {"Tracking Error", "1.997"},
+            {"Treynor Ratio", "49360110140.591"},
             {"Total Fees", "$20.35"},
-            {"Estimated Strategy Capacity", "$180000000.00"},
+            {"Estimated Strategy Capacity", "$200000000.00"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
-            {"Fitness Score", "0.135"},
+            {"Fitness Score", "0.518"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-1.841"},
-            {"Return Over Maximum Drawdown", "-10.345"},
-            {"Portfolio Turnover", "3.091"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "-7.712"},
+            {"Portfolio Turnover", "5.276"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -203,7 +199,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "5b1f6b50ad578321b66b0bb2e971d704"}
+            {"OrderListHash", "dd38e7b94027d20942a5aa9ac31a9a7f"}
         };
     }
 }

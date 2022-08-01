@@ -107,6 +107,11 @@ namespace QuantConnect.Securities.Option
             var curveGrowthRate = -7.8m;
             var underlyingPrice = option.Underlying.Price;
 
+            if (option.Underlying == null || option.Underlying.Price == 0m)
+            {
+                return 0;
+            }
+
             if (positionSide == PositionSide.Short)
             {
                 if (option.Right == OptionRight.Call)

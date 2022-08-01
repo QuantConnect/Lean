@@ -72,7 +72,7 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception($"Expecting 3 universes (chain, continuous and user defined) but have {UniverseManager.Count}");
             }
 
-            if (!Portfolio.Invested && IsMarketOpen(_futureContract.Symbol))
+            if (!Portfolio.Invested)
             {
                 Buy(_futureContract.Symbol, 1);
                 Buy(_continuousContract.Mapped, 1);
