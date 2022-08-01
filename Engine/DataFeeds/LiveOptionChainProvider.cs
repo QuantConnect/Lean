@@ -39,7 +39,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private static readonly HttpClient _client;
         private static readonly DateTime _epoch = new DateTime(1970, 1, 1);
 
-        private readonly RateGate _rateGate = new RateGate(1, TimeSpan.FromSeconds(0.5));
+        private static readonly RateGate _rateGate = new RateGate(1, TimeSpan.FromSeconds(0.5));
 
         private const string CMESymbolReplace = "{{SYMBOL}}";
         private const string CMEProductCodeReplace = "{{PRODUCT_CODE}}";

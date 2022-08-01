@@ -21,5 +21,8 @@ jobs:
       - name: Create Python Virtual Environment
         run: python -m venv /lean-testenv --system-site-packages && . /lean-testenv/bin/activate && pip install --no-cache-dir lean==1.0.99 && deactivate
 
-      - name: Run Tests
+      - name: Run Virtual Environment Test
         run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonVirtualEnvironmentTests.AssertVirtualEnvironment"
+
+      - name: Run Copula Package Environment Tests
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.CopulaTest"

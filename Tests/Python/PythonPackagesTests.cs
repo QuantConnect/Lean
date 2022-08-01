@@ -14,9 +14,10 @@
  *
 */
 
-using NUnit.Framework;
-using Python.Runtime;
 using System;
+using Python.Runtime;
+using NUnit.Framework;
+using QuantConnect.Python;
 
 namespace QuantConnect.Tests.Python
 {
@@ -81,24 +82,6 @@ def RunTest():
         }
 
         [Test]
-        public void BlazeTest()
-        {
-            AssetCode(
-                @"
-import blaze
-def RunTest():
-    accounts = blaze.symbol('accounts', 'var * {id: int, name: string, amount: int}')
-    deadbeats = accounts[accounts.amount < 0].name
-    L = [[1, 'Alice',   100],
-         [2, 'Bob',    -200],
-         [3, 'Charlie', 300],
-         [4, 'Denis',   400],
-         [5, 'Edith',  -500]]
-    return blaze.compute(deadbeats, L)"
-            );
-        }
-
-        [Test]
         public void CvxpyTest()
         {
             AssetCode(
@@ -155,22 +138,6 @@ def RunTest():
     measurements = numpy.asarray([[1,0], [0,0], [0,1]])  # 3 observations
     kf = kf.em(measurements, n_iter=5)
     return kf.filter(measurements)"
-            );
-        }
-
-        [Test]
-        public void CopulalibTest()
-        {
-            AssetCode(
-                @"
-import numpy
-from copulalib.copulalib import Copula
-def RunTest():
-    x = numpy.random.normal(size=100)
-    y = 2.5 * x + numpy.random.normal(size=100)
-
-    #Make the instance of Copula class with x, y and clayton family::
-    return Copula(x, y, family = 'clayton')"
             );
         }
 
@@ -332,9 +299,12 @@ def RunTest():
             );
         }
 
-        [Test]
+        [Test, Explicit("Requires copulas installed")]
         public void CopulaTest()
         {
+            // load the copulas virtual env if it exists
+            PythonInitializer.ActivatePythonVirtualEnvironment("/copulas");
+
             AssetCode(
                 @"
 from copulas.univariate.gaussian import GaussianUnivariate
@@ -439,7 +409,7 @@ def RunTest():
             AssetCode(
                 @"
 import pandas as pd
-from fbprophet import Prophet
+from prophet import Prophet
 def RunTest():
     df=pd.DataFrame({'ds': ['2007-12-10', '2007-12-11', '2007-12-12', '2007-12-13', '2007-12-14'], 'y': [9.590761, 8.519590, 8.183677, 8.072467, 7.893572]})
     m = Prophet()
@@ -466,12 +436,11 @@ def RunTest():
             AssetCode(
                 @"
 import numpy as np
-import pyramid as pm
-from pyramid.datasets import load_wineind
+import pmdarima as pm
+from pmdarima.datasets import load_wineind
 def RunTest():
     # this is a dataset from R
     wineind = load_wineind().astype(np.float64)
-
     # fit stepwise auto-ARIMA
     stepwise_fit = pm.auto_arima(wineind, start_p=1, start_q=1,
                                  max_p=3, max_q=3, m=12,
@@ -480,7 +449,7 @@ def RunTest():
                                  error_action='ignore',    # don't want to know if an order does not work
                                  suppress_warnings=True,   # don't want convergence warnings
                                  stepwise=True)            # set to stepwise
-    
+
     return stepwise_fit.summary()"
             );
         }
@@ -648,7 +617,7 @@ def RunTest():
             );
         }
 
-        [Test]
+        [Test, Explicit("Requires mlfinlab installed")]
         public void MlfinlabTest()
         {
             AssetCode(
@@ -863,25 +832,24 @@ def RunTest():
         /// </summary>
         /// <param name="module">The module we are testing</param>
         /// <param name="version">The module version</param>
-        [TestCase("pulp", "1.6.8", "VERSION")]
-        [TestCase("pymc3", "3.8", "__version__")]
+        [TestCase("pulp", "2.6.0", "VERSION")]
+        [TestCase("pymc", "4.1.4", "__version__")]
         [TestCase("pypfopt", "pypfopt", "__name__")]
         [TestCase("wrapt", "1.12.1", "__version__")]
-        [TestCase("tslearn", "0.3.1", "__version__")]
-        [TestCase("tweepy", "3.8.0", "__version__")]
-        [TestCase("pywt", "1.1.1", "__version__")]
-        [TestCase("umap", "0.4.1", "__version__")]
-        [TestCase("dtw", "1.0.5", "__version__")]
-        [TestCase("mplfinance", "0.12.4a0", "__version__")]
+        [TestCase("tslearn", "0.5.2", "__version__")]
+        [TestCase("tweepy", "4.10.0", "__version__")]
+        [TestCase("pywt", "1.3.0", "__version__")]
+        [TestCase("umap", "0.5.3", "__version__")]
+        [TestCase("dtw", "1.2.2", "__version__")]
+        [TestCase("mplfinance", "0.12.9b1", "__version__")]
         [TestCase("cufflinks", "0.17.3", "__version__")]
-        [TestCase("ipywidgets", "7.5.1", "__version__")]
-        [TestCase("astropy", "4.0.1.post1", "__version__")]
-        [TestCase("gluonts", "0.4.3", "__version__")]
-        [TestCase("gplearn", "0.4.1", "__version__")]
-        [TestCase("h2o", "3.30.0.3", "__version__")]
-        [TestCase("cntk", "2.7", "__version__")]
-        [TestCase("featuretools", "0.14.0", "__version__")]
-        [TestCase("pennylane", "0.9.0", "version()")]
+        [TestCase("ipywidgets", "8.0.0rc1", "__version__")]
+        [TestCase("astropy", "5.1", "__version__")]
+        [TestCase("gluonts", "0.7.7", "__version__")]
+        [TestCase("gplearn", "0.4.2", "__version__")]
+        [TestCase("h2o", "3.36.1.4", "__version__")]
+        [TestCase("featuretools", "0.18.1", "__version__")]
+        [TestCase("pennylane", "0.24.0", "version()")]
         public void ModuleVersionTest(string module, string value, string attribute)
         {
             AssetCode(
