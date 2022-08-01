@@ -52,7 +52,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void EmitsDailyCustomFutureDataOverWeekends()
         {
-            RemoteFileSubscriptionStreamReader.SetDownloadProvider(new Api.Api());
+            using var api = new Api.Api();
+            RemoteFileSubscriptionStreamReader.SetDownloadProvider(api);
             var tickers = new[] { "CHRIS/CME_ES1", "CHRIS/CME_ES2" };
             var startDate = new DateTime(2018, 4, 1);
             var endDate = new DateTime(2018, 4, 20);
@@ -77,7 +78,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var dataPointsEmitted = 0;
             RunLiveDataFeed(algorithm, startDate, symbols, timeProvider, dataManager);
 
-            var cancellationTokenSource = new CancellationTokenSource();
+            using var cancellationTokenSource = new CancellationTokenSource();
             var lastFileWriteDate = DateTime.MinValue;
 
             // create a timer to advance time much faster than realtime and to simulate live Quandl data file updates
@@ -201,7 +202,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void RemoteDataDoesNotIncreaseNumberOfSlices()
         {
-            RemoteFileSubscriptionStreamReader.SetDownloadProvider(new Api.Api());
+            using var api = new Api.Api();
+            RemoteFileSubscriptionStreamReader.SetDownloadProvider(api);
 
             var startDate = new DateTime(2017, 4, 2);
             var endDate = new DateTime(2017, 4, 23);
@@ -234,7 +236,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 algorithm.AddEquity("AAPL", Resolution.Daily).Symbol
             };
 
-            var cancellationTokenSource = new CancellationTokenSource();
+            using var cancellationTokenSource = new CancellationTokenSource();
 
             var dataPointsEmitted = 0;
             var slicesEmitted = 0;

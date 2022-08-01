@@ -980,6 +980,8 @@ namespace QuantConnect.Lean.Engine.Results
                 SendFinalResult();
 
                 base.Exit();
+
+                _cancellationTokenSource.DisposeSafely();
             }
         }
 

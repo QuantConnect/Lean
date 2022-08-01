@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -43,6 +44,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void TearDown()
         {
             _cancellationTokenSource.Cancel();
+            _cancellationTokenSource.DisposeSafely();
         }
 
         [Test]

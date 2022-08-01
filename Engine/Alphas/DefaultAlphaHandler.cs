@@ -48,13 +48,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         private DateTime _lastFitnessScoreCalculation;
         private Timer _storeTimer;
         private readonly object _lock = new object();
-        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private string _alphaResultsPath;
-
-        /// <summary>
-        /// The cancellation token that will be cancelled when requested to exit
-        /// </summary>
-        protected CancellationToken CancellationToken => _cancellationTokenSource.Token;
 
         /// <summary>
         /// Gets a flag indicating if this handler's thread is still running and processing messages
@@ -219,6 +213,7 @@ namespace QuantConnect.Lean.Engine.Alphas
             InsightManager?.DisposeSafely();
 
             IsActive = false;
+
             Log.Trace("DefaultAlphaHandler.Exit(): Ended");
         }
 

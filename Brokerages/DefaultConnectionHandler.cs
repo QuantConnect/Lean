@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -16,6 +16,7 @@
 using System;
 using System.Threading;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages
 {
@@ -82,7 +83,7 @@ namespace QuantConnect.Brokerages
         {
             ConnectionId = connectionId;
 
-            var waitHandle = new ManualResetEvent(false);
+            using var waitHandle = new ManualResetEvent(false);
 
             _cancellationTokenSource = new CancellationTokenSource();
 
@@ -100,10 +101,9 @@ namespace QuantConnect.Brokerages
 
                 try
                 {
-                    while (!_cancellationTokenSource.IsCancellationRequested)
+                    while (!_cancellationTokenSource.IsCancellationRequested
+                        && !_cancellationTokenSource.Token.WaitHandle.WaitOne(Time.GetSecondUnevenWait(1000)))
                     {
-                        Thread.Sleep(1000);
-
                         if (!_isEnabled) continue;
 
                         try
@@ -221,8 +221,8 @@ namespace QuantConnect.Brokerages
             _isEnabled = false;
 
             // request and wait for thread to stop
-            _cancellationTokenSource?.Cancel();
-            _connectionMonitorThread?.Join();
+            _connectionMonitorThread.StopSafely(TimeSpan.FromSeconds(5), _cancellationTokenSource);
+            _cancellationTokenSource?.DisposeSafely();
         }
     }
 }
