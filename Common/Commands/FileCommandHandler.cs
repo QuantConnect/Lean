@@ -79,7 +79,9 @@ namespace QuantConnect.Commands
                 Log.Error($"FileCommandHandler.Acknowledge(): command Id is null or empty, will skip writting result file");
                 return;
             }
-            File.WriteAllText($"command-result-{command.Id}.json", JsonConvert.SerializeObject(commandResultPacket));
+            var resultFilePath = $"command-result-{command.Id}.json";
+            File.WriteAllText($"{resultFilePath}", JsonConvert.SerializeObject(commandResultPacket));
+            Log.Trace($"FileCommandHandler.Acknowledge(): writing result to file {resultFilePath}");
         }
 
         /// <summary>
@@ -106,6 +108,7 @@ namespace QuantConnect.Commands
             }
 
             // remove the file when we're done reading it
+            Log.Trace($"FileCommandHandler.ReadCommandFile(): Deleting file {commandFilePath}");
             File.Delete(commandFilePath);
 
             // try it as an enumerable
