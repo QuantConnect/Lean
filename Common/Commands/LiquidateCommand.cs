@@ -14,7 +14,7 @@
 */
 
 using QuantConnect.Interfaces;
-using QuantConnect.Packets;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Commands
 {
@@ -24,12 +24,54 @@ namespace QuantConnect.Commands
     public class LiquidateCommand : BaseCommand
     {
         /// <summary>
+        /// Gets or sets the string ticker symbol
+        /// </summary>
+        public string Ticker { get; set; }
+
+        /// <summary>
+        /// Gets or sets the security type of the ticker.
+        /// </summary>
+        public SecurityType SecurityType { get; set; }
+
+        /// <summary>
+        /// Gets or sets the market the ticker resides in
+        /// </summary>
+        public string Market { get; set; }
+
+        /// <summary>
+        /// Construct for liquidate command class
+        /// </summary>
+        public LiquidateCommand(string ticker, SecurityType securityType, string market) : base()
+        {
+            Ticker = ticker;
+            SecurityType = securityType;
+            Market = market;
+            
+        }
+
+        /// <summary>
+        /// Default construct that applies default values
+        /// </summary>
+        public LiquidateCommand()
+        {
+        }
+
+        /// <summary>
         /// Submits orders to liquidate all current holdings in the algorithm
         /// </summary>
         /// <param name="algorithm">The algorithm to be liquidated</param>
         public override CommandResultPacket Run(IAlgorithm algorithm)
         {
-            algorithm.Liquidate();
+            if (Ticker != null && SecurityType != null && Market != null)
+            {
+                var symbol = Symbol.Create(Ticker, SecurityType, Market);
+                Log.Trace($"LiquidateCommand.CommandResultPacket(): Liquidating symbol ${symbol}");
+                algorithm.Liquidate(symbol);
+            }
+            else
+            {
+                algorithm.Liquidate();
+            }
             return new CommandResultPacket(this, true);
         }
     }

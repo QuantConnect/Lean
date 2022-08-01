@@ -39,7 +39,7 @@ namespace QuantConnect.Tests.Common.Commands
             if (File.Exists(SingleCommandFilePath)) File.Delete(SingleCommandFilePath);
             using var queue = new TestFileCommandHandler();
             Assert.IsEmpty(queue.GetCommandsPublic());
-            File.WriteAllText(SingleCommandFilePath, JsonConvert.SerializeObject(new LiquidateCommand(), new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All }));
+            File.WriteAllText(SingleCommandFilePath, JsonConvert.SerializeObject(new LiquidateCommand("aapl", SecurityType.Equity, Market.USA), new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All }));
             Assert.IsInstanceOf(typeof(LiquidateCommand), queue.GetCommandsPublic().Single());
         }
 
