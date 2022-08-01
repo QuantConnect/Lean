@@ -51,15 +51,14 @@ namespace QuantConnect.Algorithm.CSharp
                     Futures.Indices.SP500EMini,
                     Market.CME,
                     new DateTime(2020, 6, 19)),
-                Resolution.Minute,
-                extendedMarketHours: true).Symbol;
+                Resolution.Minute).Symbol;
 
             // Select a future option expiring ITM, and adds it to the algorithm.
             _esOption = AddFutureOptionContract(OptionChainProvider.GetOptionContractList(_es19m20, Time)
                 .Where(x => x.ID.StrikePrice <= 3100m && x.ID.OptionRight == OptionRight.Call)
                 .OrderByDescending(x => x.ID.StrikePrice)
                 .Take(1)
-                .Single(), Resolution.Minute, extendedMarketHours: true).Symbol;
+                .Single(), Resolution.Minute).Symbol;
 
             _expectedContract = QuantConnect.Symbol.CreateOption(_es19m20, Market.CME, OptionStyle.American, OptionRight.Call, 3100m, new DateTime(2020, 6, 19));
             if (_esOption != _expectedContract)
@@ -186,7 +185,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 644315;
+        public long DataPoints => 204515;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -199,33 +198,33 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "3"},
-            {"Average Win", "10.05%"},
-            {"Average Loss", "-5.60%"},
-            {"Compounding Annual Return", "8.148%"},
-            {"Drawdown", "0.500%"},
-            {"Expectancy", "0.397"},
-            {"Net Profit", "3.886%"},
-            {"Sharpe Ratio", "1.088"},
-            {"Probabilistic Sharpe Ratio", "53.421%"},
+            {"Average Win", "10.24%"},
+            {"Average Loss", "-6.46%"},
+            {"Compounding Annual Return", "6.497%"},
+            {"Drawdown", "0.900%"},
+            {"Expectancy", "0.292"},
+            {"Net Profit", "3.111%"},
+            {"Sharpe Ratio", "0.935"},
+            {"Probabilistic Sharpe Ratio", "45.607%"},
             {"Loss Rate", "50%"},
             {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "1.79"},
-            {"Alpha", "0.057"},
+            {"Profit-Loss Ratio", "1.58"},
+            {"Alpha", "0.046"},
             {"Beta", "-0.003"},
-            {"Annual Standard Deviation", "0.053"},
-            {"Annual Variance", "0.003"},
-            {"Information Ratio", "0.094"},
-            {"Tracking Error", "0.379"},
-            {"Treynor Ratio", "-20.601"},
+            {"Annual Standard Deviation", "0.049"},
+            {"Annual Variance", "0.002"},
+            {"Information Ratio", "0.064"},
+            {"Tracking Error", "0.378"},
+            {"Treynor Ratio", "-16.91"},
             {"Total Fees", "$1.85"},
-            {"Estimated Strategy Capacity", "$300000000.00"},
+            {"Estimated Strategy Capacity", "$13000000.00"},
             {"Lowest Capacity Asset", "ES XFH59UP5K75W|ES XFH59UK0MYO1"},
-            {"Fitness Score", "0.02"},
+            {"Fitness Score", "0.024"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "17.34"},
-            {"Portfolio Turnover", "0.02"},
+            {"Return Over Maximum Drawdown", "7.527"},
+            {"Portfolio Turnover", "0.025"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -239,7 +238,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "ea0a9bf273ee3becf0d9a77e8d28cb46"}
+            {"OrderListHash", "bf5fe7396dd65efe92326817647d2350"}
         };
     }
 }

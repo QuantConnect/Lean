@@ -35,8 +35,7 @@ class FutureOptionShortCallOTMExpiryRegressionAlgorithm(QCAlgorithm):
                 Futures.Indices.SP500EMini,
                 Market.CME,
                 datetime(2020, 6, 19)),
-            Resolution.Minute,
-            extendedMarketHours=True).Symbol
+            Resolution.Minute).Symbol
 
         # Select a future option expiring ITM, and adds it to the algorithm.
         self.esOption = self.AddFutureOptionContract(
@@ -45,7 +44,7 @@ class FutureOptionShortCallOTMExpiryRegressionAlgorithm(QCAlgorithm):
                     [x for x in self.OptionChainProvider.GetOptionContractList(self.es19m20, self.Time) if x.ID.StrikePrice >= 3400.0 and x.ID.OptionRight == OptionRight.Call],
                     key=lambda x: x.ID.StrikePrice
                 )
-            )[0], Resolution.Minute, extendedMarketHours=True).Symbol
+            )[0], Resolution.Minute).Symbol
 
         self.expectedContract = Symbol.CreateOption(self.es19m20, Market.CME, OptionStyle.American, OptionRight.Call, 3400.0, datetime(2020, 6, 19))
         if self.esOption != self.expectedContract:
