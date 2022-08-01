@@ -40,7 +40,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(1000000);
 
             // Subscribe to futures ES
-            var future = AddFuture(Futures.Indices.SP500EMini, Resolution.Minute, Market.CME, false, extendedMarketHours: true);
+            var future = AddFuture(Futures.Indices.SP500EMini, Resolution.Minute, Market.CME, false);
             future.SetFilter(TimeSpan.FromDays(0), TimeSpan.FromDays(90));
         }
 
@@ -89,7 +89,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 420232;
+        public long DataPoints => 132172;
 
         /// <summary>
         /// Data Points count of the algorithm history
