@@ -43,8 +43,7 @@ namespace QuantConnect.Algorithm.CSharp
             _continuousContract = AddFuture(Futures.Indices.SP500EMini,
                 dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
                 dataMappingMode: DataMappingMode.OpenInterest,
-                contractDepthOffset: 1,
-                extendedMarketHours: true
+                contractDepthOffset: 1
             );
             SetWarmup(1, Resolution.Daily);
         }
@@ -78,7 +77,7 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception($"We are getting data for more than one symbols! {string.Join(",", data.Keys.Select(symbol => symbol))}");
             }
 
-            if (!Portfolio.Invested && !IsWarmingUp && _continuousContract.Exchange.ExchangeOpen)
+            if (!Portfolio.Invested && !IsWarmingUp)
             {
                 Buy(_continuousContract.Mapped, 1);
             }
@@ -115,7 +114,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 26112;
+        public virtual long DataPoints => 9619;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -147,7 +146,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$1.85"},
-            {"Estimated Strategy Capacity", "$2500000000.00"},
+            {"Estimated Strategy Capacity", "$3600000000.00"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
             {"Fitness Score", "0.414"},
             {"Kelly Criterion Estimate", "0"},
@@ -168,7 +167,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "4b6856b9c2bd689455bd94d31be6f5e2"}
+            {"OrderListHash", "1fcd459f69177160b35f7daf96b01a0d"}
         };
     }
 }
