@@ -22,11 +22,11 @@ class ConsolidateRegressionAlgorithm(QCAlgorithm):
     # Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
     def Initialize(self):
         self.SetStartDate(2013, 10, 8)
-        self.SetEndDate(2013, 10, 9)
+        self.SetEndDate(2013, 10, 11)
 
         SP500 = Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME)
         self._symbol = _symbol = self.FutureChainProvider.GetFutureContractList(SP500, self.StartDate)[0]
-        self.AddFutureContract(_symbol, extendedMarketHours=True)
+        self.AddFutureContract(_symbol)
 
         self._consolidationCount = [0, 0, 0, 0, 0, 0]
 
@@ -80,5 +80,5 @@ class ConsolidateRegressionAlgorithm(QCAlgorithm):
 
     # OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
     def OnData(self, data):
-        if not self.Portfolio.Invested:
+        if not self.Portfolio.Invested and data.ContainsKey(self._symbol):
            self.SetHoldings(self._symbol, 0.5)
