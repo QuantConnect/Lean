@@ -56,7 +56,7 @@ namespace QuantConnect.DataLibrary.Tests
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public int AlgorithmHistoryDataPoints => 47;
 
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
