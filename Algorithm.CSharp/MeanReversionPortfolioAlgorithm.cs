@@ -51,7 +51,7 @@ namespace QuantConnect.DataLibrary.Tests
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1172;
+        public long DataPoints => 1115;
 
         /// <summary>
         /// Data Points count of the algorithm history
