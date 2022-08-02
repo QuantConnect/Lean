@@ -30,6 +30,21 @@ namespace QuantConnect.Commands
         public Symbol Symbol { get; set; }
 
         /// <summary>
+        /// Gets or sets the string ticker symbol
+        /// </summary>
+        public string Ticker { get; set; }
+
+        /// <summary>
+        /// Gets or sets the security type of the ticker.
+        /// </summary>
+        public SecurityType SecurityType { get; set; }
+
+        /// <summary>
+        /// Gets or sets the market the ticker resides in
+        /// </summary>
+        public string Market { get; set; }
+
+        /// <summary>
         /// Gets or sets the order type to be submted
         /// </summary>
         public OrderType OrderType { get; set; }
@@ -60,6 +75,17 @@ namespace QuantConnect.Commands
         /// <param name="algorithm">The algorithm to run this command against</param>
         public override CommandResultPacket Run(IAlgorithm algorithm)
         {
+            if (Symbol == null)
+            {
+                if (Ticker != null && SecurityType != null && Market != null)
+                {
+                    Symbol = Symbol.Create(Ticker, SecurityType, Market);
+                }
+                else
+                {
+                    throw new ArgumentException($"OrderCommand.CommandResultPacket(): Please provide value for all. None of ticker, market, secuity-type can be Null");
+                }
+            }
             var request = new SubmitOrderRequest(OrderType, Symbol.SecurityType, Symbol, Quantity, StopPrice, LimitPrice, DateTime.UtcNow, Tag);
             var ticket = algorithm.Transactions.ProcessRequest(request);
             var response = ticket.GetMostRecentOrderResponse();
