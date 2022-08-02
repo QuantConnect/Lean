@@ -94,12 +94,12 @@ namespace QuantConnect.DataLibrary.Tests
             {"Long Insight Count", "248"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$678641.04254131754697241114404"},
-            {"Total Accumulated Estimated Alpha Value", "$4053937.67218083519500"},
-            {"Mean Population Estimated Insight Value", "$16614.498656478832766393442623"},
-            {"Mean Population Direction", "39.344262295081955%"},
+            {"Estimated Monthly Alpha Value", "$678641.0425"},
+            {"Total Accumulated Estimated Alpha Value", "$4053937.6722"},
+            {"Mean Population Estimated Insight Value", "$16614.4987"},
+            {"Mean Population Direction", "39.3443%"},
             {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "37.87194284256898%"},
+            {"Rolling Averaged Population Direction", "37.8719%"},
             {"Rolling Averaged Population Magnitude", "0%"},
             {"OrderListHash", "2784f0faf44e32c02b4083579565d1cc"}
         };
