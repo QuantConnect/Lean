@@ -152,7 +152,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         {
             if (portfolioBias == PortfolioBias.Short)
             {
-                throw new Exception("Long position must be allowed in MeanReversionPortfolioConstructionModel.");
+                throw new ArgumentException("Long position must be allowed in MeanReversionPortfolioConstructionModel.");
             }
             
             _reversionThreshold = reversionThreshold;

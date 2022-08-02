@@ -22,16 +22,27 @@ from AlgorithmImports import *
 class MeanReversionPortfolioConstructionModel(PortfolioConstructionModel):
     
     def __init__(self,
+                 rebalance = Resolution.Daily,
+                 portfolioBias = PortfolioBias.LongShort,
                  reversion_threshold = 1,
                  window_size = 20,
                  resolution = Resolution.Daily):
         """Initialize the model
         Args:
+            rebalance: Rebalancing parameter. If it is a timedelta, date rules or Resolution, it will be converted into a function.
+                              If None will be ignored.
+                              The function returns the next expected rebalance time for a given algorithm UTC DateTime.
+                              The function returns null if unknown, in which case the function will be called again in the
+                              next loop. Returning current time will trigger rebalance.
+            portfolioBias: Specifies the bias of the portfolio (Short, Long/Short, Long)
             reversion_threshold: Reversion threshold
             window_size: Window size of mean price calculation
             resolution: The resolution of the history price and rebalancing
         """
         super().__init__()
+        if portfolioBias == PortfolioBias.Short:
+            raise ArgumentException("Long position must be allowed in MeanReversionPortfolioConstructionModel.")
+            
         self.reversion_threshold = reversion_threshold
         self.window_size = window_size
         self.resolution = resolution
@@ -39,6 +50,16 @@ class MeanReversionPortfolioConstructionModel(PortfolioConstructionModel):
         self.num_of_assets = 0
         # Initialize a dictionary to store stock data
         self.symbol_data = {}
+
+        # If the argument is an instance of Resolution or Timedelta
+        # Redefine rebalancingFunc
+        rebalancingFunc = rebalance
+        if isinstance(rebalance, int):
+            rebalance = Extensions.ToTimeSpan(rebalance)
+        if isinstance(rebalance, timedelta):
+            rebalancingFunc = lambda dt: dt + rebalance
+        if rebalancingFunc:
+            self.SetRebalancingFunc(rebalancingFunc)
 
     def DetermineTargetPercent(self, activeInsights):
         """Will determine the target percent for each insight

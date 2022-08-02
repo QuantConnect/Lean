@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using Python.Runtime;
@@ -67,7 +68,44 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(Language.Python, 1, -0.5, 31, 63)]
         public void CorrectWeightings(Language language, double? magnitude1, double? magnitude2, decimal expectedQty1, decimal expectedQty2)
         {
-            SetPortfolioConstruction(language);
+            var targets = GeneratePortfolioTargets(language, magnitude1, magnitude2);
+            var quantities = targets.Select(target => {
+                QuantConnect.Logging.Log.Trace($"{target.Symbol}: {target.Quantity}");
+                return target.Quantity;
+            }).ToArray();
+
+            Assert.AreEqual(quantities[0], expectedQty1);
+            Assert.AreEqual(quantities[1], expectedQty2);
+        }
+
+        [TestCase(Language.CSharp, PortfolioBias.Long)]
+        [TestCase(Language.Python, PortfolioBias.Long)]
+        [TestCase(Language.CSharp, PortfolioBias.LongShort)]
+        [TestCase(Language.Python, PortfolioBias.LongShort)]
+        [TestCase(Language.CSharp, PortfolioBias.Short)]
+        [TestCase(Language.Python, PortfolioBias.Short)]
+        public void PortfolioBiasIsRespected(Language language, PortfolioBias bias)
+        {
+            if (bias == PortfolioBias.Short)
+            {
+                Assert.ThrowsException<ArgumentException>(GetPortfolioConstructionModel(language, bias, Resolution.Daily),
+                    "Long position must be allowed in MeanReversionPortfolioConstructionModel.");
+            }
+
+            var targets = GeneratePortfolioTargets(language, 1, 1);
+            foreach (var target in targets)
+            {
+                if (target.Quantity == 0)
+                {
+                    continue;
+                }
+                Assert.AreEqual(Math.Sign((int)bias), Math.Sign(target.Quantity));
+            }
+        }
+
+        private IEnumerable<IPortfolioTarget> GeneratePortfolioTargets(Language language, double? magnitude1, double? magnitude2)
+        {
+            SetPortfolioConstruction(language, PortfolioBias.Long);
 
             var aapl = _algorithm.AddEquity("AAPL");
             var spy = _algorithm.AddEquity("SPY");
@@ -84,14 +122,12 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             };
             _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, SecurityChangesTests.AddedNonInternal(aapl, spy));
 
-            var quantities = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights).Select(x => x.Quantity).ToArray();
-            Assert.AreEqual(quantities[0], expectedQty1);
-            Assert.AreEqual(quantities[1], expectedQty2);
+            return _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights);
         }
 
-        protected void SetPortfolioConstruction(Language language)
+        protected void SetPortfolioConstruction(Language language, PortfolioBias bias)
         {
-            var model = GetPortfolioConstructionModel(language, Resolution.Daily);
+            var model = GetPortfolioConstructionModel(language, bias, Resolution.Daily);
             _algorithm.SetPortfolioConstruction(model);
 
             foreach (var kvp in _algorithm.Portfolio)
@@ -103,18 +139,18 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, changes);
         }
 
-        public IPortfolioConstructionModel GetPortfolioConstructionModel(Language language, Resolution resolution)
+        public IPortfolioConstructionModel GetPortfolioConstructionModel(Language language, PortfolioBias bias, Resolution resolution)
         {
             if (language == Language.CSharp)
             {
-                return new MeanReversionPortfolioConstructionModel(reversionThreshold: 1, windowSize: 1, resolution: resolution);
+                return new MeanReversionPortfolioConstructionModel(resolution, bias, 1, 1, resolution);
             }
 
             using (Py.GIL())
             {
                 const string name = nameof(MeanReversionPortfolioConstructionModel);
                 var instance = Py.Import(name).GetAttr(name)
-                    .Invoke(reversionThreshold: 1.ToPython(), windowSize: 1.ToPython(), resolution: ((int)resolution).ToPython());
+                    .Invoke(((int)resolution).ToPython(), ((int)bias).ToPython(), 1.ToPython(), 1.ToPython(), ((int)resolution).ToPython());
                 return new PortfolioConstructionModelPythonWrapper(instance);
             }
         }
