@@ -55,7 +55,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             decimal reversionThreshold = 1, 
             int windowSize = 20, 
             Resolution resolution = Resolution.Daily)
-            : this(rebalancingDateRules.ToFunc())
+            : this(rebalancingDateRules.ToFunc(), portfolioBias, reversionThreshold, windowSize, resolution)
         {
         }
 
@@ -72,7 +72,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             decimal reversionThreshold = 1, 
             int windowSize = 20, 
             Resolution resolution = Resolution.Daily)
-            : this(rebalanceResolution.ToTimeSpan())
+            : this(rebalanceResolution.ToTimeSpan(), portfolioBias, reversionThreshold, windowSize, resolution)
         {
         }
 
@@ -89,7 +89,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             decimal reversionThreshold = 1, 
             int windowSize = 20, 
             Resolution resolution = Resolution.Daily)
-            : this(dt => dt.Add(timeSpan))
+            : this(dt => dt.Add(timeSpan), portfolioBias, reversionThreshold, windowSize, resolution)
         {
         }
 
@@ -109,7 +109,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             decimal reversionThreshold = 1, 
             int windowSize = 20, 
             Resolution resolution = Resolution.Daily)
-            : this((Func<DateTime, DateTime?>)null)
+            : this((Func<DateTime, DateTime?>)null, portfolioBias, reversionThreshold, windowSize, resolution)
         {
             SetRebalancingFunc(rebalance);
         }
@@ -129,7 +129,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             decimal reversionThreshold = 1, 
             int windowSize = 20, 
             Resolution resolution = Resolution.Daily)
-            : this(rebalancingFunc != null ? (Func<DateTime, DateTime?>)(timeUtc => rebalancingFunc(timeUtc)) : null)
+            : this(rebalancingFunc != null ? (Func<DateTime, DateTime?>)(timeUtc => rebalancingFunc(timeUtc)) : null,
+                   portfolioBias, reversionThreshold, windowSize, resolution)
         {
         }
 
@@ -238,7 +239,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 var symbolData = _symbolData[insight.Symbol];
 
                 nextPriceRelatives[i] = insight.Magnitude != null ?
-                            1 + (double) insight.Magnitude :
+                            1 + (double)insight.Magnitude * (int)insight.Direction:
                             (double)symbolData.Identity.Current.Value / (double)symbolData.Sma.Current.Value;
             }
 

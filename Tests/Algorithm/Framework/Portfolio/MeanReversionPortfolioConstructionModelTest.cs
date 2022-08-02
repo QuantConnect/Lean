@@ -62,37 +62,53 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new DataPermissionManager()));
         }
 
-        [TestCase(Language.CSharp, null, null, 47, 47)]
-        [TestCase(Language.Python, null, null, 47, 47)]
-        [TestCase(Language.CSharp, 1, -0.5, 31, 63)]
-        [TestCase(Language.Python, 1, -0.5, 31, 63)]
-        public void CorrectWeightings(Language language, double? magnitude1, double? magnitude2, decimal expectedQty1, decimal expectedQty2)
+        [TestCase(Language.CSharp, InsightDirection.Up, InsightDirection.Up, null, null, 47, 47)]
+        [TestCase(Language.Python, InsightDirection.Up, InsightDirection.Up, null, null, 47, 47)]
+        [TestCase(Language.CSharp, InsightDirection.Up, InsightDirection.Up, 0, 0, 47, 47)]
+        [TestCase(Language.Python, InsightDirection.Up, InsightDirection.Up, 0, 0, 47, 47)]
+        [TestCase(Language.CSharp, InsightDirection.Up, InsightDirection.Up, 1, -0.5, 31, 63)]
+        [TestCase(Language.Python, InsightDirection.Up, InsightDirection.Up, 1, -0.5, 31, 63)]
+        [TestCase(Language.CSharp, InsightDirection.Up, InsightDirection.Down, 1, 0.5, 31, 63)]
+        [TestCase(Language.Python, InsightDirection.Up, InsightDirection.Down, 1, 0.5, 31, 63)]
+        [TestCase(Language.CSharp, InsightDirection.Up, InsightDirection.Up, 0, -0.5, 47, 47)]
+        [TestCase(Language.Python, InsightDirection.Up, InsightDirection.Up, 0, -0.5, 47, 47)]
+        [TestCase(Language.CSharp, InsightDirection.Up, InsightDirection.Up, 0, 1, 94, 0)]
+        [TestCase(Language.Python, InsightDirection.Up, InsightDirection.Up, 0, 1, 94, 0)]
+        [TestCase(Language.CSharp, InsightDirection.Up, InsightDirection.Up, 0.5, -1, 47, 47)]
+        [TestCase(Language.Python, InsightDirection.Up, InsightDirection.Up, 0.5, -1, 47, 47)]
+        public void CorrectWeightings(Language language, 
+                                      InsightDirection direction1, 
+                                      InsightDirection direction2, 
+                                      double? magnitude1, 
+                                      double? magnitude2, 
+                                      decimal expectedQty1, 
+                                      decimal expectedQty2)
         {
-            var targets = GeneratePortfolioTargets(language, magnitude1, magnitude2);
-            var quantities = targets.Select(target => {
+            var targets = GeneratePortfolioTargets(language, direction1, direction2, magnitude1, magnitude2);
+            var quantities = targets.ToDictionary(target => {
                 QuantConnect.Logging.Log.Trace($"{target.Symbol}: {target.Quantity}");
-                return target.Quantity;
-            }).ToArray();
+                return target.Symbol.Value;
+            },
+            target => target.Quantity);
 
-            Assert.AreEqual(quantities[0], expectedQty1);
-            Assert.AreEqual(quantities[1], expectedQty2);
+            Assert.AreEqual(expectedQty1, quantities["AAPL"]);
+            Assert.AreEqual(expectedQty2, quantities.ContainsKey("SPY") ? quantities["SPY"] : 0);
         }
 
         [TestCase(Language.CSharp, PortfolioBias.Long)]
         [TestCase(Language.Python, PortfolioBias.Long)]
-        [TestCase(Language.CSharp, PortfolioBias.LongShort)]
-        [TestCase(Language.Python, PortfolioBias.LongShort)]
         [TestCase(Language.CSharp, PortfolioBias.Short)]
         [TestCase(Language.Python, PortfolioBias.Short)]
         public void PortfolioBiasIsRespected(Language language, PortfolioBias bias)
         {
             if (bias == PortfolioBias.Short)
             {
-                Assert.ThrowsException<ArgumentException>(GetPortfolioConstructionModel(language, bias, Resolution.Daily),
-                    "Long position must be allowed in MeanReversionPortfolioConstructionModel.");
+                var exception = Assert.Throws<ArgumentException>(() => GetPortfolioConstructionModel(language, bias, Resolution.Daily));
+                Assert.That(exception.Message, Is.EqualTo("Long position must be allowed in MeanReversionPortfolioConstructionModel."));
+                return;
             }
 
-            var targets = GeneratePortfolioTargets(language, 1, 1);
+            var targets = GeneratePortfolioTargets(language, InsightDirection.Up, InsightDirection.Up, 1, 1);
             foreach (var target in targets)
             {
                 if (target.Quantity == 0)
@@ -103,7 +119,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             }
         }
 
-        private IEnumerable<IPortfolioTarget> GeneratePortfolioTargets(Language language, double? magnitude1, double? magnitude2)
+        private IEnumerable<IPortfolioTarget> GeneratePortfolioTargets(Language language, InsightDirection direction1, InsightDirection direction2, double? magnitude1, double? magnitude2)
         {
             SetPortfolioConstruction(language, PortfolioBias.Long);
 
@@ -117,8 +133,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             var insights = new[]
             {
-                new Insight(_nowUtc, aapl.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Up, magnitude1, null),
-                new Insight(_nowUtc, spy.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Up, magnitude2, null),
+                new Insight(_nowUtc, aapl.Symbol, TimeSpan.FromDays(1), InsightType.Price, direction1, magnitude1, null),
+                new Insight(_nowUtc, spy.Symbol, TimeSpan.FromDays(1), InsightType.Price, direction2, magnitude2, null),
             };
             _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, SecurityChangesTests.AddedNonInternal(aapl, spy));
 

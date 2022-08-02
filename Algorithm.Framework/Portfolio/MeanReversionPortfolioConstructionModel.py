@@ -124,7 +124,7 @@ class MeanReversionPortfolioConstructionModel(PortfolioConstructionModel):
         # Using the previous price to simulate assumption of instant reversion
         for i, insight in enumerate(activeInsights):
             symbol_data = self.symbol_data[insight.Symbol]
-            next_price_relatives[i] = 1 + insight.Magnitude \
+            next_price_relatives[i] = 1 + insight.Magnitude * insight.Direction \
                 if insight.Magnitude is not None \
                 else symbol_data.Identity.Current.Value / symbol_data.Sma.Current.Value
         
