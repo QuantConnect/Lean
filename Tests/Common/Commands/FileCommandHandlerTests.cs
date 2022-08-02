@@ -39,7 +39,12 @@ namespace QuantConnect.Tests.Common.Commands
             if (File.Exists(SingleCommandFilePath)) File.Delete(SingleCommandFilePath);
             using var queue = new TestFileCommandHandler();
             Assert.IsEmpty(queue.GetCommandsPublic());
-            File.WriteAllText(SingleCommandFilePath, JsonConvert.SerializeObject(new LiquidateCommand("aapl", SecurityType.Equity, Market.USA), new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All }));
+            File.WriteAllText(SingleCommandFilePath, JsonConvert.SerializeObject(new LiquidateCommand
+            {
+                Ticker = "aapl",
+                SecurityType = SecurityType.Equity,
+                Market = Market.USA
+            }, new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All }));
             Assert.IsInstanceOf(typeof(LiquidateCommand), queue.GetCommandsPublic().Single());
         }
 
@@ -51,11 +56,14 @@ namespace QuantConnect.Tests.Common.Commands
             Assert.IsEmpty(queue.GetCommandsPublic());
             File.WriteAllText(MultiCommandFilePath, JsonConvert.SerializeObject(new List<ICommand>
             {
-                new LiquidateCommand(),
+                new CancelOrderCommand
+                {
+                    OrderId = 2342
+                },
                 new SpecialCommand()
             }, new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All }));
             var list = queue.GetCommandsPublic().ToList();
-            Assert.IsInstanceOf(typeof(LiquidateCommand), list[0]);
+            Assert.IsInstanceOf(typeof(CancelOrderCommand), list[0]);
             Assert.IsInstanceOf(typeof(SpecialCommand), list[1]);
             Assert.IsEmpty(queue.GetCommandsPublic());
         }

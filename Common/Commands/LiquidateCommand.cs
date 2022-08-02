@@ -15,6 +15,7 @@
 
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using System;
 
 namespace QuantConnect.Commands
 {
@@ -39,37 +40,28 @@ namespace QuantConnect.Commands
         public string Market { get; set; }
 
         /// <summary>
-        /// Construct for liquidate command class
-        /// </summary>
-        public LiquidateCommand(string ticker, SecurityType securityType, string market) : base()
-        {
-            Ticker = ticker;
-            SecurityType = securityType;
-            Market = market;
-            
-        }
-
-        /// <summary>
-        /// Default construct that applies default values
-        /// </summary>
-        public LiquidateCommand()
-        {
-        }
-
-        /// <summary>
         /// Submits orders to liquidate all current holdings in the algorithm
         /// </summary>
         /// <param name="algorithm">The algorithm to be liquidated</param>
         public override CommandResultPacket Run(IAlgorithm algorithm)
         {
-            if (Ticker != null && SecurityType != null && Market != null)
+            if (Ticker != null || SecurityType != null || Market != null)
             {
-                var symbol = Symbol.Create(Ticker, SecurityType, Market);
-                Log.Trace($"LiquidateCommand.CommandResultPacket(): Liquidating symbol ${symbol}");
-                algorithm.Liquidate(symbol);
+                if (Ticker != null && SecurityType != null && Market != null)
+                {
+                    var symbol = Symbol.Create(Ticker, SecurityType, Market);
+                    Log.Trace($"LiquidateCommand.CommandResultPacket(): Liquidating symbol ${symbol}");
+                    algorithm.Liquidate(symbol);
+                }
+                else
+                {
+                    throw new ArgumentException($"LiquidateCommand.CommandResultPacket(): Please provide value for all. None of ticker, market, secuity-type can be Null");
+                }
+
             }
             else
             {
+                Log.Trace($"LiquidateCommand.CommandResultPacket(): Liquidating...");
                 algorithm.Liquidate();
             }
             return new CommandResultPacket(this, true);
