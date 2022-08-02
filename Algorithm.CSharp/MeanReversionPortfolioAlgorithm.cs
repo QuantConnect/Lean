@@ -101,7 +101,7 @@ namespace QuantConnect.DataLibrary.Tests
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "37.8719%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "2784f0faf44e32c02b4083579565d1cc"}
+            {"OrderListHash", "b6dca94ebb3d821f72457389a7cac298"}
         };
     }
 }
