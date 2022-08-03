@@ -109,9 +109,6 @@ namespace QuantConnect.Tests.Common.Commands
         private class TestFileCommandHandler : FileCommandHandler
         {
             public IEnumerable<ICommand> GetCommandsPublic() => base.GetCommands();
-            public TestFileCommandHandler()
-            {
-            }
         }
     }
 }

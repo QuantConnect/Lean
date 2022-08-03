@@ -82,7 +82,7 @@ namespace QuantConnect.Commands
             }
             var resultFilePath = $"{_resultFileBaseName}-{command.Id}.json";
             File.WriteAllText($"{resultFilePath}", JsonConvert.SerializeObject(commandResultPacket));
-            Log.Trace($"FileCommandHandler.Acknowledge(): writing result to file {resultFilePath}");
+            Log.Debug($"FileCommandHandler.Acknowledge(): writing result to file {resultFilePath}");
         }
 
         /// <summary>
@@ -109,7 +109,7 @@ namespace QuantConnect.Commands
             }
 
             // remove the file when we're done reading it
-            Log.Trace($"FileCommandHandler.ReadCommandFile(): Deleting file {commandFilePath}");
+            Log.Debug($"FileCommandHandler.ReadCommandFile(): Deleting file {commandFilePath}");
             File.Delete(commandFilePath);
 
             // try it as an enumerable
@@ -118,6 +118,7 @@ namespace QuantConnect.Commands
             {
                 foreach (var command in enumerable)
                 {
+                    Log.Debug($"FileCommandHandler.enumerable(): adding command {command}");
                     _commands.Enqueue(command);
                 }
                 return;
@@ -127,6 +128,7 @@ namespace QuantConnect.Commands
             var item = deserialized as ICommand;
             if (item != null)
             {
+                Log.Debug($"FileCommandHandler.single(): adding command {item}");
                 _commands.Enqueue(item);
             }
         }
