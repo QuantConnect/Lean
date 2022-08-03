@@ -32,6 +32,20 @@ namespace QuantConnect.Tests.Engine.Results
     [TestFixture]
     public class LiveTradingResultHandlerTests
     {
+        [Test]
+        public void UninitializedAlgorithm()
+        {
+            using var messagging = new QuantConnect.Messaging.Messaging();
+            var result = new LiveTradingResultHandler();
+            result.Initialize(new LiveNodePacket(), messagging, null, new BacktestingTransactionHandler());
+
+            var algorithm = new AlgorithmStub();
+            algorithm.AddEquity("SPY");
+            result.SetAlgorithm(algorithm, 10);
+
+            Assert.DoesNotThrow(() => result.Exit());
+        }
+
         [TestCase(true)]
         [TestCase(false)]
         public void GetHoldingsPositions(bool invested)
@@ -105,12 +119,11 @@ namespace QuantConnect.Tests.Engine.Results
         [TestCase(false)]
         public void DailySampleValueBasedOnMarketHour(bool extendedMarketHoursEnabled)
         {
+            using var api = new Api.Api();
+            using var messagging = new QuantConnect.Messaging.Messaging();
             var referenceDate = new DateTime(2020, 11, 25);
             var resultHandler = new LiveTradingResultHandler();
-            resultHandler.Initialize(new LiveNodePacket(),
-                new QuantConnect.Messaging.Messaging(),
-                new Api.Api(), 
-                new BacktestingTransactionHandler());
+            resultHandler.Initialize(new LiveNodePacket(), messagging, api, new BacktestingTransactionHandler());
 
             var algo = new AlgorithmStub(createDataManager:false);
             algo.SetFinishedWarmingUp();
