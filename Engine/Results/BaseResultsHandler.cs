@@ -439,6 +439,11 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="time">Time to resolve benchmark value at</param>
         protected virtual decimal GetBenchmarkValue(DateTime time)
         {
+            if(Algorithm == null || Algorithm.Benchmark == null)
+            {
+                // this could happen if the algorithm exploded mid initialization
+                return 0;
+            }
             return Algorithm.Benchmark.Evaluate(time).SmartRounding();
         }
 
