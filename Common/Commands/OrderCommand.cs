@@ -119,13 +119,13 @@ namespace QuantConnect.Commands
             {
                 return;
             }
-            if (Ticker != null && SecurityType != null && Market != null)
+            try
             {
-                Symbol = Symbol.Create(Ticker, SecurityType, Market);
+                Symbol = TryGetSymbol(Ticker, SecurityType, Market);
             }
-            else
+            catch (Exception ex)
             {
-                throw new ArgumentException($"OrderCommand.ToString(): Please provide value for all. None of ticker, market, secuity-type can be Null");
+                throw new Exception($"OrderCommand.UpdateSymbol(): {ex.Message}");
             }
         }
     }

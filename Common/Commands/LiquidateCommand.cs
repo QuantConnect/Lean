@@ -47,21 +47,18 @@ namespace QuantConnect.Commands
         {
             if (Ticker != null || (SecurityType != null && SecurityType != SecurityType.Base)|| Market != null)
             {
-                if (Ticker != null && SecurityType != null && Market != null)
+                try
                 {
-                    var symbol = Symbol.Create(Ticker, SecurityType, Market);
-                    Log.Trace($"LiquidateCommand.CommandResultPacket(): Liquidating symbol ${symbol}");
+                    var symbol = TryGetSymbol(Ticker, SecurityType, Market);
                     algorithm.Liquidate(symbol);
                 }
-                else
+                catch (Exception ex)
                 {
-                    throw new ArgumentException($"LiquidateCommand.CommandResultPacket(): Please provide value for all. None of ticker, market, secuity-type can be Null");
+                    throw new Exception($"LiquidateCommand.CommandResultPacket(): {ex.Message}");
                 }
-
             }
             else
             {
-                Log.Trace($"LiquidateCommand.CommandResultPacket(): Liquidating...");
                 algorithm.Liquidate();
             }
             return new CommandResultPacket(this, true);

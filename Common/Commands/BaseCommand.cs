@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Interfaces;
+using System;
 
 namespace QuantConnect.Commands
 {
@@ -32,5 +33,17 @@ namespace QuantConnect.Commands
         /// </summary>
         /// <param name="algorithm">The algorithm to run this command against</param>
         public abstract CommandResultPacket Run(IAlgorithm algorithm);
+
+        protected Symbol TryGetSymbol(string ticker, SecurityType securityType, string market)
+        {
+            if (ticker != null && securityType != null && market != null)
+            {
+                return Symbol.Create(ticker, securityType, market);
+            }
+            else
+            {
+                throw new ArgumentException($"BaseCommand.TryGetSymbol(): Please provide value for all. None of ticker, market, secuity-type can be Null");
+            }
+        }
     }
 }
