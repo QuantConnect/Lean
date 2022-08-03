@@ -45,8 +45,15 @@ namespace QuantConnect.DataLibrary.Tests
             SetPortfolioConstruction(new MeanReversionPortfolioConstructionModel());
         }
 
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
         public bool CanRunLocally { get; } = true;
-        public Language[] Languages { get; } = {Language.CSharp};
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
@@ -58,6 +65,9 @@ namespace QuantConnect.DataLibrary.Tests
         /// </summary>
         public int AlgorithmHistoryDataPoints => 47;
 
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "71"},

@@ -34,7 +34,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// <remarks>Using windowSize = 1 => Passive Aggressive Mean Reversion (PAMR) Portfolio</remarks>
     public class MeanReversionPortfolioConstructionModel : PortfolioConstructionModel
     {
-        private int _numOfAssets = 0;
+        private int _numOfAssets;
         private double[] _weightVector;
         private decimal _reversionThreshold;
         private int _windowSize;
@@ -230,10 +230,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <return>array of price relatives vector</return>
         protected virtual double[] GetPriceRelatives(List<Insight> activeInsights)
         {
-            // Initialize a price vector of the next prices relatives' projection
-            var nextPriceRelatives = new double[_numOfAssets];
+            var numOfInsights = activeInsights.Count();
 
-            for (int i = 0; i < _numOfAssets; i++)
+            // Initialize a price vector of the next prices relatives' projection
+            var nextPriceRelatives = new double[numOfInsights];
+
+            for (int i = 0; i < numOfInsights; i++)
             {
                 var insight = activeInsights[i];
                 var symbolData = _symbolData[insight.Symbol];
@@ -253,6 +255,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="changes">The security additions and removals from the algorithm</param>
         public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
+            base.OnSecuritiesChanged(algorithm, changes);
+
             // clean up data for removed securities
             foreach (var removed in changes.RemovedSecurities)
             {
@@ -277,7 +281,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name="sequence">sequence to obtain cumulative sum</param>
         /// <return>cumulative sum</return>
-        private IEnumerable<double> CumulativeSum(IEnumerable<double> sequence)
+        public static IEnumerable<double> CumulativeSum(IEnumerable<double> sequence)
         {
             double sum = 0;
             foreach(var item in sequence)
@@ -294,18 +298,23 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <remark>Duchi, J., Shalev-Shwartz, S., Singer, Y., and Chandra, T. (2008, July). 
         /// Efficient projections onto the l1-ball for learning in high dimensions.
         /// In Proceedings of the 25th international conference on Machine learning (pp. 272-279).</remark>
-        /// <param name="v">unnormalized weight vector</param>
-        /// <param name="b">total weight</param>
+        /// <param name="vector">unnormalized weight vector</param>
+        /// <param name="total">regulator, default to be 1, making it a probabilistic simplex</param>
         /// <return>normalized weight vector</return>
-        private double[] SimplexProjection(IEnumerable<double> v, double b = 1)
+        public static double[] SimplexProjection(IEnumerable<double> vector, double total = 1)
         {
-            // Sort v into u in descending order
-            var u = v.OrderByDescending(x => x).ToArray();
-            var sv = CumulativeSum(u).ToArray();
+            if (total <= 0)
+            {
+                throw new ArgumentException("Total must be > 0 for Euclidean Projection onto the Simplex.");
+            }
 
-            var rho = Enumerable.Range(0, v.Count()).Where(i => u[i] > (sv[i] - b) / (i+1)).Last();
-            var theta = (sv[rho] - b) / (rho + 1);
-            var w = v.Select(x => Math.Max(x - theta, 0d)).ToArray();
+            // Sort v into u in descending order
+            var mu = vector.OrderByDescending(x => x).ToArray();
+            var sv = CumulativeSum(mu).ToArray();
+
+            var rho = Enumerable.Range(0, vector.Count()).Where(i => mu[i] > (sv[i] - total) / (i+1)).Last();
+            var theta = (sv[rho] - total) / (rho + 1);
+            var w = vector.Select(x => Math.Max(x - theta, 0d)).ToArray();
             return w;
         }
 

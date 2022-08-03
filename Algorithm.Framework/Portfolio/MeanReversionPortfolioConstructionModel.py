@@ -116,9 +116,9 @@ class MeanReversionPortfolioConstructionModel(PortfolioConstructionModel):
             activeInsights: list of active insights
         Returns:
             array of price relatives vector
-        """
+        """        
         # Initialize a price vector of the next prices relatives' projection
-        next_price_relatives = np.zeros(self.num_of_assets)
+        next_price_relatives = np.zeros(len(activeInsights))
 
         ### Get next price relative predictions
         # Using the previous price to simulate assumption of instant reversion
@@ -149,25 +149,30 @@ class MeanReversionPortfolioConstructionModel(PortfolioConstructionModel):
             if symbol not in self.symbol_data:
                 self.symbol_data[symbol] = self.MeanReversionSymbolData(algorithm, symbol, self.window_size, self.resolution)
 
-    def SimplexProjection(self, v, b=1):
+    def SimplexProjection(self, vector, total=1):
         """Normalize the updated portfolio into weight vector:
         v_{t+1} = arg min || v - v_{t+1} || ^ 2
-        
         Implementation from:
         Duchi, J., Shalev-Shwartz, S., Singer, Y., & Chandra, T. (2008, July). 
             Efficient projections onto the l 1-ball for learning in high dimensions.
             In Proceedings of the 25th international conference on Machine learning 
             (pp. 272-279).
+        Args:
+            vector: unnormalized weight vector
+            total: total weight of output, default to be 1, making it a probabilistic simplex
         """
-        v = np.asarray(v)
+        if total <= 0:
+            raise ArgumentException("Total must be > 0 for Euclidean Projection onto the Simplex.")
+            
+        vector = np.asarray(vector)
 
         # Sort v into u in descending order
-        u = np.sort(v)[::-1]
-        sv = np.cumsum(u)
+        mu = np.sort(vector)[::-1]
+        sv = np.cumsum(mu)
 
-        rho = np.where(u > (sv - b) / np.arange(1, len(v) + 1))[0][-1]
-        theta = (sv[rho] - b) / (rho + 1)
-        w = (v - theta)
+        rho = np.where(mu > (sv - total) / np.arange(1, len(vector) + 1))[0][-1]
+        theta = (sv[rho] - total) / (rho + 1)
+        w = (vector - theta)
         w[w < 0] = 0
         return w
 
