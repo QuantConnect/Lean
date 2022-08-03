@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Commands
 {
@@ -65,7 +66,7 @@ namespace QuantConnect.Commands
             Resolution = Resolution.Minute;
             Market = null;
             FillDataForward = true;
-            Leverage = -1;
+            Leverage = Security.NullLeverage;
             ExtendedMarketHours = false;
         }
 
