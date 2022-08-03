@@ -45,7 +45,7 @@ namespace QuantConnect.Commands
         /// <param name="algorithm">The algorithm to be liquidated</param>
         public override CommandResultPacket Run(IAlgorithm algorithm)
         {
-            if (Ticker != null || SecurityType != null || Market != null)
+            if (Ticker != null || (SecurityType != null && SecurityType != SecurityType.Base)|| Market != null)
             {
                 if (Ticker != null && SecurityType != null && Market != null)
                 {
