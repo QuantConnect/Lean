@@ -182,6 +182,40 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         }
 
         [Test]
+        public void GetPriceRelativesPython()
+        {
+            SetPortfolioConstruction(Language.Python, PortfolioBias.Long);
+
+            var aapl = _algorithm.AddEquity("AAPL");
+            var spy = _algorithm.AddEquity("SPY");
+
+            var insights = new List<Insight>
+            {
+                new Insight(_nowUtc, aapl.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Up, null, null),
+                new Insight(_nowUtc, spy.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Up, null, null),
+            };
+            
+            var history = _algorithm.History<TradeBar>(new[] {aapl.Symbol, spy.Symbol}, 2, Resolution.Daily);
+            var aaplHist = history.Select(slice => slice[aapl.Symbol].Close);
+            var spyHist = history.Select(slice => slice[spy.Symbol].Close);
+            var aaplRelative = (double) (aaplHist.Last() / aaplHist.Average());
+            var spyRelative = (double) (spyHist.Last() / spyHist.Average());
+
+            using (Py.GIL())
+            {
+                const string name = nameof(MeanReversionPortfolioConstructionModel);
+                var model = Py.Import(name).GetAttr(name).Invoke(((int)Resolution.Daily).ToPython(), ((int)PortfolioBias.LongShort).ToPython(), 1.ToPython(), 2.ToPython());
+                model.InvokeMethod("OnSecuritiesChanged", _algorithm.ToPython(), SecurityChangesTests.AddedNonInternal(aapl, spy).ToPython());
+                
+                var result = PyList.AsList(model.InvokeMethod("GetPriceRelatives", insights.ToPython()));
+                var resultArray = result.Select(x => Math.Round(Convert.ToDouble(x), 8)).ToArray();
+                var expected = new double[] {aaplRelative, spyRelative};
+                expected = expected.Select(x => Math.Round(x, 8)).ToArray();
+                Assert.AreEqual(expected, resultArray);
+            }
+        }
+
+        [Test]
         public void GetPriceRelativesWithInsightMagnitude()
         {
             var model = new TestMeanReversionPortfolioConstructionModel();
@@ -202,16 +236,39 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             Assert.AreEqual(expected, result);
         }
 
-        [TestCase(Language.CSharp, 1)]
-        [TestCase(Language.Python, 1)]
-        [TestCase(Language.CSharp, 0.5)]
-        [TestCase(Language.Python, 0.5)]
-        [TestCase(Language.CSharp, 0)]
-        [TestCase(Language.Python, 0)]
-        public void SimplexProjection(Language language, double regulator)
+        [Test]
+        public void GetPriceRelativesWithInsightMagnitudePython()
         {
-            var model = GetPortfolioConstructionModel(language, PortfolioBias.Long, Resolution.Daily);
+            SetPortfolioConstruction(Language.Python, PortfolioBias.Long);
 
+            var aapl = _algorithm.AddEquity("AAPL");
+            var spy = _algorithm.AddEquity("SPY");
+
+            var insights = new List<Insight>
+            {
+                new Insight(_nowUtc, aapl.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Up, 1, null),
+                new Insight(_nowUtc, spy.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Up, -0.5, null),
+            };
+
+            using (Py.GIL())
+            {
+                const string name = nameof(MeanReversionPortfolioConstructionModel);
+                var model = Py.Import(name).GetAttr(name).Invoke(((int)Resolution.Daily).ToPython());
+                model.InvokeMethod("OnSecuritiesChanged", _algorithm.ToPython(), SecurityChangesTests.AddedNonInternal(aapl, spy).ToPython());
+                
+                var result = PyList.AsList(model.InvokeMethod("GetPriceRelatives", insights.ToPython()));
+                var resultArray = result.Select(x => Convert.ToDouble(x)).ToArray();
+                var expected = new double[] {2d, 0.5d};
+                Assert.AreEqual(expected, resultArray);
+            }
+        }
+
+        [TestCase(1)]
+        [TestCase(0.5)]
+        [TestCase(0)]
+        [TestCase(-0.5)]
+        public void SimplexProjection(double regulator)
+        {
             if (regulator <= 0)
             {
                 var exception = Assert.Throws<ArgumentException>(() => MeanReversionPortfolioConstructionModel.SimplexProjection(_simplexTestArray, regulator));
@@ -233,6 +290,41 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var result = MeanReversionPortfolioConstructionModel.SimplexProjection(_simplexTestArray, regulator);
             result = result.Select(x => Math.Round(x, 8)).ToArray();
             Assert.AreEqual(expected, result);
+        }
+
+        [TestCase(1)]
+        [TestCase(0.5)]
+        [TestCase(0)]
+        [TestCase(-0.5)]
+        public void SimplexProjectionPython(double regulator)
+        {
+            using (Py.GIL())
+            {
+                const string name = nameof(MeanReversionPortfolioConstructionModel);
+                var model = Py.Import(name).GetAttr(name).Invoke(((int)Resolution.Daily).ToPython());
+
+                if (regulator <= 0)
+                {
+                    var exception = Assert.Throws<ArgumentException>(() => model.InvokeMethod("SimplexProjection", _simplexTestArray.ToPython(), new PyFloat(regulator)));
+                    Assert.That(exception.Message, Is.EqualTo("Total must be > 0 for Euclidean Projection onto the Simplex."));
+                    return;
+                }
+
+                double[] expected;
+                if (regulator == 1d)
+                {
+                    expected = _simplexExpectedArray1;
+                }
+                else
+                {
+                    expected = _simplexExpectedArray2;
+                }
+                var expectedArray = expected.Select(x => Math.Round(x, 8)).ToArray();
+
+                var result = PyList.AsList(model.InvokeMethod("SimplexProjection", _simplexTestArray.ToPython(), new PyFloat(regulator)));
+                var resultArray = result.Select(x => Math.Round(Convert.ToDouble(x), 8)).ToArray();
+                Assert.AreEqual(expectedArray, resultArray);
+            }
         }
 
         private IEnumerable<IPortfolioTarget> GeneratePortfolioTargets(Language language, InsightDirection direction1, InsightDirection direction2, double? magnitude1, double? magnitude2)

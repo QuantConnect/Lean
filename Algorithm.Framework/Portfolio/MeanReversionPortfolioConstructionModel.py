@@ -81,7 +81,7 @@ class MeanReversionPortfolioConstructionModel(PortfolioConstructionModel):
             self.weight_vector = np.ones(num_of_assets) * (1/num_of_assets)
             
         ### Get price relatives vs expected price (SMA)
-        price_relatives = self.GetPriceRelative(activeInsights)     # \tilde{x}_{t+1}
+        price_relatives = self.GetPriceRelatives(activeInsights)     # \tilde{x}_{t+1}
 
         ### Get step size of next portfolio
         # \bar{x}_{t+1} = 1^T * \tilde{x}_{t+1} / m
@@ -110,7 +110,7 @@ class MeanReversionPortfolioConstructionModel(PortfolioConstructionModel):
 
         return targets
     
-    def GetPriceRelative(self, activeInsights):
+    def GetPriceRelatives(self, activeInsights):
         """Get price relatives with reference level of SMA
         Args:
             activeInsights: list of active insights
