@@ -49,6 +49,8 @@ class BasicTemplateFuturesDailyAlgorithm(QCAlgorithm):
                 contract = sorted(contracts, key = lambda x: x.Expiry)[0]
 
                 # if found, trade it.
+                # Let's check if market is actually open to place market orders. For example: for daily resolution, data can come at a
+                # time when market is closed, like 7:00PM.
                 if self.Securities[contract.Symbol].Exchange.ExchangeOpen:
                     self.MarketOrder(contract.Symbol, 1)
                 else:
@@ -56,6 +58,7 @@ class BasicTemplateFuturesDailyAlgorithm(QCAlgorithm):
                     # to make the order fill on next bar.
                     self.LimitOrder(contract.Symbol, 1, contract.AskPrice * 2)
         else:
+            # Same as above, let's check if market is open to place market orders.
             if any([not self.Securities[x.Symbol].Exchange.ExchangeOpen for x in self.Portfolio.values()]):
                 for holdings in sorted(self.Portfolio.values(), key=lambda x: x.Symbol):
                     # use a very low limit price here to make the order fill on next bar.

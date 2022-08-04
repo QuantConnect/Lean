@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -35,7 +34,6 @@ namespace QuantConnect.Algorithm.CSharp
             { CreateOption(new DateTime(2020, 2, 25), OptionRight.Call, 1600), false },
             { CreateOption(new DateTime(2020, 2, 25), OptionRight.Put, 1545), false }
         };
-        private Future _goldFuture;
 
         public override void Initialize()
         {
@@ -45,22 +43,18 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2020, 1, 4);
             SetEndDate(2020, 1, 6);
 
-            _goldFuture = AddFuture("GC", Resolution.Minute, Market.COMEX, extendedMarketHours: true);
-            _goldFuture.SetFilter(0, 365);
+            var goldFutures = AddFuture("GC", Resolution.Minute, Market.COMEX, extendedMarketHours: true);
+            goldFutures.SetFilter(0, 365);
 
-            AddFutureOption(_goldFuture.Symbol);
+            AddFutureOption(goldFutures.Symbol);
         }
 
         public override void OnData(Slice data)
         {
-            if (!_goldFuture.Exchange.ExchangeOpen)
-            {
-                return;
-            }
-
             foreach (var symbol in data.QuoteBars.Keys)
             {
-                if (_expectedSymbols.ContainsKey(symbol))
+                // Check that we are in regular hours, we can place a market order (on extended hours, limit orders should be used)
+                if (_expectedSymbols.ContainsKey(symbol) && IsInRegularHours(symbol))
                 {
                     var invested = _expectedSymbols[symbol];
                     if (!invested)
@@ -84,6 +78,11 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception("Expected holdings at the end of algorithm, but none were found.");
             }
+        }
+
+        private bool IsInRegularHours(Symbol symbol)
+        {
+            return Securities[symbol].Exchange.ExchangeOpen;
         }
 
         private static Symbol CreateOption(DateTime expiry, OptionRight optionRight, decimal strikePrice)

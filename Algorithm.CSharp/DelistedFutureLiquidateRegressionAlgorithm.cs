@@ -30,7 +30,6 @@ namespace QuantConnect.Algorithm.CSharp
     public class DelistedFutureLiquidateRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _contractSymbol;
-        private Symbol _futureSymbol;
         protected virtual Resolution Resolution => Resolution.Minute;
 
         /// <summary>
@@ -43,7 +42,6 @@ namespace QuantConnect.Algorithm.CSharp
 
             var futureSP500 = AddFuture(Futures.Indices.SP500EMini, Resolution);
             futureSP500.SetFilter(0, 182);
-            _futureSymbol = futureSP500.Symbol;
         }
 
         /// <summary>
@@ -61,15 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
                     if (contract != null)
                     {
                         _contractSymbol = contract.Symbol;
-                        // if (Securities[_contractSymbol].Exchange.ExchangeOpen)
-                        // {
-                            PlaceOrder(_contractSymbol);
-                        // }
-                        // else
-                        // {
-                        //     // Very high limit price so the order gets filled with the next bar
-                        //     LimitOrder(_contractSymbol, 1, Securities[_contractSymbol].Price * 2m);
-                        // }
+                        PlaceOrder(_contractSymbol);
                     }
                 }
             }

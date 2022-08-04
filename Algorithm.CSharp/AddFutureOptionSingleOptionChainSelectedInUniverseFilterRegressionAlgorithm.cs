@@ -103,7 +103,7 @@ namespace QuantConnect.Algorithm.CSharp
                 _dataReceived[qb.Symbol].Add(qb);
             }
 
-            if (_invested || !hasOptionQuoteBars || !_es.Exchange.ExchangeOpen)
+            if (_invested || !hasOptionQuoteBars)
             {
                 return;
             }

@@ -40,6 +40,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void Initialize()
         {
+            UniverseSettings.Resolution = Resolution.Tick;
+
             SetStartDate(2013, 10, 08);
             SetEndDate(2013, 10, 11);
             SetCash(10000000);
@@ -65,15 +67,12 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new Exception($"{matched.Count}/{slice.Keys.Count} were unexpected expiry date(s): " + string.Join(", ", matched.Select(x => x.ID.Date)));
                 }
 
-                if (slice.Keys.All(symbol => Securities[symbol].Exchange.ExchangeOpen))
+                foreach (var symbol in slice.Keys)
                 {
-                    foreach (var symbol in slice.Keys)
-                    {
-                        MarketOrder(symbol, 1);
-                    }
+                    MarketOrder(symbol, 1);
                 }
             }
-            else if (Portfolio.Any(p => p.Value.Invested) && Portfolio.Where(p => p.Value.Invested).All(p => Securities[p.Key].Exchange.ExchangeOpen))
+            else if (Portfolio.Any(p => p.Value.Invested))
             {
                 Liquidate();
             }
@@ -93,7 +92,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 46031;
+        public long DataPoints => 2561853;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -106,17 +105,17 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "4"},
-            {"Average Win", "0.00%"},
+            {"Average Win", "0%"},
             {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "0.012%"},
+            {"Compounding Annual Return", "-0.017%"},
             {"Drawdown", "0.000%"},
-            {"Expectancy", "1.703"},
+            {"Expectancy", "-1"},
             {"Net Profit", "0.000%"},
             {"Sharpe Ratio", "0"},
             {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "50%"},
-            {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "4.41"},
+            {"Loss Rate", "100%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
             {"Alpha", "0"},
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
@@ -125,13 +124,13 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0.178"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$7.40"},
-            {"Estimated Strategy Capacity", "$540000.00"},
-            {"Lowest Capacity Asset", "GC VOFJUCDY9XNH"},
-            {"Fitness Score", "0.017"},
+            {"Estimated Strategy Capacity", "$0"},
+            {"Lowest Capacity Asset", "GC VMRHKN2NLWV1"},
+            {"Fitness Score", "0.008"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "-121.653"},
             {"Portfolio Turnover", "0.017"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -146,7 +145,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "5f358e195cfc8a433250d4b01d97b293"}
+            {"OrderListHash", "7cd0ac939e3b54130734e111180e99ae"}
         };
     }
 }

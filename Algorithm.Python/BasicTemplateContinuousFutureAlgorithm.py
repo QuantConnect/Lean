@@ -44,9 +44,6 @@ class BasicTemplateContinuousFutureAlgorithm(QCAlgorithm):
             if changedEvent.Symbol == self._continuousContract.Symbol:
                 self.Log(f"SymbolChanged event: {changedEvent}")
 
-        if not self._continuousContract.Exchange.ExchangeOpen:
-            return
-
         if not self.Portfolio.Invested:
             if self._fast.Current.Value > self._slow.Current.Value:
                 self._currentContract = self.Securities[self._continuousContract.Mapped]
@@ -54,7 +51,8 @@ class BasicTemplateContinuousFutureAlgorithm(QCAlgorithm):
         elif self._fast.Current.Value < self._slow.Current.Value:
             self.Liquidate()
 
-        if self._currentContract is not None and self._currentContract.Symbol != self._continuousContract.Mapped:
+        # We check exchange hours because the contract mapping can call OnData outside of regular hours.
+        if self._currentContract is not None and self._currentContract.Symbol != self._continuousContract.Mapped and self._continuousContract.Exchange.ExchangeOpen:
             self.Log(f"{Time} - rolling position from {self._currentContract.Symbol} to {self._continuousContract.Mapped}")
 
             currentPositionSize = self._currentContract.Holdings.Quantity

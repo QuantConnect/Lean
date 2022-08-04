@@ -67,13 +67,13 @@ namespace QuantConnect.Algorithm.CSharp
 
         protected virtual void ScheduleBuySell()
         {
-            // Schedule a purchase of this contract tomorrow at 10AM
+            // Schedule a purchase of this contract tomorrow at 10AM when the market is open
             Schedule.On(DateRules.Tomorrow, TimeRules.At(10,0,0), () =>
             {
                 Ticket = MarketOrder(DcOption, 1);
             });
 
-            // Schedule liquidation tomorrow at 2PM
+            // Schedule liquidation tomorrow at 2PM when the market is open
             Schedule.On(DateRules.Tomorrow, TimeRules.At(14,0,0), () =>
             {
                 Liquidate();

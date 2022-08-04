@@ -64,7 +64,7 @@ class AddFutureOptionContractDataStreamingRegressionAlgorithm(QCAlgorithm):
         if self.invested or not hasOptionQuoteBars:
             return
 
-        if data.ContainsKey(self.es20h20) and data.ContainsKey(self.es19m20) and self.IsMarketOpen(self.es20h20):
+        if data.ContainsKey(self.es20h20) and data.ContainsKey(self.es19m20):
             self.SetHoldings(self.es20h20, 0.2)
             self.SetHoldings(self.es19m20, 0.2)
 

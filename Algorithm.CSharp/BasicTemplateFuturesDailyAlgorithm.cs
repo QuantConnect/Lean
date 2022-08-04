@@ -83,6 +83,8 @@ namespace QuantConnect.Algorithm.CSharp
                     // if found, trade it
                     if (contract != null)
                     {
+                        // Let's check if market is actually open to place market orders. For example: for daily resolution, data can come at a
+                        // time when market is closed, like 7:00PM.
                         if (Securities[contract.Symbol].Exchange.ExchangeOpen)
                         {
                             MarketOrder(contract.Symbol, 1);
@@ -98,6 +100,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
             else
             {
+                // Same as above, let's check if market is open to place market orders.
                 if (Portfolio.Values.Any(x => !Securities[x.Symbol].Exchange.ExchangeOpen))
                 {
                     foreach (var holdings in Portfolio.Values.OrderBy(x => x.Symbol))

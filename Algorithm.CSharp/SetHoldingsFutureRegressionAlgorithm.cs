@@ -30,7 +30,6 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class SetHoldingsFutureRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Future _future;
         private Symbol _contractSymbol;
         private bool _invertedPosition;
 
@@ -43,10 +42,10 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 10);
             SetCash(1000000);
 
-            _future = AddFuture(Futures.Indices.SP500EMini);
+            var future = AddFuture(Futures.Indices.SP500EMini);
 
             // set our expiry filter for this futures chain
-            _future.SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
+            future.SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
         }
 
         /// <summary>

@@ -33,7 +33,6 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private Future _continuousContract;
         private Future _futureContract;
-        private bool _invested;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -42,7 +41,6 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2013, 10, 6);
             SetEndDate(2013, 10, 10);
-            // SetCash(100000000);
 
             _continuousContract = AddFuture(Futures.Indices.SP500EMini,
                 dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
@@ -88,8 +86,6 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     throw new Exception($"Limit order should be allowed for futures outside of regular market hours");
                 }
-
-                _invested = true;
             }
         }
 

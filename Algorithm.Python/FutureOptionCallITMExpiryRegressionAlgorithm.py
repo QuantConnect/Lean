@@ -48,7 +48,7 @@ class FutureOptionCallITMExpiryRegressionAlgorithm(QCAlgorithm):
         if self.esOption != self.expectedContract:
             raise AssertionError(f"Contract {self.expectedContract} was not found in the chain")
 
-        self.Schedule.On(self.DateRules.Tomorrow, self.TimeRules.AfterMarketOpen(self.es19m20, 1, True), self.ScheduleCallback)
+        self.Schedule.On(self.DateRules.Tomorrow, self.TimeRules.AfterMarketOpen(self.es19m20, 1), self.ScheduleCallback)
 
     def ScheduleCallback(self):
         self.MarketOrder(self.esOption, 1)

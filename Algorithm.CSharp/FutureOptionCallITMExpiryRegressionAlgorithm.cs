@@ -65,7 +65,7 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception($"Contract {_expectedOptionContract} was not found in the chain");
             }
 
-            Schedule.On(DateRules.Tomorrow, TimeRules.AfterMarketOpen(_es19m20, 1, true), () =>
+            Schedule.On(DateRules.Tomorrow, TimeRules.AfterMarketOpen(_es19m20, 1), () =>
             {
                 MarketOrder(_esOption, 1);
             });
@@ -213,32 +213,32 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "3"},
-            {"Average Win", "2.30%"},
-            {"Average Loss", "-7.51%"},
-            {"Compounding Annual Return", "-10.760%"},
-            {"Drawdown", "5.400%"},
-            {"Expectancy", "-0.347"},
-            {"Net Profit", "-5.389%"},
-            {"Sharpe Ratio", "-1.16"},
-            {"Probabilistic Sharpe Ratio", "0.010%"},
+            {"Average Win", "2.28%"},
+            {"Average Loss", "-6.80%"},
+            {"Compounding Annual Return", "-9.374%"},
+            {"Drawdown", "5.300%"},
+            {"Expectancy", "-0.332"},
+            {"Net Profit", "-4.677%"},
+            {"Sharpe Ratio", "-1.002"},
+            {"Probabilistic Sharpe Ratio", "0.165%"},
             {"Loss Rate", "50%"},
             {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "0.31"},
-            {"Alpha", "-0.074"},
+            {"Profit-Loss Ratio", "0.34"},
+            {"Alpha", "-0.064"},
             {"Beta", "0.003"},
             {"Annual Standard Deviation", "0.064"},
             {"Annual Variance", "0.004"},
-            {"Information Ratio", "-0.253"},
+            {"Information Ratio", "-0.226"},
             {"Tracking Error", "0.378"},
-            {"Treynor Ratio", "-23.478"},
+            {"Treynor Ratio", "-18.826"},
             {"Total Fees", "$1.85"},
-            {"Estimated Strategy Capacity", "$38000000.00"},
+            {"Estimated Strategy Capacity", "$120000000.00"},
             {"Lowest Capacity Asset", "ES XFH59UPBIJ7O|ES XFH59UK0MYO1"},
-            {"Fitness Score", "0.009"},
+            {"Fitness Score", "0.017"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-0.181"},
-            {"Return Over Maximum Drawdown", "-1.999"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "-1.77"},
             {"Portfolio Turnover", "0.027"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -253,7 +253,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "ceb6b7b471acc27c11f0618e4ffacdbd"}
+            {"OrderListHash", "02b16807a77a858047996f15597ff145"}
         };
     }
 }

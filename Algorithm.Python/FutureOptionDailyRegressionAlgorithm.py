@@ -43,10 +43,10 @@ class FutureOptionDailyRegressionAlgorithm(QCAlgorithm):
         if self.dcOption != expectedContract:
             raise AssertionError(f"Contract {self.dcOption} was not the expected contract {expectedContract}")
 
-        # Schedule a purchase of this contract tomorrow at 10AM
+        # Schedule a purchase of this contract tomorrow at 10AM when the market is open
         self.Schedule.On(self.DateRules.Tomorrow, self.TimeRules.At(10,0,0), self.ScheduleCallbackBuy)
 
-        # Schedule liquidation at 2pm tomorrow
+        # Schedule liquidation at 2pm tomorrow when the market is open
         self.Schedule.On(self.DateRules.Tomorrow, self.TimeRules.At(14,0,0), self.ScheduleCallbackLiquidate)
 
     def ScheduleCallbackBuy(self):

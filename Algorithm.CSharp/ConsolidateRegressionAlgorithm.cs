@@ -123,7 +123,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            if (!Portfolio.Invested && data.ContainsKey(_symbol))
+            if (!Portfolio.Invested)
             {
                 SetHoldings(_symbol, 0.5);
             }

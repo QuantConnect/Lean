@@ -99,11 +99,6 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(QuantConnect.Orders.OrderEvent orderEvent)
-        {
-            base.OnOrderEvent(orderEvent);
-        }
-
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>

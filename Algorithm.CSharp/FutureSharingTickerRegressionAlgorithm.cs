@@ -18,7 +18,6 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -27,8 +26,6 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class FutureSharingTickerRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Future _goldFuture;
-
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -37,8 +34,8 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 08);
             SetEndDate(2013, 10, 10);
 
-            _goldFuture = AddFuture(Futures.Metals.Gold, market: Market.COMEX);
-            _goldFuture.SetFilter(0, 182);
+            var gold = AddFuture(Futures.Metals.Gold, market: Market.COMEX);
+            gold.SetFilter(0, 182);
 
             // this future does not exist just added as an example
             var gold2 = AddFuture(Futures.Metals.Gold, market: Market.NYMEX);

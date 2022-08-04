@@ -46,7 +46,7 @@ class FutureOptionHourlyRegressionAlgorithm(QCAlgorithm):
         # Schedule a purchase of this contract at noon
         self.Schedule.On(self.DateRules.Today, self.TimeRules.Noon, self.ScheduleCallbackBuy)
 
-        # Schedule liquidation at 2pm
+        # Schedule liquidation at 2pm when the market is open
         self.Schedule.On(self.DateRules.Today, self.TimeRules.At(14,0,0), self.ScheduleCallbackLiquidate)
 
     def ScheduleCallbackBuy(self):

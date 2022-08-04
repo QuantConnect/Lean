@@ -71,7 +71,7 @@ class AddFutureOptionSingleOptionChainSelectedInUniverseFilterRegressionAlgorith
 
             self.dataReceived[qb.Symbol].append(qb)
 
-        if self.invested or not hasOptionQuoteBars or not self.es.Exchange.ExchangeOpen:
+        if self.invested or not hasOptionQuoteBars:
             return
 
         for chain in data.OptionChains.Values:

@@ -70,11 +70,6 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
 
-            if (!_continuousContract.Exchange.ExchangeOpen)
-            {
-                return;
-            }
-
             if (!Portfolio.Invested)
             {
                 if(_fast > _slow)
@@ -88,7 +83,8 @@ namespace QuantConnect.Algorithm.CSharp
                 Liquidate();
             }
 
-            if (_currentContract != null && _currentContract.Symbol != _continuousContract.Mapped)
+            // We check exchange hours because the contract mapping can call OnData outside of regular hours.
+            if (_currentContract != null && _currentContract.Symbol != _continuousContract.Mapped && _continuousContract.Exchange.ExchangeOpen)
             {
                 Log($"{Time} - rolling position from {_currentContract.Symbol} to {_continuousContract.Mapped}");
 

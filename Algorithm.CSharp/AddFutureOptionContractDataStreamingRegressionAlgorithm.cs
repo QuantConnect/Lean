@@ -98,7 +98,7 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            if (data.ContainsKey(_es20h20) && data.ContainsKey(_es19m20) && IsMarketOpen(_es20h20))
+            if (data.ContainsKey(_es20h20) && data.ContainsKey(_es19m20))
             {
                 SetHoldings(_es20h20, 0.2);
                 SetHoldings(_es19m20, 0.2);
@@ -109,6 +109,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
+            base.OnEndOfAlgorithm();
+
             if (!_onDataReached)
             {
                 throw new Exception("OnData() was never called.");

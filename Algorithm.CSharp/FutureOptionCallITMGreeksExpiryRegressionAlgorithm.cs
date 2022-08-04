@@ -129,12 +129,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (!_invested)
             {
-                var contract = data.OptionChains.Values.First().Contracts.Values.First();
-
                 // the margin requirement for the FOPs is less than the one of the underlying so we can't allocate all our buying power
                 // into FOPs else we won't be able to exercise
-                SetHoldings(contract.Symbol, 0.25);
-
+                SetHoldings(data.OptionChains.Values.First().Contracts.Values.First().Symbol, 0.25);
                 _invested = true;
             }
         }
