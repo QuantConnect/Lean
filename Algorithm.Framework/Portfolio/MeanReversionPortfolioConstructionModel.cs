@@ -230,7 +230,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <return>array of price relatives vector</return>
         protected virtual double[] GetPriceRelatives(List<Insight> activeInsights)
         {
-            var numOfInsights = activeInsights.Count();
+            var numOfInsights = activeInsights.Count;
 
             // Initialize a price vector of the next prices relatives' projection
             var nextPriceRelatives = new double[numOfInsights];
