@@ -30,8 +30,8 @@ class ParameterizedAlgorithm(QCAlgorithm):
         self.AddEquity("SPY")
 
         # Receive parameters from the Job
-        fast_period = int(self.GetParameter("ema-fast", "100"))
-        slow_period = int(self.GetParameter("ema-slow", "200"))
+        fast_period = self.GetParameter("ema-fast", 100)
+        slow_period = self.GetParameter("ema-slow", 200)
 
         self.fast = self.EMA("SPY", fast_period)
         self.slow = self.EMA("SPY", slow_period)
