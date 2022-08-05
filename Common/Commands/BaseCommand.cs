@@ -46,7 +46,7 @@ namespace QuantConnect.Commands
             }
             else
             {
-                throw new ArgumentException($"BaseCommand.TryGetSymbol(): Please provide value for all. None of ticker, market, secuity-type can be Null");
+                throw new ArgumentException($"BaseCommand.GetSymbol(): Please provide value for all. None of ticker, market, secuity-type can be Null");
             }
         }
     }
