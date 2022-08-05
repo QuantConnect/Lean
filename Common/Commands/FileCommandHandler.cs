@@ -45,9 +45,9 @@ namespace QuantConnect.Commands
         /// <returns>Sorted enumerator of all the available command files</returns>
         public static IEnumerable<FileInfo> GetCommandFiles()
         {
-            var dir = new DirectoryInfo(Directory.GetCurrentDirectory());
-            var files = dir.GetFiles(_commandFilePattern);
-            return files.OrderBy(q => q.Name);
+            var currentDirectory = new DirectoryInfo(Directory.GetCurrentDirectory());
+            var filesFromPattern = currentDirectory.GetFiles(_commandFilePattern);
+            return filesFromPattern.OrderBy(file => file.Name);
         }
 
         /// <summary>
@@ -82,7 +82,6 @@ namespace QuantConnect.Commands
             }
             var resultFilePath = $"{_resultFileBaseName}-{command.Id}.json";
             File.WriteAllText($"{resultFilePath}", JsonConvert.SerializeObject(commandResultPacket));
-            Log.Debug($"FileCommandHandler.Acknowledge(): writing result to file {resultFilePath}");
         }
 
         /// <summary>
@@ -109,7 +108,6 @@ namespace QuantConnect.Commands
             }
 
             // remove the file when we're done reading it
-            Log.Debug($"FileCommandHandler.ReadCommandFile(): Deleting file {commandFilePath}");
             File.Delete(commandFilePath);
 
             // try it as an enumerable
@@ -118,7 +116,6 @@ namespace QuantConnect.Commands
             {
                 foreach (var command in enumerable)
                 {
-                    Log.Debug($"FileCommandHandler.enumerable(): adding command {command}");
                     _commands.Enqueue(command);
                 }
                 return;
@@ -128,7 +125,6 @@ namespace QuantConnect.Commands
             var item = deserialized as ICommand;
             if (item != null)
             {
-                Log.Debug($"FileCommandHandler.single(): adding command {item}");
                 _commands.Enqueue(item);
             }
         }
