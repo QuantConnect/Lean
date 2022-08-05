@@ -177,22 +177,21 @@ namespace QuantConnect.Util
                 return string.Empty;
             }
 
-            // Get the directory where the user files are located
-            var baseScript = value.GetStringBetweenChars('\"', '\"');
-            var length = Math.Max(baseScript.LastIndexOf('/'), baseScript.LastIndexOf('\\'));
-            if (length < 0)
-            {
-                return string.Empty;
-            }
-            var directory = baseScript.Substring(0, 1 + length);
-
             // Format the information in every line
             var lines = value.Substring(1, value.Length - 1)
-                .Split(new[] { "\'  File " }, StringSplitOptions.RemoveEmptyEntries)
-                .Where(x => x.Contains(directory))
+                .Split(new[] { "  File " }, StringSplitOptions.RemoveEmptyEntries)
                 .Where(x => x.Split(',').Length > 2)
                 .Select(x =>
                 {
+                    // Get the directory where the user files are located
+                    var baseScript = value.GetStringBetweenChars('\"', '\"');
+                    var length = Math.Max(baseScript.LastIndexOf('/'), baseScript.LastIndexOf('\\'));
+                    if (length < 0)
+                    {
+                        return string.Empty;
+                    }
+                    var directory = baseScript.Substring(0, 1 + length);
+
                     var info = x.Replace(directory, string.Empty).Split(',');
                     var line = info[0].GetStringBetweenChars('\"', '\"');
                     var lineNumber = int.Parse(info[1].Replace("line", string.Empty).Trim()) + ExceptionLineShift;

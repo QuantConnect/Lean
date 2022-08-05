@@ -73,7 +73,7 @@ def Test2(securityType: SecurityType) -> None:
         {
             var expected = new List<Symbol>
             {
-                Symbol.Create("AIG", SecurityType.Equity, Market.USA), 
+                Symbol.Create("AIG", SecurityType.Equity, Market.USA),
                 Symbol.Create("BAC", SecurityType.Equity, Market.USA),
                 Symbol.Create("IBM", SecurityType.Equity, Market.USA),
                 Symbol.Create("GOOG", SecurityType.Equity, Market.USA)
@@ -167,6 +167,32 @@ def Test2(securityType: SecurityType) -> None:
    at Python.Runtime.PyModule.Import(String name)
    at Python.Runtime.Py.Import(String name)
    at QuantConnect.AlgorithmFactory.Python.Wrappers.AlgorithmPythonWrapper..ctor(String moduleName) in D:\QuantConnect\MyLean\Lean\AlgorithmFactory\Python\Wrappers\AlgorithmPythonWrapper.cs:line 74",
+            0)]
+        [TestCase(@"
+  at wrapped_function
+    raise KeyError(f""No key found for either mapped or original key. Mapped Key: {mKey}; Original Key: {oKey}"")
+ in PandasMapper.py: line 76
+  at HistoryCall
+    history.loc['QQQ']   # <--- raises Key Error
+ in Algorithm.Python/TestAlgorithm.py: line 27
+  at OnData
+    self.HistoryCall()
+   at Python.Runtime.PythonException.ThrowLastAsClrException()
+   at Python.Runtime.PyObject.Invoke(PyTuple args in Algorithm.Python/TestAlgorithm.py: line 23
+",
+            @"  File ""/home/user/QuantConnect/Lean/Launcher/bin/Debug/PandasMapper.py"", line 76, in wrapped_function
+    raise KeyError(f""No key found for either mapped or original key. Mapped Key: {mKey}; Original Key: {oKey}"")
+  File ""/home/user/QuantConnect/Lean/Algorithm.Python/TestAlgorithm.py"", line 27, in HistoryCall
+    history.loc['QQQ']   # <--- raises Key Error
+  File ""/home/user/QuantConnect/Lean/Algorithm.Python/TestAlgorithm.py"", line 23, in OnData
+    self.HistoryCall()
+   at Python.Runtime.PythonException.ThrowLastAsClrException()
+   at Python.Runtime.PyObject.Invoke(PyTuple args, PyDict kw)
+   at Python.Runtime.PyObject.TryInvoke(InvokeBinder binder, Object[] args, Object& result)
+   at CallSite.Target(Closure , CallSite , Object , PythonSlice )
+   at System.Dynamic.UpdateDelegates.UpdateAndExecuteVoid2[T0,T1](CallSite site, T0 arg0, T1 arg1)
+   at QuantConnect.AlgorithmFactory.Python.Wrappers.AlgorithmPythonWrapper.OnData(Slice slice) in /home/jhonathan/QuantConnect/Lean/AlgorithmFactory/Python/Wrappers/AlgorithmPythonWrapper.cs:line 587
+   at QuantConnect.Lean.Engine.AlgorithmManager.Run(AlgorithmNodePacket job, IAlgorithm algorithm, ISynchronizer synchronizer, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, IAlphaHandler alphas, CancellationToken token) in /home/jhonathan/QuantConnect/Lean/Engine/AlgorithmManager.cs:line 523",
             0)]
         public void ParsesPythonExceptionStackTrace(string expected, string original, int shift)
         {
