@@ -34,9 +34,13 @@ namespace QuantConnect.Commands
         /// <param name="algorithm">The algorithm to run this command against</param>
         public abstract CommandResultPacket Run(IAlgorithm algorithm);
 
-        protected Symbol TryGetSymbol(string ticker, SecurityType securityType, string market)
+        protected Symbol GetSymbol(string ticker, SecurityType securityType, string market, Symbol symbol = null)
         {
-            if (ticker != null && securityType != null && market != null)
+            if (symbol != null)
+            {
+                return symbol;
+            }
+            if (ticker != null && (securityType != null && securityType != SecurityType.Base) && market != null)
             {
                 return Symbol.Create(ticker, securityType, market);
             }

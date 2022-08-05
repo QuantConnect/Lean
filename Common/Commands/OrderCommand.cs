@@ -75,10 +75,7 @@ namespace QuantConnect.Commands
         /// <param name="algorithm">The algorithm to run this command against</param>
         public override CommandResultPacket Run(IAlgorithm algorithm)
         {
-            if (Symbol == null)
-            {
-                UpdateSymbol();
-            }
+            Symbol = GetSymbol(Ticker, SecurityType, Market, Symbol);
             var request = new SubmitOrderRequest(OrderType, Symbol.SecurityType, Symbol, Quantity, StopPrice, LimitPrice, DateTime.UtcNow, Tag);
             var ticket = algorithm.Transactions.ProcessRequest(request);
             var response = ticket.GetMostRecentOrderResponse();
@@ -105,28 +102,9 @@ namespace QuantConnect.Commands
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
+            Symbol = GetSymbol(Ticker, SecurityType, Market, Symbol);
             // delegate to the order request
-            if (Symbol == null)
-            {
-                UpdateSymbol();
-            }
             return new SubmitOrderRequest(OrderType, Symbol.SecurityType, Symbol, Quantity, StopPrice, LimitPrice, DateTime.UtcNow, Tag).ToString();
-        }
-
-        private void UpdateSymbol()
-        {
-            if (Symbol != null)
-            {
-                return;
-            }
-            try
-            {
-                Symbol = TryGetSymbol(Ticker, SecurityType, Market);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"OrderCommand.UpdateSymbol(): {ex.Message}");
-            }
         }
     }
 }

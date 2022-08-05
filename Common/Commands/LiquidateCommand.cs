@@ -14,7 +14,6 @@
 */
 
 using QuantConnect.Interfaces;
-using QuantConnect.Logging;
 using System;
 
 namespace QuantConnect.Commands
@@ -45,11 +44,11 @@ namespace QuantConnect.Commands
         /// <param name="algorithm">The algorithm to be liquidated</param>
         public override CommandResultPacket Run(IAlgorithm algorithm)
         {
-            if (Ticker != null || (SecurityType != null && SecurityType != SecurityType.Base)|| Market != null)
+            if (Ticker != null || SecurityType != SecurityType.Base || Market != null)
             {
                 try
                 {
-                    var symbol = TryGetSymbol(Ticker, SecurityType, Market);
+                    var symbol = GetSymbol(Ticker, SecurityType, Market);
                     algorithm.Liquidate(symbol);
                 }
                 catch (Exception ex)
