@@ -31,7 +31,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// </summary>
     /// <remarks>Li, B., Hoi, S. C. (2012). On-line portfolio selection with moving average reversion. arXiv preprint arXiv:1206.4626.
     /// Available at https://arxiv.org/ftp/arxiv/papers/1206/1206.4626.pdf</remarks>
-    /// <remarks>Using windowSize = 1 => Passive Aggressive Mean Reversion (PAMR) Portfolio</remarks>
     public class MeanReversionPortfolioConstructionModel : PortfolioConstructionModel
     {
         private int _numOfAssets;
