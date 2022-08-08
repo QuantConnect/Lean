@@ -152,7 +152,7 @@ namespace QuantConnect.Tests.Python
         [TestCase("numeric_parameter", 2, false)]
         [TestCase("not_a_parameter", 2, true)]
         [TestCase("string_parameter", 2, true)]
-        public void GetParameterConvertsToIntType(string parameterName, int defaultValue, bool shouldReturnDefaultValue)
+        public void GetParameterConvertsToNumericTypes(string parameterName, int defaultValue, bool shouldReturnDefaultValue)
         {
             using (Py.GIL())
             {
@@ -176,7 +176,6 @@ namespace QuantConnect.Tests.Python
 
                 if (!shouldReturnDefaultValue && parameters.TryGetValue(parameterName, out var parameterValue))
                 {
-
                     Assert.AreEqual(int.Parse(parameterValue), intValue);
                     Assert.AreEqual(double.Parse(parameterValue), doubleValue);
                     Assert.AreEqual(decimal.Parse(parameterValue), decimalValue);
