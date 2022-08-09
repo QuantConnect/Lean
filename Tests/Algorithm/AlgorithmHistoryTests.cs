@@ -209,6 +209,71 @@ def getTradesOnlyHistory(algorithm, symbol, start):
                 () => _algorithm.History(Symbols.SPY, DateTime.UtcNow.AddDays(-1), DateTime.UtcNow, Resolution.Tick).ToList());
         }
 
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void GetsTickResolutionHistoricalDataWithoutATickSubscription(Language language)
+        {
+            var spy = _algorithm.AddEquity("SPY", Resolution.Daily).Symbol;
+            var ibm = _algorithm.AddEquity("IBM", Resolution.Daily).Symbol;
+            _algorithm.SetStartDate(2014, 6, 10);
+            var start = new DateTime(2013, 10, 7);
+            var end = new DateTime(2013, 10, 8);
+            _algorithm.SetStartDate(2013, 10, 8);
+
+            _testHistoryProvider.Slices = new[]
+            {
+                new Slice(start, new[] { new Tick(start, spy, 100, 100) { TickType = TickType.Trade } }, start),
+                new Slice(start, new[] { new Tick(start, ibm, 200, 200) { TickType = TickType.Trade } }, start),
+                new Slice(end, new[] { new Tick(end, spy, 110, 110) { TickType = TickType.Trade }, new Tick(end, ibm, 210, 210) { TickType = TickType.Trade } }, end)
+            }.ToList();
+
+            if (language == Language.CSharp)
+            {
+                var spyHistory = _algorithm.History<Tick>(spy, start, end, Resolution.Tick);
+                Assert.AreEqual(2, spyHistory.Count());
+
+                var ibmHistory = _algorithm.History<Tick>(ibm, start, end, Resolution.Tick);
+                Assert.AreEqual(2, ibmHistory.Count());
+
+                var allHistory = _algorithm.History<Tick>(new[] { spy, ibm }, start, end, Resolution.Tick);
+                Assert.AreEqual(3, allHistory.Count());
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    var getTickHistory = PyModule.FromString("testModule",
+                        @"
+from AlgorithmImports import *
+
+def getTickHistory(algorithm, symbol, start, end):
+    history = algorithm.History(Tick, symbol, start, end, Resolution.Tick)
+    history = history if isinstance(symbol, list) else history.loc[symbol]
+
+    return history.values.tolist()
+
+        ").GetAttr("getTickHistory");
+
+                    _algorithm.SetPandasConverter();
+                    using var pyAlgorithm = _algorithm.ToPython();
+                    using var pySpy = spy.ToPython();
+                    using var pyIbm = ibm.ToPython();
+                    using var pySymbols = new PyList(new [] { pySpy, pyIbm });
+                    using var pyStart = start.ToPython();
+                    using var pyEnd = end.ToPython();
+
+                    var spyHistory = getTickHistory.Invoke(pyAlgorithm, pySpy, pyStart, pyEnd).As<List<dynamic>>();
+                    Assert.AreEqual(2, spyHistory.Count);
+
+                    var ibmHistory = getTickHistory.Invoke(pyAlgorithm, pyIbm, pyStart, pyEnd).As<List<dynamic>>();
+                    Assert.AreEqual(2, ibmHistory.Count);
+
+                    var allHistory = getTickHistory.Invoke(pyAlgorithm, pySymbols, pyStart, pyEnd).As<List<dynamic>>();
+                    Assert.AreEqual(4, allHistory.Count);
+                }
+            }
+        }
+
         [TestCase(Resolution.Second, Language.CSharp)]
         [TestCase(Resolution.Minute, Language.CSharp)]
         [TestCase(Resolution.Hour, Language.CSharp)]
@@ -1183,6 +1248,8 @@ def getHistoryForContractDepthOffset(algorithm, symbol, start, end, resolution, 
                 {
                     HistryRequests.Add(request);
                 }
+
+                if (!requests.Any()) return Enumerable.Empty<Slice>().ToList();
 
                 var startTime = requests.Min(x => x.StartTimeUtc.ConvertFromUtc(x.DataTimeZone));
                 var endTime = requests.Max(x => x.EndTimeUtc.ConvertFromUtc(x.DataTimeZone));
