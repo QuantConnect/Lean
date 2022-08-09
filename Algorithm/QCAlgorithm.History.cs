@@ -314,7 +314,7 @@ namespace QuantConnect.Algorithm
         {
             var requests = symbols.Select(x =>
             {
-                var config = GetMatchingSubscription(x, typeof(T));
+                var config = GetMatchingSubscription(x, typeof(T), resolution);
                 if (config == null) return null;
 
                 return _historyRequestFactory.CreateHistoryRequest(config, start, end, GetExchangeHours(x), resolution);
