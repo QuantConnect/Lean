@@ -197,6 +197,41 @@ def getTradesOnlyHistory(algorithm, symbol, start):
         }
 
         [Test]
+        public void ExplicitTickResolutionHistoryRequestTradeBarApiThrowsException()
+        {
+            var spy = _algorithm.AddEquity("SPY", Resolution.Tick).Symbol;
+            Assert.Throws<InvalidOperationException>(() => _algorithm.History(spy, 1, Resolution.Tick).ToList());
+        }
+
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void TickResolutionPeriodBasedHistoryRequestThrowsException(Language language)
+        {
+            var spy = _algorithm.AddEquity("SPY", Resolution.Tick).Symbol;
+
+            if (language == Language.CSharp)
+            {
+                Assert.Throws<ArgumentException>(() => _algorithm.History<Tick>(spy, 1).ToList());
+                Assert.Throws<ArgumentException>(() => _algorithm.History<Tick>(spy, 1, Resolution.Tick).ToList());
+                Assert.Throws<ArgumentException>(() => _algorithm.History<Tick>(new [] { spy }, 1).ToList());
+                Assert.Throws<ArgumentException>(() => _algorithm.History<Tick>(new [] { spy }, 1, Resolution.Tick).ToList());
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    _algorithm.SetPandasConverter();
+                    using var pyTickType = typeof(Tick).ToPython();
+                    using var pySymbols = new PyList(new [] { spy.ToPython() });
+                    Assert.Throws<ArgumentException>(() => _algorithm.History(pyTickType, spy, 1));
+                    Assert.Throws<ArgumentException>(() => _algorithm.History(pyTickType, spy, 1, Resolution.Tick));
+                    Assert.Throws<ArgumentException>(() => _algorithm.History(pyTickType, pySymbols, 1));
+                    Assert.Throws<ArgumentException>(() => _algorithm.History(pyTickType, pySymbols, 1, Resolution.Tick));
+                }
+            }
+        }
+
+        [Test]
         public void TickResolutionHistoryRequestTradeBarApiThrowsException()
         {
             Assert.Throws<InvalidOperationException>(

@@ -287,11 +287,16 @@ namespace QuantConnect.Algorithm
         {
             var requests = symbols.Select(x =>
             {
+                var res = GetResolution(x, resolution);
+                if (res == Resolution.Tick)
+                {
+                    throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
+                }
+
                 var config = GetMatchingSubscription(x, typeof(T));
                 if (config == null) return null;
 
                 var exchange = GetExchangeHours(x);
-                var res = GetResolution(x, resolution);
                 var start = _historyRequestFactory.GetStartTimeAlgoTz(x, periods, res, exchange, config.DataTimeZone);
                 return _historyRequestFactory.CreateHistoryRequest(config, start, Time, exchange, res);
             });
@@ -371,10 +376,13 @@ namespace QuantConnect.Algorithm
         public IEnumerable<T> History<T>(Symbol symbol, int periods, Resolution? resolution = null)
             where T : IBaseData
         {
-            if (resolution == Resolution.Tick) throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
+            resolution = GetResolution(symbol, resolution);
+            if (resolution == Resolution.Tick)
+            {
+                throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
+            }
 
             var config = GetHistoryRequestConfig(symbol, typeof(T), resolution);
-            resolution = GetResolution(symbol, resolution);
             var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, GetExchangeHours(symbol), config.DataTimeZone);
             return History<T>(symbol, start, Time, resolution).Memoize();
         }

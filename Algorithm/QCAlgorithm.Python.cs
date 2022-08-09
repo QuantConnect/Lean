@@ -947,6 +947,11 @@ namespace QuantConnect.Algorithm
         public PyObject History(PyObject type, PyObject tickers, int periods, Resolution? resolution = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
+            if (symbols.Any(symbol => GetResolution(symbol, resolution) == Resolution.Tick))
+            {
+                throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
+            }
+
             var requestedType = type.CreateType();
             var requests = CreateBarCountHistoryRequests(symbols, requestedType, periods, resolution);
 
@@ -1004,11 +1009,14 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(HistoricalData)]
         public PyObject History(PyObject type, Symbol symbol, int periods, Resolution? resolution = null)
         {
-            if (resolution == Resolution.Tick) throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
+            resolution = GetResolution(symbol, resolution);
+            if (resolution == Resolution.Tick)
+            {
+                throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
+            }
 
-            var res = GetResolution(symbol, resolution);
             var marketHours = GetMarketHours(symbol);
-            var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, res, marketHours.ExchangeHours, marketHours.DataTimeZone);
+            var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, marketHours.ExchangeHours, marketHours.DataTimeZone);
             return History(type, symbol, start, Time, resolution);
         }
 
