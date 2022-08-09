@@ -1,7 +1,7 @@
 ![alt tag](https://raw.githubusercontent.com/QuantConnect/Lean/master/Documentation/logo.white.small.png) 
 ## LEAN Data Formats / Equity
 
-QuantConnect hosts US Equity Data (market 'usa') provided by QuantQuote. Ticks are stored unfiltered. TradeBars have suspicious ticks filtered out and the resulting ticks are consolidated and saved. QuantConnect has *trade* equity ticks only; so only saves `date_trade.zip` files.
+QuantConnect hosts US Equity Data (market 'USA') provided by [AlgoSeek](https://www.algoseek.com/). Ticks are stored unfiltered. TradeBars have suspicious ticks filtered out and the resulting ticks are consolidated and saved. QuantConnect has *trade* equity ticks as `date_trade.zip` files, and *quote* equity ticks as `date_quote.zip`.
 
 The US equity data is in the New York timezone. Data timezones are found in the [MarketHoursDatabase.json](https://github.com/QuantConnect/Lean/blob/master/Data/market-hours/market-hours-database.json)
 
@@ -66,7 +66,7 @@ Trade tick files are stored in files named `YYYYMMDD_trade.zip`. There is one fi
  - Volume - Number of shares in the sale.
  - Exchange - Location of the sale.
  - Sale Condition - Notes on the sale. 
- - Suspicious - Boolean indicating the tick is flagged as suspicious according to QuantQuote's algorithms. This generally indicates the trade is far from other market prices and may be reversed. TradeBar data excludes suspicious ticks.
+ - Suspicious - Boolean indicating the tick is flagged as suspicious according to AlgoSeek's algorithms. This generally indicates the trade is far from other market prices and may be reversed. TradeBar data excludes suspicious ticks.
 
 #### Tick Exchange Codes
 
@@ -145,4 +145,4 @@ NASD | ‘7’ | Placeholder for 611 Exempt
 NASD | ‘8’ | Placeholder for 611 Exempt
 NASD | ‘9’ | Placeholder for 611 Exempt
 
-See more information in the QuantQuote [whitepaper](https://quantquote.com/docs/TickView_Historical_Trades.pdf).
+See more information in the AlgoSeek [whitepaper](https://us-equity-market-data-docs.s3.amazonaws.com/algoseek.US.Equity.TAQ.pdf).
