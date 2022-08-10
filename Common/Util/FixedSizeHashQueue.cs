@@ -62,13 +62,7 @@ namespace QuantConnect.Util
         /// </summary>
         public bool TryPeek(out T item)
         {
-            if (_queue.Count > 0)
-            {
-                item = _queue.Peek();
-                return true;
-            }
-            item = default(T);
-            return false;
+            return _queue.TryPeek(out item);
         }
 
         /// <summary>

@@ -35,7 +35,7 @@ class SpreadExecutionModel(ExecutionModel):
         self.targetsCollection.AddRange(targets)
 
         # for performance we check count value, OrderByMarginImpact and ClearFulfilled are expensive to call
-        if self.targetsCollection.Count > 0:
+        if not self.targetsCollection.IsEmpty:
             for target in self.targetsCollection.OrderByMarginImpact(algorithm):
                 symbol = target.Symbol
                 

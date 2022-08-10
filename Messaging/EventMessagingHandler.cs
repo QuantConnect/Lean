@@ -106,9 +106,9 @@ namespace QuantConnect.Messaging
             }
 
             //Catch up if this is the first time
-            while (_queue.Count > 0)
+            while (_queue.TryDequeue(out var item))
             {
-                ProcessPacket(_queue.Dequeue());
+                ProcessPacket(item);
             }
 
             //Finally process this new packet
@@ -135,9 +135,9 @@ namespace QuantConnect.Messaging
         /// </summary>
         public void SendEnqueuedPackets()
         {
-            while (_queue.Count > 0 && _loaded)
+            while (_loaded && _queue.TryDequeue(out var item))
             {
-                ProcessPacket(_queue.Dequeue());
+                ProcessPacket(item);
             }
         }
 

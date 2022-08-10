@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -46,7 +46,7 @@ namespace QuantConnect.Util
         /// <summary>
         /// Returns true if processing, false otherwise
         /// </summary>
-        public bool IsBusy => _collection.Count > 0 || !_processingCompletedEvent.IsSet;
+        public bool IsBusy => !_collection.IsEmpty || !_processingCompletedEvent.IsSet;
 
         /// <summary>
         /// Adds the items to this collection

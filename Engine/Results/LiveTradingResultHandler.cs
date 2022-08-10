@@ -117,7 +117,7 @@ namespace QuantConnect.Lean.Engine.Results
             ExitEvent.WaitOne(3000);
 
             // -> 1. Run Primary Sender Loop: Continually process messages from queue as soon as they arrive.
-            while (!(ExitTriggered && Messages.Count == 0))
+            while (!(ExitTriggered && Messages.IsEmpty))
             {
                 try
                 {
@@ -131,7 +131,7 @@ namespace QuantConnect.Lean.Engine.Results
                     //2. Update the packet scanner:
                     Update();
 
-                    if (Messages.Count == 0)
+                    if (Messages.IsEmpty)
                     {
                         // prevent thread lock/tight loop when there's no work to be done
                         ExitEvent.WaitOne(Time.GetSecondUnevenWait(1000));
@@ -1070,8 +1070,8 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             //Send all the notification messages but timeout within a second, or if this is a force process, wait till its done.
-            var start = DateTime.UtcNow;
-            while (Algorithm.Notify.Messages.Count > 0 && (DateTime.UtcNow < start.AddSeconds(1) || forceProcess))
+            var timeout = DateTime.UtcNow.AddSeconds(1);
+            while (!Algorithm.Notify.Messages.IsEmpty && (DateTime.UtcNow < timeout || forceProcess))
             {
                 Notification message;
                 if (Algorithm.Notify.Messages.TryDequeue(out message))
