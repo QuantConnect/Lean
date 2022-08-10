@@ -1,7 +1,7 @@
 ![alt tag](https://raw.githubusercontent.com/QuantConnect/Lean/master/Documentation/logo.white.small.png) 
 ## LEAN Data Formats / Equity
 
-QuantConnect hosts US Equity Data (market 'USA') provided by [AlgoSeek](https://www.algoseek.com/). Ticks are stored unfiltered. TradeBars have suspicious ticks filtered out and the resulting ticks are consolidated and saved. QuantConnect has *trade* equity ticks as `{YYYYMMDD}_trade.zip` files, and *quote* equity ticks as `{YYYYMMDD}_quote.zip`.
+QuantConnect hosts US Equity Data (market 'USA') provided by [AlgoSeek](https://www.algoseek.com/) (trade and quote data from post-2007) and QuantQuote (trade data from pre-2007). Ticks are stored unfiltered. TradeBars and QuoteBars have suspicious ticks filtered out and the resulting ticks are consolidated and saved. QuantConnect has *trade* equity ticks as `{YYYYMMDD}_trade.zip` files, and *quote* equity ticks as `{YYYYMMDD}_quote.zip`.
 
 The US equity data is in the New York timezone. Data timezones are found in the [MarketHoursDatabase.json](https://github.com/QuantConnect/Lean/blob/master/Data/market-hours/market-hours-database.json)
 
@@ -15,7 +15,7 @@ Equity data supports the following Resolutions:
 
 ### Minute, Second Data File Format ###
 
-Minute, Second files are located in the equity / usa / resolution folders. The file name uses a 8-character length date.   `/data/equity/usa/minute/ticker/{YYYYMMDD}_{trade|quote}.zip`.
+Minute, Second files are located in the equity / usa / resolution folders. The file name uses a 8-character length date: `/data/equity/usa/minute/ticker/{YYYYMMDD}_{trade|quote}.zip`. Note that only post-2007 period has quote data.
 
 The zip file contains 1 CSV file which repeats the information about the path in the file name. e.g. `20140605_aapl_minute_trade.csv`.
 
@@ -32,7 +32,7 @@ The trade CSV contents are as follows:
  - Close - Deci-cents Close Price for TradeBar.
  - Volume - Number of shares traded in this TradeBar.
 
- The quote CSV contents are as follows:
+The quote CSV contents are as follows:
 
 | Time | Bid Open | Bid High | Bid Low | Bid Close | Bid Size | Ask Open | Ask High | Ask Low | Ask Close | Ask Size
 | ----------- | ---------- | --------- | ---------- | --------- | --------- | ---------- | --------- | ---------- | --------- | ---------
@@ -71,7 +71,7 @@ Divide prices by 10,000 to convert deci-cents to dollars.
 
 ### Tick File Format
 
-Equity tick data is stored in files which are located in the `/equity/usa/tick` folder. The file name uses a 8-character length date.   `/data/equity/usa/tick/{ticker}/{YYYYMMDD}_{trade|quote}.zip`.  QuantConnect currently only provides *Trade* equity ticks.
+Equity tick data is stored in files which are located in the `/equity/usa/tick` folder. The file name uses a 8-character length date: `/data/equity/usa/tick/{ticker}/{YYYYMMDD}_{trade|quote}.zip`.  QuantConnect currently provides *Quote* equity ticks (post-2007) and *Trade* equity ticks.
 
 Trade tick files are stored in files named `{YYYYMMDD}_trade.zip`. There is one file equity tick names named after the data: `20131008_bac_Trade_Tick.csv`. The CSV contains records of each trade:
 
