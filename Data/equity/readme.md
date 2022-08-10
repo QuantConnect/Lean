@@ -35,8 +35,8 @@ The trade CSV contents are as follows:
  The quote CSV contents are as follows:
 
 | Time | Bid Open | Bid High | Bid Low | Bid Close | Bid Size | Ask Open | Ask High | Ask Low | Ask Close | Ask Size
-| ----------- | ---------- | --------- | ---------- | --------- | ---------
-| 15300000 | 6448000  | 6448000 | 6448000 | 6448000 | 90
+| ----------- | ---------- | --------- | ---------- | --------- | --------- | ---------- | --------- | ---------- | --------- | ---------
+| 15300000 | 6448000  | 6448000 | 6448000 | 6448000 | 90 | 6500000  | 6500000 | 6500000 | 6500000 | 100
 
  - Time - Milliseconds since midnight in the timezone of the data format. 
  - Bid Open - Deci-cents Bid Open Price for QuoteBar.
