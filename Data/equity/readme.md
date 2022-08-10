@@ -127,7 +127,7 @@ Z | BATS Exchange
 
 #### Tick Sale Conditions
 ##### [Trade Ticks](https://github.com/QuantConnect/Lean/blob/master/Common/Data/Auxiliary/TradeConditionFlags.cs)
-Sale Condition Code | Description |
+Sale Condition Code | Description 
 --- | ---
 0 | No Condition
 1 | A trade made without stated conditions is deemed regular way for settlement on the third business day following the transaction date.
@@ -164,7 +164,7 @@ Sale Condition Code | Description |
 80000000 | Denotes the trade is an odd lot less than a 100 shares.
 
 ##### [Quote Ticks](https://github.com/QuantConnect/Lean/blob/master/Common/Data/Auxiliary/QuoteConditionFlags.cs)
-Sale Condition Code | Description |
+Sale Condition Code | Description 
 --- | ---
 0 | No Condition
 1 | This condition is used for the majority of quotes to indicate a normal trading environment.
@@ -192,3 +192,60 @@ Sale Condition Code | Description |
 400000 | A halt condition used when there is a sudden order influx. To prevent a disorderly market, trading is temporarily suspended by the UTP participant.
 
 See more information in the AlgoSeek [whitepaper](https://us-equity-market-data-docs.s3.amazonaws.com/algoseek.US.Equity.TAQ.pdf).
+
+##### Trade Ticks (Pre-2007)
+Exchange | Sale Condition Code | Description 
+---- | --- | ---
+CTS | Blank or ‘@’ | Regular Sale (no condition)
+CTS | ‘B’ | Average Price Trade
+CTS | ‘C’ | Cash Trade (same day clearing)
+CTS | ‘E’ | Automatic Execution
+CTS | ‘F’ | Intermarket Sweep Order
+CTS | ‘G’ | Opening/Reopening Trade Detail
+CTS | ‘H’ | Intraday Trade Detail
+CTS | ‘I’ | CAP Election Trade
+CTS | ‘J’ | Rule 127 Trade
+CTS | ‘K’ | Rule 127 trade (NYSE only) or Rule 155 trade
+NYSE | ‘L’ | Sold Last (late reporting)
+NYSE | ‘N’ | Next Day Trade (next day clearing)
+NYSE | ‘O’ | Market Center Opening Trade
+NYSE | ‘R’ | Seller
+NYSE | ‘S’ | Reserved
+NYSE | ‘T’ | Extended Hours Trade
+NYSE | ‘U’ | Extended Hours (Sold Out of Sequence)
+NYSE | ‘Z’ | Sold (out of sequence)
+NYSE | ‘4’ | Derivatively Priced
+NYSE | ‘5’ | Market Center Re-opening Prints
+NYSE | ‘6’ | Market Center Closing Prints 
+NASD | ‘@’ | Regular Trade
+NASD | ‘A’ | Acquisition
+NASD | ‘B’ | Bunched Trade
+NASD | ‘C’ | Cash Trade
+NASD | ‘D’ | Distribution
+NASD | ‘F’ | Intermarket Sweep
+NASD | ‘G’ | Bunched Sold Trade
+NASD | ‘K’ | Rule 155 Trade (NYSE MKT Only)
+NASD | ‘L’ | Sold Last
+NASD | ‘M’ | Market Center Close Price
+NASD | ‘N’ | Next Day
+NASD | ‘O’ | Opening Prints
+NASD | ‘P’ | Prior Reference Price
+NASD | ‘Q’ | Market Center Open Price
+NASD | ‘R’ | Seller (Long-Form Message Formats Only)
+NASD | ‘S’ | Split Trade
+NASD | ‘T’ | Form - T Trade
+NASD | ‘U’ | Extended Hours (Sold Out of Sequence)
+NASD | ‘W’ | Average Price Trade
+NASD | ‘Y’ | Yellow Flag
+NASD | ‘Z’ | Sold (Out of Sequence)
+NASD | ‘1’ | Stopped Stock - Regular Trade
+NASD | ‘2’ | Stopped Stock - Sold Last
+NASD | ‘3’ | Stopped Stock - Sold Last 3 | Stopped Stock - Sold
+NASD | ‘4’ | Derivatively Priced
+NASD | ‘5’ | Re-opening Prints
+NASD | ‘6’ | Closing Prints
+NASD | ‘7’ | Placeholder for 611 Exempt
+NASD | ‘8’ | Placeholder for 611 Exempt
+NASD | ‘9’ | Placeholder for 611 Exempt
+
+See more information in the QuantQuote [whitepaper](https://quantquote.com/docs/TickView_Historical_Trades.pdf).
