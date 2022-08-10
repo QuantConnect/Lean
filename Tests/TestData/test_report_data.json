@@ -1,0 +1,184 @@
+{
+    "RollingWindow": {},
+    "AlphaRuntimeStatistics": {},
+    "Charts": {
+        "Benchmark": {
+            "Name": "Benchmark",
+            "ChartType": 0,
+            "Series": {
+                "Benchmark": {
+                    "Name": "Benchmark",
+                    "Unit": "$",
+                    "Index": 0,
+                    "Values": [
+                        { "x": 1609736400, "y": 366.2371 },
+                        { "x": 1609822800, "y": 361.2511 },
+                        { "x": 1609909200, "y": 363.7392 }
+                    ],
+                    "SeriesType": 0,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none"
+                }
+            }
+        },
+        "Drawdown": {
+            "Name": "Drawdown",
+            "ChartType": 0,
+            "Series": {
+                "Equity Drawdown": {
+                    "Name": "Equity Drawdown",
+                    "Unit": "%",
+                    "Index": 0,
+                    "Values": [
+                        { "x": 1609736400, "y": 0.0 },
+                        { "x": 1609822800, "y": 0.0 },
+                        { "x": 1609909200, "y": -0.01 }
+                    ],
+                    "SeriesType": 0,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none"
+                }
+            }
+        },
+        "Capacity": {
+            "Name": "Capacity",
+            "ChartType": 0,
+            "Series": {
+                "Strategy Capacity": {
+                    "Name": "Strategy Capacity",
+                    "Unit": "$",
+                    "Index": 0,
+                    "Values": [
+                        { "x": 1609736400, "y": 0.0 },
+                        { "x": 1609822800, "y": 0.0 },
+                        { "x": 1609909200, "y": 0.0 }
+                    ],
+                    "SeriesType": 0,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none"
+                }
+            }
+        },
+        "Strategy Equity": {
+            "Name": "Strategy Equity",
+            "ChartType": 0,
+            "Series": {
+                "Equity": {
+                    "Name": "Equity",
+                    "Unit": "$",
+                    "Index": 0,
+                    "Values": [
+                        { "x": 1609736400, "y": 1000000.0 },
+                        { "x": 1609748160, "y": 1000000.0 },
+                        { "x": 1609748820, "y": 1000000.0 }
+                    ],
+                    "SeriesType": 2,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none"
+                },
+                "Daily Performance": {
+                    "Name": "Daily Performance",
+                    "Unit": "%",
+                    "Index": 1,
+                    "Values": [
+                        { "x": 1609736400, "y": 0.0 },
+                        { "x": 1609822800, "y": 0.0 },
+                        { "x": 1609909200, "y": -0.013 }
+                    ],
+                    "SeriesType": 3,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none"
+                }
+            }
+        },
+        "Exposure": {
+            "Name": "Exposure",
+            "ChartType": 0,
+            "Series": {
+                "IndexOption - Long Ratio": {
+                    "Name": "IndexOption - Long Ratio",
+                    "Unit": "",
+                    "Index": 0,
+                    "SeriesType": 0,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none",
+                    "Values": [
+                        { "x": 1609822800, "y": 0.0017 },
+                        { "x": 1609909200, "y": 0.0015 },
+                        { "x": 1609995600, "y": 0.0015 }
+                    ]
+                }
+            }
+        },
+        "Assets Sales Volume": {
+            "Name": "Assets Sales Volume",
+            "ChartType": 0,
+            "Series": {
+                "VIX   210120C00010000": {
+                    "Name": "VIX   210120C00010000",
+                    "Unit": "$",
+                    "Index": 0,
+                    "Values": [
+                        { "x": 1609822800, "y": 1670.0 },
+                        { "x": 1609909200, "y": 1670.0 },
+                        { "x": 1609995600, "y": 1670.0 }
+                    ],
+                    "SeriesType": 7,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none"
+                },
+                "VIX   210217C00010000": {
+                    "Name": "VIX   210217C00010000",
+                    "Unit": "$",
+                    "Index": 0,
+                    "Values": [
+                        { "x": 1611291600, "y": 1490.0 },
+                        { "x": 1611378000, "y": 1490.0 },
+                        { "x": 1611464400, "y": 1490.0 }
+                    ],
+                    "SeriesType": 7,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none"
+                }
+            }
+        }
+    },
+    "Orders": {
+        "1": {
+            "Type": 0,
+            "Id": 1,
+            "ContingentId": 0,
+            "BrokerId": [ "1" ],
+            "Symbol": {
+                "Value": "VIX   210120C00010000",
+                "ID": "VIX XLCXXK57591Q|VIX 31",
+                "Permtick": "VIX   210120C00010000",
+                "Underlying": {
+                    "Value": "VIX",
+                    "ID": "VIX 31",
+                    "Permtick": "VIX"
+                }
+            },
+            "Price": 16.7,
+            "PriceCurrency": "USD",
+            "Time": "2021-01-04T21:00:00Z",
+            "CreatedTime": "2021-01-04T21:00:00Z",
+            "LastFillTime": "2021-01-04T21:00:00Z",
+            "Quantity": 1.0,
+            "Status": 3,
+            "Properties": { "TimeInForce": {} },
+            "SecurityType": 10,
+            "Direction": 0,
+            "Value": 16.7,
+            "OrderSubmissionData": {
+                "BidPrice": 16.5000,
+                "AskPrice": 16.7000,
+                "LastPrice": 16.6000
+            },
+            "IsMarketable": true
+        }
+    },
+    "ProfitLoss": {},
+    "Statistics": {},
+    "RuntimeStatistics": {}
+}

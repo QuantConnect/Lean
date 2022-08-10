@@ -962,9 +962,11 @@ class ReportCharts:
             return base64
 
         color_map = {'Equity': "#71c3fc", 'Option':'#A0522D', 'Commodity':'#4B0082',
-                    'Forex':'#0000FF', 'Future':'#6B8E23', 'Cfd':'#FF8C00', 'Crypto':'#BDB76B'}
+                    'Forex':'#0000FF', 'Future':'#6B8E23', 'Cfd':'#FF8C00', 'Crypto':'#BDB76B',
+                    'FutureOption':'#BDB76C', 'IndexOption':'#BDB76E'}
         live_color_map = {'Equity': "#ff9914" , 'Option': '#DAA520', 'Commodity': '#9400D3',
-                          'Forex':'#6495ED', 'Future':'#808000', 'Cfd':'#FFD700', 'Crypto':'#FFDAB9'}
+                          'Forex':'#6495ED', 'Future':'#808000', 'Cfd':'#FFD700', 'Crypto':'#FFDAB9',
+                          'FutureOption':'#FFDABA', 'IndexOption':'#FFDABC'}
 
         for k, v in list(color_map.items()):
             color_map[k + ' - Short'] = '#' + hex(int(v[1:], 16) ^ 0xffffff)[2:].zfill(6)

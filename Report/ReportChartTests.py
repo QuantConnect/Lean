@@ -161,16 +161,16 @@ result = charts.GetLeverage(backtest, live)
 
 ## Test GetExposurePlot
 time = [pd.Timestamp(x).to_pydatetime() for x in pd.date_range('2014-10-01', periods=365)]
-long_securities = ['Equity']
-short_securities = ['Forex']
-long = [np.random.uniform(0, 0.5, 365)]
-short = [np.random.uniform(-0.5, 0, 365)]
+long_securities = ['Equity', 'Option', 'Commodity', 'Forex', 'Future', 'Cfd', 'Crypto', 'FutureOption', 'IndexOption']
+short_securities = long_securities
+long = [np.random.uniform(0, 0.5, 365) for x in long_securities]
+short = [np.random.uniform(-0.5, 0, 365) for x in short_securities]
 
 live_time = [pd.Timestamp(x).to_pydatetime() for x in pd.date_range('2015-10-01', periods=100)]
-live_long = [np.random.uniform(0, 0.5, 100)]
-live_short = [np.random.uniform(-0.5, -0, 100)]
-live_long_securities = ['Equity']
-live_short_securities = ['Forex']
+live_long_securities = long_securities
+live_short_securities = long_securities
+live_long = [np.random.uniform(0, 0.5, 100) for x in live_long_securities]
+live_short = [np.random.uniform(-0.5, -0, 100) for x in live_short_securities]
 
 result = charts.GetExposure()
 result = charts.GetExposure(time, long_securities = long_securities, long_data=long, short_securities=[], short_data=[list(np.zeros(len(long[0])))])
