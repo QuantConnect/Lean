@@ -15,11 +15,11 @@ Equity data supports the following Resolutions:
 
 ### Minute, Second Data File Format ###
 
-Minute, Second files are located in the equity / usa / resolution folders. The file name uses a 8-character length date.   `/data/equity/usa/minute/ticker/{YYYYMMDD}_trade.zip`.
+Minute, Second files are located in the equity / usa / resolution folders. The file name uses a 8-character length date.   `/data/equity/usa/minute/ticker/{YYYYMMDD}_{trade|quote}.zip`.
 
 The zip file contains 1 CSV file which repeats the information about the path in the file name. e.g. `20140605_aapl_minute_trade.csv`.
 
-The CSV contents are as follows:
+The trade CSV contents are as follows:
 
 | Time | Open | High | Low | Close | Volume
 | ----------- | ---------- | --------- | ---------- | --------- | ---------
@@ -32,9 +32,27 @@ The CSV contents are as follows:
  - Close - Deci-cents Close Price for TradeBar.
  - Volume - Number of shares traded in this TradeBar.
 
+ The quote CSV contents are as follows:
+
+| Time | Bid Open | Bid High | Bid Low | Bid Close | Bid Size | Ask Open | Ask High | Ask Low | Ask Close | Ask Size
+| ----------- | ---------- | --------- | ---------- | --------- | ---------
+| 15300000 | 6448000  | 6448000 | 6448000 | 6448000 | 90
+
+ - Time - Milliseconds since midnight in the timezone of the data format. 
+ - Bid Open - Deci-cents Bid Open Price for QuoteBar.
+ - Bid High - Deci-cents Bid High Price for QuoteBar.
+ - Bid Low - Deci-cents Bid Low Price for QuoteBar.
+ - Bid Close - Deci-cents Bid Close Price for QuoteBar.
+ - Bid Size - Number of shares being bid that quoted in this QuoteBar.
+ - Ask Open - Deci-cents Ask Open Price for QuoteBar.
+ - Ask High - Deci-cents Ask High Price for QuoteBar.
+ - Ask Low - Deci-cents Ask Low Price for QuoteBar.
+ - Ask Close - Deci-cents Ask Close Price for QuoteBar.
+ - Ask Size - Number of shares being ask for that quoted in this QuoteBar.
+
 ### Hour and Daily File Format
 
-Hour and Daily files are located in the `/equity/usa/{hour|daily}` folder. Each file contains all bars available for this ticker. e.g. `/data/equity/usa/hour/aapl.zip`. The zip file contains 1 CSV file named the same as the ticker (`aapl.csv`). Currently this filename is not used but for consistency it should follow this pattern.
+Hour and Daily files are located in the `/equity/usa/{hour|daily}` folder. Each file contains all bars available for this ticker. e.g. `/data/equity/usa/hour/aapl.zip`. The zip file contains 1 CSV file named the same as the ticker (`aapl.csv`). Only trade bar data is available in Hour and Daily resolution.
 
 The CSV contents are as follows:
 
@@ -53,21 +71,38 @@ Divide prices by 10,000 to convert deci-cents to dollars.
 
 ### Tick File Format
 
-Equity tick data is stored in files which are located in the `/equity/usa/tick` folder. The file name uses a 8-character length date.   `/data/equity/usa/tick/{ticker}/{YYYYMMDD}_tickType.zip`.  QuantConnect currently only provides *Trade* equity ticks.
+Equity tick data is stored in files which are located in the `/equity/usa/tick` folder. The file name uses a 8-character length date.   `/data/equity/usa/tick/{ticker}/{YYYYMMDD}_{trade|quote}.zip`.  QuantConnect currently only provides *Trade* equity ticks.
 
 Trade tick files are stored in files named `{YYYYMMDD}_trade.zip`. There is one file equity tick names named after the data: `20131008_bac_Trade_Tick.csv`. The CSV contains records of each trade:
 
-| Time | TradeSale | Trade Volume | Exchange | Sale Condition | Suspicious
+| Time | TradeSale | Trade Volume | Exchange | Trade Sale Condition | Suspicious
 | ----------- | ---------- | --------- | ---------- | --------- | ---------
-| 48754000 | 137450 | 100 | D | @ | 0
+| 14400009.367 | 137450 | 100 | D | 1 | 0
 
  - Time - Milliseconds since midnight in the timezone of the data format. 
  - TradeSale - Deci-cents price of the tick sale.
  - Volume - Number of shares in the sale.
  - Exchange - Location of the sale.
- - Sale Condition - Notes on the sale. 
- - Suspicious - Boolean indicating the tick is flagged as suspicious according to AlgoSeek's algorithms. This generally indicates the trade is far from other market prices and may be reversed. TradeBar data excludes suspicious ticks.
+ - Trade Sale Condition - Notes on the sale. 
+ - Suspicious - Boolean indicating the tick is flagged as suspicious according to AlgoSeek's algorithms. This generally indicates the trade is far from other market prices and may be reversed.
+TradeBar data excludes suspicious ticks.
 
+Quote tick files are stored in files named `{YYYYMMDD}_quote.zip`. There is one file equity tick names named after the data: `20131008_bac_Quote_Tick.csv`. The CSV contains records of each trade:
+
+| Time | Bid Sale | Bid Size | Ask Sale | Ask Size | Exchange | Quote Sale Condition | Suspicious
+| ----------- | ---------- | --------- | ---------- | --------- | ---------- | --------- | ---------
+| 14400009.367 | 137450 | 100 | 0 | 0 | D | 1 | 0
+
+ - Time - Milliseconds since midnight in the timezone of the data format. 
+ - Bid Sale - Deci-cents bid price of the bid quote tick.
+ - Bid Size - Number of shares in the bid quote tick.
+ - Ask Sale - Deci-cents ask price of the ask quote tick.
+ - Ask Size - Number of shares in the ask quote tick.
+ - Exchange - Location of the sale.
+ - Quote Sale Condition - Notes on the sale. 
+ - Suspicious - Boolean indicating the tick is flagged as suspicious according to AlgoSeek's algorithms. This generally indicates the quote is far from other market prices and may be reversed. 
+Each quote tick contains either bid or ask data only. QuoteBar data excludes suspicious ticks.
+ 
 #### Tick Exchange Codes
 
 Exchange Letter | Exchange Name
