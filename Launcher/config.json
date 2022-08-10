@@ -198,7 +198,7 @@
   "zerodha-api-key": "",
   "zerodha-product-type": "MIS", //MIS(Intraday) or CNC(Delivery) or NRML(Carry Forward)
   "zerodha-trading-segment": "EQUITY", // EQUITY(NSE,BSE) or COMMODITY (MCX)
-  "zerodha-history-subscription": false, // Enable this if History API Subscription available
+  "zerodha-history-subscription": "false", // "true" if History API Subscription available
 
   //samco configuration go to https://www.samco.in/stocknote-api
   "samco-client-id": "",
