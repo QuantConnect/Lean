@@ -34,10 +34,19 @@ namespace QuantConnect.Commands
         /// <param name="algorithm">The algorithm to run this command against</param>
         public abstract CommandResultPacket Run(IAlgorithm algorithm);
 
+        /// <summary>
+        /// Creats symbol using symbol properties.
+        /// </summary>
+        /// <param name="ticker">The string ticker symbol</param>
+        /// <param name="securityType">The security type of the ticker. If securityType == Option, then a canonical symbol is created</param>
+        /// <param name="market">The market the ticker resides in</param>
+        /// <param name="symbol">The algorithm to run this command against</param>
+        /// <exception cref="ArgumentException">If symbol is null or symbol can't be created with given args</exception>
         protected Symbol GetSymbol(string ticker, SecurityType securityType, string market, Symbol symbol = null)
         {
             if (symbol != null)
             {
+                // No need to create symbol if alrady exists
                 return symbol;
             }
             if (ticker != null && (securityType != null && securityType != SecurityType.Base) && market != null)
@@ -46,7 +55,7 @@ namespace QuantConnect.Commands
             }
             else
             {
-                throw new ArgumentException($"BaseCommand.GetSymbol(): Please provide value for all. None of ticker, market, secuity-type can be Null");
+                throw new ArgumentException($"BaseCommand.GetSymbol(): Please provide values for: Ticker, Market & SecurityType");
             }
         }
     }

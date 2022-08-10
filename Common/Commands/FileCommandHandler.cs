@@ -81,7 +81,7 @@ namespace QuantConnect.Commands
                 return;
             }
             var resultFilePath = $"{_resultFileBaseName}-{command.Id}.json";
-            File.WriteAllText($"{resultFilePath}", JsonConvert.SerializeObject(commandResultPacket));
+            File.WriteAllText(resultFilePath, JsonConvert.SerializeObject(commandResultPacket));
         }
 
         /// <summary>

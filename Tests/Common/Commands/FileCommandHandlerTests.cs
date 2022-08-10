@@ -85,7 +85,6 @@ namespace QuantConnect.Tests.Common.Commands
             foreach (var command in commands)
             {
                 var timestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                Thread.Sleep(1);
                 var fileName = $"{baseName}-{timestamp.ToString(CultureInfo.InvariantCulture)}.json";
                 File.WriteAllText(fileName, JsonConvert.SerializeObject(command, new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All }));
             }

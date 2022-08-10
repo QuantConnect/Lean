@@ -46,15 +46,8 @@ namespace QuantConnect.Commands
         {
             if (Ticker != null || SecurityType != SecurityType.Base || Market != null)
             {
-                try
-                {
-                    var symbol = GetSymbol(Ticker, SecurityType, Market);
-                    algorithm.Liquidate(symbol);
-                }
-                catch (Exception ex)
-                {
-                    throw new Exception($"LiquidateCommand.CommandResultPacket(): {ex.Message}");
-                }
+                var symbol = GetSymbol(Ticker, SecurityType, Market);
+                algorithm.Liquidate(symbol);
             }
             else
             {
