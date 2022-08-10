@@ -65,7 +65,7 @@ namespace QuantConnect.Tests.Python
             using (Py.GIL())
             {
                 var algorithm = GetAlgorithm(code);
-
+                
                 Assert.Null(algorithm.RunTimeError);
                 Assert.DoesNotThrow(() => algorithm.OnEndOfDay());
                 Assert.Null(algorithm.RunTimeError);
@@ -146,46 +146,6 @@ namespace QuantConnect.Tests.Python
                 Assert.Null(algorithm.RunTimeError);
                 Assert.DoesNotThrow(() => algorithm.OnEndOfDay(Symbols.SPY));
                 Assert.NotNull(algorithm.RunTimeError);
-            }
-        }
-
-        [TestCase("numeric_parameter", 2, false)]
-        [TestCase("not_a_parameter", 2, true)]
-        [TestCase("string_parameter", 2, true)]
-        public void GetParameterConvertsToNumericTypes(string parameterName, int defaultValue, bool shouldReturnDefaultValue)
-        {
-            using (Py.GIL())
-            {
-                var algorithm = GetAlgorithm("");
-                var parameters = new Dictionary<string, string>
-                {
-                    { "numeric_parameter", "1" },
-                    { "string_parameter", "string value" },
-                };
-                algorithm.SetParameters(parameters);
-
-                var doubleDefaultValue = Convert.ToDouble(defaultValue);
-                var decimalDefaultValue = Convert.ToDecimal(defaultValue);
-                var intValue = algorithm.GetParameter(parameterName, (int)defaultValue);
-                var doubleValue = algorithm.GetParameter(parameterName, doubleDefaultValue);
-                var decimalValue = algorithm.GetParameter(parameterName, decimalDefaultValue);
-
-                Assert.AreEqual(typeof(int), intValue.GetType());
-                Assert.AreEqual(typeof(double), doubleValue.GetType());
-                Assert.AreEqual(typeof(decimal), decimalValue.GetType());
-
-                if (!shouldReturnDefaultValue && parameters.TryGetValue(parameterName, out var parameterValue))
-                {
-                    Assert.AreEqual(int.Parse(parameterValue), intValue);
-                    Assert.AreEqual(double.Parse(parameterValue), doubleValue);
-                    Assert.AreEqual(decimal.Parse(parameterValue), decimalValue);
-                }
-                else
-                {
-                    Assert.AreEqual(defaultValue, intValue);
-                    Assert.AreEqual(doubleDefaultValue, doubleValue);
-                    Assert.AreEqual(decimalDefaultValue, decimalValue);
-                }
             }
         }
 

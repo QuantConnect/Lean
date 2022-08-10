@@ -53,6 +53,7 @@ namespace QuantConnect.Tests.Algorithm
                 Assert.AreEqual(typeof(double), doubleValue.GetType());
                 Assert.AreEqual(typeof(decimal), decimalValue.GetType());
 
+                // If the parameter is not found or is not numeric, the default value should be returned
                 if (!shouldReturnDefaultValue && parameters.TryGetValue(parameterName, out var parameterValue))
                 {
                     Assert.AreEqual(int.Parse(parameterValue), intValue);
@@ -75,12 +76,7 @@ namespace QuantConnect.Tests.Algorithm
 from AlgorithmImports import *
 
 def getAlgorithm():
-    algorithm = QCAlgorithm()
-    # algorithm.SetParameters({
-    #     'numeric_parameter': 1,
-    #     'string_parameter': 'string value',
-    # })
-    return algorithm
+    return QCAlgorithm()
 
 def isInt(value):
     return isinstance(value, int)
@@ -104,6 +100,7 @@ def isFloat(value):
                     Assert.IsTrue(testModule.GetAttr("isFloat").Invoke(decimalValue).As<bool>(),
                         $"Expected 'decimalValue' to be of type float but was {decimalValue.GetPythonType().ToString()} instead");
 
+                    // If the parameter is not found or is not numeric, the default value should be returned
                     if (!shouldReturnDefaultValue && parameters.TryGetValue(parameterName, out var parameterValue))
                     {
                         Assert.AreEqual(int.Parse(parameterValue), intValue.As<int>());

@@ -661,7 +661,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Gets the parameter with the specified name parsed as a decimal. If a parameter with the specified name does not exist,
+        /// Gets the parameter with the specified name parsed as an integer. If a parameter with the specified name does not exist,
         /// or the conversion is not possible, the given default value is returned if any, else null
         /// </summary>
         /// <param name="name">The name of the parameter to get</param>
@@ -674,7 +674,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Gets the parameter with the specified name parsed as a decimal. If a parameter with the specified name does not exist,
+        /// Gets the parameter with the specified name parsed as a double. If a parameter with the specified name does not exist,
         /// or the conversion is not possible, the given default value is returned if any, else null
         /// </summary>
         /// <param name="name">The name of the parameter to get</param>
