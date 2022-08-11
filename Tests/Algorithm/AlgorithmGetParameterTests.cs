@@ -117,5 +117,78 @@ def isFloat(value):
             }
         }
 
+        [TestCase(Language.CSharp, "numeric_parameter")]
+        [TestCase(Language.CSharp, "string_parameter")]
+        [TestCase(Language.CSharp, "not_a_parameter")]
+        [TestCase(Language.Python, "numeric_parameter")]
+        [TestCase(Language.Python, "string_parameter")]
+        [TestCase(Language.Python, "not_a_parameter")]
+        public void GetsParameterWithoutADefaultValue(Language language, string parameterName)
+        {
+            var parameters = new Dictionary<string, string>
+            {
+                { "numeric_parameter", "1" },
+                { "string_parameter", "string value" },
+            };
+
+            if (language == Language.CSharp)
+            {
+                var algorithm = new QCAlgorithm();
+                algorithm.SetParameters(parameters);
+                var parameterWithoutDefault = algorithm.GetParameter(parameterName);
+                var parameterWithNullDefault = algorithm.GetParameter(parameterName, null);
+
+                if (parameters.TryGetValue(parameterName, out var parameterValue))
+                {
+                    Assert.AreEqual(typeof(string), parameterWithoutDefault.GetType());
+                    Assert.AreEqual(typeof(string), parameterWithNullDefault.GetType());
+                    Assert.AreEqual(parameterValue, parameterWithoutDefault);
+                    Assert.AreEqual(parameterValue, parameterWithNullDefault);
+                }
+                else
+                {
+                    Assert.IsNull(parameterWithoutDefault);
+                    Assert.IsNull(parameterWithNullDefault);
+                }
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    var testModule = PyModule.FromString("testModule",
+                        @"
+from AlgorithmImports import *
+
+def getAlgorithm():
+    return QCAlgorithm()
+
+def isString(value):
+    return isinstance(value, str)
+        ");
+
+                    dynamic getAlgorithm = testModule.GetAttr("getAlgorithm");
+                    dynamic algorithm = getAlgorithm();
+                    algorithm.SetParameters(PyDict.FromManagedObject(parameters));
+                    dynamic parameterWithoutDefault = algorithm.GetParameter(parameterName.ToPython());
+                    dynamic parameterWithNullDefault = algorithm.GetParameter(parameterName.ToPython(), null);
+
+                    if (parameters.TryGetValue(parameterName, out var parameterValue))
+                    {
+                        dynamic isString = testModule.GetAttr("isString");
+                        Assert.IsTrue(isString(parameterWithoutDefault).As<bool>(),
+                            $"Expected 'parameterWithoutDefault' to be of type string but was {parameterWithoutDefault.GetPythonType().ToString()} instead");
+                        Assert.IsTrue(isString(parameterWithNullDefault).As<bool>(),
+                        $"Expected 'parameterWithNullDefault' to be of type string but was {parameterWithNullDefault.GetPythonType().ToString()} instead");
+                        Assert.AreEqual(parameterValue, parameterWithoutDefault.As<string>());
+                        Assert.AreEqual(parameterValue, parameterWithNullDefault.As<string>());
+                    }
+                    else
+                    {
+                        Assert.IsNull(parameterWithoutDefault);
+                        Assert.IsNull(parameterWithNullDefault);
+                    }
+                }
+            }
+        }
     }
 }
