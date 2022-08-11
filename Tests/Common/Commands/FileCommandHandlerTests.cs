@@ -20,8 +20,6 @@ using NUnit.Framework;
 using QuantConnect.Commands;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
-using System;
-using System.Threading;
 using System.Globalization;
 
 namespace QuantConnect.Tests.Common.Commands
@@ -82,10 +80,10 @@ namespace QuantConnect.Tests.Common.Commands
             {
                 new LiquidateCommand(), new SpecialCommand(), new AlgorithmStatusCommand()
             };
+            var fileSerialNumber = 0;
             foreach (var command in commands)
             {
-                var timestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                var fileName = $"{baseName}-{timestamp.ToString(CultureInfo.InvariantCulture)}.json";
+                var fileName = $"{baseName}-{++fileSerialNumber}.json";
                 File.WriteAllText(fileName, JsonConvert.SerializeObject(command, new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All }));
             }
             var list = queue.GetCommandsPublic().ToList();
