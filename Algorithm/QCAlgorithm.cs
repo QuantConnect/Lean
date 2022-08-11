@@ -683,7 +683,8 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(ParameterAndOptimization)]
         public double GetParameter(string name, double defaultValue)
         {
-            return _parameters.TryGetValue(name, out var strValue) && double.TryParse(strValue, out var value) ? value : defaultValue;
+            return _parameters.TryGetValue(name, out var strValue) &&
+                double.TryParse(strValue, System.Globalization.NumberStyles.Any, null, out var value) ? value : defaultValue;
         }
 
         /// <summary>
@@ -696,7 +697,8 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(ParameterAndOptimization)]
         public decimal GetParameter(string name, decimal defaultValue)
         {
-            return _parameters.TryGetValue(name, out var strValue) && decimal.TryParse(strValue, out var value) ? value : defaultValue;
+            return _parameters.TryGetValue(name, out var strValue) &&
+                decimal.TryParse(strValue, System.Globalization.NumberStyles.Any, null, out var value) ? value : defaultValue;
         }
 
         /// <summary>

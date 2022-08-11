@@ -190,5 +190,124 @@ def isString(value):
                 }
             }
         }
+
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void GetParameterCannotConvertoToNumberFromNonNumericValues(Language language)
+        {
+            var parameters = new Dictionary<string, string>
+            {
+                { "date_parameter", "2022-8-8" },
+                { "string_parameter", "string value" },
+            };
+            int defaultInt = 0;
+            double defaultDouble = 0;
+            decimal defaultDecimal = 0;
+            int intValue;
+            double doubleValue;
+            decimal decimalValue;
+
+            foreach (var parameterName in parameters.Keys)
+            {
+                if (language == Language.CSharp)
+                {
+                    var algorithm = new QCAlgorithm();
+                    algorithm.SetParameters(parameters);
+                    intValue = algorithm.GetParameter(parameterName, defaultInt);
+                    doubleValue = algorithm.GetParameter(parameterName, defaultDouble);
+                    decimalValue = algorithm.GetParameter(parameterName, defaultDecimal);
+                }
+                else
+                {
+                    using (Py.GIL())
+                    {
+                        var testModule = PyModule.FromString("testModule",
+                            @"
+from AlgorithmImports import *
+
+def getAlgorithm():
+    return QCAlgorithm()
+            ");
+
+                        var getAlgorithm = testModule.GetAttr("getAlgorithm");
+                        dynamic algorithm = getAlgorithm.Invoke();
+                        algorithm.GetAttr("SetParameters").Invoke(PyDict.FromManagedObject(parameters));
+                        intValue = algorithm.GetParameter(parameterName.ToPython(), defaultInt.ToPython()).As<int>();
+                        doubleValue = algorithm.GetParameter(parameterName.ToPython(), defaultDouble.ToPython()).As<double>();
+                        decimalValue = algorithm.GetParameter(parameterName.ToPython(), defaultDecimal.ToPython()).As<decimal>();
+                    }
+                }
+
+                Assert.AreEqual(defaultInt, intValue, $"Expected '{parameterName}' to be {defaultInt} but was {intValue} instead");
+                Assert.AreEqual(defaultDouble, doubleValue, $"Expected '{parameterName}' to be {defaultDouble} but was {doubleValue} instead");
+                Assert.AreEqual(defaultDecimal, decimalValue, $"Expected '{parameterName}' to be {defaultDecimal} but was {decimalValue} instead");
+            }
+        }
+
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void GetParameterConvertsToFloatingPointTypesFromDifferentFormats(Language language)
+        {
+            var parameters = new Dictionary<string, string>
+            {
+                { "int_parameter", "1" },
+                { "float_parameter", "1.0" },
+                { "comma_parameter", "1,234.56" },
+                { "scientific_parameter", "-1.643e6" },
+            };
+            var expectedDoubles = new Dictionary<string, double>
+            {
+                { "int_parameter", 1.0 },
+                { "float_parameter", 1.0 },
+                { "comma_parameter", 1234.56 },
+                { "scientific_parameter", -1643000.0 },
+            };
+            var expectedDecimals = new Dictionary<string, decimal>
+            {
+                { "int_parameter", 1m },
+                { "float_parameter", 1m },
+                { "comma_parameter", 1234.56m },
+                { "scientific_parameter", -1643000m },
+            };
+            double defaultDouble = 0;
+            decimal defaultDecimal = 0;
+            double doubleValue;
+            decimal decimalValue;
+
+            foreach (var parameterName in parameters.Keys)
+            {
+                if (language == Language.CSharp)
+                {
+                    var algorithm = new QCAlgorithm();
+                    algorithm.SetParameters(parameters);
+                    doubleValue = algorithm.GetParameter(parameterName, defaultDouble);
+                    decimalValue = algorithm.GetParameter(parameterName, defaultDecimal);
+                }
+                else
+                {
+                    using (Py.GIL())
+                    {
+                        var testModule = PyModule.FromString("testModule",
+                            @"
+from AlgorithmImports import *
+
+def getAlgorithm():
+    return QCAlgorithm()
+            ");
+
+                        var getAlgorithm = testModule.GetAttr("getAlgorithm");
+                        dynamic algorithm = getAlgorithm.Invoke();
+                        algorithm.GetAttr("SetParameters").Invoke(PyDict.FromManagedObject(parameters));
+                        doubleValue = algorithm.GetParameter(parameterName.ToPython(), defaultDouble.ToPython()).As<double>();
+                        decimalValue = algorithm.GetParameter(parameterName.ToPython(), defaultDecimal.ToPython()).As<decimal>();
+                    }
+                }
+
+                Assert.AreEqual(expectedDoubles[parameterName], doubleValue,
+                    $"Expected '{parameterName}' to be {expectedDoubles[parameterName]} but was {doubleValue} instead");
+                Assert.AreEqual(expectedDecimals[parameterName], decimalValue,
+                    $"Expected '{parameterName}' to be {expectedDecimals[parameterName]} but was {decimalValue} instead");
+            }
+        }
     }
 }
