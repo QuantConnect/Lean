@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,21 +15,20 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using System.Threading;
 using QuantConnect.Data;
-using QuantConnect.Data.Fundamental;
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
-using QuantConnect.Securities;
 using QuantConnect.Util;
+using System.Diagnostics;
+using QuantConnect.Securities;
+using System.Collections.Generic;
+using QuantConnect.Data.Fundamental;
 using Log = QuantConnect.Logging.Log;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
 {
@@ -55,10 +54,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 new SecurityCache()
             );
             var request = new SubscriptionRequest(false, null, security, config, parameters.StartDate, parameters.EndDate);
-            var fileProvider = new DefaultDataProvider();
 
             var factory = new FineFundamentalSubscriptionEnumeratorFactory(parameters.LiveMode);
-            var enumerator = factory.CreateEnumerator(request, fileProvider);
+            var enumerator = factory.CreateEnumerator(request, TestGlobals.DataProvider);
             while (enumerator.MoveNext())
             {
                 var current = enumerator.Current as FineFundamental;
@@ -111,9 +109,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 new SecurityCache()
             );
             var request = new SubscriptionRequest(false, null, security, config, startDate, endDate);
-            var fileProvider = new DefaultDataProvider();
             var factory = new FineFundamentalSubscriptionEnumeratorFactory(false);
-            var enumerator = factory.CreateEnumerator(request, fileProvider);
+            var enumerator = factory.CreateEnumerator(request, TestGlobals.DataProvider);
             enumerator.MoveNext();
             var fine = (FineFundamental)enumerator.Current;
             Assert.AreEqual(438783011299, fine.CompanyProfile.EnterpriseValue);
@@ -152,7 +149,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 new SecurityCache()
             );
             var request = new SubscriptionRequest(false, null, security, config, startDate, endDate);
-            var fileProvider = new DefaultDataProvider();
             var factory = new FineFundamentalSubscriptionEnumeratorFactory(false);
 
             GC.Collect();
@@ -161,7 +157,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             const int iterations = 1000;
             for (var i = 0; i < iterations; i++)
             {
-                using (var enumerator = factory.CreateEnumerator(request, fileProvider))
+                using (var enumerator = factory.CreateEnumerator(request, TestGlobals.DataProvider))
                 {
                     enumerator.MoveNext();
                 }

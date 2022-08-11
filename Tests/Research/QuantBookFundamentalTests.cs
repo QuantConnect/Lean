@@ -23,6 +23,9 @@ using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Research;
 using QuantConnect.Securities;
+using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
+using System.IO;
 
 namespace QuantConnect.Tests.Research
 {
@@ -67,14 +70,19 @@ namespace QuantConnect.Tests.Research
         [Test]
         public void DefaultEndDate()
         {
-            var startDate = DateTime.UtcNow.Date.AddDays(-7);
-
-            // Expected end date should be either today if tradable, or last tradable day
-            var aapl = _qb.AddEquity("AAPL");
             var now = DateTime.UtcNow.Date;
+            var startDate = now.AddDays(-7);
+
+            var qc = new TestQuantBook
+            {
+                // we don't have new fine data in the repo, so we use this test class to handle returning old fine data instead
+                PublicDataProvider = new TestDataProvider()
+            };
+            // Expected end date should be either today if tradable, or last tradable day
+            var aapl = qc.AddEquity("AAPL");
             var expectedDate = aapl.Exchange.Hours.IsDateOpen(now) ? now : aapl.Exchange.Hours.GetPreviousTradingDay(now);
 
-            IEnumerable<DataDictionary<dynamic>> data = _qb.GetFundamental("AAPL", "ValuationRatios.PERatio", startDate);
+            IEnumerable<DataDictionary<dynamic>> data = qc.GetFundamental("AAPL", "ValuationRatios.PERatio", startDate);
 
             // Check that the last day in the collection is as expected
             var lastDay = data.Last();
@@ -171,6 +179,30 @@ namespace QuantConnect.Tests.Research
             new object[] {Symbol.Create("AIG", SecurityType.Equity, Market.USA), "ValuationRatios.PERatio", new DateTime(1972, 4, 1),  new DateTime(1972, 4, 1)},
             new object[] {Symbol.Create("IBM", SecurityType.Equity, Market.USA), "ValuationRatios.BookValuePerShare", new DateTime(2014, 4, 1), new DateTime(2014, 3, 31)},
         };
+
+        private class TestDataProvider : DefaultDataProvider
+        {
+            public override Stream Fetch(string key)
+            {
+                var directory = Path.GetDirectoryName(key);
+                return base.Fetch(Path.Combine(directory, "20140424.zip"));
+            }
+        }
+
+        private class TestQuantBook : QuantBook
+        {
+            public IDataProvider PublicDataProvider
+            {
+                get
+                {
+                    return DataProvider;
+                }
+                set
+                {
+                    DataProvider = value;
+                }
+            }
+        }
     }
 }
 

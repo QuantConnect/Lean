@@ -47,8 +47,13 @@ namespace QuantConnect.Research
     {
         private dynamic _pandas;
         private IDataCacheProvider _dataCacheProvider;
-        private IDataProvider _dataProvider;
         private static bool _isPythonNotebook;
+
+        /// <summary>
+        /// The data provider instance to use
+        /// </summary>
+        /// <remarks>Protected for easier testing</remarks>
+        protected IDataProvider DataProvider { get; set; }
 
         static QuantBook()
         {
@@ -151,7 +156,7 @@ namespace QuantConnect.Research
                 SetObjectStore(algorithmHandlers.ObjectStore);
 
                 _dataCacheProvider = new ZipDataCacheProvider(algorithmHandlers.DataProvider);
-                _dataProvider = algorithmHandlers.DataProvider;
+                DataProvider = algorithmHandlers.DataProvider;
 
                 var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
                 var registeredTypes = new RegisteredSecurityDataTypesProvider();
@@ -839,7 +844,7 @@ namespace QuantConnect.Research
                     );
                 var security = Securities.CreateSecurity(symbol, config);
                 var request = new SubscriptionRequest(false, null, security, config, startTime.ConvertToUtc(TimeZones.NewYork), endTime.ConvertToUtc(TimeZones.NewYork));
-                using (var enumerator = factory.CreateEnumerator(request, _dataProvider))
+                using (var enumerator = factory.CreateEnumerator(request, DataProvider))
                 {
                     while (enumerator.MoveNext())
                     {

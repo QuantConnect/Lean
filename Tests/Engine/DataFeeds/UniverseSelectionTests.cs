@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -33,13 +33,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     [TestFixture]
     public class UniverseSelectionTests
     {
+        private DateTime _start = new DateTime(2014, 04, 01);
+
         [Test]
         public void CreatedEquityIsNotAddedToSymbolCache()
         {
             SymbolCache.Clear();
             var algorithm = new AlgorithmStub(new MockDataFeed());
-            algorithm.SetEndDate(Time.EndOfTime);
-            algorithm.SetStartDate(DateTime.UtcNow.Subtract(TimeSpan.FromDays(10)));
+            algorithm.SetStartDate(_start);
+            algorithm.SetEndDate(_start.AddDays(10));
             algorithm.AddUniverse(CoarseSelectionFunction, FineSelectionFunction);
             // OnEndOfTimeStep will add all pending universe additions
             algorithm.OnEndOfTimeStep();
@@ -48,7 +50,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 universe,
                 algorithm.EndDate.ConvertToUtc(algorithm.TimeZone).Subtract(TimeSpan.FromDays(1)),
                 new BaseDataCollection(
-                    DateTime.UtcNow,
+                    _start.AddDays(2),
                     Symbols.AAPL,
                     new[]
                     {
@@ -125,8 +127,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void CoarseFundamentalHasFundamentalDataFalseExcludedInFineUniverseSelection()
         {
             var algorithm = new AlgorithmStub(new MockDataFeed());
-            algorithm.SetEndDate(Time.EndOfTime);
-            algorithm.SetStartDate(DateTime.UtcNow.Subtract(TimeSpan.FromDays(10)));
+            algorithm.SetStartDate(_start);
+            algorithm.SetEndDate(_start.AddDays(10));
 
             algorithm.AddUniverse(
                 coarse => coarse.Select(c => c.Symbol),
@@ -140,7 +142,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 universe,
                 algorithm.EndDate.ConvertToUtc(algorithm.TimeZone).Subtract(TimeSpan.FromDays(1)),
                 new BaseDataCollection(
-                    DateTime.UtcNow,
+                    _start.AddDays(2),
                     Symbols.AAPL,
                     new[]
                     {
@@ -172,7 +174,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             return new[] { fine.First(fundamental => fundamental.Symbol.Value == "AAPL").Symbol };
         }
 
-        public class MockDataFeedWithSubscription : IDataFeed
+        private class MockDataFeedWithSubscription : IDataFeed
         {
             public bool IsActive { get; }
 
