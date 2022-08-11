@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Globalization;
 using NodaTime;
 using NodaTime.TimeZones;
 using QuantConnect.Benchmarks;
@@ -684,7 +685,7 @@ namespace QuantConnect.Algorithm
         public double GetParameter(string name, double defaultValue)
         {
             return _parameters.TryGetValue(name, out var strValue) &&
-                double.TryParse(strValue, System.Globalization.NumberStyles.Any, null, out var value) ? value : defaultValue;
+                double.TryParse(strValue, NumberStyles.Any, CultureInfo.InvariantCulture, out var value) ? value : defaultValue;
         }
 
         /// <summary>
@@ -698,7 +699,7 @@ namespace QuantConnect.Algorithm
         public decimal GetParameter(string name, decimal defaultValue)
         {
             return _parameters.TryGetValue(name, out var strValue) &&
-                decimal.TryParse(strValue, System.Globalization.NumberStyles.Any, null, out var value) ? value : defaultValue;
+                decimal.TryParse(strValue, NumberStyles.Any, CultureInfo.InvariantCulture, out var value) ? value : defaultValue;
         }
 
         /// <summary>
