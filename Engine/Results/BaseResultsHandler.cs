@@ -38,6 +38,7 @@ namespace QuantConnect.Lean.Engine.Results
     /// </summary>
     public abstract class BaseResultsHandler
     {
+        private bool _packetDroppedWarning;
         // used for resetting out/error upon completion
         private static readonly TextWriter StandardOut = Console.Out;
         private static readonly TextWriter StandardError = Console.Error;
@@ -47,7 +48,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// The main loop update interval
         /// </summary>
-        protected virtual TimeSpan MainUpdateInterval => TimeSpan.FromSeconds(3);
+        protected virtual TimeSpan MainUpdateInterval { get; } = TimeSpan.FromSeconds(3);
 
         /// <summary>
         /// The chart update interval
@@ -731,16 +732,14 @@ namespace QuantConnect.Lean.Engine.Results
 
         private void ProcessAlgorithmLogsImpl(ConcurrentQueue<string> concurrentQueue, PacketType packetType, int? messageQueueLimit = null)
         {
-            if (concurrentQueue.Count <= 0)
+            if (concurrentQueue.IsEmpty)
             {
                 return;
             }
 
-            var result = new List<string>();
             var endTime = DateTime.UtcNow.AddMilliseconds(250).Ticks;
-            string message;
             var currentMessageCount = -1;
-            while (DateTime.UtcNow.Ticks < endTime && concurrentQueue.TryDequeue(out message))
+            while (DateTime.UtcNow.Ticks < endTime && concurrentQueue.TryDequeue(out var message))
             {
                 if (messageQueueLimit.HasValue)
                 {
@@ -751,19 +750,17 @@ namespace QuantConnect.Lean.Engine.Results
                     }
                     if (currentMessageCount > messageQueueLimit)
                     {
+                        if (!_packetDroppedWarning)
+                        {
+                            _packetDroppedWarning = true;
+                            // this shouldn't happen in most cases, queue limit is high and consumed often but just in case let's not silently drop packets without a warning
+                            Messages.Enqueue(new HandledErrorPacket(AlgorithmId, "Your algorithm messaging has been rate limited to prevent browser flooding."));
+                        }
                         //if too many in the queue already skip the logging and drop the messages
                         continue;
                     }
                 }
-                AddToLogStore(message);
-                result.Add(message);
-                // increase count after we add
-                currentMessageCount++;
-            }
 
-            if (result.Count > 0)
-            {
-                message = string.Join(Environment.NewLine, result);
                 if (packetType == PacketType.Debug)
                 {
                     Messages.Enqueue(new DebugPacket(ProjectId, AlgorithmId, CompileId, message));
@@ -776,6 +773,10 @@ namespace QuantConnect.Lean.Engine.Results
                 {
                     Messages.Enqueue(new HandledErrorPacket(AlgorithmId, message));
                 }
+                AddToLogStore(message);
+
+                // increase count after we add
+                currentMessageCount++;
             }
         }
     }

@@ -540,7 +540,7 @@ namespace QuantConnect.Tests.Engine.Setup
 
             if (!hasCashBalance && !hasHoldings)
             {
-                Assert.That(algorithm.DebugMessages.Count > 0);
+                Assert.IsFalse(algorithm.DebugMessages.IsEmpty);
 
                 Assert.That(algorithm.DebugMessages.Any(x => x.Contains("No cash balances or holdings were found in the brokerage account.")));
             }

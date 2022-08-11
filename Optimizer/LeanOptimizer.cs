@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -219,10 +219,8 @@ namespace QuantConnect.Optimizer
 
                 // we got a new result if there are any pending parameterSet to run we can now trigger 1
                 // we do this before 'Strategy.PushNewResults' so FIFO is respected
-                if (PendingParameterSet.Count > 0)
+                if (PendingParameterSet.TryDequeue(out var pendingParameterSet))
                 {
-                    ParameterSet pendingParameterSet;
-                    PendingParameterSet.TryDequeue(out pendingParameterSet);
                     LaunchLeanForParameterSet(pendingParameterSet);
                 }
 

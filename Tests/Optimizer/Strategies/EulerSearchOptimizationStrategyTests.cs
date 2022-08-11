@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -64,9 +64,9 @@ namespace QuantConnect.Tests.Optimizer.Strategies
 
                 _strategy.PushNewResults(OptimizationResult.Initial);
 
-                while (_pendingOptimizationResults.Count > 0)
+                while (_pendingOptimizationResults.TryDequeue(out var item))
                 {
-                    _strategy.PushNewResults(_pendingOptimizationResults.Dequeue());
+                    _strategy.PushNewResults(item);
                 }
 
                 Assert.AreEqual(Math.Ceiling(Math.Log((double)(param.Step / param.MinStep), _defaultSegmentAmount)), depth);

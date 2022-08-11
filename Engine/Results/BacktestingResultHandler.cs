@@ -106,10 +106,10 @@ namespace QuantConnect.Lean.Engine.Results
         {
             try
             {
-                while (!(ExitTriggered && Messages.Count == 0))
+                while (!(ExitTriggered && Messages.IsEmpty))
                 {
                     //While there's no work to do, go back to the algorithm:
-                    if (Messages.Count == 0)
+                    if (Messages.IsEmpty)
                     {
                         ExitEvent.WaitOne(50);
                     }
