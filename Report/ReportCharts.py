@@ -961,16 +961,23 @@ class ReportCharts:
             plt.close('all')
             return base64
 
-        color_map = {'Equity': "#71c3fc", 'Option':'#A0522D', 'Commodity':'#4B0082',
-                    'Forex':'#0000FF', 'Future':'#6B8E23', 'Cfd':'#FF8C00', 'Crypto':'#BDB76B'}
-        live_color_map = {'Equity': "#ff9914" , 'Option': '#DAA520', 'Commodity': '#9400D3',
-                          'Forex':'#6495ED', 'Future':'#808000', 'Cfd':'#FFD700', 'Crypto':'#FFDAB9'}
+        color_map = {
+            "Equity": "#ff9914",
+            "Option": "#DAA520",
+            "Commodity": "#9400D3",
+            "Forex": "#6495ED",
+            "Future": "#808000",
+            "Cfd": "#FFD700",
+            "Crypto": "#FFDAB9",
+            "FutureOption": "#1ED3A9",
+            "IndexOption": "#A4AACC",
+        }
 
         for k, v in list(color_map.items()):
             color_map[k + ' - Short'] = '#' + hex(int(v[1:], 16) ^ 0xffffff)[2:].zfill(6)
 
-        for k, v in list(live_color_map.items()):
-            live_color_map[k + ' - Short'] = '#' + hex(int(v[1:], 16) ^ 0xffffff)[2:].zfill(6)
+        for k, v in list(color_map.items()):
+            color_map[k + ' - Short'] = '#' + hex(int(v[1:], 16) ^ 0xffffff)[2:].zfill(6)
 
         labels = long_securities + short_securities
         live_labels = live_long_securities + live_short_securities
@@ -1069,14 +1076,14 @@ class ReportCharts:
 
         if max([len(x) for x in live_long_data_copy]) > max([len(x) for x in live_short_data_copy]):
             ax.stackplot(live_time_copy[:max([len(x) for x in live_long_data_copy])], np.vstack(live_long_data_copy),
-                         color=[live_color_map[security] for security in live_long_securities], alpha = 0.75)
+                         color=[color_map[security] for security in live_long_securities], alpha = 0.75)
             ax.stackplot(live_time_copy[:max([len(x) for x in live_short_data_copy])], np.vstack(live_short_data_copy),
-                         color=[live_color_map[security + ' - Short'] for security in live_short_securities], alpha = 0.75)
+                         color=[color_map[security + ' - Short'] for security in live_short_securities], alpha = 0.75)
         else:
             ax.stackplot(live_time_copy[:max([len(x) for x in live_short_data_copy])], np.vstack(live_short_data_copy),
-                         color=[live_color_map[security + ' - Short'] for security in live_short_securities], alpha=0.75)
+                         color=[color_map[security + ' - Short'] for security in live_short_securities], alpha=0.75)
             ax.stackplot(live_time_copy[:max([len(x) for x in live_long_data_copy])], np.vstack(live_long_data_copy),
-                         color=[live_color_map[security] for security in live_long_securities], alpha=0.75)
+                         color=[color_map[security] for security in live_long_securities], alpha=0.75)
 
         for security in short_securities:
             if not all([all([abs(y) == 0.0 for y in x]) for x in short_data]):
@@ -1089,7 +1096,7 @@ class ReportCharts:
         labels = list(set(labels))
         live_labels = list(set(live_labels))
         rectangles = [plt.Rectangle((0, 0), 1, 1, fc=color_map[lab]) for lab in labels]
-        live_rectangles = [plt.Rectangle((0, 0), 1, 1, fc=live_color_map[lab]) for lab in live_labels]
+        live_rectangles = [plt.Rectangle((0, 0), 1, 1, fc=color_map[lab]) for lab in live_labels]
         ax.legend(rectangles + live_rectangles, labels + [f'{lab} - Live' for lab in live_labels], handlelength=0.8,
                   handleheight=0.8, frameon=False, fontsize=8, ncol=len(labels), loc='upper right')
         fig = ax.get_figure()
