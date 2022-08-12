@@ -19,12 +19,12 @@ Our research docker image has been integrated with Lean CLI to streamline the pr
 
 Lean CLI research specific documentation is found [here](https://www.quantconnect.com/docs/v2/lean-cli/tutorials/research).
 
-We highly recommend using Lean CLI with docker for research but below in [Running Jupter Locally](#running-jupyter-locally) we cover how to install and prepare the environment on your personal desktop. 
+We highly recommend using Lean CLI with docker for research but below in [Running Jupyter Locally](#running-jupyter-locally) we cover how to install and prepare the environment on your personal desktop. 
 
 <br>
 
 ## Running Jupyter Locally 
-Note: we recommend using the above approach with our Docker container, where the setup and evironment is tested and stable.
+Note: we recommend using the above approach with our Docker container, where the setup and environment is tested and stable.
 
 Before we enable Jupyter support, follow [Lean installation](https://github.com/QuantConnect/Lean#installation-instructions)
 and [Python installation](https://github.com/QuantConnect/Lean/tree/master/Algorithm.Python#quantconnect-python-algorithm-project) to get LEAN running Python algorithms on your machine. Then be sure to build Lean at least once before the following. 
