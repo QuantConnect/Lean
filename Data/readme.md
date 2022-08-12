@@ -3,7 +3,7 @@
 
 ### Introduction ###
 
-From the beginning LEAN strived to use an open, human readible data format - independent of any specific database or file format. From this core philosophy we built LEAN to read its financial data from flat files on disk. Data compression is done in zip format; and all individual files are CSV or JSON.
+From the beginning LEAN strived to use an open, human readable data format - independent of any specific database or file format. From this core philosophy we built LEAN to read its financial data from flat files on disk. Data compression is done in zip format; and all individual files are CSV or JSON.
 
 When there is no activity for a security, the price is omitted to the file. Only new ticks, and price changes are recorded.
 

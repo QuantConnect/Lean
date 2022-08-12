@@ -4,7 +4,7 @@ QuantConnect Testing
 Before starting any testing, follow the [installation instructions](https://github.com/QuantConnect/Lean#installation-instructions) to get LEAN running C# algorithms in your machine. 
 For any Python related tests please ensure you have followed the setup as described [here](https://github.com/QuantConnect/Lean/tree/master/Algorithm.Python#install-python-36).
 
-If the above installation, build, and initial run was succesful than we can move forward to testing.
+If the above installation, build, and initial run was successful than we can move forward to testing.
 
 
 ## Visual Studio:
