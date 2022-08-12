@@ -34,7 +34,7 @@ namespace QuantConnect.Commands
         public override CommandResultPacket Run(IAlgorithm algorithm)
         {
             var ticket = algorithm.Transactions.CancelOrder(OrderId);
-            return ticket.CancelRequest != null
+            return ticket.CancelRequest != null && ticket.Status != Orders.OrderStatus.Invalid
                 ? new Result(this, true, ticket.QuantityFilled)
                 : new Result(this, false, ticket.QuantityFilled);
         }

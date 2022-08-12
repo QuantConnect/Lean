@@ -17,8 +17,8 @@ using System;
 using System.IO;
 using Newtonsoft.Json;
 using QuantConnect.Logging;
-using QuantConnect.Configuration;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Commands
 {
@@ -27,25 +27,27 @@ namespace QuantConnect.Commands
     /// </summary>
     public class FileCommandHandler : BaseCommandHandler
     {
-        private readonly string _commandJsonFilePath;
-        private readonly Queue<ICommand> _commands = new Queue<ICommand>();
+        private readonly Queue<ICommand> _commands = new();
+        private const string _commandFilePattern = "command*.json";
+        private const string _resultFileBaseName = "result-command";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FileCommandHandler"/> class
         /// using the 'command-json-file' configuration value for the command json file
         /// </summary>
         public FileCommandHandler()
-            : this(Config.Get("command-json-file", "command.json"))
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="FileCommandHandler"/> class
+        /// Gets all the available command files
         /// </summary>
-        /// <param name="commandJsonFilePath">The file path to the commands json file</param>
-        public FileCommandHandler(string commandJsonFilePath)
+        /// <returns>Sorted enumerator of all the available command files</returns>
+        public static IEnumerable<FileInfo> GetCommandFiles()
         {
-            _commandJsonFilePath = commandJsonFilePath;
+            var currentDirectory = new DirectoryInfo(Directory.GetCurrentDirectory());
+            var filesFromPattern = currentDirectory.GetFiles(_commandFilePattern);
+            return filesFromPattern.OrderBy(file => file.Name);
         }
 
         /// <summary>
@@ -54,15 +56,15 @@ namespace QuantConnect.Commands
         /// <returns>The next command in the queue, if present, null if no commands present</returns>
         protected override IEnumerable<ICommand> GetCommands()
         {
-            if (File.Exists(_commandJsonFilePath))
+            foreach(var file in GetCommandFiles())
             {
                 // update the queue by reading the command file
-                ReadCommandFile();
-            }
+                ReadCommandFile(file.FullName);
 
-            while (_commands.Count != 0)
-            {
-                yield return _commands.Dequeue();
+                while (_commands.Count != 0)
+                {
+                    yield return _commands.Dequeue();
+                }
             }
         }
 
@@ -78,19 +80,25 @@ namespace QuantConnect.Commands
                 Log.Error($"FileCommandHandler.Acknowledge(): command Id is null or empty, will skip writting result file");
                 return;
             }
-            File.WriteAllText($"command-result-{command.Id}.json", JsonConvert.SerializeObject(commandResultPacket));
+            var resultFilePath = $"{_resultFileBaseName}-{command.Id}.json";
+            File.WriteAllText(resultFilePath, JsonConvert.SerializeObject(commandResultPacket));
         }
 
         /// <summary>
         /// Reads the commnd file on disk and populates the queue with the commands
         /// </summary>
-        private void ReadCommandFile()
+        private void ReadCommandFile(string commandFilePath)
         {
+            Log.Trace($"FileCommandHandler.ReadCommandFile(): Reading command file {commandFilePath}");
             object deserialized;
             try
             {
-                if (!File.Exists(_commandJsonFilePath)) return;
-                var contents = File.ReadAllText(_commandJsonFilePath);
+                if (!File.Exists(commandFilePath)) 
+                {
+                    Log.Error($"FileCommandHandler.ReadCommandFile(): File {commandFilePath} does not exists");
+                    return;
+                } 
+                var contents = File.ReadAllText(commandFilePath);
                 deserialized = JsonConvert.DeserializeObject(contents, new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All });
             }
             catch (Exception err)
@@ -100,7 +108,7 @@ namespace QuantConnect.Commands
             }
 
             // remove the file when we're done reading it
-            File.Delete(_commandJsonFilePath);
+            File.Delete(commandFilePath);
 
             // try it as an enumerable
             var enumerable = deserialized as IEnumerable<ICommand>;
