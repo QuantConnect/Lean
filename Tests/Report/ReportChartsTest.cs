@@ -50,10 +50,12 @@ namespace QuantConnect.Tests.Report
             };
             var backtest = JsonConvert.DeserializeObject<BacktestResult>(
                 File.ReadAllText(Path.Combine("TestData", "test_report_data.json")), backtestSettings);
-            LiveResult live = null;
-            var report = new QuantConnect.Report.Report("Report", "Report", "v1.0.0", backtest, live);
+            QuantConnect.Report.Report report = null;
 
-            Assert.DoesNotThrow(() => report.Compile(out _, out _));
+            Assert.DoesNotThrow(() => report = new QuantConnect.Report.Report("Report", "Report", "v1.0.0", backtest, (LiveResult)null));
+            string html = "";
+            Assert.DoesNotThrow(() => report.Compile(out html, out _));
+            Assert.IsNotEmpty(html);
         }
     }
 }
