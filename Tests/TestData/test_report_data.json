@@ -95,8 +95,112 @@
             "Name": "Exposure",
             "ChartType": 0,
             "Series": {
-                "IndexOption - Long Ratio": {
-                    "Name": "IndexOption - Long Ratio",
+                "Equity": {
+                    "Name": "Equity",
+                    "Unit": "",
+                    "Index": 0,
+                    "SeriesType": 0,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none",
+                    "Values": [
+                        { "x": 1609822800, "y": 0.0019 },
+                        { "x": 1609909200, "y": 0.0014 },
+                        { "x": 1609995600, "y": 0.0013 }
+                    ]
+                },
+                "Option": {
+                    "Name": "Option",
+                    "Unit": "",
+                    "Index": 0,
+                    "SeriesType": 0,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none",
+                    "Values": [
+                        { "x": 1609822800, "y": 0.0020 },
+                        { "x": 1609909200, "y": 0.0004 },
+                        { "x": 1609995600, "y": 0.0011 }
+                    ]
+                },
+                "Commodity": {
+                    "Name": "Commodity",
+                    "Unit": "",
+                    "Index": 0,
+                    "SeriesType": 0,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none",
+                    "Values": [
+                        { "x": 1609822800, "y": 0.0016 },
+                        { "x": 1609909200, "y": 0.0012 },
+                        { "x": 1609995600, "y": 0.0010 }
+                    ]
+                },
+                "Forex": {
+                    "Name": "Forex",
+                    "Unit": "",
+                    "Index": 0,
+                    "SeriesType": 0,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none",
+                    "Values": [
+                        { "x": 1609822800, "y": 0.0012 },
+                        { "x": 1609909200, "y": 0.0019 },
+                        { "x": 1609995600, "y": 0.0020 }
+                    ]
+                },
+                "Future": {
+                    "Name": "Future",
+                    "Unit": "",
+                    "Index": 0,
+                    "SeriesType": 0,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none",
+                    "Values": [
+                        { "x": 1609822800, "y": 0.0013 },
+                        { "x": 1609909200, "y": 0.0015 },
+                        { "x": 1609995600, "y": 0.0017 }
+                    ]
+                },
+                "Cfd": {
+                    "Name": "Cfd",
+                    "Unit": "",
+                    "Index": 0,
+                    "SeriesType": 0,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none",
+                    "Values": [
+                        { "x": 1609822800, "y": 0.0014 },
+                        { "x": 1609909200, "y": 0.0015 },
+                        { "x": 1609995600, "y": 0.0014 }
+                    ]
+                },
+                "Crypto": {
+                    "Name": "Crypto",
+                    "Unit": "",
+                    "Index": 0,
+                    "SeriesType": 0,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none",
+                    "Values": [
+                        { "x": 1609822800, "y": 0.0013 },
+                        { "x": 1609909200, "y": 0.0015 },
+                        { "x": 1609995600, "y": 0.0017 }
+                    ]
+                },
+                "FutureOption": {
+                    "Name": "FutureOption",
+                    "Unit": "",
+                    "Index": 0,
+                    "SeriesType": 0,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none",
+                    "Values": [
+                        { "x": 1609822800, "y": 0.0022 },
+                        { "x": 1609909200, "y": 0.0014 },
+                        { "x": 1609995600, "y": 0.0020 }
+                    ]
+                },
+                "IndexOption": {
+                    "Name": "IndexOption",
                     "Unit": "",
                     "Index": 0,
                     "SeriesType": 0,

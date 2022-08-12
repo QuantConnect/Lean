@@ -48,7 +48,8 @@ namespace QuantConnect.Tests.Report
                 Converters = new List<JsonConverter> { new NullResultValueTypeJsonConverter<BacktestResult>() },
                 FloatParseHandling = FloatParseHandling.Decimal
             };
-            var backtest = JsonConvert.DeserializeObject<BacktestResult>(File.ReadAllText(Path.Combine("TestData", "test_report_data.json")), backtestSettings);
+            var backtest = JsonConvert.DeserializeObject<BacktestResult>(
+                File.ReadAllText(Path.Combine("TestData", "test_report_data.json")), backtestSettings);
             LiveResult live = null;
             var report = new QuantConnect.Report.Report("Report", "Report", "v1.0.0", backtest, live);
 
