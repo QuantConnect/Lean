@@ -27,8 +27,7 @@ namespace QuantConnect.Tests.Common.Commands
         public void GetsSymbolWhenSymbolIsPresent()
         {
             var command = new TestBaseCommand();
-            var symbol = Symbol.Create("aapl", SecurityType.Equity, "usa");
-            Assert.DoesNotThrow(() => command.PublicGetSymbol(null, SecurityType.Base, null, symbol));
+            Assert.DoesNotThrow(() => command.PublicGetSymbol(null, SecurityType.Base, null, Symbols.AAPL));
         }
 
 
@@ -36,16 +35,23 @@ namespace QuantConnect.Tests.Common.Commands
         public void GetsSymbolWhenTickerSecurityMarketIsPresent()
         {
             var command = new TestBaseCommand();
-            Assert.DoesNotThrow(() => command.PublicGetSymbol("aapl", SecurityType.Equity, "usa"));
+            Assert.DoesNotThrow(() => command.PublicGetSymbol(Symbols.AAPL.ID.Symbol, SecurityType.Equity, Market.USA));
         }
 
+        [Test]
+        public void ReturnSymbolWhenOtherValuesArePresentToo()
+        {
+            var command = new TestBaseCommand();
+            var symbol = command.PublicGetSymbol(Symbols.GOOG.ID.Symbol, SecurityType.Equity, Market.USA, Symbols.AAPL);
+            Assert.AreEqual(Symbols.AAPL, symbol);
+        }
 
         [Test]
         public void GetsSymbolThrowsWhenTickerMissing()
         {
             var command = new TestBaseCommand();
             Assert.Throws<ArgumentException>(() => 
-                                    command.PublicGetSymbol(null, SecurityType.Equity, "usa"));
+                                    command.PublicGetSymbol(null, SecurityType.Equity, Market.USA));
         }
 
         [Test]
@@ -53,7 +59,7 @@ namespace QuantConnect.Tests.Common.Commands
         {
             var command = new TestBaseCommand();
             Assert.Throws<ArgumentException>(() => 
-                                    command.PublicGetSymbol("aapl", SecurityType.Base, "usa"));
+                                    command.PublicGetSymbol(Symbols.AAPL.ID.Symbol, SecurityType.Base, Market.USA));
         }
 
 
@@ -62,7 +68,7 @@ namespace QuantConnect.Tests.Common.Commands
         {
             var command = new TestBaseCommand();
             Assert.Throws<ArgumentException>(() => 
-                                    command.PublicGetSymbol("aapl", SecurityType.Equity, null));
+                                    command.PublicGetSymbol(Symbols.AAPL.ID.Symbol, SecurityType.Equity, null));
         }
 
 
