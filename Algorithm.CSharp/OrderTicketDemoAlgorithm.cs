@@ -165,7 +165,7 @@ namespace QuantConnect.Algorithm.CSharp
                     return;
                 }
 
-                // if niether order has filled, bring in the limits by a penny
+                // if neither order has filled, bring in the limits by a penny
 
                 var newLongLimit = longOrder.Get(OrderField.LimitPrice) + 0.01m;
                 var newShortLimit = shortOrder.Get(OrderField.LimitPrice) - 0.01m;
@@ -234,7 +234,7 @@ namespace QuantConnect.Algorithm.CSharp
                     return;
                 }
 
-                // if niether order has filled, bring in the stops by a penny
+                // if neither order has filled, bring in the stops by a penny
 
                 var newLongStop = longOrder.Get(OrderField.StopPrice) - 0.01m;
                 var newShortStop = shortOrder.Get(OrderField.StopPrice) + 0.01m;
@@ -258,7 +258,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// StopLimitOrders work as a combined stop and limit order. First, the
         /// price must pass the stop price in the same way a StopMarketOrder works,
-        /// but then we're also gauranteed a fill price at least as good as the
+        /// but then we're also guaranteed a fill price at least as good as the
         /// limit price. This order type can be beneficial in gap down scenarios
         /// where a StopMarketOrder would have triggered and given the not as beneficial
         /// gapped down price, whereas the StopLimitOrder could protect you from
@@ -279,7 +279,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 // a long stop is triggered when the price rises above the value
                 // so we'll set a long stop .25% above the current bar's close
-                // now we'll also be setting a limit, this means we are gauranteed
+                // now we'll also be setting a limit, this means we are guaranteed
                 // to get at least the limit price for our fills, so make the limit
                 // price a little softer than the stop price
 
@@ -291,7 +291,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 // a short stop is triggered when the price falls below the value
                 // so we'll set a short stop .25% below the current bar's close
-                // now we'll also be setting a limit, this means we are gauranteed
+                // now we'll also be setting a limit, this means we are guaranteed
                 // to get at least the limit price for our fills, so make the limit
                 // price a little softer than the stop price
 
@@ -314,7 +314,7 @@ namespace QuantConnect.Algorithm.CSharp
                     return;
                 }
 
-                // if niether order has filled, bring in the stops/limits in by a penny
+                // if neither order has filled, bring in the stops/limits in by a penny
 
                 var newLongStop = longOrder.Get(OrderField.StopPrice) - 0.01m;
                 var newLongLimit = longOrder.Get(OrderField.LimitPrice) + 0.01m;
@@ -494,7 +494,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
             if (remainingOpenOrders != 0m)
             {
-                throw new Exception($"No remaining quantiy to be filled from open orders was expected");
+                throw new Exception($"No remaining quantity to be filled from open orders was expected");
             }
 
             var symbolOpenOrders = Transactions.GetOpenOrders(symbol).Count;
@@ -507,7 +507,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
             if (symbolOpenOrdersRemainingQuantity != 0)
             {
-                throw new Exception($"No remaining quantiy to be filled from open orders was expected");
+                throw new Exception($"No remaining quantity to be filled from open orders was expected");
             }
 
             var defaultOrders = Transactions.GetOrders();
@@ -526,7 +526,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
             if (defaultOpenOrdersRemaining != 0m)
             {
-                throw new Exception($"No remaining quantiy to be filled from open orders was expected");
+                throw new Exception($"No remaining quantity to be filled from open orders was expected");
             }
         }
 
