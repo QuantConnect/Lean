@@ -31,7 +31,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="trading and orders" />
     public class BasicTemplateIntrinioEconomicData : QCAlgorithm
     {
-        // Set your Intrinino user and password.
+        // Set your Intrinio user and password.
         public string _user = "";
         public string _password = "";
 
@@ -55,7 +55,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(year: 2013, month: 12, day: 31); //Set End Date
             SetCash(startingCash: 100000); //Set Strategy Cash
 
-            // Set your Intrinino user and password.
+            // Set your Intrinio user and password.
             IntrinioConfig.SetUserAndPassword(_user, _password);
 
             // Set Intrinio config to make 1 call each minute, default is 1 call each 5 seconds.

@@ -22,7 +22,7 @@ class BasicTemplateIntrinioEconomicData(QCAlgorithm):
         self.SetEndDate(2013, 12, 31)  #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
 
-        # Set your Intrinino user and password.
+        # Set your Intrinio user and password.
         IntrinioConfig.SetUserAndPassword("intrinio-username", "intrinio-password")
         # The Intrinio user and password can be also defined in the config.json file for local backtest.
 

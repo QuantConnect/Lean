@@ -122,7 +122,7 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
                 self.__openLimitOrders = []
                 return
 
-            # if niether order has filled, bring in the limits by a penny
+            # if neither order has filled, bring in the limits by a penny
             newLongLimit = longOrder.Get(OrderField.LimitPrice) + 0.01
             newShortLimit = shortOrder.Get(OrderField.LimitPrice) - 0.01
             self.Log("Updating limits - Long: {0:.2f} Short: {1:.2f}".format(newLongLimit, newShortLimit))
@@ -193,7 +193,7 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
     def StopLimitOrders(self):
         '''StopLimitOrders work as a combined stop and limit order. First, the
         price must pass the stop price in the same way a StopMarketOrder works,
-        but then we're also gauranteed a fill price at least as good as the
+        but then we're also guaranteed a fill price at least as good as the
         limit price. This order type can be beneficial in gap down scenarios
         where a StopMarketOrder would have triggered and given the not as beneficial
         gapped down price, whereas the StopLimitOrder could protect you from
@@ -210,7 +210,7 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
             # a long stop is triggered when the price rises above the
             # value so we'll set a long stop .25% above the current bar's
             # close now we'll also be setting a limit, this means we are
-            # gauranteed to get at least the limit price for our fills,
+            # guaranteed to get at least the limit price for our fills,
             # so make the limit price a little higher than the stop price
 
             close = self.Securities[self.spy.Value].Close
@@ -220,7 +220,7 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
             # a short stop is triggered when the price falls below the
             # value so we'll set a short stop .25% below the current bar's
             # close now we'll also be setting a limit, this means we are
-            # gauranteed to get at least the limit price for our fills,
+            # guaranteed to get at least the limit price for our fills,
             # so make the limit price a little softer than the stop price
 
             newTicket = self.StopLimitOrder(self.spy, -10, close * .999, close + 0.03)
@@ -359,7 +359,7 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
 
         assert(filledOrdersSize == 8 and orderTicketsSize == 10), "There were expected 8 filled orders and 10 order tickets"
         assert(not (len(openOrders) or openOrderTicketsSize)), "No open orders or tickets were expected"
-        assert(not remainingOpenOrders), "No remaining quantiy to be filled from open orders was expected"
+        assert(not remainingOpenOrders), "No remaining quantity to be filled from open orders was expected"
 
         spyOpenOrders = self.Transactions.GetOpenOrders(self.spy)
         spyOpenOrderTickets = self.Transactions.GetOpenOrderTickets(self.spy)
@@ -367,7 +367,7 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
         spyOpenOrdersRemainingQuantity = self.Transactions.GetOpenOrdersRemainingQuantity(self.spy)
 
         assert(not (len(spyOpenOrders) or spyOpenOrderTicketsSize)), "No open orders or tickets were expected"
-        assert(not spyOpenOrdersRemainingQuantity), "No remaining quantiy to be filled from open orders was expected"
+        assert(not spyOpenOrdersRemainingQuantity), "No remaining quantity to be filled from open orders was expected"
 
         defaultOrders = self.Transactions.GetOrders()
         defaultOrderTickets = self.Transactions.GetOrderTickets()
@@ -381,4 +381,4 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
 
         assert(defaultOrdersSize == 10 and defaultOrderTicketsSize == 10), "There were expected 10 orders and 10 order tickets"
         assert(not (len(defaultOpenOrders) or defaultOpenOrderTicketsSize)), "No open orders or tickets were expected"
-        assert(not defaultOpenOrdersRemaining), "No remaining quantiy to be filled from open orders was expected"
+        assert(not defaultOpenOrdersRemaining), "No remaining quantity to be filled from open orders was expected"
