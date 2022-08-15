@@ -51,6 +51,12 @@ class FuturesExtendedMarketHoursRegressionAlgorithm(QCAlgorithm):
         self._gcRanOnRegularHours |= gcIsInRegularHours and sliceHasGCData
         self._gcRanOnExtendedHours |= gcIsInExtendedHours and sliceHasGCData
 
+        timeOfDay = self.Time.time()
+        currentTimeIsRegularHours = (timeOfDay >= time(9, 30, 0) and timeOfDay < time(16, 15, 0)) or (timeOfDay >= time(16, 30, 0) and timeOfDay < time(17, 0, 0))
+        currentTimeIsExtendedHours = not currentTimeIsRegularHours and (timeOfDay < time(9, 30, 0) or timeOfDay >= time(18, 0, 0))
+        if esIsInRegularHours != currentTimeIsRegularHours or esIsInExtendedHours != currentTimeIsExtendedHours:
+            raise Exception("At {Time}, {_es.Symbol} is either in regular hours but current time is in extended hours, or viceversa")
+
     def OnEndOfAlgorithm(self):
         if not self._esRanOnRegularHours:
             raise Exception(f"Algorithm should have run on regular hours for {self._es.Symbol} future, which enabled extended market hours")

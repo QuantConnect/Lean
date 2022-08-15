@@ -40,13 +40,13 @@ namespace QuantConnect.Algorithm.CSharp
         };
         protected virtual List<DateTime> ExpectedCloses => new List<DateTime>()
         {
-            new DateTime(2013, 10, 07, 16, 30, 0),
-            new DateTime(2013, 10, 08, 16, 30, 0),
-            new DateTime(2013, 10, 09, 16, 30, 0),
-            new DateTime(2013, 10, 10, 16, 30, 0),
-            new DateTime(2013, 10, 11, 16, 30, 0),
-            new DateTime(2013, 10, 14, 16, 30, 0),
-            new DateTime(2013, 10, 14, 16, 30, 0),
+            new DateTime(2013, 10, 07, 17, 0, 0),
+            new DateTime(2013, 10, 08, 17, 0, 0),
+            new DateTime(2013, 10, 09, 17, 0, 0),
+            new DateTime(2013, 10, 10, 17, 0, 0),
+            new DateTime(2013, 10, 11, 17, 0, 0),
+            new DateTime(2013, 10, 14, 17, 0, 0),
+            new DateTime(2013, 10, 14, 17, 0, 0),
         };
 
         private Queue<DateTime> _expectedOpensQueue;
@@ -101,9 +101,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (open != bar.Time || close != bar.EndTime)
             {
-                // throw new Exception($"Bar span was expected to be from {open} to {close}. " +
-                //     $"\n But was from {bar.Time} to {bar.EndTime}.");
-                Logging.Log.Debug($"Consolidator Event span. Start {bar.Time} End : {bar.EndTime}");
+                throw new Exception($"Bar span was expected to be from {open} to {close}. " +
+                    $"\n But was from {bar.Time} to {bar.EndTime}.");
             }
 
             Logging.Log.Debug($"Consolidator Event span. Start {bar.Time} End : {bar.EndTime}");

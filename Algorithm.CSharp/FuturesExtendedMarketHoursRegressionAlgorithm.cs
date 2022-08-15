@@ -65,6 +65,16 @@ namespace QuantConnect.Algorithm.CSharp
             var sliceHasGCData = sliceSymbols.Any(symbol => symbol == _gc.Symbol || symbol.Canonical == _gc.Symbol);
             _gcRanOnRegularHours |= gcIsInRegularHours && sliceHasGCData;
             _gcRanOnExtendedHours |= gcIsInExtendedHours && sliceHasGCData;
+
+            var currentTimeIsRegularHours = (Time.TimeOfDay >= new TimeSpan(9, 30, 0) && Time.TimeOfDay < new TimeSpan(16, 15, 0)) ||
+                (Time.TimeOfDay >= new TimeSpan(16, 30, 0) && Time.TimeOfDay < new TimeSpan(17, 0, 0));
+            var currentTimeIsExtendedHours = !currentTimeIsRegularHours
+                && (Time.TimeOfDay < new TimeSpan(9, 30, 0) || Time.TimeOfDay >= new TimeSpan(18, 0, 0));
+
+            if (esIsInRegularHours != currentTimeIsRegularHours || esIsInExtendedHours != currentTimeIsExtendedHours)
+            {
+                throw new Exception($"At {Time}, {_es.Symbol} is either in regular hours but current time is in extended hours, or viceversa");
+            }
         }
 
         public override void OnEndOfAlgorithm()

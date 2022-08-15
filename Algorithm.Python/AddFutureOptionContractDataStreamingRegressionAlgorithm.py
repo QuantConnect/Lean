@@ -36,6 +36,7 @@ class AddFutureOptionContractDataStreamingRegressionAlgorithm(QCAlgorithm):
             Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, datetime(2020, 6, 19)),
             Resolution.Minute).Symbol
 
+        # Get option contract lists for 2020/01/05 (timedelta(days=1)) because Lean has local data for that date
         optionChains = self.OptionChainProvider.GetOptionContractList(self.es20h20, self.Time + timedelta(days=1))
         optionChains += self.OptionChainProvider.GetOptionContractList(self.es19m20, self.Time + timedelta(days=1))
 

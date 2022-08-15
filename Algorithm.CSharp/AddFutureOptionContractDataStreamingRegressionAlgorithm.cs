@@ -51,6 +51,7 @@ namespace QuantConnect.Algorithm.CSharp
                 QuantConnect.Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 6, 19)),
                 Resolution.Minute).Symbol;
 
+            // Get option contract lists for 2020/01/05 (Time.AddDays(1)) because Lean has local data for that date
             var optionChains = OptionChainProvider.GetOptionContractList(_es20h20, Time.AddDays(1))
                 .Concat(OptionChainProvider.GetOptionContractList(_es19m20, Time.AddDays(1)));
 

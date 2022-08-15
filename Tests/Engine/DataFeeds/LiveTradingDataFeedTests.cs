@@ -2796,7 +2796,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 // Must include weeklys because the contracts returned by the lookup, futureSymbol1 & futureSymbol2, are non-standard
                 future.SetFilter(x => x.IncludeWeeklys());
                 exchangeTimeZone = future.Exchange.TimeZone;
-                // algorithm.UniverseSettings.ExtendedMarketHours = true;
             }
             else
             {

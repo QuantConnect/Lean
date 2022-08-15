@@ -27,14 +27,13 @@ namespace QuantConnect.Algorithm.CSharp
     public class AddFutureOptionContractFromFutureChainRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private bool _addedOptions;
-        private Resolution _resolution = Resolution.Minute;
 
         public override void Initialize()
         {
             SetStartDate(2020, 1, 4);
             SetEndDate(2020, 1, 6);
 
-            var es = AddFuture(Futures.Indices.SP500EMini, _resolution, Market.CME);
+            var es = AddFuture(Futures.Indices.SP500EMini, Resolution.Minute, Market.CME);
             es.SetFilter((futureFilter) =>
             {
                 return futureFilter.Expiration(0, 365).ExpirationCycle(new[] { 3, 6 });
@@ -60,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
                             .ThenBy(x => x.ID.StrikePrice)
                             .ThenBy(x => x.ID.OptionRight).Take(5))
                         {
-                            AddOptionContract(option_contract_symbol, _resolution);
+                            AddOptionContract(option_contract_symbol, Resolution.Minute);
                         }
                     }
                 }

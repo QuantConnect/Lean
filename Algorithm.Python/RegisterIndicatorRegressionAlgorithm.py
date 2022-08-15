@@ -95,7 +95,7 @@ class RegisterIndicatorRegressionAlgorithm(QCAlgorithm):
 
     # OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
     def OnData(self, data):
-        if not self.Portfolio.Invested and data.ContainsKey(self._symbol):
+        if not self.Portfolio.Invested:
            self.SetHoldings(self._symbol, 0.5)
 
     def OnEndOfAlgorithm(self):

@@ -38,14 +38,14 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 1, 1);
             SetCash(10000000);
 
-            var future = AddFuture(Futures.Dairy.ClassIIIMilk, Resolution, Market.CME);
-            future.SetFilter(1, 120);
+            var dc = AddFuture(Futures.Dairy.ClassIIIMilk, Resolution, Market.CME);
+            dc.SetFilter(1, 120);
 
-            AddFutureOption(future.Symbol, universe => universe.Strikes(-2, 2));
+            AddFutureOption(dc.Symbol, universe => universe.Strikes(-2, 2));
             _lastMonth = -1;
 
             // This is required to prevent the algorithm from automatically delisting the underlying. Without this, future options will be subscribed
-            // with resolution default to Minute insted of this.Resolution
+            // with resolution default to Minute insted of this.Resolution. This could be replaced after GH issue #6491 is implemented.
             UniverseSettings.Resolution = Resolution;
         }
 
