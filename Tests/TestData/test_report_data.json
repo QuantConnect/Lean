@@ -522,6 +522,29 @@
         }
     },
     "ProfitLoss": {},
-    "Statistics": {},
+    "Statistics": {
+        "Total Trades": "7",
+        "Average Win": "11.29%",
+        "Average Loss": "-1.24%",
+        "Compounding Annual Return": "114.572%",
+        "Drawdown": "31.300%",
+        "Expectancy": "1.491",
+        "Net Profit": "361.374%",
+        "Sharpe Ratio": "2.034",
+        "Probabilistic Sharpe Ratio": "80.811%",
+        "Loss Rate": "75%",
+        "Win Rate": "25%",
+        "Profit-Loss Ratio": "9.12",
+        "Alpha": "0",
+        "Beta": "0",
+        "Annual Standard Deviation": "0.396",
+        "Annual Variance": "0.157",
+        "Information Ratio": "2.034",
+        "Tracking Error": "0.396",
+        "Treynor Ratio": "0",
+        "Total Fees": "$0.65",
+        "Estimated Strategy Capacity": "$0",
+        "Lowest Capacity Asset": "ETHBTC 2MN"
+    },
     "RuntimeStatistics": {}
 }

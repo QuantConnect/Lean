@@ -14,6 +14,7 @@
 */
 
 using System.Globalization;
+using System.Linq;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Report.ReportElements
@@ -47,14 +48,15 @@ namespace QuantConnect.Report.ReportElements
         public override string Render()
         {
             var statistics = _backtest?.Statistics;
-            string capacityUsd;
-            if (statistics == null || !statistics.TryGetValue("Estimated Strategy Capacity", out capacityUsd))
+            string capacityWithCurrency;
+            if (statistics == null || !statistics.TryGetValue("Estimated Strategy Capacity", out capacityWithCurrency))
             {
                 return "-";
             }
 
-            var capacity = decimal.Parse(capacityUsd.Replace("$", ""), NumberStyles.Any, CultureInfo.InvariantCulture)
-                .RoundToSignificantDigits(2);
+            var currency = Currencies.CurrencySymbols.Aggregate("", (longest, current) =>
+                capacityWithCurrency.StartsWith(current.Value) && current.Value.Length > longest.Length ? current.Value : longest);
+            var capacity = decimal.Parse(capacityWithCurrency.Replace(currency, ""), NumberStyles.Any, CultureInfo.InvariantCulture).RoundToSignificantDigits(2);
 
             Result = capacity;
 
