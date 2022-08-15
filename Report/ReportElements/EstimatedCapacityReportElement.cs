@@ -54,9 +54,7 @@ namespace QuantConnect.Report.ReportElements
                 return "-";
             }
 
-            var currency = Currencies.CurrencySymbols.Aggregate("", (longest, current) =>
-                capacityWithCurrency.StartsWith(current.Value) && current.Value.Length > longest.Length ? current.Value : longest);
-            var capacity = decimal.Parse(capacityWithCurrency.Replace(currency, ""), NumberStyles.Any, CultureInfo.InvariantCulture).RoundToSignificantDigits(2);
+            var capacity = Currencies.Parse(capacityWithCurrency).RoundToSignificantDigits(2);
 
             Result = capacity;
 
