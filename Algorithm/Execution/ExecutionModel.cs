@@ -24,7 +24,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
     public class ExecutionModel : IExecutionModel
     {
         /// <summary>
-        /// Submit orders for the specified portolio targets.
+        /// Submit orders for the specified portfolio targets.
         /// This model is free to delay or spread out these orders as it sees fit
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>

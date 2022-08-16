@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         }
 
         /// <summary>
-        /// Submit orders for the specified portolio targets if the spread is tighter/equal to preset level
+        /// Submit orders for the specified portfolio targets if the spread is tighter/equal to preset level
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="targets">The portfolio targets to be ordered</param>

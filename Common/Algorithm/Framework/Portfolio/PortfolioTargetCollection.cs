@@ -260,7 +260,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// Gets or sets the portfolio target for the specified symbol
         /// </summary>
         /// <param name="symbol">The symbol</param>
-        /// <returns>The symbol's portolio target if it exists in this collection, if not a <see cref="KeyNotFoundException"/> will be thrown.</returns>
+        /// <returns>The symbol's portfolio target if it exists in this collection, if not a <see cref="KeyNotFoundException"/> will be thrown.</returns>
         public IPortfolioTarget this[Symbol symbol]
         {
             get { return _targets[symbol]; }
