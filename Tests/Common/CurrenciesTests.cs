@@ -103,7 +103,7 @@ namespace QuantConnect.Tests.Common
             [Values("10.000.1", "10.000,1", "1.00001A4", "")] string value)
         {
             string valueWithCurrency = currencySymbol + value;
-            Assert.Throws<FormatException>(() => Currencies.Parse(valueWithCurrency));
+            Assert.Throws<ArgumentException>(() => Currencies.Parse(valueWithCurrency));
             Assert.IsFalse(Currencies.TryParse(valueWithCurrency, out _));
         }
 

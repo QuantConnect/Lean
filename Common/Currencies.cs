@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Globalization;
@@ -255,12 +256,14 @@ namespace QuantConnect
         /// <returns>The decimal equivalent to the value</returns>
         public static decimal Parse(string value)
         {
-            foreach (var currencySymbol in Currencies.CurrencySymbols.Values.OrderByDescending(x => x.Length))
+            decimal parsedValue;
+
+            if (!TryParse(value, out parsedValue))
             {
-                value = value.Replace(currencySymbol, string.Empty);
+                throw new ArgumentException($"The value {value} cannot be converted to a decimal number");
             }
 
-            return decimal.Parse(value, NumberStyles.Any, CultureInfo.InvariantCulture);
+            return parsedValue;
         }
 
         /// <summary>
@@ -271,9 +274,10 @@ namespace QuantConnect
         /// <returns>True if the value was succesfuly converted</returns>
         public static bool TryParse(string value, out decimal parsedValue)
         {
+            // Replace the longest currencies first to avoid ending up with a partial/unknown currency symbol (e.g. ZX after replacing R in ZRX)
             foreach (var currencySymbol in Currencies.CurrencySymbols.Values.OrderByDescending(x => x.Length))
             {
-                value = value.Replace(currencySymbol, string.Empty);
+                value = value.Replace(currencySymbol, string.Empty, StringComparison.InvariantCultureIgnoreCase);
             }
 
             return decimal.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out parsedValue);
