@@ -13,7 +13,10 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Globalization;
 
 namespace QuantConnect
 {
@@ -243,6 +246,41 @@ namespace QuantConnect
         {
             string currencySymbol;
             return CurrencySymbols.TryGetValue(currency, out currencySymbol) ? currencySymbol : currency;
+        }
+
+        /// <summary>
+        /// Converts the string representation of number with currency in the format {currency}{value} to its decimal equivalent.
+        /// It throws if the value cannot be converted to a decimal number.
+        /// </summary>
+        /// <param name="value">The value with currency</param>
+        /// <returns>The decimal equivalent to the value</returns>
+        public static decimal Parse(string value)
+        {
+            decimal parsedValue;
+
+            if (!TryParse(value, out parsedValue))
+            {
+                throw new ArgumentException($"The value {value} cannot be converted to a decimal number");
+            }
+
+            return parsedValue;
+        }
+
+        /// <summary>
+        /// Converts the string representation of number with currency in the format {currency}{value} to its decimal equivalent.
+        /// </summary>
+        /// <param name="value">The value with currency</param>
+        /// <param name="parsedValue">The decimal equivalent to the string value after conversion</param>
+        /// <returns>True if the value was succesfuly converted</returns>
+        public static bool TryParse(string value, out decimal parsedValue)
+        {
+            // Replace the longest currencies first to avoid ending up with a partial/unknown currency symbol (e.g. ZX after replacing R in ZRX)
+            foreach (var currencySymbol in Currencies.CurrencySymbols.Values.OrderByDescending(x => x.Length))
+            {
+                value = value.Replace(currencySymbol, string.Empty, StringComparison.InvariantCultureIgnoreCase);
+            }
+
+            return decimal.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out parsedValue);
         }
     }
 }

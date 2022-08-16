@@ -13,7 +13,9 @@
  * limitations under the License.
 */
 
+using System;
 using System.Linq;
+using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Crypto;
@@ -80,5 +82,31 @@ namespace QuantConnect.Tests.Common
         {
             Assert.AreEqual(currency, Currencies.GetCurrencySymbol(currency));
         }
+
+        [Test]
+        public void ParsesValuesWithCurrency(
+            [ValueSource(nameof(CurrencySymbols))] string currencySymbol,
+            [Values("10,000.1", "10000.1", "1.00001e4")] string value)
+        {
+            decimal result = 0;
+            decimal result2;
+            string valueWithCurrency = currencySymbol + value;
+            Assert.DoesNotThrow(() => result = Currencies.Parse(valueWithCurrency));
+            Assert.IsTrue(Currencies.TryParse(valueWithCurrency, out result2));
+            Assert.AreEqual(10000.1m, result);
+            Assert.AreEqual(result, result2);
+        }
+
+        [Test]
+        public void CannotParseInvalidValuesWithCurrency(
+            [ValueSource(nameof(CurrencySymbols))] string currencySymbol,
+            [Values("10.000.1", "10.000,1", "1.00001A4", "")] string value)
+        {
+            string valueWithCurrency = currencySymbol + value;
+            Assert.Throws<ArgumentException>(() => Currencies.Parse(valueWithCurrency));
+            Assert.IsFalse(Currencies.TryParse(valueWithCurrency, out _));
+        }
+
+        static IEnumerable<string> CurrencySymbols => Currencies.CurrencySymbols.Values.Distinct();
     }
 }
