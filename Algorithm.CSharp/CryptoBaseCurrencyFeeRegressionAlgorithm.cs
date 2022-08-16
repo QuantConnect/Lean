@@ -73,12 +73,12 @@ namespace QuantConnect.Algorithm.CSharp
                     || filledEvent.FillQuantity != ticket.QuantityFilled
                     || (0.1m - filledEvent.OrderFee.Value.Amount) != ticket.QuantityFilled)
                 {
-                    throw new Exception($"Unexpected BaseCurrency porfoltio status. Event {filledEvent}. CashBook: {Portfolio.CashBook}. ");
+                    throw new Exception($"Unexpected BaseCurrency portfolio status. Event {filledEvent}. CashBook: {Portfolio.CashBook}. ");
                 }
 
                 if (Portfolio.CashBook[quoteCurrency].Amount != (initialQuoteCurrency - 0.1m * filledEvent.FillPrice))
                 {
-                    throw new Exception($"Unexpected QuoteCurrency porfoltio status. Event {filledEvent}. CashBook: {Portfolio.CashBook}. ");
+                    throw new Exception($"Unexpected QuoteCurrency portfolio status. Event {filledEvent}. CashBook: {Portfolio.CashBook}. ");
                 }
 
                 if (Securities[_symbol].Holdings.Quantity != (0.1m - filledEvent.OrderFee.Value.Amount))
