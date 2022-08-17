@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Securities;
 using static QuantConnect.StringExtensions;
@@ -248,7 +249,27 @@ namespace QuantConnect.Orders.Fees
 
         private static CashAmount UnitedStatesFutureFees(Security security)
         {
-            return new CashAmount(0.85m + 1, Currencies.USD);
+            IDictionary<string, decimal> fees;
+            decimal ibFeePerContract;
+
+            switch (security.Symbol.SecurityType)
+            {
+                case SecurityType.Future:
+                    fees = _usaFuturesFees;
+                    break;
+                case SecurityType.FutureOption:
+                    fees = _usaFutureOptionsFees;
+                    break;
+                default:
+                    throw new ArgumentException(Invariant($"InteractiveBrokersFeeModel.UnitedStatesFutureFees(): Unsupported security type: {security.Type}"));
+            }
+
+            if (!fees.TryGetValue(security.Symbol.ID.Symbol, out ibFeePerContract))
+            {
+                ibFeePerContract = 0.85m;
+            }
+
+            return new CashAmount(ibFeePerContract + 1, Currencies.USD);
         }
 
         /// <summary>
@@ -281,6 +302,27 @@ namespace QuantConnect.Orders.Fees
             // let's add a 50% extra charge for exchange fees
             return new CashAmount(ibFeePerContract * 1.5m, security.QuoteCurrency.Symbol);
         }
+
+        /// <summary>
+        /// Reference at https://www.interactivebrokers.com/en/pricing/commissions-futures.php?re=amer
+        /// </summary>
+        private static readonly Dictionary<string, decimal> _usaFuturesFees = new()
+        {
+            { "MYM", 0.25m }, { "M2K", 0.25m }, { "MES", 0.25m }, { "MNQ", 0.25m }, { "2YY", 0.25m }, { "5YY", 0.25m }, { "10Y", 0.25m },
+            { "30Y", 0.25m }, { "MRB", 0.25m }, { "MCL", 0.25m }, { "MGC", 0.25m }, { "SIL", 0.25m }, { "BTC", 5m }, { "MIB", 2.25m },
+            { "MBT", 2.25m }, { "MET", 0.20m }, { "E7", 0.50m }, { "J7", 0.50m }, { "M6E", 0.15m }, { "M6A", 0.15m }, { "M6B", 0.15m },
+            { "MCD", 0.15m }, { "MJY", 0.15m }, { "MSF", 0.15m }, { "M6J", 0.15m }, { "MIR", 0.15m }, { "M6C", 0.15m }, { "M6S", 0.15m },
+            { "MNH", 0.15m },
+        };
+
+        private static readonly Dictionary<string, decimal> _usaFutureOptionsFees = new()
+        {
+            { "MYM", 0.25m }, { "M2K", 0.25m }, { "MES", 0.25m }, { "MNQ", 0.25m }, { "2YY", 0.25m }, { "5YY", 0.25m }, { "10Y", 0.25m },
+            { "30Y", 0.25m }, { "MRB", 0.25m }, { "MCL", 0.25m }, { "MGC", 0.25m }, { "SIL", 0.25m }, { "BTC", 5m }, { "MIB", 1.25m },
+            { "MBT", 1.25m }, { "MET", 0.10m }, { "E7", 0.50m }, { "J7", 0.50m }, { "M6E", 0.15m }, { "M6A", 0.15m }, { "M6B", 0.15m },
+            { "MCD", 0.15m }, { "MJY", 0.15m }, { "MSF", 0.15m }, { "M6J", 0.15m }, { "MIR", 0.15m }, { "M6C", 0.15m }, { "M6S", 0.15m },
+            { "MNH", 0.15m },
+        };
 
         /// <summary>
         /// Helper class to handle IB Equity fees
