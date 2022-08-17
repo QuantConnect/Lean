@@ -59,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
                             .ThenBy(x => x.ID.StrikePrice)
                             .ThenBy(x => x.ID.OptionRight).Take(5))
                         {
-                            AddOptionContract(option_contract_symbol, Resolution.Minute);
+                            AddOptionContract(option_contract_symbol);
                         }
                     }
                 }
