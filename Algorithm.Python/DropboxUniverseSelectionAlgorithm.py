@@ -15,7 +15,7 @@ from AlgorithmImports import *
 import base64
 
 ### <summary>
-### In this algortihm we show how you can easily use the universe selection feature to fetch symbols
+### In this algorithm we show how you can easily use the universe selection feature to fetch symbols
 ### to be traded using the BaseData custom data system in combination with the AddUniverse{T} method.
 ### AddUniverse{T} requires a function that will return the symbols to be traded.
 ### </summary>

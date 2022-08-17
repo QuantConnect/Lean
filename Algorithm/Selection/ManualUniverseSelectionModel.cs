@@ -70,7 +70,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         /// <param name="symbols">The symbols to subscribe to
         /// Should not send in symbols at <see cref="QCAlgorithm.Securities"/> since those will be managed by the <see cref="UserDefinedUniverse"/></param>
-        /// <param name="universeSettings">The settings used when adding symbols to the algorithm, specify null to use algorthm.UniverseSettings</param>
+        /// <param name="universeSettings">The settings used when adding symbols to the algorithm, specify null to use algorithm.UniverseSettings</param>
         public ManualUniverseSelectionModel(IEnumerable<Symbol> symbols, UniverseSettings universeSettings)
         {
             if (symbols == null)

@@ -927,7 +927,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public void SetLocked() => _baseAlgorithm.SetLocked();
 
         /// <summary>
-        /// Set the maximum number of orders the algortihm is allowed to process.
+        /// Set the maximum number of orders the algorithm is allowed to process.
         /// </summary>
         /// <param name="max">Maximum order count int</param>
         public void SetMaximumOrders(int max) => _baseAlgorithm.SetMaximumOrders(max);

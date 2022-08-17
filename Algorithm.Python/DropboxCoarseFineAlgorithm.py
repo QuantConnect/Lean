@@ -14,7 +14,7 @@
 from AlgorithmImports import *
 
 ### <summary>
-### In this algortihm, we fetch a list of tickers with corresponding dates from a file on Dropbox.
+### In this algorithm, we fetch a list of tickers with corresponding dates from a file on Dropbox.
 ### We then create a fine fundamental universe which contains those symbols on their respective dates.### 
 ### </summary>
 ### <meta name="tag" content="download" />
