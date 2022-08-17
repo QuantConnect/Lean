@@ -1,0 +1,25 @@
+name: Python Virtual Environments
+
+on:
+  push:
+    branches: ['*']
+    tags: ['*']
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    container:
+        image: quantconnect/lean:foundation
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build
+        run: dotnet build /p:Configuration=Release /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
+
+      - name: Create Python Virtual Environment
+        run: python -m venv /lean-testenv --system-site-packages && . /lean-testenv/bin/activate && pip install --no-cache-dir lean==1.0.99 && deactivate
+
+      - name: Run Tests
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonVirtualEnvironmentTests.AssertVirtualEnvironment"

@@ -23,7 +23,7 @@ namespace QuantConnect.Packets
     /// <summary>
     /// Algorithm Node Packet is a work task for the Lean Engine
     /// </summary>
-    public class AlgorithmNodePacket : Packet
+    public class AlgorithmNodePacket : PythonEnvironmentPacket
     {
         /// <summary>
         /// Default constructor for the algorithm node:

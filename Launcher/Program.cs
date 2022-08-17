@@ -21,6 +21,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Python;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Launcher
@@ -67,6 +68,9 @@ namespace QuantConnect.Lean.Launcher
             //-> Pull job from QuantConnect job queue, or, pull local build:
             string assemblyPath;
             job = leanEngineSystemHandlers.JobQueue.NextJob(out assemblyPath);
+
+            // Activate our PythonVirtualEnvironment
+            PythonInitializer.ActivatePythonVirtualEnvironment(job.PythonVirtualEnvironment);
 
             leanEngineAlgorithmHandlers = Initializer.GetAlgorithmHandlers();
 

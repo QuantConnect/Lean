@@ -3005,9 +3005,27 @@ namespace QuantConnect
         /// <returns></returns>
         public static string RemoveFromEnd(this string s, string ending)
         {
-            if (s.EndsWith(ending))
+            if (s.EndsWith(ending, StringComparison.InvariantCulture))
             {
                 return s.Substring(0, s.Length - ending.Length);
+            }
+            else
+            {
+                return s;
+            }
+        }
+
+        /// <summary>
+        /// Returns a new string in which specified start in the current instance is removed.
+        /// </summary>
+        /// <param name="s">original string value</param>
+        /// <param name="start">the string to be removed</param>
+        /// <returns>Substring with start removed</returns>
+        public static string RemoveFromStart(this string s, string start)
+        {
+            if (!string.IsNullOrEmpty(s) && !string.IsNullOrEmpty(start) && s.StartsWith(start, StringComparison.InvariantCulture))
+            {
+                return s.Substring(start.Length);
             }
             else
             {
