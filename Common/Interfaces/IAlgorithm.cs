@@ -662,7 +662,7 @@ namespace QuantConnect.Interfaces
         void SetFinishedWarmingUp();
 
         /// <summary>
-        /// Set the maximum number of orders the algortihm is allowed to process.
+        /// Set the maximum number of orders the algorithm is allowed to process.
         /// </summary>
         /// <param name="max">Maximum order count int</param>
         void SetMaximumOrders(int max);
