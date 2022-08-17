@@ -1435,7 +1435,7 @@ namespace QuantConnect.Algorithm
         /// Set the algorithm id (backtestId or live deployId for the algorithm).
         /// </summary>
         /// <param name="algorithmId">String Algorithm Id</param>
-        /// <remarks>Intended for internal QC Lean Engine use only as a setter for AlgorihthmId</remarks>
+        /// <remarks>Intended for internal QC Lean Engine use only as a setter for AlgorithmId</remarks>
         [DocumentationAttribute(HandlingData)]
         public void SetAlgorithmId(string algorithmId)
         {
