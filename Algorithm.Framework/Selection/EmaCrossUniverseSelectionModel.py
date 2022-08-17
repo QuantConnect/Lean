@@ -28,7 +28,7 @@ class EmaCrossUniverseSelectionModel(FundamentalUniverseSelectionModel):
             fastPeriod: Fast EMA period
             slowPeriod: Slow EMA period
             universeCount: Maximum number of members of this universe selection
-            universeSettings: The settings used when adding symbols to the algorithm, specify null to use algorthm.UniverseSettings'''
+            universeSettings: The settings used when adding symbols to the algorithm, specify null to use algorithm.UniverseSettings'''
         super().__init__(False, universeSettings)
         self.fastPeriod = fastPeriod
         self.slowPeriod = slowPeriod

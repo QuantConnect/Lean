@@ -22,7 +22,7 @@ class FundamentalUniverseSelectionModel:
         '''Initializes a new instance of the FundamentalUniverseSelectionModel class
         Args:
             filterFineData: True to also filter using fine fundamental data, false to only filter on coarse data
-            universeSettings: The settings used when adding symbols to the algorithm, specify null to use algorthm.UniverseSettings'''
+            universeSettings: The settings used when adding symbols to the algorithm, specify null to use algorithm.UniverseSettings'''
         self.filterFineData = filterFineData
         self.universeSettings = universeSettings
 
