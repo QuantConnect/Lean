@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -238,59 +239,73 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 });
         }
 
-        private static TestCaseData[] USAFuturesFeeTestCases => new []
+        private static TestCaseData[] USAFuturesFeeTestCases()
         {
-            new TestCaseData(Symbols.Future_ESZ18_Dec2018, 1.85m),
-            new TestCaseData(Symbols.Future_CLF19_Jan2019, 1.85m),
+            return new[]
+            {
+                // E-micro Futures
+                new { Symbol = Futures.Indices.MicroDow30EMini, Type = SecurityType.Future, ExpectedFee = 1.25m },
+                new { Symbol = Futures.Indices.MicroRussell2000EMini, Type = SecurityType.Future, ExpectedFee = 1.25m },
+                new { Symbol = Futures.Indices.MicroSP500EMini, Type = SecurityType.Future, ExpectedFee = 1.25m },
+                new { Symbol = Futures.Indices.MicroNASDAQ100EMini, Type = SecurityType.Future, ExpectedFee = 1.25m },
+                new { Symbol = Futures.Financials.MicroY2TreasuryBond, Type = SecurityType.Future, ExpectedFee = 1.25m },
+                new { Symbol = Futures.Financials.MicroY5TreasuryBond, Type = SecurityType.Future, ExpectedFee = 1.25m },
+                new { Symbol = Futures.Financials.MicroY10TreasuryNote, Type = SecurityType.Future, ExpectedFee = 1.25m },
+                new { Symbol = Futures.Financials.MicroY30TreasuryBond, Type = SecurityType.Future, ExpectedFee = 1.25m },
+                new { Symbol = Futures.Metals.MicroGold, Type = SecurityType.Future, ExpectedFee = 1.25m },
+                new { Symbol = Futures.Metals.MicroSilver, Type = SecurityType.Future, ExpectedFee = 1.25m },
+                new { Symbol = Futures.Energies.MicroCrudeOilWTI, Type = SecurityType.Future, ExpectedFee = 1.25m },
+                // Cryptocurrency futures
+                new { Symbol = Futures.Currencies.BTC, Type = SecurityType.Future, ExpectedFee = 6.0m },
+                new { Symbol = Futures.Currencies.MicroBTC, Type = SecurityType.Future, ExpectedFee = 3.25m },
+                new { Symbol = Futures.Currencies.BTICMicroBTC, Type = SecurityType.Future, ExpectedFee = 3.25m },
+                new { Symbol = Futures.Currencies.MicroEther, Type = SecurityType.Future, ExpectedFee = 1.20m },
+                new { Symbol = Futures.Currencies.BTICMicroEther, Type = SecurityType.Future, ExpectedFee = 1.20m },
+                new { Symbol = Futures.Currencies.BTC, Type = SecurityType.FutureOption, ExpectedFee = 6.0m },
+                new { Symbol = Futures.Currencies.MicroBTC, Type = SecurityType.FutureOption, ExpectedFee = 2.25m },
+                new { Symbol = Futures.Currencies.BTICMicroBTC, Type = SecurityType.FutureOption, ExpectedFee = 2.25m },
+                new { Symbol = Futures.Currencies.MicroEther, Type = SecurityType.FutureOption, ExpectedFee = 1.10m },
+                new { Symbol = Futures.Currencies.BTICMicroEther, Type = SecurityType.FutureOption, ExpectedFee = 1.10m },
+                // E-mini FX (currencies) Futures
+                new { Symbol = Futures.Currencies.EuroFXEmini, Type = SecurityType.Future, ExpectedFee = 1.50m },
+                new { Symbol = Futures.Currencies.JapaneseYenEmini, Type = SecurityType.Future, ExpectedFee = 1.50m },
+                // E-Micro FX (currencies) Futures
+                new { Symbol = Futures.Currencies.MicroAUD, Type = SecurityType.Future, ExpectedFee = 1.15m },
+                new { Symbol = Futures.Currencies.MicroEUR, Type = SecurityType.Future, ExpectedFee = 1.15m },
+                new { Symbol = Futures.Currencies.MicroGBP, Type = SecurityType.Future, ExpectedFee = 1.15m },
+                new { Symbol = Futures.Currencies.MicroCADUSD, Type = SecurityType.Future, ExpectedFee = 1.15m },
+                new { Symbol = Futures.Currencies.MicroJPY, Type = SecurityType.Future, ExpectedFee = 1.15m },
+                new { Symbol = Futures.Currencies.MicroCHF, Type = SecurityType.Future, ExpectedFee = 1.15m },
+                new { Symbol = Futures.Currencies.MicroUSDJPY, Type = SecurityType.Future, ExpectedFee = 1.15m },
+                new { Symbol = Futures.Currencies.MicroINRUSD, Type = SecurityType.Future, ExpectedFee = 1.15m },
+                new { Symbol = Futures.Currencies.MicroCAD, Type = SecurityType.Future, ExpectedFee = 1.15m },
+                new { Symbol = Futures.Currencies.MicroUSDCHF, Type = SecurityType.Future, ExpectedFee = 1.15m },
+                new { Symbol = Futures.Currencies.MicroUSDCNH, Type = SecurityType.Future, ExpectedFee = 1.15m },
+                // Default
+                new { Symbol = Futures.Indices.SP500EMini, Type = SecurityType.Future, ExpectedFee = 1.85m },
+                new { Symbol = Futures.Indices.Dow30EMini, Type = SecurityType.Future, ExpectedFee = 1.85m },
+                new { Symbol = Futures.Metals.MicroGoldTAS, Type = SecurityType.Future, ExpectedFee = 1.85m },
+                new { Symbol = Futures.Metals.MicroPalladium, Type = SecurityType.Future, ExpectedFee = 1.85m },
+                new { Symbol = Futures.Energies.MicroGasoilZeroPointOnePercentBargesFOBARAPlatts, Type = SecurityType.Future, ExpectedFee = 1.85m },
+                new { Symbol = Futures.Energies.MicroEuropeanThreePointFivePercentFuelOilCargoesFOBMedPlatts, Type = SecurityType.Future, ExpectedFee = 1.85m },
+                new { Symbol = Futures.Energies.MicroCoalAPIFivefobNewcastleArgusMcCloskey, Type = SecurityType.Future, ExpectedFee = 1.85m },
+                new { Symbol = Futures.Energies.MicroSingaporeFuelOil380CSTPlatts, Type = SecurityType.Future, ExpectedFee = 1.85m },
+                new { Symbol = Futures.Energies.MicroEuropeanThreePointFivePercentOilBargesFOBRdamPlatts, Type = SecurityType.Future, ExpectedFee = 1.85m },
+                new { Symbol = Futures.Energies.MicroEuropeanFOBRdamMarineFuelZeroPointFivePercentBargesPlatts, Type = SecurityType.Future, ExpectedFee = 1.85m },
+                new { Symbol = Futures.Energies.MicroSingaporeFOBMarineFuelZeroPointFivePercetPlatts, Type = SecurityType.Future, ExpectedFee = 1.85m },
+                new { Symbol = Futures.Currencies.USD, Type = SecurityType.Future, ExpectedFee = 1.85m },
+                new { Symbol = Futures.Currencies.CAD, Type = SecurityType.Future, ExpectedFee = 1.85m },
+                new { Symbol = Futures.Currencies.EUR, Type = SecurityType.Future, ExpectedFee = 1.85m },
+            }.Select(x =>
+            {
+                var symbol = Symbols.CreateFutureSymbol(x.Symbol, SecurityIdentifier.DefaultDate);
+                if (x.Type == SecurityType.FutureOption)
+                {
+                    symbol = Symbols.CreateFutureOptionSymbol(symbol, OptionRight.Call, 0m, SecurityIdentifier.DefaultDate);
+                }
 
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Currencies.BTC, new DateTime(2022, 9, 16)), 6.0m),
-            new TestCaseData(Symbols.CreateFutureOptionSymbol(Symbols.CreateFutureSymbol(Futures.Currencies.BTC, new DateTime(2022, 9, 16)), OptionRight.Call, 0m, new DateTime(2022, 9, 16)), 6.0m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Currencies.MicroBTC, new DateTime(2022, 9, 16)), 3.25m),
-            new TestCaseData(Symbols.CreateFutureOptionSymbol(Symbols.CreateFutureSymbol(Futures.Currencies.MicroBTC, new DateTime(2022, 9, 16)), OptionRight.Call, 0m, new DateTime(2022, 9, 16)), 2.25m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Currencies.BTICMicroBTC, new DateTime(2022, 9, 16)), 3.25m),
-            new TestCaseData(Symbols.CreateFutureOptionSymbol(Symbols.CreateFutureSymbol(Futures.Currencies.BTICMicroBTC, new DateTime(2022, 9, 16)), OptionRight.Call, 0m, new DateTime(2022, 9, 16)), 2.25m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Currencies.BTICMicroEther, new DateTime(2022, 9, 16)), 1.25m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Currencies.MicroEther, new DateTime(2022, 9, 16)), 1.20m),
-
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Indices.MicroDow30EMini, new DateTime(2022, 9, 16)), 1.25m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Indices.MicroRussell2000EMini, new DateTime(2022, 9, 16)), 1.25m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Indices.MicroSP500EMini, new DateTime(2022, 9, 16)), 1.25m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Indices.MicroNASDAQ100EMini, new DateTime(2022, 9, 16)), 1.25m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Financials.MicroY2TreasuryBond, new DateTime(2022, 9, 16)), 1.25m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Financials.MicroY5TreasuryBond, new DateTime(2022, 9, 16)), 1.25m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Financials.MicroY10TreasuryNote, new DateTime(2022, 9, 16)), 1.25m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Financials.MicroY30TreasuryBond, new DateTime(2022, 9, 16)), 1.25m),
-
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Currencies.EuroFXEmini, new DateTime(2022, 9, 16)), 1.50m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Currencies.JapaneseYenEmini, new DateTime(2022, 9, 16)), 1.50m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Currencies.MicroAUD, new DateTime(2022, 9, 16)), 1.15m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Currencies.MicroEUR, new DateTime(2022, 9, 16)), 1.15m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Currencies.MicroGBP, new DateTime(2022, 9, 16)), 1.15m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Currencies.MicroCADUSD, new DateTime(2022, 9, 16)), 1.15m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Currencies.MicroJPY, new DateTime(2022, 9, 16)), 1.15m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Currencies.MicroCHF, new DateTime(2022, 9, 16)), 1.15m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Currencies.MicroUSDJPY, new DateTime(2022, 9, 16)), 1.15m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Currencies.MicroINRUSD, new DateTime(2022, 9, 16)), 1.15m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Currencies.MicroCAD, new DateTime(2022, 9, 16)), 1.15m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Currencies.MicroUSDCHF, new DateTime(2022, 9, 16)), 1.15m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Currencies.MicroUSDCNH, new DateTime(2022, 9, 16)), 1.15m),
-
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Metals.MicroGold, new DateTime(2022, 9, 16)), 1.25m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Metals.MicroGoldTAS, new DateTime(2022, 9, 16)), 1.85m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Metals.MicroSilver, new DateTime(2022, 9, 16)), 1.25m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Metals.MicroPalladium, new DateTime(2022, 9, 16)), 1.85m),
-
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Energies.MicroGasoilZeroPointOnePercentBargesFOBARAPlatts, new DateTime(2022, 9, 16)), 1.85m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Energies.MicroEuropeanThreePointFivePercentFuelOilCargoesFOBMedPlatts, new DateTime(2022, 9, 16)), 1.85m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Energies.MicroCoalAPIFivefobNewcastleArgusMcCloskey, new DateTime(2022, 9, 16)), 1.85m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Energies.MicroSingaporeFuelOil380CSTPlatts, new DateTime(2022, 9, 16)), 1.85m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Energies.MicroCrudeOilWTI, new DateTime(2022, 9, 16)), 1.25m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Energies.MicroEuropeanThreePointFivePercentOilBargesFOBRdamPlatts, new DateTime(2022, 9, 16)), 1.85m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Energies.MicroEuropeanFOBRdamMarineFuelZeroPointFivePercentBargesPlatts, new DateTime(2022, 9, 16)), 1.85m),
-            new TestCaseData(Symbols.CreateFutureSymbol(Futures.Energies.MicroSingaporeFOBMarineFuelZeroPointFivePercetPlatts, new DateTime(2022, 9, 16)), 1.85m),
-
-
-
-        };
+                return new TestCaseData(symbol, x.ExpectedFee);
+            }).ToArray();
+        }
     }
 }
