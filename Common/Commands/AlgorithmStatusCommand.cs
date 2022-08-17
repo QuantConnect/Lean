@@ -45,7 +45,7 @@ namespace QuantConnect.Commands
         }
 
         /// <summary>
-        /// Sets the algoritm's status to <see cref="Status"/>
+        /// Sets the algorithm's status to <see cref="Status"/>
         /// </summary>
         /// <param name="algorithm">The algorithm to run this command against</param>
         public override CommandResultPacket Run(IAlgorithm algorithm)
