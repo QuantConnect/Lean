@@ -31,6 +31,9 @@
   "debugging": false,
   "debugging-method": "LocalCmdline",
 
+  // location of a python virtual env to use libraries from
+  //"python-venv": "/venv",
+
   // handlers
   "log-handler": "QuantConnect.Logging.CompositeLogHandler",
   "messaging-handler": "QuantConnect.Messaging.Messaging",
