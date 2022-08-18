@@ -80,7 +80,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCache());
-            Security security = symbol.SecurityType == SecurityType.Future
+            var security = (Security) (symbol.SecurityType == SecurityType.Future
                 ? future
                 : new FutureOption(symbol,
                     SecurityExchangeHours.AlwaysOpen(tz),
@@ -89,15 +89,10 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                     ErrorCurrencyConverter.Instance,
                     RegisteredSecurityDataTypesProvider.Null,
                     new SecurityCache(),
-                    future);
-            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
-
-            var fee = _feeModel.GetOrderFee(
-                new OrderFeeParameters(
-                    security,
-                    new MarketOrder(security.Symbol, 1000, DateTime.UtcNow)
-                )
-            );
+                    future));
+            var time = new DateTime(2022, 8, 18);
+            security.SetMarketPrice(new Tick(time, security.Symbol, 100, 100));
+            var fee = _feeModel.GetOrderFee(new OrderFeeParameters(security, new MarketOrder(security.Symbol, 1000, time)));
 
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
             Assert.AreEqual(1000 * expectedFee, fee.Value.Amount);
