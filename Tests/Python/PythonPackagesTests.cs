@@ -199,9 +199,10 @@ def RunTest():
             );
         }
 
-        [Test]
+        [Test, Category("latest")]
         public void KerasTest()
         {
+            PythonInitializer.ActivatePythonVirtualEnvironment("/latest");
             AssetCode(
                 @"
 import numpy
@@ -223,9 +224,10 @@ def RunTest():
             );
         }
 
-        [Test]
+        [Test, Category("latest")]
         public void TensorflowTest()
         {
+            PythonInitializer.ActivatePythonVirtualEnvironment("/latest");
             AssetCode(
                 @"
 import tensorflow as tf
@@ -299,12 +301,10 @@ def RunTest():
             );
         }
 
-        [Test, Explicit("Requires copulas installed")]
+        [Test, Category("latest")]
         public void CopulaTest()
         {
-            // load the copulas virtual env if it exists
-            PythonInitializer.ActivatePythonVirtualEnvironment("/copulas");
-
+            PythonInitializer.ActivatePythonVirtualEnvironment("/latest");
             AssetCode(
                 @"
 from copulas.univariate.gaussian import GaussianUnivariate
@@ -351,9 +351,10 @@ def RunTest():
             );
         }
 
-        [Test]
+        [Test, Category("latest")]
         public void PomegranateTest()
         {
+            PythonInitializer.ActivatePythonVirtualEnvironment("/latest");
             AssetCode(
                 @"
 from pomegranate import *
@@ -459,18 +460,17 @@ def RunTest():
         {
             AssetCode(
                 @"
-from stable_baselines.common.cmd_util import make_atari_env
-from stable_baselines import PPO2
+from stable_baselines3 import PPO
+from stable_baselines3.common.env_util import make_vec_env
+
 def RunTest():
-    # There already exists an environment generator that will make and wrap atari environments correctly
-    env = make_atari_env('DemonAttackNoFrameskip-v4', num_env=8, seed=0)
+    # Parallel environments
+	env = make_vec_env(""CartPole-v1"", n_envs=4)
 
-    model = PPO2('CnnPolicy', env)
-    model.learn(total_timesteps=10)
-
-    obs = env.reset()
-    return model.predict(obs)"
-            );
+	model = PPO(""MlpPolicy"", env, verbose=1)
+	model.learn(total_timesteps=25000)
+	model.save(""ppo_cartpole"")
+    return");
         }
 
         [Test]
@@ -576,6 +576,7 @@ def RunTest():
             );
         }
 
+        [Test]
         public void NltkVaderTest()
         {
             AssetCode(
@@ -671,9 +672,10 @@ def RunTest():
             );
         }
 
-        [Test]
+        [Test, Category("latest")]
         public void NeuralTangentsTest()
         {
+            PythonInitializer.ActivatePythonVirtualEnvironment("/latest");
             AssetCode(
                 @"
 from jax import random
@@ -771,9 +773,10 @@ def RunTest():
             );
         }
 
-        [Test]
+        [Test, Category("latest")]
         public void CopulaeTest()
         {
+            PythonInitializer.ActivatePythonVirtualEnvironment("/latest");
             AssetCode(
                 @"
 from copulae import NormalCopula

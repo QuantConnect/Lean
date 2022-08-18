@@ -24,5 +24,8 @@ jobs:
       - name: Run Virtual Environment Test
         run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonVirtualEnvironmentTests.AssertVirtualEnvironment"
 
-      - name: Run Copula Package Environment Tests
-        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.CopulaTest"
+      - name: Run Base Package Environment Tests
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "TestCategory!=latest&FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests"
+
+      - name: Run Latest Package Environment Tests
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "TestCategory=latest&FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests"
