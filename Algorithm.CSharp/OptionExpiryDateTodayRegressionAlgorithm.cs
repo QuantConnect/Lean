@@ -24,7 +24,7 @@ using QuantConnect.Securities;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm excersizing an equity covered option asserting that greeks can be accessed
+    /// Regression algorithm exercising an equity covered option asserting that greeks can be accessed
     /// and have are not all zero, the same day as the contract expiration date.
     /// </summary>
     public class OptionExpiryDateTodayRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
