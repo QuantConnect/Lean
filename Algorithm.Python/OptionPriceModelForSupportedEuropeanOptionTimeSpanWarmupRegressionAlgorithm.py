@@ -15,7 +15,7 @@ from AlgorithmImports import *
 from OptionPriceModelForSupportedEuropeanOptionRegressionAlgorithm import OptionPriceModelForSupportedEuropeanOptionRegressionAlgorithm
 
 ### <summary>
-### Regression algorithm excersizing an equity covered European style option, using an option price model
+### Regression algorithm exercising an equity covered European style option, using an option price model
 ### that supports European style options and asserting that the option price model is used.
 ### </summary>
 class OptionPriceModelForSupportedEuropeanOptionTimeSpanWarmupRegressionAlgorithm(OptionPriceModelForSupportedEuropeanOptionRegressionAlgorithm):
