@@ -142,15 +142,15 @@ def RunTest():
         }
 
         [Test]
-        public void TheanoTest()
+        public void AesaraTest()
         {
             AssetCode(
                 @"
-import theano
+import aesara
 def RunTest():
-    a = theano.tensor.vector()          # declare variable
+    a = aesara.tensor.vector()          # declare variable
     out = a + a ** 10               # build symbolic expression
-    f = theano.function([a], out)   # compile function
+    f = aesara.function([a], out)   # compile function
     return f([0, 1, 2])"
             );
         }
@@ -199,10 +199,9 @@ def RunTest():
             );
         }
 
-        [Test, Category("latest")]
+        [Test]
         public void KerasTest()
         {
-            PythonInitializer.ActivatePythonVirtualEnvironment("/latest");
             AssetCode(
                 @"
 import numpy
@@ -224,19 +223,25 @@ def RunTest():
             );
         }
 
-        [Test, Category("latest")]
+        [Test]
         public void TensorflowTest()
         {
-            PythonInitializer.ActivatePythonVirtualEnvironment("/latest");
             AssetCode(
                 @"
 import tensorflow as tf
 def RunTest():
-    node1 = tf.constant(3.0, tf.float32)
-    node2 = tf.constant(4.0) # also tf.float32 implicitly
-    sess = tf.Session()
-    node3 = tf.add(node1, node2)
-    return sess.run(node3)"
+    mnist = tf.keras.datasets.mnist
+
+    (x_train, y_train), (x_test, y_test) = mnist.load_data()
+    x_train, x_test = x_train / 255.0, x_test / 255.0
+
+    model = tf.keras.models.Sequential([
+        tf.keras.layers.Flatten(input_shape=(28, 28)),
+        tf.keras.layers.Dense(128, activation='relu'),
+        tf.keras.layers.Dropout(0.2),
+        tf.keras.layers.Dense(10)
+    ])
+    model(x_train[:1]).numpy()"
             );
         }
 
@@ -301,10 +306,9 @@ def RunTest():
             );
         }
 
-        [Test, Category("latest")]
+        [Test]
         public void CopulaTest()
         {
-            PythonInitializer.ActivatePythonVirtualEnvironment("/latest");
             AssetCode(
                 @"
 from copulas.univariate.gaussian import GaussianUnivariate
@@ -351,10 +355,10 @@ def RunTest():
             );
         }
 
-        [Test, Category("latest")]
+        [Test, Explicit("Installed in specific environment")]
         public void PomegranateTest()
         {
-            PythonInitializer.ActivatePythonVirtualEnvironment("/latest");
+            PythonInitializer.ActivatePythonVirtualEnvironment("/pomegranate");
             AssetCode(
                 @"
 from pomegranate import *
@@ -465,12 +469,11 @@ from stable_baselines3.common.env_util import make_vec_env
 
 def RunTest():
     # Parallel environments
-	env = make_vec_env(""CartPole-v1"", n_envs=4)
+    env = make_vec_env(""CartPole-v1"", n_envs=4)
 
-	model = PPO(""MlpPolicy"", env, verbose=1)
-	model.learn(total_timesteps=25000)
-	model.save(""ppo_cartpole"")
-    return");
+    model = PPO(""MlpPolicy"", env, verbose=1)
+    model.learn(total_timesteps=25000)
+    model.save(""ppo_cartpole"")");
         }
 
         [Test]
@@ -595,15 +598,15 @@ def RunTest():
         'The book was kind of good.', # qualified positive sentence is handled correctly (intensity adjusted)
         'The plot was good, but the characters are uncompelling and the dialog is not great.', # mixed negation sentence
         'A really bad, horrible book.',       # negative sentence with booster words
-        'At least it isn't a horrible book.', # negated negative sentence with contraction
+        'At least it is not a horrible book.', # negated negative sentence with contraction
         ':) and :D',     # emoticons handled
         '',              # an empty string is correctly handled
         'Today sux',     #  negative slang handled
         'Today sux!',    #  negative slang with punctuation emphasis handled
         'Today SUX!',    #  negative slang with capitalization emphasis
-        'Today kinda sux! But I'll get by, lol' # mixed sentiment example with slang and constrastive conjunction 'but'
+        'Today kinda sux! But I will get by, lol' # mixed sentiment example with slang and constrastive conjunction 'but'
     ]
-    paragraph = 'It was one of the worst movies I've seen, despite good reviews. \
+    paragraph = 'It was one of the worst movies I have seen, despite good reviews. \
         Unbelievably bad acting!! Poor direction.VERY poor production. \
         The movie was bad.Very bad movie.VERY bad movie.VERY BAD movie.VERY BAD movie!'
 
@@ -653,18 +656,18 @@ def RunTest():
         {
             AssetCode(
                 @"
-import jax.numpy as np
-from jax import grad, jit, vmap
+from jax import *
+import jax.numpy as jnp
 
 def predict(params, inputs):
   for W, b in params:
-    outputs = np.dot(inputs, W) + b
-    inputs = np.tanh(outputs)
+    outputs = jnp.dot(inputs, W) + b
+    inputs = jnp.tanh(outputs)
   return outputs
 
 def logprob_fun(params, inputs, targets):
   preds = predict(params, inputs)
-  return np.sum((preds - targets)**2)
+  return jnp.sum((preds - targets)**2)
 
 def RunTest():
     grad_fun = jit(grad(logprob_fun))  # compiled gradient evaluation function
@@ -672,34 +675,35 @@ def RunTest():
             );
         }
 
-        [Test, Category("latest")]
+        [Test, Explicit("Has issues when run along side the other tests")]
         public void NeuralTangentsTest()
         {
-            PythonInitializer.ActivatePythonVirtualEnvironment("/latest");
             AssetCode(
                 @"
-from jax import random
+from jax import *
 import neural_tangents as nt
-from neural_tangents import stax
+from neural_tangents import *
 
 def RunTest():
+    key = random.PRNGKey(1)
+    key1, key2 = random.split(key, 2)
+    x_train = random.normal(key1, (20, 32, 32, 3))
+    y_train = random.uniform(key1, (20, 10))
+    x_test = random.normal(key2, (5, 32, 32, 3))
+
     init_fn, apply_fn, kernel_fn = stax.serial(
-        stax.Dense(512), stax.Relu(),
-        stax.Dense(512), stax.Relu(),
-        stax.Dense(1)
+        stax.Conv(128, (3, 3)),
+        stax.Relu(),
+        stax.Conv(256, (3, 3)),
+        stax.Relu(),
+        stax.Conv(512, (3, 3)),
+        stax.Flatten(),
+        stax.Dense(10)
     )
 
-    key1, key2 = random.split(random.PRNGKey(1))
-    x1 = random.normal(key1, (10, 100))
-    x2 = random.normal(key2, (20, 100))
-
-    x_train, x_test = x1, x2
-    y_train = random.uniform(key1, shape=(10, 1))  # training targets
-
-    y_test_nngp = nt.predict.gp_inference(kernel_fn, x_train, y_train, x_test, get='nngp')
-
-    # (20, 1) np.ndarray test predictions of an infinite Bayesian network
-    return nt.predict.gp_inference(kernel_fn, x_train, y_train, x_test, get='ntk')"
+    predict_fn = nt.predict.gradient_descent_mse_ensemble(kernel_fn, x_train, y_train)
+    # (5, 10) np.ndarray NNGP test prediction
+    predict_fn(x_test=x_test, get='nngp')"
             );
         }
 
@@ -773,10 +777,9 @@ def RunTest():
             );
         }
 
-        [Test, Category("latest")]
+        [Test]
         public void CopulaeTest()
         {
-            PythonInitializer.ActivatePythonVirtualEnvironment("/latest");
             AssetCode(
                 @"
 from copulae import NormalCopula
@@ -830,6 +833,39 @@ def RunTest():
             );
         }
 
+        [Test]
+        public void Tigramite()
+        {
+            AssetCode(@"
+import numpy as np
+from tigramite.pcmci import PCMCI
+from tigramite.independence_tests import ParCorr
+import tigramite.data_processing as pp
+from tigramite.toymodels import structural_causal_processes as toys
+
+def RunTest():
+    # Example process to play around with
+    # Each key refers to a variable and the incoming links are supplied
+    # as a list of format [((var, -lag), coeff, function), ...]
+    def lin_f(x): return x
+    links = {0: [((0, -1), 0.9, lin_f)],
+             1: [((1, -1), 0.8, lin_f), ((0, -1), 0.8, lin_f)],
+             2: [((2, -1), 0.7, lin_f), ((1, 0), 0.6, lin_f)],
+             3: [((3, -1), 0.7, lin_f), ((2, 0), -0.5, lin_f)],
+             }
+    data, nonstat = toys.structural_causal_process(links,
+                        T=1000, seed=7)
+    # Data must be array of shape (time, variables)
+    print (data.shape)
+    (1000, 4)
+    dataframe = pp.DataFrame(data)
+    cond_ind_test = ParCorr()
+    pcmci = PCMCI(dataframe=dataframe, cond_ind_test=cond_ind_test)
+    results = pcmci.run_pcmciplus(tau_min=0, tau_max=2, pc_alpha=0.01)
+    pcmci.print_results(results, alpha_level=0.01)
+");
+        }
+
         /// <summary>
         /// Simple test for modules that don't have short test example
         /// </summary>
@@ -838,7 +874,7 @@ def RunTest():
         [TestCase("pulp", "2.6.0", "VERSION")]
         [TestCase("pymc", "4.1.4", "__version__")]
         [TestCase("pypfopt", "pypfopt", "__name__")]
-        [TestCase("wrapt", "1.12.1", "__version__")]
+        [TestCase("wrapt", "1.14.1", "__version__")]
         [TestCase("tslearn", "0.5.2", "__version__")]
         [TestCase("tweepy", "4.10.0", "__version__")]
         [TestCase("pywt", "1.3.0", "__version__")]
@@ -852,7 +888,7 @@ def RunTest():
         [TestCase("gplearn", "0.4.2", "__version__")]
         [TestCase("h2o", "3.36.1.4", "__version__")]
         [TestCase("featuretools", "0.18.1", "__version__")]
-        [TestCase("pennylane", "0.24.0", "version()")]
+        [TestCase("pennylane", "0.25.1", "version()")]
         public void ModuleVersionTest(string module, string value, string attribute)
         {
             AssetCode(

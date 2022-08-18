@@ -24,8 +24,11 @@ jobs:
       - name: Run Virtual Environment Test
         run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonVirtualEnvironmentTests.AssertVirtualEnvironment"
 
-      - name: Run Base Package Environment Tests
-        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "TestCategory!=latest&FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests"
+      - name: Run Python Package Tests
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests" --blame-hang-timeout 40seconds
 
-      - name: Run Latest Package Environment Tests
-        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "TestCategory=latest&FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests"
+      - name: Run Pomegranate Python Package Test
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.PomegranateTest" --blame-hang-timeout 40seconds
+
+      - name: Run NeuralTangents Python Package Test
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.NeuralTangentsTest" --blame-hang-timeout 40seconds
