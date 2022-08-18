@@ -159,7 +159,7 @@ namespace QuantConnect.Tests.Common.Securities
             var algorithm = new AlgorithmStub();
             algorithm.SetFinishedWarmingUp();
             var backtestingTransactionHandler = new BacktestingTransactionHandler();
-            var brokerage = new BacktestingBrokerage(algorithm);
+            using var brokerage = new BacktestingBrokerage(algorithm);
             algorithm.Transactions.SetOrderProcessor(backtestingTransactionHandler);
             backtestingTransactionHandler.Initialize(algorithm, brokerage, new TestResultHandler());
 
@@ -179,7 +179,8 @@ namespace QuantConnect.Tests.Common.Securities
             optionSecurity.Underlying.SetMarketPrice(new Tick { Value = price, Time = time });
             optionSecurity.SetMarketPrice(new Tick { Value = 150, Time = time });
             optionSecurity.Holdings.SetHoldings(1.5m, 10);
-            
+
+            algorithm.SetDateTime(time.AddHours(14)); // 10am
             var ticket = algorithm.ExerciseOption(optionSecurity.Symbol, 10, true);
             Assert.AreEqual(OrderStatus.Filled, ticket.Status);
         }

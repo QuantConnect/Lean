@@ -37,10 +37,13 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void Initialize()
         {
+            // Required for FOPs to use extended hours, until GH #6491 is addressed
+            UniverseSettings.ExtendedMarketHours = true;
+
             SetStartDate(2020, 1, 4);
             SetEndDate(2020, 1, 6);
 
-            var goldFutures = AddFuture("GC", Resolution.Minute, Market.COMEX);
+            var goldFutures = AddFuture("GC", Resolution.Minute, Market.COMEX, extendedMarketHours: true);
             goldFutures.SetFilter(0, 365);
 
             AddFutureOption(goldFutures.Symbol);
@@ -50,7 +53,8 @@ namespace QuantConnect.Algorithm.CSharp
         {
             foreach (var symbol in data.QuoteBars.Keys)
             {
-                if (_expectedSymbols.ContainsKey(symbol))
+                // Check that we are in regular hours, we can place a market order (on extended hours, limit orders should be used)
+                if (_expectedSymbols.ContainsKey(symbol) && IsInRegularHours(symbol))
                 {
                     var invested = _expectedSymbols[symbol];
                     if (!invested)
@@ -74,6 +78,11 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception("Expected holdings at the end of algorithm, but none were found.");
             }
+        }
+
+        private bool IsInRegularHours(Symbol symbol)
+        {
+            return Securities[symbol].Exchange.ExchangeOpen;
         }
 
         private static Symbol CreateOption(DateTime expiry, OptionRight optionRight, decimal strikePrice)
@@ -115,31 +124,31 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "4"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-5.605%"},
-            {"Drawdown", "3.500%"},
+            {"Compounding Annual Return", "-25.112%"},
+            {"Drawdown", "0.200%"},
             {"Expectancy", "0"},
-            {"Net Profit", "-0.047%"},
-            {"Sharpe Ratio", "-10.898"},
+            {"Net Profit", "-0.237%"},
+            {"Sharpe Ratio", "-9.707"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.135"},
-            {"Beta", "0.124"},
-            {"Annual Standard Deviation", "0.005"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-17.984"},
-            {"Tracking Error", "0.038"},
-            {"Treynor Ratio", "-0.467"},
+            {"Alpha", "0.125"},
+            {"Beta", "-0.622"},
+            {"Annual Standard Deviation", "0.027"},
+            {"Annual Variance", "0.001"},
+            {"Information Ratio", "-12.597"},
+            {"Tracking Error", "0.069"},
+            {"Treynor Ratio", "0.416"},
             {"Total Fees", "$7.40"},
-            {"Estimated Strategy Capacity", "$25000000.00"},
+            {"Estimated Strategy Capacity", "$31000000.00"},
             {"Lowest Capacity Asset", "OG 31BFX0QKBVPGG|GC XE1Y0ZJ8NQ8T"},
-            {"Fitness Score", "0.012"},
+            {"Fitness Score", "0.013"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-126.806"},
-            {"Portfolio Turnover", "0.025"},
+            {"Return Over Maximum Drawdown", "-112.515"},
+            {"Portfolio Turnover", "0.026"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -153,7 +162,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "979e3995c0dbedc46eaf3705e0438bf5"}
+            {"OrderListHash", "ebde540d026c0bf7055caf5bf2eeded5"}
         };
     }
 }

@@ -367,11 +367,13 @@ namespace QuantConnect.Research
                     }
                     if (symbol.Underlying.SecurityType == SecurityType.Future && symbol.Underlying.IsCanonical())
                     {
-                        AddFuture(symbol.Underlying.ID.Symbol, resolutionToUseForUnderlying, fillDataForward: fillForward);
+                        AddFuture(symbol.Underlying.ID.Symbol, resolutionToUseForUnderlying, fillDataForward: fillForward,
+                            extendedMarketHours: extendedMarket);
                     }
                     else if (symbol.Underlying.SecurityType == SecurityType.Future)
                     {
-                        AddFutureContract(symbol.Underlying, resolutionToUseForUnderlying, fillDataForward: fillForward);
+                        AddFutureContract(symbol.Underlying, resolutionToUseForUnderlying, fillDataForward: fillForward,
+                            extendedMarketHours: extendedMarket);
                     }
                 }
                 var allSymbols = new List<Symbol>();

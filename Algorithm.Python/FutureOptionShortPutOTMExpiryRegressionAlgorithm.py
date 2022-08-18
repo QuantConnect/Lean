@@ -67,7 +67,7 @@ class FutureOptionShortPutOTMExpiryRegressionAlgorithm(QCAlgorithm):
             if delisting.Type == DelistingType.Delisted:
                 if delisting.Time != datetime(2020, 6, 20):
                     raise AssertionError(f"Delisting happened at unexpected date: {delisting.Time}")
-        
+
 
     def OnOrderEvent(self, orderEvent: OrderEvent):
         if orderEvent.Status != OrderStatus.Filled:

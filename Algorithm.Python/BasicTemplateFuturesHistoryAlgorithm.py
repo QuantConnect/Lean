@@ -29,28 +29,30 @@ class BasicTemplateFuturesHistoryAlgorithm(QCAlgorithm):
         self.SetEndDate(2013, 10, 9)
         self.SetCash(1000000)
 
+        extendedMarketHours = self.GetExtendedMarketHours()
+
         # Subscribe and set our expiry filter for the futures chain
         # find the front contract expiring no earlier than in 90 days
-        futureES = self.AddFuture(Futures.Indices.SP500EMini, Resolution.Minute)
+        futureES = self.AddFuture(Futures.Indices.SP500EMini, Resolution.Minute, extendedMarketHours=extendedMarketHours)
         futureES.SetFilter(timedelta(0), timedelta(182))
 
-        futureGC = self.AddFuture(Futures.Metals.Gold, Resolution.Minute)
+        futureGC = self.AddFuture(Futures.Metals.Gold, Resolution.Minute, extendedMarketHours=extendedMarketHours)
         futureGC.SetFilter(timedelta(0), timedelta(182))
 
         self.SetBenchmark(lambda x: 1000000)
 
         self.Schedule.On(self.DateRules.EveryDay(), self.TimeRules.Every(timedelta(hours=1)), self.MakeHistoryCall)
-        self.successCount = 0
+        self._successCount = 0
 
     def MakeHistoryCall(self):
         history = self.History(self.Securities.keys(), 10, Resolution.Minute)
         if len(history) < 10:
             raise Exception(f'Empty history at {self.Time}')
-        self.successCount += 1
+        self._successCount += 1
 
     def OnEndOfAlgorithm(self):
-        if self.successCount < 49:
-            raise Exception(f'Scheduled Event did not assert history call as many times as expected: {_successCount}/49')
+        if self._successCount < self.GetExpectedHistoryCallCount():
+            raise Exception(f'Scheduled Event did not assert history call as many times as expected: {self._successCount}/49')
 
     def OnData(self,slice):
         if self.Portfolio.Invested: return
@@ -73,3 +75,9 @@ class BasicTemplateFuturesHistoryAlgorithm(QCAlgorithm):
         # Order fill event handler. On an order fill update the resulting information is passed to this method.
         # Order event details containing details of the events
         self.Log(f'{orderEvent}')
+
+    def GetExtendedMarketHours(self):
+        return False
+
+    def GetExpectedHistoryCallCount(self):
+        return 42

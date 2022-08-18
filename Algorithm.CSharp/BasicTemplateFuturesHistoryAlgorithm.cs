@@ -36,6 +36,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="futures" />
     public class BasicTemplateFuturesHistoryAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        protected virtual bool ExtendedMarketHours => false;
+        protected virtual int ExpectedHistoryCallCount => 42;
+
         // S&P 500 EMini futures
         private string [] roots = new []
         {
@@ -44,7 +47,6 @@ namespace QuantConnect.Algorithm.CSharp
         };
 
         private int _successCount = 0;
-
         public override void Initialize()
         {
             SetStartDate(2013, 10, 8);
@@ -54,7 +56,7 @@ namespace QuantConnect.Algorithm.CSharp
             foreach (var root in roots)
             {
                 // set our expiry filter for this futures chain
-                AddFuture(root, Resolution.Minute).SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
+                AddFuture(root, Resolution.Minute, extendedMarketHours: ExtendedMarketHours).SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
             }
 
             SetBenchmark(d => 1000000);
@@ -74,7 +76,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            if (_successCount < 49)
+            if (_successCount < ExpectedHistoryCallCount)
             {
                 throw new Exception($"Scheduled Event did not assert history call as many times as expected: {_successCount}/49");
             }
@@ -128,27 +130,27 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
-        public bool CanRunLocally { get; } = true;
+        public virtual bool CanRunLocally { get; } = true;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+        public virtual Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 133616;
+        public virtual long DataPoints => 43704;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 5539;
+        public virtual int AlgorithmHistoryDataPoints => 4818;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "0"},
             {"Average Win", "0%"},

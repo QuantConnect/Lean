@@ -26,7 +26,7 @@ class AddFutureOptionContractDataStreamingRegressionAlgorithm(QCAlgorithm):
         self.dataReceived = {}
 
         self.SetStartDate(2020, 1, 4)
-        self.SetEndDate(2020, 1, 6)
+        self.SetEndDate(2020, 1, 8)
 
         self.es20h20 = self.AddFutureContract(
             Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, datetime(2020, 3, 20)),
@@ -36,8 +36,9 @@ class AddFutureOptionContractDataStreamingRegressionAlgorithm(QCAlgorithm):
             Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, datetime(2020, 6, 19)),
             Resolution.Minute).Symbol
 
+        # Get option contract lists for 2020/01/05 (timedelta(days=1)) because Lean has local data for that date
         optionChains = self.OptionChainProvider.GetOptionContractList(self.es20h20, self.Time + timedelta(days=1))
-        optionChains += self.OptionChainProvider.GetOptionContractList(self.es19m20, self.Time)
+        optionChains += self.OptionChainProvider.GetOptionContractList(self.es19m20, self.Time + timedelta(days=1))
 
         for optionContract in optionChains:
             self.expectedSymbolsReceived.append(self.AddFutureOptionContract(optionContract, Resolution.Minute).Symbol)
@@ -71,8 +72,6 @@ class AddFutureOptionContractDataStreamingRegressionAlgorithm(QCAlgorithm):
             self.invested = True
 
     def OnEndOfAlgorithm(self):
-        super().OnEndOfAlgorithm()
-
         self.symbolsReceived = list(set(self.symbolsReceived))
         self.expectedSymbolsReceived = list(set(self.expectedSymbolsReceived))
 

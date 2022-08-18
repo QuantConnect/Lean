@@ -26,17 +26,22 @@ class FutureOptionMultipleContractsInDifferentContractMonthsWithSameUnderlyingFu
             self._createOption(datetime(2020, 2, 25), OptionRight.Put, 1545.0): False
         }
 
+
+        # Required for FOPs to use extended hours, until GH #6491 is addressed
+        self.UniverseSettings.ExtendedMarketHours = True
+
         self.SetStartDate(2020, 1, 4)
         self.SetEndDate(2020, 1, 6)
 
-        goldFutures = self.AddFuture("GC", Resolution.Minute, Market.COMEX)
+        goldFutures = self.AddFuture("GC", Resolution.Minute, Market.COMEX, extendedMarketHours=True)
         goldFutures.SetFilter(0, 365)
 
         self.AddFutureOption(goldFutures.Symbol)
 
     def OnData(self, data: Slice):
         for symbol in data.QuoteBars.Keys:
-            if symbol in self.expectedSymbols:
+            # Check that we are in regular hours, we can place a market order (on extended hours, limit orders should be used)
+            if symbol in self.expectedSymbols and self.IsInRegularHours(symbol):
                 invested = self.expectedSymbols[symbol]
                 if not invested:
                     self.MarketOrder(symbol, 1)
@@ -51,6 +56,8 @@ class FutureOptionMultipleContractsInDifferentContractMonthsWithSameUnderlyingFu
         if not self.Portfolio.Invested:
             raise AggregateException("Expected holdings at the end of algorithm, but none were found.")
 
+    def IsInRegularHours(self, symbol):
+        return self.Securities[symbol].Exchange.ExchangeOpen
 
     def _createOption(self, expiry: datetime, optionRight: OptionRight, strikePrice: float) -> Symbol:
         return Symbol.CreateOption(

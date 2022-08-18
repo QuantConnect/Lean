@@ -1401,19 +1401,20 @@ namespace QuantConnect.Tests.Algorithm
 
             var es20h20 = algo.AddFutureContract(
                 QuantConnect.Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 3, 20)),
-                Resolution.Minute);
+                Resolution.Minute,
+                extendedMarketHours: true);
 
             //Set price to $25
             Update(es20h20, 25);
             algo.Portfolio.SetCash(150000);
 
-            algo.SetDateTime(new DateTime(2013, 10, 6));  // Sunday
+            algo.SetDateTime(new DateTime(2013, 10, 6, 23, 0, 0));  // Sunday
             var ticket = algo.Buy(es20h20.Symbol, 1);
             Assert.That(ticket, Has.Property("Status").EqualTo(OrderStatus.Invalid));
             ticket = algo.Sell(es20h20.Symbol, 1);
             Assert.That(ticket, Has.Property("Status").EqualTo(OrderStatus.Invalid));
 
-            algo.SetDateTime(new DateTime(2013, 10, 7));  // Monday
+            algo.SetDateTime(new DateTime(2013, 10, 7, 14, 0, 0));  // Monday
             ticket = algo.Buy(es20h20.Symbol, 1);
             Assert.That(ticket, Has.Property("Status").EqualTo(OrderStatus.New));
             ticket = algo.Sell(es20h20.Symbol, 1);

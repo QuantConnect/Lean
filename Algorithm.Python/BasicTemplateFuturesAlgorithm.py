@@ -36,7 +36,7 @@ class BasicTemplateFuturesAlgorithm(QCAlgorithm):
 
         # set our expiry filter for this futures chain
         # SetFilter method accepts timedelta objects or integer for days.
-        # The following statements yield the same filtering criteria 
+        # The following statements yield the same filtering criteria
         futureSP500.SetFilter(timedelta(0), timedelta(182))
         futureGold.SetFilter(0, 182)
 

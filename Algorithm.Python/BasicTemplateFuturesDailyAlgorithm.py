@@ -20,23 +20,23 @@ from AlgorithmImports import *
 ### <meta name="tag" content="benchmarks" />
 ### <meta name="tag" content="futures" />
 class BasicTemplateFuturesDailyAlgorithm(QCAlgorithm):
-
     def Initialize(self):
         self.SetStartDate(2013, 10, 8)
         self.SetEndDate(2014, 10, 10)
         self.SetCash(1000000)
 
-        self.contractSymbol = None
+        resolution = self.GetResolution()
+        extendedMarketHours = self.GetExtendedMarketHours()
 
         # Subscribe and set our expiry filter for the futures chain
-        futureSP500 = self.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily)
-        futureGold = self.AddFuture(Futures.Metals.Gold, Resolution.Daily)
+        self.futureSP500 = self.AddFuture(Futures.Indices.SP500EMini, resolution, extendedMarketHours=extendedMarketHours)
+        self.futureGold = self.AddFuture(Futures.Metals.Gold, resolution, extendedMarketHours=extendedMarketHours)
 
         # set our expiry filter for this futures chain
         # SetFilter method accepts timedelta objects or integer for days.
         # The following statements yield the same filtering criteria
-        futureSP500.SetFilter(timedelta(0), timedelta(182))
-        futureGold.SetFilter(0, 182)
+        self.futureSP500.SetFilter(timedelta(0), timedelta(182))
+        self.futureGold.SetFilter(0, 182)
 
     def OnData(self,slice):
         if not self.Portfolio.Invested:
@@ -46,13 +46,28 @@ class BasicTemplateFuturesDailyAlgorithm(QCAlgorithm):
 
                 # if there is any contract, trade the front contract
                 if len(contracts) == 0: continue
-                front = sorted(contracts, key = lambda x: x.Expiry)[0]
+                contract = sorted(contracts, key = lambda x: x.Expiry)[0]
 
-                self.contractSymbol = front.Symbol
-                # if found and exchange is open, trade it. Exchange could be closed, for example for a bar after 6:00pm on a friday, when futures
-                # markets are closed.
-                if self.Securities[self.contractSymbol].Exchange.ExchangeOpen:
-                    self.MarketOrder(front.Symbol , 1)
-        # same as before, we have to check if exchange is actually open because market-on-open orders are not supported for futures.
-        elif all([x.Exchange.ExchangeOpen for x in self.Securities.Values]):
-            self.Liquidate()
+                # if found, trade it.
+                # Let's check if market is actually open to place market orders. For example: for daily resolution, data can come at a
+                # time when market is closed, like 7:00PM.
+                if self.Securities[contract.Symbol].Exchange.ExchangeOpen:
+                    self.MarketOrder(contract.Symbol, 1)
+                else:
+                    # MOO are not allowed for futures, so to make sure, use limit order instead. We use a very big limit price here
+                    # to make the order fill on next bar.
+                    self.LimitOrder(contract.Symbol, 1, contract.AskPrice * 2)
+        else:
+            # Same as above, let's check if market is open to place market orders.
+            if any([not self.Securities[x.Symbol].Exchange.ExchangeOpen for x in self.Portfolio.values()]):
+                for holdings in sorted(self.Portfolio.values(), key=lambda x: x.Symbol):
+                    # use a very low limit price here to make the order fill on next bar.
+                    self.LimitOrder(holdings.Symbol, -holdings.Quantity, 1.0)
+            else:
+                self.Liquidate()
+
+    def GetResolution(self):
+        return Resolution.Daily
+
+    def GetExtendedMarketHours(self):
+        return False

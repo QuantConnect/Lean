@@ -293,7 +293,7 @@ namespace QuantConnect.Tests.Research
                 var future = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, expiry);
                 var start = new DateTime(2020, 1, 5);
                 var end = new DateTime(2020, 1, 6);
-                var history = qb.GetOptionHistory(future, start, end, Resolution.Minute);
+                var history = qb.GetOptionHistory(future, start, end, Resolution.Minute, extendedMarket: true);
                 dynamic df = history.GetAllData();
 
                 Assert.IsNotNull(df);
@@ -322,7 +322,7 @@ namespace QuantConnect.Tests.Research
 
                 var start = new DateTime(2020, 1, 5);
                 var end = new DateTime(2020, 1, 6);
-                var history = qb.GetOptionHistory(futureOption, start, end, Resolution.Minute);
+                var history = qb.GetOptionHistory(futureOption, start, end, Resolution.Minute, extendedMarket: true);
                 dynamic df = history.GetAllData();
 
                 Assert.IsNotNull(df);
@@ -349,7 +349,7 @@ namespace QuantConnect.Tests.Research
         [TestCase(true, false, 780)]
         [TestCase(false, true, 776)]
         [TestCase(false, false, 390)]
-        public void OptionHistorySpecifyingFillForward(bool fillForward, bool extendedMarket, int expectedCount)
+        public void OptionHistorySpecifyingFillForwardAndExtendedMarket(bool fillForward, bool extendedMarket, int expectedCount)
         {
             using (Py.GIL())
             {
@@ -365,18 +365,20 @@ namespace QuantConnect.Tests.Research
             }
         }
 
-        [TestCase(true, 360)]
-        [TestCase(false, 60)]
-        public void FutureHistorySpecifyingFillForward(bool fillForward, int expectedCount)
+        [TestCase(true, true, 8550)]
+        [TestCase(true, false, 2610)]
+        [TestCase(false, true, 6825)]
+        [TestCase(false, false, 2175)]
+        public void FutureHistorySpecifyingFillForwardAndExtendedMarket(bool fillForward, bool extendedMarket, int expectedCount)
         {
             using (Py.GIL())
             {
                 var qb = new QuantBook();
-                var start = new DateTime(2020, 1, 5);
-                var end = new DateTime(2020, 1, 6);
+                var start = new DateTime(2013, 10, 6);
+                var end = new DateTime(2013, 10, 15);
 
-                var future = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 3, 20));
-                dynamic history = qb.GetFutureHistory(future, start, end, Resolution.Minute, fillForward: fillForward).GetAllData();
+                var future = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2013, 12, 20));
+                dynamic history = qb.GetFutureHistory(future, start, end, Resolution.Minute, fillForward, extendedMarket).GetAllData();
                 var historyCount = (history.shape[0] as PyObject).As<int>();
 
                 Assert.AreEqual(expectedCount, historyCount);

@@ -38,9 +38,9 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 Ticket = MarketOrder(DcOption, 1);
             });
-            
-            // Schedule liquidation at 6PM
-            Schedule.On(DateRules.Today, TimeRules.At(18,0,0), () =>
+
+            // Schedule liquidation at 2PM when the market is open
+            Schedule.On(DateRules.Today, TimeRules.At(14,0,0), () =>
             {
                 Liquidate();
             });
@@ -68,7 +68,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 180;
+        public override long DataPoints => 88;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -102,12 +102,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Fees", "$3.70"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "DC V5E8P9VAH3IC|DC V5E8P9SH0U0X"},
-            {"Fitness Score", "0.01"},
+            {"Fitness Score", "0.021"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-101.911"},
-            {"Portfolio Turnover", "0.02"},
+            {"Return Over Maximum Drawdown", "-136.054"},
+            {"Portfolio Turnover", "0.043"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -121,7 +121,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "665d06e4f758724b5b9576b14fd18743"}
+            {"OrderListHash", "aa0827b2e3105a09c7308382ac0512aa"}
         };
     }
 }

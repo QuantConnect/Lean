@@ -27,44 +27,65 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class FutureMarketOpenConsolidatorRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private static List<DateTime> _expectedOpens = new List<DateTime>(){
-            new DateTime(2013, 10, 06, 18, 00, 0),
-            new DateTime(2013, 10, 07, 16, 30, 0),
-            new DateTime(2013, 10, 08, 16, 30, 0),
-            new DateTime(2013, 10, 09, 16, 30, 0),
-            new DateTime(2013, 10, 10, 16, 30, 0),
-            new DateTime(2013, 10, 11, 16, 30, 0),
-            new DateTime(2013, 10, 13, 18, 00, 0),
+        protected virtual bool ExtendedMarketHours => false;
+        protected virtual List<DateTime> ExpectedOpens => new List<DateTime>()
+        {
+            new DateTime(2013, 10, 07, 9, 30, 0),
+            new DateTime(2013, 10, 08, 9, 30, 0),
+            new DateTime(2013, 10, 09, 9, 30, 0),
+            new DateTime(2013, 10, 10, 9, 30, 0),
+            new DateTime(2013, 10, 11, 9, 30, 0),
+            new DateTime(2013, 10, 14, 9, 30, 0),
+            new DateTime(2013, 10, 14, 9, 30, 0),
         };
-        private static List<DateTime> _expectedCloses = new List<DateTime>(){
-            new DateTime(2013, 10, 07, 16, 15, 0),
-            new DateTime(2013, 10, 08, 16, 15, 0),
-            new DateTime(2013, 10, 09, 16, 15, 0),
-            new DateTime(2013, 10, 10, 16, 15, 0),
-            new DateTime(2013, 10, 11, 16, 15, 0),
-            new DateTime(2013, 10, 14, 16, 15, 0),
-            new DateTime(2013, 10, 14, 16, 15, 0),
+        protected virtual List<DateTime> ExpectedCloses => new List<DateTime>()
+        {
+            new DateTime(2013, 10, 07, 17, 0, 0),
+            new DateTime(2013, 10, 08, 17, 0, 0),
+            new DateTime(2013, 10, 09, 17, 0, 0),
+            new DateTime(2013, 10, 10, 17, 0, 0),
+            new DateTime(2013, 10, 11, 17, 0, 0),
+            new DateTime(2013, 10, 14, 17, 0, 0),
+            new DateTime(2013, 10, 14, 17, 0, 0),
         };
 
-        private Queue<DateTime> _expectedOpensQueue = new Queue<DateTime>(_expectedOpens);
-        private Queue<DateTime> _expectedClosesQueue = new Queue<DateTime>(_expectedCloses);
+        private Queue<DateTime> _expectedOpensQueue;
+        private Queue<DateTime> _expectedClosesQueue;
 
         public override void Initialize()
         {
             SetStartDate(2013, 10, 06);
             SetEndDate(2013, 10, 14);
 
-            var es = AddSecurity(SecurityType.Future, "ES");
+            var es = AddSecurity(SecurityType.Future, "ES", extendedMarketHours: ExtendedMarketHours);
+
+            _expectedOpensQueue = new Queue<DateTime>(ExpectedOpens);
+            _expectedClosesQueue = new Queue<DateTime>(ExpectedCloses);
 
             Consolidate<BaseData>(es.Symbol, dataTime =>
             {
-                var start = es.Exchange.Hours.GetPreviousMarketOpen(dataTime, false);
-                var end = es.Exchange.Hours.GetNextMarketClose(start, false);
+                var start = es.Exchange.Hours.GetPreviousMarketOpen(dataTime, ExtendedMarketHours);
+                var end = es.Exchange.Hours.GetNextMarketClose(start, ExtendedMarketHours);
 
-                // market might open at 16:30 and close again at 17:00 but we are not interested in using the close so we skip it here
-                while (end.Date == start.Date)
+                if (ExtendedMarketHours)
                 {
-                    end = es.Exchange.Hours.GetNextMarketClose(end, false);
+                    // market might open at 16:30 and close again at 17:00 but we are not interested in using the close so we skip it here
+                    while (end.Date == start.Date)
+                    {
+                        end = es.Exchange.Hours.GetNextMarketClose(end, ExtendedMarketHours);
+                    }
+                } else
+                {
+                    // Let's not consider regular market gaps like when market closes at 16:15 and opens again at 16:30
+                    while (true)
+                    {
+                        var potentialEnd = es.Exchange.Hours.GetNextMarketClose(end, ExtendedMarketHours);
+                        if (potentialEnd.Date != end.Date)
+                        {
+                            break;
+                        }
+                        end = potentialEnd;
+                    }
                 }
 
                 var period = end - start;
@@ -92,12 +113,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp };
+        public virtual Language[] Languages { get; } = { Language.CSharp };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 94112;
+        public virtual long DataPoints => 28812;
 
         /// </summary>
         /// Data Points count of the algorithm history
@@ -107,7 +128,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "0"},
             {"Average Win", "0%"},

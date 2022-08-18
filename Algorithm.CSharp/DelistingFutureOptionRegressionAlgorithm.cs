@@ -76,7 +76,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 foreach (var contractsValue in chain.Contracts.Values)
                 {
-                    MarketOrder(contractsValue.Symbol, 1);
+                    PlaceOrder(contractsValue.Symbol);
                     _traded = true;
                 }
             }
@@ -94,6 +94,11 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        protected virtual void PlaceOrder(Symbol symbol)
+        {
+            MarketOrder(symbol, 1);
+        }
+
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
@@ -107,7 +112,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>0
-        public virtual long DataPoints => 15228955;
+        public virtual long DataPoints => 5117455;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -139,13 +144,13 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0.107"},
             {"Treynor Ratio", "1.353"},
             {"Total Fees", "$14.80"},
-            {"Estimated Strategy Capacity", "$860000000.00"},
-            {"Lowest Capacity Asset", "DC V5E8P9SH0U0X"},
+            {"Estimated Strategy Capacity", "$1300000000.00"},
+            {"Lowest Capacity Asset", "DC V5E8PHPRCHJ8|DC V5E8P9SH0U0X"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-0.128"},
-            {"Return Over Maximum Drawdown", "-0.995"},
+            {"Sortino Ratio", "-0.129"},
+            {"Return Over Maximum Drawdown", "-0.997"},
             {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},

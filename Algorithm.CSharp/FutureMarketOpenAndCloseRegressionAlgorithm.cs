@@ -25,16 +25,17 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class FutureMarketOpenAndCloseRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private static List<DateTime> _afterMarketOpen = new List<DateTime>() {
-            new DateTime(2022, 02, 01, 16, 30, 0),
-            new DateTime(2022, 02, 02, 16, 30, 0),
-            new DateTime(2022, 02, 03, 16, 30, 0),
-            new DateTime(2022, 02, 04, 16, 30, 0),
-            new DateTime(2022, 02, 06, 18, 0, 0),
-            new DateTime(2022, 02, 07, 16, 30, 0),
-            new DateTime(2022, 02, 08, 16, 30, 0)
+        protected virtual bool ExtendedMarketHours => false;
+
+        protected virtual List<DateTime> AfterMarketOpen => new List<DateTime>() {
+            new DateTime(2022, 02, 01, 9, 30, 0),
+            new DateTime(2022, 02, 02, 9, 30, 0),
+            new DateTime(2022, 02, 03, 9, 30, 0),
+            new DateTime(2022, 02, 04, 9, 30, 0),
+            new DateTime(2022, 02, 07, 9, 30, 0),
+            new DateTime(2022, 02, 08, 9, 30, 0)
         };
-        private static List<DateTime> _beforeMarketClose = new List<DateTime>()
+        protected virtual List<DateTime> BeforeMarketClose => new List<DateTime>()
         {
             new DateTime(2022, 02, 01, 16, 15, 0),
             new DateTime(2022, 02, 02, 16, 15, 0),
@@ -43,21 +44,24 @@ namespace QuantConnect.Algorithm.CSharp
             new DateTime(2022, 02, 07, 16, 15, 0),
             new DateTime(2022, 02, 08, 16, 15, 0)
         };
-        private Queue<DateTime> _afterMarketOpenQueue = new Queue<DateTime>(_afterMarketOpen);
-        private Queue<DateTime> _beforeMarketCloseQueue = new Queue<DateTime>(_beforeMarketClose);
+        private Queue<DateTime> _afterMarketOpenQueue;
+        private Queue<DateTime> _beforeMarketCloseQueue;
 
         public override void Initialize()
         {
             SetStartDate(2022, 02, 01);
             SetEndDate(2022, 02, 08);
-            var esFuture = AddFuture("ES").Symbol;
+            var esFuture = AddFuture("ES", extendedMarketHours: ExtendedMarketHours).Symbol;
+
+            _afterMarketOpenQueue = new Queue<DateTime>(AfterMarketOpen);
+            _beforeMarketCloseQueue = new Queue<DateTime>(BeforeMarketClose);
 
             Schedule.On(DateRules.EveryDay(esFuture),
-                TimeRules.AfterMarketOpen(esFuture),
+                TimeRules.AfterMarketOpen(esFuture, extendedMarketOpen: ExtendedMarketHours),
                 EveryDayAfterMarketOpen);
 
             Schedule.On(DateRules.EveryDay(esFuture),
-                TimeRules.BeforeMarketClose(esFuture),
+                TimeRules.BeforeMarketClose(esFuture, extendedMarketClose: ExtendedMarketHours),
                 EveryDayBeforeMarketClose);
         }
 
@@ -91,12 +95,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp};
+        public virtual Language[] Languages { get; } = { Language.CSharp};
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 7;
+        public virtual long DataPoints => 7;
 
         /// </summary>
         /// Data Points count of the algorithm history
@@ -106,7 +110,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "0"},
             {"Average Win", "0%"},

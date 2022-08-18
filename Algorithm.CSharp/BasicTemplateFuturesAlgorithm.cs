@@ -59,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // set our expiry filter for this futures chain
             // SetFilter method accepts TimeSpan objects or integer for days.
-            // The following statements yield the same filtering criteria 
+            // The following statements yield the same filtering criteria
             futureSP500.SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
             futureGold.SetFilter(0, 182);
 
@@ -151,46 +151,46 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 203367;
+        public long DataPoints => 67925;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 518;
+        public int AlgorithmHistoryDataPoints => 340;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "8186"},
+            {"Total Trades", "2618"},
             {"Average Win", "0.00%"},
             {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "-100.000%"},
-            {"Drawdown", "13.100%"},
-            {"Expectancy", "-0.817"},
-            {"Net Profit", "-13.059%"},
-            {"Sharpe Ratio", "-22.436"},
+            {"Compounding Annual Return", "-99.665%"},
+            {"Drawdown", "4.100%"},
+            {"Expectancy", "-0.725"},
+            {"Net Profit", "-4.141%"},
+            {"Sharpe Ratio", "-32.414"},
             {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "89%"},
-            {"Win Rate", "11%"},
-            {"Profit-Loss Ratio", "0.69"},
-            {"Alpha", "1.976"},
-            {"Beta", "-0.184"},
-            {"Annual Standard Deviation", "0.045"},
-            {"Annual Variance", "0.002"},
-            {"Information Ratio", "-59.896"},
-            {"Tracking Error", "0.287"},
-            {"Treynor Ratio", "5.445"},
-            {"Total Fees", "$15144.10"},
-            {"Estimated Strategy Capacity", "$130000.00"},
+            {"Loss Rate", "83%"},
+            {"Win Rate", "17%"},
+            {"Profit-Loss Ratio", "0.66"},
+            {"Alpha", "-2.976"},
+            {"Beta", "0.124"},
+            {"Annual Standard Deviation", "0.03"},
+            {"Annual Variance", "0.001"},
+            {"Information Ratio", "-80.766"},
+            {"Tracking Error", "0.213"},
+            {"Treynor Ratio", "-7.867"},
+            {"Total Fees", "$4843.30"},
+            {"Estimated Strategy Capacity", "$420000.00"},
             {"Lowest Capacity Asset", "GC VOFJUCDY9XNH"},
-            {"Fitness Score", "0.028"},
+            {"Fitness Score", "0.001"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-10.138"},
-            {"Return Over Maximum Drawdown", "-8.192"},
-            {"Portfolio Turnover", "299.379"},
+            {"Sortino Ratio", "-48.263"},
+            {"Return Over Maximum Drawdown", "-34.378"},
+            {"Portfolio Turnover", "95.779"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -204,7 +204,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "fbf8650f2a4f433563f37f44c59cfa0d"}
+            {"OrderListHash", "5893914e2edb6df1730a7ec3dbe6256d"}
         };
     }
 }
