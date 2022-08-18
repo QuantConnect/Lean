@@ -209,7 +209,7 @@ namespace QuantConnect.Tests.Common.Securities
             var initialMarginExpected = buyingPowerModel.GetInitialMarginRequirement(futureSecurity, quantity);
 
             Assert.AreEqual(initialMarginExpected
-                            + 18.50m * Math.Sign(quantity), // fees -> 10 quantity * 1.85
+                            + 24.70m * Math.Sign(quantity), // fees -> 10 quantity * 2.47
                 initialMargin);
         }
 
@@ -283,7 +283,7 @@ namespace QuantConnect.Tests.Common.Securities
             // Drop 40% price from $20 to $12
             Update(futureSecurity, 12, algorithm);
 
-            var expected = (12 - 20) * 100 * futureSecurity.SymbolProperties.ContractMultiplier - 1.85m * 100;
+            var expected = (12 - 20) * 100 * futureSecurity.SymbolProperties.ContractMultiplier - 2.47m * 100;
             Assert.AreEqual(futureSecurity.Holdings.UnrealizedProfit, expected);
 
             // we have a massive loss because of futures leverage
@@ -314,7 +314,7 @@ namespace QuantConnect.Tests.Common.Securities
             // Increase from $20 to $40
             Update(futureSecurity, 40, algorithm);
 
-            var expected = (40 - 20) * 100 * futureSecurity.SymbolProperties.ContractMultiplier - 1.85m * 100;
+            var expected = (40 - 20) * 100 * futureSecurity.SymbolProperties.ContractMultiplier - 2.47m * 100;
             Assert.AreEqual(futureSecurity.Holdings.UnrealizedProfit, expected);
 
             // we have a massive win because of futures leverage

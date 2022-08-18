@@ -499,8 +499,8 @@ namespace QuantConnect.Tests.Common.Securities
 
             // 100 quantity * 110 current price * 10 rate = 110000m
             Assert.AreEqual(110000m, future.Holdings.AbsoluteHoldingsValue);
-            // (110 current price - 100 average price) * 100 quantity * 10 rate - 1.85 fee * 100 quantity = 9815m
-            Assert.AreEqual(9815m, future.Holdings.TotalCloseProfit());
+            // (110 current price - 100 average price) * 100 quantity * 10 rate - 2.15 fee * 100 quantity = 9785m
+            Assert.AreEqual(9785m, future.Holdings.TotalCloseProfit());
         }
 
         [TestCase("USD")]
@@ -546,8 +546,8 @@ namespace QuantConnect.Tests.Common.Securities
 
             // 100 quantity * 110 current price * 10 rate = 110000m
             Assert.AreEqual(110000m, future.Holdings.AbsoluteHoldingsValue);
-            // (110 current price - 100 average price) * - 100 quantity * 10 rate - 1.85 fee * 100 quantity = 9815m
-            Assert.AreEqual(-10185, future.Holdings.TotalCloseProfit());
+            // (110 current price - 100 average price) * - 100 quantity * 10 rate - 2.15 fee * 100 quantity = -10215m
+            Assert.AreEqual(-10215m, future.Holdings.TotalCloseProfit());
         }
 
         [TestCase("USD")]
