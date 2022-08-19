@@ -76,13 +76,17 @@ RUN pip install --no-cache-dir      \
     xarray==2022.6.0                \
     plotly==5.9.0                   \
     jupyterlab==3.4.4               \
+    tensorflow==2.9.1               \
     docutils==0.19                  \
     cvxopt==1.3.0                   \
     gensim==4.2.0                   \
+    keras==2.9.0                    \
     lightgbm==3.3.2                 \
     mpi4py==3.1.3                   \
     nltk==3.7                       \
     graphviz==0.8.4                 \
+    cmdstanpy==1.0.4                \
+    copulae==0.7.7                  \
     featuretools==0.18.1            \
     PuLP==2.6.0                     \
     pymc==4.1.4                     \
@@ -98,6 +102,7 @@ RUN pip install --no-cache-dir      \
     umap-learn==0.5.3               \
     fastai==2.7.7                   \
     arch==5.3.1                     \
+    copulas==0.7.0                  \
     creme==0.6.1                    \
     cufflinks==0.17.3               \
     gym==0.21                       \
@@ -122,6 +127,7 @@ RUN pip install --no-cache-dir      \
     jaxlib==0.3.15                  \
     keras-rl==0.4.2                 \
     pennylane==0.25.1               \
+    neural-tangents==0.6.0          \
     mplfinance==0.12.9b1            \
     hmmlearn==0.2.7                 \
     catboost==1.0.6                 \
@@ -148,13 +154,7 @@ RUN pip install --no-cache-dir      \
     fastText==0.9.2                 \
     tigramite==5.0.0.1              \
     h2o==3.36.1.4                   \
-    copulas==0.7.0                  \
-    tensorflow==2.9.1               \
-    keras==2.9.0                    \
-    neural-tangents==0.6.0          \
-    prophet==1.1                    \
-    cmdstanpy==1.0.4                \
-    copulae==0.7.7
+    prophet==1.1
 
 RUN conda install -y -c conda-forge \
     openmpi=4.1.4                   \
@@ -204,18 +204,22 @@ RUN wget https://cdn.quantconnect.com/ta-lib/ta-lib-0.4.0-src.tar.gz && \
     unzip -q TA_Lib-0.4.18.zip && cd ta-lib-TA_Lib-0.4.18 && \
     python setup.py install && cd ../.. && rm -rf ta-lib && rm ta-lib-0.4.0-src.tar.gz
 
-# Due to conflicts install 'tensorforce' virtual environment package
-RUN python -m venv /tensorforce --system-site-packages && . /tensorforce/bin/activate \
-    && pip install --no-cache-dir       \
-    tensorforce==0.6.5                  \
-    && python -m ipykernel install --name=tensorforce \
-    && deactivate
-
 # Due to conflicts install 'pomegranate' virtual environment package
 RUN python -m venv /pomegranate --system-site-packages && . /pomegranate/bin/activate \
     && pip install --no-cache-dir       \
     pomegranate==0.14.8                 \
     && python -m ipykernel install --name=pomegranate \
+    && deactivate
+
+# Due to conflicts install 'tensorforce' virtual environment package with older tensorflow
+RUN python -m venv /tensorforce && . /tensorforce/bin/activate \
+    && pip install --no-cache-dir       \
+    tensorflow==2.6.0                   \
+    keras==2.6.0                        \
+    tensorforce==0.6.5                  \
+    gym==0.21                           \
+    jupyterlab==3.4.4                   \
+    && python -m ipykernel install --name=tensorforce \
     && deactivate
 
 # List all packages
