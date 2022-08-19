@@ -21,17 +21,20 @@ namespace QuantConnect.Report.ReportElements
 {
     internal class RuntimeDaysReportElement : ReportElement
     {
-        private Result _result;
+        private BacktestResult _backtest;
+        private LiveResult _live;
 
         /// <summary>
-        /// Create a new metric describing the number of days an algorithm has been live.
+        /// Create a new metric describing the number of days an algorithm ran for.
         /// </summary>
         /// <param name="name">Name of the widget</param>
         /// <param name="key">Location of injection</param>
-        /// <param name="result">Result object</param>
-        public RuntimeDaysReportElement(string name, string key, Result result)
+        /// <param name="backtest">Backtest result object</param>
+        /// <param name="live">Backtest result object</param>
+        public RuntimeDaysReportElement(string name, string key, BacktestResult backtest, LiveResult live)
         {
-            _result = result;
+            _backtest = backtest;
+            _live = live;
             Name = name;
             Key = key;
         }
@@ -41,12 +44,13 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            if (_result == null)
+            var result = (Result) _live ?? _backtest;
+            if (result == null)
             {
                 return "-";
             }
 
-            var equityPoints = ResultsUtil.EquityPoints(_result);
+            var equityPoints = ResultsUtil.EquityPoints(result);
             if (equityPoints.Count == 0)
             {
                 Result = 0;
