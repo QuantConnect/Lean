@@ -30,7 +30,7 @@ namespace QuantConnect.Report.ReportElements
         /// <param name="name">Name of the widget</param>
         /// <param name="key">Location of injection</param>
         /// <param name="backtest">Backtest result object</param>
-        /// <param name="live">Backtest result object</param>
+        /// <param name="live">Live result object</param>
         public RuntimeDaysReportElement(string name, string key, BacktestResult backtest, LiveResult live)
         {
             _backtest = backtest;
