@@ -39,5 +39,14 @@ jobs:
       - name: Run Tensorforce Python Package Test
         run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.TensorforceTests"
 
+      - name: Run StableBaselines Python Package Test
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.StableBaselinesTest"
+
+      - name: Run AxPlatform Python Package Test
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.AxPlatformTest"
+
       - name: Run NeuralTangents Python Package Test
         run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.NeuralTangentsTest"
+
+      - name: Run NBeats Python Package Test
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.NBeatsTest"

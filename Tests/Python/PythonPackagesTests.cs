@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Python
         [Test]
         public void NumpyTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import numpy
 def RunTest():
@@ -38,7 +38,7 @@ def RunTest():
         [Test]
         public void ScipyTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import scipy
 import numpy
@@ -50,7 +50,7 @@ def RunTest():
         [Test]
         public void SklearnTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 from sklearn.ensemble import RandomForestClassifier
 def RunTest():
@@ -61,7 +61,7 @@ def RunTest():
         [Test]
         public void CvxoptTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import cvxopt
 def RunTest():
@@ -72,7 +72,7 @@ def RunTest():
         [Test]
         public void TalibTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import numpy
 import talib
@@ -84,7 +84,7 @@ def RunTest():
         [Test]
         public void CvxpyTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import numpy
 import cvxpy
@@ -106,7 +106,7 @@ def RunTest():
         [Test]
         public void StatsmodelsTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import numpy
 import statsmodels.api as sm
@@ -129,7 +129,7 @@ def RunTest():
         [Test]
         public void PykalmanTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import numpy
 from pykalman import KalmanFilter
@@ -144,7 +144,7 @@ def RunTest():
         [Test]
         public void AesaraTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import aesara
 def RunTest():
@@ -158,7 +158,7 @@ def RunTest():
         [Test]
         public void XgboostTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import numpy
 import xgboost
@@ -172,7 +172,7 @@ def RunTest():
         [Test]
         public void ArchTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import numpy
 from arch import arch_model
@@ -202,7 +202,7 @@ def RunTest():
         [Test]
         public void KerasTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import numpy
 from keras.models import Sequential
@@ -228,7 +228,7 @@ def RunTest():
         {
             PythonInitializer.ActivatePythonVirtualEnvironment("/tensorforce");
 
-            AssetCode(@"
+            AssertCode(@"
 from tensorforce import Agent, Environment
 
 def RunTest():
@@ -269,7 +269,7 @@ def RunTest():
         [Test]
         public void TensorflowTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import tensorflow as tf
 def RunTest():
@@ -291,7 +291,7 @@ def RunTest():
         [Test]
         public void DeapTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import numpy
 from deap import algorithms, base, creator, tools
@@ -330,7 +330,7 @@ def RunTest():
         [Test]
         public void QuantlibTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import QuantLib as ql
 def RunTest():
@@ -352,7 +352,7 @@ def RunTest():
         [Test]
         public void CopulaTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 from copulas.univariate.gaussian import GaussianUnivariate
 import pandas as pd
@@ -368,7 +368,7 @@ def RunTest():
         [Test]
         public void HmmlearnTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import numpy as np
 from hmmlearn import hmm
@@ -402,7 +402,7 @@ def RunTest():
         public void PomegranateTest()
         {
             PythonInitializer.ActivatePythonVirtualEnvironment("/pomegranate");
-            AssetCode(
+            AssertCode(
                 @"
 from pomegranate import *
 def RunTest():
@@ -418,7 +418,7 @@ def RunTest():
         [Test]
         public void LightgbmTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import lightgbm as lgb
 import numpy as np
@@ -454,7 +454,7 @@ def RunTest():
         [Test]
         public void FbProphetTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import pandas as pd
 from prophet import Prophet
@@ -470,7 +470,7 @@ def RunTest():
         [Test]
         public void FastAiTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 from fastai.text import *
 def RunTest():
@@ -481,7 +481,7 @@ def RunTest():
         [Test]
         public void PyramidArimaTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import numpy as np
 import pmdarima as pm
@@ -502,27 +502,26 @@ def RunTest():
             );
         }
 
-        [Test]
+        [Test, Explicit("Installed in specific environment. Requires older gym")]
         public void StableBaselinesTest()
         {
-            AssetCode(
+            PythonInitializer.ActivatePythonVirtualEnvironment("/tensorforce");
+            AssertCode(
                 @"
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
 
 def RunTest():
-    # Parallel environments
-    env = make_vec_env(""CartPole-v1"", n_envs=4)
+    env = make_vec_env(""CartPole-v1"", n_envs=1)
 
     model = PPO(""MlpPolicy"", env, verbose=1)
-    model.learn(total_timesteps=25000)
-    model.save(""ppo_cartpole"")");
+    model.learn(total_timesteps=500)");
         }
 
         [Test]
         public void GensimTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 from gensim import models
 
@@ -547,7 +546,7 @@ def RunTest():
         [Test]
         public void ScikitMultiflowTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 from skmultiflow.data import WaveformGenerator
 from skmultiflow.trees import HoeffdingTree
@@ -575,7 +574,7 @@ def RunTest():
         [Test]
         public void ScikitOptimizeTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import numpy as np
 from skopt import gp_minimize
@@ -592,7 +591,7 @@ def RunTest():
         [Test]
         public void CremeTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 from creme import datasets
 
@@ -606,7 +605,7 @@ def RunTest():
         [Test]
         public void NltkTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import nltk.data
 
@@ -625,7 +624,7 @@ def RunTest():
         [Test]
         public void NltkVaderTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from nltk import tokenize
@@ -667,7 +666,7 @@ def RunTest():
         [Test, Explicit("Requires mlfinlab installed")]
         public void MlfinlabTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 from mlfinlab.portfolio_optimization.hrp import HierarchicalRiskParity
 from mlfinlab.portfolio_optimization.mean_variance import MeanVarianceOptimisation
@@ -697,7 +696,7 @@ def RunTest():
         [Test]
         public void JaxTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 from jax import *
 import jax.numpy as jnp
@@ -721,7 +720,7 @@ def RunTest():
         [Test, Explicit("Has issues when run along side the other tests. random.PRNGKey call hangs")]
         public void NeuralTangentsTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 from jax import *
 import neural_tangents as nt
@@ -754,7 +753,7 @@ def RunTest():
         [Test]
         public void SmmTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import ssm
 
@@ -775,7 +774,7 @@ def RunTest():
         [Test]
         public void RiskparityportfolioTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import riskparityportfolio as rp
 import numpy as np
@@ -794,7 +793,7 @@ def RunTest():
         [Test]
         public void PyrbTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import pandas as pd
 import numpy as np
@@ -823,7 +822,7 @@ def RunTest():
         [Test]
         public void CopulaeTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 from copulae import NormalCopula
 import numpy as np
@@ -847,7 +846,7 @@ def RunTest():
         [Test]
         public void SanityClrInstallation()
         {
-            AssetCode(
+            AssertCode(
                 @"
 from os import walk
 import setuptools as _
@@ -879,7 +878,7 @@ def RunTest():
         [Test]
         public void Tigramite()
         {
-            AssetCode(@"
+            AssertCode(@"
 import numpy as np
 from tigramite.pcmci import PCMCI
 from tigramite.independence_tests import ParCorr
@@ -909,6 +908,132 @@ def RunTest():
 ");
         }
 
+        [Test, Explicit("Sometimes crashes when run along side the other tests")]
+        public void NBeatsTest()
+        {
+            AssertCode(@"
+import warnings
+import numpy as np
+
+from nbeats_keras.model import NBeatsNet as NBeatsKeras
+from nbeats_pytorch.model import NBeatsNet as NBeatsPytorch
+
+warnings.filterwarnings(action='ignore', message='Setting attributes')
+
+def RunTest():
+    # https://keras.io/layers/recurrent/
+    # At the moment only Keras supports input_dim > 1. In the original paper, input_dim=1.
+    num_samples, time_steps, input_dim, output_dim = 50_000, 10, 1, 1
+
+    # This example is for both Keras and Pytorch. In practice, choose the one you prefer.
+    for BackendType in [NBeatsKeras, NBeatsPytorch]:
+        # NOTE: If you choose the Keras backend with input_dim>1, you have
+        # to set the value here too (in the constructor).
+        backend = BackendType(
+            backcast_length=time_steps, forecast_length=output_dim,
+            stack_types=(NBeatsKeras.GENERIC_BLOCK, NBeatsKeras.GENERIC_BLOCK),
+            nb_blocks_per_stack=2, thetas_dim=(4, 4), share_weights_in_stack=True,
+            hidden_layer_units=64
+        )
+
+        # Definition of the objective function and the optimizer.
+        backend.compile(loss='mae', optimizer='adam')
+
+        # Definition of the data. The problem to solve is to find f such as | f(x) - y | -> 0.
+        # where f = np.mean.
+        x = np.random.uniform(size=(num_samples, time_steps, input_dim))
+        y = np.mean(x, axis=1, keepdims=True)
+
+        # Split data into training and testing datasets.
+        c = num_samples // 10
+        x_train, y_train, x_test, y_test = x[c:], y[c:], x[:c], y[:c]
+        test_size = len(x_test)
+
+        # Train the model.
+        print('Training...')
+        backend.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=5, batch_size=128)
+
+        # Save the model for later.
+        backend.save('n_beats_model.h5')
+
+        # Predict on the testing set (forecast).
+        predictions_forecast = backend.predict(x_test)
+        np.testing.assert_equal(predictions_forecast.shape, (test_size, backend.forecast_length, output_dim))
+
+        # Predict on the testing set (backcast).
+        predictions_backcast = backend.predict(x_test, return_backcast=True)
+        np.testing.assert_equal(predictions_backcast.shape, (test_size, backend.backcast_length, output_dim))
+
+        # Load the model.
+        model_2 = BackendType.load('n_beats_model.h5')
+
+        np.testing.assert_almost_equal(predictions_forecast, model_2.predict(x_test))
+");
+        }
+
+        [Test, Explicit("Sometimes hangs when run along side the other tests")]
+        public void AxPlatformTest()
+        {
+            AssertCode(@"
+from ax import optimize
+
+def RunTest():
+    best_parameters, best_values, experiment, model = optimize(
+            parameters=[
+              {
+                ""name"": ""x1"",
+                ""type"": ""range"",
+                ""bounds"": [-10.0, 10.0],
+              },
+              {
+                ""name"": ""x2"",
+                ""type"": ""range"",
+                ""bounds"": [-10.0, 10.0],
+              },
+            ],
+            # Booth function
+            evaluation_function=lambda p: (p[""x1""] + 2*p[""x2""] - 7)**2 + (2*p[""x1""] + p[""x2""] - 5)**2,
+            minimize=True,
+        )
+");
+        }
+
+        [Test]
+        public void RiskfolioLibTest()
+        {
+            AssertCode(@"
+import riskfolio as rp
+import pandas as pd
+
+def RunTest():
+	# Data
+	date_index = pd.DatetimeIndex(data=['2020-06-15', '2020-06-15', '2020-06-15'])
+	d = {'AAPL': [10, 22, 11], 'AMC': [21,  13, 45]}
+	df = pd.DataFrame(data=d).set_index(date_index)
+	df = df.pct_change().dropna()
+
+	# Building the portfolio object
+	port = rp.Portfolio(returns=df)
+
+	method_mu='hist' # Method to estimate expected returns based on historical data.
+	method_cov='hist' # Method to estimate covariance matrix based on historical data.
+
+	port.assets_stats(method_mu=method_mu, method_cov=method_cov, d=0.94)
+
+	# Estimate optimal portfolio:
+
+	model='Classic' # Could be Classic (historical), BL (Black Litterman) or FM (Factor Model)
+	rm = 'MV' # Risk measure used, this time will be variance
+	obj = 'Sharpe' # Objective function, could be MinRisk, MaxRet, Utility or Sharpe
+	hist = True # Use historical scenarios for risk measures that depend on scenarios
+	rf = 0 # Risk free rate
+	l = 0 # Risk aversion factor, only useful when obj is 'Utility'
+
+	w = port.optimization(model=model, rm=rm, obj=obj, rf=rf, l=l, hist=hist)
+
+	w.T");
+        }
+
         /// <summary>
         /// Simple test for modules that don't have short test example
         /// </summary>
@@ -934,7 +1059,7 @@ def RunTest():
         [TestCase("pennylane", "0.25.1", "version()")]
         public void ModuleVersionTest(string module, string value, string attribute)
         {
-            AssetCode(
+            AssertCode(
                 $@"
 import {module}
 
@@ -944,12 +1069,19 @@ def RunTest():
             );
         }
 
-        private static void AssetCode(string code)
+        private static void AssertCode(string code)
         {
             using (Py.GIL())
             {
-                dynamic module = PyModule.FromString(Guid.NewGuid().ToString(), code);
-                Assert.DoesNotThrow(() => module.RunTest());
+                using dynamic module = PyModule.FromString(Guid.NewGuid().ToString(), code);
+                Assert.DoesNotThrow(() =>
+                {
+                    var response = module.RunTest();
+                    if(response != null)
+                    {
+                        response.Dispose();
+                    }
+                });
             }
         }
     }

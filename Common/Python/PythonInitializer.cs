@@ -29,6 +29,7 @@ namespace QuantConnect.Python
     /// </summary>
     public static class PythonInitializer
     {
+        private static bool IncludeSystemPackages;
         private static string PathToVirtualEnv;
 
         // Used to allow multiple Python unit and regression tests to be run in the same test run
@@ -52,10 +53,10 @@ namespace QuantConnect.Python
 
                 _isInitialized = true;
 
+                AddPythonPaths(new []{ Environment.CurrentDirectory });
+
                 TryInitPythonVirtualEnvironment();
                 Log.Trace("PythonInitializer.Initialize(): ended");
-
-                AddPythonPaths(new []{ Environment.CurrentDirectory });
             }
         }
 
@@ -180,6 +181,8 @@ namespace QuantConnect.Python
                 PythonEngine.SetNoSiteFlag();
             }
 
+            IncludeSystemPackages = includeSystemPackages.Value;
+
             TryInitPythonVirtualEnvironment();
             return true;
         }
@@ -194,9 +197,24 @@ namespace QuantConnect.Python
             using (Py.GIL())
             {
                 using dynamic sys = Py.Import("sys");
+
+                if (!IncludeSystemPackages)
+                {
+                    using var locals = new PyDict();
+                    locals.SetItem("sys", sys);
+                    var currentPath = (List<string>)sys.path.As<List<string>>();
+                    var toRemove = new List<string>(currentPath.Where(s => s.Contains("site-packages", StringComparison.InvariantCultureIgnoreCase)));
+                    if (toRemove.Count > 0)
+                    {
+                        var code = string.Join(";", toRemove.Select(s => $"sys.path.remove('{s}')"));
+                        PythonEngine.Exec(code, locals: locals);
+                    }
+                }
+
                 // fix the prefixes to point to our venv
                 sys.prefix = PathToVirtualEnv;
                 sys.exec_prefix = PathToVirtualEnv;
+
 
                 using dynamic site = Py.Import("site");
                 // This has to be overwritten because site module may already have been loaded by the interpreter (but not run yet)
