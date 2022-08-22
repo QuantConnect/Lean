@@ -401,7 +401,7 @@ def RunTest():
         [Test, Explicit("Installed in specific environment. Requires older numpy")]
         public void PomegranateTest()
         {
-            PythonInitializer.ActivatePythonVirtualEnvironment("/pomegranate");
+            PythonInitializer.ActivatePythonVirtualEnvironment("/standard-pomegranate");
             AssertCode(
                 @"
 from pomegranate import *

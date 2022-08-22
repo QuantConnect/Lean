@@ -204,10 +204,10 @@ RUN wget https://cdn.quantconnect.com/ta-lib/ta-lib-0.4.0-src.tar.gz && \
     python setup.py install && cd ../.. && rm -rf ta-lib && rm ta-lib-0.4.0-src.tar.gz
 
 # Due to conflicts install 'pomegranate' virtual environment package
-RUN python -m venv /pomegranate --system-site-packages && . /pomegranate/bin/activate \
+RUN python -m venv /standard-pomegranate --system-site-packages && . /standard-pomegranate/bin/activate \
     && pip install --no-cache-dir       \
     pomegranate==0.14.8                 \
-    && python -m ipykernel install --name=pomegranate \
+    && python -m ipykernel install --name=standard-pomegranate \
     && deactivate
 
 # Due to conflicts install 'tensorforce' virtual environment package with older tensorflow
