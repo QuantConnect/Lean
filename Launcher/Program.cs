@@ -138,18 +138,7 @@ namespace QuantConnect.Lean.Launcher
             Log.LogHandler.DisposeSafely();
             OS.CpuPerformanceCounter.DisposeSafely();
 
-            if (PythonEngine.IsInitialized)
-            {
-                try
-                {
-                    var pyGIle = Py.GIL();
-                    PythonEngine.Shutdown();
-                }
-                catch (Exception e)
-                {
-                    Log.Error(e, "Exception shutting down python");
-                }
-            }
+            PythonInitializer.Shutdown();
 
             Log.Trace("Program.Main(): Exiting Lean...");
             Environment.Exit(exitCode);

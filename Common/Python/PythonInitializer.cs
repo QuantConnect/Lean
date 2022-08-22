@@ -21,7 +21,6 @@ using Python.Runtime;
 using QuantConnect.Util;
 using QuantConnect.Logging;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 
 namespace QuantConnect.Python
 {
@@ -30,6 +29,9 @@ namespace QuantConnect.Python
     /// </summary>
     public static class PythonInitializer
     {
+        private static bool IncludeSystemPackages;
+        private static string PathToVirtualEnv;
+
         // Used to allow multiple Python unit and regression tests to be run in the same test run
         private static bool _isInitialized;
 
@@ -37,7 +39,7 @@ namespace QuantConnect.Python
         private static List<string> _pendingPathAdditions = new List<string>();
 
         /// <summary>
-        /// Initialize the Python.NET library
+        /// Initialize python
         /// </summary>
         public static void Initialize()
         {
@@ -50,9 +52,34 @@ namespace QuantConnect.Python
                 PythonEngine.BeginAllowThreads();
 
                 _isInitialized = true;
-                Log.Trace("PythonInitializer.Initialize(): ended");
 
                 AddPythonPaths(new []{ Environment.CurrentDirectory });
+
+                TryInitPythonVirtualEnvironment();
+                Log.Trace("PythonInitializer.Initialize(): ended");
+            }
+        }
+
+        /// <summary>
+        /// Shutdown python
+        /// </summary>
+        public static void Shutdown()
+        {
+            if (_isInitialized)
+            {
+                Log.Trace("PythonInitializer.Shutdown(): start");
+                _isInitialized = false;
+
+                try
+                {
+                    PythonEngine.Shutdown();
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex);
+                }
+
+                Log.Trace("PythonInitializer.Shutdown(): ended");
             }
         }
 
@@ -74,7 +101,7 @@ namespace QuantConnect.Python
             {
                 using (Py.GIL())
                 {
-                    dynamic sys = Py.Import("sys");
+                    using dynamic sys = Py.Import("sys");
                     using var locals = new PyDict();
                     locals.SetItem("sys", sys);
 
@@ -118,30 +145,102 @@ namespace QuantConnect.Python
                 return false;
             }
 
-            pathToVirtualEnv = pathToVirtualEnv.TrimEnd('/', '\\');
-            var pathsToPrepend = new List<string>();
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                // For linux we need to know the python version to determine the lib folder containing our packages
-                // Compare our PyDLL to the directory names under the lib directory and get a match
-                var pyDll = Environment.GetEnvironmentVariable("PYTHONNET_PYDLL");
-                var version = Path.GetFileNameWithoutExtension(pyDll);
-                var libDir = Directory.GetDirectories($"{pathToVirtualEnv}/lib")
-                    .Select(d => new DirectoryInfo(d).Name)
-                    .First(x => version.Contains(x, StringComparison.InvariantCulture));
+            PathToVirtualEnv = pathToVirtualEnv;
 
-                pathsToPrepend.Add($"{pathToVirtualEnv}/lib/{libDir}");
-                pathsToPrepend.Add($"{pathToVirtualEnv}/lib/{libDir}/site-packages");
+            bool? includeSystemPackages = null;
+            var configFile = new FileInfo(Path.Combine(PathToVirtualEnv, "pyvenv.cfg"));
+            if(configFile.Exists)
+            {
+                foreach (var line in File.ReadAllLines(configFile.FullName))
+                {
+                    if (line.Contains("include-system-site-packages", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        // format: include-system-site-packages = false (or true)
+                        var equalsIndex = line.IndexOf('=', StringComparison.InvariantCultureIgnoreCase);
+                        if(equalsIndex != -1 && line.Length > (equalsIndex + 1) && bool.TryParse(line.Substring(equalsIndex + 1).Trim(), out var result))
+                        {
+                            includeSystemPackages = result;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if(!includeSystemPackages.HasValue)
+            {
+                includeSystemPackages = true;
+                Log.Error($"PythonIntializer.ActivatePythonVirtualEnvironment(): failed to find system packages configuration. ConfigFile.Exits: {configFile.Exists}. Will default to true.");
             }
             else
             {
-                pathsToPrepend.Add($"{pathToVirtualEnv}\\Lib");
-                pathsToPrepend.Add($"{pathToVirtualEnv}\\Lib\\site-packages");
+                Log.Trace($"PythonIntializer.ActivatePythonVirtualEnvironment(): will use system packages: {includeSystemPackages.Value}");
             }
 
-            Log.Trace($"PythonIntializer.ActivatePythonVirtualEnvironment(): Adding the following locations to Python Path: {string.Join(",", pathsToPrepend)}");
+            if (!includeSystemPackages.Value)
+            {
+                PythonEngine.SetNoSiteFlag();
+            }
 
-            return AddPythonPaths(pathsToPrepend);
+            IncludeSystemPackages = includeSystemPackages.Value;
+
+            TryInitPythonVirtualEnvironment();
+            return true;
+        }
+
+        private static void TryInitPythonVirtualEnvironment()
+        {
+            if (!_isInitialized || string.IsNullOrEmpty(PathToVirtualEnv))
+            {
+                return;
+            }
+
+            using (Py.GIL())
+            {
+                using dynamic sys = Py.Import("sys");
+
+                if (!IncludeSystemPackages)
+                {
+                    using var locals = new PyDict();
+                    locals.SetItem("sys", sys);
+                    var currentPath = (List<string>)sys.path.As<List<string>>();
+                    var toRemove = new List<string>(currentPath.Where(s => s.Contains("site-packages", StringComparison.InvariantCultureIgnoreCase)));
+                    if (toRemove.Count > 0)
+                    {
+                        var code = string.Join(";", toRemove.Select(s => $"sys.path.remove('{s}')"));
+                        PythonEngine.Exec(code, locals: locals);
+                    }
+                }
+
+                // fix the prefixes to point to our venv
+                sys.prefix = PathToVirtualEnv;
+                sys.exec_prefix = PathToVirtualEnv;
+
+
+                using dynamic site = Py.Import("site");
+                // This has to be overwritten because site module may already have been loaded by the interpreter (but not run yet)
+                site.PREFIXES = new List<PyObject> { sys.prefix, sys.exec_prefix };
+                // Run site path modification with tweaked prefixes
+                site.main();
+
+                if (Log.DebuggingEnabled)
+                {
+                    using dynamic os = Py.Import("os");
+                    var path = new List<string>();
+                    foreach (var p in sys.path)
+                    {
+                        path.Add((string)p);
+                    }
+
+                    Log.Debug($"PythonIntializer.InitPythonVirtualEnvironment(): PYTHONHOME: {os.getenv("PYTHONHOME")}." +
+                        $" PYTHONPATH: {os.getenv("PYTHONPATH")}." +
+                        $" sys.executable: {sys.executable}." +
+                        $" sys.prefix: {sys.prefix}." +
+                        $" sys.base_prefix: {sys.base_prefix}." +
+                        $" sys.exec_prefix: {sys.exec_prefix}." +
+                        $" sys.base_exec_prefix: {sys.base_exec_prefix}." +
+                        $" sys.path: [{string.Join(",", path)}]");
+                }
+            }
         }
     }
 }

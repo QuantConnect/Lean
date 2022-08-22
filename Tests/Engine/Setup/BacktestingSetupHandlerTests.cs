@@ -51,15 +51,20 @@ namespace QuantConnect.Tests.Engine.Setup
         [Test]
         public void HandlesErrorOnInitializeCorrectly()
         {
-            var setupHandler = new BacktestingSetupHandler();
+            using var setupHandler = new BacktestingSetupHandler();
 
-            Assert.IsFalse(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, _algorithm,
-                null, new BacktestNodePacket(), new TestResultHandler(),
-                null, new BacktestingRealTimeHandler(), null, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider)));
+            var packet = new BacktestNodePacket();
+            packet.Controls.RamAllocation = 1024 * 4;
+            var realTimeHandler = new BacktestingRealTimeHandler();
+            var resultHandler = new TestResultHandler();
+            Assert.IsFalse(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, _algorithm, null, packet,
+                resultHandler, null, realTimeHandler, null, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider)));
 
+            resultHandler.Exit();
+            realTimeHandler.Exit();
             setupHandler.DisposeSafely();
             Assert.AreEqual(1, setupHandler.Errors.Count);
-            Assert.IsTrue(setupHandler.Errors[0].InnerException.Message.Equals("Some failure"));
+            Assert.IsTrue(setupHandler.Errors[0].InnerException.Message.Equals("Some failure", StringComparison.OrdinalIgnoreCase));
         }
 
         internal class TestAlgorithmThrowsOnInitialize : AlgorithmStub

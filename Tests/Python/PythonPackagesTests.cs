@@ -14,9 +14,10 @@
  *
 */
 
-using NUnit.Framework;
-using Python.Runtime;
 using System;
+using Python.Runtime;
+using NUnit.Framework;
+using QuantConnect.Python;
 
 namespace QuantConnect.Tests.Python
 {
@@ -26,7 +27,7 @@ namespace QuantConnect.Tests.Python
         [Test]
         public void NumpyTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import numpy
 def RunTest():
@@ -37,7 +38,7 @@ def RunTest():
         [Test]
         public void ScipyTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import scipy
 import numpy
@@ -49,7 +50,7 @@ def RunTest():
         [Test]
         public void SklearnTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 from sklearn.ensemble import RandomForestClassifier
 def RunTest():
@@ -60,7 +61,7 @@ def RunTest():
         [Test]
         public void CvxoptTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import cvxopt
 def RunTest():
@@ -71,7 +72,7 @@ def RunTest():
         [Test]
         public void TalibTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import numpy
 import talib
@@ -81,27 +82,9 @@ def RunTest():
         }
 
         [Test]
-        public void BlazeTest()
-        {
-            AssetCode(
-                @"
-import blaze
-def RunTest():
-    accounts = blaze.symbol('accounts', 'var * {id: int, name: string, amount: int}')
-    deadbeats = accounts[accounts.amount < 0].name
-    L = [[1, 'Alice',   100],
-         [2, 'Bob',    -200],
-         [3, 'Charlie', 300],
-         [4, 'Denis',   400],
-         [5, 'Edith',  -500]]
-    return blaze.compute(deadbeats, L)"
-            );
-        }
-
-        [Test]
         public void CvxpyTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import numpy
 import cvxpy
@@ -123,7 +106,7 @@ def RunTest():
         [Test]
         public void StatsmodelsTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import numpy
 import statsmodels.api as sm
@@ -146,7 +129,7 @@ def RunTest():
         [Test]
         public void PykalmanTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import numpy
 from pykalman import KalmanFilter
@@ -159,31 +142,15 @@ def RunTest():
         }
 
         [Test]
-        public void CopulalibTest()
+        public void AesaraTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
-import numpy
-from copulalib.copulalib import Copula
+import aesara
 def RunTest():
-    x = numpy.random.normal(size=100)
-    y = 2.5 * x + numpy.random.normal(size=100)
-
-    #Make the instance of Copula class with x, y and clayton family::
-    return Copula(x, y, family = 'clayton')"
-            );
-        }
-
-        [Test]
-        public void TheanoTest()
-        {
-            AssetCode(
-                @"
-import theano
-def RunTest():
-    a = theano.tensor.vector()          # declare variable
+    a = aesara.tensor.vector()          # declare variable
     out = a + a ** 10               # build symbolic expression
-    f = theano.function([a], out)   # compile function
+    f = aesara.function([a], out)   # compile function
     return f([0, 1, 2])"
             );
         }
@@ -191,7 +158,7 @@ def RunTest():
         [Test]
         public void XgboostTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import numpy
 import xgboost
@@ -205,7 +172,7 @@ def RunTest():
         [Test]
         public void ArchTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import numpy
 from arch import arch_model
@@ -235,7 +202,7 @@ def RunTest():
         [Test]
         public void KerasTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import numpy
 from keras.models import Sequential
@@ -256,25 +223,75 @@ def RunTest():
             );
         }
 
+        [Test, Explicit("Installed in specific environment. Requires older tensorflow")]
+        public void TensorforceTests()
+        {
+            PythonInitializer.ActivatePythonVirtualEnvironment("/tensorforce");
+
+            AssertCode(@"
+from tensorforce import Agent, Environment
+
+def RunTest():
+    # Pre-defined or custom environment
+    environment = Environment.create(
+        environment='gym', level='CartPole', max_episode_timesteps=500
+    )
+
+    # Instantiate a Tensorforce agent
+    agent = Agent.create(
+        agent='tensorforce',
+        environment=environment,  # alternatively: states, actions, (max_episode_timesteps)
+        memory=10000,
+        update=dict(unit='timesteps', batch_size=64),
+        optimizer=dict(type='adam', learning_rate=3e-4),
+        policy=dict(network='auto'),
+        objective='policy_gradient',
+        reward_estimation=dict(horizon=20)
+    )
+
+    # Train for 50 episodes
+    for _ in range(50):
+
+        # Initialize episode
+        states = environment.reset()
+        terminal = False
+
+        while not terminal:
+            # Episode timestep
+            actions = agent.act(states=states)
+            states, terminal, reward = environment.execute(actions=actions)
+            agent.observe(terminal=terminal, reward=reward)
+
+    agent.close()
+    environment.close()");
+        }
+
         [Test]
         public void TensorflowTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import tensorflow as tf
 def RunTest():
-    node1 = tf.constant(3.0, tf.float32)
-    node2 = tf.constant(4.0) # also tf.float32 implicitly
-    sess = tf.Session()
-    node3 = tf.add(node1, node2)
-    return sess.run(node3)"
+    mnist = tf.keras.datasets.mnist
+
+    (x_train, y_train), (x_test, y_test) = mnist.load_data()
+    x_train, x_test = x_train / 255.0, x_test / 255.0
+
+    model = tf.keras.models.Sequential([
+        tf.keras.layers.Flatten(input_shape=(28, 28)),
+        tf.keras.layers.Dense(128, activation='relu'),
+        tf.keras.layers.Dropout(0.2),
+        tf.keras.layers.Dense(10)
+    ])
+    model(x_train[:1]).numpy()"
             );
         }
 
         [Test]
         public void DeapTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import numpy
 from deap import algorithms, base, creator, tools
@@ -313,7 +330,7 @@ def RunTest():
         [Test]
         public void QuantlibTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import QuantLib as ql
 def RunTest():
@@ -335,7 +352,7 @@ def RunTest():
         [Test]
         public void CopulaTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 from copulas.univariate.gaussian import GaussianUnivariate
 import pandas as pd
@@ -351,7 +368,7 @@ def RunTest():
         [Test]
         public void HmmlearnTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import numpy as np
 from hmmlearn import hmm
@@ -381,10 +398,11 @@ def RunTest():
             );
         }
 
-        [Test]
+        [Test, Explicit("Installed in specific environment. Requires older numpy")]
         public void PomegranateTest()
         {
-            AssetCode(
+            PythonInitializer.ActivatePythonVirtualEnvironment("/standard-pomegranate");
+            AssertCode(
                 @"
 from pomegranate import *
 def RunTest():
@@ -400,7 +418,7 @@ def RunTest():
         [Test]
         public void LightgbmTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import lightgbm as lgb
 import numpy as np
@@ -436,10 +454,10 @@ def RunTest():
         [Test]
         public void FbProphetTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import pandas as pd
-from fbprophet import Prophet
+from prophet import Prophet
 def RunTest():
     df=pd.DataFrame({'ds': ['2007-12-10', '2007-12-11', '2007-12-12', '2007-12-13', '2007-12-14'], 'y': [9.590761, 8.519590, 8.183677, 8.072467, 7.893572]})
     m = Prophet()
@@ -452,7 +470,7 @@ def RunTest():
         [Test]
         public void FastAiTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 from fastai.text import *
 def RunTest():
@@ -463,15 +481,14 @@ def RunTest():
         [Test]
         public void PyramidArimaTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import numpy as np
-import pyramid as pm
-from pyramid.datasets import load_wineind
+import pmdarima as pm
+from pmdarima.datasets import load_wineind
 def RunTest():
     # this is a dataset from R
     wineind = load_wineind().astype(np.float64)
-
     # fit stepwise auto-ARIMA
     stepwise_fit = pm.auto_arima(wineind, start_p=1, start_q=1,
                                  max_p=3, max_q=3, m=12,
@@ -480,34 +497,31 @@ def RunTest():
                                  error_action='ignore',    # don't want to know if an order does not work
                                  suppress_warnings=True,   # don't want convergence warnings
                                  stepwise=True)            # set to stepwise
-    
+
     return stepwise_fit.summary()"
             );
         }
 
-        [Test]
+        [Test, Explicit("Installed in specific environment. Requires older gym")]
         public void StableBaselinesTest()
         {
-            AssetCode(
+            PythonInitializer.ActivatePythonVirtualEnvironment("/tensorforce");
+            AssertCode(
                 @"
-from stable_baselines.common.cmd_util import make_atari_env
-from stable_baselines import PPO2
+from stable_baselines3 import PPO
+from stable_baselines3.common.env_util import make_vec_env
+
 def RunTest():
-    # There already exists an environment generator that will make and wrap atari environments correctly
-    env = make_atari_env('DemonAttackNoFrameskip-v4', num_env=8, seed=0)
+    env = make_vec_env(""CartPole-v1"", n_envs=1)
 
-    model = PPO2('CnnPolicy', env)
-    model.learn(total_timesteps=10)
-
-    obs = env.reset()
-    return model.predict(obs)"
-            );
+    model = PPO(""MlpPolicy"", env, verbose=1)
+    model.learn(total_timesteps=500)");
         }
 
         [Test]
         public void GensimTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 from gensim import models
 
@@ -532,7 +546,7 @@ def RunTest():
         [Test]
         public void ScikitMultiflowTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 from skmultiflow.data import WaveformGenerator
 from skmultiflow.trees import HoeffdingTree
@@ -560,7 +574,7 @@ def RunTest():
         [Test]
         public void ScikitOptimizeTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import numpy as np
 from skopt import gp_minimize
@@ -577,7 +591,7 @@ def RunTest():
         [Test]
         public void CremeTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 from creme import datasets
 
@@ -591,7 +605,7 @@ def RunTest():
         [Test]
         public void NltkTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import nltk.data
 
@@ -607,9 +621,10 @@ def RunTest():
             );
         }
 
+        [Test]
         public void NltkVaderTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from nltk import tokenize
@@ -625,15 +640,15 @@ def RunTest():
         'The book was kind of good.', # qualified positive sentence is handled correctly (intensity adjusted)
         'The plot was good, but the characters are uncompelling and the dialog is not great.', # mixed negation sentence
         'A really bad, horrible book.',       # negative sentence with booster words
-        'At least it isn't a horrible book.', # negated negative sentence with contraction
+        'At least it is not a horrible book.', # negated negative sentence with contraction
         ':) and :D',     # emoticons handled
         '',              # an empty string is correctly handled
         'Today sux',     #  negative slang handled
         'Today sux!',    #  negative slang with punctuation emphasis handled
         'Today SUX!',    #  negative slang with capitalization emphasis
-        'Today kinda sux! But I'll get by, lol' # mixed sentiment example with slang and constrastive conjunction 'but'
+        'Today kinda sux! But I will get by, lol' # mixed sentiment example with slang and constrastive conjunction 'but'
     ]
-    paragraph = 'It was one of the worst movies I've seen, despite good reviews. \
+    paragraph = 'It was one of the worst movies I have seen, despite good reviews. \
         Unbelievably bad acting!! Poor direction.VERY poor production. \
         The movie was bad.Very bad movie.VERY bad movie.VERY BAD movie.VERY BAD movie!'
 
@@ -648,10 +663,10 @@ def RunTest():
             );
         }
 
-        [Test]
+        [Test, Explicit("Requires mlfinlab installed")]
         public void MlfinlabTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 from mlfinlab.portfolio_optimization.hrp import HierarchicalRiskParity
 from mlfinlab.portfolio_optimization.mean_variance import MeanVarianceOptimisation
@@ -681,20 +696,20 @@ def RunTest():
         [Test]
         public void JaxTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
-import jax.numpy as np
-from jax import grad, jit, vmap
+from jax import *
+import jax.numpy as jnp
 
 def predict(params, inputs):
   for W, b in params:
-    outputs = np.dot(inputs, W) + b
-    inputs = np.tanh(outputs)
+    outputs = jnp.dot(inputs, W) + b
+    inputs = jnp.tanh(outputs)
   return outputs
 
 def logprob_fun(params, inputs, targets):
   preds = predict(params, inputs)
-  return np.sum((preds - targets)**2)
+  return jnp.sum((preds - targets)**2)
 
 def RunTest():
     grad_fun = jit(grad(logprob_fun))  # compiled gradient evaluation function
@@ -702,33 +717,35 @@ def RunTest():
             );
         }
 
-        [Test]
+        [Test, Explicit("Has issues when run along side the other tests. random.PRNGKey call hangs")]
         public void NeuralTangentsTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
-from jax import random
+from jax import *
 import neural_tangents as nt
-from neural_tangents import stax
+from neural_tangents import *
 
 def RunTest():
+    key = random.PRNGKey(1)
+    key1, key2 = random.split(key, 2)
+    x_train = random.normal(key1, (20, 32, 32, 3))
+    y_train = random.uniform(key1, (20, 10))
+    x_test = random.normal(key2, (5, 32, 32, 3))
+
     init_fn, apply_fn, kernel_fn = stax.serial(
-        stax.Dense(512), stax.Relu(),
-        stax.Dense(512), stax.Relu(),
-        stax.Dense(1)
+        stax.Conv(128, (3, 3)),
+        stax.Relu(),
+        stax.Conv(256, (3, 3)),
+        stax.Relu(),
+        stax.Conv(512, (3, 3)),
+        stax.Flatten(),
+        stax.Dense(10)
     )
 
-    key1, key2 = random.split(random.PRNGKey(1))
-    x1 = random.normal(key1, (10, 100))
-    x2 = random.normal(key2, (20, 100))
-
-    x_train, x_test = x1, x2
-    y_train = random.uniform(key1, shape=(10, 1))  # training targets
-
-    y_test_nngp = nt.predict.gp_inference(kernel_fn, x_train, y_train, x_test, get='nngp')
-
-    # (20, 1) np.ndarray test predictions of an infinite Bayesian network
-    return nt.predict.gp_inference(kernel_fn, x_train, y_train, x_test, get='ntk')"
+    predict_fn = nt.predict.gradient_descent_mse_ensemble(kernel_fn, x_train, y_train)
+    # (5, 10) np.ndarray NNGP test prediction
+    predict_fn(x_test=x_test, get='nngp')"
             );
         }
 
@@ -736,7 +753,7 @@ def RunTest():
         [Test]
         public void SmmTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import ssm
 
@@ -757,7 +774,7 @@ def RunTest():
         [Test]
         public void RiskparityportfolioTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import riskparityportfolio as rp
 import numpy as np
@@ -776,7 +793,7 @@ def RunTest():
         [Test]
         public void PyrbTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 import pandas as pd
 import numpy as np
@@ -805,7 +822,7 @@ def RunTest():
         [Test]
         public void CopulaeTest()
         {
-            AssetCode(
+            AssertCode(
                 @"
 from copulae import NormalCopula
 import numpy as np
@@ -829,7 +846,7 @@ def RunTest():
         [Test]
         public void SanityClrInstallation()
         {
-            AssetCode(
+            AssertCode(
                 @"
 from os import walk
 import setuptools as _
@@ -858,33 +875,191 @@ def RunTest():
             );
         }
 
+        [Test]
+        public void Tigramite()
+        {
+            AssertCode(@"
+import numpy as np
+from tigramite.pcmci import PCMCI
+from tigramite.independence_tests import ParCorr
+import tigramite.data_processing as pp
+from tigramite.toymodels import structural_causal_processes as toys
+
+def RunTest():
+    # Example process to play around with
+    # Each key refers to a variable and the incoming links are supplied
+    # as a list of format [((var, -lag), coeff, function), ...]
+    def lin_f(x): return x
+    links = {0: [((0, -1), 0.9, lin_f)],
+             1: [((1, -1), 0.8, lin_f), ((0, -1), 0.8, lin_f)],
+             2: [((2, -1), 0.7, lin_f), ((1, 0), 0.6, lin_f)],
+             3: [((3, -1), 0.7, lin_f), ((2, 0), -0.5, lin_f)],
+             }
+    data, nonstat = toys.structural_causal_process(links,
+                        T=1000, seed=7)
+    # Data must be array of shape (time, variables)
+    print (data.shape)
+    (1000, 4)
+    dataframe = pp.DataFrame(data)
+    cond_ind_test = ParCorr()
+    pcmci = PCMCI(dataframe=dataframe, cond_ind_test=cond_ind_test)
+    results = pcmci.run_pcmciplus(tau_min=0, tau_max=2, pc_alpha=0.01)
+    pcmci.print_results(results, alpha_level=0.01)
+");
+        }
+
+        [Test, Explicit("Sometimes crashes when run along side the other tests")]
+        public void NBeatsTest()
+        {
+            AssertCode(@"
+import warnings
+import numpy as np
+
+from nbeats_keras.model import NBeatsNet as NBeatsKeras
+from nbeats_pytorch.model import NBeatsNet as NBeatsPytorch
+
+warnings.filterwarnings(action='ignore', message='Setting attributes')
+
+def RunTest():
+    # https://keras.io/layers/recurrent/
+    # At the moment only Keras supports input_dim > 1. In the original paper, input_dim=1.
+    num_samples, time_steps, input_dim, output_dim = 50_000, 10, 1, 1
+
+    # This example is for both Keras and Pytorch. In practice, choose the one you prefer.
+    for BackendType in [NBeatsKeras, NBeatsPytorch]:
+        # NOTE: If you choose the Keras backend with input_dim>1, you have
+        # to set the value here too (in the constructor).
+        backend = BackendType(
+            backcast_length=time_steps, forecast_length=output_dim,
+            stack_types=(NBeatsKeras.GENERIC_BLOCK, NBeatsKeras.GENERIC_BLOCK),
+            nb_blocks_per_stack=2, thetas_dim=(4, 4), share_weights_in_stack=True,
+            hidden_layer_units=64
+        )
+
+        # Definition of the objective function and the optimizer.
+        backend.compile(loss='mae', optimizer='adam')
+
+        # Definition of the data. The problem to solve is to find f such as | f(x) - y | -> 0.
+        # where f = np.mean.
+        x = np.random.uniform(size=(num_samples, time_steps, input_dim))
+        y = np.mean(x, axis=1, keepdims=True)
+
+        # Split data into training and testing datasets.
+        c = num_samples // 10
+        x_train, y_train, x_test, y_test = x[c:], y[c:], x[:c], y[:c]
+        test_size = len(x_test)
+
+        # Train the model.
+        print('Training...')
+        backend.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=5, batch_size=128)
+
+        # Save the model for later.
+        backend.save('n_beats_model.h5')
+
+        # Predict on the testing set (forecast).
+        predictions_forecast = backend.predict(x_test)
+        np.testing.assert_equal(predictions_forecast.shape, (test_size, backend.forecast_length, output_dim))
+
+        # Predict on the testing set (backcast).
+        predictions_backcast = backend.predict(x_test, return_backcast=True)
+        np.testing.assert_equal(predictions_backcast.shape, (test_size, backend.backcast_length, output_dim))
+
+        # Load the model.
+        model_2 = BackendType.load('n_beats_model.h5')
+
+        np.testing.assert_almost_equal(predictions_forecast, model_2.predict(x_test))
+");
+        }
+
+        [Test, Explicit("Sometimes hangs when run along side the other tests")]
+        public void AxPlatformTest()
+        {
+            AssertCode(@"
+from ax import optimize
+
+def RunTest():
+    best_parameters, best_values, experiment, model = optimize(
+            parameters=[
+              {
+                ""name"": ""x1"",
+                ""type"": ""range"",
+                ""bounds"": [-10.0, 10.0],
+              },
+              {
+                ""name"": ""x2"",
+                ""type"": ""range"",
+                ""bounds"": [-10.0, 10.0],
+              },
+            ],
+            # Booth function
+            evaluation_function=lambda p: (p[""x1""] + 2*p[""x2""] - 7)**2 + (2*p[""x1""] + p[""x2""] - 5)**2,
+            minimize=True,
+        )
+");
+        }
+
+        [Test]
+        public void RiskfolioLibTest()
+        {
+            AssertCode(@"
+import riskfolio as rp
+import pandas as pd
+
+def RunTest():
+	# Data
+	date_index = pd.DatetimeIndex(data=['2020-06-15', '2020-06-15', '2020-06-15'])
+	d = {'AAPL': [10, 22, 11], 'AMC': [21,  13, 45]}
+	df = pd.DataFrame(data=d).set_index(date_index)
+	df = df.pct_change().dropna()
+
+	# Building the portfolio object
+	port = rp.Portfolio(returns=df)
+
+	method_mu='hist' # Method to estimate expected returns based on historical data.
+	method_cov='hist' # Method to estimate covariance matrix based on historical data.
+
+	port.assets_stats(method_mu=method_mu, method_cov=method_cov, d=0.94)
+
+	# Estimate optimal portfolio:
+
+	model='Classic' # Could be Classic (historical), BL (Black Litterman) or FM (Factor Model)
+	rm = 'MV' # Risk measure used, this time will be variance
+	obj = 'Sharpe' # Objective function, could be MinRisk, MaxRet, Utility or Sharpe
+	hist = True # Use historical scenarios for risk measures that depend on scenarios
+	rf = 0 # Risk free rate
+	l = 0 # Risk aversion factor, only useful when obj is 'Utility'
+
+	w = port.optimization(model=model, rm=rm, obj=obj, rf=rf, l=l, hist=hist)
+
+	w.T");
+        }
+
         /// <summary>
         /// Simple test for modules that don't have short test example
         /// </summary>
         /// <param name="module">The module we are testing</param>
         /// <param name="version">The module version</param>
-        [TestCase("pulp", "1.6.8", "VERSION")]
-        [TestCase("pymc3", "3.8", "__version__")]
+        [TestCase("pulp", "2.6.0", "VERSION")]
+        [TestCase("pymc", "4.1.4", "__version__")]
         [TestCase("pypfopt", "pypfopt", "__name__")]
-        [TestCase("wrapt", "1.12.1", "__version__")]
-        [TestCase("tslearn", "0.3.1", "__version__")]
-        [TestCase("tweepy", "3.8.0", "__version__")]
-        [TestCase("pywt", "1.1.1", "__version__")]
-        [TestCase("umap", "0.4.1", "__version__")]
-        [TestCase("dtw", "1.0.5", "__version__")]
-        [TestCase("mplfinance", "0.12.4a0", "__version__")]
+        [TestCase("wrapt", "1.14.1", "__version__")]
+        [TestCase("tslearn", "0.5.2", "__version__")]
+        [TestCase("tweepy", "4.10.0", "__version__")]
+        [TestCase("pywt", "1.3.0", "__version__")]
+        [TestCase("umap", "0.5.3", "__version__")]
+        [TestCase("dtw", "1.2.2", "__version__")]
+        [TestCase("mplfinance", "0.12.9b1", "__version__")]
         [TestCase("cufflinks", "0.17.3", "__version__")]
-        [TestCase("ipywidgets", "7.5.1", "__version__")]
-        [TestCase("astropy", "4.0.1.post1", "__version__")]
-        [TestCase("gluonts", "0.4.3", "__version__")]
-        [TestCase("gplearn", "0.4.1", "__version__")]
-        [TestCase("h2o", "3.30.0.3", "__version__")]
-        [TestCase("cntk", "2.7", "__version__")]
-        [TestCase("featuretools", "0.14.0", "__version__")]
-        [TestCase("pennylane", "0.9.0", "version()")]
+        [TestCase("ipywidgets", "8.0.0rc1", "__version__")]
+        [TestCase("astropy", "5.1", "__version__")]
+        [TestCase("gluonts", "0.7.7", "__version__")]
+        [TestCase("gplearn", "0.4.2", "__version__")]
+        [TestCase("h2o", "3.36.1.4", "__version__")]
+        [TestCase("featuretools", "0.18.1", "__version__")]
+        [TestCase("pennylane", "0.25.1", "version()")]
         public void ModuleVersionTest(string module, string value, string attribute)
         {
-            AssetCode(
+            AssertCode(
                 $@"
 import {module}
 
@@ -894,12 +1069,19 @@ def RunTest():
             );
         }
 
-        private static void AssetCode(string code)
+        private static void AssertCode(string code)
         {
             using (Py.GIL())
             {
-                dynamic module = PyModule.FromString(Guid.NewGuid().ToString(), code);
-                Assert.DoesNotThrow(() => module.RunTest());
+                using dynamic module = PyModule.FromString(Guid.NewGuid().ToString(), code);
+                Assert.DoesNotThrow(() =>
+                {
+                    var response = module.RunTest();
+                    if(response != null)
+                    {
+                        response.Dispose();
+                    }
+                });
             }
         }
     }
