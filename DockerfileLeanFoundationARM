@@ -26,8 +26,7 @@ RUN apt-get update && apt-fast install -y git libgtk2.0.0 cmake bzip2 curl unzip
 # Install IB Gateway: Installs to /root/ibgateway
 # We update the install script so it doesn't use the bundled JVM
 # The bundled JVM doesn't work on ARM64, so we update it to use the JVM installed in the previous command
-RUN sed -i -e '/^assistive_technologies=/s/^/#/' /etc/java-8-openjdk/accessibility.properties && \
-    mkdir -p /root/ibgateway && \
+RUN mkdir -p /root/ibgateway && \
     wget https://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64.v10.12.2d.sh && \
     java_patch_version=$(java -version 2>&1 | head -n 1 | cut -d'_' -f2 | cut -d'"' -f1) && \
     bbe -e 's|# INSTALL4J_JAVA_HOME_OVERRIDE=|INSTALL4J_JAVA_HOME_OVERRIDE="/usr/lib/jvm/java-1.8.0-openjdk-arm64"|' -e "s|-lt \"152\"|-lt \"$java_patch_version\"|" -e "s|-gt \"152\"|-gt \"$java_patch_version\"|" ibgateway-latest-standalone-linux-x64.v10.12.2d.sh > ibgateway-stable-standalone-linux-custom-jvm.sh && \
@@ -63,6 +62,9 @@ RUN wget -O Miniforge3.sh https://github.com/conda-forge/miniforge/releases/late
 # Avoid pip install read timeouts
 ENV PIP_DEFAULT_TIMEOUT=120
 
+# Install numpy first to avoid it not being resolved when installing libraries that depend on it next
+RUN pip install --no-cache-dir numpy==1.22.4
+
 # The list of packages in this image is shorter than the list in the AMD images
 # This list only includes packages that can be installed within 2 minutes on ARM
 RUN pip install --no-cache-dir      \
@@ -71,6 +73,7 @@ RUN pip install --no-cache-dir      \
     scipy==1.8.1                    \
     numpy==1.22.4                   \
     wrapt==1.14.1                   \
+    astropy==5.1                    \
     beautifulsoup4==4.11.1          \
     dill==0.3.5.1                   \
     jsonschema==4.9.1               \
@@ -79,7 +82,6 @@ RUN pip install --no-cache-dir      \
     xarray==2022.6.0                \
     plotly==5.9.0                   \
     jupyterlab==3.4.4               \
-    tensorflow==2.9.1               \
     docutils==0.19                  \
     keras==2.9.0                    \
     lightgbm==3.3.2                 \
@@ -100,6 +102,7 @@ RUN pip install --no-cache-dir      \
     gym==0.25.1                     \
     ipywidgets==8.0.0rc1            \
     deap==1.3.3                     \
+    cvxpy==1.2.1                    \
     pykalman==0.9.5                 \
     pyro-ppl==1.8.1                 \
     sklearn-json==0.1.0             \
@@ -108,9 +111,7 @@ RUN pip install --no-cache-dir      \
     gluonts==0.7.7                  \
     gplearn==0.4.2                  \
     jax==0.3.16                     \
-    jaxlib==0.3.15                  \
     pennylane==0.25.1               \
-    neural-tangents==0.6.0          \
     mplfinance==0.12.9b1            \
     hmmlearn==0.2.7                 \
     ta==0.10.1                      \
@@ -127,7 +128,6 @@ RUN pip install --no-cache-dir      \
     ruptures==1.1.7                 \
     simpy==4.0.1                    \
     scikit-learn-extra==0.2.0       \
-    ray==1.13                       \
     fastText==0.9.2                 \
     tigramite==5.0.0.1              \
     h2o==3.36.1.4                   \
@@ -161,18 +161,6 @@ RUN python -m venv /pomegranate --system-site-packages && . /pomegranate/bin/act
     && pip install --no-cache-dir       \
     pomegranate==0.14.8                 \
     && python -m ipykernel install --name=pomegranate \
-    && deactivate
-
-# Due to conflicts install 'tensorforce' virtual environment package with older tensorflow
-RUN python -m venv /tensorforce && . /tensorforce/bin/activate \
-    && pip install --no-cache-dir       \
-    tensorflow==2.6.0                   \
-    keras==2.6.0                        \
-    tensorforce==0.6.5                  \
-    gym==0.21                           \
-    jupyterlab==3.4.4                   \
-    stable-baselines3==1.6.0            \
-    && python -m ipykernel install --name=tensorforce \
     && deactivate
 
 # List all packages
