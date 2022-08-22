@@ -36,7 +36,7 @@ RUN mkdir -p /root/ibgateway && \
     sed -i "s/-lt \"152\"/-lt \"$java_patch_version\"/" /root/ibgateway/ibgateway && \
     sed -i "s/-gt \"152\"/-gt \"$java_patch_version\"/" /root/ibgateway/ibgateway
 
-# Install dotnet 5 sdk & runtime
+# Install dotnet 6 sdk & runtime
 # The .deb packages don't support ARM, the install script does
 ENV PATH="/root/.dotnet:${PATH}"
 RUN wget https://dot.net/v1/dotnet-install.sh && \
