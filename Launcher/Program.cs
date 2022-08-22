@@ -69,9 +69,6 @@ namespace QuantConnect.Lean.Launcher
             string assemblyPath;
             job = leanEngineSystemHandlers.JobQueue.NextJob(out assemblyPath);
 
-            // Activate our PythonVirtualEnvironment
-            PythonInitializer.ActivatePythonVirtualEnvironment(job.PythonVirtualEnvironment);
-
             leanEngineAlgorithmHandlers = Initializer.GetAlgorithmHandlers();
 
             if (job == null)
@@ -80,6 +77,9 @@ namespace QuantConnect.Lean.Launcher
                 Log.Error(jobNullMessage);
                 throw new ArgumentException(jobNullMessage);
             }
+
+            // Activate our PythonVirtualEnvironment
+            PythonInitializer.ActivatePythonVirtualEnvironment(job.PythonVirtualEnvironment);
 
             // if the job version doesn't match this instance version then we can't process it
             // we also don't want to reprocess redelivered jobs
