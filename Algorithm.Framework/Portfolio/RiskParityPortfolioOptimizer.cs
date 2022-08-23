@@ -61,7 +61,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             Func<double[], double> objective = (x) => 0.5 * Matrix.Dot(Matrix.Dot(x, covariance), x) - Matrix.Dot(budget, Elementwise.Log(x));
             Func<double[], double[]> gradient = (x) => Elementwise.Subtract(Matrix.Dot(covariance, x), Elementwise.Divide(budget, x));
             Func<double[], double[,]> hessian = (x) => Elementwise.Add(covariance, Matrix.Diagonal(Elementwise.Divide(budget, Elementwise.Multiply(x, x))));
-            var solution = NonNegNewtonMethodOptimization(size, objective, gradient, hessian);
+            var solution = NewtonMethodOptimization(size, objective, gradient, hessian);
             
             // Normalize weights: w = x / x^T.1
             return Elementwise.Divide(solution, solution.Sum());
@@ -77,13 +77,22 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="tolerance">Tolerance level of objective difference with previous steps to accept minimization result.</param>
         /// <param name="maxIter">Maximum iteration per optimization.</param>
         /// <returns>Array of double of argumented minimization</returns>
-        public double[] NonNegNewtonMethodOptimization(int numOfVar, 
-                                                       Func<double[], double> objective, 
-                                                       Func<double[], double[]> gradient, 
-                                                       Func<double[], double[,]> hessian, 
-                                                       double tolerance = 1e-05,
-                                                       int maxIter = 1000)
+        protected double[] NewtonMethodOptimization(int numOfVar, 
+                                                    Func<double[], double> objective, 
+                                                    Func<double[], double[]> gradient, 
+                                                    Func<double[], double[,]> hessian, 
+                                                    double tolerance = 1e-05,
+                                                    int maxIter = 1000)
         {
+            if (numOfVar < 1 || numOfVar > 1000)
+            {
+                throw new ArgumentException("Argument \"numOfVar\" must be a positive integer between 1 and 1000");
+            }
+            else if (numOfVar == 1) 
+            {
+                return new double[]{1d};
+            }
+            
             var weight = Vector.Create(numOfVar, 1d / numOfVar);
             var newObjective = Double.MinValue;
             var oldObjective = Double.MaxValue;
