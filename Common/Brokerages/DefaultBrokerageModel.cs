@@ -238,13 +238,13 @@ namespace QuantConnect.Brokerages
                 case SecurityType.Option:
                     break;
                 case SecurityType.FutureOption:
-                    break;
+                    return new FutureOptionFillModel();
                 case SecurityType.Commodity:
                     break;
                 case SecurityType.Forex:
                     break;
                 case SecurityType.Future:
-                    break;
+                    return new FutureFillModel();
                 case SecurityType.Cfd:
                     break;
                 case SecurityType.Crypto:

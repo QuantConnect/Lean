@@ -50,7 +50,7 @@ namespace QuantConnect.Securities.FutureOption
                 new OptionExchange(exchangeHours),
                 securityCache,
                 new OptionPortfolioModel(),
-                new FutureOptionImmediateFillModel(),
+                new FutureOptionFillModel(),
                 new InteractiveBrokersFeeModel(),
                 new ConstantSlippageModel(0),
                 new ImmediateSettlementModel(),

@@ -21,7 +21,7 @@ namespace QuantConnect.Orders.Fills
     /// <summary>
     /// Represents the default fill model used to simulate order fills for futures
     /// </summary>
-    public class FutureImmediateFillModel : ImmediateFillModel
+    public class FutureFillModel : ImmediateFillModel
     {
         /// <summary>
         /// Default market fill model for the base security class. Fills at the last traded price.
@@ -38,7 +38,7 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             // make sure the exchange is open/normal market hours before filling
-            if (!IsExchangeOpen(asset, true)) return fill;
+            if (!IsExchangeOpen(asset)) return fill;
 
             var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
             var pricesEndTimeUtc = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);

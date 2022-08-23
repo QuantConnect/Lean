@@ -28,7 +28,7 @@ using QuantConnect.Tests.Common.Data;
 namespace QuantConnect.Tests.Common.Orders.Fills
 {
     [TestFixture]
-    public class FutureImmediateFillModelTests
+    public class FutureOptionFillModelTests
     {
         private static readonly DateTime Noon = new DateTime(2014, 6, 24, 12, 0, 0);
 
@@ -41,17 +41,20 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         }
 
         [Test]
-        public void PerformsMarketFill([Values] bool extendedMarketHours,
+        public void PerformsMarketFill([Values] bool isInternal,
+            [Values] bool extendedMarketHours,
             [Values(OrderDirection.Buy, OrderDirection.Sell)] OrderDirection orderDirection)
         {
-            var model = new FutureImmediateFillModel();
+            var model = new FutureFillModel();
             var quantity = orderDirection == OrderDirection.Buy ? 100 : -100;
             var time = extendedMarketHours ? Noon.AddHours(-12) : Noon; // Midgnight (extended hours) or Noon (regular hours)
-            var order = new MarketOrder(Symbols.ES_Future_Chain, quantity, time);
-            var config = CreateTradeBarConfig(Symbols.ES_Future_Chain);
+            var symbol = Symbols.CreateFutureOptionSymbol(Symbols.CreateFutureSymbol("ES", new DateTime(2020, 4, 28)), OptionRight.Call,
+                1000, new DateTime(2020, 3, 26));
+            var order = new MarketOrder(symbol, quantity, time);
+            var config = CreateTradeBarConfig(symbol, isInternal, extendedMarketHours);
             var security = GetSecurity(config);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
-            security.SetMarketPrice(new IndicatorDataPoint(Symbols.ES_Future_Chain, time, 101.123m));
+            security.SetMarketPrice(new IndicatorDataPoint(symbol, time, 101.123m));
 
             var fill = model.Fill(new FillModelParameters(
                 security,
