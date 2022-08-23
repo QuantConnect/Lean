@@ -716,7 +716,7 @@ namespace QuantConnect.Orders.Fills
         /// Helper method to determine if the exchange is open before filling. Will allow pre/post market fills to occur based on configuration
         /// </summary>
         /// <param name="asset">Security which has subscribed data types</param>
-        protected bool IsExchangeOpen(Security asset)
+        private bool IsExchangeOpen(Security asset)
         {
             // even though data from internal configurations are not sent to the algorithm.OnData they still drive security cache and data
             // this is specially relevant for the continuous contract underlying mapped contracts which are internal configurations

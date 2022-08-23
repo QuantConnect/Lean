@@ -37,8 +37,8 @@ namespace QuantConnect.Orders.Fills
 
             if (order.Status == OrderStatus.Canceled) return fill;
 
-            // make sure the exchange is open/normal market hours before filling
-            if (!IsExchangeOpen(asset)) return fill;
+            // make sure the exchange is open market hours before filling
+            if (!IsExchangeOpen(asset, true)) return fill;
 
             var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
             var pricesEndTimeUtc = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);

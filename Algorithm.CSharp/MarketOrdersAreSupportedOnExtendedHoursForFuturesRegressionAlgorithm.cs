@@ -26,10 +26,9 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm for testing limit orders are filled after hours for futures.
-    /// It also asserts that market-on-open orders are not allowed for futures outside of regular market hours
+    /// Regression algorithm asserting that market hours are supported on extended market hours for futures.
     /// </summary>
-    public class LimitOrdersAreFilledAfterHoursForFuturesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class MarketOrdersAreSupportedOnExtendedHoursForFuturesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Future _continuousContract;
         private Future _futureContract;
@@ -50,32 +49,13 @@ namespace QuantConnect.Algorithm.CSharp
             );
             _futureContract = AddFutureContract(FutureChainProvider.GetFutureContractList(_continuousContract.Symbol, Time).First(), extendedMarketHours: true);
         }
-
-        public override void OnWarmupFinished()
-        {
-            // Right after warm up we should be outside regular market hours
-            if (_futureContract.Exchange.ExchangeOpen)
-            {
-                throw new Exception("We should be outside regular market hours");
-            }
-
-            // Market on open order should not be allowed for futures outside of regular market hours
-            var futureContractMarketOnOpenOrder = MarketOnOpenOrder(_futureContract.Symbol, 1);
-            if (futureContractMarketOnOpenOrder.Status != OrderStatus.Invalid)
-            {
-                throw new Exception($"Market on open order should not be allowed for futures outside of regular market hours");
-            }
-        }
-
         public override void OnData(Slice slice)
         {
-            if (Time.TimeOfDay.Hours > 17 && !Portfolio.Invested)
+            if (Time.TimeOfDay.Hours > 18 && !Portfolio.Invested)
             {
-                // Limit order should be allowed for futures outside of regular market hours.
-                // Use a very high limit price so the limit orders get filled immediately
-                var futureContractLimitOrder = LimitOrder(_futureContract.Symbol, 1, _futureContract.Price * 2m);
-                var continuousContractLimitOrder = LimitOrder(_continuousContract.Mapped, 1, _continuousContract.Price * 2m);
-                if (futureContractLimitOrder.Status == OrderStatus.Invalid || continuousContractLimitOrder.Status == OrderStatus.Invalid)
+                var futureContractMarketOrder = MarketOrder(_futureContract.Symbol, 1);
+                var continuousContractMarketOrder = MarketOrder(_continuousContract.Mapped, 1);
+                if (futureContractMarketOrder.Status == OrderStatus.Invalid || continuousContractMarketOrder.Status == OrderStatus.Invalid)
                 {
                     throw new Exception($"Limit order should be allowed for futures outside of regular market hours");
                 }
@@ -128,31 +108,31 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "120.870%"},
+            {"Compounding Annual Return", "113.036%"},
             {"Drawdown", "3.700%"},
             {"Expectancy", "0"},
-            {"Net Profit", "1.091%"},
-            {"Sharpe Ratio", "4.285"},
+            {"Net Profit", "1.041%"},
+            {"Sharpe Ratio", "4.286"},
             {"Probabilistic Sharpe Ratio", "58.720%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "1.132"},
+            {"Alpha", "1.133"},
             {"Beta", "1.285"},
             {"Annual Standard Deviation", "0.314"},
             {"Annual Variance", "0.098"},
-            {"Information Ratio", "15.222"},
-            {"Tracking Error", "0.077"},
+            {"Information Ratio", "15.206"},
+            {"Tracking Error", "0.078"},
             {"Treynor Ratio", "1.046"},
             {"Total Fees", "$4.30"},
-            {"Estimated Strategy Capacity", "$39000000.00"},
+            {"Estimated Strategy Capacity", "$12000000.00"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
-            {"Fitness Score", "0.327"},
+            {"Fitness Score", "0.325"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "7.175"},
-            {"Return Over Maximum Drawdown", "23.875"},
-            {"Portfolio Turnover", "0.334"},
+            {"Sortino Ratio", "6.46"},
+            {"Return Over Maximum Drawdown", "21.495"},
+            {"Portfolio Turnover", "0.335"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -166,7 +146,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "22ca22bec4626a32dc8db29382acf948"}
+            {"OrderListHash", "e5f9bd8f1fe5684eab176db3e67ec772"}
         };
     }
 }

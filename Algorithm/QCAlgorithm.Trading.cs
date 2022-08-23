@@ -252,11 +252,7 @@ namespace QuantConnect.Algorithm
         {
             // check the exchange is open before sending a market order, if it's not open then convert it into a market on open order.
             // For futures and FOPs, market orders can be submitted on extended hours, so we let them through.
-            var config = SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(security.Symbol, true).FirstOrDefault();
-            var isMarketOpen = security.Type != SecurityType.Future && security.Type != SecurityType.FutureOption
-                ? security.Exchange.ExchangeOpen
-                : security.Exchange.Hours.IsOpen(Time, config.ExtendedMarketHours);
-            if (!isMarketOpen)
+            if ((security.Type != SecurityType.Future && security.Type != SecurityType.FutureOption) && !security.Exchange.ExchangeOpen)
             {
                 var mooTicket = MarketOnOpenOrder(security.Symbol, quantity, tag);
                 if (!_isMarketOnOpenOrderWarningSent)
