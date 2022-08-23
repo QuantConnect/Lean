@@ -17,14 +17,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Accord.Math;
-using Accord.Math.Optimization;
-using Accord.Math.Random;
-using Accord.Statistics;
 using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Alphas;
-using QuantConnect.Data.Market;
+using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Indicators;
 using QuantConnect.Scheduling;
 using QuantConnect.Util;
 
@@ -37,168 +33,188 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// Available at https://papers.ssrn.com/sol3/Papers.cfm?abstract_id=2297383</remarks>
     public class RiskParityPortfolioConstructionModel : PortfolioConstructionModel
     {
-        private int _lookback;
-        private Resolution _resolution;
-        private Dictionary<Symbol, RiskParitySymbolData> _symbolData = new();
+        private readonly int _lookback;
+        private readonly int _period;
+        private readonly Resolution _resolution;
+        private readonly IPortfolioOptimizer _optimizer;
+        private readonly Dictionary<Symbol, ReturnsSymbolData> _symbolDataDict;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RiskParityPortfolioConstructionModel"/> class
+        /// Initialize the model
         /// </summary>
         /// <param name="rebalancingDateRules">The date rules used to define the next expected rebalance time
         /// in UTC</param>
         /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
-        /// <param name="lookback">Lookback period for volatility estimation</param>
-        /// <param name="resolution">The resolution of the history price and rebalancing</param>
+        /// <param name="lookback">Historical return lookback period</param>
+        /// <param name="period">The time interval of history price to calculate the weight</param>
+        /// <param name="resolution">The resolution of the history price</param>
+        /// <param name="optimizer">The portfolio optimization algorithm. If the algorithm is not provided then the default will be mean-variance optimization.</param>
         public RiskParityPortfolioConstructionModel(IDateRule rebalancingDateRules,
             PortfolioBias portfolioBias = PortfolioBias.LongShort,
-            int lookback = 20, 
-            Resolution resolution = Resolution.Daily)
-            : this(rebalancingDateRules.ToFunc(), portfolioBias, lookback, resolution)
+            int lookback = 1,
+            int period = 252,
+            Resolution resolution = Resolution.Daily,
+            IPortfolioOptimizer optimizer = null)
+            : this(rebalancingDateRules.ToFunc(), portfolioBias, lookback, period, resolution, optimizer)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RiskParityPortfolioConstructionModel"/> class
+        /// Initialize the model
         /// </summary>
         /// <param name="rebalanceResolution">Rebalancing frequency</param>
         /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
-        /// <param name="lookback">Lookback period for volatility estimation</param>
-        /// <param name="resolution">The resolution of the history price and rebalancing</param>
+        /// <param name="lookback">Historical return lookback period</param>
+        /// <param name="period">The time interval of history price to calculate the weight</param>
+        /// <param name="resolution">The resolution of the history price</param>
+        /// <param name="optimizer">The portfolio optimization algorithm. If the algorithm is not provided then the default will be mean-variance optimization.</param>
         public RiskParityPortfolioConstructionModel(Resolution rebalanceResolution = Resolution.Daily,
             PortfolioBias portfolioBias = PortfolioBias.LongShort,
-            int lookback = 20, 
-            Resolution resolution = Resolution.Daily)
-            : this(rebalanceResolution.ToTimeSpan(), portfolioBias, lookback, resolution)
+            int lookback = 1,
+            int period = 252,
+            Resolution resolution = Resolution.Daily,
+            IPortfolioOptimizer optimizer = null)
+            : this(rebalanceResolution.ToTimeSpan(), portfolioBias, lookback, period, resolution, optimizer)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RiskParityPortfolioConstructionModel"/> class
+        /// Initialize the model
         /// </summary>
         /// <param name="timeSpan">Rebalancing frequency</param>
         /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
-        /// <param name="lookback">Lookback period for volatility estimation</param>
-        /// <param name="resolution">The resolution of the history price and rebalancing</param>
+        /// <param name="lookback">Historical return lookback period</param>
+        /// <param name="period">The time interval of history price to calculate the weight</param>
+        /// <param name="resolution">The resolution of the history price</param>
+        /// <param name="optimizer">The portfolio optimization algorithm. If the algorithm is not provided then the default will be mean-variance optimization.</param>
         public RiskParityPortfolioConstructionModel(TimeSpan timeSpan,
             PortfolioBias portfolioBias = PortfolioBias.LongShort,
-            int lookback = 20, 
-            Resolution resolution = Resolution.Daily)
-            : this(dt => dt.Add(timeSpan), portfolioBias, lookback, resolution)
+            int lookback = 1,
+            int period = 252,
+            Resolution resolution = Resolution.Daily,
+            IPortfolioOptimizer optimizer = null)
+            : this(dt => dt.Add(timeSpan), portfolioBias, lookback, period, resolution, optimizer)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RiskParityPortfolioConstructionModel"/> class
+        /// Initialize the model
         /// </summary>
         /// <param name="rebalance">Rebalancing func or if a date rule, timedelta will be converted into func.
         /// For a given algorithm UTC DateTime the func returns the next expected rebalance time
         /// or null if unknown, in which case the function will be called again in the next loop. Returning current time
         /// will trigger rebalance. If null will be ignored</param>
         /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
-        /// <param name="lookback">Lookback period for volatility estimation</param>
-        /// <param name="resolution">The resolution of the history price and rebalancing</param>
+        /// <param name="lookback">Historical return lookback period</param>
+        /// <param name="period">The time interval of history price to calculate the weight</param>
+        /// <param name="resolution">The resolution of the history price</param>
+        /// <param name="optimizer">The portfolio optimization algorithm. If the algorithm is not provided then the default will be mean-variance optimization.</param>
+        /// <remarks>This is required since python net can not convert python methods into func nor resolve the correct
+        /// constructor for the date rules parameter.
+        /// For performance we prefer python algorithms using the C# implementation</remarks>
         public RiskParityPortfolioConstructionModel(PyObject rebalance,
             PortfolioBias portfolioBias = PortfolioBias.LongShort,
-            int lookback = 20, 
-            Resolution resolution = Resolution.Daily)
-            : this((Func<DateTime, DateTime?>)null, portfolioBias, lookback, resolution)
+            int lookback = 1,
+            int period = 252,
+            Resolution resolution = Resolution.Daily,
+            IPortfolioOptimizer optimizer = null)
+            : this((Func<DateTime, DateTime?>)null, portfolioBias, lookback, period, resolution, optimizer)
         {
             SetRebalancingFunc(rebalance);
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RiskParityPortfolioConstructionModel"/> class
+        /// Initialize the model
         /// </summary>
         /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance UTC time.
         /// Returning current time will trigger rebalance. If null will be ignored</param>
-        /// will trigger rebalance. If null will be ignored</param>
         /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
-        /// <param name="lookback">Lookback period for volatility estimation</param>
-        /// <param name="resolution">The resolution of the history price and rebalancing</param>
+        /// <param name="lookback">Historical return lookback period</param>
+        /// <param name="period">The time interval of history price to calculate the weight</param>
+        /// <param name="resolution">The resolution of the history price</param>
+        /// <param name="optimizer">The portfolio optimization algorithm. If the algorithm is not provided then the default will be mean-variance optimization.</param>
         public RiskParityPortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc,
             PortfolioBias portfolioBias = PortfolioBias.LongShort,
-            int lookback = 20, 
-            Resolution resolution = Resolution.Daily)
+            int lookback = 1,
+            int period = 252,
+            Resolution resolution = Resolution.Daily,
+            IPortfolioOptimizer optimizer = null)
             : this(rebalancingFunc != null ? (Func<DateTime, DateTime?>)(timeUtc => rebalancingFunc(timeUtc)) : null,
-                   portfolioBias, lookback, resolution)
+                portfolioBias,
+                lookback,
+                period,
+                resolution,
+                optimizer)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RiskParityPortfolioConstructionModel"/> class
+        /// Initialize the model
         /// </summary>
         /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance time
         /// or null if unknown, in which case the function will be called again in the next loop. Returning current time
         /// will trigger rebalance.</param>
         /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
-        /// <param name="lookback">Lookback period for volatility estimation</param>
-        /// <param name="resolution">The resolution of the history price and rebalancing</param>
+        /// <param name="lookback">Historical return lookback period</param>
+        /// <param name="period">The time interval of history price to calculate the weight</param>
+        /// <param name="resolution">The resolution of the history price</param>
+        /// <param name="optimizer">The portfolio optimization algorithm. If the algorithm is not provided then the default will be mean-variance optimization.</param>
         public RiskParityPortfolioConstructionModel(Func<DateTime, DateTime?> rebalancingFunc,
             PortfolioBias portfolioBias = PortfolioBias.LongShort,
-            int lookback = 20, 
-            Resolution resolution = Resolution.Daily)
+            int lookback = 1,
+            int period = 252,
+            Resolution resolution = Resolution.Daily,
+            IPortfolioOptimizer optimizer = null)
             : base(rebalancingFunc)
         {
-            Generator.Seed = 0;
-            
             if (portfolioBias == PortfolioBias.Short)
             {
                 throw new ArgumentException("Long position must be allowed in RiskParityPortfolioConstructionModel.");
             }
-            
-            _resolution = resolution;
+
             _lookback = lookback;
+            _period = period;
+            _resolution = resolution;
+
+            _optimizer = optimizer ?? new RiskParityPortfolioOptimizer();
+
+            _symbolDataDict = new Dictionary<Symbol, ReturnsSymbolData>();
         }
 
         /// <summary>
         /// Will determine the target percent for each insight
         /// </summary>
-        /// <param name="activeInsights">list of active insights</param>
-        /// <return>dictionary of insight and respective target weight</return>
+        /// <param name="activeInsights">The active insights to generate a target for</param>
+        /// <returns>A target percent for each insight</returns>
         protected override Dictionary<Insight, double> DetermineTargetPercent(List<Insight> activeInsights)
         {
             var targets = new Dictionary<Insight, double>();
 
-            // If we have no insights or non-ready just return an empty target list
-            if (activeInsights.IsNullOrEmpty() || 
-                !activeInsights.All(x => _symbolData[x.Symbol].IsReady()))
+            // If we have no insights just return an empty target list
+            if (activeInsights.IsNullOrEmpty())
             {
                 return targets;
             }
-        
-            // Get the covariance matrix of all activeInsights' symbols
-            var numOfAssets = activeInsights.Count;
-            var rets = activeInsights.Select(insight => _symbolData[insight.Symbol].Returns.ToArray()).ToArray();
-            var cov = Matrix.Transpose(rets).Covariance();
 
-            // Optimization Problem
-            // minimize_{w >= 0} 1/2 * x^T S x - b^T log(x)
-            // b = 1/num_of_assets (equal budget of risk)
-            // dy/dw = Sx - b/x
-            // 0 <= w_i <= 1 for all w_i in w
-            var budget = Enumerable.Repeat((double) 1/numOfAssets, numOfAssets).ToArray();
-            Func<double[], double> objective = (x) => 1/2 * Matrix.Dot(Matrix.Dot(x, cov), x) - Matrix.Dot(budget, Elementwise.Log(x));
-            Func<double[], double[]> gradient = (x) => Elementwise.Subtract(Matrix.Dot(cov, x), Elementwise.Divide(budget, x));
-            
-            // Parameters of optimization
-            var lbfgs = new BoundedBroydenFletcherGoldfarbShanno(numberOfVariables: numOfAssets, function: objective, gradient: gradient);
-            lbfgs.Corrections = 10;
-            lbfgs.MaxIterations = 15000;
-            lbfgs.FunctionTolerance = 2.220446049250313e-09;
-            lbfgs.GradientTolerance = 1e-05;
-            // lbfgs.UpperBounds = Enumerable.Repeat((double) 1, numOfAssets).ToArray();
-            // lbfgs.LowerBounds = Enumerable.Repeat((double) 0, numOfAssets).ToArray();
+            var symbols = activeInsights.Select(x => x.Symbol).ToList();
 
-            // Optimize for weights
-            lbfgs.Minimize(budget);
-            var solution = lbfgs.Solution;
-            // Normalize
-            var weights = Elementwise.Divide(solution, solution.Sum());
+            // Get symbols' returns
+            var returns = _symbolDataDict.FormReturnsMatrix(symbols);
 
-            // Update portfolio state
-            for (int i = 0; i < numOfAssets; i++)
+            // The optimization method processes the data frame
+            var w = _optimizer.Optimize(returns);
+
+            // process results
+            if (w.Length > 0)
             {
-                targets.Add(activeInsights[i], weights[i]);
+                var sidx = 0;
+                foreach (var symbol in symbols)
+                {
+                    var weight = w[sidx];
+                    targets[activeInsights.First(insight => insight.Symbol == symbol)] = weight;
+
+                    sidx++;
+                }
             }
 
             return targets;
@@ -212,64 +228,39 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
             base.OnSecuritiesChanged(algorithm, changes);
-
             // clean up data for removed securities
             foreach (var removed in changes.RemovedSecurities)
             {
-                _symbolData.Remove(removed.Symbol, out var symbolData);
-                symbolData.Reset();
+                ReturnsSymbolData data;
+                if (_symbolDataDict.TryGetValue(removed.Symbol, out data))
+                {
+                    _symbolDataDict.Remove(removed.Symbol);
+                }
             }
+
+            if (changes.AddedSecurities.Count == 0)
+                return;
 
             // initialize data for added securities
-            var symbols = changes.AddedSecurities.Select(x => x.Symbol);
-
-            foreach(var symbol in symbols)
+            foreach (var added in changes.AddedSecurities)
             {
-                if (!_symbolData.ContainsKey(symbol))
+                if (!_symbolDataDict.ContainsKey(added.Symbol))
                 {
-                    _symbolData.Add(symbol, new RiskParitySymbolData(algorithm, symbol, _lookback, _resolution));
-                }
-            }
-        }
-
-        private class RiskParitySymbolData
-        {
-            private RateOfChange _roc;
-            public RollingWindow<double> Returns;
-
-            public RiskParitySymbolData(QCAlgorithm algo, Symbol symbol, int lookback, Resolution resolution)
-            {
-                // Indicator of pct return
-                _roc = algo.ROC(symbol, 1, resolution);
-                // RollingWindow to save the pct return
-                Returns = new RollingWindow<double>(lookback);
-                // Update the RollingWindow when new pct change piped
-                _roc.Updated += OnROCUpdated;
-
-                // Warmup indicator
-                var history = algo.History<TradeBar>(symbol, lookback + 1, resolution);
-                foreach (var bar in history)
-                {
-                    _roc.Update(bar.EndTime, bar.Close);
+                    var symbolData = new ReturnsSymbolData(added.Symbol, _lookback, _period);
+                    _symbolDataDict[added.Symbol] = symbolData;
                 }
             }
 
-            private void OnROCUpdated(object _, IndicatorDataPoint updated)
-            {
-                Returns.Add((double)updated.Value);
-            }
-
-            public void Reset()
-            {
-                _roc.Updated -= OnROCUpdated;
-                _roc.Reset();
-                Returns.Reset();
-            }
-            
-            public bool IsReady()
-            {
-                return (_roc.IsReady & Returns.IsReady);
-            }
+            // warmup our indicators by pushing history through the consolidators
+            algorithm.History(changes.AddedSecurities.Select(security => security.Symbol), _lookback * _period, _resolution)
+                .PushThrough(bar =>
+                {
+                    ReturnsSymbolData symbolData;
+                    if (_symbolDataDict.TryGetValue(bar.Symbol, out symbolData))
+                    {
+                        symbolData.Update(bar.EndTime, bar.Value);
+                    }
+                });
         }
     }
 }
