@@ -157,11 +157,13 @@ RUN wget https://cdn.quantconnect.com/dx/dx-master-69922c0.zip && \
     pip install . && cd .. && rm -rf dx-master && rm dx-master-69922c0.zip
 
 # Due to conflicts install 'pomegranate' virtual environment package
-RUN python -m venv /pomegranate --system-site-packages && . /pomegranate/bin/activate \
+RUN python -m venv /Foundation-Pomegranate --system-site-packages && . /Foundation-Pomegranate/bin/activate \
     && pip install --no-cache-dir       \
     pomegranate==0.14.8                 \
-    && python -m ipykernel install --name=pomegranate \
+    && python -m ipykernel install --name=Foundation-Pomegranate \
     && deactivate
+
+RUN echo "{\"argv\":[\"python\",\"-m\",\"ipykernel_launcher\",\"-f\",\"{connection_file}\"],\"display_name\":\"Foundation-Py-Default\",\"language\":\"python\",\"metadata\":{\"debugger\":true}}" > /opt/miniforge3/share/jupyter/kernels/python3/kernel.json
 
 # List all packages
 RUN conda list

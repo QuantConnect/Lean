@@ -204,14 +204,14 @@ RUN wget https://cdn.quantconnect.com/ta-lib/ta-lib-0.4.0-src.tar.gz && \
     python setup.py install && cd ../.. && rm -rf ta-lib && rm ta-lib-0.4.0-src.tar.gz
 
 # Due to conflicts install 'pomegranate' virtual environment package
-RUN python -m venv /standard-pomegranate --system-site-packages && . /standard-pomegranate/bin/activate \
+RUN python -m venv /Foundation-Pomegranate --system-site-packages && . /Foundation-Pomegranate/bin/activate \
     && pip install --no-cache-dir       \
     pomegranate==0.14.8                 \
-    && python -m ipykernel install --name=standard-pomegranate \
+    && python -m ipykernel install --name=Foundation-Pomegranate \
     && deactivate
 
 # Due to conflicts install 'tensorforce' virtual environment package with older tensorflow
-RUN python -m venv /tensorforce && . /tensorforce/bin/activate \
+RUN python -m venv /Foundation-Tensorforce && . /Foundation-Tensorforce/bin/activate \
     && pip install --no-cache-dir       \
     tensorflow==2.6.0                   \
     keras==2.6.0                        \
@@ -219,8 +219,10 @@ RUN python -m venv /tensorforce && . /tensorforce/bin/activate \
     gym==0.21                           \
     jupyterlab==3.4.4                   \
     stable-baselines3==1.6.0            \
-    && python -m ipykernel install --name=tensorforce \
+    && python -m ipykernel install --name=Foundation-Tensorforce \
     && deactivate
+
+RUN echo "{\"argv\":[\"python\",\"-m\",\"ipykernel_launcher\",\"-f\",\"{connection_file}\"],\"display_name\":\"Foundation-Py-Default\",\"language\":\"python\",\"metadata\":{\"debugger\":true}}" > /opt/miniconda3/share/jupyter/kernels/python3/kernel.json
 
 # List all packages
 RUN conda list

@@ -226,7 +226,7 @@ def RunTest():
         [Test, Explicit("Installed in specific environment. Requires older tensorflow")]
         public void TensorforceTests()
         {
-            PythonInitializer.ActivatePythonVirtualEnvironment("/tensorforce");
+            PythonInitializer.ActivatePythonVirtualEnvironment("/Foundation-Tensorforce");
 
             AssertCode(@"
 from tensorforce import Agent, Environment
@@ -401,7 +401,7 @@ def RunTest():
         [Test, Explicit("Installed in specific environment. Requires older numpy")]
         public void PomegranateTest()
         {
-            PythonInitializer.ActivatePythonVirtualEnvironment("/standard-pomegranate");
+            PythonInitializer.ActivatePythonVirtualEnvironment("/Foundation-Pomegranate");
             AssertCode(
                 @"
 from pomegranate import *
@@ -505,7 +505,7 @@ def RunTest():
         [Test, Explicit("Installed in specific environment. Requires older gym")]
         public void StableBaselinesTest()
         {
-            PythonInitializer.ActivatePythonVirtualEnvironment("/tensorforce");
+            PythonInitializer.ActivatePythonVirtualEnvironment("/Foundation-Tensorforce");
             AssertCode(
                 @"
 from stable_baselines3 import PPO
