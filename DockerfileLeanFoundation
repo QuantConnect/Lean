@@ -222,7 +222,7 @@ RUN python -m venv /Foundation-Tensorforce && . /Foundation-Tensorforce/bin/acti
     && python -m ipykernel install --name=Foundation-Tensorforce \
     && deactivate
 
-RUN echo "{\"argv\":[\"python\",\"-m\",\"ipykernel_launcher\",\"-f\",\"{connection_file}\"],\"display_name\":\"Foundation-Default\",\"language\":\"python\",\"metadata\":{\"debugger\":true}}" > /opt/miniconda3/share/jupyter/kernels/python3/kernel.json
+RUN echo "{\"argv\":[\"python\",\"-m\",\"ipykernel_launcher\",\"-f\",\"{connection_file}\"],\"display_name\":\"Foundation-Py-Default\",\"language\":\"python\",\"metadata\":{\"debugger\":true}}" > /opt/miniconda3/share/jupyter/kernels/python3/kernel.json
 
 # List all packages
 RUN conda list
