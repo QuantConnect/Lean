@@ -252,7 +252,7 @@ namespace QuantConnect.Algorithm
         {
             // check the exchange is open before sending a market order, if it's not open
             // then convert it into a market on open order (not supported for futures)
-            if (!security.Exchange.ExchangeOpen)
+            if ((security.Type != SecurityType.Future && security.Type != SecurityType.FutureOption) && !security.Exchange.ExchangeOpen)
             {
                 var mooTicket = MarketOnOpenOrder(security.Symbol, quantity, tag);
                 if (!_isMarketOnOpenOrderWarningSent)
