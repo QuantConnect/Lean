@@ -642,7 +642,8 @@ class ReportCharts:
         return base64
 
     def GetRollingBeta(self, data = [[],[],[],[]], live_data = [[],[],[],[]], name = "rolling-portfolio-beta-to-equity.png",
-                           width = 11.5, height = 2.5):
+                        width = 11.5, height = 2.5, live_six_months_color = "#ff9914", live_twelve_months_color = "#ffd700",
+                        backtest_six_months_color = "#71c3fc", backtest_twelve_months_color = "#1d7dc1"):
 
         if len(data[0]) == 0 and len(live_data[0]) == 0:
             fig = plt.figure()
@@ -683,26 +684,34 @@ class ReportCharts:
         rectangles = []
 
         if len(backtest_six_month_beta) > 0:
-            labels += ['6 mo.', '12 mo.']
-            rectangles += [plt.Rectangle((0, 0), 1, 1, fc="#71c3fc"), plt.Rectangle((0, 0), 1, 1, fc="#1d7dc1")]
+            labels += ['6 mo.']
+            rectangles += [plt.Rectangle((0, 0), 1, 1, fc=backtest_six_months_color)]
+        if len(backtest_twelve_month_beta) > 0:
+            labels += ['12 mo.']
+            rectangles += [plt.Rectangle((0, 0), 1, 1, fc=backtest_twelve_months_color)]
         if len(live_six_month_beta) > 0:
-            labels += ['Live 6 mo.', 'Live 12 mo.']
-            rectangles += [plt.Rectangle((0, 0), 1, 1, fc="#ff9914"), plt.Rectangle((0, 0), 1, 1, fc="#ffd700")]
+            labels += ['Live 6 mo.']
+            rectangles += [plt.Rectangle((0, 0), 1, 1, fc=live_six_months_color)]
+        if len(live_twelve_month_beta) > 0:
+            labels += ['Live 12 mo.']
+            rectangles += [plt.Rectangle((0, 0), 1, 1, fc=live_twelve_months_color)]
 
         plt.figure()
         ax = plt.gca()
         fig = ax.get_figure()
         ax.xaxis.set_major_formatter(DateFormatter("%b %Y"))
 
-        if len(backtest_six_month_beta_dates) > 0:
-            # Backtest
-            ax.plot(backtest_six_month_beta_dates, backtest_six_month_beta, linewidth = 0.5, color = "#71c3fc")
-            ax.plot(backtest_twelve_month_beta_dates, backtest_twelve_month_beta, linewidth=0.5, color="#1d7dc1")
+        # Backtest
+        if len(backtest_six_month_beta) > 0:
+            ax.plot(backtest_six_month_beta_dates, backtest_six_month_beta, linewidth=0.5, color=backtest_six_months_color)
+        if len(backtest_twelve_month_beta) > 0:
+            ax.plot(backtest_twelve_month_beta_dates, backtest_twelve_month_beta, linewidth=0.5, color=backtest_twelve_months_color)
 
         # Live
         if len(live_six_month_beta) > 0:
-            ax.plot(live_six_month_beta_dates, live_six_month_beta, linewidth=0.5, color="#ff9914")
-            ax.plot(live_twelve_month_beta_dates, live_twelve_month_beta, linewidth=0.5, color="#ffd700")
+            ax.plot(live_six_month_beta_dates, live_six_month_beta, linewidth=0.5, color=live_six_months_color)
+        if len(live_twelve_month_beta) > 0:
+            ax.plot(live_twelve_month_beta_dates, live_twelve_month_beta, linewidth=0.5, color=live_twelve_months_color)
 
         leg = ax.legend(rectangles, labels, handlelength=0.8, handleheight=0.8,
                         frameon=False, fontsize=8, ncol=2)
@@ -754,9 +763,6 @@ class ReportCharts:
             plt.close('all')
             return base64
 
-        labels = []
-        rectangles = []
-
         plt.figure()
         ax = plt.gca()
         ax.xaxis.set_major_formatter(DateFormatter("%b %Y"))
@@ -768,21 +774,32 @@ class ReportCharts:
         live_six_month_rolling_sharpe_dates, live_six_month_rolling_sharpe = (live_data[0], live_data[1])
         live_twelve_month_rolling_sharpe_dates, live_twelve_month_rolling_sharpe = (live_data[2], live_data[3])
 
+        labels = []
+        rectangles = []
+
         if len(backtest_six_month_rolling_sharpe) > 0:
-            labels += ['6 mo.', '12 mo.']
-            rectangles += [plt.Rectangle((0, 0), 1, 1, fc=backtest_six_months_color), plt.Rectangle((0, 0), 1, 1, fc=backtest_twelve_months_color)]
+            labels += ['6 mo.']
+            rectangles += [plt.Rectangle((0, 0), 1, 1, fc=backtest_six_months_color)]
+        if len(backtest_twelve_month_rolling_sharpe) > 0:
+            labels += ['12 mo.']
+            rectangles += [plt.Rectangle((0, 0), 1, 1, fc=backtest_twelve_months_color)]
         if len(live_six_month_rolling_sharpe) > 0:
-            labels += ['Live 6 mo.', 'Live 12 mo.']
-            rectangles += [plt.Rectangle((0, 0), 1, 1, fc=live_six_months_color), plt.Rectangle((0, 0), 1, 1, fc=live_twelve_months_color)]
+            labels += ['Live 6 mo.']
+            rectangles += [plt.Rectangle((0, 0), 1, 1, fc=live_six_months_color)]
+        if len(live_twelve_month_rolling_sharpe) > 0:
+            labels += ['Live 12 mo.']
+            rectangles += [plt.Rectangle((0, 0), 1, 1, fc=live_twelve_months_color)]
 
         # Backtest
-        if len(backtest_six_month_rolling_sharpe_dates) > 0:
+        if len(backtest_six_month_rolling_sharpe) > 0:
             ax.plot(backtest_six_month_rolling_sharpe_dates, backtest_six_month_rolling_sharpe, linewidth=0.5, color=backtest_six_months_color)
+        if len(backtest_twelve_month_rolling_sharpe) > 0:
             ax.plot(backtest_twelve_month_rolling_sharpe_dates, backtest_twelve_month_rolling_sharpe, linewidth=0.5, color=backtest_twelve_months_color)
 
         # Live
         if len(live_six_month_rolling_sharpe) > 0:
             ax.plot(live_six_month_rolling_sharpe_dates, live_six_month_rolling_sharpe, linewidth=0.5, color=live_six_months_color)
+        if len(live_twelve_month_rolling_sharpe) > 0:
             ax.plot(live_twelve_month_rolling_sharpe_dates, live_twelve_month_rolling_sharpe, linewidth=0.5, color=live_twelve_months_color)
 
         leg = ax.legend(rectangles, labels, handlelength=0.8, handleheight=0.8,
@@ -1104,6 +1121,7 @@ class ReportCharts:
             if not all([all([abs(y) == 0.0 for y in x]) for x in live_short_data]):
                 live_labels.append(security + ' - Short')
 
+        # use dict.fromkeys() instead of set() to remove duplicates and preserve order
         labels = list(dict.fromkeys(labels))
         live_labels = list(dict.fromkeys(live_labels))
         rectangles = [plt.Rectangle((0, 0), 1, 1, fc=color_map[lab]) for lab in labels]
