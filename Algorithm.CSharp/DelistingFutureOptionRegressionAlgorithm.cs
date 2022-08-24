@@ -76,7 +76,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 foreach (var contractsValue in chain.Contracts.Values)
                 {
-                    PlaceOrder(contractsValue.Symbol);
+                    MarketOrder(contractsValue.Symbol, 1);
                     _traded = true;
                 }
             }
@@ -92,11 +92,6 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception("We shouldn't be invested anymore");
             }
-        }
-
-        protected virtual void PlaceOrder(Symbol symbol)
-        {
-            MarketOrder(symbol, 1);
         }
 
         /// <summary>

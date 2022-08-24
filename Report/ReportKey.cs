@@ -31,6 +31,7 @@ namespace QuantConnect.Report
         public const string MaxDrawdown = @"{{$KPI-DRAWDOWN}}";
         public const string KellyEstimate = @"{{$KPI-KELLY-ESTIMATE}}";
         public const string SharpeRatio = @"{{$KPI-SHARPE}}";
+        public const string BacktestDays = @"{{$KPI-BACKTEST-DAYS}}";
         public const string DaysLive = @"{{$KPI-DAYS-LIVE}}";
         public const string InformationRatio = @"{{$KPI-INFORMATION-RATIO}}";
         public const string TradesPerDay = @"{{$KPI-TRADES-PER-DAY}}";

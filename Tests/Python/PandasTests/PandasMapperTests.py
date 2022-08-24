@@ -34,7 +34,7 @@ dlldir = os.path.join(fileDirectory, dlldir)
 os.chdir(dlldir)
 sys.path.append(dlldir)
 
-# Tell PythonNet to use .dotnet 5
+# Tell PythonNet to use .dotnet 6
 from pythonnet import set_runtime
 import clr_loader
 set_runtime(clr_loader.get_coreclr(os.path.join(dlldir, "QuantConnect.Lean.Launcher.runtimeconfig.json")))

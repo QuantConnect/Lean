@@ -7,7 +7,7 @@
 [Lean Home][1] | [Documentation][2] | [Download Zip][3] | [Docker Hub][8] | [Nuget][9]
 
 ----------
-
+ 
 ## Introduction ##
  
 Lean Engine is an open-source algorithmic trading engine built for easy strategy research, backtesting and live trading. We integrate with common data providers and brokerages so you can quickly deploy algorithmic trading strategies.
@@ -91,7 +91,7 @@ dotnet QuantConnect.Lean.Launcher.dll
 
 ### Linux (Debian, Ubuntu)
 
-- Install [dotnet 5](https://docs.microsoft.com/en-us/dotnet/core/install/linux):
+- Install [dotnet 6](https://docs.microsoft.com/en-us/dotnet/core/install/linux):
 - Compile Lean Solution:
 ```
 dotnet build QuantConnect.Lean.sln

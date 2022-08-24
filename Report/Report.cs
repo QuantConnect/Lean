@@ -105,7 +105,7 @@ namespace QuantConnect.Report
                 new TextReportElement("live marker key", ReportKey.LiveMarker, live == null ? string.Empty : "Live "),
 
                 //KPI's Backtest:
-                new DaysLiveReportElement("days live kpi", ReportKey.DaysLive, live),
+                new RuntimeDaysReportElement("runtime days kpi", ReportKey.BacktestDays, backtest, live),
                 new CAGRReportElement("cagr kpi", ReportKey.CAGR, backtest, live),
                 new TurnoverReportElement("turnover kpi", ReportKey.Turnover, backtest, live),
                 new MaxDrawdownReportElement("max drawdown kpi", ReportKey.MaxDrawdown, backtest, live),

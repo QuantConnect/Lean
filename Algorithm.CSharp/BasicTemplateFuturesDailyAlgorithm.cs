@@ -80,40 +80,19 @@ namespace QuantConnect.Algorithm.CSharp
                         select futuresContract
                     ).FirstOrDefault();
 
-                    // if found, trade it
-                    if (contract != null)
+                    // if found, trade it.
+                    // Also check if exchange is open for regular or extended hours. Since daily data comes at 8PM, this allows us prevent the
+                    // algorithm from trading on friday when there is not after-market.
+                    if (contract != null && Securities[contract.Symbol].Exchange.Hours.IsOpen(Time, true))
                     {
-                        // Let's check if market is actually open to place market orders. For example: for daily resolution, data can come at a
-                        // time when market is closed, like 7:00PM.
-                        if (Securities[contract.Symbol].Exchange.ExchangeOpen)
-                        {
-                            MarketOrder(contract.Symbol, 1);
-                        }
-                        else
-                        {
-                            // MOO are not allowed for futures, so to make sure, use limit order instead. We use a very big limit price here
-                            // to make the order fill on next bar.
-                            LimitOrder(contract.Symbol, 1, contract.AskPrice * 2);
-                        }
+                        MarketOrder(contract.Symbol, 1);
                     }
                 }
             }
-            else
+            // Same as above, check for cases like trading on a friday night.
+            else if (Securities.Values.Where(x => x.Invested).All(x => x.Exchange.Hours.IsOpen(Time, true)))
             {
-                // Same as above, let's check if market is open to place market orders.
-                if (Portfolio.Values.Any(x => !Securities[x.Symbol].Exchange.ExchangeOpen))
-                {
-                    foreach (var holdings in Portfolio.Values.OrderBy(x => x.Symbol))
-                    {
-
-                        // use a very low limit price here to make the order fill on next bar.
-                        LimitOrder(holdings.Symbol, -holdings.Quantity, 1m);
-                    }
-                }
-                else
-                {
-                    Liquidate();
-                }
+                Liquidate();
             }
 
             foreach (var changedEvent in slice.SymbolChangedEvents.Values)
@@ -138,7 +117,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 11721;
+        public virtual long DataPoints => 11709;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -150,34 +129,34 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "56"},
-            {"Average Win", "0.30%"},
-            {"Average Loss", "-3.89%"},
-            {"Compounding Annual Return", "-15.101%"},
-            {"Drawdown", "15.300%"},
-            {"Expectancy", "-0.784"},
-            {"Net Profit", "-15.209%"},
-            {"Sharpe Ratio", "-1.13"},
-            {"Probabilistic Sharpe Ratio", "0.000%"},
-            {"Loss Rate", "80%"},
-            {"Win Rate", "20%"},
-            {"Profit-Loss Ratio", "0.08"},
-            {"Alpha", "-0.093"},
-            {"Beta", "-0.081"},
-            {"Annual Standard Deviation", "0.091"},
-            {"Annual Variance", "0.008"},
-            {"Information Ratio", "-1.694"},
-            {"Tracking Error", "0.132"},
-            {"Treynor Ratio", "1.279"},
-            {"Total Fees", "$117.06"},
-            {"Estimated Strategy Capacity", "$130000000.00"},
-            {"Lowest Capacity Asset", "ES VP274HSU1AF5"},
-            {"Fitness Score", "0.011"},
+            {"Total Trades", "118"},
+            {"Average Win", "0.09%"},
+            {"Average Loss", "-0.01%"},
+            {"Compounding Annual Return", "-0.479%"},
+            {"Drawdown", "0.500%"},
+            {"Expectancy", "-0.835"},
+            {"Net Profit", "-0.483%"},
+            {"Sharpe Ratio", "-1.938"},
+            {"Probabilistic Sharpe Ratio", "0%"},
+            {"Loss Rate", "98%"},
+            {"Win Rate", "2%"},
+            {"Profit-Loss Ratio", "8.76"},
+            {"Alpha", "-0.003"},
+            {"Beta", "-0.001"},
+            {"Annual Standard Deviation", "0.002"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "-1.397"},
+            {"Tracking Error", "0.089"},
+            {"Treynor Ratio", "5.665"},
+            {"Total Fees", "$263.30"},
+            {"Estimated Strategy Capacity", "$1000.00"},
+            {"Lowest Capacity Asset", "ES VRJST036ZY0X"},
+            {"Fitness Score", "0.01"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-0.225"},
-            {"Return Over Maximum Drawdown", "-0.99"},
-            {"Portfolio Turnover", "0.028"},
+            {"Sortino Ratio", "-1.059"},
+            {"Return Over Maximum Drawdown", "-0.992"},
+            {"Portfolio Turnover", "0.031"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -191,7 +170,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "b05e6b7d992a1c42edeef553b9f6c1f1"}
+            {"OrderListHash", "b75b224669c374dcbacc33f946a1cc7c"}
         };
     }
 }

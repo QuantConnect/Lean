@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -34,7 +34,7 @@ namespace QuantConnect.Tests.Algorithm
             var algorithm = new QCAlgorithm();
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             var security = algorithm.AddSecurity(securityType, ticker);
-            var consolidator = algorithm.ResolveConsolidator(ticker, Resolution.Minute);
+            var consolidator = algorithm.ResolveConsolidator(security.Symbol, Resolution.Minute);
 
             var inputType = security.Subscriptions.Single(s=>s.TickType==expectedTickType).Type;
             var outputType = consolidator.OutputType;
@@ -48,7 +48,7 @@ namespace QuantConnect.Tests.Algorithm
             var algorithm = new QCAlgorithm();
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             var security = algorithm.AddEquity("SPY");
-            var consolidator = algorithm.ResolveConsolidator("SPY", Resolution.Minute);
+            var consolidator = algorithm.ResolveConsolidator(security.Symbol, Resolution.Minute);
 
             var inputType = security.Subscriptions.Single(s => s.TickType == LeanData.GetCommonTickType(SecurityType.Equity)).Type;
             var outputType = consolidator.OutputType;
@@ -62,7 +62,7 @@ namespace QuantConnect.Tests.Algorithm
             var algorithm = new QCAlgorithm();
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             var security = algorithm.AddForex("EURUSD");
-            var consolidator = algorithm.ResolveConsolidator("EURUSD", Resolution.Minute);
+            var consolidator = algorithm.ResolveConsolidator(security.Symbol, Resolution.Minute);
 
             var inputType = security.SubscriptionDataConfig.Type;
             var outputType = consolidator.OutputType;
@@ -76,7 +76,7 @@ namespace QuantConnect.Tests.Algorithm
             var algorithm = new QCAlgorithm();
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             var security = algorithm.AddEquity("SPY", Resolution.Tick);
-            var consolidator = algorithm.ResolveConsolidator("SPY", Resolution.Minute);
+            var consolidator = algorithm.ResolveConsolidator(security.Symbol, Resolution.Minute);
 
             var tickType = security.Subscriptions.Single(s => s.TickType == LeanData.GetCommonTickType(SecurityType.Equity)).TickType;
             var outputType = consolidator.OutputType;
@@ -91,7 +91,7 @@ namespace QuantConnect.Tests.Algorithm
             var algorithm = new QCAlgorithm();
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             var security = algorithm.AddForex("EURUSD", Resolution.Tick);
-            var consolidator = algorithm.ResolveConsolidator("EURUSD", Resolution.Minute);
+            var consolidator = algorithm.ResolveConsolidator(security.Symbol, Resolution.Minute);
 
             var tickType = security.Subscriptions.Single(s => s.TickType == LeanData.GetCommonTickType(SecurityType.Forex)).TickType;
 
@@ -107,7 +107,7 @@ namespace QuantConnect.Tests.Algorithm
             var algorithm = new QCAlgorithm();
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             var security = algorithm.AddEquity("SPY", Resolution.Tick);
-            var consolidator = algorithm.ResolveConsolidator("SPY", Resolution.Tick);
+            var consolidator = algorithm.ResolveConsolidator(security.Symbol, Resolution.Tick);
 
             var tickType = security.Subscriptions.Single(s => s.TickType == LeanData.GetCommonTickType(SecurityType.Equity)).TickType;
             var inputType = security.SubscriptionDataConfig.Type;
@@ -123,7 +123,7 @@ namespace QuantConnect.Tests.Algorithm
             var algorithm = new QCAlgorithm();
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             var security = algorithm.AddForex("EURUSD", Resolution.Tick);
-            var consolidator = algorithm.ResolveConsolidator("EURUSD", Resolution.Tick);
+            var consolidator = algorithm.ResolveConsolidator(security.Symbol, Resolution.Tick);
 
             var tickType = security.SubscriptionDataConfig.TickType;
             var inputType = security.SubscriptionDataConfig.Type;

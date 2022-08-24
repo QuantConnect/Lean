@@ -3,8 +3,8 @@
         VS Code Launch configurations for the LEAN engine
 
         Launch:
-        Builds the project with dotnet 5 and then launches the program using coreclr; supports debugging.
-        In order to use this you need dotnet 5 on your system path, As well as the C# extension from the 
+        Builds the project with dotnet 6 and then launches the program using coreclr; supports debugging.
+        In order to use this you need dotnet 6 on your system path, As well as the C# extension from the 
         marketplace.
 
         Attach to Python:

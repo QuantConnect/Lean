@@ -326,18 +326,18 @@ namespace QuantConnect.Orders.Fills
             {
                 return fill;
             }
-            
+
             // Get the range of prices in the last bar:
             var tradeHigh = 0m;
             var tradeLow = 0m;
             var pricesEndTime = DateTime.MinValue;
-            
+
             var subscribedTypes = GetSubscribedTypes(asset);
 
             if (subscribedTypes.Contains(typeof(Tick)))
             {
                 var trade = GetPricesCheckingPythonWrapper(asset, order.Direction);
-                
+
                 if (trade != null)
                 {
                     tradeHigh = trade.Current;
@@ -345,7 +345,7 @@ namespace QuantConnect.Orders.Fills
                     pricesEndTime = trade.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
                 }
             }
-            
+
             else if (subscribedTypes.Contains(typeof(TradeBar)))
             {
                 var tradeBar = asset.Cache.GetData<TradeBar>();
@@ -366,12 +366,12 @@ namespace QuantConnect.Orders.Fills
                     if (tradeHigh >= order.TriggerPrice || order.TriggerTouched)
                     {
                         order.TriggerTouched = true;
-                        
+
                         //-> 1.1 Limit surpassed: Sell.
                         if (GetAskPrice(asset, out pricesEndTime) >= order.LimitPrice)
                         {
                             fill.Status = OrderStatus.Filled;
-                            fill.FillPrice = order.LimitPrice;                            
+                            fill.FillPrice = order.LimitPrice;
                             // assume the order completely filled
                             fill.FillQuantity = order.Quantity;
                         }
@@ -387,7 +387,7 @@ namespace QuantConnect.Orders.Fills
                         if (GetBidPrice(asset, out pricesEndTime) <= order.LimitPrice)
                         {
                             fill.Status = OrderStatus.Filled;
-                            fill.FillPrice = order.LimitPrice;                            
+                            fill.FillPrice = order.LimitPrice;
                             // assume the order completely filled
                             fill.FillQuantity = order.Quantity;
                         }
@@ -751,12 +751,12 @@ namespace QuantConnect.Orders.Fills
             }
             return IsExchangeOpen(asset, exchangeOpenInternals);
         }
-        
+
         /// <summary>
         /// This is required due to a limitation in PythonNet to resolved
         /// overriden methods. <see cref="GetPrices"/>
         /// </summary>
-        private Prices GetPricesCheckingPythonWrapper(Security asset, OrderDirection direction)
+        protected Prices GetPricesCheckingPythonWrapper(Security asset, OrderDirection direction)
         {
             if (PythonWrapper != null)
             {

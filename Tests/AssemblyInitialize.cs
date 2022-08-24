@@ -51,6 +51,7 @@ namespace QuantConnect.Tests
             Config.Reset();
             Globals.Reset();
 
+            Log.DebuggingEnabled = Config.GetBool("debug-mode");
             // Activate virtual environment if defined
             PythonInitializer.ActivatePythonVirtualEnvironment(Config.Get("python-venv"));
 

@@ -19,18 +19,21 @@ using QuantConnect.Packets;
 
 namespace QuantConnect.Report.ReportElements
 {
-    internal class DaysLiveReportElement : ReportElement
+    internal class RuntimeDaysReportElement : ReportElement
     {
+        private BacktestResult _backtest;
         private LiveResult _live;
 
         /// <summary>
-        /// Create a new metric describing the number of days an algorithm has been live.
+        /// Create a new metric describing the number of days an algorithm ran for.
         /// </summary>
         /// <param name="name">Name of the widget</param>
         /// <param name="key">Location of injection</param>
+        /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
-        public DaysLiveReportElement(string name, string key, LiveResult live)
+        public RuntimeDaysReportElement(string name, string key, BacktestResult backtest, LiveResult live)
         {
+            _backtest = backtest;
             _live = live;
             Name = name;
             Key = key;
@@ -41,22 +44,23 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            if (_live == null)
+            var result = (Result) _live ?? _backtest;
+            if (result == null)
             {
                 return "-";
             }
 
-            var equityPoints = ResultsUtil.EquityPoints(_live);
+            var equityPoints = ResultsUtil.EquityPoints(result);
             if (equityPoints.Count == 0)
             {
                 Result = 0;
                 return "0";
             }
-            
-            var daysLive = (equityPoints.Last().Key - equityPoints.First().Key).Days;
-            Result = daysLive;
 
-            return daysLive.ToStringInvariant();
+            var days = (equityPoints.Last().Key - equityPoints.First().Key).Days;
+            Result = days;
+
+            return days.ToStringInvariant();
         }
     }
 }

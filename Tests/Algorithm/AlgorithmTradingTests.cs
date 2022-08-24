@@ -1388,7 +1388,7 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
-        public void MarketOrderNotSupportedForFuturesOnExtendedMarketHours()
+        public void MarketOrdersAreSupportedForFuturesOnExtendedMarketHours()
         {
             var algo = GetAlgorithm(out _, 1, 0);
 
@@ -1403,22 +1403,41 @@ namespace QuantConnect.Tests.Algorithm
                 QuantConnect.Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 3, 20)),
                 Resolution.Minute,
                 extendedMarketHours: true);
+            var es20h20FOP = algo.AddFutureOptionContract(
+                Symbol.CreateOption(es20h20.Symbol, Market.CME, OptionStyle.American, OptionRight.Call, 2550m, new DateTime(2020, 3, 20)),
+                Resolution.Minute);
 
             //Set price to $25
             Update(es20h20, 25);
+            Update(es20h20FOP, 25);
             algo.Portfolio.SetCash(150000);
 
-            algo.SetDateTime(new DateTime(2013, 10, 6, 23, 0, 0));  // Sunday
-            var ticket = algo.Buy(es20h20.Symbol, 1);
-            Assert.That(ticket, Has.Property("Status").EqualTo(OrderStatus.Invalid));
-            ticket = algo.Sell(es20h20.Symbol, 1);
-            Assert.That(ticket, Has.Property("Status").EqualTo(OrderStatus.Invalid));
+            var testOrders = (DateTime dateTime) =>
+            {
+                algo.SetDateTime(dateTime);
 
-            algo.SetDateTime(new DateTime(2013, 10, 7, 14, 0, 0));  // Monday
-            ticket = algo.Buy(es20h20.Symbol, 1);
-            Assert.That(ticket, Has.Property("Status").EqualTo(OrderStatus.New));
-            ticket = algo.Sell(es20h20.Symbol, 1);
-            Assert.That(ticket, Has.Property("Status").EqualTo(OrderStatus.New));
+                var ticket = algo.Buy(es20h20.Symbol, 1);
+                Assert.AreEqual(OrderStatus.New, ticket.Status, $"Future buy market order status should be new at {dateTime}, but was {ticket.Status}");
+                ticket = algo.Sell(es20h20.Symbol, 1);
+                Assert.AreEqual(OrderStatus.New, ticket.Status, $"Future sell market order status should be new at {dateTime}, but was {ticket.Status}");
+
+                ticket = algo.Buy(es20h20FOP.Symbol, 1);
+                Assert.AreEqual(OrderStatus.New, ticket.Status, $"Future option buy market order status should be new at {dateTime}, but was {ticket.Status}");
+                ticket = algo.Sell(es20h20FOP.Symbol, 1);
+                Assert.AreEqual(OrderStatus.New, ticket.Status, $"Future option sell market order status should be new at {dateTime}, but was {ticket.Status}");
+            };
+
+            // October 7 to 11 (monday to friday). Testing pre-market hours
+            for (var i = 7; i <= 11; i++)
+            {
+                testOrders(new DateTime(2013, 10, i, 5, 0, 0));
+            }
+
+            // October 6 to 10 (sunday to thrusday). Testing post-market hours
+            for (var i = 6; i <= 10; i++)
+            {
+                testOrders(new DateTime(2013, 10, i, 23, 0, 0));
+            }
         }
 
         [Test]

@@ -47,9 +47,6 @@ class BasicTemplateFuturesWithExtendedMarketAlgorithm(QCAlgorithm):
         self.SetSecurityInitializer(lambda security: seeder.SeedSecurity(security))
 
     def OnData(self,slice):
-        if not self.IsMarketOpen(self.futureSP500.Symbol) or not self.IsMarketOpen(self.futureGold.Symbol):
-            return
-
         if not self.Portfolio.Invested:
             for chain in slice.FutureChains:
                  # Get contracts expiring no earlier than in 90 days
