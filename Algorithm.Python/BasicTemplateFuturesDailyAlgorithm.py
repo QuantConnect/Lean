@@ -49,22 +49,13 @@ class BasicTemplateFuturesDailyAlgorithm(QCAlgorithm):
                 contract = sorted(contracts, key = lambda x: x.Expiry)[0]
 
                 # if found, trade it.
-                # Let's check if market is actually open to place market orders. For example: for daily resolution, data can come at a
-                # time when market is closed, like 7:00PM.
-                if self.Securities[contract.Symbol].Exchange.ExchangeOpen:
+                # Also check if exchange is open for regular or extended hours. Since daily data comes at 8PM, this allows us prevent the
+                # algorithm from trading on friday when there is not after-market.
+                if self.Securities[contract.Symbol].Exchange.Hours.IsOpen(self.Time, True):
                     self.MarketOrder(contract.Symbol, 1)
-                else:
-                    # MOO are not allowed for futures, so to make sure, use limit order instead. We use a very big limit price here
-                    # to make the order fill on next bar.
-                    self.LimitOrder(contract.Symbol, 1, contract.AskPrice * 2)
-        else:
-            # Same as above, let's check if market is open to place market orders.
-            if any([not self.Securities[x.Symbol].Exchange.ExchangeOpen for x in self.Portfolio.values()]):
-                for holdings in sorted(self.Portfolio.values(), key=lambda x: x.Symbol):
-                    # use a very low limit price here to make the order fill on next bar.
-                    self.LimitOrder(holdings.Symbol, -holdings.Quantity, 1.0)
-            else:
-                self.Liquidate()
+        # Same as above, check for cases like trading on a friday night.
+        elif all(x.Exchange.Hours.IsOpen(self.Time, True) for x in self.Securities.Values if x.Invested):
+            self.Liquidate()
 
     def GetResolution(self):
         return Resolution.Daily

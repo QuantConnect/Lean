@@ -250,9 +250,9 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket MarketOrder(Security security, decimal quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            // check the exchange is open before sending a market order, if it's not open
-            // then convert it into a market on open order (not supported for futures)
-            if (!security.Exchange.ExchangeOpen)
+            // check the exchange is open before sending a market order, if it's not open then convert it into a market on open order.
+            // For futures and FOPs, market orders can be submitted on extended hours, so we let them through.
+            if ((security.Type != SecurityType.Future && security.Type != SecurityType.FutureOption) && !security.Exchange.ExchangeOpen)
             {
                 var mooTicket = MarketOnOpenOrder(security.Symbol, quantity, tag);
                 if (!_isMarketOnOpenOrderWarningSent)

@@ -17,12 +17,9 @@ using Moq;
 using NUnit.Framework;
 using QuantConnect.Brokerages;
 using QuantConnect.Tests.Brokerages;
-using System;
-using System.Collections.Generic;
-using QuantConnect.Data.Market;
 using QuantConnect.Orders;
-using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using QuantConnect.Orders.Fills;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
@@ -55,6 +52,24 @@ namespace QuantConnect.Tests.Common.Brokerages
             var security = TestsHelpers.GetSecurity(securityType: securityType, market: Market.USA);
             Assert.IsTrue(_defaultBrokerageModel.CanSubmitOrder(security, order, out _));
         }
+
+        [TestCase(SecurityType.Base, nameof(ImmediateFillModel))]
+        [TestCase(SecurityType.Equity, nameof(EquityFillModel))]
+        [TestCase(SecurityType.Option, nameof(ImmediateFillModel))]
+        [TestCase(SecurityType.Forex, nameof(ImmediateFillModel))]
+        [TestCase(SecurityType.Cfd, nameof(ImmediateFillModel))]
+        [TestCase(SecurityType.Crypto, nameof(ImmediateFillModel))]
+        [TestCase(SecurityType.Index, nameof(ImmediateFillModel))]
+        [TestCase(SecurityType.IndexOption, nameof(ImmediateFillModel))]
+        [TestCase(SecurityType.Future, nameof(FutureFillModel))]
+        [TestCase(SecurityType.FutureOption, nameof(FutureOptionFillModel))]
+        public void GetsCorrectFillModel(SecurityType securityType, string expectedFillModel)
+        {
+            var security = TestsHelpers.GetSecurity(securityType: securityType, market: Market.USA);
+            var fillModel = _defaultBrokerageModel.GetFillModel(security);
+            Assert.AreEqual(expectedFillModel, fillModel.GetType().Name);
+        }
+
 
         private static Order GetMarketOnOpenOrder()
         {

@@ -59,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
                     if (contract != null)
                     {
                         _contractSymbol = contract.Symbol;
-                        PlaceOrder(_contractSymbol);
+                        MarketOrder(_contractSymbol, 1);
                     }
                 }
             }
@@ -77,11 +77,6 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
             Log($"{orderEvent}. Delisting on: {_contractSymbol.ID.Date}");
-        }
-
-        protected virtual void PlaceOrder(Symbol symbol)
-        {
-            MarketOrder(symbol, 1);
         }
 
         /// <summary>
