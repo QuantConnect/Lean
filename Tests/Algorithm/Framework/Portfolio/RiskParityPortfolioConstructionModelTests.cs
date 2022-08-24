@@ -14,8 +14,8 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using Accord.Math;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Algorithm;
@@ -36,6 +36,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
     {
         private DateTime _nowUtc;
         private QCAlgorithm _algorithm;
+        private double[,] _covariance1, _covariance2, _covariance3, _covariance4;
+        private double[] _expectedReturn, _expectedResult1, _expectedResult2, _expectedResult3, _expectedResult4;
 
         [SetUp]
         public virtual void SetUp()
@@ -60,6 +62,19 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 i => { },
                 true,
                 new DataPermissionManager()));
+
+            // Test by known convex objective: Mean-variance
+            _covariance1 = new double[,] {{0.25, -0.2}, {-0.2, 0.25}};      // both 50% variance, -80% correlation
+            _covariance2 = new double[,] {{0.01, 0}, {0, 0.04}};            // sigma(A) 10%, sigma(B) 20%, 0% correlation
+            _covariance3 = new double[,] {{1, 0.45}, {0.45, 0.25}};         // sigma(A) 100%, sigma(B) 50%, 90% correlation
+            _covariance4 = new double[,] {{0.25, 0.05}, {0.05, 0.04}};      // sigma(A) 50%, sigma(B) 10%, 25% correlation
+
+            _expectedReturn = new double[] {0.25d, 0.5d};                   // E_return(A) 25%, E_return(B) 50%
+
+            _expectedResult1 = new double[] {7.22d, 7.78d};
+            _expectedResult2 = new double[] {25d, 12.5d};
+            _expectedResult3 = new double[] {-3.42d, 8.16d};
+            _expectedResult4 = new double[] {-2d, 15d};
         }
         
         [TestCase(Language.CSharp)]
@@ -92,36 +107,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 return;
             }
 
-            var targets = GeneratePortfolioTargets(language, InsightDirection.Up, InsightDirection.Up);
-            foreach (var target in targets)
-            {
-                if (target.Quantity == 0)
-                {
-                    continue;
-                }
-                Assert.AreEqual(Math.Sign((int)bias), Math.Sign(target.Quantity));
-            }
-        }
-
-        [TestCase(InsightDirection.Up, InsightDirection.Up, 47, 47)]
-        public void CorrectWeightings(InsightDirection direction1, 
-                                      InsightDirection direction2, 
-                                      decimal expectedQty1, 
-                                      decimal expectedQty2)
-        {
-            var targets = GeneratePortfolioTargets(Language.CSharp, direction1, direction2);
-            var quantities = targets.ToDictionary(target => {
-                QuantConnect.Logging.Log.Trace($"{target.Symbol}: {target.Quantity}");
-                return target.Symbol.Value;
-            },
-            target => target.Quantity);
-
-            Assert.AreEqual(expectedQty1, quantities["AAPL"]);
-            Assert.AreEqual(expectedQty2, quantities.ContainsKey("SPY") ? quantities["SPY"] : 0);
-        }
-
-        private IEnumerable<IPortfolioTarget> GeneratePortfolioTargets(Language language, InsightDirection direction1, InsightDirection direction2)
-        {
             SetPortfolioConstruction(language, PortfolioBias.Long);
 
             var aapl = _algorithm.AddEquity("AAPL");
@@ -131,15 +116,69 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             {
                 equity.SetMarketPrice(new Tick(_nowUtc, equity.Symbol, 10, 10));
             }
+            _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, SecurityChangesTests.AddedNonInternal(aapl, spy));
 
             var insights = new[]
             {
-                new Insight(_nowUtc, aapl.Symbol, TimeSpan.FromDays(1), InsightType.Price, direction1, null, null),
-                new Insight(_nowUtc, spy.Symbol, TimeSpan.FromDays(1), InsightType.Price, direction2, null, null),
+                new Insight(_nowUtc, aapl.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Up, null, null),
+                new Insight(_nowUtc, spy.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Down, null, null)
             };
-            _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, SecurityChangesTests.AddedNonInternal(aapl, spy));
+            
+            foreach (var target in _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights))
+            {
+                if (target.Quantity == 0)
+                {
+                    continue;
+                }
+                Assert.AreEqual(Math.Sign((int)bias), Math.Sign(target.Quantity));
+            }
+        }
 
-            return _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights);
+        [Test]
+        public void NewtonMethodOptimizationTest()
+        {
+            var testOptimizer = new TestRiskParityPortfolioOptimizer();
+
+            Func<double[], double> objective = (x) => 1/2 * Matrix.Dot(Matrix.Dot(x, _covariance1), x) - Matrix.Dot(_expectedReturn, x);
+            Func<double[], double[]> jacobian = (x) => Elementwise.Subtract(Matrix.Dot(_covariance1, x), _expectedReturn);
+            Func<double[], double[,]> hessian = (x) => _covariance1;
+
+            var result = testOptimizer.TestNewtonMethodOptimization(1, objective, jacobian, hessian);
+            Assert.AreEqual(new double[]{1d}, result);
+
+            var exception = Assert.Throws<ArgumentException>(() => testOptimizer.TestNewtonMethodOptimization(0, objective, jacobian, hessian));
+            Assert.That(exception.Message, Is.EqualTo("Argument \"numOfVar\" must be a positive integer between 1 and 1000"));
+
+            exception = Assert.Throws<ArgumentException>(() => testOptimizer.TestNewtonMethodOptimization(2000, objective, jacobian, hessian));
+            Assert.That(exception.Message, Is.EqualTo("Argument \"numOfVar\" must be a positive integer between 1 and 1000"));
+
+            result = testOptimizer.TestNewtonMethodOptimization(2, objective, jacobian, hessian);
+            result = result.Select(x => Math.Round(x, 2)).ToArray();
+            Assert.AreEqual(_expectedResult1, result);
+            
+            objective = (x) => 1/2 * Matrix.Dot(Matrix.Dot(x, _covariance2), x) - Matrix.Dot(_expectedReturn, x);
+            jacobian = (x) => Elementwise.Subtract(Matrix.Dot(_covariance2, x), _expectedReturn);
+            hessian = (x) => _covariance2;
+
+            result = testOptimizer.TestNewtonMethodOptimization(2, objective, jacobian, hessian);
+            result = result.Select(x => Math.Round(x, 2)).ToArray();
+            Assert.AreEqual(_expectedResult2, result);
+            
+            objective = (x) => 1/2 * Matrix.Dot(Matrix.Dot(x, _covariance3), x) - Matrix.Dot(_expectedReturn, x);
+            jacobian = (x) => Elementwise.Subtract(Matrix.Dot(_covariance3, x), _expectedReturn);
+            hessian = (x) => _covariance3;
+
+            result = testOptimizer.TestNewtonMethodOptimization(2, objective, jacobian, hessian);
+            result = result.Select(x => Math.Round(x, 2)).ToArray();
+            Assert.AreEqual(_expectedResult3, result);
+            
+            objective = (x) => 1/2 * Matrix.Dot(Matrix.Dot(x, _covariance4), x) - Matrix.Dot(_expectedReturn, x);
+            jacobian = (x) => Elementwise.Subtract(Matrix.Dot(_covariance4, x), _expectedReturn);
+            hessian = (x) => _covariance4;
+
+            result = testOptimizer.TestNewtonMethodOptimization(2, objective, jacobian, hessian);
+            result = result.Select(x => Math.Round(x, 2)).ToArray();
+            Assert.AreEqual(_expectedResult4, result);
         }
 
         protected void SetPortfolioConstruction(Language language, PortfolioBias bias, IPortfolioConstructionModel defaultModel = null)
@@ -160,14 +199,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             if (language == Language.CSharp)
             {
-                return new RiskParityPortfolioConstructionModel(resolution, bias, 1, 1, resolution);
+                return new RiskParityPortfolioConstructionModel(resolution, bias, 1, 252, resolution);
             }
 
             using (Py.GIL())
             {
                 const string name = nameof(RiskParityPortfolioConstructionModel);
                 var instance = Py.Import(name).GetAttr(name)
-                    .Invoke(((int)resolution).ToPython(), ((int)bias).ToPython(), 1.ToPython(), 1.ToPython(), ((int)resolution).ToPython());
+                    .Invoke(((int)resolution).ToPython(), ((int)bias).ToPython(), 1.ToPython(), 252.ToPython(), ((int)resolution).ToPython());
                 return new PortfolioConstructionModelPythonWrapper(instance);
             }
         }

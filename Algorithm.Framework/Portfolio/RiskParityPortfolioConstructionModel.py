@@ -12,7 +12,7 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from scipy.optimize import minimize
+from Portfolio.RiskParityPortfolioOptimizer import RiskParityPortfolioOptimizer
 
 ### <summary>
 ### Risk Parity Portfolio Construction Model

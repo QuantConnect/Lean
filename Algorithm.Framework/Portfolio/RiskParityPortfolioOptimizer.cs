@@ -34,7 +34,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name="lower">The lower bounds on portfolio weights</param>
         /// <param name="upper">The upper bounds on portfolio weights</param>
-        public RiskParityPortfolioOptimizer(double lower = 1e-05, double upper =  Double.PositiveInfinity)
+        public RiskParityPortfolioOptimizer(double lower = 1e-05, double upper = Double.MaxValue)
         {
             _lower = lower < 1e-05 ? 1e-05 : lower;     // has to be greater than or equal to 0
             _upper = upper < lower ? lower : _upper;
@@ -64,7 +64,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             var solution = NewtonMethodOptimization(size, objective, gradient, hessian);
             
             // Normalize weights: w = x / x^T.1
-            return Elementwise.Divide(solution, solution.Sum());
+            solution = Elementwise.Divide(solution, solution.Sum());
+            // Make sure the vector is within range
+            return solution.Select(x => Math.Max(Math.Min(x, _upper), _lower)).ToArray();
+                
         }
 
         /// <summary>
@@ -81,8 +84,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                                                     Func<double[], double> objective, 
                                                     Func<double[], double[]> gradient, 
                                                     Func<double[], double[,]> hessian, 
-                                                    double tolerance = 1e-05,
-                                                    int maxIter = 1000)
+                                                    double tolerance = 1e-11,
+                                                    int maxIter = 15000)
         {
             if (numOfVar < 1 || numOfVar > 1000)
             {
@@ -110,8 +113,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 // Get next weight vector
                 // x^{k + 1} = x^{k} - H^{-1}(x^{k}).df(x^{k}))
                 weight = Elementwise.Subtract(weight, Matrix.Dot(invHess, jacobian));
-                // Make sure the vector is within range
-                weight = weight.Select(x => Math.Max(Math.Min(x, _upper), _lower)).ToArray();
 
                 // Store new objective value
                 newObjective = objective(weight);
