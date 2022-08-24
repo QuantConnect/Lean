@@ -21,21 +21,17 @@ using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Securities.Future;
-using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm asserting that market hours are supported on extended market hours for futures.
+    /// Regression algorithm asserting that market orders are supported on extended market hours for futures.
     /// </summary>
     public class MarketOrdersAreSupportedOnExtendedHoursForFuturesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Future _continuousContract;
         private Future _futureContract;
 
-        /// <summary>
-        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
-        /// </summary>
         public override void Initialize()
         {
             SetStartDate(2013, 10, 6);
@@ -47,7 +43,8 @@ namespace QuantConnect.Algorithm.CSharp
                 contractDepthOffset: 0,
                 extendedMarketHours: true
             );
-            _futureContract = AddFutureContract(FutureChainProvider.GetFutureContractList(_continuousContract.Symbol, Time).First(), extendedMarketHours: true);
+            _futureContract = AddFutureContract(FutureChainProvider.GetFutureContractList(_continuousContract.Symbol, Time).First(),
+                extendedMarketHours: true);
         }
         public override void OnData(Slice slice)
         {
@@ -57,7 +54,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var continuousContractMarketOrder = MarketOrder(_continuousContract.Mapped, 1);
                 if (futureContractMarketOrder.Status == OrderStatus.Invalid || continuousContractMarketOrder.Status == OrderStatus.Invalid)
                 {
-                    throw new Exception($"Limit order should be allowed for futures outside of regular market hours");
+                    throw new Exception($"Market orders should be allowed for futures outside of regular market hours");
                 }
             }
         }

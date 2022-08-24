@@ -1388,7 +1388,7 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
-        public void MarketOrderAreSupportedForFuturesOnExtendedMarketHours()
+        public void MarketOrdersAreSupportedForFuturesOnExtendedMarketHours()
         {
             var algo = GetAlgorithm(out _, 1, 0);
 

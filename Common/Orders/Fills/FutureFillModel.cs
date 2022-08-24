@@ -19,7 +19,7 @@ using QuantConnect.Orders.Fees;
 namespace QuantConnect.Orders.Fills
 {
     /// <summary>
-    /// Represents the default fill model used to simulate order fills for futures
+    /// Represents the fill model used to simulate order fills for futures
     /// </summary>
     public class FutureFillModel : ImmediateFillModel
     {
@@ -37,7 +37,7 @@ namespace QuantConnect.Orders.Fills
 
             if (order.Status == OrderStatus.Canceled) return fill;
 
-            // make sure the exchange is open market hours before filling
+            // make sure the exchange is open on regular/extended market hours before filling
             if (!IsExchangeOpen(asset, true)) return fill;
 
             var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);

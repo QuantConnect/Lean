@@ -15,14 +15,12 @@
 
 using System;
 using NUnit.Framework;
-using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Forex;
 using QuantConnect.Tests.Common.Data;
 
 namespace QuantConnect.Tests.Common.Orders.Fills
