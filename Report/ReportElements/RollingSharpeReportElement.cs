@@ -49,8 +49,13 @@ namespace QuantConnect.Report.ReportElements
             var backtestPoints = ResultsUtil.EquityPoints(_backtest);
             var livePoints = ResultsUtil.EquityPoints(_live);
 
-            var backtestRollingSharpe = Rolling.Sharpe(new Series<DateTime, double>(backtestPoints), 6).DropMissing();
-            var liveRollingSharpe = Rolling.Sharpe(new Series<DateTime, double>(livePoints), 6).DropMissing();
+            var backtestSeries = new Series<DateTime, double>(backtestPoints);
+            var liveSeries = new Series<DateTime, double>(livePoints);
+
+            var backtestRollingSharpeSixMonths = Rolling.Sharpe(backtestSeries, 6).DropMissing();
+            var backtestRollingSharpeTwelveMonths = Rolling.Sharpe(backtestSeries, 12).DropMissing();
+            var liveRollingSharpeSixMonths = Rolling.Sharpe(liveSeries, 6).DropMissing();
+            var liveRollingSharpeTwelveMonths = Rolling.Sharpe(liveSeries, 12).DropMissing();
 
             var base64 = "";
             using (Py.GIL())
@@ -58,11 +63,15 @@ namespace QuantConnect.Report.ReportElements
                 var backtestList = new PyList();
                 var liveList = new PyList();
 
-                backtestList.Append(backtestRollingSharpe.Keys.ToList().ToPython());
-                backtestList.Append(backtestRollingSharpe.Values.ToList().ToPython());
+                backtestList.Append(backtestRollingSharpeSixMonths.Keys.ToList().ToPython());
+                backtestList.Append(backtestRollingSharpeSixMonths.Values.ToList().ToPython());
+                backtestList.Append(backtestRollingSharpeTwelveMonths.Keys.ToList().ToPython());
+                backtestList.Append(backtestRollingSharpeTwelveMonths.Values.ToList().ToPython());
 
-                liveList.Append(liveRollingSharpe.Keys.ToList().ToPython());
-                liveList.Append(liveRollingSharpe.Values.ToList().ToPython());
+                liveList.Append(liveRollingSharpeSixMonths.Keys.ToList().ToPython());
+                liveList.Append(liveRollingSharpeSixMonths.Values.ToList().ToPython());
+                liveList.Append(liveRollingSharpeTwelveMonths.Keys.ToList().ToPython());
+                liveList.Append(liveRollingSharpeTwelveMonths.Values.ToList().ToPython());
 
                 base64 = Charting.GetRollingSharpeRatio(backtestList, liveList);
             }

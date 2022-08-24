@@ -725,7 +725,8 @@ class ReportCharts:
         return base64
 
     def GetRollingSharpeRatio(self, data = [[],[]], live_data = [[],[]], name = "rolling-sharpe-ratio.png",
-                                  width = 11.5, height = 2.5, live_color = "#ff9914", backtest_color = "#71c3fc"):
+                                width = 11.5, height = 2.5, live_six_months_color = "#ff9914", live_twelve_months_color = "#ffd700",
+                                backtest_six_months_color = "#71c3fc", backtest_twelve_months_color = "#1d7dc1"):
         if len(data[0]) == 0:
             fig = plt.figure()
             fig.set_size_inches(width, height)
@@ -753,27 +754,36 @@ class ReportCharts:
             plt.close('all')
             return base64
 
-        labels = ['6 mo.']
-        rectangles = [plt.Rectangle((0, 0), 1, 1, fc=backtest_color)]
+        labels = []
+        rectangles = []
 
         plt.figure()
         ax = plt.gca()
         ax.xaxis.set_major_formatter(DateFormatter("%b %Y"))
 
-        backtest_rolling_sharpe_dates, backtest_rolling_sharpe = (data[0], data[1])
-        live_rolling_sharpe_dates, live_rolling_sharpe = (live_data[0], live_data[1])
+        # Data will come in the following format:
+        # [six month rolling sharpe time, six month rolling sharpe, twelve month rolling sharpe time, twelve month rolling sharpe]
+        backtest_six_month_rolling_sharpe_dates, backtest_six_month_rolling_sharpe = (data[0], data[1])
+        backtest_twelve_month_rolling_sharpe_dates, backtest_twelve_month_rolling_sharpe = (data[2], data[3])
+        live_six_month_rolling_sharpe_dates, live_six_month_rolling_sharpe = (live_data[0], live_data[1])
+        live_twelve_month_rolling_sharpe_dates, live_twelve_month_rolling_sharpe = (live_data[2], live_data[3])
 
-        # Check after the fact if we have any live values since we might not be far
-        # enough into live trading to generate the live rolling sharpe graph
-        if len(live_rolling_sharpe) > 0:
-            rectangles += [plt.Rectangle((0, 0,), 1, 1, fc=live_color)]
-            labels += ["Live 6 mo."]
+        if len(backtest_six_month_rolling_sharpe) > 0:
+            labels += ['6 mo.', '12 mo.']
+            rectangles += [plt.Rectangle((0, 0), 1, 1, fc=backtest_six_months_color), plt.Rectangle((0, 0), 1, 1, fc=backtest_twelve_months_color)]
+        if len(live_six_month_rolling_sharpe) > 0:
+            labels += ['Live 6 mo.', 'Live 12 mo.']
+            rectangles += [plt.Rectangle((0, 0), 1, 1, fc=live_six_months_color), plt.Rectangle((0, 0), 1, 1, fc=live_twelve_months_color)]
 
         # Backtest
-        ax.plot(backtest_rolling_sharpe_dates, backtest_rolling_sharpe, color=backtest_color, linewidth=0.5, zorder=2)
+        if len(backtest_six_month_rolling_sharpe_dates) > 0:
+            ax.plot(backtest_six_month_rolling_sharpe_dates, backtest_six_month_rolling_sharpe, linewidth=0.5, color=backtest_six_months_color)
+            ax.plot(backtest_twelve_month_rolling_sharpe_dates, backtest_twelve_month_rolling_sharpe, linewidth=0.5, color=backtest_twelve_months_color)
 
         # Live
-        ax.plot(live_rolling_sharpe_dates, live_rolling_sharpe, color=live_color, linewidth=0.5, zorder=2)
+        if len(live_six_month_rolling_sharpe) > 0:
+            ax.plot(live_six_month_rolling_sharpe_dates, live_six_month_rolling_sharpe, linewidth=0.5, color=live_six_months_color)
+            ax.plot(live_twelve_month_rolling_sharpe_dates, live_twelve_month_rolling_sharpe, linewidth=0.5, color=live_twelve_months_color)
 
         leg = ax.legend(rectangles, labels, handlelength=0.8, handleheight=0.8,
                         frameon=False, fontsize=8)
