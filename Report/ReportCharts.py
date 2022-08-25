@@ -1003,13 +1003,11 @@ class ReportCharts:
         for k, v in list(color_map.items()):
             color_map[k + ' - Short'] = '#' + hex(int(v[1:], 16) ^ 0xffffff)[2:].zfill(6)
 
-        for k, v in list(color_map.items()):
-            color_map[k + ' - Short'] = '#' + hex(int(v[1:], 16) ^ 0xffffff)[2:].zfill(6)
-
-        long_colors = [color_map[security] for security in long_securities]
-        long_live_colors = [color_map[security] for security in live_long_securities]
-        short_colors = [color_map[security + ' - Short'] for security in short_securities]
-        short_live_colors = [color_map[security + ' - Short'] for security in live_short_securities]
+        # None if no colors can be mapped, so stackplot gets None and doesn't try to access this color list
+        long_colors = [color_map[security] for security in long_securities] if len(long_securities) > 0 else None
+        long_live_colors = [color_map[security] for security in live_long_securities] if len(live_long_securities) > 0 else None
+        short_colors = [color_map[security + ' - Short'] for security in short_securities] if len(short_securities) > 0 else None
+        short_live_colors = [color_map[security + ' - Short'] for security in live_short_securities] if len(live_short_securities) > 0 else None
 
         ax = plt.gca()
 
@@ -1094,24 +1092,24 @@ class ReportCharts:
         # No need to check if live is empty or not, this will handle it, just needs to plot whichever has the longer time index first
         if max([len(x) for x in long_data_copy]) > max([len(x) for x in short_data_copy]):
             ax.stackplot(time_copy[:max([len(x) for x in long_data_copy])], np.vstack(long_data_copy), colors=long_colors, alpha = 0.75)
-            ax.stackplot(time_copy[:max([len(x) for x in short_data_copy])], np.vstack(short_data_copy),color=short_colors, alpha=0.75)
+            ax.stackplot(time_copy[:max([len(x) for x in short_data_copy])], np.vstack(short_data_copy), colors=short_colors, alpha=0.75)
         else:
-            ax.stackplot(time_copy[:max([len(x) for x in short_data_copy])], np.vstack(short_data_copy), color=short_colors, alpha=0.75)
+            ax.stackplot(time_copy[:max([len(x) for x in short_data_copy])], np.vstack(short_data_copy), colors=short_colors, alpha=0.75)
             ax.stackplot(time_copy[:max([len(x) for x in long_data_copy])], np.vstack(long_data_copy), colors=long_colors, alpha=0.75)
 
         if max([len(x) for x in live_long_data_copy]) > max([len(x) for x in live_short_data_copy]):
             ax.stackplot(live_time_copy[:max([len(x) for x in live_long_data_copy])], np.vstack(live_long_data_copy),
-                         color=long_live_colors, alpha = 0.75)
+                         colors=long_live_colors, alpha = 0.75)
             ax.stackplot(live_time_copy[:max([len(x) for x in live_short_data_copy])], np.vstack(live_short_data_copy),
-                         color=short_live_colors, alpha = 0.75)
+                         colors=short_live_colors, alpha = 0.75)
         else:
             ax.stackplot(live_time_copy[:max([len(x) for x in live_short_data_copy])], np.vstack(live_short_data_copy),
-                         color=short_live_colors, alpha=0.75)
+                         colors=short_live_colors, alpha=0.75)
             ax.stackplot(live_time_copy[:max([len(x) for x in live_long_data_copy])], np.vstack(live_long_data_copy),
-                         color=long_live_colors, alpha=0.75)
+                         colors=long_live_colors, alpha=0.75)
 
-        labels = long_securities
-        live_labels = live_long_securities
+        labels = long_securities + short_securities
+        live_labels = live_long_securities + live_short_securities
 
         for security in short_securities:
             if not all([all([abs(y) == 0.0 for y in x]) for x in short_data]):
