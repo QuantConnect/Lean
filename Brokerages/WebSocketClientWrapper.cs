@@ -36,6 +36,7 @@ namespace QuantConnect.Brokerages
         private CancellationTokenSource _cts;
         private ClientWebSocket _client;
         private Task _taskConnect;
+        private object _connectLock = new object();
         private readonly object _locker = new object();
 
         /// <summary>
@@ -67,43 +68,46 @@ namespace QuantConnect.Brokerages
         /// </summary>
         public void Connect()
         {
-            lock (_locker)
+            lock (_connectLock)
             {
-                if (_cts == null)
+                lock (_locker)
                 {
-                    _cts = new CancellationTokenSource();
-
-                    _client = null;
-
-                    _taskConnect = Task.Factory.StartNew(
-                        () =>
-                        {
-                            Log.Trace($"WebSocketClientWrapper connection task started: {_url}");
-
-                            try
-                            {
-                                HandleConnection();
-                            }
-                            catch (Exception e)
-                            {
-                                Log.Error(e, $"Error in WebSocketClientWrapper connection task: {_url}: ");
-                            }
-
-                            Log.Trace($"WebSocketClientWrapper connection task ended: {_url}");
-                        },
-                        _cts.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
-
-                    var count = 0;
-                    do
+                    if (_cts == null)
                     {
-                        // wait for _client to be not null
-                        if (_client != null || _cts.Token.WaitHandle.WaitOne(50))
-                        {
-                            break;
-                        }
+                        _cts = new CancellationTokenSource();
+
+                        _client = null;
+
+                        _taskConnect = Task.Factory.StartNew(
+                            () =>
+                            {
+                                Log.Trace($"WebSocketClientWrapper connection task started: {_url}");
+
+                                try
+                                {
+                                    HandleConnection();
+                                }
+                                catch (Exception e)
+                                {
+                                    Log.Error(e, $"Error in WebSocketClientWrapper connection task: {_url}: ");
+                                }
+
+                                Log.Trace($"WebSocketClientWrapper connection task ended: {_url}");
+                            },
+                            _cts.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
                     }
-                    while (++count < 100);
                 }
+
+                var count = 0;
+                do
+                {
+                    // wait for _client to be not null, we need to release the '_locker' lock used by 'HandleConnection'
+                    if (_client != null || _cts.Token.WaitHandle.WaitOne(50))
+                    {
+                        break;
+                    }
+                }
+                while (++count < 100);
             }
         }
 
@@ -175,7 +179,6 @@ namespace QuantConnect.Brokerages
         /// </summary>
         protected virtual void OnMessage(WebSocketMessage e)
         {
-            //Logging.Log.Trace("WebSocketWrapper.OnMessage(): " + e.Message);
             Message?.Invoke(this, e);
         }
 
