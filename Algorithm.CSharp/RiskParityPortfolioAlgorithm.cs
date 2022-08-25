@@ -55,12 +55,12 @@ namespace QuantConnect.DataLibrary.Tests
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 228;
+        public long DataPoints => 252;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 533;
+        public int AlgorithmHistoryDataPoints => 509;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -103,12 +103,12 @@ namespace QuantConnect.DataLibrary.Tests
             {"Long/Short Ratio", "100%"},
             {"Estimated Monthly Alpha Value", "$-3742968"},
             {"Total Accumulated Estimated Alpha Value", "$-4761887"},
-            {"Mean Population Estimated Insight Value", "$-91575"},
-            {"Mean Population Direction", "3.2692%"},
+            {"Mean Population Estimated Insight Value", "$-91574.75"},
+            {"Mean Population Direction", "32.6923%"},
             {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "3.8557%"},
+            {"Rolling Averaged Population Direction", "38.5572%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "fcd0474e571f1a9b42ec7aa83badce49"}
+            {"OrderListHash", "f0d4972dbf679730bf8c8de2674d4975"}
         };
 
     }
