@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.Report
     public class ReportChartTests
     {
         [Test]
-        public void RunsAllReportCartTests()
+        public void RunsAllReportChartTests()
         {
             using (Py.GIL())
             {

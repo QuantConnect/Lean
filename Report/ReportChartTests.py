@@ -128,18 +128,20 @@ live = [time, six, time, twelve]
 result = charts.GetRollingBeta(live)
 
 ## Test GetRollingSharpeRatioPlot
-data = list(np.random.uniform(1, 3, 365 * 2))
+six = list(np.random.uniform(1, 3, 365 * 2))
+twelve = [np.nan for x in range(365)] + list(np.random.uniform(1, 3, 365))
 time = [pd.Timestamp(x).to_pydatetime() for x in pd.date_range('2012-10-01 00:00:00', periods=365 * 2)]
-backtest = [time, data]
+six_live = list(np.random.uniform(1, 3, 365 + 180))
+twelve_live = [np.nan for x in range(180)] + list(np.random.uniform(1, 3, 365))
+time_live = [pd.Timestamp(x).to_pydatetime() for x in pd.date_range('2014-10-01 00:00:00', periods=365 + 180)]
 
-data = list(np.random.uniform(1, 3, 365))
-time = [pd.Timestamp(x).to_pydatetime() for x in pd.date_range('2014-10-01 00:00:00', periods=365)]
-live = [time, data]
-
-empty = [[], []]
-result = charts.GetRollingSharpeRatio(empty, empty)
-result = charts.GetRollingSharpeRatio(backtest, empty)
-result = charts.GetRollingSharpeRatio(backtest, live)
+empty = [[], [], [], []]
+result = charts.GetRollingSharpeRatio([time, six, time, twelve], empty)
+result = charts.GetRollingSharpeRatio([time, six, [], []], empty)
+result = charts.GetRollingSharpeRatio([time, six, time, twelve], [time_live, six_live, time_live, twelve_live])
+result = charts.GetRollingSharpeRatio([time, six, [], []], [time_live, six_live, time_live, twelve_live])
+result = charts.GetRollingSharpeRatio([time, six, time, twelve], [time_live, six_live, [], []])
+result = charts.GetRollingSharpeRatio([time, six, [], []], [time_live, six_live, [], []])
 
 ## Test GetAssetAllocationPlot
 backtest = [['SPY', 'IBM', 'NFLX', 'AAPL'], [0.50, 0.25, 0.125, 0.125]]
