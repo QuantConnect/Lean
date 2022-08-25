@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -559,13 +559,10 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Get the last price update set to the security.
+        /// Get the last price update set to the security if any else null
         /// </summary>
         /// <returns>BaseData object for this security</returns>
-        public BaseData GetLastData()
-        {
-            return Cache.GetData();
-        }
+        public BaseData GetLastData() => Cache.GetData();
 
         /// <summary>
         /// Sets the <see cref="LocalTimeKeeper"/> to be used for this <see cref="Security"/>.

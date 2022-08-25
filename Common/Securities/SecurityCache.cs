@@ -264,7 +264,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Get last data packet received for this security
+        /// Get last data packet received for this security if any else null
         /// </summary>
         /// <returns>BaseData type of the security</returns>
         public BaseData GetData()

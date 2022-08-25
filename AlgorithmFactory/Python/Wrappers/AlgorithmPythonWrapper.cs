@@ -759,6 +759,17 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
+        /// Will submit an order request to the algorithm
+        /// </summary>
+        /// <param name="request">The request to submit</param>
+        /// <remarks>Will run order prechecks, which include making sure the algorithm is not warming up, security is added and has data among others</remarks>
+        /// <returns>The order ticket</returns>
+        public OrderTicket SubmitOrderRequest(SubmitOrderRequest request)
+        {
+            return _baseAlgorithm.SubmitOrderRequest(request);
+        }
+
+        /// <summary>
         /// Option assignment event handler. On an option assignment event for short legs the resulting information is passed to this method.
         /// </summary>
         /// <param name="assignmentEvent">Option exercise event details containing details of the assignment</param>

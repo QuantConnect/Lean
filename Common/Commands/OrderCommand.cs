@@ -77,20 +77,20 @@ namespace QuantConnect.Commands
         {
             Symbol = GetSymbol(Ticker, SecurityType, Market, Symbol);
             var request = new SubmitOrderRequest(OrderType, Symbol.SecurityType, Symbol, Quantity, StopPrice, LimitPrice, DateTime.UtcNow, Tag);
-            var ticket = algorithm.Transactions.ProcessRequest(request);
+            var ticket = algorithm.SubmitOrderRequest(request);
             var response = ticket.GetMostRecentOrderResponse();
             var message = $"{OrderType} for {Quantity} units of {Symbol}: {response}";
 
-            if (response.IsSuccess)
-            {
-                algorithm.Debug(message);
-            }
-            else
+            if (response.IsError)
             {
                 algorithm.Error(message);
             }
+            else
+            {
+                algorithm.Debug(message);
+            }
 
-            return new CommandResultPacket(this, response.IsSuccess);
+            return new CommandResultPacket(this, success: !response.IsError);
         }
 
         /// <summary>
