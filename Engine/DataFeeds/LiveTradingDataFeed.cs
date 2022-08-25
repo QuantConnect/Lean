@@ -429,6 +429,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     configuration: new SubscriptionDataConfig(request.Configuration, fillForward: false,
                     resolution: _algorithm.Settings.WarmupResolution));
                 if (warmupRequest.TradableDays.Any()
+                    // make sure there is at least room for a single bar of the requested resolution, else can cause issues with some history providers
+                    // this could happen when we create some internal subscription whose start time is 'Now', which we don't really want to warmup
+                    && warmupRequest.EndTimeUtc - warmupRequest.StartTimeUtc >= warmupRequest.Configuration.Resolution.ToTimeSpan()
                     // since we change the resolution, let's validate it's still valid configuration (example daily equity quotes are not!)
                     && LeanData.IsValidConfiguration(warmupRequest.Configuration.SecurityType, warmupRequest.Configuration.Resolution, warmupRequest.Configuration.TickType))
                 {
