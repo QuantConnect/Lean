@@ -12,7 +12,7 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from scipy.optimize import minimize
+from scipy.optimize import *
 
 ### <summary>
 ### Provides an implementation of a risk parity portfolio optimizer that calculate the optimal weights 
@@ -22,7 +22,7 @@ class RiskParityPortfolioOptimizer:
     
     def __init__(self, 
                  minimum_weight = 1e-05, 
-                 maximum_weight = np.inf):
+                 maximum_weight = sys.float_info.max):
         '''Initialize the RiskParityPortfolioOptimizer
         Args:
             minimum_weight(float): The lower bounds on portfolio weights
@@ -30,11 +30,12 @@ class RiskParityPortfolioOptimizer:
         self.minimum_weight = minimum_weight if minimum_weight >= 1e-05 else 1e-05
         self.maximum_weight = maximum_weight if maximum_weight >= minimum_weight else minimum_weight
 
-    def Optimize(self, historicalReturns, covariance = None):
+    def Optimize(self, historicalReturns, budget = None, covariance = None):
         '''
         Perform portfolio optimization for a provided matrix of historical returns and an array of expected returns
         args:
             historicalReturns: Matrix of annualized historical returns where each column represents a security and each row returns for the given date/time (size: K x N).
+            budget: Risk budget vector (size: K x 1).
             covariance: Multi-dimensional array of double with the portfolio covariance of annualized returns (size: K x K).
         Returns:
             Array of double with the portfolio weights (size: K x 1)
@@ -50,7 +51,8 @@ class RiskParityPortfolioOptimizer:
         # df(x)/dx = S.x - b / x
         # H(x) = S + Diag(b / x^2)
         # lw <= x <= up
-        x0 = budget = np.array(size * [1. / size])
+        x0 = np.array(size * [1. / size])
+        budget = budget if budget is not None else x0
         objective = lambda weights: 0.5 * weights.T @ covariance @ weights - budget.T @ np.log(weights)
         gradient = lambda weights: covariance @ weights - budget / weights
         hessian = lambda weights: covariance + np.diag((budget / weights**2).flatten())

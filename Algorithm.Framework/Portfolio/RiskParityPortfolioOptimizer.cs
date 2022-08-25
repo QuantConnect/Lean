@@ -26,28 +26,28 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// </summary>
     public class RiskParityPortfolioOptimizer : IPortfolioOptimizer
     {
-        private double _lower;
-        private double _upper;
+        private double _lower = 1e-05;
+        private double _upper = Double.MaxValue;
 
         /// <summary>
         /// Initialize a new instance of <see cref="RiskParityPortfolioOptimizer"/>
         /// </summary>
         /// <param name="lower">The lower bounds on portfolio weights</param>
         /// <param name="upper">The upper bounds on portfolio weights</param>
-        public RiskParityPortfolioOptimizer(double lower = 1e-05, double upper = Double.MaxValue)
+        public RiskParityPortfolioOptimizer(double? lower = null, double? upper = null)
         {
-            _lower = lower < 1e-05 ? 1e-05 : lower;     // has to be greater than or equal to 0
-            _upper = upper < lower ? lower : _upper;
+            _lower = lower ?? _lower;     // has to be greater than or equal to 0
+            _upper = upper ?? _upper;
         }
 
         /// <summary>
         /// Perform portfolio optimization for a provided matrix of historical returns and an array of expected returns
         /// </summary>
         /// <param name="historicalReturns">Matrix of annualized historical returns where each column represents a security and each row returns for the given date/time (size: K x N).</param>
-        /// <param name="expectedReturns">Unused.</param>
+        /// <param name="budget">Risk budget vector (size: K x 1).</param>
         /// <param name="covariance">Multi-dimensional array of double with the portfolio covariance of annualized returns (size: K x K).</param>
         /// <returns>Array of double with the portfolio weights (size: K x 1)</returns>
-        public double[] Optimize(double[,] historicalReturns, double[] expectedReturns = null, double[,] covariance = null)
+        public double[] Optimize(double[,] historicalReturns, double[] budget = null, double[,] covariance = null)
         {
             covariance = covariance ?? historicalReturns.Covariance();
             var size = covariance.GetLength(0);
@@ -57,51 +57,45 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             // b = 1 / num_of_assets (equal budget of risk)
             // df(x)/dx = S.x - b / x
             // H(x) = S + Diag(b / x^2)
-            var budget = Vector.Create(size, 1d / size);
-            Func<double[], double> objective = (x) => 0.5 * Matrix.Dot(Matrix.Dot(x, covariance), x) - Matrix.Dot(budget, Elementwise.Log(x));
-            Func<double[], double[]> gradient = (x) => Elementwise.Subtract(Matrix.Dot(covariance, x), Elementwise.Divide(budget, x));
-            Func<double[], double[,]> hessian = (x) => Elementwise.Add(covariance, Matrix.Diagonal(Elementwise.Divide(budget, Elementwise.Multiply(x, x))));
-            var solution = NewtonMethodOptimization(size, objective, gradient, hessian);
+            budget = budget ?? Vector.Create(size, 1d / size);
+            var solution = RiskParityNewtonMethodOptimization(size, covariance, budget);
             
             // Normalize weights: w = x / x^T.1
             solution = Elementwise.Divide(solution, solution.Sum());
             // Make sure the vector is within range
-            return solution.Select(x => Math.Max(Math.Min(x, _upper), _lower)).ToArray();
+            return solution.Select(x => Math.Clamp(x, _lower, _upper)).ToArray();
                 
         }
 
         /// <summary>
         /// Newton method of minimization
         /// </summary>
-        /// <param name="numOfVar">The number of variables (size of weight vector).</param>
-        /// <param name="objective">The objective function.</param>
-        /// <param name="gradient">Gradient of the objective function.</param>
-        /// <param name="hessian">Hessian matrix of the objective function.</param>
+        /// <param name="numberOfVariables">The number of variables (size of weight vector).</param>
+        /// <param name="covariance">Covariance matrix (size: K x K).</param>
+        /// <param name="budget">The risk budget (size: K x 1).</param>
         /// <param name="tolerance">Tolerance level of objective difference with previous steps to accept minimization result.</param>
-        /// <param name="maxIter">Maximum iteration per optimization.</param>
+        /// <param name="maximumIteration">Maximum iteration per optimization.</param>
         /// <returns>Array of double of argumented minimization</returns>
-        protected double[] NewtonMethodOptimization(int numOfVar, 
-                                                    Func<double[], double> objective, 
-                                                    Func<double[], double[]> gradient, 
-                                                    Func<double[], double[,]> hessian, 
-                                                    double tolerance = 1e-11,
-                                                    int maxIter = 15000)
+        protected double[] RiskParityNewtonMethodOptimization(int numberOfVariables, double[,] covariance, double[] budget, double tolerance = 1e-11, int maximumIteration = 15000)
         {
-            if (numOfVar < 1 || numOfVar > 1000)
+            if (numberOfVariables < 1 || numberOfVariables > 1000)
             {
-                throw new ArgumentException("Argument \"numOfVar\" must be a positive integer between 1 and 1000");
+                throw new ArgumentException("Argument \"numberOfVariables\" must be a positive integer between 1 and 1000");
             }
-            else if (numOfVar == 1) 
+            else if (numberOfVariables == 1) 
             {
                 return new double[]{1d};
             }
             
-            var weight = Vector.Create(numOfVar, 1d / numOfVar);
+            Func<double[], double> objective = (x) => 0.5 * Matrix.Dot(Matrix.Dot(x, covariance), x) - Matrix.Dot(budget, Elementwise.Log(x));
+            Func<double[], double[]> gradient = (x) => Elementwise.Subtract(Matrix.Dot(covariance, x), Elementwise.Divide(budget, x));
+            Func<double[], double[,]> hessian = (x) => Elementwise.Add(covariance, Matrix.Diagonal(Elementwise.Divide(budget, Elementwise.Multiply(x, x))));
+            var weight = Vector.Create(numberOfVariables, 1d / numberOfVariables);
             var newObjective = Double.MinValue;
             var oldObjective = Double.MaxValue;
             var iter = 0;
 
-            while (Math.Abs(newObjective - oldObjective) > tolerance && iter < maxIter)
+            while (Math.Abs(newObjective - oldObjective) > tolerance && iter < maximumIteration)
             {
                 // Store old objective value
                 oldObjective = newObjective;

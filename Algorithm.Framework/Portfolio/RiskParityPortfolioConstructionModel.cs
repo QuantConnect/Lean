@@ -42,8 +42,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// Initialize the model
         /// </summary>
-        /// <param name="rebalancingDateRules">The date rules used to define the next expected rebalance time
-        /// in UTC</param>
+        /// <param name="rebalancingDateRules">The date rules used to define the next expected rebalance time in UTC</param>
         /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
         /// <param name="lookback">Historical return lookback period</param>
         /// <param name="period">The time interval of history price to calculate the weight</param>
@@ -231,15 +230,13 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             // clean up data for removed securities
             foreach (var removed in changes.RemovedSecurities)
             {
-                ReturnsSymbolData data;
-                if (_symbolDataDict.TryGetValue(removed.Symbol, out data))
-                {
-                    _symbolDataDict.Remove(removed.Symbol);
-                }
+                _symbolDataDict.Remove(removed.Symbol);
             }
 
             if (changes.AddedSecurities.Count == 0)
+            {
                 return;
+            }
 
             // initialize data for added securities
             foreach (var added in changes.AddedSecurities)

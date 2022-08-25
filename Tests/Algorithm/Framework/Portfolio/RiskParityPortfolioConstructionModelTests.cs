@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Accord.Math;
 using NUnit.Framework;
@@ -36,8 +37,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
     {
         private DateTime _nowUtc;
         private QCAlgorithm _algorithm;
-        private double[,] _covariance1, _covariance2, _covariance3, _covariance4;
-        private double[] _expectedReturn, _expectedResult1, _expectedResult2, _expectedResult3, _expectedResult4;
+        private Dictionary<int, double[][]> _covariances = new();
+        private Dictionary<int, double[]> _riskBudgets = new();
+        private Dictionary<int, double[]> _expectedResults = new();
 
         [SetUp]
         public virtual void SetUp()
@@ -50,31 +52,66 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             _algorithm.SetDateTime(_nowUtc.ConvertToUtc(_algorithm.TimeZone));
             _algorithm.SetCash(1200);
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
+            var dataProvider = new SingleEntryDataCacheProvider(TestGlobals.DataProvider);
             _algorithm.SetHistoryProvider(historyProvider);
 
             historyProvider.Initialize(new HistoryProviderInitializeParameters(
                 new BacktestNodePacket(),
                 null,
                 TestGlobals.DataProvider,
-                new SingleEntryDataCacheProvider(TestGlobals.DataProvider),
+                dataProvider,
                 TestGlobals.MapFileProvider,
                 TestGlobals.FactorFileProvider,
                 i => { },
                 true,
                 new DataPermissionManager()));
 
-            // Test by known convex objective: Mean-variance
-            _covariance1 = new double[,] {{0.25, -0.2}, {-0.2, 0.25}};      // both 50% variance, -80% correlation
-            _covariance2 = new double[,] {{0.01, 0}, {0, 0.04}};            // sigma(A) 10%, sigma(B) 20%, 0% correlation
-            _covariance3 = new double[,] {{1, 0.45}, {0.45, 0.25}};         // sigma(A) 100%, sigma(B) 50%, 90% correlation
-            _covariance4 = new double[,] {{0.25, 0.05}, {0.05, 0.04}};      // sigma(A) 50%, sigma(B) 10%, 25% correlation
+            dataProvider.Dispose();
 
-            _expectedReturn = new double[] {0.25d, 0.5d};                   // E_return(A) 25%, E_return(B) 50%
+            // Test by known cases
+            var riskBudget1 = new double[] {0.5d, 0.5d};                                // equal risk distribution
+            var riskBudget2 = new double[] {0.25d, 0.75d};                              // 25% risk assigned to A, 75% risk assigned to B
 
-            _expectedResult1 = new double[] {7.22d, 7.78d};
-            _expectedResult2 = new double[] {25d, 12.5d};
-            _expectedResult3 = new double[] {-3.42d, 8.16d};
-            _expectedResult4 = new double[] {-2d, 15d};
+            var covariance1 = new double[][] {new[]{0.25, -0.2}, new[]{-0.2, 0.25}};    // both 50% variance, -80% correlation
+            var covariance2 = new double[][] {new[]{0.01, 0}, new[]{0, 0.04}};          // sigma(A) 10%, sigma(B) 20%, 0% correlation
+            var covariance3 = new double[][] {new[]{1, 0.45}, new[]{0.45, 0.25}};       // sigma(A) 100%, sigma(B) 50%, 90% correlation
+            var covariance4 = new double[][] {new[]{0.25, 0.05}, new[]{0.05, 0.04}};    // sigma(A) 50%, sigma(B) 10%, 25% correlation
+
+            var expectedResult1 = new double[] {3.162278d, 3.162278d};
+            var expectedResult2 = new double[] {7.071068d, 3.535534d};
+            var expectedResult3 = new double[] {0.512989d, 1.025978d};
+            var expectedResult4 = new double[] {1.154701d, 2.886751d};
+            var expectedResult5 = new double[] {2.965685d, 3.285618d};
+            var expectedResult6 = new double[] {5d, 4.330127d};
+            var expectedResult7 = new double[] {0.264749d, 1.510089d};
+            var expectedResult8 = new double[] {0.681774d, 3.924933d};
+
+            _covariances.TryAdd(1, covariance1);
+            _covariances.TryAdd(2, covariance2);
+            _covariances.TryAdd(3, covariance3);
+            _covariances.TryAdd(4, covariance4);
+            _covariances.TryAdd(5, covariance1);
+            _covariances.TryAdd(6, covariance2);
+            _covariances.TryAdd(7, covariance3);
+            _covariances.TryAdd(8, covariance4);
+
+            _riskBudgets.TryAdd(1, riskBudget1);
+            _riskBudgets.TryAdd(2, riskBudget1);
+            _riskBudgets.TryAdd(3, riskBudget1);
+            _riskBudgets.TryAdd(4, riskBudget1);
+            _riskBudgets.TryAdd(5, riskBudget2);
+            _riskBudgets.TryAdd(6, riskBudget2);
+            _riskBudgets.TryAdd(7, riskBudget2);
+            _riskBudgets.TryAdd(8, riskBudget2);
+
+            _expectedResults.TryAdd(1, expectedResult1);
+            _expectedResults.TryAdd(2, expectedResult2);
+            _expectedResults.TryAdd(3, expectedResult3);
+            _expectedResults.TryAdd(4, expectedResult4);
+            _expectedResults.TryAdd(5, expectedResult5);
+            _expectedResults.TryAdd(6, expectedResult6);
+            _expectedResults.TryAdd(7, expectedResult7);
+            _expectedResults.TryAdd(8, expectedResult8);
         }
         
         [TestCase(Language.CSharp)]
@@ -134,51 +171,63 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             }
         }
 
-        [Test]
-        public void NewtonMethodOptimizationTest()
+        [TestCase(1)]
+        [TestCase(0)]
+        [TestCase(1001)]
+        public void TestForExtremeNumberOfVariablesRiskParityNewtonMethodOptimization(int numberOfVariables)
         {
             var testOptimizer = new TestRiskParityPortfolioOptimizer();
 
-            Func<double[], double> objective = (x) => 1/2 * Matrix.Dot(Matrix.Dot(x, _covariance1), x) - Matrix.Dot(_expectedReturn, x);
-            Func<double[], double[]> jacobian = (x) => Elementwise.Subtract(Matrix.Dot(_covariance1, x), _expectedReturn);
-            Func<double[], double[,]> hessian = (x) => _covariance1;
+            if (numberOfVariables < 1 || numberOfVariables > 1000)
+            {
+                var exception = Assert.Throws<ArgumentException>(() => testOptimizer.TestOptimization(numberOfVariables, new double[,]{}, new double[]{}));
+                Assert.That(exception.Message, Is.EqualTo("Argument \"numberOfVariables\" must be a positive integer between 1 and 1000"));
+                return;
+            }
 
-            var result = testOptimizer.TestNewtonMethodOptimization(1, objective, jacobian, hessian);
-            Assert.AreEqual(new double[]{1d}, result);
+            var result = testOptimizer.TestOptimization(numberOfVariables, new double[,]{}, new double[]{});
+            Assert.AreEqual(new double[] {1d}, result);
+        }
 
-            var exception = Assert.Throws<ArgumentException>(() => testOptimizer.TestNewtonMethodOptimization(0, objective, jacobian, hessian));
-            Assert.That(exception.Message, Is.EqualTo("Argument \"numOfVar\" must be a positive integer between 1 and 1000"));
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(3)]
+        [TestCase(4)]
+        [TestCase(5)]
+        [TestCase(6)]
+        [TestCase(7)]
+        [TestCase(8)]
+        public void TestRiskParityNewtonMethodOptimizationWeightings(int testCaseNumber)
+        {
+            var testOptimizer = new TestRiskParityPortfolioOptimizer();
+            var covariance = JaggedArrayTo2DArray(_covariances[testCaseNumber]);
 
-            exception = Assert.Throws<ArgumentException>(() => testOptimizer.TestNewtonMethodOptimization(2000, objective, jacobian, hessian));
-            Assert.That(exception.Message, Is.EqualTo("Argument \"numOfVar\" must be a positive integer between 1 and 1000"));
+            var result = testOptimizer.TestOptimization(2, covariance, _riskBudgets[testCaseNumber]);
+            result = result.Select(x => Math.Round(x, 6)).ToArray();
 
-            result = testOptimizer.TestNewtonMethodOptimization(2, objective, jacobian, hessian);
-            result = result.Select(x => Math.Round(x, 2)).ToArray();
-            Assert.AreEqual(_expectedResult1, result);
+            Assert.AreEqual(_expectedResults[testCaseNumber], result);
+        }
+
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(3)]
+        [TestCase(4)]
+        [TestCase(5)]
+        [TestCase(6)]
+        [TestCase(7)]
+        [TestCase(8)]
+        public void TestOptimizeWeightings(int testCaseNumber)
+        {
+            var testOptimizer = new TestRiskParityPortfolioOptimizer();
+            var covariance = JaggedArrayTo2DArray(_covariances[testCaseNumber]);
+            var result = testOptimizer.Optimize(new double[,]{}, _riskBudgets[testCaseNumber], covariance);
+            result = result.Select(x => Math.Round(x, 6)).ToArray();
+
+            var expected = _expectedResults[testCaseNumber];
+            expected = Elementwise.Divide(expected, expected.Sum()).Select(x => Math.Clamp(x, 1e-05, double.MaxValue)).ToArray();
+            expected = expected.Select(x => Math.Round(x, 6)).ToArray();
             
-            objective = (x) => 1/2 * Matrix.Dot(Matrix.Dot(x, _covariance2), x) - Matrix.Dot(_expectedReturn, x);
-            jacobian = (x) => Elementwise.Subtract(Matrix.Dot(_covariance2, x), _expectedReturn);
-            hessian = (x) => _covariance2;
-
-            result = testOptimizer.TestNewtonMethodOptimization(2, objective, jacobian, hessian);
-            result = result.Select(x => Math.Round(x, 2)).ToArray();
-            Assert.AreEqual(_expectedResult2, result);
-            
-            objective = (x) => 1/2 * Matrix.Dot(Matrix.Dot(x, _covariance3), x) - Matrix.Dot(_expectedReturn, x);
-            jacobian = (x) => Elementwise.Subtract(Matrix.Dot(_covariance3, x), _expectedReturn);
-            hessian = (x) => _covariance3;
-
-            result = testOptimizer.TestNewtonMethodOptimization(2, objective, jacobian, hessian);
-            result = result.Select(x => Math.Round(x, 2)).ToArray();
-            Assert.AreEqual(_expectedResult3, result);
-            
-            objective = (x) => 1/2 * Matrix.Dot(Matrix.Dot(x, _covariance4), x) - Matrix.Dot(_expectedReturn, x);
-            jacobian = (x) => Elementwise.Subtract(Matrix.Dot(_covariance4, x), _expectedReturn);
-            hessian = (x) => _covariance4;
-
-            result = testOptimizer.TestNewtonMethodOptimization(2, objective, jacobian, hessian);
-            result = result.Select(x => Math.Round(x, 2)).ToArray();
-            Assert.AreEqual(_expectedResult4, result);
+            Assert.AreEqual(expected, result);
         }
 
         protected void SetPortfolioConstruction(Language language, PortfolioBias bias, IPortfolioConstructionModel defaultModel = null)
@@ -211,6 +260,19 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             }
         }
 
+        private T[,] JaggedArrayTo2DArray<T>(T[][] source)
+        {
+            int FirstDim = source.Length;
+            int SecondDim = source.GroupBy(row => row.Length).Single().Key;
+
+            var result = new T[FirstDim, SecondDim];
+            for (int i = 0; i < FirstDim; ++i)
+                for (int j = 0; j < SecondDim; ++j)
+                    result[i, j] = source[i][j];
+
+            return result;
+        }
+
         private class TestRiskParityPortfolioOptimizer : RiskParityPortfolioOptimizer
         {
             public TestRiskParityPortfolioOptimizer()
@@ -218,9 +280,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             {
             }
 
-            public double[] TestNewtonMethodOptimization(int numOfVar, Func<double[], double> objective, Func<double[], double[]> gradient, Func<double[], double[,]> hessian)
+            public double[] TestOptimization(int numOfVar, double[,] covariance, double[] budget)
             {
-                return base.NewtonMethodOptimization(numOfVar, objective, gradient, hessian);
+                return base.RiskParityNewtonMethodOptimization(numOfVar, covariance, budget);
             }
         }
     }

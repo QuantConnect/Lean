@@ -26,7 +26,7 @@ namespace QuantConnect.DataLibrary.Tests
     /// <summary>
     /// Example algorithm of using RiskParityPortfolioConstructionModel
     /// </summary>
-    public class RiskParityPortfolioAlgorithm : QCAlgorithm//, IRegressionAlgorithmDefinition
+    public class RiskParityPortfolioAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {

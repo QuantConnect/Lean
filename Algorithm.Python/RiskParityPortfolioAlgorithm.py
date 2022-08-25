@@ -19,6 +19,7 @@ class RiakParityPortfolioAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         self.SetStartDate(2021, 2, 21)  # Set Start Date
+        self.SetEndDate(2021, 3, 31)
         self.SetCash(100000)  # Set Strategy Cash
         self.SetSecurityInitializer(lambda security: security.SetMarketPrice(self.GetLastKnownPrice(security)))
         
