@@ -31,7 +31,7 @@ namespace QuantConnect.DataLibrary.Tests
         public override void Initialize()
         {
             SetStartDate(2021, 2, 21);
-            SetEndDate(2021, 3, 31);
+            SetEndDate(2021, 3, 30);
             SetCash(100000);
             SetSecurityInitializer(security => security.SetMarketPrice(GetLastKnownPrice(security)));
 
@@ -55,60 +55,60 @@ namespace QuantConnect.DataLibrary.Tests
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 605;
+        public long DataPoints => 228;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 867;
+        public int AlgorithmHistoryDataPoints => 533;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "43"},
+            {"Total Trades", "42"},
             {"Average Win", "0.01%"},
             {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "0.660%"},
-            {"Drawdown", "5.500%"},
-            {"Expectancy", "0.274"},
-            {"Net Profit", "0.993%"},
-            {"Sharpe Ratio", "0.11"},
-            {"Probabilistic Sharpe Ratio", "9.408%"},
-            {"Loss Rate", "50%"},
-            {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "1.55"},
-            {"Alpha", "-0.006"},
-            {"Beta", "1.277"},
-            {"Annual Standard Deviation", "0.055"},
-            {"Annual Variance", "0.003"},
-            {"Information Ratio", "-0.128"},
-            {"Tracking Error", "0.028"},
-            {"Treynor Ratio", "0.005"},
-            {"Total Fees", "$43.98"},
-            {"Estimated Strategy Capacity", "$630000000.00"},
+            {"Compounding Annual Return", "3.593%"},
+            {"Drawdown", "4.900%"},
+            {"Expectancy", "0.304"},
+            {"Net Profit", "0.368%"},
+            {"Sharpe Ratio", "0.227"},
+            {"Probabilistic Sharpe Ratio", "38.412%"},
+            {"Loss Rate", "47%"},
+            {"Win Rate", "53%"},
+            {"Profit-Loss Ratio", "1.48"},
+            {"Alpha", "-0.103"},
+            {"Beta", "1.222"},
+            {"Annual Standard Deviation", "0.201"},
+            {"Annual Variance", "0.04"},
+            {"Information Ratio", "-0.845"},
+            {"Tracking Error", "0.09"},
+            {"Treynor Ratio", "0.037"},
+            {"Total Fees", "$42.65"},
+            {"Estimated Strategy Capacity", "$720000000.00"},
             {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Fitness Score", "0.001"},
-            {"Kelly Criterion Estimate", "-5609406551260240000"},
-            {"Kelly Criterion Probability Value", "0.5"},
-            {"Sortino Ratio", "0.044"},
-            {"Return Over Maximum Drawdown", "0.119"},
-            {"Portfolio Turnover", "0.002"},
-            {"Total Insights Generated", "758"},
-            {"Total Insights Closed", "756"},
-            {"Total Insights Analysis Completed", "756"},
-            {"Long Insight Count", "758"},
+            {"Fitness Score", "0.019"},
+            {"Kelly Criterion Estimate", "-12.671"},
+            {"Kelly Criterion Probability Value", "0.88"},
+            {"Sortino Ratio", "0.252"},
+            {"Return Over Maximum Drawdown", "0.73"},
+            {"Portfolio Turnover", "0.034"},
+            {"Total Insights Generated", "54"},
+            {"Total Insights Closed", "52"},
+            {"Total Insights Analysis Completed", "52"},
+            {"Long Insight Count", "54"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "-$99650.9973"},
-            {"Total Accumulated Estimated Alpha Value", "-$1820845.1678"},
-            {"Mean Population Estimated Insight Value", "-$2408.5254"},
-            {"Mean Population Direction", "2.5132%"},
+            {"Estimated Monthly Alpha Value", "$-3742968.0595"},
+            {"Total Accumulated Estimated Alpha Value", "$-4761887.1423"},
+            {"Mean Population Estimated Insight Value", "$-91574.7527"},
+            {"Mean Population Direction", "3.2692%"},
             {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Direction", "3.8557%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "b6dca94ebb3d821f72457389a7cac298"}
+            {"OrderListHash", "fcd0474e571f1a9b42ec7aa83badce49"}
         };
 
     }
