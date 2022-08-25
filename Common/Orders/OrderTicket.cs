@@ -556,17 +556,6 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
-        /// Creates a new <see cref="OrderTicket"/> that is invalidated because the algorithm was in the middle of warm up still
-        /// </summary>
-        public static OrderTicket InvalidWarmingUp(SecurityTransactionManager transactionManager, SubmitOrderRequest submit)
-        {
-            submit.SetResponse(OrderResponse.WarmingUp(submit));
-            var ticket = new OrderTicket(transactionManager, submit);
-            ticket._orderStatusOverride = OrderStatus.Invalid;
-            return ticket;
-        }
-
-        /// <summary>
         /// Returns a string that represents the current object.
         /// </summary>
         /// <returns>

@@ -269,21 +269,8 @@ namespace QuantConnect.Algorithm
 
             var request = CreateSubmitOrderRequest(OrderType.Market, security, quantity, tag, orderProperties ?? DefaultOrderProperties?.Clone());
 
-            // If warming up, do not submit
-            if (IsWarmingUp)
-            {
-                return OrderTicket.InvalidWarmingUp(Transactions, request);
-            }
-
-            //Initialize the Market order parameters:
-            var preOrderCheckResponse = PreOrderChecks(request);
-            if (preOrderCheckResponse.IsError)
-            {
-                return OrderTicket.InvalidSubmitRequest(Transactions, request, preOrderCheckResponse);
-            }
-
             //Add the order and create a new order Id.
-            var ticket = Transactions.AddOrder(request);
+            var ticket = SubmitOrderRequest(request);
 
             // Wait for the order event to process, only if the exchange is open
             if (!asynchronous)
@@ -335,13 +322,8 @@ namespace QuantConnect.Algorithm
         {
             var security = Securities[symbol];
             var request = CreateSubmitOrderRequest(OrderType.MarketOnOpen, security, quantity, tag, orderProperties ?? DefaultOrderProperties?.Clone());
-            var response = PreOrderChecks(request);
-            if (response.IsError)
-            {
-                return OrderTicket.InvalidSubmitRequest(Transactions, request, response);
-            }
 
-            return Transactions.AddOrder(request);
+            return SubmitOrderRequest(request);
         }
 
         /// <summary>
@@ -385,13 +367,8 @@ namespace QuantConnect.Algorithm
         {
             var security = Securities[symbol];
             var request = CreateSubmitOrderRequest(OrderType.MarketOnClose, security, quantity, tag, orderProperties ?? DefaultOrderProperties?.Clone());
-            var response = PreOrderChecks(request);
-            if (response.IsError)
-            {
-                return OrderTicket.InvalidSubmitRequest(Transactions, request, response);
-            }
 
-            return Transactions.AddOrder(request);
+            return SubmitOrderRequest(request);
         }
 
         /// <summary>
@@ -438,13 +415,8 @@ namespace QuantConnect.Algorithm
         {
             var security = Securities[symbol];
             var request = CreateSubmitOrderRequest(OrderType.Limit, security, quantity, tag, limitPrice: limitPrice, properties: orderProperties ?? DefaultOrderProperties?.Clone());
-            var response = PreOrderChecks(request);
-            if (response.IsError)
-            {
-                return OrderTicket.InvalidSubmitRequest(Transactions, request, response);
-            }
 
-            return Transactions.AddOrder(request);
+            return SubmitOrderRequest(request);
         }
 
         /// <summary>
@@ -491,13 +463,8 @@ namespace QuantConnect.Algorithm
         {
             var security = Securities[symbol];
             var request = CreateSubmitOrderRequest(OrderType.StopMarket, security, quantity, tag, stopPrice: stopPrice, properties: orderProperties ?? DefaultOrderProperties?.Clone());
-            var response = PreOrderChecks(request);
-            if (response.IsError)
-            {
-                return OrderTicket.InvalidSubmitRequest(Transactions, request, response);
-            }
 
-            return Transactions.AddOrder(request);
+            return SubmitOrderRequest(request);
         }
 
         /// <summary>
@@ -547,14 +514,8 @@ namespace QuantConnect.Algorithm
         {
             var security = Securities[symbol];
             var request = CreateSubmitOrderRequest(OrderType.StopLimit, security, quantity, tag, stopPrice: stopPrice, limitPrice: limitPrice, properties: orderProperties ?? DefaultOrderProperties?.Clone());
-            var response = PreOrderChecks(request);
-            if (response.IsError)
-            {
-                return OrderTicket.InvalidSubmitRequest(Transactions, request, response);
-            }
 
-            //Add the order and create a new order Id.
-            return Transactions.AddOrder(request);
+            return SubmitOrderRequest(request);
         }
 
         /// <summary>
@@ -604,14 +565,8 @@ namespace QuantConnect.Algorithm
         {
             var security = Securities[symbol];
             var request = CreateSubmitOrderRequest(OrderType.LimitIfTouched, security, quantity, tag, triggerPrice: triggerPrice, limitPrice: limitPrice, properties: orderProperties ?? DefaultOrderProperties?.Clone());
-            var response = PreOrderChecks(request);
-            if (response.IsError)
-            {
-                return OrderTicket.InvalidSubmitRequest(Transactions, request, response);
-            }
 
-            //Add the order and create a new order Id.
-            return Transactions.AddOrder(request);
+            return SubmitOrderRequest(request);
         }
 
         /// <summary>
@@ -631,12 +586,6 @@ namespace QuantConnect.Algorithm
             // SubmitOrderRequest.Quantity indicates the change in holdings quantity, therefore manual exercise quantities must be negative
             // PreOrderChecksImpl confirms that we don't hold a short position, so we're lenient here and accept +/- quantity values
             var request = CreateSubmitOrderRequest(OrderType.OptionExercise, option, -Math.Abs(quantity), tag, orderProperties ?? DefaultOrderProperties?.Clone());
-
-            // If warming up, do not submit
-            if (IsWarmingUp)
-            {
-                return OrderTicket.InvalidWarmingUp(Transactions, request);
-            }
 
             //Initialize the exercise order parameters
             var preOrderCheckResponse = PreOrderChecks(request);
@@ -776,7 +725,23 @@ namespace QuantConnect.Algorithm
             return orders;
         }
 
+        /// <summary>
+        /// Will submit an order request to the algorithm
+        /// </summary>
+        /// <param name="request">The request to submit</param>
+        /// <remarks>Will run order prechecks, which include making sure the algorithm is not warming up, security is added and has data among others</remarks>
+        /// <returns>The order ticket</returns>
+        public OrderTicket SubmitOrderRequest(SubmitOrderRequest request)
+        {
+            var response = PreOrderChecks(request);
+            if (response.IsError)
+            {
+                return OrderTicket.InvalidSubmitRequest(Transactions, request, response);
+            }
 
+            //Add the order and create a new order Id.
+            return Transactions.AddOrder(request);
+        }
 
         /// <summary>
         /// Perform pre-order checks to ensure we have sufficient capital,
