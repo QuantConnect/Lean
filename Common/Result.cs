@@ -81,6 +81,6 @@ namespace QuantConnect
         /// The algorithm's settings required for report generation
         /// </summary>
         [JsonProperty(PropertyName = "AlgorithmSettings", NullValueHandling = NullValueHandling.Ignore)]
-        public AlgorithmResultSettings AlgorithmSettings;
+        public AlgorithmConfiguration AlgorithmSettings;
     }
 }

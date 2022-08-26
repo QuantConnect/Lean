@@ -208,7 +208,7 @@ namespace QuantConnect.Tests.Report
             order.GetType().GetProperty("Price").SetValue(order, orderPrice);
             var orders = new[] { order };
 
-            var looper = PortfolioLooper.FromOrders(series, orders, new AlgorithmResultSettings(currency, BrokerageName.Binance, AccountType.Cash));
+            var looper = PortfolioLooper.FromOrders(series, orders, new AlgorithmConfiguration(currency, BrokerageName.Binance, AccountType.Cash));
             var pointInTimePortfolio = looper.ToList();
 
             Assert.AreEqual(2, pointInTimePortfolio.Count);

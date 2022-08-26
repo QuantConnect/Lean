@@ -65,9 +65,9 @@ namespace QuantConnect.Report
         /// <param name="startingCash">Equity curve</param>
         /// <param name="orders">Order events</param>
         /// <param name="resolution">Optional parameter to override default resolution (Hourly)</param>
-        /// <param name="algorithmSettings">Optional parameter to override default algorithm settings</param>
+        /// <param name="algorithmConfiguration">Optional parameter to override default algorithm configuration</param>
         private PortfolioLooper(double startingCash, List<Order> orders, Resolution resolution = _resolution,
-            AlgorithmResultSettings algorithmSettings = null)
+            AlgorithmConfiguration algorithmConfiguration = null)
         {
             // Initialize the providers that the HistoryProvider requires
             var factorFileProvider = Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>("LocalDiskFactorFileProvider");
@@ -77,7 +77,7 @@ namespace QuantConnect.Report
 
             var dataPermissionManager = new DataPermissionManager();
             historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, _cacheProvider, mapFileProvider, factorFileProvider, (_) => { }, false, dataPermissionManager));
-            Algorithm = new PortfolioLooperAlgorithm((decimal)startingCash, orders, algorithmSettings);
+            Algorithm = new PortfolioLooperAlgorithm((decimal)startingCash, orders, algorithmConfiguration);
             Algorithm.SetHistoryProvider(historyProvider);
 
             // Dummy LEAN datafeed classes and initializations that essentially do nothing
@@ -238,11 +238,11 @@ namespace QuantConnect.Report
         /// </summary>
         /// <param name="equityCurve">Equity curve series</param>
         /// <param name="orders">Orders</param>
-        /// <param name="algorithmSettings">Optional parameter to override default algorithm settings</param>
+        /// <param name="algorithmConfiguration">Optional parameter to override default algorithm configuration</param>
         /// <param name="liveSeries">Equity curve series originates from LiveResult</param>
         /// <returns>Enumerable of <see cref="PointInTimePortfolio"/></returns>
         public static IEnumerable<PointInTimePortfolio> FromOrders(Series<DateTime, double> equityCurve, IEnumerable<Order> orders,
-            AlgorithmResultSettings algorithmSettings = null, bool liveSeries = false)
+            AlgorithmConfiguration algorithmConfiguration = null, bool liveSeries = false)
         {
             // Don't do anything if we have no orders or equity curve to process
             if (!orders.Any() || equityCurve.IsEmpty)
@@ -300,7 +300,7 @@ namespace QuantConnect.Report
                 }
 
                 // For every deployment, we want to start fresh.
-                looper = new PortfolioLooper(deployment.LastValue(), deploymentOrders, algorithmSettings: algorithmSettings);
+                looper = new PortfolioLooper(deployment.LastValue(), deploymentOrders, algorithmConfiguration: algorithmConfiguration);
 
                 foreach (var portfolio in looper.ProcessOrders(deploymentOrders))
                 {

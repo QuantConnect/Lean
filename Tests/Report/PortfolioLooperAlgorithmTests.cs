@@ -28,9 +28,9 @@ namespace QuantConnect.Tests.Report
     [TestFixture]
     public class PortfolioLooperAlgorithmTests
     {
-        private PortfolioLooperAlgorithm CreateAlgorithm(IEnumerable<Order> orders, AlgorithmResultSettings algorithmSettings = null)
+        private PortfolioLooperAlgorithm CreateAlgorithm(IEnumerable<Order> orders, AlgorithmConfiguration algorithmConfiguration = null)
         {
-            var algorithm = new PortfolioLooperAlgorithm(100000m, orders, algorithmSettings);
+            var algorithm = new PortfolioLooperAlgorithm(100000m, orders, algorithmConfiguration);
 
             // Create MHDB and Symbol properties DB instances for the DataManager
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
@@ -114,7 +114,7 @@ namespace QuantConnect.Tests.Report
         [TestCase("EUR", BrokerageName.Bitfinex, AccountType.Margin)]
         public void SetsTheRightAlgorithmConfiguration(string currency, BrokerageName brokerageName, AccountType accountType)
         {
-            var algorithm = CreateAlgorithm(new List<Order>(), new AlgorithmResultSettings(currency, brokerageName, accountType));
+            var algorithm = CreateAlgorithm(new List<Order>(), new AlgorithmConfiguration(currency, brokerageName, accountType));
             algorithm.Initialize();
 
             Assert.AreEqual(currency, algorithm.AccountCurrency);

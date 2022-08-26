@@ -356,8 +356,7 @@ namespace QuantConnect.Lean.Engine.Results
                     result = new BacktestResultPacket(_job,
                         new BacktestResult(new BacktestResultParameters(charts, orders, profitLoss, statisticsResults.Summary, runtime,
                             statisticsResults.RollingPerformances, orderEvents, statisticsResults.TotalPerformance, AlphaRuntimeStatistics,
-                            new AlgorithmResultSettings(Algorithm.AccountCurrency, BrokerageModel.GetBrokerageName(Algorithm.BrokerageModel),
-                                Algorithm.BrokerageModel.AccountType))),
+                            AlgorithmConfiguration.Create(Algorithm))),
                         Algorithm.EndDate, Algorithm.StartDate);
                 }
                 else
