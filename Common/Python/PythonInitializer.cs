@@ -170,11 +170,11 @@ namespace QuantConnect.Python
             if(!includeSystemPackages.HasValue)
             {
                 includeSystemPackages = true;
-                Log.Error($"PythonIntializer.ActivatePythonVirtualEnvironment(): failed to find system packages configuration. ConfigFile.Exits: {configFile.Exists}. Will default to true.");
+                Log.Error($"PythonIntializer.ActivatePythonVirtualEnvironment(): virtual env '{pathToVirtualEnv}'. Failed to find system packages configuration. ConfigFile.Exits: {configFile.Exists}. Will default to true.");
             }
             else
             {
-                Log.Trace($"PythonIntializer.ActivatePythonVirtualEnvironment(): will use system packages: {includeSystemPackages.Value}");
+                Log.Trace($"PythonIntializer.ActivatePythonVirtualEnvironment(): virtual env '{pathToVirtualEnv}'. Will use system packages: {includeSystemPackages.Value}");
             }
 
             if (!includeSystemPackages.Value)
