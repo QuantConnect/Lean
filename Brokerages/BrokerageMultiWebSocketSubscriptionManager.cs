@@ -174,10 +174,27 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
-        public void Dispose()
+        public override void Dispose()
         {
             _reconnectTimer?.Stop();
             _reconnectTimer.DisposeSafely();
+            lock (_locker)
+            {
+                foreach (var entry in _webSocketEntries)
+                {
+                    try
+                    {
+                        entry.WebSocket.Open -= OnOpen;
+                        entry.WebSocket.Message -= EventHandler;
+                        entry.WebSocket.Close();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex);
+                    }
+                }
+                _webSocketEntries.Clear();
+            }
         }
 
         private BrokerageMultiWebSocketEntry GetWebSocketEntryBySymbol(Symbol symbol)
