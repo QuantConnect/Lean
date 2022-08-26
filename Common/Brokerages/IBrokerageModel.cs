@@ -24,6 +24,7 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
+using QuantConnect.Python;
 
 namespace QuantConnect.Brokerages
 {
@@ -253,34 +254,67 @@ namespace QuantConnect.Brokerages
         /// <returns>The <see cref="BrokerageName"/> for the specified brokerage model</returns>
         public static BrokerageName GetBrokerageName(IBrokerageModel brokerageModel)
         {
-            if (_brokerageNames.TryGetValue(brokerageModel.GetType(), out var brokerageName))
+            // Case order matters to ensure we get the correct brokerage name from the inheritance chain
+            switch (brokerageModel)
             {
-                return brokerageName;
+                case InteractiveBrokersBrokerageModel _:
+                    return BrokerageName.InteractiveBrokersBrokerage;
+
+                case TradierBrokerageModel _:
+                    return BrokerageName.TradierBrokerage;
+
+                case OandaBrokerageModel _:
+                    return BrokerageName.OandaBrokerage;
+
+                case FxcmBrokerageModel _:
+                    return BrokerageName.FxcmBrokerage;
+
+                case BitfinexBrokerageModel _:
+                    return BrokerageName.Bitfinex;
+
+                case BinanceUSBrokerageModel _:
+                    return BrokerageName.BinanceUS;
+
+                case BinanceBrokerageModel _:
+                    return BrokerageName.Binance;
+
+                case GDAXBrokerageModel _:
+                    return BrokerageName.GDAX;
+
+                case AlphaStreamsBrokerageModel _:
+                    return BrokerageName.AlphaStreams;
+
+                case ZerodhaBrokerageModel _:
+                    return BrokerageName.Zerodha;
+
+                case AtreyuBrokerageModel _:
+                    return BrokerageName.Atreyu;
+
+                case TradingTechnologiesBrokerageModel _:
+                    return BrokerageName.TradingTechnologies;
+
+                case SamcoBrokerageModel _:
+                    return BrokerageName.Samco;
+
+                case KrakenBrokerageModel _:
+                    return BrokerageName.Kraken;
+
+                case ExanteBrokerageModel _:
+                    return BrokerageName.Exante;
+
+                case FTXUSBrokerageModel _:
+                    return BrokerageName.FTXUS;
+
+                case FTXBrokerageModel _:
+                    return BrokerageName.FTX;
+
+                case DefaultBrokerageModel _:
+                case BrokerageModelPythonWrapper _:
+                    return BrokerageName.Default;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(brokerageModel), brokerageModel, null);
             }
-
-            throw new ArgumentOutOfRangeException(nameof(brokerageModel), brokerageModel, null);
         }
-
-        private static readonly IReadOnlyDictionary<Type, BrokerageName> _brokerageNames = new Dictionary<Type, BrokerageName>
-        {
-            { typeof(DefaultBrokerageModel), BrokerageName.Default },
-            { typeof(InteractiveBrokersBrokerageModel), BrokerageName.InteractiveBrokersBrokerage },
-            { typeof(TradierBrokerageModel), BrokerageName.TradierBrokerage },
-            { typeof(OandaBrokerageModel), BrokerageName.OandaBrokerage },
-            { typeof(FxcmBrokerageModel), BrokerageName.FxcmBrokerage },
-            { typeof(BitfinexBrokerageModel), BrokerageName.Bitfinex },
-            { typeof(BinanceBrokerageModel), BrokerageName.Binance },
-            { typeof(BinanceUSBrokerageModel), BrokerageName.BinanceUS },
-            { typeof(GDAXBrokerageModel), BrokerageName.GDAX },
-            { typeof(AlphaStreamsBrokerageModel), BrokerageName.AlphaStreams },
-            { typeof(ZerodhaBrokerageModel), BrokerageName.Zerodha },
-            { typeof(AtreyuBrokerageModel), BrokerageName.Atreyu },
-            { typeof(TradingTechnologiesBrokerageModel), BrokerageName.TradingTechnologies },
-            { typeof(SamcoBrokerageModel), BrokerageName.Samco },
-            { typeof(KrakenBrokerageModel), BrokerageName.Kraken },
-            { typeof(ExanteBrokerageModel), BrokerageName.Exante },
-            { typeof(FTXBrokerageModel), BrokerageName.FTX },
-            { typeof(FTXUSBrokerageModel), BrokerageName.FTXUS }
-        };
     }
 }

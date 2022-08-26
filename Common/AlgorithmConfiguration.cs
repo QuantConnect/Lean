@@ -64,7 +64,6 @@ namespace QuantConnect
 
         /// <summary>
         /// Provides a convenience method for creating a <see cref="AlgorithmConfiguration"/> for a given algorithm.
-        /// This method currently does not support Commodities
         /// </summary>
         /// <param name="algorithm">Algorithm for which the configuration object is being created</param>
         /// <returns>A new AlgorithmConfiguration object for the specified algorithm</returns>
