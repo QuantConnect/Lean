@@ -254,8 +254,14 @@ namespace QuantConnect.Brokerages
         /// <returns>The <see cref="BrokerageName"/> for the specified brokerage model</returns>
         public static BrokerageName GetBrokerageName(IBrokerageModel brokerageModel)
         {
+            var model = brokerageModel;
+            if (brokerageModel is BrokerageModelPythonWrapper)
+            {
+                model = (brokerageModel as BrokerageModelPythonWrapper).GetModel();
+            }
+
             // Case order matters to ensure we get the correct brokerage name from the inheritance chain
-            switch (brokerageModel)
+            switch (model)
             {
                 case InteractiveBrokersBrokerageModel _:
                     return BrokerageName.InteractiveBrokersBrokerage;
@@ -309,7 +315,6 @@ namespace QuantConnect.Brokerages
                     return BrokerageName.FTX;
 
                 case DefaultBrokerageModel _:
-                case BrokerageModelPythonWrapper _:
                     return BrokerageName.Default;
 
                 default:
