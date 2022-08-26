@@ -186,7 +186,7 @@ namespace QuantConnect.Lean.Engine.Results
                             deltaCharts.Add(chart.Name, updates);
                         }
 
-                        // Update our algorithm performance charts 
+                        // Update our algorithm performance charts
                         if (AlgorithmPerformanceCharts.Contains(kvp.Key))
                         {
                             performanceCharts[kvp.Key] = chart.Clone();
@@ -306,7 +306,8 @@ namespace QuantConnect.Lean.Engine.Results
                             result.Results.RollingWindow,
                             null, // null order events, we store them separately
                             result.Results.TotalPerformance,
-                            result.Results.AlphaRuntimeStatistics));
+                            result.Results.AlphaRuntimeStatistics,
+                            result.Results.AlgorithmSettings));
                     }
                     // Save results
                     SaveResults(key, results);
@@ -353,7 +354,10 @@ namespace QuantConnect.Lean.Engine.Results
                     var orderEvents = TransactionHandler.OrderEvents.ToList();
                     //Create a result packet to send to the browser.
                     result = new BacktestResultPacket(_job,
-                        new BacktestResult(new BacktestResultParameters(charts, orders, profitLoss, statisticsResults.Summary, runtime, statisticsResults.RollingPerformances, orderEvents, statisticsResults.TotalPerformance, AlphaRuntimeStatistics)),
+                        new BacktestResult(new BacktestResultParameters(charts, orders, profitLoss, statisticsResults.Summary, runtime,
+                            statisticsResults.RollingPerformances, orderEvents, statisticsResults.TotalPerformance, AlphaRuntimeStatistics,
+                            new AlgorithmResultSettings(Algorithm.AccountCurrency, BrokerageModel.GetBrokerageName(Algorithm.BrokerageModel),
+                                Algorithm.BrokerageModel.AccountType))),
                         Algorithm.EndDate, Algorithm.StartDate);
                 }
                 else

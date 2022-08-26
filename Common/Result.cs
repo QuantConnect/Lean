@@ -76,5 +76,11 @@ namespace QuantConnect
         /// </summary>
         [JsonProperty(PropertyName = "ServerStatistics", NullValueHandling = NullValueHandling.Ignore)]
         public IDictionary<string, string> ServerStatistics;
+
+        /// <summary>
+        /// The algorithm's settings required for report generation
+        /// </summary>
+        [JsonProperty(PropertyName = "AlgorithmSettings", NullValueHandling = NullValueHandling.Ignore)]
+        public AlgorithmResultSettings AlgorithmSettings;
     }
 }

@@ -218,19 +218,19 @@ namespace QuantConnect.Brokerages
 
                 case BrokerageName.Zerodha:
                     return new ZerodhaBrokerageModel(accountType);
-                
+
                 case BrokerageName.Atreyu:
                     return new AtreyuBrokerageModel(accountType);
 
                 case BrokerageName.TradingTechnologies:
                     return new TradingTechnologiesBrokerageModel(accountType);
-                
+
                 case BrokerageName.Samco:
                     return new SamcoBrokerageModel(accountType);
-                
+
                 case BrokerageName.Kraken:
                     return new KrakenBrokerageModel(accountType);
-                
+
                 case BrokerageName.Exante:
                     return new ExanteBrokerageModel(accountType);
 
@@ -244,5 +244,43 @@ namespace QuantConnect.Brokerages
                     throw new ArgumentOutOfRangeException(nameof(brokerage), brokerage, null);
             }
         }
+
+
+        /// <summary>
+        /// Gets the corresponding <see cref="BrokerageName"/> for the specified <see cref="IBrokerageModel"/>
+        /// </summary>
+        /// <param name="brokerageModel">The brokerage model</param>
+        /// <returns>The <see cref="BrokerageName"/> for the specified brokerage model</returns>
+        public static BrokerageName GetBrokerageName(IBrokerageModel brokerageModel)
+        {
+            if (_brokerageNames.TryGetValue(brokerageModel.GetType(), out var brokerageName))
+            {
+                return brokerageName;
+            }
+
+            throw new ArgumentOutOfRangeException(nameof(brokerageModel), brokerageModel, null);
+        }
+
+        private static readonly IReadOnlyDictionary<Type, BrokerageName> _brokerageNames = new Dictionary<Type, BrokerageName>
+        {
+            { typeof(DefaultBrokerageModel), BrokerageName.Default },
+            { typeof(InteractiveBrokersBrokerageModel), BrokerageName.InteractiveBrokersBrokerage },
+            { typeof(TradierBrokerageModel), BrokerageName.TradierBrokerage },
+            { typeof(OandaBrokerageModel), BrokerageName.OandaBrokerage },
+            { typeof(FxcmBrokerageModel), BrokerageName.FxcmBrokerage },
+            { typeof(BitfinexBrokerageModel), BrokerageName.Bitfinex },
+            { typeof(BinanceBrokerageModel), BrokerageName.Binance },
+            { typeof(BinanceUSBrokerageModel), BrokerageName.BinanceUS },
+            { typeof(GDAXBrokerageModel), BrokerageName.GDAX },
+            { typeof(AlphaStreamsBrokerageModel), BrokerageName.AlphaStreams },
+            { typeof(ZerodhaBrokerageModel), BrokerageName.Zerodha },
+            { typeof(AtreyuBrokerageModel), BrokerageName.Atreyu },
+            { typeof(TradingTechnologiesBrokerageModel), BrokerageName.TradingTechnologies },
+            { typeof(SamcoBrokerageModel), BrokerageName.Samco },
+            { typeof(KrakenBrokerageModel), BrokerageName.Kraken },
+            { typeof(ExanteBrokerageModel), BrokerageName.Exante },
+            { typeof(FTXBrokerageModel), BrokerageName.FTX },
+            { typeof(FTXUSBrokerageModel), BrokerageName.FTXUS }
+        };
     }
 }
