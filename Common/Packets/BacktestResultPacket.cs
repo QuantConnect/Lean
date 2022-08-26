@@ -248,7 +248,7 @@ namespace QuantConnect.Packets
             OrderEvents = parameters.OrderEvents;
             TotalPerformance = parameters.TotalPerformance;
             AlphaRuntimeStatistics = parameters.AlphaRuntimeStatistics;
-            AlgorithmSettings = parameters.AlgorithmConfiguration;
+            AlgorithmConfiguration = parameters.AlgorithmConfiguration;
         }
     }
 } // End of Namespace:
