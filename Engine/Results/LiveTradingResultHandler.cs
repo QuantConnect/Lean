@@ -244,10 +244,7 @@ namespace QuantConnect.Lean.Engine.Results
                         var orderEvents = GetOrderEventsToStore();
 
                         var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
-                        var complete = new LiveResultPacket(_job,
-                            new LiveResult(new LiveResultParameters(chartComplete, orders, Algorithm.Transactions.TransactionRecord, holdings,
-                                Algorithm.Portfolio.CashBook, deltaStatistics, runtimeStatistics, orderEvents, serverStatistics,
-                                algorithmConfiguration: AlgorithmConfiguration.Create(Algorithm))));
+                        var complete = new LiveResultPacket(_job, new LiveResult(new LiveResultParameters(chartComplete, orders, Algorithm.Transactions.TransactionRecord, holdings, Algorithm.Portfolio.CashBook, deltaStatistics, runtimeStatistics, orderEvents, serverStatistics)));
                         StoreResult(complete);
                         _nextChartsUpdate = DateTime.UtcNow.Add(ChartUpdateInterval);
                         Log.Debug("LiveTradingResultHandler.Update(): End-store result");
@@ -427,8 +424,7 @@ namespace QuantConnect.Lean.Engine.Results
                     runtimeStatistics: runtimeStatistics,
                     orderEvents: null, // we stored order events separately
                     serverStatistics: serverStatistics,
-                    alphaRuntimeStatistics: AlphaRuntimeStatistics,
-                    algorithmConfiguration: AlgorithmConfiguration.Create(Algorithm)));
+                    alphaRuntimeStatistics: AlphaRuntimeStatistics));
 
                 SaveResults($"{AlgorithmId}.json", result);
                 Log.Debug("LiveTradingResultHandler.Update(): status update end.");
@@ -494,8 +490,7 @@ namespace QuantConnect.Lean.Engine.Results
                     Statistics = deltaStatistics,
                     RuntimeStatistics = runtimeStatistics,
                     ServerStatistics = serverStatistics,
-                    AlphaRuntimeStatistics = AlphaRuntimeStatistics,
-                    AlgorithmConfiguration = AlgorithmConfiguration.Create(Algorithm)
+                    AlphaRuntimeStatistics = AlphaRuntimeStatistics
                 })
             };
 

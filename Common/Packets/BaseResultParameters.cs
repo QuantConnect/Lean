@@ -63,6 +63,6 @@ namespace QuantConnect.Packets
         /// <summary>
         /// The algorithm's configuration required for report generation
         /// </summary>
-        public AlgorithmConfiguration AlgorithmConfiguration;
+        public AlgorithmConfiguration AlgorithmConfiguration { get; set; }
     }
 }
