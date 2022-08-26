@@ -154,8 +154,8 @@ namespace QuantConnect.Lean.Engine.Setup
                 }
             }
 
-            Log.Trace("BaseSetupHandler.SetupCurrencyConversions():" +
-                $"{Environment.NewLine}{algorithm.Portfolio.CashBook}");
+            Log.Trace($"BaseSetupHandler.SetupCurrencyConversions():{Environment.NewLine}" +
+                $"Account Type: {algorithm.BrokerageModel.AccountType}{Environment.NewLine}{Environment.NewLine}{algorithm.Portfolio.CashBook}");
         }
 
         /// <summary>
