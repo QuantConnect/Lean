@@ -75,6 +75,9 @@
     <Content Include="Portfolio\MinimumVariancePortfolioOptimizer.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Portfolio\RiskParityPortfolioConstructionModel.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Alphas\PearsonCorrelationPairsTradingAlphaModel.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
