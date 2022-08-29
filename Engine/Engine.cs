@@ -121,7 +121,7 @@ namespace QuantConnect.Lean.Engine
                     AlgorithmHandlers.Alphas.Initialize(job, algorithm, SystemHandlers.Notify, SystemHandlers.Api, AlgorithmHandlers.Transactions);
 
                     // initialize the object store
-                    AlgorithmHandlers.ObjectStore.Initialize(algorithm.Name, job.UserId, job.ProjectId, job.UserToken, job.Controls);
+                    AlgorithmHandlers.ObjectStore.Initialize(job.UserId, job.ProjectId, job.UserToken, job.Controls);
 
                     // initialize the data permission manager
                     AlgorithmHandlers.DataPermissionsManager.Initialize(job);

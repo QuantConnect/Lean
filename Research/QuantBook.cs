@@ -136,8 +136,7 @@ namespace QuantConnect.Research
                     Version = Globals.Version
                 });
 
-                algorithmHandlers.ObjectStore.Initialize(Config.Get("research-object-store-name", "QuantBook"),
-                    Config.GetInt("job-user-id"),
+                algorithmHandlers.ObjectStore.Initialize(Config.GetInt("job-user-id"),
                     Config.GetInt("project-id"),
                     Config.Get("api-access-token"),
                     new Controls

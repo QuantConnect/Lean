@@ -53,34 +53,35 @@ namespace QuantConnect.Storage
         /// <summary>
         /// Initializes the object store
         /// </summary>
-        /// <param name="algorithmName">The algorithm name</param>
         /// <param name="userId">The user id</param>
         /// <param name="projectId">The project id</param>
         /// <param name="userToken">The user token</param>
         /// <param name="controls">The job controls instance</param>
-        public void Initialize(string algorithmName, int userId, int projectId, string userToken, Controls controls)
+        public void Initialize(int userId, int projectId, string userToken, Controls controls)
         {
-            _store.Initialize(algorithmName, userId, projectId, userToken, controls);
+            _store.Initialize(userId, projectId, userToken, controls);
         }
 
         /// <summary>
         /// Determines whether the store contains data for the specified key
         /// </summary>
         /// <param name="key">The object key</param>
+        /// <param name="prefix">Optionally the key prefix to use, will default to the project id</param>
         /// <returns>True if the key was found</returns>
-        public bool ContainsKey(string key)
+        public bool ContainsKey(string key, string prefix = null)
         {
-            return _store.ContainsKey(key);
+            return _store.ContainsKey(key, prefix);
         }
 
         /// <summary>
         /// Returns the object data for the specified key
         /// </summary>
         /// <param name="key">The object key</param>
+        /// <param name="prefix">Optionally the key prefix to use, will default to the project id</param>
         /// <returns>A byte array containing the data</returns>
-        public byte[] ReadBytes(string key)
+        public byte[] ReadBytes(string key, string prefix = null)
         {
-            return _store.ReadBytes(key);
+            return _store.ReadBytes(key, prefix);
         }
 
         /// <summary>
@@ -88,30 +89,33 @@ namespace QuantConnect.Storage
         /// </summary>
         /// <param name="key">The object key</param>
         /// <param name="contents">The object data</param>
+        /// <param name="prefix">Optionally the key prefix to use, will default to the project id</param>
         /// <returns>True if the save operation was successful</returns>
-        public bool SaveBytes(string key, byte[] contents)
+        public bool SaveBytes(string key, byte[] contents, string prefix = null)
         {
-            return _store.SaveBytes(key, contents);
+            return _store.SaveBytes(key, contents, prefix);
         }
 
         /// <summary>
         /// Deletes the object data for the specified key
         /// </summary>
         /// <param name="key">The object key</param>
+        /// <param name="prefix">Optionally the key prefix to use, will default to the project id</param>
         /// <returns>True if the delete operation was successful</returns>
-        public bool Delete(string key)
+        public bool Delete(string key, string prefix = null)
         {
-            return _store.Delete(key);
+            return _store.Delete(key, prefix);
         }
 
         /// <summary>
         /// Returns the file path for the specified key
         /// </summary>
         /// <param name="key">The object key</param>
+        /// <param name="prefix">Optionally the key prefix to use, will default to the project id</param>
         /// <returns>The path for the file</returns>
-        public string GetFilePath(string key)
+        public string GetFilePath(string key, string prefix = null)
         {
-            return _store.GetFilePath(key);
+            return _store.GetFilePath(key, prefix);
         }
 
         /// <summary>
@@ -119,12 +123,13 @@ namespace QuantConnect.Storage
         /// </summary>
         /// <param name="key">The object key</param>
         /// <param name="encoding">The string encoding used</param>
+        /// <param name="prefix">Optionally the key prefix to use, will default to the project id</param>
         /// <returns>A string containing the data</returns>
-        public string Read(string key, Encoding encoding = null)
+        public string Read(string key, Encoding encoding = null, string prefix = null)
         {
             encoding = encoding ?? Encoding.UTF8;
 
-            var data = _store.ReadBytes(key);
+            var data = _store.ReadBytes(key, prefix);
             return data != null ? encoding.GetString(data) : null;
         }
 
@@ -133,10 +138,11 @@ namespace QuantConnect.Storage
         /// </summary>
         /// <param name="key">The object key</param>
         /// <param name="encoding">The string encoding used</param>
+        /// <param name="prefix">Optionally the key prefix to use, will default to the project id</param>
         /// <returns>A string containing the data</returns>
-        public string ReadString(string key, Encoding encoding = null)
+        public string ReadString(string key, Encoding encoding = null, string prefix = null)
         {
-            return Read(key, encoding);
+            return Read(key, encoding, prefix);
         }
 
         /// <summary>
@@ -145,12 +151,13 @@ namespace QuantConnect.Storage
         /// <param name="key">The object key</param>
         /// <param name="encoding">The string encoding used</param>
         /// <param name="settings">The settings used by the JSON deserializer</param>
+        /// <param name="prefix">Optionally the key prefix to use, will default to the project id</param>
         /// <returns>An object containing the data</returns>
-        public T ReadJson<T>(string key, Encoding encoding = null, JsonSerializerSettings settings = null)
+        public T ReadJson<T>(string key, Encoding encoding = null, JsonSerializerSettings settings = null, string prefix = null)
         {
             encoding = encoding ?? Encoding.UTF8;
 
-            var json = Read(key, encoding);
+            var json = Read(key, encoding, prefix);
             return JsonConvert.DeserializeObject<T>(json, settings);
         }
 
@@ -159,12 +166,13 @@ namespace QuantConnect.Storage
         /// </summary>
         /// <param name="key">The object key</param>
         /// <param name="encoding">The string encoding used</param>
+        /// <param name="prefix">Optionally the key prefix to use, will default to the project id</param>
         /// <returns>An object containing the data</returns>
-        public T ReadXml<T>(string key, Encoding encoding = null)
+        public T ReadXml<T>(string key, Encoding encoding = null, string prefix = null)
         {
             encoding = encoding ?? Encoding.UTF8;
 
-            var xml = Read(key, encoding);
+            var xml = Read(key, encoding, prefix);
 
             var serializer = new XmlSerializer(typeof(T));
             using (var reader = new StringReader(xml))
@@ -198,11 +206,12 @@ namespace QuantConnect.Storage
         /// <param name="key">The object key</param>
         /// <param name="text">The string object to be saved</param>
         /// <param name="encoding">The string encoding used, <see cref="Encoding.UTF8"/> by default</param>
+        /// <param name="prefix">Optionally the key prefix to use, will default to the project id</param>
         /// <returns>True if the object was saved successfully</returns>
-        public bool Save(string key, string text, Encoding encoding = null)
+        public bool Save(string key, string text, Encoding encoding = null, string prefix = null)
         {
             encoding ??= Encoding.UTF8;
-            return _store.SaveBytes(key, encoding.GetBytes(text));
+            return _store.SaveBytes(key, encoding.GetBytes(text), prefix);
         }
 
         /// <summary>
@@ -211,12 +220,13 @@ namespace QuantConnect.Storage
         /// <param name="key">The object key</param>
         /// <param name="text">The string object to be saved</param>
         /// <param name="encoding">The string encoding used</param>
+        /// <param name="prefix">Optionally the key prefix to use, will default to the project id</param>
         /// <returns>True if the object was saved successfully</returns>
-        public bool SaveString(string key, string text, Encoding encoding = null)
+        public bool SaveString(string key, string text, Encoding encoding = null, string prefix = null)
         {
             encoding = encoding ?? Encoding.UTF8;
 
-            return _store.SaveBytes(key, encoding.GetBytes(text));
+            return _store.SaveBytes(key, encoding.GetBytes(text), prefix);
         }
 
         /// <summary>
@@ -226,13 +236,14 @@ namespace QuantConnect.Storage
         /// <param name="obj">The object to be saved</param>
         /// <param name="encoding">The string encoding used</param>
         /// <param name="settings">The settings used by the JSON serializer</param>
+        /// <param name="prefix">Optionally the key prefix to use, will default to the project id</param>
         /// <returns>True if the object was saved successfully</returns>
-        public bool SaveJson<T>(string key, T obj, Encoding encoding = null, JsonSerializerSettings settings = null)
+        public bool SaveJson<T>(string key, T obj, Encoding encoding = null, JsonSerializerSettings settings = null, string prefix = null)
         {
             encoding = encoding ?? Encoding.UTF8;
 
             var json = JsonConvert.SerializeObject(obj, settings);
-            return SaveString(key, json, encoding);
+            return SaveString(key, json, encoding, prefix);
         }
 
         /// <summary>
@@ -241,8 +252,9 @@ namespace QuantConnect.Storage
         /// <param name="key">The object key</param>
         /// <param name="obj">The object to be saved</param>
         /// <param name="encoding">The string encoding used</param>
+        /// <param name="prefix">Optionally the key prefix to use, will default to the project id</param>
         /// <returns>True if the object was saved successfully</returns>
-        public bool SaveXml<T>(string key, T obj, Encoding encoding = null)
+        public bool SaveXml<T>(string key, T obj, Encoding encoding = null, string prefix = null)
         {
             encoding = encoding ?? Encoding.UTF8;
 
@@ -252,7 +264,7 @@ namespace QuantConnect.Storage
                 serializer.Serialize(writer, obj);
 
                 var xml = writer.ToString();
-                return SaveString(key, xml, encoding);
+                return SaveString(key, xml, encoding, prefix);
             }
         }
 
