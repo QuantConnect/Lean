@@ -138,23 +138,20 @@ def getHistory(algorithm, symbol, start, resolution):
         public void TickResolutionHistoryRequest(Language language)
         {
             var start = new DateTime(2013, 10, 07);
-            _algorithm = GetAlgorithm(start.AddDays(1));
+            _algorithm = GetAlgorithm(start.AddDays(1).AddHours(10));
 
             if (language == Language.CSharp)
             {
-                // Trades and quotes
-                var result = _algorithm.History(new [] { Symbols.SPY }, start.AddHours(9.8), start.AddHours(10), Resolution.Tick).ToList();
-
-                // Just Trades
-                var result2 = _algorithm.History<Tick>(Symbols.SPY, start.AddHours(9.8), start.AddHours(10), Resolution.Tick).ToList();
+                var result = _algorithm.History(new [] { Symbols.SPY }, TimeSpan.FromMinutes(12), Resolution.Tick).ToList();
+                var result2 = _algorithm.History<Tick>(Symbols.SPY, TimeSpan.FromMinutes(12), Resolution.Tick).ToList();
 
                 Assert.IsNotEmpty(result);
                 Assert.IsNotEmpty(result2);
 
-                Assert.IsTrue(result2.All(tick => tick.TickType == TickType.Trade));
+                Assert.IsTrue(result2.Any(tick => tick.TickType == TickType.Trade));
+                Assert.IsTrue(result2.Any(tick => tick.TickType == TickType.Quote));
 
-                // (Trades and quotes).Count > Trades * 2
-                Assert.Greater(result.Count, result2.Count * 2);
+                Assert.AreEqual(result.Count, result2.Count);
             }
             else
             {
