@@ -835,7 +835,6 @@ namespace QuantConnect.Algorithm
                         x.Item2,
                         true,
                         UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType)));
-                    // .OrderByDescending(config => GetTickTypeOrder(config.SecurityType, config.TickType));
             }
         }
 
