@@ -184,6 +184,7 @@ namespace QuantConnect.Tests.Common.Storage
         [TestCase("a/super/prefix/")]
         [TestCase("/a/super/prefix/")]
         [TestCase("/a/super/prefix")]
+        [TestCase("./a/su-p_er\\pr##efi$x")]
         [TestCase("./a/super/prefix")]
         public void CustomPrefixStore(string prefix)
         {

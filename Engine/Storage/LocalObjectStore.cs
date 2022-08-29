@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
@@ -64,6 +65,7 @@ namespace QuantConnect.Lean.Engine.Storage
         private string _defaultPrefix;
         private Timer _persistenceTimer;
         private readonly string _storageRoot = DefaultObjectStore;
+        private Regex _pathRegex = new Regex(@"^\.?[a-zA-Z0-9\\/_#\-\$]+$", RegexOptions.Compiled);
         private readonly ConcurrentDictionary<string, byte[]> _storage = new ConcurrentDictionary<string, byte[]>();
         private readonly object _persistLock = new object();
 
@@ -416,9 +418,9 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 return string.Empty;
             }
-            else if (prefix.StartsWith("../", StringComparison.InvariantCultureIgnoreCase) || prefix.StartsWith("..\\", StringComparison.InvariantCultureIgnoreCase))
+            else if (!_pathRegex.IsMatch(prefix))
             {
-                throw new ArgumentException($"LocalObjectStore: prefix outside of root object store is not supported: '{prefix}'");
+                throw new ArgumentException($"LocalObjectStore: prefix is not supported: '{prefix}'");
             }
 
             return prefix.TrimStart('\\', '/');
