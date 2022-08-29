@@ -47,23 +47,22 @@ namespace QuantConnect.Algorithm.CSharp
                 IEnumerable<BaseData> history;
                 if (symbol.SecurityType == SecurityType.Equity)
                 {
-                    history = History<QuoteBar>(symbol, 10, Resolution.Daily).Select(bar => bar as BaseData);
-                    if (history.Any())
+                    try
                     {
-                        throw new Exception("We were expecting no quote bars. Equity does not have daily QuoteBars!");
-                    }
 
+                        history = History<QuoteBar>(symbol, 10, Resolution.Daily).Select(bar => bar as BaseData);
+                        throw new Exception("We were expecting an argument exception to be thrown. Equity does not have daily QuoteBars!");
+                    }
+                    catch (ArgumentException)
+                    {
+                        // expected
+                    }
                     history = History<TradeBar>(symbol, 10, Resolution.Daily).Select(bar => bar as BaseData);
                 }
                 else
                 {
                     history = History<QuoteBar>(symbol, 10, Resolution.Daily)
                         .Select(bar => bar as BaseData);
-                }
-
-                if (!history.Any())
-                {
-                    throw new Exception("History is empty!");
                 }
 
                 var duplications = history
