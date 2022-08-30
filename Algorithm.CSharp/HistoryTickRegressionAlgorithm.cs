@@ -16,56 +16,36 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Interfaces;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm for testing that period-based history requests are not allowed with tick resolution
+    /// Regression algorithm asserting that tick history request includes both trade and quote data
     /// </summary>
-    public class PeriodBasedHistoryRequestNotAllowedWithTickResolutionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class HistoryTickRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private Symbol _symbol;
+
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 08);
-            SetEndDate(2013, 10, 09);
+            SetStartDate(2013, 10, 11);
+            SetEndDate(2013, 10, 11);
 
-            var spy = AddEquity("SPY", Resolution.Tick).Symbol;
-
-            // Tick resolution is not allowed for period-based history requests
-            AssertThatHistoryThrowsForTickResolution(() => History<Tick>(spy, 1),
-                "Tick history call with implicit tick resolution");
-            AssertThatHistoryThrowsForTickResolution(() => History<Tick>(spy, 1, Resolution.Tick),
-                "Tick history call with explicit tick resolution");
-            AssertThatHistoryThrowsForTickResolution(() => History<Tick>(new [] { spy }, 1),
-                "Tick history call with symbol array with implicit tick resolution");
-            AssertThatHistoryThrowsForTickResolution(() => History<Tick>(new [] { spy }, 1, Resolution.Tick),
-                "Tick history call with symbol array with explicit tick resolution");
-
-            var history = History<Tick>(spy, TimeSpan.FromHours(12));
-            if (history.Count() == 0)
-            {
-                throw new Exception("On history call with implicit tick resolution: history returned no results");
-            }
-
-            history = History<Tick>(spy, TimeSpan.FromHours(12), Resolution.Tick);
-            if (history.Count() == 0)
-            {
-                throw new Exception("On history call with explicit tick resolution: history returned no results");
-            }
+            _symbol = AddEquity("SPY", Resolution.Tick).Symbol;
         }
 
-        private void AssertThatHistoryThrowsForTickResolution(Action historyCall, string historyCallDescription)
+        public override void OnEndOfAlgorithm()
         {
-            try
+            var history = History<Tick>(_symbol, StartDate, EndDate, Resolution.Tick);
+            var quotes = history.Where(x => x.TickType == TickType.Quote).ToList();
+            var trades = history.Where(x => x.TickType == TickType.Trade).ToList();
+
+            if (quotes.Count == 0 || trades.Count == 0)
             {
-                historyCall();
-                throw new Exception($"{historyCallDescription}: expected an exception to be thrown");
-            }
-            catch (ArgumentException)
-            {
-                // expected
+                throw new Exception("Expected to find at least one tick of each type (quote and trade)");
             }
         }
 
@@ -82,12 +62,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 7682413;
+        public long DataPoints => 2741747;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 2736238;
+        public int AlgorithmHistoryDataPoints => 2741732;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -119,8 +99,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
+            {"Sortino Ratio", "0"},
+            {"Return Over Maximum Drawdown", "0"},
             {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},

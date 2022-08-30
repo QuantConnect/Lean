@@ -382,9 +382,8 @@ namespace QuantConnect.Algorithm
                 throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
             }
 
-            var config = GetHistoryRequestConfig(symbol, typeof(T), resolution);
-            var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, GetExchangeHours(symbol), config.DataTimeZone);
-            return History<T>(symbol, start, Time, resolution).Memoize();
+            var requests = CreateBarCountHistoryRequests(new [] { symbol }, typeof(T), periods, resolution);
+            return GetDataTypedHistory<T>(symbol, requests);
         }
 
         /// <summary>
@@ -399,10 +398,8 @@ namespace QuantConnect.Algorithm
         public IEnumerable<T> History<T>(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null)
             where T : IBaseData
         {
-            var config = GetHistoryRequestConfig(symbol, typeof(T), resolution);
-
-            var request = _historyRequestFactory.CreateHistoryRequest(config, start, end, GetExchangeHours(symbol), resolution);
-            return History(request).Get<T>(symbol).Memoize();
+            var requests = CreateDateRangeHistoryRequests(new[] { symbol }, typeof(T), start, end, resolution);
+            return GetDataTypedHistory<T>(symbol, requests);
         }
 
         /// <summary>
@@ -623,25 +620,20 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Centralized logic to get a configuration for a symbol, a data type and a resolution
+        /// Centralized logic to get data typed history given a list of requests for the specified symbol.
+        /// This method is used to keep backwards compatibility for those History methods that expect an ArgumentException to be thrown
+        /// when the security and the requested data type do not match
         /// </summary>
-        private SubscriptionDataConfig GetHistoryRequestConfig(Symbol symbol, Type requestedType, Resolution? resolution = null)
+        private IEnumerable<T> GetDataTypedHistory<T>(Symbol symbol, IEnumerable<HistoryRequest> requests)
+            where T : IBaseData
         {
-            if (symbol == null) throw new ArgumentException(_symbolEmptyErrorMessage);
-
-            // verify the types match
-            var config = GetMatchingSubscription(symbol, requestedType, resolution);
-            if (config == null)
+            if (requests == null || !requests.Any())
             {
-                var actualType = GetMatchingSubscription(symbol, typeof(BaseData)).Type;
-                var message = $"The specified security is not of the requested type. Symbol: {symbol} Requested Type: {requestedType.Name} Actual Type: {actualType}";
-                if (resolution.HasValue)
-                {
-                    message += $" Requested Resolution.{resolution.Value}";
-                }
-                throw new ArgumentException(message);
+                throw new ArgumentException($"No history data could be fetched. " +
+                    $"This could be due to the specified security not being of the requested type. Symbol: {symbol} Requested Type: {typeof(T).Name}");
             }
-            return config;
+
+            return History(requests).Get<T>(symbol).Memoize();
         }
 
         [DocumentationAttribute(HistoricalData)]
