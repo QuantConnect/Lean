@@ -114,6 +114,8 @@ namespace QuantConnect.Lean.Engine
                     // Save algorithm to cache, load algorithm instance:
                     algorithm = AlgorithmHandlers.Setup.CreateAlgorithmInstance(job, assemblyPath);
 
+                    algorithm.ProjectId = job.ProjectId;
+
                     // Set algorithm in ILeanManager
                     SystemHandlers.LeanManager.SetAlgorithm(algorithm);
 

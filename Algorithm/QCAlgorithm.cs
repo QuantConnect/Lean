@@ -109,7 +109,7 @@ namespace QuantConnect.Algorithm
         private Action<Slice> _onDataSlice;
 
         // flips to true when the user
-        private bool _userSetSecurityInitializer = false;
+        private bool _userSetSecurityInitializer;
 
         // warmup resolution variables
         private TimeSpan? _warmupTimeSpan;
@@ -251,6 +251,15 @@ namespace QuantConnect.Algorithm
         /// </summary>
         [DocumentationAttribute(HandlingData)]
         public SubscriptionManager SubscriptionManager
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// The project id associated with this algorithm if any
+        /// </summary>
+        public int ProjectId
         {
             get;
             set;
