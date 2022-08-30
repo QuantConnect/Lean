@@ -69,6 +69,15 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
+        /// The project id associated with this algorithm if any
+        /// </summary>
+        int ProjectId
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Security object collection class stores an array of objects representing representing each security/asset
         /// we have a subscription for.
         /// </summary>

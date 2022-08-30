@@ -395,6 +395,21 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public SubscriptionManager SubscriptionManager => _baseAlgorithm.SubscriptionManager;
 
         /// <summary>
+        /// The project id associated with this algorithm if any
+        /// </summary>
+        public int ProjectId
+        {
+            set
+            {
+                _baseAlgorithm.ProjectId = value;
+            }
+            get
+            {
+                return _baseAlgorithm.ProjectId;
+            }
+        }
+
+        /// <summary>
         /// Current date/time in the algorithm's local time zone
         /// </summary>
         public DateTime Time => _baseAlgorithm.Time;
