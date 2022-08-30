@@ -276,7 +276,7 @@ namespace QuantConnect
         public static bool TryParse(string value, out decimal parsedValue)
         {
             // Strip out the currency (any character before the first number) ignoring blank spaces since they are not supposed to be in numbers with currency
-            value = Regex.Replace(value, @"^[^\d\s]+", string.Empty);
+            value = Regex.Replace(value, @"^[^\d\s-+]+", string.Empty);
             return decimal.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out parsedValue);
         }
     }
