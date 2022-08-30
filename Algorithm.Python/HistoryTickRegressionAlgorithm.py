@@ -31,5 +31,3 @@ class HistoryTickRegressionAlgorithm(QCAlgorithm):
 
         if not quotes or not trades:
             raise Exception("Expected to find at least one tick of each type (quote and trade)")
-
-        self.Quit()
