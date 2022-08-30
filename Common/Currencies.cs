@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace QuantConnect
 {
@@ -274,12 +275,8 @@ namespace QuantConnect
         /// <returns>True if the value was succesfuly converted</returns>
         public static bool TryParse(string value, out decimal parsedValue)
         {
-            // Replace the longest currencies first to avoid ending up with a partial/unknown currency symbol (e.g. ZX after replacing R in ZRX)
-            foreach (var currencySymbol in Currencies.CurrencySymbols.Values.OrderByDescending(x => x.Length))
-            {
-                value = value.Replace(currencySymbol, string.Empty, StringComparison.InvariantCultureIgnoreCase);
-            }
-
+            // Strip out the currency (any character before the first number) ignoring blank spaces since they are not supposed to be in numbers with currency
+            value = Regex.Replace(value, @"^[^\d\s-+]+", string.Empty);
             return decimal.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out parsedValue);
         }
     }
