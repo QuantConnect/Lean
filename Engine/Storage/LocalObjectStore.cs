@@ -63,7 +63,7 @@ namespace QuantConnect.Lean.Engine.Storage
 
         private Timer _persistenceTimer;
         private readonly string _storageRoot = DefaultObjectStore;
-        private Regex _pathRegex = new (@"^\.?[a-zA-Z0-9\\/_#\-\$]+\.?[a-zA-Z0-9]*$", RegexOptions.Compiled);
+        private Regex _pathRegex = new (@"^\.?[a-zA-Z0-9\\/_#\-\$= ]+\.?[a-zA-Z0-9]*$", RegexOptions.Compiled);
         private readonly ConcurrentDictionary<string, byte[]> _storage = new ConcurrentDictionary<string, byte[]>();
         private readonly object _persistLock = new object();
 
@@ -351,14 +351,6 @@ namespace QuantConnect.Lean.Engine.Storage
                     Persist();
 
                     _persistenceTimer.DisposeSafely();
-                }
-
-                // if the object store was not used, delete the empty storage directory created in Initialize.
-                if (AlgorithmStorageRoot != null &&
-                    Directory.Exists(AlgorithmStorageRoot) &&
-                    !Directory.GetFiles(AlgorithmStorageRoot, "*", SearchOption.AllDirectories).Any())
-                {
-                    Directory.Delete(AlgorithmStorageRoot, true);
                 }
             }
             catch (Exception err)

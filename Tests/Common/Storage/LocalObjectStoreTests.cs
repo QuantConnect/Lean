@@ -213,6 +213,7 @@ namespace QuantConnect.Tests.Common.Storage
         [TestCase("/a/super/prefix")]
         [TestCase("./a/su-p_er\\pr##efi$x")]
         [TestCase("./a/super/prefix")]
+        [TestCase("./a/su-p_er\\pr x=")]
         public void CustomPrefixStore(string prefix)
         {
             using (var store = new ObjectStore(new LocalObjectStore()))
@@ -419,7 +420,7 @@ namespace QuantConnect.Tests.Common.Storage
         }
 
         [Test]
-        public void DisposeRemovesEmptyStorageFolder()
+        public void DisposeDoesNotRemovesEmptyStorageFolder()
         {
             using (var store = new LocalObjectStore())
             {
@@ -428,7 +429,7 @@ namespace QuantConnect.Tests.Common.Storage
                 Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests"));
             }
 
-            Assert.IsFalse(Directory.Exists("./LocalObjectStoreTests"));
+            Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests"));
         }
 
         [Test]
