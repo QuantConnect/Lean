@@ -41,44 +41,39 @@ namespace QuantConnect.Interfaces
         void Initialize(int userId, int projectId, string userToken, Controls controls);
 
         /// <summary>
-        /// Determines whether the store contains data for the specified key
+        /// Determines whether the store contains data for the specified path
         /// </summary>
-        /// <param name="key">The object key</param>
-        /// <param name="prefix">Optionally the key prefix to use, will default to the project id</param>
+        /// <param name="path">The object path</param>
         /// <returns>True if the key was found</returns>
-        bool ContainsKey(string key, string prefix = null);
+        bool ContainsKey(string path);
 
         /// <summary>
         /// Returns the object data for the specified key
         /// </summary>
-        /// <param name="key">The object key</param>
-        /// <param name="prefix">Optionally the key prefix to use, will default to the project id</param>
+        /// <param name="path">The object key</param>
         /// <returns>A byte array containing the data</returns>
-        byte[] ReadBytes(string key, string prefix = null);
+        byte[] ReadBytes(string path);
 
         /// <summary>
-        /// Saves the object data for the specified key
+        /// Saves the object data for the specified path
         /// </summary>
-        /// <param name="key">The object key</param>
+        /// <param name="path">The object path</param>
         /// <param name="contents">The object data</param>
-        /// <param name="prefix">Optionally the key prefix to use, will default to the project id</param>
         /// <returns>True if the save operation was successful</returns>
-        bool SaveBytes(string key, byte[] contents, string prefix = null);
+        bool SaveBytes(string path, byte[] contents);
 
         /// <summary>
-        /// Deletes the object data for the specified key
+        /// Deletes the object data for the specified path
         /// </summary>
-        /// <param name="key">The object key</param>
-        /// <param name="prefix">Optionally the key prefix to use, will default to the project id</param>
+        /// <param name="path">The object path</param>
         /// <returns>True if the delete operation was successful</returns>
-        bool Delete(string key, string prefix = null);
+        bool Delete(string path);
 
         /// <summary>
-        /// Returns the file path for the specified key
+        /// Returns the file path for the specified path
         /// </summary>
-        /// <param name="key">The object key</param>
-        /// <param name="prefix">Optionally the key prefix to use, will default to the project id</param>
+        /// <param name="path">The object path</param>
         /// <returns>The path for the file</returns>
-        string GetFilePath(string key, string prefix = null);
+        string GetFilePath(string path);
     }
 }

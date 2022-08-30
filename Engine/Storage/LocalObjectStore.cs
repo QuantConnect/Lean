@@ -19,7 +19,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using QuantConnect.Configuration;
@@ -62,10 +61,9 @@ namespace QuantConnect.Lean.Engine.Storage
         /// </summary>
         private volatile bool _dirty;
 
-        private string _defaultPrefix;
         private Timer _persistenceTimer;
         private readonly string _storageRoot = DefaultObjectStore;
-        private Regex _pathRegex = new Regex(@"^\.?[a-zA-Z0-9\\/_#\-\$]+$", RegexOptions.Compiled);
+        private Regex _pathRegex = new (@"^\.?[a-zA-Z0-9\\/_#\-\$]+\.?[a-zA-Z0-9]*$", RegexOptions.Compiled);
         private readonly ConcurrentDictionary<string, byte[]> _storage = new ConcurrentDictionary<string, byte[]>();
         private readonly object _persistLock = new object();
 
@@ -94,16 +92,12 @@ namespace QuantConnect.Lean.Engine.Storage
             // create the root path if it does not exist
             Directory.CreateDirectory(AlgorithmStorageRoot);
 
-            // default folder
-            _defaultPrefix = projectId.ToString();
-            Directory.CreateDirectory(Path.Combine(AlgorithmStorageRoot, _defaultPrefix));
-
             Log.Trace($"LocalObjectStore.Initialize(): Storage Root: {new FileInfo(AlgorithmStorageRoot).FullName}. StorageFileCount {controls.StorageFileCount}. StorageLimitMB {controls.StorageLimitMB}");
 
             Controls = controls;
 
             // Load in any already existing objects in the storage directory
-            LoadExistingObjects();
+            LoadExistingObjects(loadContent: false);
 
             // if <= 0 we disable periodic persistence and make it synchronous
             if (Controls.PersistenceIntervalSeconds > 0)
@@ -115,102 +109,107 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <summary>
         /// Loads objects from the AlgorithmStorageRoot into the ObjectStore
         /// </summary>
-        protected virtual void LoadExistingObjects()
+        private void LoadExistingObjects(bool loadContent)
         {
             if (Controls.StoragePermissions.HasFlag(FileAccess.Read))
             {
                 var rootFolder = new DirectoryInfo(AlgorithmStorageRoot);
                 foreach (var file in rootFolder.EnumerateFiles("*", SearchOption.AllDirectories))
                 {
-                    // Decode the filename to get our key
-                    var key = Base64ToKey(file.Name);
+                    var path = NormalizePath(file.FullName.RemoveFromStart(rootFolder.FullName));
 
-                    var prefix = file.Directory.FullName.RemoveFromStart(rootFolder.FullName);
-                    prefix = prefix.TrimStart('\\', '/');
-                    if (!string.IsNullOrEmpty(prefix))
+                    if (loadContent)
                     {
-                        key = Path.Combine(prefix, key);
+                        _storage[path] = File.ReadAllBytes(file.FullName);
                     }
-                    // we do not read the file contents yet, just the name. We read the contents on demand
-                    _storage[key] = null;
+                    else
+                    {
+                        // we do not read the file contents yet, just the name. We read the contents on demand
+                        _storage[path] = null;
+                    }
                 }
             }
         }
 
         /// <summary>
-        /// Determines whether the store contains data for the specified key
+        /// Determines whether the store contains data for the specified path
         /// </summary>
-        /// <param name="key">The object key</param>
-        /// <param name="prefix">Optionally the key prefix to use, will default to the project id</param>
+        /// <param name="path">The object path</param>
         /// <returns>True if the key was found</returns>
-        public bool ContainsKey(string key, string prefix = null)
+        public bool ContainsKey(string path)
         {
-            if (key == null)
+            if (path == null)
             {
-                throw new ArgumentNullException(nameof(key));
+                throw new ArgumentNullException(nameof(path));
             }
             if (!Controls.StoragePermissions.HasFlag(FileAccess.Read))
             {
                 throw new InvalidOperationException($"LocalObjectStore.ContainsKey(): {NoReadPermissionsError}");
             }
 
-            return _storage.ContainsKey(AdjustKey(key, prefix));
+            return _storage.ContainsKey(NormalizePath(path));
         }
 
         /// <summary>
-        /// Returns the object data for the specified key
+        /// Returns the object data for the specified path
         /// </summary>
-        /// <param name="key">The object key</param>
-        /// <param name="prefix">Optionally the key prefix to use, will default to the project id</param>
+        /// <param name="path">The object path</param>
         /// <returns>A byte array containing the data</returns>
-        public byte[] ReadBytes(string key, string prefix = null)
+        public byte[] ReadBytes(string path)
         {
             // Ensure we have the key, also takes care of null or improper access
-            if (!ContainsKey(key, prefix))
+            if (!ContainsKey(path))
             {
-                throw new KeyNotFoundException($"Object with key '{key}' was not found in the current project. " +
+                throw new KeyNotFoundException($"Object with path '{path}' was not found in the current project. " +
                     "Please use ObjectStore.ContainsKey(key) to check if an object exists before attempting to read."
                 );
             }
+            path = NormalizePath(path);
 
-            var adjustedKey = AdjustKey(key, prefix);
-            _storage.TryGetValue(adjustedKey, out var data);
+            _storage.TryGetValue(path, out var data);
 
             if(data == null)
             {
-                var path = PathForKey(prefix, key);
-                if (File.Exists(path))
+                var filePath = PathForKey(path);
+                if (File.Exists(filePath))
                 {
                     // if there is no data in the cache and the file exists on disk let's load it
-                    data = _storage[adjustedKey] = File.ReadAllBytes(path);
+                    data = _storage[path] = File.ReadAllBytes(filePath);
                 }
             }
             return data;
         }
 
         /// <summary>
-        /// Saves the object data for the specified key
+        /// Saves the object data for the specified path
         /// </summary>
-        /// <param name="key">The object key</param>
+        /// <param name="path">The object path</param>
         /// <param name="contents">The object data</param>
-        /// <param name="prefix">Optionally the key prefix to use, will default to the project id</param>
         /// <returns>True if the save operation was successful</returns>
-        public bool SaveBytes(string key, byte[] contents, string prefix = null)
+        public bool SaveBytes(string path, byte[] contents)
         {
-            if (key == null)
+            if (path == null)
             {
-                throw new ArgumentNullException(nameof(key));
+                throw new ArgumentNullException(nameof(path));
             }
-            if (key.Contains('?', StringComparison.InvariantCultureIgnoreCase))
-            {
-                throw new ArgumentException($"LocalObjectStore.SaveBytes(): char '?' is not supported in the key {key}");
-            }
-            if (!Controls.StoragePermissions.HasFlag(FileAccess.Write))
+            else if (!Controls.StoragePermissions.HasFlag(FileAccess.Write))
             {
                 throw new InvalidOperationException($"LocalObjectStore.SaveBytes(): {NoWritePermissionsError}");
             }
+            else if (!_pathRegex.IsMatch(path))
+            {
+                throw new ArgumentException($"LocalObjectStore: path is not supported: '{path}'");
+            }
+            else if (path.Count(c => c == '/') > 100 || path.Count(c => c == '\\') > 100)
+            {
+                // just in case
+                throw new ArgumentException($"LocalObjectStore: path is not supported: '{path}'");
+            }
 
-            if (InternalSaveBytes(key, contents, prefix)
+            // after we check the regex
+            path = NormalizePath(path);
+
+            if (InternalSaveBytes(path, contents)
                 // only persist if we actually stored some new data, else can skip
                 && contents != null)
             {
@@ -229,17 +228,15 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <summary>
         /// Won't trigger persist nor will check storage write permissions, useful on initialization since it allows read only permissions to load the object store
         /// </summary>
-        protected bool InternalSaveBytes(string key, byte[] contents, string prefix = null)
+        protected bool InternalSaveBytes(string path, byte[] contents)
         {
-            key = AdjustKey(key, prefix);
-
             // Before saving confirm we are abiding by the control rules
             // Start by counting our file and its length
             var fileCount = 1;
             var expectedStorageSizeBytes = contents?.Length ?? 0L;
             foreach (var kvp in _storage)
             {
-                if (key.Equals(kvp.Key))
+                if (path.Equals(kvp.Key))
                 {
                     // Skip we have already counted this above
                     // If this key was already in storage it will be replaced.
@@ -247,7 +244,7 @@ namespace QuantConnect.Lean.Engine.Storage
                 else
                 {
                     fileCount++;
-                    var fileInfo = new FileInfo(GetFilePathForObjectStoreKey(kvp.Key));
+                    var fileInfo = new FileInfo(PathForKey(kvp.Key));
                     if (fileInfo.Exists)
                     {
                         expectedStorageSizeBytes += fileInfo.Length;
@@ -258,7 +255,7 @@ namespace QuantConnect.Lean.Engine.Storage
             // Verify we are within FileCount limit
             if (fileCount > Controls.StorageFileCount)
             {
-                var message = $"LocalObjectStore.InternalSaveBytes(): You have reached the ObjectStore limit for files it can save: {fileCount}. Unable to save the new file: '{key}'";
+                var message = $"LocalObjectStore.InternalSaveBytes(): You have reached the ObjectStore limit for files it can save: {fileCount}. Unable to save the new file: '{path}'";
                 Log.Error(message);
                 OnErrorRaised(new StorageLimitExceededException(message));
                 return false;
@@ -268,36 +265,35 @@ namespace QuantConnect.Lean.Engine.Storage
             var expectedStorageSizeMb = BytesToMb(expectedStorageSizeBytes);
             if (expectedStorageSizeMb > Controls.StorageLimitMB)
             {
-                var message = $"LocalObjectStore.InternalSaveBytes(): at storage capacity: {expectedStorageSizeMb}MB/{Controls.StorageLimitMB}MB. Unable to save: '{key}'";
+                var message = $"LocalObjectStore.InternalSaveBytes(): at storage capacity: {expectedStorageSizeMb}MB/{Controls.StorageLimitMB}MB. Unable to save: '{path}'";
                 Log.Error(message);
                 OnErrorRaised(new StorageLimitExceededException(message));
                 return false;
             }
 
             // Add the entry
-            _storage.AddOrUpdate(key, k => contents, (k, v) => contents);
+            _storage.AddOrUpdate(path, k => contents, (k, v) => contents);
             return true;
         }
 
         /// <summary>
-        /// Deletes the object data for the specified key
+        /// Deletes the object data for the specified path
         /// </summary>
-        /// <param name="key">The object key</param>
-        /// <param name="prefix">Optionally the key prefix to use, will default to the project id</param>
+        /// <param name="path">The object path</param>
         /// <returns>True if the delete operation was successful</returns>
-        public bool Delete(string key, string prefix = null)
+        public bool Delete(string path)
         {
-            if (key == null)
+            if (path == null)
             {
-                throw new ArgumentNullException(nameof(key));
+                throw new ArgumentNullException(nameof(path));
             }
             if (!Controls.StoragePermissions.HasFlag(FileAccess.Write))
             {
                 throw new InvalidOperationException($"LocalObjectStore.Delete(): {NoWritePermissionsError}");
             }
 
-            key = AdjustKey(key, prefix);
-            if (_storage.TryRemove(key, out var _))
+            path = NormalizePath(path);
+            if (_storage.TryRemove(path, out var _))
             {
                 _dirty = true;
 
@@ -313,21 +309,20 @@ namespace QuantConnect.Lean.Engine.Storage
         }
 
         /// <summary>
-        /// Returns the file path for the specified key
+        /// Returns the file path for the specified path
         /// </summary>
         /// <remarks>If the key is not already inserted it will just return a path associated with it
         /// and add the key with null value</remarks>
-        /// <param name="key">The object key</param>
-        /// <param name="prefix">Optionally the key prefix to use, will default to the project id</param>
+        /// <param name="path">The object path</param>
         /// <returns>The path for the file</returns>
-        public virtual string GetFilePath(string key, string prefix = null)
+        public virtual string GetFilePath(string path)
         {
             // Ensure we have an object for that key
-            if (!ContainsKey(key, prefix))
+            if (!ContainsKey(path))
             {
                 // Add a key with null value to tell Persist() not to delete the file created in the path associated
                 // with this key and not update it with the value associated with the key(null)
-                SaveBytes(key, null, prefix);
+                SaveBytes(path, null);
             }
             else
             {
@@ -336,7 +331,7 @@ namespace QuantConnect.Lean.Engine.Storage
             }
 
             // Fetch the path to file and return it
-            return PathForKey(prefix, key);
+            return PathForKey(path);
         }
 
         /// <summary>
@@ -374,6 +369,11 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <filterpriority>1</filterpriority>
         public IEnumerator<KeyValuePair<string, byte[]>> GetEnumerator()
         {
+            if(_storage.Any(kvp => kvp.Value == null))
+            {
+                // we need to load the data
+                LoadExistingObjects(loadContent: true);
+            }
             return _storage.GetEnumerator();
         }
 
@@ -386,49 +386,12 @@ namespace QuantConnect.Lean.Engine.Storage
         }
 
         /// <summary>
-        /// Get's a file path for a given key.
+        /// Get's a file path for a given path.
         /// Internal use only because it does not guarantee the existence of the file.
         /// </summary>
-        protected string PathForKey(string prefix, string key)
+        protected string PathForKey(string path)
         {
-            // We use an encoded filename because certain keys will cause problems with persisting
-            // data to a file; we use Base64 because it allow us to use all chars except '?' in our
-            // key, this is because '?' in the right place will output '/' which will break during
-            // persist
-            return Path.Combine(AlgorithmStorageRoot, GetPrefix(prefix), $"{KeyToBase64(key)}");
-        }
-
-        /// <summary>
-        /// Helper method to retrieve a file path for an object store key
-        /// </summary>
-        private string GetFilePathForObjectStoreKey(string objectStoreKey)
-        {
-            var key = Path.GetFileName(objectStoreKey);
-            var prefix = objectStoreKey.RemoveFromEnd(key);
-            return PathForKey(prefix, key);
-        }
-
-        private string GetPrefix(string prefix)
-        {
-            if (prefix == null)
-            {
-                prefix = _defaultPrefix;
-            }
-            else if (string.IsNullOrEmpty(prefix))
-            {
-                return string.Empty;
-            }
-            else if (!_pathRegex.IsMatch(prefix))
-            {
-                throw new ArgumentException($"LocalObjectStore: prefix is not supported: '{prefix}'");
-            }
-
-            return prefix.TrimStart('\\', '/');
-        }
-
-        private string AdjustKey(string key, string prefix)
-        {
-            return Path.Combine(GetPrefix(prefix), key);
+            return Path.Combine(AlgorithmStorageRoot, NormalizePath(path));
         }
 
         /// <summary>
@@ -488,15 +451,9 @@ namespace QuantConnect.Lean.Engine.Storage
                 var rootFolder = new DirectoryInfo(AlgorithmStorageRoot);
                 foreach (var file in rootFolder.EnumerateFiles("*", SearchOption.AllDirectories))
                 {
-                    var key = Base64ToKey(file.Name);
+                    var path = NormalizePath(file.FullName.RemoveFromStart(rootFolder.FullName));
 
-                    var prefix = file.Directory.FullName.RemoveFromStart(rootFolder.FullName);
-                    if (!string.IsNullOrEmpty(prefix))
-                    {
-                        key = Path.Combine(prefix, key);
-                    }
-
-                    if (!_storage.ContainsKey(key))
+                    if (!_storage.ContainsKey(path))
                     {
                         file.Delete();
                     }
@@ -509,7 +466,7 @@ namespace QuantConnect.Lean.Engine.Storage
                     if (kvp.Value != null)
                     {
                         // Get a path for this key and write to it
-                        var path = GetFilePathForObjectStoreKey(kvp.Key);
+                        var path = PathForKey(kvp.Key);
                         // directory might not exist for custom prefix
                         Directory.CreateDirectory(Path.GetDirectoryName(path));
                         File.WriteAllBytes(path, kvp.Value);
@@ -542,26 +499,13 @@ namespace QuantConnect.Lean.Engine.Storage
             return bytes / 1024.0 / 1024.0;
         }
 
-        /// <summary>
-        /// Convert a given key to a Base64 string
-        /// </summary>
-        /// <param name="key">Key to be encoded</param>
-        /// <returns>Base64 hash string</returns>
-        private static string KeyToBase64(string key)
+        private static string NormalizePath(string path)
         {
-            var textAsBytes = Encoding.UTF8.GetBytes(key);
-            return Convert.ToBase64String(textAsBytes);
-        }
-
-        /// <summary>
-        /// Convert a given Base64 string back to a key
-        /// </summary>
-        /// <param name="hash">Hash to be decoded</param>
-        /// <returns>Key string</returns>
-        private static string Base64ToKey(string hash)
-        {
-            var textAsBytes = Convert.FromBase64String(hash);
-            return Encoding.UTF8.GetString(textAsBytes);
+            if (string.IsNullOrEmpty(path))
+            {
+                return path;
+            }
+            return path.TrimStart('.').TrimStart('/', '\\');
         }
     }
 }
