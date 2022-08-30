@@ -53,118 +53,117 @@ namespace QuantConnect.Storage
         /// <summary>
         /// Initializes the object store
         /// </summary>
-        /// <param name="algorithmName">The algorithm name</param>
         /// <param name="userId">The user id</param>
         /// <param name="projectId">The project id</param>
         /// <param name="userToken">The user token</param>
         /// <param name="controls">The job controls instance</param>
-        public void Initialize(string algorithmName, int userId, int projectId, string userToken, Controls controls)
+        public void Initialize(int userId, int projectId, string userToken, Controls controls)
         {
-            _store.Initialize(algorithmName, userId, projectId, userToken, controls);
+            _store.Initialize(userId, projectId, userToken, controls);
         }
 
         /// <summary>
-        /// Determines whether the store contains data for the specified key
+        /// Determines whether the store contains data for the specified path
         /// </summary>
-        /// <param name="key">The object key</param>
+        /// <param name="path">The object path</param>
         /// <returns>True if the key was found</returns>
-        public bool ContainsKey(string key)
+        public bool ContainsKey(string path)
         {
-            return _store.ContainsKey(key);
+            return _store.ContainsKey(path);
         }
 
         /// <summary>
-        /// Returns the object data for the specified key
+        /// Returns the object data for the specified path
         /// </summary>
-        /// <param name="key">The object key</param>
+        /// <param name="path">The object path</param>
         /// <returns>A byte array containing the data</returns>
-        public byte[] ReadBytes(string key)
+        public byte[] ReadBytes(string path)
         {
-            return _store.ReadBytes(key);
+            return _store.ReadBytes(path);
         }
 
         /// <summary>
-        /// Saves the object data for the specified key
+        /// Saves the object data for the specified path
         /// </summary>
-        /// <param name="key">The object key</param>
+        /// <param name="path">The object path</param>
         /// <param name="contents">The object data</param>
         /// <returns>True if the save operation was successful</returns>
-        public bool SaveBytes(string key, byte[] contents)
+        public bool SaveBytes(string path, byte[] contents)
         {
-            return _store.SaveBytes(key, contents);
+            return _store.SaveBytes(path, contents);
         }
 
         /// <summary>
-        /// Deletes the object data for the specified key
+        /// Deletes the object data for the specified path
         /// </summary>
-        /// <param name="key">The object key</param>
+        /// <param name="path">The object path</param>
         /// <returns>True if the delete operation was successful</returns>
-        public bool Delete(string key)
+        public bool Delete(string path)
         {
-            return _store.Delete(key);
+            return _store.Delete(path);
         }
 
         /// <summary>
-        /// Returns the file path for the specified key
+        /// Returns the file path for the specified path
         /// </summary>
-        /// <param name="key">The object key</param>
+        /// <param name="path">The object path</param>
         /// <returns>The path for the file</returns>
-        public string GetFilePath(string key)
+        public string GetFilePath(string path)
         {
-            return _store.GetFilePath(key);
+            return _store.GetFilePath(path);
         }
 
         /// <summary>
-        /// Returns the string object data for the specified key
+        /// Returns the string object data for the specified path
         /// </summary>
-        /// <param name="key">The object key</param>
+        /// <param name="path">The object path</param>
         /// <param name="encoding">The string encoding used</param>
         /// <returns>A string containing the data</returns>
-        public string Read(string key, Encoding encoding = null)
+        public string Read(string path, Encoding encoding = null)
         {
             encoding = encoding ?? Encoding.UTF8;
 
-            var data = _store.ReadBytes(key);
+            var data = _store.ReadBytes(path);
             return data != null ? encoding.GetString(data) : null;
         }
 
         /// <summary>
-        /// Returns the string object data for the specified key
+        /// Returns the string object data for the specified path
         /// </summary>
-        /// <param name="key">The object key</param>
+        /// <param name="path">The object path</param>
         /// <param name="encoding">The string encoding used</param>
         /// <returns>A string containing the data</returns>
-        public string ReadString(string key, Encoding encoding = null)
+        public string ReadString(string path, Encoding encoding = null)
         {
-            return Read(key, encoding);
+            return Read(path, encoding);
         }
 
         /// <summary>
-        /// Returns the JSON deserialized object data for the specified key
+        /// Returns the JSON deserialized object data for the specified path
         /// </summary>
-        /// <param name="key">The object key</param>
+        /// <param name="path">The object path</param>
         /// <param name="encoding">The string encoding used</param>
         /// <param name="settings">The settings used by the JSON deserializer</param>
         /// <returns>An object containing the data</returns>
-        public T ReadJson<T>(string key, Encoding encoding = null, JsonSerializerSettings settings = null)
+        public T ReadJson<T>(string path, Encoding encoding = null, JsonSerializerSettings settings = null)
         {
             encoding = encoding ?? Encoding.UTF8;
 
-            var json = Read(key, encoding);
+            var json = Read(path, encoding);
             return JsonConvert.DeserializeObject<T>(json, settings);
         }
 
         /// <summary>
-        /// Returns the XML deserialized object data for the specified key
+        /// Returns the XML deserialized object data for the specified path
         /// </summary>
-        /// <param name="key">The object key</param>
+        /// <param name="path">The object path</param>
         /// <param name="encoding">The string encoding used</param>
         /// <returns>An object containing the data</returns>
-        public T ReadXml<T>(string key, Encoding encoding = null)
+        public T ReadXml<T>(string path, Encoding encoding = null)
         {
             encoding = encoding ?? Encoding.UTF8;
 
-            var xml = Read(key, encoding);
+            var xml = Read(path, encoding);
 
             var serializer = new XmlSerializer(typeof(T));
             using (var reader = new StringReader(xml))
@@ -174,75 +173,75 @@ namespace QuantConnect.Storage
         }
 
         /// <summary>
-        /// Saves the data from a local file path associated with the specified key
+        /// Saves the data from a local file path associated with the specified path
         /// </summary>
         /// <remarks>If the file does not exist it will throw an exception</remarks>
-        /// <param name="key">The object key</param>
+        /// <param name="path">The object path</param>
         /// <returns>True if the object was saved successfully</returns>
-        public bool Save(string key)
+        public bool Save(string path)
         {
             // Check the file exists
-            var filePath = GetFilePath(key);
+            var filePath = GetFilePath(path);
             if (!File.Exists(filePath))
             {
-                throw new ArgumentException($"There is no file associated with key {key} in '{filePath}'");
+                throw new ArgumentException($"There is no file associated with path {path} in '{filePath}'");
             }
             var bytes = File.ReadAllBytes(filePath);
 
-            return _store.SaveBytes(key, bytes);
+            return _store.SaveBytes(path, bytes);
         }
 
         /// <summary>
-        /// Saves the object data in text format for the specified key
+        /// Saves the object data in text format for the specified path
         /// </summary>
-        /// <param name="key">The object key</param>
+        /// <param name="path">The object path</param>
         /// <param name="text">The string object to be saved</param>
         /// <param name="encoding">The string encoding used, <see cref="Encoding.UTF8"/> by default</param>
         /// <returns>True if the object was saved successfully</returns>
-        public bool Save(string key, string text, Encoding encoding = null)
+        public bool Save(string path, string text, Encoding encoding = null)
         {
             encoding ??= Encoding.UTF8;
-            return _store.SaveBytes(key, encoding.GetBytes(text));
+            return _store.SaveBytes(path, encoding.GetBytes(text));
         }
 
         /// <summary>
-        /// Saves the object data in text format for the specified key
+        /// Saves the object data in text format for the specified path
         /// </summary>
-        /// <param name="key">The object key</param>
+        /// <param name="path">The object path</param>
         /// <param name="text">The string object to be saved</param>
         /// <param name="encoding">The string encoding used</param>
         /// <returns>True if the object was saved successfully</returns>
-        public bool SaveString(string key, string text, Encoding encoding = null)
+        public bool SaveString(string path, string text, Encoding encoding = null)
         {
             encoding = encoding ?? Encoding.UTF8;
 
-            return _store.SaveBytes(key, encoding.GetBytes(text));
+            return _store.SaveBytes(path, encoding.GetBytes(text));
         }
 
         /// <summary>
-        /// Saves the object data in JSON format for the specified key
+        /// Saves the object data in JSON format for the specified path
         /// </summary>
-        /// <param name="key">The object key</param>
+        /// <param name="path">The object path</param>
         /// <param name="obj">The object to be saved</param>
         /// <param name="encoding">The string encoding used</param>
         /// <param name="settings">The settings used by the JSON serializer</param>
         /// <returns>True if the object was saved successfully</returns>
-        public bool SaveJson<T>(string key, T obj, Encoding encoding = null, JsonSerializerSettings settings = null)
+        public bool SaveJson<T>(string path, T obj, Encoding encoding = null, JsonSerializerSettings settings = null)
         {
             encoding = encoding ?? Encoding.UTF8;
 
             var json = JsonConvert.SerializeObject(obj, settings);
-            return SaveString(key, json, encoding);
+            return SaveString(path, json, encoding);
         }
 
         /// <summary>
-        /// Saves the object data in XML format for the specified key
+        /// Saves the object data in XML format for the specified path
         /// </summary>
-        /// <param name="key">The object key</param>
+        /// <param name="path">The object path</param>
         /// <param name="obj">The object to be saved</param>
         /// <param name="encoding">The string encoding used</param>
         /// <returns>True if the object was saved successfully</returns>
-        public bool SaveXml<T>(string key, T obj, Encoding encoding = null)
+        public bool SaveXml<T>(string path, T obj, Encoding encoding = null)
         {
             encoding = encoding ?? Encoding.UTF8;
 
@@ -252,7 +251,7 @@ namespace QuantConnect.Storage
                 serializer.Serialize(writer, obj);
 
                 var xml = writer.ToString();
-                return SaveString(key, xml, encoding);
+                return SaveString(path, xml, encoding);
             }
         }
 

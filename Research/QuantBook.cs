@@ -136,16 +136,15 @@ namespace QuantConnect.Research
                     Version = Globals.Version
                 });
 
-                algorithmHandlers.ObjectStore.Initialize(Config.Get("research-object-store-name", "QuantBook"),
-                    Config.GetInt("job-user-id"),
+                algorithmHandlers.ObjectStore.Initialize(Config.GetInt("job-user-id"),
                     Config.GetInt("project-id"),
                     Config.Get("api-access-token"),
                     new Controls
                     {
                         // if <= 0 we disable periodic persistence and make it synchronous
                         PersistenceIntervalSeconds = -1,
-                        StorageLimitMB = Config.GetInt("storage-limit-mb", 5),
-                        StorageFileCount = Config.GetInt("storage-file-count", 100),
+                        StorageLimit = Config.GetValue("storage-limit", 10737418240L),
+                        StorageFileCount = Config.GetInt("storage-file-count", 10000),
                         StoragePermissions = (FileAccess) Config.GetInt("storage-permissions", (int)FileAccess.ReadWrite)
                     });
                 SetObjectStore(algorithmHandlers.ObjectStore);
