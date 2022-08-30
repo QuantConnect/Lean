@@ -17,6 +17,7 @@ using Deedle;
 using NUnit.Framework;
 using QuantConnect.Orders;
 using QuantConnect.Report;
+using QuantConnect.Brokerages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -177,6 +178,46 @@ namespace QuantConnect.Tests.Report
                     Assert.AreEqual(option.Underlying, pointInTimePortfolio.Order.Symbol.Underlying);
                 }
             });
+        }
+
+        [TestCase("BNTUSDT", "USDT")]
+        [TestCase("AUDBUSD", "BUSD")]
+        public void OrderProcessedInLooper_WithNonDefaultAlgorithmSettings(string symbol, string currency)
+        {
+            var equityPoints = new SortedList<DateTime, double>
+            {
+                { new DateTime(2020, 2, 12, 20, 0, 0), 100000 },
+                { new DateTime(2020, 2, 13, 20, 0, 0), 900000 },
+            };
+            var series = new Series<DateTime, double>(equityPoints);
+            var orderPrice = 0.35m;
+            var orderQuantity = 30000m;
+            var order = Order.CreateOrder(new SubmitOrderRequest(
+                OrderType.Market,
+                SecurityType.Crypto,
+                Symbol.Create(symbol, SecurityType.Crypto, Market.Binance),
+                orderQuantity,
+                0m,
+                0m,
+                new DateTime(2020, 2, 12, 20, 0, 0),
+                string.Empty
+            ));
+            order.LastFillTime = new DateTime(2020, 2, 12, 20, 0, 0);
+            order.GetType().GetProperty("Id").SetValue(order, 1);
+            order.GetType().GetProperty("Status").SetValue(order, OrderStatus.Filled);
+            order.GetType().GetProperty("Price").SetValue(order, orderPrice);
+            var orders = new[] { order };
+
+            var looper = PortfolioLooper.FromOrders(series, orders, new AlgorithmConfiguration(currency, BrokerageName.Binance, AccountType.Cash));
+            var pointInTimePortfolio = looper.ToList();
+
+            Assert.AreEqual(2, pointInTimePortfolio.Count);
+            Assert.AreEqual(100000m, pointInTimePortfolio[0].TotalPortfolioValue);
+
+            var holdings = pointInTimePortfolio[0].Holdings;
+            Assert.AreEqual(1, holdings.Count);
+            Assert.AreEqual(orderQuantity, holdings[0].Quantity);
+            Assert.AreEqual(orderQuantity * orderPrice, holdings[0].HoldingsValue);
         }
     }
 }

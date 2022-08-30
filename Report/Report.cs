@@ -57,10 +57,13 @@ namespace QuantConnect.Report
             var backtestOrders = backtest?.Orders?.Values.ToList() ?? new List<Order>();
             var liveOrders = live?.Orders?.Values.ToList() ?? new List<Order>();
 
+            var backtestConfiguration = backtest?.AlgorithmConfiguration;
+            var liveConfiguration = live?.AlgorithmConfiguration;
+
             Log.Trace($"QuantConnect.Report.Report(): Processing backtesting orders");
-            var backtestPortfolioInTime = PortfolioLooper.FromOrders(backtestCurve, backtestOrders).ToList();
+            var backtestPortfolioInTime = PortfolioLooper.FromOrders(backtestCurve, backtestOrders, backtestConfiguration).ToList();
             Log.Trace($"QuantConnect.Report.Report(): Processing live orders");
-            var livePortfolioInTime = PortfolioLooper.FromOrders(liveCurve, liveOrders, liveSeries: true).ToList();
+            var livePortfolioInTime = PortfolioLooper.FromOrders(liveCurve, liveOrders, liveConfiguration, liveSeries: true).ToList();
 
             var destination = pointInTimePortfolioDestination ?? Config.Get("report-destination");
             if (!string.IsNullOrWhiteSpace(destination))

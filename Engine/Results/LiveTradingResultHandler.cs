@@ -57,7 +57,7 @@ namespace QuantConnect.Lean.Engine.Results
         private DateTime _currentUtcDate;
 
         /// <summary>
-        /// The earliest time of next dump to the status file 
+        /// The earliest time of next dump to the status file
         /// </summary>
         protected DateTime NextStatusUpdate;
 
@@ -801,7 +801,9 @@ namespace QuantConnect.Lean.Engine.Results
 
                     //Create a packet:
                     result = new LiveResultPacket(_job,
-                        new LiveResult(new LiveResultParameters(charts, orders, profitLoss, new Dictionary<string, Holding>(), Algorithm.Portfolio.CashBook, statisticsResults.Summary, runtime, GetOrderEventsToStore())));
+                        new LiveResult(new LiveResultParameters(charts, orders, profitLoss, new Dictionary<string, Holding>(),
+                            Algorithm.Portfolio.CashBook, statisticsResults.Summary, runtime, GetOrderEventsToStore(),
+                            algorithmConfiguration: AlgorithmConfiguration.Create(Algorithm))));
                 }
                 else
                 {

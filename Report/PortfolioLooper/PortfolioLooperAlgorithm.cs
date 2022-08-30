@@ -29,16 +29,19 @@ namespace QuantConnect.Report
     {
         private decimal _startingCash;
         private List<Order> _orders;
+        private AlgorithmConfiguration _algorithmConfiguration;
 
         /// <summary>
         /// Initialize an instance of <see cref="PortfolioLooperAlgorithm"/>
         /// </summary>
         /// <param name="startingCash">Starting algorithm cash</param>
         /// <param name="orders">Orders to use</param>
-        public PortfolioLooperAlgorithm(decimal startingCash, IEnumerable<Order> orders) : base()
+        /// <param name="algorithmConfiguration">Optional parameter to override default algorithm configuration</param>
+        public PortfolioLooperAlgorithm(decimal startingCash, IEnumerable<Order> orders, AlgorithmConfiguration algorithmConfiguration = null) : base()
         {
             _startingCash = startingCash;
             _orders = orders.ToList();
+            _algorithmConfiguration = algorithmConfiguration;
         }
 
         /// <summary>
@@ -81,6 +84,12 @@ namespace QuantConnect.Report
         /// </summary>
         public override void Initialize()
         {
+            if (_algorithmConfiguration != null)
+            {
+                SetAccountCurrency(_algorithmConfiguration.AccountCurrency);
+                SetBrokerageModel(_algorithmConfiguration.BrokerageName, _algorithmConfiguration.AccountType);
+            }
+
             SetCash(_startingCash);
 
             if (_orders.Count != 0)

@@ -59,5 +59,10 @@ namespace QuantConnect.Packets
         /// Runtime banner/updating statistics in the title banner of the live algorithm GUI.
         /// </summary>
         public IDictionary<string, string> RuntimeStatistics { get; set; }
+
+        /// <summary>
+        /// The algorithm's configuration required for report generation
+        /// </summary>
+        public AlgorithmConfiguration AlgorithmConfiguration { get; set; }
     }
 }
