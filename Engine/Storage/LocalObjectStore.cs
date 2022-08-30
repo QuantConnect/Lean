@@ -120,7 +120,11 @@ namespace QuantConnect.Lean.Engine.Storage
 
                     if (loadContent)
                     {
-                        _storage[path] = File.ReadAllBytes(file.FullName);
+                        if (!_storage.TryGetValue(path, out var content) || content == null)
+                        {
+                            // load file if content is null or not present, we prioritize the version we have in memory
+                            _storage[path] = File.ReadAllBytes(file.FullName);
+                        }
                     }
                     else
                     {
