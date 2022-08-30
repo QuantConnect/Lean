@@ -43,7 +43,7 @@ namespace QuantConnect.Tests.Common.Storage
             Config.Set("object-store-root", TestStorageRoot);
 
             _store = new ObjectStore(new LocalObjectStore());
-            _store.Initialize(0, 0, "", new Controls());
+            _store.Initialize(0, 0, "", new Controls() {  StorageLimit = 5 * 1024 * 1024, StorageFileCount = 100});
 
             // Store initial Log Handler
             _logHandler = Log.LogHandler;
