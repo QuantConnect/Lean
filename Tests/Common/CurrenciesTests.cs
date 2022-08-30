@@ -107,6 +107,10 @@ namespace QuantConnect.Tests.Common
             Assert.IsFalse(Currencies.TryParse(valueWithCurrency, out _));
         }
 
-        static IEnumerable<string> CurrencySymbols => Currencies.CurrencySymbols.Values.Distinct();
+        static IEnumerable<string> CurrencySymbols =>
+            // Currencies with known symbols
+            Currencies.CurrencySymbols.Values.Distinct()
+            // Currencies without known symbols
+            .Concat(new [] { "BUSD", "BNT", "ARS", "VES" });
     }
 }
