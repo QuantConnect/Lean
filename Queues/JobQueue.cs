@@ -118,8 +118,8 @@ namespace QuantConnect.Queues
                 TickLimit = Config.GetInt("symbol-tick-limit", 10000),
                 RamAllocation = int.MaxValue,
                 MaximumDataPointsPerChartSeries = Config.GetInt("maximum-data-points-per-chart-series", 4000),
-                StorageLimitMB = Config.GetInt("storage-limit-mb", 5),
-                StorageFileCount = Config.GetInt("storage-file-count", 100),
+                StorageLimit = Config.GetValue("storage-limit", 10737418240L),
+                StorageFileCount = Config.GetInt("storage-file-count", 10000),
                 StoragePermissions = (FileAccess)Config.GetInt("storage-permissions", (int)FileAccess.ReadWrite)
             };
 

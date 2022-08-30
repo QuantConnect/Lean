@@ -21,9 +21,6 @@
   //Research notebook
   //"composer-dll-directory": ".",
 
-  //Object store directory name for Research Notebook
-  "research-object-store-name": "QuantBook",
-
   // engine
   "data-folder": "../../../Data/",
 

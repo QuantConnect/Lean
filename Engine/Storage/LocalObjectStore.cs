@@ -92,7 +92,7 @@ namespace QuantConnect.Lean.Engine.Storage
             // create the root path if it does not exist
             Directory.CreateDirectory(AlgorithmStorageRoot);
 
-            Log.Trace($"LocalObjectStore.Initialize(): Storage Root: {new FileInfo(AlgorithmStorageRoot).FullName}. StorageFileCount {controls.StorageFileCount}. StorageLimitMB {controls.StorageLimitMB}");
+            Log.Trace($"LocalObjectStore.Initialize(): Storage Root: {new FileInfo(AlgorithmStorageRoot).FullName}. StorageFileCount {controls.StorageFileCount}. StorageLimit {BytesToMb(controls.StorageLimit)}MB");
 
             Controls = controls;
 
@@ -266,10 +266,9 @@ namespace QuantConnect.Lean.Engine.Storage
             }
 
             // Verify we are within Storage limit
-            var expectedStorageSizeMb = BytesToMb(expectedStorageSizeBytes);
-            if (expectedStorageSizeMb > Controls.StorageLimitMB)
+            if (expectedStorageSizeBytes > Controls.StorageLimit)
             {
-                var message = $"LocalObjectStore.InternalSaveBytes(): at storage capacity: {expectedStorageSizeMb}MB/{Controls.StorageLimitMB}MB. Unable to save: '{path}'";
+                var message = $"LocalObjectStore.InternalSaveBytes(): at storage capacity: {BytesToMb(expectedStorageSizeBytes)}MB/{BytesToMb(Controls.StorageLimit)}MB. Unable to save: '{path}'";
                 Log.Error(message);
                 OnErrorRaised(new StorageLimitExceededException(message));
                 return false;
@@ -471,8 +470,13 @@ namespace QuantConnect.Lean.Engine.Storage
                     {
                         // Get a path for this key and write to it
                         var path = PathForKey(kvp.Key);
+
                         // directory might not exist for custom prefix
-                        Directory.CreateDirectory(Path.GetDirectoryName(path));
+                        var parent = Path.GetDirectoryName(path);
+                        if (!Directory.Exists(parent))
+                        {
+                            Directory.CreateDirectory(parent);
+                        }
                         File.WriteAllBytes(path, kvp.Value);
                     }
                 }
@@ -481,7 +485,7 @@ namespace QuantConnect.Lean.Engine.Storage
             }
             catch (Exception err) 
             {
-                Log.Error("LocalObjectStore.PersistData()", err);
+                Log.Error(err, "LocalObjectStore.PersistData()");
                 OnErrorRaised(err);
                 return false;
             }
