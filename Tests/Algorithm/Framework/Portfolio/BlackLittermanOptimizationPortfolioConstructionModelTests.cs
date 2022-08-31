@@ -173,13 +173,28 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 PortfolioTarget.Percent(_algorithm, GetSymbol("USA"), 0.18803095)
             };
 
-            double[,] P;
-            double[] Q;
-            ((BLOPCM)_algorithm.PortfolioConstruction).TestTryGetViews(_view1Insights, out P, out Q);
+            if (language == Language.CSharp)
+            {
+                double[,] P;
+                double[] Q;
+                ((BLOPCM)_algorithm.PortfolioConstruction).TestTryGetViews(_view1Insights, out P, out Q);
+
+                Assert.AreEqual(P.GetLength(0), 1);
+                Assert.AreEqual(P.GetLength(1), 7);
+                Assert.AreEqual(Q.GetLength(0), 1);
+
+                return;
+            }
             
-            Assert.AreEqual(P.GetLength(0), 1);
-            Assert.AreEqual(P.GetLength(1), 7);
-            Assert.AreEqual(Q.GetLength(0), 7);
+            using (Py.GIL())
+            {
+                var name = nameof(BLOPCM);
+                var instance = PyModule.FromString(name, GetPythonBLOPCM()).GetAttr(name).Invoke(((int)PortfolioBias.LongShort).ToPython());
+                var result = PyList.AsList(instance.InvokeMethod("get_views", _view1Insights.ToPython()));
+                Assert.AreEqual(result[0].Length(), 1);
+                Assert.AreEqual(result[0][0].Length(), 7);
+                Assert.AreEqual(result[1].Length(), 1);
+            }
         }
 
         [Test]
@@ -203,13 +218,28 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             var insights = _view1Insights.Concat(_view2Insights).ToList();
 
-            double[,] P;
-            double[] Q;
-            ((BLOPCM)_algorithm.PortfolioConstruction).TestTryGetViews(insights, out P, out Q);
+            if (language == Language.CSharp)
+            {
+                double[,] P;
+                double[] Q;
+                ((BLOPCM)_algorithm.PortfolioConstruction).TestTryGetViews(insights, out P, out Q);
 
-            Assert.AreEqual(P.GetLength(0), 2);
-            Assert.AreEqual(P.GetLength(1), 7);
-            Assert.AreEqual(Q.GetLength(0), 7);
+                Assert.AreEqual(P.GetLength(0), 2);
+                Assert.AreEqual(P.GetLength(1), 7);
+                Assert.AreEqual(Q.GetLength(0), 2);
+
+                return;
+            }
+            
+            using (Py.GIL())
+            {
+                var name = nameof(BLOPCM);
+                var instance = PyModule.FromString(name, GetPythonBLOPCM()).GetAttr(name).Invoke(((int)PortfolioBias.LongShort).ToPython());
+                var result = PyList.AsList(instance.InvokeMethod("get_views", insights.ToPython()));
+                Assert.AreEqual(result[0].Length(), 2);
+                Assert.AreEqual(result[0][0].Length(), 7);
+                Assert.AreEqual(result[1].Length(), 2);
+            }
         }
 
         [Test]

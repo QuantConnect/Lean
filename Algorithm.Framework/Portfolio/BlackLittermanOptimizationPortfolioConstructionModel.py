@@ -254,7 +254,7 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
                         P[model][insight.Symbol] = value / q
                     # Add zero for other symbols that are listed but active insight
                     else:
-                        P[model][symbol] = 0
+                        P[model][insight.Symbol] = 0
 
             Q = np.array([[x] for x in Q.values()])
             if len(Q) > 0:
