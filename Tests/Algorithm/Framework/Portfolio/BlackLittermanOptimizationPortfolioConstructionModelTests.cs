@@ -155,6 +155,64 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         }
 
         [Test]
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void OneViewDimensionTest(Language language)
+        {
+            SetPortfolioConstruction(language);
+
+            // Results from http://www.blacklitterman.org/code/hl_py.html (View 1+2)
+            var expectedTargets = new[]
+            {
+                PortfolioTarget.Percent(_algorithm, GetSymbol("AUS"), 0.0152381),
+                PortfolioTarget.Percent(_algorithm, GetSymbol("CAN"), 0.41863571),
+                PortfolioTarget.Percent(_algorithm, GetSymbol("FRA"), -0.03409321),
+                PortfolioTarget.Percent(_algorithm, GetSymbol("GER"), 0.33582847),
+                PortfolioTarget.Percent(_algorithm, GetSymbol("JAP"), 0.11047619),
+                PortfolioTarget.Percent(_algorithm, GetSymbol("UK"), -0.08173526),
+                PortfolioTarget.Percent(_algorithm, GetSymbol("USA"), 0.18803095)
+            };
+
+            double[,] P;
+            double[] Q;
+            ((BLOPCM)_algorithm.PortfolioConstruction).TestTryGetViews(_view1Insights, out P, out Q);
+            
+            Assert.AreEqual(P.GetLength(0), 1);
+            Assert.AreEqual(P.GetLength(1), 7);
+            Assert.AreEqual(Q.GetLength(0), 7);
+        }
+
+        [Test]
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void TwoViewsDimensionTest(Language language)
+        {
+            SetPortfolioConstruction(language);
+
+            // Results from http://www.blacklitterman.org/code/hl_py.html (View 1+2)
+            var expectedTargets = new[]
+            {
+                PortfolioTarget.Percent(_algorithm, GetSymbol("AUS"), 0.0152381),
+                PortfolioTarget.Percent(_algorithm, GetSymbol("CAN"), 0.41863571),
+                PortfolioTarget.Percent(_algorithm, GetSymbol("FRA"), -0.03409321),
+                PortfolioTarget.Percent(_algorithm, GetSymbol("GER"), 0.33582847),
+                PortfolioTarget.Percent(_algorithm, GetSymbol("JAP"), 0.11047619),
+                PortfolioTarget.Percent(_algorithm, GetSymbol("UK"), -0.08173526),
+                PortfolioTarget.Percent(_algorithm, GetSymbol("USA"), 0.18803095)
+            };
+
+            var insights = _view1Insights.Concat(_view2Insights).ToList();
+
+            double[,] P;
+            double[] Q;
+            ((BLOPCM)_algorithm.PortfolioConstruction).TestTryGetViews(insights, out P, out Q);
+
+            Assert.AreEqual(P.GetLength(0), 2);
+            Assert.AreEqual(P.GetLength(1), 7);
+            Assert.AreEqual(Q.GetLength(0), 7);
+        }
+
+        [Test]
         [TestCase(Language.CSharp, 11, true)]
         [TestCase(Language.CSharp, -11, true)]
         [TestCase(Language.CSharp, 0.001d, true)]
@@ -358,6 +416,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 // Equilibrium covariance matrix
                 Σ = Elementwise.Multiply(C, σ.Outer(σ));
                 return w.Dot(Σ.Multiply(delta));
+            }
+
+            public bool TestTryGetViews(ICollection<Insight> insights, out double[,] P, out double[] Q)
+            {
+                return base.TryGetViews(insights, out P, out Q);
             }
 
             public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)

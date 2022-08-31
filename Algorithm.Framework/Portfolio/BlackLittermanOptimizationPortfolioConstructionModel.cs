@@ -378,7 +378,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="insights">Array of insight that represent the investors' views</param>
         /// <param name="P">A matrix that identifies the assets involved in the views (size: K x N)</param>
         /// <param name="Q">A view vector (size: K x 1)</param>
-        private bool TryGetViews(ICollection<Insight> insights, out double[,] P, out double[] Q)
+        protected bool TryGetViews(ICollection<Insight> insights, out double[,] P, out double[] Q)
         {
             try
             {
