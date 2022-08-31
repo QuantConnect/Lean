@@ -75,5 +75,15 @@ namespace QuantConnect.Interfaces
         /// <param name="path">The object path</param>
         /// <returns>The path for the file</returns>
         string GetFilePath(string path);
+
+        /// <summary>
+        /// Returns the file paths present in the object store. This is specially useful not to load the object store into memory
+        /// </summary>
+        ICollection<string> Keys { get; }
+
+        /// <summary>
+        /// Will clear the object store state cache. This is useful when the object store is used concurrently by nodes which want to share information
+        /// </summary>
+        void Clear();
     }
 }
