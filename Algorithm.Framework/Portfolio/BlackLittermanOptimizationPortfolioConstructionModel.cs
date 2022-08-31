@@ -382,6 +382,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         {
             try
             {
+                var symbols = insights.Select(insight => insight.Symbol);
+
                 var tmpQ = insights.GroupBy(insight => insight.SourceModel)
                     .Select(values =>
                     {
@@ -402,7 +404,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                             return value / q;
                         });
                         // Add zero for other symbols that are listed but active insight
-                        foreach (var symbol in _symbolDataDict.Keys)
+                        foreach (var symbol in symbols)
                         {
                             if (!results.ContainsKey(symbol))
                             {
@@ -451,9 +453,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 // Compute posterior estimate of the uncertainty in the mean
                 var M = Στ.Subtract(A.Dot(P).Dot(Στ));
                 Σ = Σ.Add(M).Multiply(_delta);
-
-                // Compute posterior weights based on uncertainty in mean
-                var W = Π.Dot(Σ.Inverse());
             }
         }
     }
