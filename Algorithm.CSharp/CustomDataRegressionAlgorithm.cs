@@ -110,7 +110,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 8942;
+        public long DataPoints => 8943;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -125,30 +125,30 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "157.655%"},
+            {"Compounding Annual Return", "155.365%"},
             {"Drawdown", "84.800%"},
             {"Expectancy", "0"},
-            {"Net Profit", "5319.007%"},
-            {"Sharpe Ratio", "2.123"},
-            {"Probabilistic Sharpe Ratio", "70.581%"},
+            {"Net Profit", "5123.170%"},
+            {"Sharpe Ratio", "2.103"},
+            {"Probabilistic Sharpe Ratio", "69.967%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "1.776"},
-            {"Beta", "0.059"},
+            {"Alpha", "1.76"},
+            {"Beta", "0.055"},
             {"Annual Standard Deviation", "0.84"},
             {"Annual Variance", "0.706"},
-            {"Information Ratio", "1.962"},
-            {"Tracking Error", "0.847"},
-            {"Treynor Ratio", "30.455"},
+            {"Information Ratio", "1.942"},
+            {"Tracking Error", "0.848"},
+            {"Treynor Ratio", "32.317"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "BTC.Bitcoin 2S"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "2.271"},
-            {"Return Over Maximum Drawdown", "1.86"},
+            {"Sortino Ratio", "2.238"},
+            {"Return Over Maximum Drawdown", "1.832"},
             {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -190,6 +190,16 @@ namespace QuantConnect.Algorithm.CSharp
             [JsonProperty("volume")]
             public decimal VolumeBTC = 0;
             public decimal VolumeUSD = 0;
+
+            /// <summary>
+            /// The end time of this data. Some data covers spans (trade bars)
+            /// and as such we want to know the entire time span covered
+            /// </summary>
+            /// <remarks>
+            /// This property is overriden to allow different values for Time and EndTime
+            /// if they are set in the Reader. In the base implementation EndTime equals Time
+            /// </remarks>
+            public override DateTime EndTime { get; set; }
 
             /// <summary>
             /// 1. DEFAULT CONSTRUCTOR: Custom data types need a default constructor.
