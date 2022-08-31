@@ -43,7 +43,7 @@ namespace QuantConnect.Tests.Common.Storage
             Config.Set("object-store-root", TestStorageRoot);
 
             _store = new ObjectStore(new LocalObjectStore());
-            _store.Initialize(0, 0, "", new Controls() {  StorageLimit = 5 * 1024 * 1024, StorageFileCount = 100});
+            _store.Initialize(0, 0, "", new Controls() { StorageLimit = 5 * 1024 * 1024, StorageFileCount = 100 });
 
             // Store initial Log Handler
             _logHandler = Log.LogHandler;
@@ -92,6 +92,9 @@ namespace QuantConnect.Tests.Common.Storage
 
                 Assert.IsTrue(File.Exists(store.GetFilePath("location-pepe/test/Jose")));
                 Assert.IsTrue(File.Exists(store.GetFilePath("rootFile")));
+
+                Assert.IsTrue(store.Delete("location-pepe/test/Jose"));
+                Assert.IsTrue(store.Delete("rootFile"));
             }
         }
 
@@ -149,6 +152,7 @@ namespace QuantConnect.Tests.Common.Storage
             else
             {
                 Assert.IsTrue(store.SaveBytes("Jose", new byte[] { 0 }));
+                Assert.IsTrue(store.Delete("Jose"));
             }
         }
 
@@ -173,29 +177,29 @@ namespace QuantConnect.Tests.Common.Storage
 
         [TestCase("../prefix/")]
         [TestCase("..\\prefix/")]
-        public void InvalidCustomPrefixStore(string prefix)
+        public void InvalidCustomPathsStore(string path)
         {
             using (var store = new ObjectStore(new LocalObjectStore()))
             {
                 store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
                 Assert.AreEqual(0, store.Count());
 
-                Assert.Throws<ArgumentException>(() => store.SaveString($"{prefix}ILove", "Pizza"));
+                Assert.Throws<ArgumentException>(() => store.SaveString($"{path}ILove", "Pizza"));
             }
         }
 
         [Test]
-        public void Prefix()
+        public void ValidPaths()
         {
             using (var store = new ObjectStore(new LocalObjectStore()))
             {
                 store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
 
-                store.SaveString("jose/pepe/ILove", "Pizza");
+                store.SaveString("jose-something/pepe/ILove", "Pizza");
                 Assert.AreEqual(1, store.Count());
-                Assert.AreEqual(1, Directory.EnumerateFiles(Path.Combine(TestStorageRoot, "jose", "pepe")).Count());
+                Assert.AreEqual(1, Directory.EnumerateFiles(Path.Combine(TestStorageRoot, "jose-something", "pepe")).Count());
 
-                store.Delete("jose/pepe/ILove");
+                store.Delete("jose-something/pepe/ILove");
                 Assert.AreEqual(0, store.Count());
                 Assert.AreEqual(0, Directory.EnumerateFiles(TestStorageRoot, "*", SearchOption.AllDirectories).Count());
             }
@@ -222,7 +226,7 @@ namespace QuantConnect.Tests.Common.Storage
                 Assert.AreEqual(0, store.Count());
 
                 var key = "ILove";
-                if(prefix != null)
+                if (prefix != null)
                 {
                     key = Path.Combine(prefix, key);
                 }
@@ -238,6 +242,111 @@ namespace QuantConnect.Tests.Common.Storage
                 Assert.IsTrue(File.Exists(path));
                 Assert.IsTrue(store.Delete(key));
                 Assert.IsFalse(File.Exists(path));
+            }
+        }
+
+        [TestCase(2)]
+        [TestCase(1)]
+        [TestCase(0)]
+        public void KeysBehavior(int useCase)
+        {
+            using (var store = new ObjectStore(new LocalObjectStore()))
+            {
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+                var key = "ILove";
+                store.SaveString(key, "Pizza");
+                var path = store.GetFilePath(key);
+
+                if (useCase == 0)
+                {
+                    // delete
+                    Assert.IsTrue(store.Delete(key));
+                    Assert.IsFalse(File.Exists(path));
+                    Assert.AreEqual(0, store.Keys.Count);
+                }
+                else if (useCase == 1)
+                {
+                    // read
+                    Assert.AreEqual(key, store.Keys.Single());
+                }
+                else if (useCase == 2)
+                {
+                    // new file
+                    File.WriteAllText(Path.Combine(Path.GetDirectoryName(path), "some other-file"), "Pepe");
+
+                    Assert.AreEqual(2, store.Keys.Count);
+                    Assert.AreEqual(1, store.Keys.Count(k => k == key));
+                    Assert.AreEqual(1, store.Keys.Count(k => k == "some other-file"));
+
+                    Assert.IsTrue(store.Delete("some other-file"));
+                }
+
+                // clean up
+                if (File.Exists(path))
+                {
+                    File.Delete(path);
+                }
+            }
+        }
+
+        [TestCase(5)]
+        [TestCase(4)]
+        [TestCase(3)]
+        [TestCase(2)]
+        [TestCase(1)]
+        [TestCase(0)]
+        public void AfterClearState(int useCase)
+        {
+            using (var store = new ObjectStore(new LocalObjectStore()))
+            {
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+                var key = "ILove";
+                store.SaveString(key, "Pizza");
+                var path = store.GetFilePath(key);
+                // CLEAR the state
+                store.Clear();
+
+                if(useCase == 0)
+                {
+                    // delete
+                    Assert.IsTrue(store.Delete(key));
+                    Assert.IsFalse(File.Exists(path));
+                }
+                else if (useCase == 1)
+                {
+                    // read
+                    Assert.AreEqual("Pizza", store.ReadString(key));
+                }
+                else if (useCase == 2)
+                {
+                    // enumeration
+                    Assert.AreEqual("Pizza", store.Single().Value);
+                }
+                else if (useCase == 3)
+                {
+                    // keys
+                    Assert.AreEqual(key, store.Keys.Single());
+                }
+                else if (useCase == 4)
+                {
+                    // get file path
+                    Assert.AreEqual(path, store.GetFilePath(key));
+                }
+                else if (useCase == 5)
+                {
+                    // new file
+                    File.WriteAllText(Path.Combine(Path.GetDirectoryName(path), "some other-file"), "Pepe");
+
+                    // read new file
+                    Assert.AreEqual("Pepe", store.ReadString("some other-file"));
+                    Assert.IsTrue(store.Delete("some other-file"));
+                }
+
+                // clean up
+                if (File.Exists(path))
+                {
+                    File.Delete(path);
+                }
             }
         }
 
@@ -267,7 +376,7 @@ namespace QuantConnect.Tests.Common.Storage
         public void ContainsKeyPermissions(FileAccess permissions, bool shouldThrow)
         {
             using var store = new TestLocalObjectStore();
-            store.Initialize(0, 0, "", new Controls {StoragePermissions = permissions});
+            store.Initialize(0, 0, "", new Controls { StoragePermissions = permissions });
 
             if (shouldThrow)
             {
@@ -316,14 +425,14 @@ namespace QuantConnect.Tests.Common.Storage
                 PersistenceIntervalSeconds = -1
             });
 
-            store.SaveBytes("Pepe", new byte[] {1});
+            store.SaveBytes("Pepe", new byte[] { 1 });
             Assert.AreEqual(1, store.ReadBytes("Pepe").Single());
             Assert.IsTrue(store.PersistDataCalled);
 
             store.PersistDataCalled = false;
 
             store.Delete("Pepe");
-            Assert.IsTrue(store.PersistDataCalled);
+            Assert.IsFalse(File.Exists(Path.Combine(TestStorageRoot, "Pepe")));
             Assert.IsFalse(store.ContainsKey("Pepe"));
 
             store.DisposeSafely();
@@ -346,7 +455,7 @@ namespace QuantConnect.Tests.Common.Storage
         [TestCase("|", null)]
         public void GetFilePathReturnsFileName(string key, string expectedRelativePath)
         {
-            if(expectedRelativePath == null)
+            if (expectedRelativePath == null)
             {
                 Assert.Throws<ArgumentException>(() => _store.GetFilePath(key));
             }
@@ -455,7 +564,7 @@ namespace QuantConnect.Tests.Common.Storage
             string path;
             using (var store = new LocalObjectStore())
             {
-                store.Initialize(0, 0, "", new Controls() {PersistenceIntervalSeconds = -1});
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
                 Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests"));
 
                 var validData = new byte[1024 * 1024 * 4];
@@ -490,6 +599,9 @@ namespace QuantConnect.Tests.Common.Storage
                 // Get the file path and verify it exists
                 var path = qb.ObjectStore.GetFilePath("a.txt");
                 Assert.IsTrue(File.Exists(path));
+
+                Assert.IsTrue(qb.ObjectStore.Delete("a.txt"));
+                Assert.IsFalse(File.Exists(path));
             }
         }
 
@@ -506,14 +618,25 @@ namespace QuantConnect.Tests.Common.Storage
         [Test]
         public void TooManyObjects()
         {
-            // Write 100 Files first, should not throw
-            for (int i = _store.Count(); i < 100; i++)
+            using (var store = new LocalObjectStore())
             {
-                Assert.IsTrue(_store.SaveString($"{i}", $"{i}"));
-            }
+                store.Initialize(0, 0, "", new Controls() { StorageLimit = 5 * 1024 * 1024, StorageFileCount = 100 });
+                // Write 100 Files first, should not throw
+                var start = store.Count();
+                for (var i = start; i < 100; i++)
+                {
+                    Assert.IsTrue(store.SaveBytes($"{i}", new byte[1]));
+                }
 
-            // Write 1 more; should throw
-            Assert.IsFalse(_store.SaveString("breaker", "gotem"));
+                // Write 1 more; should throw
+                Assert.IsFalse(store.SaveBytes("breaker", new byte[1]));
+
+                // cleaup
+                for (var i = start; i < 100; i++)
+                {
+                    Assert.IsTrue(store.Delete($"{i}"));
+                }
+            }
         }
 
         [Test]
@@ -565,6 +688,73 @@ namespace QuantConnect.Tests.Common.Storage
             }
         }
 
+        [TestCase(1)]
+        [TestCase(0)]
+        public void NewUnregisteredFileIsAvailable(int useCase)
+        {
+            using (var store = new LocalObjectStore())
+            {
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+
+                // create 'Jose' file in the object store After initialize
+                var joseFile = Path.Combine(TestStorageRoot, "JoseNew2");
+                File.WriteAllText(joseFile, "Pepe");
+
+                if (useCase == 0)
+                {
+                    Assert.IsTrue(store.ContainsKey("JoseNew2"));
+                }
+                else if (useCase == 1)
+                {
+                    Assert.IsNotNull(store.ReadBytes("JoseNew2"));
+                }
+
+                // clean up
+                File.Delete(joseFile);
+            }
+        }
+
+        [Test]
+        public void NewUnregisteredFileIsNotDeleted()
+        {
+            using (var store = new LocalObjectStore())
+            {
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+
+                // create 'Jose' file in the object store After initialize
+                var joseFile = Path.Combine(TestStorageRoot, "JoseNew");
+                File.WriteAllText(joseFile, "Pepe");
+
+                store.SaveBytes("a.txt", new byte[1024 * 4]);
+                Assert.IsTrue(store.ContainsKey("a.txt"));
+
+                Assert.IsTrue(File.Exists(joseFile));
+
+                // clean up
+                store.Delete("a.txt");
+                File.Delete(joseFile);
+            }
+        }
+
+        [Test]
+        public void NewUnregisteredFileCanBeDeleted()
+        {
+            using (var store = new LocalObjectStore())
+            {
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+
+                // create 'Jose' file in the object store After initialize
+                var joseFile = Path.Combine(TestStorageRoot, "JoseNew77");
+                File.WriteAllText(joseFile, "Pepe");
+
+                Assert.IsTrue(File.Exists(joseFile));
+
+                Assert.IsTrue(store.Delete("JoseNew77"));
+
+                Assert.IsFalse(File.Exists(joseFile));
+            }
+        }
+
         [Test]
         public void DeletedObjectIsNotReloaded()
         {
@@ -609,7 +799,7 @@ namespace QuantConnect.Tests.Common.Storage
                 sw.Write(content);
                 sw.Close();
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 throw e;
             }
@@ -624,10 +814,10 @@ namespace QuantConnect.Tests.Common.Storage
         private class TestLocalObjectStore : LocalObjectStore
         {
             public bool PersistDataCalled { get; set; }
-            protected override bool PersistData(IEnumerable<KeyValuePair<string, byte[]>> data)
+            protected override bool PersistData()
             {
                 PersistDataCalled = true;
-                return base.PersistData(data);
+                return base.PersistData();
             }
         }
     }

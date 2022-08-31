@@ -63,6 +63,16 @@ namespace QuantConnect.Storage
         }
 
         /// <summary>
+        /// Returns the file paths present in the object store. This is specially useful not to load the object store into memory
+        /// </summary>
+        public ICollection<string> Keys => _store.Keys;
+
+        /// <summary>
+        /// Will clear the object store state cache. This is useful when the object store is used concurrently by nodes which want to share information
+        /// </summary>
+        public void Clear() => _store.Clear();
+
+        /// <summary>
         /// Determines whether the store contains data for the specified path
         /// </summary>
         /// <param name="path">The object path</param>

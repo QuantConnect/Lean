@@ -64,7 +64,7 @@ namespace QuantConnect.Lean.Engine.Storage
         private Timer _persistenceTimer;
         private readonly string _storageRoot = DefaultObjectStore;
         private Regex _pathRegex = new (@"^\.?[a-zA-Z0-9\\/_#\-\$= ]+\.?[a-zA-Z0-9]*$", RegexOptions.Compiled);
-        private readonly ConcurrentDictionary<string, byte[]> _storage = new ConcurrentDictionary<string, byte[]>();
+        private readonly ConcurrentDictionary<string, ObjectStoreEntry> _storage = new();
         private readonly object _persistLock = new object();
 
         /// <summary>
@@ -92,47 +92,83 @@ namespace QuantConnect.Lean.Engine.Storage
             // create the root path if it does not exist
             Directory.CreateDirectory(AlgorithmStorageRoot);
 
-            Log.Trace($"LocalObjectStore.Initialize(): Storage Root: {new FileInfo(AlgorithmStorageRoot).FullName}. StorageFileCount {controls.StorageFileCount}. StorageLimit {BytesToMb(controls.StorageLimit)}MB");
-
             Controls = controls;
-
-            // Load in any already existing objects in the storage directory
-            LoadExistingObjects(loadContent: false);
 
             // if <= 0 we disable periodic persistence and make it synchronous
             if (Controls.PersistenceIntervalSeconds > 0)
             {
                 _persistenceTimer = new Timer(_ => Persist(), null, Controls.PersistenceIntervalSeconds * 1000, Timeout.Infinite);
             }
+
+            Log.Trace($"LocalObjectStore.Initialize(): Storage Root: {new FileInfo(AlgorithmStorageRoot).FullName}. StorageFileCount {controls.StorageFileCount}. StorageLimit {BytesToMb(controls.StorageLimit)}MB");
         }
 
         /// <summary>
         /// Loads objects from the AlgorithmStorageRoot into the ObjectStore
         /// </summary>
-        private void LoadExistingObjects(bool loadContent)
+        private IEnumerable<ObjectStoreEntry> GetObjectStoreEntries(bool loadContent)
         {
             if (Controls.StoragePermissions.HasFlag(FileAccess.Read))
             {
-                var rootFolder = new DirectoryInfo(AlgorithmStorageRoot);
-                foreach (var file in rootFolder.EnumerateFiles("*", SearchOption.AllDirectories))
+                // Acquire the persist lock to avoid yielding twice the same value, just in case
+                lock (_persistLock)
                 {
-                    var path = NormalizePath(file.FullName.RemoveFromStart(rootFolder.FullName));
-
-                    if (loadContent)
+                    foreach (var kvp in _storage)
                     {
-                        if (!_storage.TryGetValue(path, out var content) || content == null)
+                        if (!loadContent || kvp.Value.Data != null)
                         {
-                            // load file if content is null or not present, we prioritize the version we have in memory
-                            _storage[path] = File.ReadAllBytes(file.FullName);
+                            // let's first serve what we already have in memory because it might include files which are not on disk yet
+                            yield return kvp.Value;
                         }
                     }
-                    else
+
+                    var rootFolder = new DirectoryInfo(AlgorithmStorageRoot);
+                    foreach (var file in rootFolder.EnumerateFiles("*", SearchOption.AllDirectories))
                     {
-                        // we do not read the file contents yet, just the name. We read the contents on demand
-                        _storage[path] = null;
+                        var path = NormalizePath(file.FullName.RemoveFromStart(rootFolder.FullName));
+
+                        ObjectStoreEntry objectStoreEntry;
+                        if (loadContent)
+                        {
+                            if (!_storage.TryGetValue(path, out objectStoreEntry) || objectStoreEntry.Data == null)
+                            {
+                                // load file if content is null or not present, we prioritize the version we have in memory
+                                yield return _storage[path] = new ObjectStoreEntry(path, File.ReadAllBytes(file.FullName));
+                            }
+                        }
+                        else
+                        {
+                            if (!_storage.ContainsKey(path))
+                            {
+                                // we do not read the file contents yet, just the name. We read the contents on demand
+                                yield return _storage[path] = new ObjectStoreEntry(path, null);
+                            }
+                        }
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns the file paths present in the object store. This is specially useful not to load the object store into memory
+        /// </summary>
+        public ICollection<string> Keys
+        {
+            get
+            {
+                return GetObjectStoreEntries(loadContent: false).Select(objectStoreEntry => objectStoreEntry.Path).ToList();
+            }
+        }
+
+        /// <summary>
+        /// Will clear the object store state cache. This is useful when the object store is used concurrently by nodes which want to share information
+        /// </summary>
+        public void Clear()
+        {
+            // write to disk anything pending first
+            Persist();
+
+            _storage.Clear();
         }
 
         /// <summary>
@@ -151,7 +187,20 @@ namespace QuantConnect.Lean.Engine.Storage
                 throw new InvalidOperationException($"LocalObjectStore.ContainsKey(): {NoReadPermissionsError}");
             }
 
-            return _storage.ContainsKey(NormalizePath(path));
+            path = NormalizePath(path);
+            if (_storage.ContainsKey(path))
+            {
+                return true;
+            }
+
+            // if we don't have the file but it exists, be friendly and register it
+            var filePath = PathForKey(path);
+            if (File.Exists(filePath))
+            {
+                _storage[path] = new ObjectStoreEntry(path, null);
+                return true;
+            }
+            return false;
         }
 
         /// <summary>
@@ -170,18 +219,16 @@ namespace QuantConnect.Lean.Engine.Storage
             }
             path = NormalizePath(path);
 
-            _storage.TryGetValue(path, out var data);
-
-            if(data == null)
+            if(!_storage.TryGetValue(path, out var objectStoreEntry) || objectStoreEntry.Data == null)
             {
                 var filePath = PathForKey(path);
                 if (File.Exists(filePath))
                 {
                     // if there is no data in the cache and the file exists on disk let's load it
-                    data = _storage[path] = File.ReadAllBytes(filePath);
+                    objectStoreEntry = _storage[path] = new ObjectStoreEntry(path, File.ReadAllBytes(filePath));
                 }
             }
-            return data;
+            return objectStoreEntry?.Data;
         }
 
         /// <summary>
@@ -248,10 +295,18 @@ namespace QuantConnect.Lean.Engine.Storage
                 else
                 {
                     fileCount++;
-                    var fileInfo = new FileInfo(PathForKey(kvp.Key));
-                    if (fileInfo.Exists)
+                    if(kvp.Value.Data != null)
                     {
-                        expectedStorageSizeBytes += fileInfo.Length;
+                        // if the data is in memory use it
+                        expectedStorageSizeBytes += kvp.Value.Data.Length;
+                    }
+                    else
+                    {
+                        var fileInfo = new FileInfo(PathForKey(kvp.Key));
+                        if (fileInfo.Exists)
+                        {
+                            expectedStorageSizeBytes += fileInfo.Length;
+                        }
                     }
                 }
             }
@@ -274,8 +329,9 @@ namespace QuantConnect.Lean.Engine.Storage
                 return false;
             }
 
-            // Add the entry
-            _storage.AddOrUpdate(path, k => contents, (k, v) => contents);
+            // Add the dirty entry
+            var entry = _storage[path] = new ObjectStoreEntry(path, contents);
+            entry.SetDirty();
             return true;
         }
 
@@ -296,19 +352,17 @@ namespace QuantConnect.Lean.Engine.Storage
             }
 
             path = NormalizePath(path);
-            if (_storage.TryRemove(path, out var _))
-            {
-                _dirty = true;
 
-                // if <= 0 we disable periodic persistence and make it synchronous
-                if (Controls.PersistenceIntervalSeconds <= 0)
-                {
-                    Persist();
-                }
+            var wasInCache = _storage.TryRemove(path, out var _);
+
+            var filePath = PathForKey(path);
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
                 return true;
             }
 
-            return false;
+            return wasInCache;
         }
 
         /// <summary>
@@ -364,12 +418,7 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <filterpriority>1</filterpriority>
         public IEnumerator<KeyValuePair<string, byte[]>> GetEnumerator()
         {
-            if(_storage.Any(kvp => kvp.Value == null))
-            {
-                // we need to load the data
-                LoadExistingObjects(loadContent: true);
-            }
-            return _storage.GetEnumerator();
+            return GetObjectStoreEntries(loadContent: true).Select(objectStore => new KeyValuePair<string, byte[]>(objectStore.Path, objectStore.Data)).GetEnumerator();
         }
 
         /// <summary>Returns an enumerator that iterates through a collection.</summary>
@@ -405,7 +454,7 @@ namespace QuantConnect.Lean.Engine.Storage
                         return;
                     }
 
-                    if (PersistData(this))
+                    if (PersistData())
                     {
                         _dirty = false;
                     }
@@ -436,40 +485,29 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <summary>
         /// Overridable persistence function
         /// </summary>
-        /// <param name="data">The data to be persisted</param>
         /// <returns>True if persistence was successful, otherwise false</returns>
-        protected virtual bool PersistData(IEnumerable<KeyValuePair<string, byte[]>> data)
+        protected virtual bool PersistData()
         {
             try
             {
-                // Delete any files that are no longer saved in the store
-                var rootFolder = new DirectoryInfo(AlgorithmStorageRoot);
-                foreach (var file in rootFolder.EnumerateFiles("*", SearchOption.AllDirectories))
+                // Write our store data to disk
+                // Skip the key associated with null values. They are not linked to a file yet or not loaded
+                // Also skip fails which are not flagged as dirty
+                foreach (var kvp in _storage)
                 {
-                    var path = NormalizePath(file.FullName.RemoveFromStart(rootFolder.FullName));
-
-                    if (!_storage.ContainsKey(path))
+                    if(kvp.Value.Data != null && kvp.Value.IsDirty)
                     {
-                        file.Delete();
-                    }
-                }
-
-                // Write all our store data to disk
-                foreach (var kvp in data)
-                {
-                    // Skip the key associated with null values. They are not linked to a file yet or not loaded
-                    if (kvp.Value != null)
-                    {
-                        // Get a path for this key and write to it
-                        var path = PathForKey(kvp.Key);
-
+                        var filePath = PathForKey(kvp.Key);
                         // directory might not exist for custom prefix
-                        var parent = Path.GetDirectoryName(path);
-                        if (!Directory.Exists(parent))
+                        var parentDirectory = Path.GetDirectoryName(filePath);
+                        if (!Directory.Exists(parentDirectory))
                         {
-                            Directory.CreateDirectory(parent);
+                            Directory.CreateDirectory(parentDirectory);
                         }
-                        File.WriteAllBytes(path, kvp.Value);
+                        File.WriteAllBytes(filePath, kvp.Value.Data);
+
+                        // clear the dirty flag
+                        kvp.Value.SetClean();
                     }
                 }
 
@@ -505,7 +543,32 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 return path;
             }
-            return path.TrimStart('.').TrimStart('/', '\\');
+            return path.TrimStart('.').TrimStart('/', '\\').Replace('\\', '/');
+        }
+
+        /// <summary>
+        /// Helper class to hold the state of an object store file
+        /// </summary>
+        private class ObjectStoreEntry
+        {
+            private long _isDirty;
+            public byte[] Data { get; }
+            public string Path { get; }
+            public bool IsDirty => Interlocked.Read(ref _isDirty) != 0;
+            public ObjectStoreEntry(string path, byte[] data)
+            {
+                Path = path;
+                Data = data;
+            }
+            public void SetDirty()
+            {
+                // flag as dirty
+                Interlocked.CompareExchange(ref _isDirty, 1, 0);
+            }
+            public void SetClean()
+            {
+                Interlocked.CompareExchange(ref _isDirty, 0, 1);
+            }
         }
     }
 }
