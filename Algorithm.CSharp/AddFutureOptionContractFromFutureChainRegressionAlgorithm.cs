@@ -93,7 +93,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 11759;
+        public long DataPoints => 12164;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -109,7 +109,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "386219349.202%"},
-            {"Drawdown", "2.600%"},
+            {"Drawdown", "5.200%"},
             {"Expectancy", "0"},
             {"Net Profit", "11.912%"},
             {"Sharpe Ratio", "1604181.92"},

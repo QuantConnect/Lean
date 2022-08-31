@@ -28,22 +28,20 @@ namespace QuantConnect.Algorithm.CSharp
     {
         protected override bool ExtendedMarketHours => true;
         protected override List<DateTime> ExpectedOpens => new List<DateTime>(){
-            new DateTime(2013, 10, 06, 18, 00, 0),
-            new DateTime(2013, 10, 07, 16, 30, 0),
-            new DateTime(2013, 10, 08, 16, 30, 0),
-            new DateTime(2013, 10, 09, 16, 30, 0),
-            new DateTime(2013, 10, 10, 16, 30, 0),
-            new DateTime(2013, 10, 11, 16, 30, 0),
-            new DateTime(2013, 10, 13, 18, 00, 0),
+            new DateTime(2013, 10, 06, 18, 0, 0), // Sunday
+            new DateTime(2013, 10, 07, 18, 0, 0),
+            new DateTime(2013, 10, 08, 18, 0, 0),
+            new DateTime(2013, 10, 09, 18, 0, 0),
+            new DateTime(2013, 10, 10, 18, 0, 0),
+            new DateTime(2013, 10, 13, 18, 0, 0),
         };
         protected override List<DateTime> ExpectedCloses => new List<DateTime>(){
-            new DateTime(2013, 10, 07, 16, 15, 0),
-            new DateTime(2013, 10, 08, 16, 15, 0),
-            new DateTime(2013, 10, 09, 16, 15, 0),
-            new DateTime(2013, 10, 10, 16, 15, 0),
-            new DateTime(2013, 10, 11, 16, 15, 0),
-            new DateTime(2013, 10, 14, 16, 15, 0),
-            new DateTime(2013, 10, 14, 16, 15, 0),
+            new DateTime(2013, 10, 07, 17, 0, 0),
+            new DateTime(2013, 10, 08, 17, 0, 0),
+            new DateTime(2013, 10, 09, 17, 0, 0),
+            new DateTime(2013, 10, 10, 17, 0, 0),
+            new DateTime(2013, 10, 11, 17, 0, 0),
+            new DateTime(2013, 10, 14, 17, 0, 0),
         };
 
         /// <summary>
@@ -54,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 94112;
+        public override long DataPoints => 95102;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
