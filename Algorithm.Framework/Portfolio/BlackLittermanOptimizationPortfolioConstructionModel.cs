@@ -382,6 +382,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         {
             try
             {
+                var symbols = insights.Select(insight => insight.Symbol).ToList();
+
                 var tmpQ = insights.GroupBy(insight => insight.SourceModel)
                     .Select(values =>
                     {
@@ -402,7 +404,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                             return value / q;
                         });
                         // Add zero for other symbols that are listed but active insight
-                        foreach (var symbol in insights.Select(insight => insight.Symbol).ToList())
+                        foreach (var symbol in symbols)
                         {
                             if (!results.ContainsKey(symbol))
                             {
