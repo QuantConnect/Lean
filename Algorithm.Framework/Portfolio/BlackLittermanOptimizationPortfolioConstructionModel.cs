@@ -382,7 +382,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         {
             try
             {
-                var symbols = insights.Select(insight => insight.Symbol).ToList();
+                var symbols = insights.Select(insight => insight.Symbol).ToHashSet();
 
                 var tmpQ = insights.GroupBy(insight => insight.SourceModel)
                     .Select(values =>

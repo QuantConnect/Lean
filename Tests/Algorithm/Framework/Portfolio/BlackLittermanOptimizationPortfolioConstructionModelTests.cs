@@ -98,6 +98,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             SetPortfolioConstruction(language);
 
+            // Add outdated insight to check if only the latest one was considered
+            var outdatedInsight = GetInsight("View 1", "CAN", 0.05);
+            outdatedInsight.GeneratedTimeUtc -= TimeSpan.FromHours(1);
+            outdatedInsight.CloseTimeUtc -= TimeSpan.FromHours(1);
+
             // Results from http://www.blacklitterman.org/code/hl_py.html (View 1)
             var expectedTargets = new[]
             {
@@ -110,7 +115,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 PortfolioTarget.Percent(_algorithm, GetSymbol("USA"), 0.58571429)
             };
 
-            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, _view1Insights);
+            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, _view1Insights.Concat(new[] {outdatedInsight}).ToArray());
 
             Assert.AreEqual(expectedTargets.Count(), actualTargets.Count());
 
@@ -141,7 +146,12 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 PortfolioTarget.Percent(_algorithm, GetSymbol("USA"), 0.18803095)
             };
 
-            var insights = _view1Insights.Concat(_view2Insights);
+            // Add outdated insight to check if only the latest one was considered
+            var outdatedInsight = GetInsight("View 2", "USA", 0.05);
+            outdatedInsight.GeneratedTimeUtc -= TimeSpan.FromHours(1);
+            outdatedInsight.CloseTimeUtc -= TimeSpan.FromHours(1);
+
+            var insights = _view1Insights.Concat(_view2Insights).Concat(new[] {outdatedInsight});
             var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights.ToArray());
 
             Assert.AreEqual(expectedTargets.Count(), actualTargets.Count());
