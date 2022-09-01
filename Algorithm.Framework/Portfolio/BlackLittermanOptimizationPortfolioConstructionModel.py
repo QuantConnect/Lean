@@ -229,6 +229,8 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
         try:
             P = {}
             Q = {}
+            symbols = set(insight.Symbol for insight in insights)
+            
             for model, group in groupby(insights, lambda x: x.SourceModel):
                 group = list(group)
 
@@ -251,12 +253,14 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
                 for insight in group:
                     value = insight.Direction * np.abs(insight.Magnitude)
                     P[model][insight.Symbol] = value / q
+                # Add zero for other symbols that are listed but active insight
+                for symbol in symbols:
+                    if symbol not in P[model]:
+                        P[model][symbol] = 0
 
             Q = np.array([[x] for x in Q.values()])
             if len(Q) > 0:
                 P = np.array([list(x.values()) for x in P.values()])
-                # Fill nan with 0 (symbols with no view in a source model)
-                P = np.nan_to_num(P)
                 return P, Q
         except:
             pass

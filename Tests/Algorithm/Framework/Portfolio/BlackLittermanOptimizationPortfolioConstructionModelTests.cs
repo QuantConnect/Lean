@@ -171,18 +171,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             SetPortfolioConstruction(language);
 
-            // Results from http://www.blacklitterman.org/code/hl_py.html (View 1+2)
-            var expectedTargets = new[]
-            {
-                PortfolioTarget.Percent(_algorithm, GetSymbol("AUS"), 0.0152381),
-                PortfolioTarget.Percent(_algorithm, GetSymbol("CAN"), 0.41863571),
-                PortfolioTarget.Percent(_algorithm, GetSymbol("FRA"), -0.03409321),
-                PortfolioTarget.Percent(_algorithm, GetSymbol("GER"), 0.33582847),
-                PortfolioTarget.Percent(_algorithm, GetSymbol("JAP"), 0.11047619),
-                PortfolioTarget.Percent(_algorithm, GetSymbol("UK"), -0.08173526),
-                PortfolioTarget.Percent(_algorithm, GetSymbol("USA"), 0.18803095)
-            };
-
             if (language == Language.CSharp)
             {
                 double[,] P;
@@ -214,19 +202,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             SetPortfolioConstruction(language);
 
-            // Results from http://www.blacklitterman.org/code/hl_py.html (View 1+2)
-            var expectedTargets = new[]
-            {
-                PortfolioTarget.Percent(_algorithm, GetSymbol("AUS"), 0.0152381),
-                PortfolioTarget.Percent(_algorithm, GetSymbol("CAN"), 0.41863571),
-                PortfolioTarget.Percent(_algorithm, GetSymbol("FRA"), -0.03409321),
-                PortfolioTarget.Percent(_algorithm, GetSymbol("GER"), 0.33582847),
-                PortfolioTarget.Percent(_algorithm, GetSymbol("JAP"), 0.11047619),
-                PortfolioTarget.Percent(_algorithm, GetSymbol("UK"), -0.08173526),
-                PortfolioTarget.Percent(_algorithm, GetSymbol("USA"), 0.18803095)
-            };
-
-            var insights = _view1Insights.Concat(_view2Insights).ToList();
+            // Test if a symbol has no view in one of the source models
+            var insights = _view1Insights.Concat(_view2Insights.Skip(1)).ToList();
 
             if (language == Language.CSharp)
             {
