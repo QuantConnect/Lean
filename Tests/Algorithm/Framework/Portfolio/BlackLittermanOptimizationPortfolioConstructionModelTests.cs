@@ -98,6 +98,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             SetPortfolioConstruction(language);
 
+            // Add outdated insight to check if only the latest one was considered
+            var outdatedInsight = GetInsight("View 1", "CAN", 0.05);
+            outdatedInsight.GeneratedTimeUtc -= TimeSpan.FromHours(1);
+            outdatedInsight.CloseTimeUtc -= TimeSpan.FromHours(1);
+
             // Results from http://www.blacklitterman.org/code/hl_py.html (View 1)
             var expectedTargets = new[]
             {
@@ -110,7 +115,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 PortfolioTarget.Percent(_algorithm, GetSymbol("USA"), 0.58571429)
             };
 
-            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, _view1Insights);
+            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, _view1Insights.Concat(new[] {outdatedInsight}).ToArray());
 
             Assert.AreEqual(expectedTargets.Count(), actualTargets.Count());
 
@@ -141,7 +146,12 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 PortfolioTarget.Percent(_algorithm, GetSymbol("USA"), 0.18803095)
             };
 
-            var insights = _view1Insights.Concat(_view2Insights);
+            // Add outdated insight to check if only the latest one was considered
+            var outdatedInsight = GetInsight("View 2", "USA", 0.05);
+            outdatedInsight.GeneratedTimeUtc -= TimeSpan.FromHours(1);
+            outdatedInsight.CloseTimeUtc -= TimeSpan.FromHours(1);
+
+            var insights = _view1Insights.Concat(_view2Insights).Concat(new[] {outdatedInsight});
             var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights.ToArray());
 
             Assert.AreEqual(expectedTargets.Count(), actualTargets.Count());
@@ -151,6 +161,71 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 var actual = actualTargets.FirstOrDefault(x => x.Symbol == expected.Symbol);
                 Assert.IsNotNull(actual);
                 Assert.AreEqual(expected.Quantity, actual.Quantity);
+            }
+        }
+
+        [Test]
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void OneViewDimensionTest(Language language)
+        {
+            SetPortfolioConstruction(language);
+
+            if (language == Language.CSharp)
+            {
+                double[,] P;
+                double[] Q;
+                ((BLOPCM)_algorithm.PortfolioConstruction).TestTryGetViews(_view1Insights, out P, out Q);
+
+                Assert.AreEqual(P.GetLength(0), 1);
+                Assert.AreEqual(P.GetLength(1), 7);
+                Assert.AreEqual(Q.GetLength(0), 1);
+
+                return;
+            }
+            
+            using (Py.GIL())
+            {
+                var name = nameof(BLOPCM);
+                var instance = PyModule.FromString(name, GetPythonBLOPCM()).GetAttr(name).Invoke(((int)PortfolioBias.LongShort).ToPython());
+                var result = PyList.AsList(instance.InvokeMethod("get_views", _view1Insights.ToPython()));
+                Assert.AreEqual(result[0].Length(), 1);
+                Assert.AreEqual(result[0][0].Length(), 7);
+                Assert.AreEqual(result[1].Length(), 1);
+            }
+        }
+
+        [Test]
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void TwoViewsDimensionTest(Language language)
+        {
+            SetPortfolioConstruction(language);
+
+            // Test if a symbol has no view in one of the source models
+            var insights = _view1Insights.Concat(_view2Insights.Skip(1)).ToList();
+
+            if (language == Language.CSharp)
+            {
+                double[,] P;
+                double[] Q;
+                ((BLOPCM)_algorithm.PortfolioConstruction).TestTryGetViews(insights, out P, out Q);
+
+                Assert.AreEqual(P.GetLength(0), 2);
+                Assert.AreEqual(P.GetLength(1), 7);
+                Assert.AreEqual(Q.GetLength(0), 2);
+
+                return;
+            }
+            
+            using (Py.GIL())
+            {
+                var name = nameof(BLOPCM);
+                var instance = PyModule.FromString(name, GetPythonBLOPCM()).GetAttr(name).Invoke(((int)PortfolioBias.LongShort).ToPython());
+                var result = PyList.AsList(instance.InvokeMethod("get_views", insights.ToPython()));
+                Assert.AreEqual(result[0].Length(), 2);
+                Assert.AreEqual(result[0][0].Length(), 7);
+                Assert.AreEqual(result[1].Length(), 2);
             }
         }
 
@@ -358,6 +433,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 // Equilibrium covariance matrix
                 Σ = Elementwise.Multiply(C, σ.Outer(σ));
                 return w.Dot(Σ.Multiply(delta));
+            }
+
+            public bool TestTryGetViews(ICollection<Insight> insights, out double[,] P, out double[] Q)
+            {
+                return base.TryGetViews(insights, out P, out Q);
             }
 
             public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
