@@ -615,8 +615,9 @@ namespace QuantConnect.Tests.Common.Storage
             Assert.IsFalse(_store.SaveBytes("test", bytesToWrite));
         }
 
-        [Test]
-        public void TooManyObjects()
+        [TestCase(true)]
+        [TestCase(false)]
+        public void TooManyObjects(bool usingObjectStore)
         {
             using (var store = new LocalObjectStore())
             {
@@ -625,7 +626,14 @@ namespace QuantConnect.Tests.Common.Storage
                 var start = store.Count();
                 for (var i = start; i < 100; i++)
                 {
-                    Assert.IsTrue(store.SaveBytes($"{i}", new byte[1]));
+                    if (usingObjectStore)
+                    {
+                        Assert.IsTrue(store.SaveBytes($"{i}", new byte[1]));
+                    }
+                    else
+                    {
+                        File.WriteAllBytes(Path.Combine(LocalObjectStore.DefaultObjectStore, $"{i}"), new byte[1]);
+                    }
                 }
 
                 // Write 1 more; should throw

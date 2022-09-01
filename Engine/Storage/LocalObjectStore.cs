@@ -285,9 +285,9 @@ namespace QuantConnect.Lean.Engine.Storage
             // Start by counting our file and its length
             var fileCount = 1;
             var expectedStorageSizeBytes = contents?.Length ?? 0L;
-            foreach (var kvp in _storage)
+            foreach (var kvp in GetObjectStoreEntries(loadContent: false))
             {
-                if (path.Equals(kvp.Key))
+                if (path.Equals(kvp.Path))
                 {
                     // Skip we have already counted this above
                     // If this key was already in storage it will be replaced.
@@ -295,14 +295,14 @@ namespace QuantConnect.Lean.Engine.Storage
                 else
                 {
                     fileCount++;
-                    if(kvp.Value.Data != null)
+                    if(kvp.Data != null)
                     {
                         // if the data is in memory use it
-                        expectedStorageSizeBytes += kvp.Value.Data.Length;
+                        expectedStorageSizeBytes += kvp.Data.Length;
                     }
                     else
                     {
-                        var fileInfo = new FileInfo(PathForKey(kvp.Key));
+                        var fileInfo = new FileInfo(PathForKey(kvp.Path));
                         if (fileInfo.Exists)
                         {
                             expectedStorageSizeBytes += fileInfo.Length;
