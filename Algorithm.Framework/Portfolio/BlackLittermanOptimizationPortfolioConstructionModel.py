@@ -248,14 +248,15 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
 
                 # generate the link matrix of views: P
                 P[model] = dict()
-                for insight in insights:
-                    if insight in group:
-                        value = insight.Direction * np.abs(insight.Magnitude)
-                        P[model][insight.Symbol] = value / q
+                for insight in group:
+                    value = insight.Direction * np.abs(insight.Magnitude)
+                    P[model][insight.Symbol] = value / q
 
             Q = np.array([[x] for x in Q.values()])
             if len(Q) > 0:
                 P = np.array([list(x.values()) for x in P.values()])
+                # Fill nan with 0 (symbols with no view in a source model)
+                P = np.nan_to_num(P)
                 return P, Q
         except:
             pass
