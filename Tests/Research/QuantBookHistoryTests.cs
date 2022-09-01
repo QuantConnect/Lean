@@ -365,10 +365,10 @@ namespace QuantConnect.Tests.Research
             }
         }
 
-        [TestCase(true, true, 8550)]
-        [TestCase(true, false, 2610)]
-        [TestCase(false, true, 6825)]
-        [TestCase(false, false, 2175)]
+        [TestCase(true, true, 8640)]
+        [TestCase(true, false, 2700)]
+        [TestCase(false, true, 6899)]
+        [TestCase(false, false, 2249)]
         public void FutureHistorySpecifyingFillForwardAndExtendedMarket(bool fillForward, bool extendedMarket, int expectedCount)
         {
             using (Py.GIL())
