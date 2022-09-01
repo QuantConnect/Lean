@@ -20,7 +20,7 @@ jobs:
           pip3 install papermill clr-loader
 
       - name: install kernel
-        run: dotnet tool install --global Microsoft.dotnet-interactive --version 1.0.317502
+        run: dotnet tool install --global Microsoft.dotnet-interactive --version 1.0.340501
 
       - name: Add dotnet tools to Path
         run: echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
