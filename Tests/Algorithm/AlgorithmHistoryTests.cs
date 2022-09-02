@@ -1260,16 +1260,16 @@ def getHistoryForContractDepthOffset(algorithm, symbol, start, end, resolution, 
             if (language == Language.CSharp)
             {
                 var tradeHistory = algorithm.History<TradeBar>(ibmSymbol, ibmHistoryStart, ibmHistoryEnd);
-                Assert.IsTrue(tradeHistory.Any());
+                Assert.AreEqual(390, tradeHistory.Count());
 
                 var quoteHistory = algorithm.History<QuoteBar>(ibmSymbol, ibmHistoryStart, ibmHistoryEnd);
-                Assert.IsTrue(quoteHistory.Any());
+                Assert.AreEqual(390, quoteHistory.Count());
 
                 var tickHistory = algorithm.History<Tick>(ibmSymbol, ibmHistoryStart, ibmHistoryEnd, Resolution.Tick);
-                Assert.IsTrue(tickHistory.Any());
+                Assert.AreEqual(57460, tickHistory.Count());
 
                 var openInterestHistory = algorithm.History<OpenInterest>(twxSymbol, twxHistoryStart, twxHistoryEnd);
-                Assert.IsTrue(openInterestHistory.Any());
+                Assert.AreEqual(1050, openInterestHistory.Count());
             }
             else
             {
@@ -1300,16 +1300,16 @@ def getOpenInterestHistory(algorithm, symbol, start, end):
                     algorithm.SetPandasConverter();
 
                     dynamic tradeHistory = getTradeBarHistory(algorithm, ibmSymbol, ibmHistoryStart, ibmHistoryEnd);
-                    Assert.IsFalse(tradeHistory.empty.As<bool>());
+                    Assert.AreEqual(390, tradeHistory.shape[0].As<int>());
 
                     dynamic quoteHistory = getQuoteBarHistory(algorithm, ibmSymbol, ibmHistoryStart, ibmHistoryEnd);
-                    Assert.IsFalse(quoteHistory.empty.As<bool>());
+                    Assert.AreEqual(390, quoteHistory.shape[0].As<int>());
 
                     dynamic tickHistory = getTickHistory(algorithm, ibmSymbol, ibmHistoryStart, ibmHistoryEnd);
-                    Assert.IsFalse(tickHistory.empty.As<bool>());
+                    Assert.AreEqual(24106, tickHistory.shape[0].As<int>());
 
                     dynamic openInterestHistory = getOpenInterestHistory(algorithm, twxSymbol, twxHistoryStart, twxHistoryEnd);
-                    Assert.IsFalse(openInterestHistory.empty.As<bool>());
+                    Assert.AreEqual(1050, openInterestHistory.shape[0].As<int>());
                 }
             }
         }

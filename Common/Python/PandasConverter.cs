@@ -55,13 +55,16 @@ namespace QuantConnect.Python
             var maxLevels = 0;
             var sliceDataDict = new Dictionary<Symbol, PandasData>();
 
-            if (dataType == null)
+            foreach (var slice in data)
             {
-                AddSliceDataToDict(data, sliceDataDict, ref maxLevels);
-            }
-            else
-            {
-                AddSliceDataTypeDataToDict(data, dataType, sliceDataDict, ref maxLevels);
+                if (dataType == null)
+                {
+                    AddSliceDataToDict(slice, sliceDataDict, ref maxLevels);
+                }
+                else
+                {
+                    AddSliceDataTypeDataToDict(slice, dataType, sliceDataDict, ref maxLevels);
+                }
             }
 
             using (Py.GIL())
@@ -230,27 +233,24 @@ namespace QuantConnect.Python
         /// <summary>
         /// Adds each slice data to the pandas data dictionary
         /// </summary>
-        private void AddSliceDataToDict(IEnumerable<Slice> data, IDictionary<Symbol, PandasData> sliceDataDict, ref int maxLevels)
+        private void AddSliceDataToDict(Slice slice, IDictionary<Symbol, PandasData> sliceDataDict, ref int maxLevels)
         {
-            foreach (var slice in data)
+            foreach (var key in slice.Keys)
             {
-                foreach (var key in slice.Keys)
+                var baseData = slice[key];
+                var value = GetPandasDataValue(sliceDataDict, key, baseData, ref maxLevels);
+
+                if (value.IsCustomData)
                 {
-                    var baseData = slice[key];
-                    var value = GetPandasDataValue(sliceDataDict, key, baseData, ref maxLevels);
+                    value.Add(baseData);
+                }
+                else
+                {
+                    var ticks = slice.Ticks.ContainsKey(key) ? slice.Ticks[key] : null;
+                    var tradeBars = slice.Bars.ContainsKey(key) ? slice.Bars[key] : null;
+                    var quoteBars = slice.QuoteBars.ContainsKey(key) ? slice.QuoteBars[key] : null;
+                    value.Add(ticks, tradeBars, quoteBars);
 
-                    if (value.IsCustomData)
-                    {
-                        value.Add(baseData);
-                    }
-                    else
-                    {
-                        var ticks = slice.Ticks.ContainsKey(key) ? slice.Ticks[key] : null;
-                        var tradeBars = slice.Bars.ContainsKey(key) ? slice.Bars[key] : null;
-                        var quoteBars = slice.QuoteBars.ContainsKey(key) ? slice.QuoteBars[key] : null;
-                        value.Add(ticks, tradeBars, quoteBars);
-
-                    }
                 }
             }
         }
@@ -258,31 +258,27 @@ namespace QuantConnect.Python
         /// <summary>
         /// Adds each slice data corresponding to the requested data type to the pandas data dictionary
         /// </summary>
-        private void AddSliceDataTypeDataToDict(IEnumerable<Slice> data, Type dataType, IDictionary<Symbol, PandasData> sliceDataDict, ref int maxLevels)
+        private void AddSliceDataTypeDataToDict(Slice slice, Type dataType, IDictionary<Symbol, PandasData> sliceDataDict, ref int maxLevels)
         {
             var isTick = dataType == typeof(Tick) || dataType == typeof(OpenInterest);
+            // Access ticks directly since slice.Get(typeof(Tick)) and slice.Get(typeof(OpenInterest)) will return only the last tick
+            var sliceData = isTick ? slice.Ticks : slice.Get(dataType);
 
-            foreach (var slice in data)
+            foreach (var key in sliceData.Keys)
             {
-                // Access ticks directly since slice.Get(typeof(Tick)) and slice.Get(typeof(OpenInterest)) will return only the last tick
-                var sliceData = isTick ? slice.Ticks : slice.Get(dataType);
+                var baseData = sliceData[key];
+                var value = GetPandasDataValue(sliceDataDict, key, baseData, ref maxLevels);
 
-                foreach (var key in sliceData.Keys)
+                if (value.IsCustomData)
                 {
-                    var baseData = sliceData[key];
-                    var value = GetPandasDataValue(sliceDataDict, key, baseData, ref maxLevels);
-
-                    if (value.IsCustomData)
-                    {
-                        value.Add(baseData);
-                    }
-                    else
-                    {
-                        var ticks = dataType == typeof(Tick) || dataType == typeof(OpenInterest) ? baseData : null;
-                        var tradeBars = dataType == typeof(TradeBar) ? baseData : null;
-                        var quoteBars = dataType == typeof(QuoteBar) ? baseData : null;
-                        value.Add(ticks, tradeBars, quoteBars);
-                    }
+                    value.Add(baseData);
+                }
+                else
+                {
+                    var ticks = isTick ? baseData : null;
+                    var tradeBars = dataType == typeof(TradeBar) ? baseData : null;
+                    var quoteBars = dataType == typeof(QuoteBar) ? baseData : null;
+                    value.Add(ticks, tradeBars, quoteBars);
                 }
             }
         }
