@@ -930,7 +930,7 @@ namespace QuantConnect.Algorithm
             var requestedType = type.CreateType();
             var requests = CreateDateRangeHistoryRequests(symbols, requestedType, start, end, resolution, fillForward, extendedMarket,
                 dataMappingMode, dataNormalizationMode, contractDepthOffset);
-            return PandasConverter.GetDataFrame(History(requests.Where(x => x != null)));
+            return PandasConverter.GetDataFrame(History(requests.Where(x => x != null)), requestedType);
         }
 
         /// <summary>
@@ -955,7 +955,7 @@ namespace QuantConnect.Algorithm
             var requestedType = type.CreateType();
             var requests = CreateBarCountHistoryRequests(symbols, requestedType, periods, resolution);
 
-            return PandasConverter.GetDataFrame(History(requests.Where(x => x != null)).Memoize());
+            return PandasConverter.GetDataFrame(History(requests.Where(x => x != null)).Memoize(), requestedType);
         }
 
         /// <summary>
@@ -993,7 +993,7 @@ namespace QuantConnect.Algorithm
                 throw new ArgumentException("The specified security is not of the requested type. Symbol: " + symbol.ToString() + " Requested Type: " + requestedType.Name + " Actual Type: " + actualType);
             }
 
-            return PandasConverter.GetDataFrame(History(request).Memoize());
+            return PandasConverter.GetDataFrame(History(request).Memoize(), requestedType);
         }
 
         /// <summary>

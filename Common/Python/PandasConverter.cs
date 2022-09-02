@@ -15,6 +15,7 @@
 
 using Python.Runtime;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using System;
 using System.Collections.Generic;
@@ -47,17 +48,28 @@ namespace QuantConnect.Python
         /// Converts an enumerable of <see cref="Slice"/> in a pandas.DataFrame
         /// </summary>
         /// <param name="data">Enumerable of <see cref="Slice"/></param>
+        /// <param name="dataType">Optional type of bars to add to the data frame</param>
         /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
-        public PyObject GetDataFrame(IEnumerable<Slice> data)
+        public PyObject GetDataFrame(IEnumerable<Slice> data, Type dataType = null)
         {
             var maxLevels = 0;
             var sliceDataDict = new Dictionary<Symbol, PandasData>();
+            var withDataType = dataType != null;
 
             foreach (var slice in data)
             {
-                foreach (var key in slice.Keys)
+                dynamic sliceData = slice;
+                var isTick = withDataType && (dataType == typeof(Tick) || dataType == typeof(OpenInterest));
+
+                if (withDataType)
                 {
-                    var baseData = slice[key];
+                    // Access ticks directly since slice.Get(typeof(Tick)) and slice.Get(typeof(OpenInterest)) will return only the last tick
+                    sliceData = isTick ? slice.Ticks : slice.Get(dataType);
+                }
+
+                foreach (var key in sliceData.Keys)
+                {
+                    var baseData = sliceData[key];
 
                     PandasData value;
                     if (!sliceDataDict.TryGetValue(key, out value))
@@ -70,12 +82,20 @@ namespace QuantConnect.Python
                     {
                         value.Add(baseData);
                     }
+                    else if (withDataType)
+                    {
+                        var ticks = isTick ? baseData : null;
+                        var tradeBars = dataType == typeof(TradeBar) ? baseData : null;
+                        var quoteBars = dataType == typeof(QuoteBar) ? baseData : null;
+                        value.Add(ticks, tradeBars, quoteBars);
+                    }
                     else
                     {
-                        var ticks = slice.Ticks.ContainsKey(key) ? slice.Ticks[key] : null;
-                        var tradeBars = slice.Bars.ContainsKey(key) ? slice.Bars[key] : null;
-                        var quoteBars = slice.QuoteBars.ContainsKey(key) ? slice.QuoteBars[key] : null;
+                        var ticks = sliceData.Ticks.ContainsKey(key) ? sliceData.Ticks[key] : null;
+                        var tradeBars = sliceData.Bars.ContainsKey(key) ? sliceData.Bars[key] : null;
+                        var quoteBars = sliceData.QuoteBars.ContainsKey(key) ? sliceData.QuoteBars[key] : null;
                         value.Add(ticks, tradeBars, quoteBars);
+
                     }
                 }
             }
