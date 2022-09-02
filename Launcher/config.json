@@ -49,6 +49,12 @@
   "symbol-second-limit": 10000,
   "symbol-tick-limit": 10000,
 
+  // log missing data files, useful for debugging
+  "show-missing-data-logs": false,
+
+  // For live trading during warmup we limit the amount of historical data fetched from the history provider and expect the data to be on disk for older data
+  "maximum-warmup-history-days-look-back": 5,
+
   // limits the amount of data points per chart series. Applies only for backtesting
   "maximum-data-points-per-chart-series": 4000,
 
