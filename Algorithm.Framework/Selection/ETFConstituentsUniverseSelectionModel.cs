@@ -15,10 +15,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.Framework.Selection
 {
@@ -27,26 +24,23 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// </summary>
     public class ETFConstituentsUniverseSelectionModel : UniverseSelectionModel
     {
-        private string _etfTicker, _market;
+        private Symbol _etfSymbol;
         private UniverseSettings _universeSettings;
         private Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>> _universeFilterFunc;
-        private Universe _universe = null;
+        private Universe _universe;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ETFConstituentsUniverseSelection"/> class
         /// </summary>
-        /// <param name="etfTicker">Ticker of the ETF to get constituents for</param>
-        /// <param name="market">Market of the ETF</param>
+        /// <param name="etfSymbol">Symbol of the ETF to get constituents for</param>
         /// <param name="universeSettings">Universe settings</param>
         /// <param name="universeFilterFunc">Function to filter universe results</param>
         public ETFConstituentsUniverseSelectionModel(
-            string etfTicker,
-            string market = null,
+            Symbol etfSymbol,
             UniverseSettings universeSettings = null,
             Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>> universeFilterFunc = null)
         {
-            _etfTicker = etfTicker;
-            _market = market;
+            _etfSymbol = etfSymbol;
             _universeSettings = universeSettings;
             _universeFilterFunc = universeFilterFunc;
         }
@@ -61,7 +55,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         {
             if (_universe == null)
             {
-                _universe = algorithm.Universe.ETF(_etfTicker, _market, _universeSettings, _universeFilterFunc);
+                _universe = algorithm.Universe.ETF(_etfSymbol, _universeSettings, _universeFilterFunc);
             }
             return new[] { _universe };
         }

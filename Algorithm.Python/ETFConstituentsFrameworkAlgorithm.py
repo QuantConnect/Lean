@@ -25,7 +25,8 @@ class ETFConstituentsFrameworkAlgorithm(QCAlgorithm):
         self.SetCash(100000)
 
         self.UniverseSettings.Resolution = Resolution.Daily;
-        self.AddUniverseSelection(ETFConstituentsUniverseSelectionModel("SPY"))
+        symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA)
+        self.AddUniverseSelection(ETFConstituentsUniverseSelectionModel(symbol))
 
         self.AddAlpha(ConstantAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(days=1)))
 

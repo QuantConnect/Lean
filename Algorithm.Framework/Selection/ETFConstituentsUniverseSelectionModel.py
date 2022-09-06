@@ -18,18 +18,15 @@ class ETFConstituentsUniverseSelectionModel(UniverseSelectionModel):
     '''Universe selection model that selects the constituents of an ETF.'''
 
     def __init__(self,
-                 etfTicker, 
-                 market = None, 
+                 etfSymbol, 
                  universeSettings = None, 
                  universeFilterFunc = None):
         '''Initializes a new instance of the ETFConstituentsUniverseSelectionModel class
         Args:
-            etfTicker: Ticker of the ETF to get constituents for
-            market: Market of the ETF
+            etfSymbol: Symbol of the ETF to get constituents for
             universeSettings: Universe settings
             universeFilterFunc: Function to filter universe results'''
-        self.etf_ticker = etfTicker
-        self.market = market
+        self.etf_symbol = etfSymbol
         self.universe_settings = universeSettings
         self.universe_filter_function = universeFilterFunc
 
@@ -42,5 +39,5 @@ class ETFConstituentsUniverseSelectionModel(UniverseSelectionModel):
         Returns:
             The universe defined by this model'''
         if self.universe is None:
-            self.universe = algorithm.Universe.ETF(self.etf_ticker, self.market, self.universe_settings, self.universe_filter_function)           
+            self.universe = algorithm.Universe.ETF(self.etf_symbol, self.universe_settings, self.universe_filter_function)           
         return [self.universe]

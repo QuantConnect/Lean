@@ -15,10 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Selection;
@@ -29,7 +25,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Example algorithm of using ETFConstituentsUniverseSelectionModel
     /// </summary>
-    class ETFConstituentsFrameworkAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ETFConstituentsFrameworkAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -53,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp };
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
