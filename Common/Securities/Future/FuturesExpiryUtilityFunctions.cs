@@ -410,6 +410,7 @@ namespace QuantConnect.Securities.Future
             { Futures.Energies.BrentCrude, 2 },
             { Futures.Energies.BrentLastDayFinancial, 2 },
             { Futures.Energies.CrudeOilWTI, 1 },
+            { Futures.Energies.MicroCrudeOilWTI, 1 },
             { Futures.Energies.Gasoline, 1 },
             { Futures.Energies.HeatingOil, 1 },
             { Futures.Energies.MarsArgusVsWTITradeMonth, 1 },
