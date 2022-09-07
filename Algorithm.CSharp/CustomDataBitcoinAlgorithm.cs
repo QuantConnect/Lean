@@ -93,6 +93,16 @@ namespace QuantConnect.Algorithm.CSharp
             public decimal VolumeUSD = 0;
 
             /// <summary>
+            /// The end time of this data. Some data covers spans (trade bars)
+            /// and as such we want to know the entire time span covered
+            /// </summary>
+            /// <remarks>
+            /// This property is overriden to allow different values for Time and EndTime
+            /// if they are set in the Reader. In the base implementation EndTime equals Time
+            /// </remarks>
+            public override DateTime EndTime { get; set; }
+
+            /// <summary>
             /// 1. DEFAULT CONSTRUCTOR: Custom data types need a default constructor.
             /// We search for a default constructor so please provide one here. It won't be used for data, just to generate the "Factory".
             /// </summary>

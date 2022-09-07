@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -113,6 +113,16 @@ namespace QuantConnect.Algorithm.CSharp
             [JsonProperty("volume")]
             public decimal VolumeBTC = 0;
             public decimal VolumeUSD = 0;
+
+            /// <summary>
+            /// The end time of this data. Some data covers spans (trade bars)
+            /// and as such we want to know the entire time span covered
+            /// </summary>
+            /// <remarks>
+            /// This property is overriden to allow different values for Time and EndTime
+            /// if they are set in the Reader. In the base implementation EndTime equals Time
+            /// </remarks>
+            public override DateTime EndTime { get; set; }
 
             /// <summary>
             /// 1. DEFAULT CONSTRUCTOR: Custom data types need a default constructor.

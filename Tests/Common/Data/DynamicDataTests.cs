@@ -46,9 +46,17 @@ namespace QuantConnect.Tests.Common.Data
 
             BaseData baseData = data;
             Assert.AreEqual(time, baseData.Time);
+            Assert.AreEqual(time, baseData.EndTime);
             Assert.AreEqual(value, baseData.Value);
             Assert.AreEqual(value, baseData.Price);
             Assert.AreEqual(symbol, baseData.Symbol);
+
+            // let's access the properties through the dynamic handling
+            Assert.AreEqual(time, data.Time);
+            Assert.AreEqual(time, data.EndTime);
+            Assert.AreEqual(value, data.Value);
+            Assert.AreEqual(value, data.Price);
+            Assert.AreEqual(symbol, data.Symbol);
         }
 
         [Test]

@@ -32,6 +32,32 @@ namespace QuantConnect.Python
         private readonly dynamic _supportedResolutions;
         private readonly dynamic _isSparseData;
         private readonly dynamic _requiresMapping;
+        private DateTime _endTime;
+
+        /// <summary>
+        /// The end time of this data. Some data covers spans (trade bars)
+        /// and as such we want to know the entire time span covered
+        /// </summary>
+        /// <remarks>
+        /// This property is overriden to allow different values for Time and EndTime
+        /// if they are set in the Reader. In the base implementation EndTime equals Time
+        /// </remarks>
+        public override DateTime EndTime
+        {
+            get
+            {
+                return _endTime == default ? Time : _endTime;
+            }
+            set
+            {
+                _endTime = value;
+                if(Time == default)
+                {
+                    // if Time hasn't been set let's set it, like BaseData does. If the user overrides it that's okay
+                    Time = value;
+                }
+            }
+        }
 
         /// <summary>
         /// Constructor for initializing the PythonData class
