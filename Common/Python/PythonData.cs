@@ -44,8 +44,19 @@ namespace QuantConnect.Python
         /// </remarks>
         public override DateTime EndTime
         {
-            get => _endTime == default ? Time : _endTime;
-            set => _endTime = value;
+            get
+            {
+                return _endTime == default ? Time : _endTime;
+            }
+            set
+            {
+                _endTime = value;
+                if(Time == default)
+                {
+                    // if Time hasn't been set let's set it, like BaseData does. If the user overrides it that's okay
+                    Time = value;
+                }
+            }
         }
 
         /// <summary>
