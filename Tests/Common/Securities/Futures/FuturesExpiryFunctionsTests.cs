@@ -265,6 +265,28 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             }
         }
 
+        // 25th is a sunday
+        [TestCase(QuantConnect.Securities.Futures.Energies.MicroCrudeOilWTI, "20221001", "20220919")]
+        [TestCase(QuantConnect.Securities.Futures.Energies.CrudeOilWTI, "20221001", "20220920")]
+        // 25th is a tuesday
+        [TestCase(QuantConnect.Securities.Futures.Energies.MicroCrudeOilWTI, "20221101", "20221019")]
+        [TestCase(QuantConnect.Securities.Futures.Energies.CrudeOilWTI, "20221101", "20221020")]
+        // 25th is a friday but includes thanks giving
+        [TestCase(QuantConnect.Securities.Futures.Energies.MicroCrudeOilWTI, "20221201", "20221118")]
+        [TestCase(QuantConnect.Securities.Futures.Energies.CrudeOilWTI, "20221201", "20221121")]
+        public void MicroCrudeOilExpiration(string symbol, string dateStr, string expectedDate)
+        {
+            var date = Time.ParseDate(dateStr);
+            var expected = Time.ParseDate(expectedDate);
+
+            var futureSymbol = GetFutureSymbol(symbol, date);
+            var func = FuturesExpiryFunctions.FuturesExpiryFunction(GetFutureSymbol(symbol));
+
+            var actual = func(futureSymbol.ID.Date);
+
+            Assert.AreEqual(expected, actual, $"Failed for symbol: {symbol}. Date {dateStr}");
+        }
+
         [TestCase(QuantConnect.Securities.Futures.Financials.EuroDollar, ElevenOclock)]
         [TestCase(QuantConnect.Securities.Futures.Financials.Y30TreasuryBond, TwelveOne)]
         [TestCase(QuantConnect.Securities.Futures.Financials.Y10TreasuryNote, TwelveOne)]
