@@ -48,7 +48,12 @@ namespace QuantConnect.Algorithm.CSharp
             var spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
 
             UniverseSettings.Resolution = Resolution.Hour;
-            AddUniverse(Universe.ETF(spy, UniverseSettings, FilterETFConstituents));
+            AddUniverseWrapper(spy);
+        }
+
+        protected virtual void AddUniverseWrapper(Symbol symbol)
+        {
+            AddUniverse(Universe.ETF(symbol, UniverseSettings, FilterETFConstituents));
         }
 
         /// <summary>
@@ -195,7 +200,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+        public virtual Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
