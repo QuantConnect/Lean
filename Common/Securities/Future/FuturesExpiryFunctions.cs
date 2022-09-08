@@ -2046,15 +2046,14 @@ namespace QuantConnect.Securities.Future
                     // Trading in the current delivery month shall cease on the third business day prior to the twenty-fifth calendar day of the month preceding the delivery month. If the twenty-fifth calendar day of the month is a non-business day, trading shall cease on the third business day prior to the last business day preceding the twenty-fifth calendar day. In the event that the official Exchange holiday schedule changes subsequent to the listing of a Crude Oil futures, the originally listed expiration date shall remain in effect.In the event that the originally listed expiration day is declared a holiday, expiration will move to the business day immediately prior.
                     var twentyFifth = new DateTime(time.Year,time.Month,25);
                     twentyFifth = twentyFifth.AddMonths(-1);
-                    if(FuturesExpiryUtilityFunctions.NotHoliday(twentyFifth))
+
+                    var businessDays = -3;
+                    if(!FuturesExpiryUtilityFunctions.NotHoliday(twentyFifth))
                     {
-                        return FuturesExpiryUtilityFunctions.AddBusinessDays(twentyFifth,-3);
+                        // if the 25th is a holiday we substract 1 extra bussiness day
+                        businessDays -= 1;
                     }
-                    else
-                    {
-                        var lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(twentyFifth,-1);
-                        return FuturesExpiryUtilityFunctions.AddBusinessDays(lastBusinessDay,-3);
-                    }
+                    return FuturesExpiryUtilityFunctions.AddBusinessDays(twentyFifth, businessDays);
                 })
             },
             // Gulf Coast CBOB Gasoline A2 (Platts) vs. RBOB Gasoline (CRB): https://www.cmegroup.com/trading/energy/refined-products/gulf-coast-cbob-gasoline-a2-platts-vs-rbob-spread-swap_contract_specifications.html
@@ -3250,11 +3249,18 @@ namespace QuantConnect.Securities.Future
 
                     // Trading terminates 4 business days prior to the 25th calendar day of the month prior to the
                     // contract month (1 business day prior to CL LTD)
+                    // If the 25th calendar day is not a business day, trading terminates 5 business days before the 25th calendar day of the month prior to the contract month.
 
                     var previousMonth = time.AddMonths(-1);
                     var twentyFifthDay = new DateTime(previousMonth.Year, previousMonth.Month, 25);
-                    var twentyFifthDayLessFour = FuturesExpiryUtilityFunctions.AddBusinessDays(twentyFifthDay, -4);
-                    return twentyFifthDayLessFour;
+
+                    var businessDays = -4;
+                    if(!FuturesExpiryUtilityFunctions.NotHoliday(twentyFifthDay))
+                    {
+                        // if the 25th is a holiday we substract 1 extra bussiness day
+                        businessDays -= 1;
+                    }
+                    return FuturesExpiryUtilityFunctions.AddBusinessDays(twentyFifthDay, businessDays);
                 })
             },
             // Micro Singapore FOB Marine Fuel 0.5% (Platts) Futures (S50): https://www.cmegroup.com/markets/energy/refined-products/micro-singapore-fob-marine-fuel-05-platts.contractSpecs.html
