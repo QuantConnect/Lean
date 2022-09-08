@@ -33,6 +33,7 @@ using QuantConnect.Tests.ToolBox;
 using QuantConnect.ToolBox;
 using QuantConnect.Util;
 using QuantConnect.Indicators;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Tests.Python
 {
@@ -3630,6 +3631,92 @@ def DataFrameIsEmpty():
                 CollectionAssert.AreEqual(indicator1DataPoints.Select(point => point.Value), getIndicatorData("ind1").GetRange(0, indicator1DataPoints.Count));
                 CollectionAssert.AreEqual(indicator2DataPoints.Select(point => point.Value), getIndicatorData("ind2").GetRange(0, indicator2DataPoints.Count));
                 CollectionAssert.AreEqual(indicator3DataPoints.Select(point => point.Value), getIndicatorData("ind3").GetRange(0, indicator3DataPoints.Count));
+            }
+        }
+
+        [Test]
+        public void HandlesTickHistoryWithDifferentTickTypesForTheSameTimeStamp()
+        {
+            var converter = new PandasConverter();
+            var time = new DateTime(2013, 10, 8);
+            var symbol = Symbols.SPY;
+            var data = new[]
+            {
+                new Slice(
+                    time,
+                    new[]
+                    {
+                        new Tick(time, symbol, "04000001", "P", 100, 1m), // trade
+                        new Tick(time, symbol, "04000001", "P", 1m, 1m, 1m, 1.1m), // quote
+                        new OpenInterest(time, symbol, 100) // open interest
+                    },
+                    time)
+            };
+
+            var ticks = data[0].Ticks[symbol];
+            Assert.AreEqual(TickType.Trade, ticks[0].TickType);
+            Assert.AreEqual(TickType.Quote, ticks[1].TickType);
+            Assert.AreEqual(TickType.OpenInterest, ticks[2].TickType);
+
+            dynamic dataFrame = null;
+            Assert.DoesNotThrow(() => dataFrame = converter.GetDataFrame(data));
+
+            var expected = new []
+            {
+                new Dictionary<string, object> // trade
+                {
+                    {"askprice", double.NaN},
+                    {"asksize", double.NaN},
+                    {"bidprice", double.NaN},
+                    {"bidsize", double.NaN},
+                    {"exchange", "ARCA"},
+                    {"lastprice", 1d},
+                    {"openinterest", double.NaN},
+                    {"quantity", 100},
+                },
+                new Dictionary<string, object>  // quote
+                {
+                    {"askprice", 1.1},
+                    {"asksize", 1.0},
+                    {"bidprice", 1.0},
+                    {"bidsize", 1.0},
+                    {"exchange", "ARCA"},
+                    {"lastprice", 0.0},
+                    {"openinterest", double.NaN},
+                    {"quantity", 0},
+                },
+                new Dictionary<string, object> // open interest
+                {
+                    {"askprice", double.NaN},
+                    {"asksize", double.NaN},
+                    {"bidprice", double.NaN},
+                    {"bidsize", double.NaN},
+                    {"exchange", ""},
+                    {"lastprice", double.NaN},
+                    {"openinterest", 100d},
+                    {"quantity", 0},
+                },
+            };
+
+            using (Py.GIL())
+            {
+                Assert.AreEqual(ticks.Count, dataFrame.shape[0].As<int>());
+                dynamic subDataFrame = dataFrame.loc[symbol];
+                Assert.AreEqual(ticks.Count, subDataFrame.shape[0].As<int>());
+
+                for (int i = 0; i < expected.Length; i++)
+                {
+                    dynamic expectedTick = expected[i];
+                    dynamic tick = subDataFrame.iloc[i];
+                    Assert.AreEqual(expectedTick["askprice"], tick.askprice.As<double>());
+                    Assert.AreEqual(expectedTick["asksize"], tick.asksize.As<double>());
+                    Assert.AreEqual(expectedTick["bidprice"], tick.bidprice.As<double>());
+                    Assert.AreEqual(expectedTick["bidsize"], tick.bidsize.As<double>());
+                    Assert.AreEqual(expectedTick["exchange"], tick.exchange.As<string>());
+                    Assert.AreEqual(expectedTick["lastprice"], tick.lastprice.As<double>());
+                    Assert.AreEqual(expectedTick["openinterest"], tick.openinterest.As<double>());
+                    Assert.AreEqual(expectedTick["quantity"], tick.quantity.As<int>());
+                }
             }
         }
 

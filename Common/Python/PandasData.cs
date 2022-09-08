@@ -226,9 +226,6 @@ namespace QuantConnect.Python
                     if (tick == null) continue;
 
                     var time = tick.EndTime;
-                    var column = tick.TickType == TickType.OpenInterest
-                        ? "openinterest"
-                        : "lastprice";
 
                     if (tick.TickType == TickType.Quote)
                     {
@@ -237,10 +234,28 @@ namespace QuantConnect.Python
                         AddToSeries("bidprice", time, tick.BidPrice);
                         AddToSeries("bidsize", time, tick.BidSize);
                     }
+                    else
+                    {
+                        AddToSeries("askprice", time, null);
+                        AddToSeries("asksize", time, null);
+                        AddToSeries("bidprice", time, null);
+                        AddToSeries("bidsize", time, null);
+                    }
+
                     AddToSeries("exchange", time, tick.Exchange);
                     AddToSeries("suspicious", time, tick.Suspicious);
                     AddToSeries("quantity", time, tick.Quantity);
-                    AddToSeries(column, time, tick.LastPrice);
+
+                    if (tick.TickType == TickType.OpenInterest)
+                    {
+                        AddToSeries("openinterest", time, tick.Value);
+                        AddToSeries("lastprice", time, null);
+                    }
+                    else
+                    {
+                        AddToSeries("lastprice", time, tick.Value);
+                        AddToSeries("openinterest", time, null);
+                    }
                 }
             }
         }
