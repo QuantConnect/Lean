@@ -227,6 +227,9 @@ namespace QuantConnect.Python
 
                     var time = tick.EndTime;
 
+                    // We will fill some series with null for tick types that don't have a value for that series, so that we make sure
+                    // the indices are the same for every tick series.
+
                     if (tick.TickType == TickType.Quote)
                     {
                         AddToSeries("askprice", time, tick.AskPrice);
@@ -236,6 +239,7 @@ namespace QuantConnect.Python
                     }
                     else
                     {
+                        // Trade and open interest ticks don't have these values, so we'll fill them with null.
                         AddToSeries("askprice", time, null);
                         AddToSeries("asksize", time, null);
                         AddToSeries("bidprice", time, null);

@@ -3743,11 +3743,11 @@ def DataFrameIsEmpty():
                             time
                         )
                     },
-"                             askprice  asksize  bidprice  bidsize exchange  lastprice  openinterest  quantity\n" +
-"symbol           time                                                                                        \n" +
-"SPY R735QTJ8XC9X 2013-10-08       NaN      NaN       NaN      NaN   NASDAQ        1.0           NaN     100.0\n" +
-"                 2013-10-08     120.0    150.0     110.0    100.0     ARCA        0.0           NaN       0.0\n" +
-"                 2013-10-08       NaN      NaN       NaN      NaN                 NaN         150.0       0.0"
+$"                             askprice  asksize  bidprice  bidsize exchange  lastprice  openinterest  quantity{Environment.NewLine}" +
+$"symbol           time                                                                                        {Environment.NewLine}" +
+$"SPY R735QTJ8XC9X 2013-10-08       NaN      NaN       NaN      NaN   NASDAQ        1.0           NaN     100.0{Environment.NewLine}" +
+$"                 2013-10-08     120.0    150.0     110.0    100.0     ARCA        0.0           NaN       0.0{Environment.NewLine}" +
+$"                 2013-10-08       NaN      NaN       NaN      NaN                 NaN         150.0       0.0"
                 ),
                 // Trade tick
                 new TestCaseData(
@@ -3763,9 +3763,9 @@ def DataFrameIsEmpty():
                             time
                         )
                     },
-"                            exchange  lastprice  quantity\n" +
-"symbol           time                                    \n" +
-"SPY R735QTJ8XC9X 2013-10-08   NASDAQ        1.0     100.0"
+$"                            exchange  lastprice  quantity{Environment.NewLine}" +
+$"symbol           time                                    {Environment.NewLine}" +
+$"SPY R735QTJ8XC9X 2013-10-08   NASDAQ        1.0     100.0"
                 ),
                 // Trade ticks with same timestamp
                 new TestCaseData(
@@ -3782,10 +3782,10 @@ def DataFrameIsEmpty():
                             time
                         )
                     },
-"                            exchange  lastprice  quantity\n" +
-"symbol           time                                    \n" +
-"SPY R735QTJ8XC9X 2013-10-08   NASDAQ        1.0     100.0\n" +
-"                 2013-10-08   NASDAQ        2.0     200.0"
+$"                            exchange  lastprice  quantity{Environment.NewLine}" +
+$"symbol           time                                    {Environment.NewLine}" +
+$"SPY R735QTJ8XC9X 2013-10-08   NASDAQ        1.0     100.0{Environment.NewLine}" +
+$"                 2013-10-08   NASDAQ        2.0     200.0"
                 ),
                 // Quote tick
                 new TestCaseData(
@@ -3801,9 +3801,9 @@ def DataFrameIsEmpty():
                             time
                         )
                     },
-"                      askprice  asksize  bidprice  bidsize\n" +
-"symbol    time                                            \n" +
-"BTCUSD XJ 2013-10-08     120.0    150.0     110.0    100.0"
+$"                      askprice  asksize  bidprice  bidsize{Environment.NewLine}" +
+$"symbol    time                                            {Environment.NewLine}" +
+$"BTCUSD XJ 2013-10-08     120.0    150.0     110.0    100.0"
                 ),
                 // Quote ticks with same timestamp
                 new TestCaseData(
@@ -3820,10 +3820,10 @@ def DataFrameIsEmpty():
                             time
                         )
                     },
-"                      askprice  asksize  bidprice  bidsize\n" +
-"symbol    time                                            \n" +
-"BTCUSD XJ 2013-10-08     120.0    150.0     110.0    100.0\n" +
-"          2013-10-08     220.0    250.0     210.0    200.0"
+$"                      askprice  asksize  bidprice  bidsize{Environment.NewLine}" +
+$"symbol    time                                            {Environment.NewLine}" +
+$"BTCUSD XJ 2013-10-08     120.0    150.0     110.0    100.0{Environment.NewLine}" +
+$"          2013-10-08     220.0    250.0     210.0    200.0"
                 ),
                 // Open interest tick
                 new TestCaseData(
@@ -3839,9 +3839,9 @@ def DataFrameIsEmpty():
                             time
                         )
                     },
-"                             openinterest\n" +
-"symbol           time                    \n" +
-"SPY R735QTJ8XC9X 2013-10-08         150.0"
+$"                             openinterest{Environment.NewLine}" +
+$"symbol           time                    {Environment.NewLine}" +
+$"SPY R735QTJ8XC9X 2013-10-08         150.0"
                 ),
                 // Open interest ticks with same timestamp
                 new TestCaseData(
@@ -3858,10 +3858,10 @@ def DataFrameIsEmpty():
                             time
                         )
                     },
-"                             openinterest\n" +
-"symbol           time                    \n" +
-"SPY R735QTJ8XC9X 2013-10-08         150.0\n" +
-"                 2013-10-08         250.0"
+$"                             openinterest{Environment.NewLine}" +
+$"symbol           time                    {Environment.NewLine}" +
+$"SPY R735QTJ8XC9X 2013-10-08         150.0{Environment.NewLine}" +
+$"                 2013-10-08         250.0"
                 ),
                 // Trade, quote and open interest ticks with different times
                 new TestCaseData(
@@ -3879,11 +3879,11 @@ def DataFrameIsEmpty():
                             time
                         )
                     },
-"                                          askprice  asksize  bidprice  bidsize exchange  lastprice  openinterest  quantity\n" +
-"symbol           time                                                                                                     \n" +
-"SPY R735QTJ8XC9X 2013-10-08 00:00:00.000       NaN      NaN       NaN      NaN   NASDAQ        1.0           NaN     100.0\n" +
-"                 2013-10-08 00:00:00.100     120.0    150.0     110.0    100.0     ARCA        0.0           NaN       0.0\n" +
-"                 2013-10-31 03:33:20.000       NaN      NaN       NaN      NaN                 NaN         150.0       0.0"
+$"                                          askprice  asksize  bidprice  bidsize exchange  lastprice  openinterest  quantity{Environment.NewLine}" +
+$"symbol           time                                                                                                     {Environment.NewLine}" +
+$"SPY R735QTJ8XC9X 2013-10-08 00:00:00.000       NaN      NaN       NaN      NaN   NASDAQ        1.0           NaN     100.0{Environment.NewLine}" +
+$"                 2013-10-08 00:00:00.100     120.0    150.0     110.0    100.0     ARCA        0.0           NaN       0.0{Environment.NewLine}" +
+$"                 2013-10-31 03:33:20.000       NaN      NaN       NaN      NaN                 NaN         150.0       0.0"
                 ),
                 // Trade and quote bars
                 new TestCaseData(
@@ -3900,9 +3900,9 @@ def DataFrameIsEmpty():
                             time
                         )
                     },
-"                                      askclose  askhigh  asklow  askopen  asksize  bidclose  bidhigh  bidlow  bidopen  bidsize  close   high    low   open  volume\n" +
-"symbol           time                                                                                                                                             \n" +
-"SPY R735QTJ8XC9X 2013-10-08 00:01:00     110.0    112.0   105.0    110.0     98.0     101.0    102.0   100.0    101.0     99.0  101.0  102.0  100.0  101.0    10.0"
+$"                                      askclose  askhigh  asklow  askopen  asksize  bidclose  bidhigh  bidlow  bidopen  bidsize  close   high    low   open  volume{Environment.NewLine}" +
+$"symbol           time                                                                                                                                             {Environment.NewLine}" +
+$"SPY R735QTJ8XC9X 2013-10-08 00:01:00     110.0    112.0   105.0    110.0     98.0     101.0    102.0   100.0    101.0     99.0  101.0  102.0  100.0  101.0    10.0"
                 ),
                 // Trade bar
                 new TestCaseData(
@@ -3918,9 +3918,9 @@ def DataFrameIsEmpty():
                             time
                         )
                     },
-"                                      close   high    low   open  volume\n" +
-"symbol           time                                                   \n" +
-"SPY R735QTJ8XC9X 2013-10-08 00:01:00  101.0  102.0  100.0  101.0    10.0"
+$"                                      close   high    low   open  volume{Environment.NewLine}" +
+$"symbol           time                                                   {Environment.NewLine}" +
+$"SPY R735QTJ8XC9X 2013-10-08 00:01:00  101.0  102.0  100.0  101.0    10.0"
                 ),
                 // Quote bar
                 new TestCaseData(
@@ -3936,9 +3936,9 @@ def DataFrameIsEmpty():
                             time
                         )
                     },
-"                               askclose  askhigh  asklow  askopen  asksize  bidclose  bidhigh  bidlow  bidopen  bidsize  close   high    low   open\n" +
-"symbol    time                                                                                                                                     \n" +
-"BTCUSD XJ 2013-10-08 00:01:00     110.0    112.0   105.0    110.0     98.0     101.0    102.0   100.0    101.0     99.0  105.5  107.0  102.5  105.5"
+$"                               askclose  askhigh  asklow  askopen  asksize  bidclose  bidhigh  bidlow  bidopen  bidsize  close   high    low   open{Environment.NewLine}" +
+$"symbol    time                                                                                                                                     {Environment.NewLine}" +
+$"BTCUSD XJ 2013-10-08 00:01:00     110.0    112.0   105.0    110.0     98.0     101.0    102.0   100.0    101.0     99.0  105.5  107.0  102.5  105.5"
                 ),
                 // Trade and quote bars with different times
                 new TestCaseData(
@@ -3961,10 +3961,10 @@ def DataFrameIsEmpty():
                             },
                             time.AddMinutes(1))
                     },
-"                               askclose  askhigh  asklow  askopen  asksize  bidclose  bidhigh  bidlow  bidopen  bidsize  close   high    low   open  volume\n" +
-"symbol    time                                                                                                                                             \n" +
-"BTCUSD XJ 2013-10-08 00:01:00       NaN      NaN     NaN      NaN      NaN       NaN      NaN     NaN      NaN      NaN  101.0  102.0  100.0  101.0    10.0\n" +
-"          2013-10-08 00:02:01     110.0    112.0   105.0    110.0     98.0     101.0    102.0   100.0    101.0     99.0  105.5  107.0  102.5  105.5     NaN"
+$"                               askclose  askhigh  asklow  askopen  asksize  bidclose  bidhigh  bidlow  bidopen  bidsize  close   high    low   open  volume{Environment.NewLine}" +
+$"symbol    time                                                                                                                                             {Environment.NewLine}" +
+$"BTCUSD XJ 2013-10-08 00:01:00       NaN      NaN     NaN      NaN      NaN       NaN      NaN     NaN      NaN      NaN  101.0  102.0  100.0  101.0    10.0{Environment.NewLine}" +
+$"          2013-10-08 00:02:01     110.0    112.0   105.0    110.0     98.0     101.0    102.0   100.0    101.0     99.0  105.5  107.0  102.5  105.5     NaN"
                 ),
             };
         }
