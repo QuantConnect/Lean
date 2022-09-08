@@ -33,7 +33,6 @@ using QuantConnect.Tests.ToolBox;
 using QuantConnect.ToolBox;
 using QuantConnect.Util;
 using QuantConnect.Indicators;
-using QuantConnect.Logging;
 
 namespace QuantConnect.Tests.Python
 {
@@ -3634,89 +3633,16 @@ def DataFrameIsEmpty():
             }
         }
 
-        [Test]
-        public void HandlesTickHistoryWithDifferentTickTypesForTheSameTimeStamp()
+        [TestCaseSource(nameof(GetHistoryWithDuplicateTimes))]
+        public void HandlesSlicesWithDuplicateTimeStamps(Symbol symbol, IEnumerable<Slice> data, string expectedDataFrameString)
         {
             var converter = new PandasConverter();
-            var time = new DateTime(2013, 10, 8);
-            var symbol = Symbols.SPY;
-            var data = new[]
-            {
-                new Slice(
-                    time,
-                    new[]
-                    {
-                        new Tick(time, symbol, "04000001", "P", 100, 1m), // trade
-                        new Tick(time, symbol, "04000001", "P", 1m, 1m, 1m, 1.1m), // quote
-                        new OpenInterest(time, symbol, 100) // open interest
-                    },
-                    time)
-            };
-
-            var ticks = data[0].Ticks[symbol];
-            Assert.AreEqual(TickType.Trade, ticks[0].TickType);
-            Assert.AreEqual(TickType.Quote, ticks[1].TickType);
-            Assert.AreEqual(TickType.OpenInterest, ticks[2].TickType);
-
             dynamic dataFrame = null;
             Assert.DoesNotThrow(() => dataFrame = converter.GetDataFrame(data));
 
-            var expected = new []
-            {
-                new Dictionary<string, object> // trade
-                {
-                    {"askprice", double.NaN},
-                    {"asksize", double.NaN},
-                    {"bidprice", double.NaN},
-                    {"bidsize", double.NaN},
-                    {"exchange", "ARCA"},
-                    {"lastprice", 1d},
-                    {"openinterest", double.NaN},
-                    {"quantity", 100},
-                },
-                new Dictionary<string, object>  // quote
-                {
-                    {"askprice", 1.1},
-                    {"asksize", 1.0},
-                    {"bidprice", 1.0},
-                    {"bidsize", 1.0},
-                    {"exchange", "ARCA"},
-                    {"lastprice", 0.0},
-                    {"openinterest", double.NaN},
-                    {"quantity", 0},
-                },
-                new Dictionary<string, object> // open interest
-                {
-                    {"askprice", double.NaN},
-                    {"asksize", double.NaN},
-                    {"bidprice", double.NaN},
-                    {"bidsize", double.NaN},
-                    {"exchange", ""},
-                    {"lastprice", double.NaN},
-                    {"openinterest", 100d},
-                    {"quantity", 0},
-                },
-            };
-
             using (Py.GIL())
             {
-                Assert.AreEqual(ticks.Count, dataFrame.shape[0].As<int>());
-                dynamic subDataFrame = dataFrame.loc[symbol];
-                Assert.AreEqual(ticks.Count, subDataFrame.shape[0].As<int>());
-
-                for (int i = 0; i < expected.Length; i++)
-                {
-                    dynamic expectedTick = expected[i];
-                    dynamic tick = subDataFrame.iloc[i];
-                    Assert.AreEqual(expectedTick["askprice"], tick.askprice.As<double>());
-                    Assert.AreEqual(expectedTick["asksize"], tick.asksize.As<double>());
-                    Assert.AreEqual(expectedTick["bidprice"], tick.bidprice.As<double>());
-                    Assert.AreEqual(expectedTick["bidsize"], tick.bidsize.As<double>());
-                    Assert.AreEqual(expectedTick["exchange"], tick.exchange.As<string>());
-                    Assert.AreEqual(expectedTick["lastprice"], tick.lastprice.As<double>());
-                    Assert.AreEqual(expectedTick["openinterest"], tick.openinterest.As<double>());
-                    Assert.AreEqual(expectedTick["quantity"], tick.quantity.As<int>());
-                }
+                Assert.AreEqual(expectedDataFrameString, dataFrame.to_string().As<string>());
             }
         }
 
@@ -3788,6 +3714,259 @@ def DataFrameIsEmpty():
                     }
                 );
             return _converter.GetDataFrame(slices);
+        }
+
+        /// <summary>
+        /// Test cases to verify that the <see cref="PandasConverter"/> handles slices with duplicate time stamps.
+        /// We want to verify we handle non-unique multi-index errors from Pandas as described in GH issue #4297
+        /// </summary>
+        private static TestCaseData[] GetHistoryWithDuplicateTimes()
+        {
+            var time = new DateTime(2013, 10, 8);
+            var symbol = Symbols.SPY;
+
+            return new []
+            {
+                // Trade, quote and open interest ticks
+                new TestCaseData(
+                    symbol,
+                    new[]
+                    {
+                        new Slice(
+                            time,
+                            new[]
+                            {
+                                new Tick(time, symbol, "04000001", "Q", 100, 1m), // trade
+                                new Tick(time, symbol, "04000002", "P", 100m, 110m, 150m, 120m), // quote
+                                new OpenInterest(time, symbol, 150m) // open interest
+                            },
+                            time
+                        )
+                    },
+"                             askprice  asksize  bidprice  bidsize exchange  lastprice  openinterest  quantity\n" +
+"symbol           time                                                                                        \n" +
+"SPY R735QTJ8XC9X 2013-10-08       NaN      NaN       NaN      NaN   NASDAQ        1.0           NaN     100.0\n" +
+"                 2013-10-08     120.0    150.0     110.0    100.0     ARCA        0.0           NaN       0.0\n" +
+"                 2013-10-08       NaN      NaN       NaN      NaN                 NaN         150.0       0.0"
+                ),
+                // Trade tick
+                new TestCaseData(
+                    symbol,
+                    new[]
+                    {
+                        new Slice(
+                            time,
+                            new[]
+                            {
+                                new Tick(time, symbol, "04000001", "Q", 100, 1m), // trade
+                            },
+                            time
+                        )
+                    },
+"                            exchange  lastprice  quantity\n" +
+"symbol           time                                    \n" +
+"SPY R735QTJ8XC9X 2013-10-08   NASDAQ        1.0     100.0"
+                ),
+                // Trade ticks with same timestamp
+                new TestCaseData(
+                    symbol,
+                    new[]
+                    {
+                        new Slice(
+                            time,
+                            new[]
+                            {
+                                new Tick(time, symbol, "04000001", "Q", 100, 1m), // trade
+                                new Tick(time, symbol, "04000001", "Q", 200, 2m), // trade
+                            },
+                            time
+                        )
+                    },
+"                            exchange  lastprice  quantity\n" +
+"symbol           time                                    \n" +
+"SPY R735QTJ8XC9X 2013-10-08   NASDAQ        1.0     100.0\n" +
+"                 2013-10-08   NASDAQ        2.0     200.0"
+                ),
+                // Quote tick
+                new TestCaseData(
+                    Symbols.BTCUSD,
+                    new[]
+                    {
+                        new Slice(
+                            time,
+                            new[]
+                            {
+                                new Tick(time, Symbols.BTCUSD, "04000002", "P", 100m, 110m, 150m, 120m), // quote
+                            },
+                            time
+                        )
+                    },
+"                      askprice  asksize  bidprice  bidsize\n" +
+"symbol    time                                            \n" +
+"BTCUSD XJ 2013-10-08     120.0    150.0     110.0    100.0"
+                ),
+                // Quote ticks with same timestamp
+                new TestCaseData(
+                    Symbols.BTCUSD,
+                    new[]
+                    {
+                        new Slice(
+                            time,
+                            new[]
+                            {
+                                new Tick(time, Symbols.BTCUSD, "04000002", "P", 100m, 110m, 150m, 120m), // quote
+                                new Tick(time, Symbols.BTCUSD, "04000002", "P", 200m, 210m, 250m, 220m), // quote
+                            },
+                            time
+                        )
+                    },
+"                      askprice  asksize  bidprice  bidsize\n" +
+"symbol    time                                            \n" +
+"BTCUSD XJ 2013-10-08     120.0    150.0     110.0    100.0\n" +
+"          2013-10-08     220.0    250.0     210.0    200.0"
+                ),
+                // Open interest tick
+                new TestCaseData(
+                    symbol,
+                    new[]
+                    {
+                        new Slice(
+                            time,
+                            new[]
+                            {
+                                new OpenInterest(time, symbol, 150m) // open interest
+                            },
+                            time
+                        )
+                    },
+"                             openinterest\n" +
+"symbol           time                    \n" +
+"SPY R735QTJ8XC9X 2013-10-08         150.0"
+                ),
+                // Open interest ticks with same timestamp
+                new TestCaseData(
+                    symbol,
+                    new[]
+                    {
+                        new Slice(
+                            time,
+                            new[]
+                            {
+                                new OpenInterest(time, symbol, 150m), // open interest
+                                new OpenInterest(time, symbol, 250m) // open interest
+                            },
+                            time
+                        )
+                    },
+"                             openinterest\n" +
+"symbol           time                    \n" +
+"SPY R735QTJ8XC9X 2013-10-08         150.0\n" +
+"                 2013-10-08         250.0"
+                ),
+                // Trade, quote and open interest ticks with different times
+                new TestCaseData(
+                    symbol,
+                    new[]
+                    {
+                        new Slice(
+                            time,
+                            new[]
+                            {
+                                new Tick(time, symbol, "04000001", "Q", 100, 1m), // trade
+                                new Tick(time.AddTicks(1000000), symbol, "04000002", "P", 100m, 110m, 150m, 120m), // quote
+                                new OpenInterest(time.AddSeconds(2 * 1000000), symbol, 150m) // open interest
+                            },
+                            time
+                        )
+                    },
+"                                          askprice  asksize  bidprice  bidsize exchange  lastprice  openinterest  quantity\n" +
+"symbol           time                                                                                                     \n" +
+"SPY R735QTJ8XC9X 2013-10-08 00:00:00.000       NaN      NaN       NaN      NaN   NASDAQ        1.0           NaN     100.0\n" +
+"                 2013-10-08 00:00:00.100     120.0    150.0     110.0    100.0     ARCA        0.0           NaN       0.0\n" +
+"                 2013-10-31 03:33:20.000       NaN      NaN       NaN      NaN                 NaN         150.0       0.0"
+                ),
+                // Trade and quote bars
+                new TestCaseData(
+                    symbol,
+                    new[]
+                    {
+                        new Slice(
+                            time,
+                            new BaseData[]
+                            {
+                                new TradeBar(time, symbol, 101m, 102m, 100m, 101m, 10m),
+                                new QuoteBar(time, symbol, new Bar(101m, 102m, 100m, 101m), 99m, new Bar(110m, 112m, 105m, 110m), 98m)
+                            },
+                            time
+                        )
+                    },
+"                                      askclose  askhigh  asklow  askopen  asksize  bidclose  bidhigh  bidlow  bidopen  bidsize  close   high    low   open  volume\n" +
+"symbol           time                                                                                                                                             \n" +
+"SPY R735QTJ8XC9X 2013-10-08 00:01:00     110.0    112.0   105.0    110.0     98.0     101.0    102.0   100.0    101.0     99.0  101.0  102.0  100.0  101.0    10.0"
+                ),
+                // Trade bar
+                new TestCaseData(
+                    symbol,
+                    new[]
+                    {
+                        new Slice(
+                            time,
+                            new BaseData[]
+                            {
+                                new TradeBar(time, symbol, 101m, 102m, 100m, 101m, 10m)
+                            },
+                            time
+                        )
+                    },
+"                                      close   high    low   open  volume\n" +
+"symbol           time                                                   \n" +
+"SPY R735QTJ8XC9X 2013-10-08 00:01:00  101.0  102.0  100.0  101.0    10.0"
+                ),
+                // Quote bar
+                new TestCaseData(
+                    Symbols.BTCUSD,
+                    new[]
+                    {
+                        new Slice(
+                            time,
+                            new BaseData[]
+                            {
+                                new QuoteBar(time, Symbols.BTCUSD, new Bar(101m, 102m, 100m, 101m), 99m, new Bar(110m, 112m, 105m, 110m), 98m)
+                            },
+                            time
+                        )
+                    },
+"                               askclose  askhigh  asklow  askopen  asksize  bidclose  bidhigh  bidlow  bidopen  bidsize  close   high    low   open\n" +
+"symbol    time                                                                                                                                     \n" +
+"BTCUSD XJ 2013-10-08 00:01:00     110.0    112.0   105.0    110.0     98.0     101.0    102.0   100.0    101.0     99.0  105.5  107.0  102.5  105.5"
+                ),
+                // Trade and quote bars with different times
+                new TestCaseData(
+                    Symbols.BTCUSD,
+                    new[]
+                    {
+                        new Slice(
+                            time,
+                            new BaseData[]
+                            {
+                                new TradeBar(time, Symbols.BTCUSD, 101m, 102m, 100m, 101m, 10m),
+                            },
+                            time
+                        ),
+                        new Slice(
+                            time.AddMinutes(1),
+                            new BaseData[]
+                            {
+                                new QuoteBar(time.AddMinutes(1).AddSeconds(1), Symbols.BTCUSD, new Bar(101m, 102m, 100m, 101m), 99m, new Bar(110m, 112m, 105m, 110m), 98m)
+                            },
+                            time.AddMinutes(1))
+                    },
+"                               askclose  askhigh  asklow  askopen  asksize  bidclose  bidhigh  bidlow  bidopen  bidsize  close   high    low   open  volume\n" +
+"symbol    time                                                                                                                                             \n" +
+"BTCUSD XJ 2013-10-08 00:01:00       NaN      NaN     NaN      NaN      NaN       NaN      NaN     NaN      NaN      NaN  101.0  102.0  100.0  101.0    10.0\n" +
+"          2013-10-08 00:02:01     110.0    112.0   105.0    110.0     98.0     101.0    102.0   100.0    101.0     99.0  105.5  107.0  102.5  105.5     NaN"
+                ),
+            };
         }
 
         internal class SubTradeBar : TradeBar
