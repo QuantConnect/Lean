@@ -1306,7 +1306,7 @@ def getOpenInterestHistory(algorithm, symbol, start, end):
                     Assert.AreEqual(390, quoteHistory.shape[0].As<int>());
 
                     dynamic tickHistory = getTickHistory(algorithm, ibmSymbol, ibmHistoryStart, ibmHistoryEnd);
-                    Assert.AreEqual(24106, tickHistory.shape[0].As<int>());
+                    Assert.AreEqual(132104, tickHistory.shape[0].As<int>());
 
                     dynamic openInterestHistory = getOpenInterestHistory(algorithm, twxSymbol, twxHistoryStart, twxHistoryEnd);
                     Assert.AreEqual(1050, openInterestHistory.shape[0].As<int>());
