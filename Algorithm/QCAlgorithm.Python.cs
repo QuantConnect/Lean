@@ -987,7 +987,7 @@ namespace QuantConnect.Algorithm
         {
             var requestedType = type.CreateType();
             var requests = CreateDateRangeHistoryRequests(new [] {  symbol }, requestedType, start, end, resolution);
-            if (requests == null || !requests.Any())
+            if (requests.IsNullOrEmpty())
             {
                 throw new ArgumentException($"No history data could be fetched. " +
                     $"This could be due to the specified security not being of the requested type. Symbol: {symbol} Requested Type: {requestedType.Name}");

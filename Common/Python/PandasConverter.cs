@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -235,10 +235,11 @@ namespace QuantConnect.Python
         /// </summary>
         private void AddSliceDataToDict(Slice slice, IDictionary<Symbol, PandasData> sliceDataDict, ref int maxLevels)
         {
-            foreach (var key in slice.Keys)
+            foreach (var kvp in slice)
             {
-                var baseData = slice[key];
-                var value = GetPandasDataValue(sliceDataDict, key, baseData, ref maxLevels);
+                var symbol = kvp.Key;
+                var baseData = kvp.Value;
+                var value = GetPandasDataValue(sliceDataDict, symbol, baseData, ref maxLevels);
 
                 if (value.IsCustomData)
                 {
@@ -246,11 +247,10 @@ namespace QuantConnect.Python
                 }
                 else
                 {
-                    var ticks = slice.Ticks.ContainsKey(key) ? slice.Ticks[key] : null;
-                    var tradeBars = slice.Bars.ContainsKey(key) ? slice.Bars[key] : null;
-                    var quoteBars = slice.QuoteBars.ContainsKey(key) ? slice.QuoteBars[key] : null;
+                    var ticks = slice.Ticks.ContainsKey(symbol) ? slice.Ticks[symbol] : null;
+                    var tradeBars = slice.Bars.ContainsKey(symbol) ? slice.Bars[symbol] : null;
+                    var quoteBars = slice.QuoteBars.ContainsKey(symbol) ? slice.QuoteBars[symbol] : null;
                     value.Add(ticks, tradeBars, quoteBars);
-
                 }
             }
         }
@@ -264,10 +264,11 @@ namespace QuantConnect.Python
             // Access ticks directly since slice.Get(typeof(Tick)) and slice.Get(typeof(OpenInterest)) will return only the last tick
             var sliceData = isTick ? slice.Ticks : slice.Get(dataType);
 
-            foreach (var key in sliceData.Keys)
+            foreach (var kvp in sliceData)
             {
-                var baseData = sliceData[key];
-                var value = GetPandasDataValue(sliceDataDict, key, baseData, ref maxLevels);
+                Symbol symbol = kvp.Key;
+                var baseData = kvp.Value;
+                PandasData value = GetPandasDataValue(sliceDataDict, symbol, baseData, ref maxLevels);
 
                 if (value.IsCustomData)
                 {
