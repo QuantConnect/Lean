@@ -1244,6 +1244,76 @@ def getHistoryForContractDepthOffset(algorithm, symbol, start, end, resolution, 
             }
         }
 
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void GetsHistoryWithGivenBarType(Language language)
+        {
+            var algorithm = GetAlgorithm(new DateTime(2014, 6, 6));
+            var ibmSymbol = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
+            var twxSymbol = Symbol.CreateOption("TWX", Market.USA, OptionStyle.American, OptionRight.Call, 45, new DateTime(2015, 1, 17));
+
+            var ibmHistoryStart = new DateTime(2013, 10, 7);
+            var ibmHistoryEnd = new DateTime(2013, 10, 8);
+            var twxHistoryStart = new DateTime(2014, 6, 5);
+            var twxHistoryEnd = new DateTime(2014, 6, 6);
+
+            if (language == Language.CSharp)
+            {
+                var tradeHistory = algorithm.History<TradeBar>(ibmSymbol, ibmHistoryStart, ibmHistoryEnd);
+                Assert.AreEqual(390, tradeHistory.Count());
+
+                var quoteHistory = algorithm.History<QuoteBar>(ibmSymbol, ibmHistoryStart, ibmHistoryEnd);
+                Assert.AreEqual(390, quoteHistory.Count());
+
+                var tickHistory = algorithm.History<Tick>(ibmSymbol, ibmHistoryStart, ibmHistoryEnd, Resolution.Tick);
+                Assert.AreEqual(57460, tickHistory.Count());
+
+                var openInterestHistory = algorithm.History<OpenInterest>(twxSymbol, twxHistoryStart, twxHistoryEnd);
+                Assert.AreEqual(1050, openInterestHistory.Count());
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    var testModule = PyModule.FromString("testModule",
+                        @"
+from AlgorithmImports import *
+
+def getTradeBarHistory(algorithm, symbol, start, end):
+    return algorithm.History(TradeBar, symbol, start, end)
+
+def getQuoteBarHistory(algorithm, symbol, start, end):
+    return algorithm.History(QuoteBar, symbol, start, end)
+
+def getTickHistory(algorithm, symbol, start, end):
+    return algorithm.History(Tick, symbol, start, end, Resolution.Tick)
+
+def getOpenInterestHistory(algorithm, symbol, start, end):
+    return algorithm.History(OpenInterest, symbol, start, end)
+");
+
+                    dynamic getTradeBarHistory = testModule.GetAttr("getTradeBarHistory");
+                    dynamic getQuoteBarHistory = testModule.GetAttr("getQuoteBarHistory");
+                    dynamic getTickHistory = testModule.GetAttr("getTickHistory");
+                    dynamic getOpenInterestHistory = testModule.GetAttr("getOpenInterestHistory");
+
+                    algorithm.SetPandasConverter();
+
+                    dynamic tradeHistory = getTradeBarHistory(algorithm, ibmSymbol, ibmHistoryStart, ibmHistoryEnd);
+                    Assert.AreEqual(390, tradeHistory.shape[0].As<int>());
+
+                    dynamic quoteHistory = getQuoteBarHistory(algorithm, ibmSymbol, ibmHistoryStart, ibmHistoryEnd);
+                    Assert.AreEqual(390, quoteHistory.shape[0].As<int>());
+
+                    dynamic tickHistory = getTickHistory(algorithm, ibmSymbol, ibmHistoryStart, ibmHistoryEnd);
+                    Assert.AreEqual(132104, tickHistory.shape[0].As<int>());
+
+                    dynamic openInterestHistory = getOpenInterestHistory(algorithm, twxSymbol, twxHistoryStart, twxHistoryEnd);
+                    Assert.AreEqual(1050, openInterestHistory.shape[0].As<int>());
+                }
+            }
+        }
+
         private QCAlgorithm GetAlgorithm(DateTime dateTime)
         {
             var algorithm = new QCAlgorithm();

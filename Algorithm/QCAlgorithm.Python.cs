@@ -930,7 +930,7 @@ namespace QuantConnect.Algorithm
             var requestedType = type.CreateType();
             var requests = CreateDateRangeHistoryRequests(symbols, requestedType, start, end, resolution, fillForward, extendedMarket,
                 dataMappingMode, dataNormalizationMode, contractDepthOffset);
-            return PandasConverter.GetDataFrame(History(requests.Where(x => x != null)));
+            return PandasConverter.GetDataFrame(History(requests.Where(x => x != null)), requestedType);
         }
 
         /// <summary>
@@ -955,7 +955,7 @@ namespace QuantConnect.Algorithm
             var requestedType = type.CreateType();
             var requests = CreateBarCountHistoryRequests(symbols, requestedType, periods, resolution);
 
-            return PandasConverter.GetDataFrame(History(requests.Where(x => x != null)).Memoize());
+            return PandasConverter.GetDataFrame(History(requests.Where(x => x != null)).Memoize(), requestedType);
         }
 
         /// <summary>
@@ -986,14 +986,14 @@ namespace QuantConnect.Algorithm
         public PyObject History(PyObject type, Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null)
         {
             var requestedType = type.CreateType();
-            var request = CreateDateRangeHistoryRequests(new [] {  symbol }, requestedType, start, end, resolution).FirstOrDefault();
-            if (request == null)
+            var requests = CreateDateRangeHistoryRequests(new [] {  symbol }, requestedType, start, end, resolution);
+            if (requests.IsNullOrEmpty())
             {
-                var actualType = GetMatchingSubscription(symbol, typeof(BaseData)).Type;
-                throw new ArgumentException("The specified security is not of the requested type. Symbol: " + symbol.ToString() + " Requested Type: " + requestedType.Name + " Actual Type: " + actualType);
+                throw new ArgumentException($"No history data could be fetched. " +
+                    $"This could be due to the specified security not being of the requested type. Symbol: {symbol} Requested Type: {requestedType.Name}");
             }
 
-            return PandasConverter.GetDataFrame(History(request).Memoize());
+            return PandasConverter.GetDataFrame(History(requests).Memoize(), requestedType);
         }
 
         /// <summary>
