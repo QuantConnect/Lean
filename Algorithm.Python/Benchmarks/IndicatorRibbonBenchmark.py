@@ -32,7 +32,7 @@ class IndicatorRibbonBenchmark(QCAlgorithm):
             delay = Delay(offset*(x+1))
             # define an indicator that takes the output of the sma and pipes it into our delay indicator
             delayedSma = IndicatorExtensions.Of(delay, self.sma)
-            # register our new 'delayedSma' for automaic updates on a daily resolution
+            # register our new 'delayedSma' for automatic updates on a daily resolution
             self.RegisterIndicator(self.spy, delayedSma, Resolution.Daily)
             self.ribbon.append(delayedSma)
 
