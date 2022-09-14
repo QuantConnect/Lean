@@ -50,3 +50,9 @@ jobs:
 
       - name: Run NBeats Python Package Test
         run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.NBeatsTest"
+
+      - name: Run Tensorly Python Package Test
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.TensorlyTest"
+
+      - name: Run Ignite Python Package Test
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.IgniteTest"

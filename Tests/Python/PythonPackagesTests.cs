@@ -25,6 +25,325 @@ namespace QuantConnect.Tests.Python
     public class PythonPackagesTests
     {
         [Test]
+        public void StockstatsTest()
+        {
+            AssertCode(
+                @"
+import pandas as pd
+import stockstats
+
+def RunTest():
+    d = {'date': [ '20220901', '20220902' ], 'open': [ 1, 2 ], 'close': [ 1, 2 ],'high': [ 1, 2], 'low': [ 1, 2 ], 'volume': [ 1, 2 ] }
+    df = pd.DataFrame(data=d)
+    stock = stockstats.wrap(df)");
+        }
+
+        [Test]
+        public void HurstTest()
+        {
+            AssertCode(
+                @"
+import numpy as np
+import matplotlib.pyplot as plt
+from hurst import compute_Hc, random_walk
+
+def RunTest():
+    # Use random_walk() function or generate a random walk series manually:
+    # series = random_walk(99999, cumprod=True)
+    np.random.seed(42)
+    random_changes = 1. + np.random.randn(99999) / 1000.
+    series = np.cumprod(random_changes)  # create a random walk from random changes
+
+    # Evaluate Hurst equation
+    H, c, data = compute_Hc(series, kind='price', simplified=True)");
+        }
+
+        [Test]
+        public void PolarsTest()
+        {
+            AssertCode(
+                @"
+import polars as pl
+
+def RunTest():
+    df = pl.DataFrame({ ""A"": [1, 2, 3, 4, 5], ""fruits"": [""banana"", ""banana"", ""apple"", ""apple"", ""banana""], ""cars"": [""beetle"", ""audi"", ""beetle"", ""beetle"", ""beetle""], })
+    df.sort(""fruits"")");
+        }
+
+        [Test]
+        public void TensorflowProbabilityTest()
+        {
+            AssertCode(
+                @"
+import tensorflow as tf
+import tensorflow_probability as tfp
+
+def RunTest():
+    # Pretend to load synthetic data set.
+    features = tfp.distributions.Normal(loc=0., scale=1.).sample(int(100e3))
+    labels = tfp.distributions.Bernoulli(logits=1.618 * features).sample()
+
+    # Specify model.
+    model = tfp.glm.Bernoulli()
+
+    # Fit model given data.
+    coeffs, linear_response, is_converged, num_iter = tfp.glm.fit(
+        model_matrix=features[:, tf.newaxis],
+        response=tf.cast(labels, dtype=tf.float32),
+        model=model)");
+        }
+
+        [Test]
+        public void MpmathTest()
+        {
+            AssertCode(
+                @"
+from mpmath import sin, cos
+
+def RunTest():
+    sin(1), cos(1)");
+        }
+
+        [Test]
+        public void LimeTest()
+        {
+            AssertCode(
+                @"
+from __future__ import print_function
+import sklearn
+import sklearn.datasets
+import sklearn.ensemble
+import numpy as np
+import lime
+import lime.lime_tabular
+np.random.seed(1)
+
+def RunTest():
+	iris = sklearn.datasets.load_iris()
+
+	train, test, labels_train, labels_test = sklearn.model_selection.train_test_split(iris.data, iris.target, train_size=0.80)
+
+	rf = sklearn.ensemble.RandomForestClassifier(n_estimators=500)
+	rf.fit(train, labels_train)
+
+	sklearn.metrics.accuracy_score(labels_test, rf.predict(test))
+	explainer = lime.lime_tabular.LimeTabularExplainer(train, feature_names=iris.feature_names, class_names=iris.target_names, discretize_continuous=True)"
+            );
+        }
+
+        [Test]
+        public void ShapTest()
+        {
+            AssertCode(
+                @"
+import xgboost
+import numpy as np
+import shap
+
+def RunTest():
+	# simulate some binary data and a linear outcome with an interaction term
+	# note we make the features in X perfectly independent of each other to make
+	# it easy to solve for the exact SHAP values
+	N = 2000
+	X = np.zeros((N,5))
+	X[:1000,0] = 1
+	X[:500,1] = 1
+	X[1000:1500,1] = 1
+	X[:250,2] = 1
+	X[500:750,2] = 1
+	X[1000:1250,2] = 1
+	X[1500:1750,2] = 1
+	X[:,0:3] -= 0.5
+	y = 2*X[:,0] - 3*X[:,1]
+
+	Xd = xgboost.DMatrix(X, label=y)
+	model = xgboost.train({
+	    'eta':1, 'max_depth':3, 'base_score': 0, ""lambda"": 0
+	}, Xd, 1)
+	print(""Model error ="", np.linalg.norm(y-model.predict(Xd)))
+	print(model.get_dump(with_stats=True)[0])
+
+	# make sure the SHAP values add up to marginal predictions
+	pred = model.predict(Xd, output_margin=True)
+	explainer = shap.TreeExplainer(model)
+	shap_values = explainer.shap_values(Xd)
+	np.abs(shap_values.sum(1) + explainer.expected_value - pred).max()
+
+	shap.summary_plot(shap_values, X)"
+            );
+        }
+
+        [Test]
+        public void MlxtendTest()
+        {
+            AssertCode(
+                @"
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+import itertools
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
+from mlxtend.classifier import EnsembleVoteClassifier
+from mlxtend.data import iris_data
+from mlxtend.plotting import plot_decision_regions
+
+def RunTest():
+   # Initializing Classifiers
+   clf1 = LogisticRegression(random_state=0)
+   clf2 = RandomForestClassifier(random_state=0)
+   clf3 = SVC(random_state=0, probability=True)
+   eclf = EnsembleVoteClassifier(clfs=[clf1, clf2, clf3],
+                                 weights=[2, 1, 1], voting='soft')
+   # Loading some example data
+   X, y = iris_data()
+   X = X[:,[0, 2]]
+
+   # Plotting Decision Regions
+   gs = gridspec.GridSpec(2, 2)
+   fig = plt.figure(figsize=(10, 8))
+
+   labels = ['Logistic Regression',
+             'Random Forest',
+             'RBF kernel SVM',
+             'Ensemble']
+
+   for clf, lab, grd in zip([clf1, clf2, clf3, eclf],
+                            labels,
+                            itertools.product([0, 1],
+                            repeat=2)):
+       clf.fit(X, y)
+       ax = plt.subplot(gs[grd[0], grd[1]])
+       fig = plot_decision_regions(X=X, y=y,
+                                   clf=clf, legend=2)
+       plt.title(lab)
+
+   plt.show()"
+            );
+        }
+
+        [Test, Explicit("Hangs if run along side the rest")]
+        public void IgniteTest()
+        {
+            AssertCode(
+                $@"
+import ignite
+
+def RunTest():
+    assert(ignite.__version__ == '0.4.10')"
+            );
+        }
+
+        [Test, Explicit("Sometimes hangs when run along side the other tests")]
+        public void TensorlyTest()
+        {
+            AssertCode(
+                @"
+import tensorly as tl
+from tensorly import random
+
+def RunTest():
+	tensor = random.random_tensor((10, 10, 10))
+	# This will be a NumPy array by default
+	tl.set_backend('pytorch')
+	# TensorLy now uses TensorLy for all operations
+
+	tensor = random.random_tensor((10, 10, 10))
+	# This will be a PyTorch array by default
+	tl.max(tensor)
+	tl.mean(tensor)
+	tl.dot(tl.unfold(tensor, 0), tl.transpose(tl.unfold(tensor, 0)))"
+            );
+        }
+
+        [Test]
+        public void SpacyTest()
+        {
+            AssertCode(
+                @"
+import spacy
+from spacy.lang.en.examples import sentences
+
+def RunTest():
+    nlp = spacy.load(""en_core_web_md"")
+    doc = nlp(sentences[0])
+    print(doc.text)"
+            );
+        }
+
+        [Test]
+        public void PyEMDTest()
+        {
+            AssertCode(
+                @"
+import numpy as np
+import PyEMD
+
+def RunTest():
+    s = np.random.random(100)
+    emd = PyEMD.EMD()
+    IMFs = emd(s)"
+            );
+        }
+
+        [Test]
+        public void RipserTest()
+        {
+            AssertCode(
+                @"
+import numpy as np
+import ripser
+import persim
+def RunTest():
+    data = np.random.random((100,2))
+    diagrams = ripser.ripser(data)['dgms']
+    persim.plot_diagrams(diagrams, show=True)"
+            );
+        }
+
+        [Test]
+        public void AlphalensTest()
+        {
+            AssertCode(
+                @"
+import alphalens
+import pandas
+def RunTest():
+    tickers = ['A', 'B', 'C', 'D', 'E', 'F']
+
+    factor_groups = {'A': 1, 'B': 1, 'C': 1, 'D': 2, 'E': 2, 'F': 2}
+
+    daily_rets = [1, 1, 2, 1, 1, 2]
+    price_data = [[daily_rets[0]**i, daily_rets[1]**i, daily_rets[2]**i,
+           daily_rets[3]**i, daily_rets[4]**i, daily_rets[5]**i]
+          for i in range(1, 5)]  # 4 days
+
+    start = '2015-1-11'
+    factor_end = '2015-1-13'
+    price_end = '2015-1-14'  # 1D fwd returns
+
+    price_index = pandas.date_range(start=start, end=price_end)
+    price_index.name = 'date'
+    prices = pandas.DataFrame(index=price_index, columns=tickers, data=price_data)
+
+    factor = 2
+    factor_index = pandas.date_range(start=start, end=factor_end)
+    factor_index.name = 'date'
+    factor = pandas.DataFrame(index=factor_index, columns=tickers,
+       data=factor).stack()
+
+    # Ingest and format data
+    factor_data = alphalens.utils.get_clean_factor_and_forward_returns(
+        factor, prices,
+        groupby=factor_groups,
+        quantiles=None,
+        bins=True,
+        periods=(1,))"
+            );
+        }
+
+        [Test]
         public void NumpyTest()
         {
             AssertCode(
@@ -1057,6 +1376,17 @@ def RunTest():
         [TestCase("h2o", "3.36.1.4", "__version__")]
         [TestCase("featuretools", "0.18.1", "__version__")]
         [TestCase("pennylane", "0.25.1", "version()")]
+        [TestCase("pyfolio", "0.9.2", "__version__")]
+        [TestCase("altair", "4.2.0", "__version__")]
+        [TestCase("stellargraph", "1.2.1", "__version__")]
+        [TestCase("modin", "0.15.3", "__version__")]
+        [TestCase("persim", "0.3.1", "__version__")]
+        [TestCase("pydmd", "0.4.0.post2209", "__version__")]
+        [TestCase("pandas_ta", "0.3.14b0", "__version__")]
+        [TestCase("finrl", "finrl", "__package__")]
+        [TestCase("tensortrade", "1.0.3", "__version__")]
+        [TestCase("quantstats", "0.0.59", "__version__")]
+        [TestCase("autokeras", "1.0.20", "__version__")]
         public void ModuleVersionTest(string module, string value, string attribute)
         {
             AssertCode(
