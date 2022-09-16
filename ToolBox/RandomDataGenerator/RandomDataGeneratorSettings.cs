@@ -194,7 +194,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             else if (!bool.TryParse(includeCoarseString, out includeCoarse))
             {
                 failed = true;
-                Log.Error($"RandomDataGeneratorSettings(): Optional parameter --include-coarse was incorrectly formated. Please specify a valid boolean. Value provided: '{includeCoarseString}'. Valid values: 'true' or 'false'");
+                Log.Error($"RandomDataGeneratorSettings(): Optional parameter --include-coarse was incorrectly formatted. Please specify a valid boolean. Value provided: '{includeCoarseString}'. Valid values: 'true' or 'false'");
             }
             else if (includeCoarse && securityType != SecurityType.Equity)
             {
@@ -211,7 +211,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             {
                 var validValues = string.Join(", ", Enum.GetValues(typeof(DataDensity))).Cast<DataDensity>();
                 failed = true;
-                Log.Error($"RandomDataGeneratorSettings(): Optional parameter --data-density was incorrectly formated. Please specify a valid DataDensity. Value provided: '{dataDensityString}'. Valid values: {validValues}");
+                Log.Error($"RandomDataGeneratorSettings(): Optional parameter --data-density was incorrectly formatted. Please specify a valid DataDensity. Value provided: '{dataDensityString}'. Valid values: {validValues}");
             }
 
             // --quote-trade-ratio
