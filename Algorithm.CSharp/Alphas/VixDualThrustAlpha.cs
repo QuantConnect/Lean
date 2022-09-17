@@ -202,7 +202,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 SymbolData symbolData;
                 if (_symbolDataBySymbol.TryGetValue(removed.Symbol, out symbolData))
                 {
-                    // unsibscribe consolidator from data updates
+                    // unsubscribe consolidator from data updates
                     algorithm.SubscriptionManager.RemoveConsolidator(removed.Symbol, symbolData.GetConsolidator());
 
                     // remove item from dictionary collection
