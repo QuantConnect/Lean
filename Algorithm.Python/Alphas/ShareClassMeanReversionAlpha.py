@@ -17,7 +17,7 @@ from AlgorithmImports import *
 # A number of companies publicly trade two different classes of shares
 # in US equity markets. If both assets trade with reasonable volume, then
 # the underlying driving forces of each should be similar or the same. Given
-# this, we can create a relatively dollar-netural long/short portfolio using
+# this, we can create a relatively dollar-neutral long/short portfolio using
 # the dual share classes. Theoretically, any deviation of this portfolio from
 # its mean-value should be corrected, and so the motivating idea is based on
 # mean-reversion. Using a Simple Moving Average indicator, we can
