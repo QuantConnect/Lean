@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
             //DefaultOrderProperties = new IndiaOrderProperties(exchange: Exchange.NSE, IndiaOrderProperties.IndiaProductType.CNC);
 
             // General Debug statement for acknowledgement
-            Debug("Intialization Done");
+            Debug("Initialization Done");
         }
 
         /// <summary>
