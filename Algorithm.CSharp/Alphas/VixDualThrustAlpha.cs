@@ -109,7 +109,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             int barsToConsolidate = 1
             )
         {
-            // coefficient that used to determinte upper and lower borders of a breakout channel
+            // coefficient that used to determine upper and lower borders of a breakout channel
             _k1 = k1;
             _k2 = k2;
 
