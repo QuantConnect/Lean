@@ -17,7 +17,7 @@ jobs:
 
       - name: install dependencies
         run: |
-          pip3 install papermill clr-loader
+          pip3 install papermill==2.4.0 clr-loader==0.1.6
 
       - name: install kernel
         run: dotnet tool install --global Microsoft.dotnet-interactive --version 1.0.340501
