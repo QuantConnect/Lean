@@ -43,13 +43,13 @@ namespace QuantConnect.Algorithm.CSharp
             // Equities Resolutions: Tick, Second, Minute, Hour, Daily.
             AddEquity("YESBANK", Resolution.Minute, Market.India);
 
-            //Set Order Prperties as per the requirements for order placement
+            //Set Order Properties as per the requirements for order placement
             DefaultOrderProperties = new IndiaOrderProperties(exchange: Exchange.NSE);
             //override default productType value set in config.json if needed - order specific productType value
             //DefaultOrderProperties = new IndiaOrderProperties(exchange: Exchange.NSE, IndiaOrderProperties.IndiaProductType.CNC);
 
             // General Debug statement for acknowledgement
-            Debug("Intialization Done");
+            Debug("Initialization Done");
         }
 
         /// <summary>

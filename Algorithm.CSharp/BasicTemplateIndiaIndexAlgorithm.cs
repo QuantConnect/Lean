@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
             //Trade Index based ETF
             NiftyETF = AddEquity("JUNIORBEES", Resolution.Minute, Market.India).Symbol;
 
-            //Set Order Prperties as per the requirements for order placement
+            //Set Order Properties as per the requirements for order placement
             DefaultOrderProperties = new IndiaOrderProperties(exchange: Exchange.NSE);
 
             _emaSlow = EMA(Nifty, 80);

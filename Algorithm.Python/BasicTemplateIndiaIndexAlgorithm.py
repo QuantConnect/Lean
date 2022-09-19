@@ -35,7 +35,7 @@ class BasicTemplateIndiaIndexAlgorithm(QCAlgorithm):
         # Trade Index based ETF
         self.NiftyETF = self.AddEquity("JUNIORBEES", Resolution.Minute, Market.India).Symbol
    
-        # Set Order Prperties as per the requirements for order placement
+        # Set Order Properties as per the requirements for order placement
         self.DefaultOrderProperties = IndiaOrderProperties(Exchange.NSE)
 
         # Define indicator
