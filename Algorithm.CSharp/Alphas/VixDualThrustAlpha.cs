@@ -109,7 +109,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             int barsToConsolidate = 1
             )
         {
-            // coefficient that used to determinte upper and lower borders of a breakout channel
+            // coefficient that used to determine upper and lower borders of a breakout channel
             _k1 = k1;
             _k2 = k2;
 
@@ -202,7 +202,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 SymbolData symbolData;
                 if (_symbolDataBySymbol.TryGetValue(removed.Symbol, out symbolData))
                 {
-                    // unsibscribe consolidator from data updates
+                    // unsubscribe consolidator from data updates
                     algorithm.SubscriptionManager.RemoveConsolidator(removed.Symbol, symbolData.GetConsolidator());
 
                     // remove item from dictionary collection
