@@ -19,7 +19,6 @@ RUN wget https://github.com/Samsung/netcoredbg/releases/download/2.0.0-880/netco
 && tar xvzf netcoredbg-linux-amd64.tar.gz && rm netcoredbg-linux-amd64.tar.gz
 
 COPY ./DataLibraries /Lean/Launcher/bin/Debug/
-COPY ./AlphaStreams/QuantConnect.AlphaStream/bin/Debug/ /Lean/Launcher/bin/Debug/
 COPY ./Lean/Launcher/bin/Debug/ /Lean/Launcher/bin/Debug/
 COPY ./Lean/Optimizer.Launcher/bin/Debug/ /Lean/Optimizer.Launcher/bin/Debug/
 COPY ./Lean/Report/bin/Debug/ /Lean/Report/bin/Debug/
