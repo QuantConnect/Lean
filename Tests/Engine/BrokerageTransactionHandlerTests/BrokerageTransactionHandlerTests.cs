@@ -38,6 +38,7 @@ using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Tests.Engine.Setup;
 using QuantConnect.Util;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
+using QuantConnect.AlgorithmFactory;
 
 namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 {
@@ -672,6 +673,47 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.AreEqual(orderTicket.Status, OrderStatus.New);
 
             Assert.AreEqual(_algorithm.OrderEvents.Count, 0);
+        }
+
+        [Test]
+        public void CancelOrderTicket()
+        {
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            using var brokerage = new NoSubmitTestBrokerage(_algorithm);
+            transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
+
+            var security = _algorithm.Securities[_symbol];
+            var price = 1.12m;
+            security.SetMarketPrice(new Tick(DateTime.Now, security.Symbol, price, price, price));
+            var orderRequest = new SubmitOrderRequest(OrderType.Limit, security.Type, security.Symbol, 1000, 0, 1.11m, DateTime.Now, "");
+
+            _algorithm.Transactions.SetOrderProcessor(transactionHandler);
+
+            var orderTicket = transactionHandler.Process(orderRequest);
+            transactionHandler.HandleOrderRequest(orderRequest);
+            Assert.IsTrue(orderRequest.Response.IsProcessed);
+            Assert.IsTrue(orderRequest.Response.IsSuccess);
+            Assert.AreEqual(orderTicket.Status, OrderStatus.New);
+
+            // will fail because order status is new
+            var response = orderTicket.Cancel();
+            Assert.IsTrue(response.IsProcessed);
+            Assert.IsTrue(response.IsError);
+            Assert.AreEqual(response.ErrorCode, OrderResponseErrorCode.InvalidNewOrderStatus);
+            Assert.AreEqual(orderTicket.Status, OrderStatus.New);
+
+            Assert.AreEqual(_algorithm.OrderEvents.Count, 0);
+
+            var submitted = new OrderEvent(_algorithm.Transactions.GetOpenOrders().Single(), _algorithm.UtcTime, OrderFee.Zero)
+            { Status = OrderStatus.Submitted };
+            brokerage.PublishOrderEvent(submitted);
+
+            Assert.AreEqual(orderTicket.Status, OrderStatus.Submitted);
+
+            var response2 = orderTicket.Cancel();
+            Assert.IsTrue(response2.IsProcessed);
+            Assert.IsFalse(response2.IsError);
+            Assert.AreEqual(orderTicket.Status, OrderStatus.CancelPending);
         }
 
         [Test]
