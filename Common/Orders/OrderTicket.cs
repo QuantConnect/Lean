@@ -371,8 +371,9 @@ namespace QuantConnect.Orders
             var request = new CancelOrderRequest(_transactionManager.UtcTime, OrderId, tag);
             lock (_cancelRequestLock)
             {
-                // don't submit duplicate cancel requests
-                if (_cancelRequest != null)
+                // don't submit duplicate cancel requests, if the cancel request wasn't flagged as error
+                // this could happen when trying to cancel an order which status is still new and hasn't even been submitted to the brokerage
+                if (_cancelRequest != null && _cancelRequest.Status != OrderRequestStatus.Error)
                 {
                     return OrderResponse.Error(request, OrderResponseErrorCode.RequestCanceled,
                         Invariant($"Order {OrderId} has already received a cancellation request.")
@@ -506,7 +507,9 @@ namespace QuantConnect.Orders
 
             lock (_cancelRequestLock)
             {
-                if (_cancelRequest != null)
+                // don't submit duplicate cancel requests, if the cancel request wasn't flagged as error
+                // this could happen when trying to cancel an order which status is still new and hasn't even been submitted to the brokerage
+                if (_cancelRequest != null && _cancelRequest.Status != OrderRequestStatus.Error)
                 {
                     return false;
                 }
