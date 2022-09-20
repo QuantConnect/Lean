@@ -24,6 +24,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.DataFeeds.WorkScheduling;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Util;
@@ -167,7 +168,15 @@ namespace QuantConnect.Lean.Engine.Setup
         {
             var isolator = new Isolator();
             return isolator.ExecuteWithTimeLimit(TimeSpan.FromMinutes(5),
-                () => DebuggerHelper.Initialize(algorithmNodePacket.Language),
+                () => {
+                    DebuggerHelper.Initialize(algorithmNodePacket.Language, out var workersInitializationCallback);
+
+                    if(workersInitializationCallback != null)
+                    {
+                        // initialize workers for debugging if required
+                        WeightedWorkScheduler.Instance.AddSingleCallForAll(workersInitializationCallback);
+                    }
+                },
                 algorithmNodePacket.RamAllocation,
                 sleepIntervalMillis: 100,
                 workerThread: workerThread);

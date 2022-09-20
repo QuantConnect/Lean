@@ -26,6 +26,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
     {
         private int _pointer;
         private bool _removed;
+        private Action _singleCallWork;
         private readonly List<WorkItem> _workQueue;
 
         /// <summary>
@@ -63,6 +64,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
                     workItem = Get();
                     if (workItem == null)
                     {
+                        if(_singleCallWork != null)
+                        {
+                            try
+                            {
+                                _singleCallWork();
+                            }
+                            catch (Exception exception)
+                            {
+                                // this shouldn't happen but just in case
+                                Logging.Log.Error(exception);
+                            }
+                            // we execute this once only and clear it's reference
+                            _singleCallWork = null;
+                        }
+
                         // no work to do, lets sleep and try again
                         WaitHandle.WaitAny(waitHandles, Math.Min(1 + (waitedPreviousLoop * 10), 250));
                         waitedPreviousLoop++;
@@ -97,6 +113,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
         private void Add(WorkItem work)
         {
             _workQueue.Add(work);
+        }
+
+        /// <summary>
+        /// Adds a new item to this work queue
+        /// </summary>
+        /// <param name="work">The work to add</param>
+        public void AddSingleCall(Action work)
+        {
+            _singleCallWork = work;
+            _workAvailableEvent.Set();
         }
 
         /// <summary>
