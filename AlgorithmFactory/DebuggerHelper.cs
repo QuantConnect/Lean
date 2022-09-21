@@ -14,12 +14,13 @@
 */
 
 using System;
-using System.Diagnostics;
-using System.Threading;
 using Python.Runtime;
-using QuantConnect.Configuration;
-using QuantConnect.Logging;
+using System.Threading;
+using System.Diagnostics;
 using QuantConnect.Python;
+using QuantConnect.Logging;
+using QuantConnect.Configuration;
+using System.Collections.Concurrent;
 
 namespace QuantConnect.AlgorithmFactory
 {
@@ -28,6 +29,8 @@ namespace QuantConnect.AlgorithmFactory
     /// </summary>
     public static class DebuggerHelper
     {
+        private static readonly ConcurrentQueue<Py.GILState> _threadsState = new();
+
         /// <summary>
         /// The different implemented debugging methods
         /// </summary>
@@ -70,8 +73,12 @@ namespace QuantConnect.AlgorithmFactory
         /// <summary>
         /// Will start a new debugging session
         /// </summary>
-        public static void Initialize(Language language)
+        /// <param name="language">The algorithms programming language</param>
+        /// <param name="workersInitializationCallback">Optionally, the debugging method will set an action which the data stack workers should execute
+        /// so we can debug code executed by them, this is specially important for python.</param>
+        public static void Initialize(Language language, out Action workersInitializationCallback)
         {
+            workersInitializationCallback = null;
             if (language == Language.Python)
             {
                 DebuggingMethod debuggingType;
@@ -111,6 +118,7 @@ Log.Trace(""DebuggerHelper.Initialize(): debugpy waiting for attach at port 5678
 
 debugpy.listen(('0.0.0.0', 5678))
 debugpy.wait_for_client()");
+                            workersInitializationCallback = DebugpyThreadInitialization;
                             break;
 
                         case DebuggingMethod.PyCharm:
@@ -163,6 +171,23 @@ while count <= 10:
             else
             {
                 throw new NotImplementedException($"DebuggerHelper.Initialize(): not implemented for {language}");
+            }
+        }
+
+        /// <summary>
+        /// For each thread we need to create it's python state, we do this by taking the GIL and we later release it by calling 'BeginAllowThreads'
+        /// but we do not dispose of it. If we did, the state of the debugpy calls we do here are lost. So we keep a reference of the GIL we've
+        /// created so it's not picked up the C# garbage collector and disposed off, which would clear the py thread state.
+        /// </summary>
+        private static void DebugpyThreadInitialization()
+        {
+            _threadsState.Enqueue(Py.GIL());
+            PythonEngine.BeginAllowThreads();
+
+            Log.Debug($"DebuggerHelper.Initialize({Thread.CurrentThread.Name}): initializing debugpy for thread...");
+            using (Py.GIL())
+            {
+                PythonEngine.RunSimpleString("import debugpy;debugpy.debug_this_thread();debugpy.trace_this_thread(True)");
             }
         }
     }
