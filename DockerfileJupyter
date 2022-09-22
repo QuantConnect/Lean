@@ -52,7 +52,7 @@ RUN echo "if [ ! -d \"${WORK}Notebooks\" ]; then mkdir ${WORK}Notebooks; fi && \
     \"api-handler\": \"QuantConnect.Api.Api\" }' > ${WORK}Notebooks/config.json; fi && \
     echo \"Starting JupyterLab, access in your browser at localhost:8888\" && \
     jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root --notebook-dir=\"Notebooks\" --LabApp.token='' " \
-    > start.sh >> ${WORK}AlgorithmImports.py
+    > start.sh
 
 RUN echo "{\"argv\":[\"dotnet\",\"interactive\",\"jupyter\",\"--default-kernel\",\"csharp\",\"{connection_file}\",\"--http-port-range\",\"1000-3000\"],\"display_name\":\"Foundation-C#-Default\",\"language\":\"C#\",\"metadata\":{\"vscode\":{\"extension_id\":\"ms-dotnettools.dotnet-interactive-vscode\",\"kernel_id\":\"dotnet-interactive\"}}}" > /root/.local/share/jupyter/kernels/.net-csharp/kernel.json
 
