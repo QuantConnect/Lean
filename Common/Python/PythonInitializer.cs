@@ -21,6 +21,7 @@ using Python.Runtime;
 using QuantConnect.Util;
 using QuantConnect.Logging;
 using System.Collections.Generic;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Python
 {
@@ -50,10 +51,13 @@ namespace QuantConnect.Python
 
                 // required for multi-threading usage
                 PythonEngine.BeginAllowThreads();
-
+                
                 _isInitialized = true;
 
-                AddPythonPaths(new []{ Environment.CurrentDirectory });
+                var paths = new List<string> { Environment.CurrentDirectory };
+                var pythonAdditionalPaths = Config.GetValue("python-additional-paths", Enumerable.Empty<string>());
+                paths.AddRange(pythonAdditionalPaths);
+                AddPythonPaths(paths);
 
                 TryInitPythonVirtualEnvironment();
                 Log.Trace("PythonInitializer.Initialize(): ended");
