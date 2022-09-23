@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.Framework.Selection
@@ -24,11 +25,49 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// </summary>
     public class ETFConstituentsUniverseSelectionModel : UniverseSelectionModel
     {
-        private Symbol _etfSymbol;
-        private UniverseSettings _universeSettings;
-        private Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>> _universeFilterFunc;
+        private readonly Symbol _etfSymbol;
+        private readonly UniverseSettings _universeSettings;
+        private readonly Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>> _universeFilterFunc;
         private Universe _universe;
-
+        
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ETFConstituentsUniverseSelection"/> class
+        /// </summary>
+        /// <param name="etfSymbol">Symbol of the ETF to get constituents for</param>
+        /// <param name="universeSettings">Universe settings</param>
+        /// <param name="universeFilterFunc">Function to filter universe results</param>
+        public ETFConstituentsUniverseSelectionModel(
+            Symbol etfSymbol,
+            UniverseSettings universeSettings,
+            Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>> universeFilterFunc)
+        {
+            _etfSymbol = etfSymbol;
+            _universeSettings = universeSettings;
+            _universeFilterFunc = universeFilterFunc;
+        }
+        
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ETFConstituentsUniverseSelection"/> class
+        /// </summary>
+        /// <param name="etfSymbol">Symbol of the ETF to get constituents for</param>
+        /// <param name="universeFilterFunc">Function to filter universe results</param>
+        public ETFConstituentsUniverseSelectionModel(
+            Symbol etfSymbol,
+            Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>> universeFilterFunc)
+            : this(etfSymbol, null, universeFilterFunc)
+        {
+        }
+        
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ETFConstituentsUniverseSelection"/> class
+        /// </summary>
+        /// <param name="etfSymbol">Symbol of the ETF to get constituents for</param>
+        /// <param name="universeSettings">Universe settings</param>
+        public ETFConstituentsUniverseSelectionModel(Symbol etfSymbol, UniverseSettings universeSettings = null)
+            : this(etfSymbol, universeSettings, default(Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>>))
+        {
+        }
+        
         /// <summary>
         /// Initializes a new instance of the <see cref="ETFConstituentsUniverseSelection"/> class
         /// </summary>
@@ -38,14 +77,11 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public ETFConstituentsUniverseSelectionModel(
             Symbol etfSymbol,
             UniverseSettings universeSettings = null,
-            Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>> universeFilterFunc = null)
+            PyObject universeFilterFunc = null) :
+            this(etfSymbol, universeSettings, universeFilterFunc.ConvertPythonUniverseFilterFunction<ETFConstituentData>())
         {
-            _etfSymbol = etfSymbol;
-            _universeSettings = universeSettings;
-            _universeFilterFunc = universeFilterFunc;
         }
-
-
+        
         /// <summary>
         /// Creates a new ETF constituents universe using this class's selection function
         /// </summary>
@@ -53,10 +89,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <returns>The universe defined by this model</returns>
         public override IEnumerable<Universe> CreateUniverses(QCAlgorithm algorithm)
         {
-            if (_universe == null)
-            {
-                _universe = algorithm.Universe.ETF(_etfSymbol, _universeSettings, _universeFilterFunc);
-            }
+            _universe ??= algorithm?.Universe.ETF(_etfSymbol, _universeSettings, _universeFilterFunc);
             return new[] { _universe };
         }
     }
