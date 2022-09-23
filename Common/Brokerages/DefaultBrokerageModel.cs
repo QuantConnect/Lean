@@ -358,15 +358,20 @@ namespace QuantConnect.Brokerages
         /// <returns>The buying power model for this brokerage/security</returns>
         public virtual IBuyingPowerModel GetBuyingPowerModel(Security security)
         {
-            return security.Type switch
+            IBuyingPowerModel getCurrencyBuyingPowerModel() =>
+                AccountType == AccountType.Cash
+                    ? new CashBuyingPowerModel()
+                    : new SecurityMarginModel(GetLeverage(security), RequiredFreeBuyingPowerPercent);
+
+            return security?.Type switch
             {
+                SecurityType.Crypto => getCurrencyBuyingPowerModel(),
+                SecurityType.Forex => getCurrencyBuyingPowerModel(),
                 SecurityType.Future => new FutureMarginModel(RequiredFreeBuyingPowerPercent, security),
                 SecurityType.FutureOption => new FuturesOptionsMarginModel(RequiredFreeBuyingPowerPercent, (Option)security),
                 SecurityType.IndexOption => new OptionMarginModel(RequiredFreeBuyingPowerPercent),
                 SecurityType.Option => new OptionMarginModel(RequiredFreeBuyingPowerPercent),
-                _ => AccountType == AccountType.Cash
-                    ? new CashBuyingPowerModel()
-                    : new SecurityMarginModel(GetLeverage(security), RequiredFreeBuyingPowerPercent)
+                _ => new SecurityMarginModel(GetLeverage(security), RequiredFreeBuyingPowerPercent)
             };
         }
 
