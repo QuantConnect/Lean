@@ -13,10 +13,13 @@
  * limitations under the License.
 */
 
-using Python.Runtime;
+using System;
+using NodaTime;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Brokerages;
 using QuantConnect.Python;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
@@ -51,6 +54,28 @@ class CustomBrokerageModel({brokerage.GetType().Name}):
                 Assert.AreEqual(brokerageName, BrokerageModel.GetBrokerageName(new BrokerageModelPythonWrapper(PyCustomBrokerageModel())));
             }
         }
+
+        [TestCaseSource(nameof(GetBrokerageBuyingPowerModel))]
+        public void GetsCorrectBuyingPowerModelForSecurityAndAccountType(IBrokerageModel brokerage, AccountType accountType, SecurityType securityType, Type type)
+        {
+            static Security getSecurity(Symbol symbol) =>
+                new(symbol,
+                    SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
+                    new Cash(Currencies.USD, 0, 1),
+                    SymbolProperties.GetDefault(Currencies.USD),
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache());
+
+            var security = securityType == SecurityType.Equity
+                ? getSecurity(Symbols.SPY)
+                : getSecurity(Symbols.EURUSD);
+
+            var buyingPowerModel = brokerage?.GetBuyingPowerModel(security);
+
+            Assert.AreEqual(buyingPowerModel.GetType(), type);
+        }
+
 
         private static TestCaseData[] GetBrokerageNameTestCases()
         {
@@ -118,6 +143,17 @@ class CustomBrokerageModel({brokerage.GetType().Name}):
                 new TestCaseData(new CustomFTXUSBrokerageModel(), BrokerageName.FTXUS),
                 new TestCaseData(new CustomFTXBrokerageModel(), BrokerageName.FTX),
                 new TestCaseData(new CustomDefaultBrokerageModel(), BrokerageName.Default)
+            };
+        }
+
+        private static TestCaseData[] GetBrokerageBuyingPowerModel()
+        {
+            return new[]
+            {
+                new TestCaseData(new InteractiveBrokersBrokerageModel(AccountType.Cash), AccountType.Cash, SecurityType.Equity, typeof(SecurityMarginModel)),
+                new TestCaseData(new InteractiveBrokersBrokerageModel(AccountType.Margin), AccountType.Margin, SecurityType.Equity, typeof(SecurityMarginModel)),
+                new TestCaseData(new InteractiveBrokersBrokerageModel(AccountType.Cash), AccountType.Cash, SecurityType.Forex, typeof(CashBuyingPowerModel)),
+                new TestCaseData(new InteractiveBrokersBrokerageModel(AccountType.Margin), AccountType.Margin, SecurityType.Forex, typeof(SecurityMarginModel)),
             };
         }
     }
