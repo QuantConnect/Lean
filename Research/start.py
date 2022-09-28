@@ -36,4 +36,8 @@ Initializer.Start()
 api = Initializer.GetSystemHandlers().Api
 algorithmHandlers = Initializer.GetAlgorithmHandlers()
 
-get_ipython().run_line_magic('matplotlib', 'inline')
+try:
+    get_ipython().run_line_magic('matplotlib', 'inline')
+except NameError:
+    # can happen if start is triggered from python and not Ipython
+    pass

@@ -42,9 +42,6 @@ namespace QuantConnect.Tests
         // Update in config.json when template expected result needs to be updated
         private static readonly bool _updateResearchRegressionOutput = Config.GetBool("research-regression-update-output", false);
 
-        // Update in config.json to specify the alternate path to python.exe to run papermill module for notebook
-        private static string _pythonLocation = Config.Get("python-location", "python");
-
         [Test, TestCaseSource(nameof(GetResearchRegressionTestParameters))]
         public void ResearchRegression(ResearchRegressionTestParameters parameters)
         {
@@ -214,33 +211,8 @@ namespace QuantConnect.Tests
         {
             var args = $"-m papermill \"{notebookPath}\" \"{notebookoutputPath}\" --log-output --cwd {workingDirectoryForNotebook}";
 
-            Log.Trace($"ResearchRegressionTests.RunResearchNotebookAndGetOutput(): running '{_pythonLocation}' args {args}");
+            TestProcess.RunPythonProcess(args, out process);
 
-            // Use ProcessStartInfo class
-            var startInfo = new ProcessStartInfo(_pythonLocation, args)
-            {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                WindowStyle = ProcessWindowStyle.Hidden,
-                CreateNoWindow = true,
-                WorkingDirectory = Directory.GetCurrentDirectory()
-            };
-
-            process = new Process
-            {
-                StartInfo = startInfo,
-            };
-
-            process.Start();
-            process.BeginErrorReadLine();
-            process.BeginOutputReadLine();
-
-            if (!process.WaitForExit(1000 * 30))
-            {
-                process.Kill();
-                Assert.Fail("Timeout waiting for process to exit");
-            }
             return File.ReadAllText(notebookoutputPath);
         }
 
