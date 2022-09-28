@@ -58,3 +58,13 @@ class PandasDataFrameTests():
         except KeyError as e:
             return str(e)
 
+    def test_contains_user_defined_columns_with_spaces(self, column_name):
+        # Adds a column, then try accessing it.
+        # If the colums has white spaces, it should not fail
+        df = self.spydf.copy()
+        df[column_name] = 1
+        try:
+            x = df[column_name]
+            return True
+        except:
+            return False

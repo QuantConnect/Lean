@@ -17,6 +17,7 @@
 using System;
 using NUnit.Framework;
 using Python.Runtime;
+using static QLNet.NumericHaganPricer;
 
 namespace QuantConnect.Tests.Python
 {
@@ -54,6 +55,19 @@ namespace QuantConnect.Tests.Python
             using (Py.GIL())
             { 
                 PyObject result = _pandasDataFrameTests.test_contains_user_mapped_ticker();
+                var test = result.As<bool>();
+
+                Assert.IsTrue(test);
+            }
+        }
+
+        [TestCase("SPY WhatEver")]
+        [TestCase("Sharpe ratio")]
+        public void ContainsUserDefinedColumnsWithSpaces(string columnName)
+        {
+            using (Py.GIL())
+            {
+                PyObject result = _pandasDataFrameTests.test_contains_user_defined_columns_with_spaces(columnName);
                 var test = result.As<bool>();
 
                 Assert.IsTrue(test);
