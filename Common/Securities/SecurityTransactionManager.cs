@@ -423,9 +423,9 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="brokerageId">The brokerage id to fetch</param>
         /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
-        public Order GetOrderByBrokerageId(string brokerageId)
+        public List<Order> GetOrdersByBrokerageId(string brokerageId)
         {
-            return _orderProcessor.GetOrderByBrokerageId(brokerageId);
+            return _orderProcessor.GetOrdersByBrokerageId(brokerageId);
         }
 
         /// <summary>
@@ -487,14 +487,6 @@ namespace QuantConnect.Securities
                 }
                 _transactionRecord.Add(clone, transactionProfitLoss);
             }
-        }
-
-        /// <summary>
-        /// Returns true when the specified order is in a completed state
-        /// </summary>
-        private static bool Completed(Order order)
-        {
-            return order.Status == OrderStatus.Filled || order.Status == OrderStatus.PartiallyFilled || order.Status == OrderStatus.Invalid || order.Status == OrderStatus.Canceled;
         }
     }
 }

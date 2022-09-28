@@ -97,6 +97,14 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        public GroupOrderManager GroupOrderManager
+        {
+            get; private set;
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="SubmitOrderRequest"/> class.
         /// The <see cref="OrderRequest.OrderId"/> will default to <see cref="OrderResponseErrorCode.UnableToFindOrder"/>
         /// </summary>
@@ -110,6 +118,7 @@ namespace QuantConnect.Orders
         /// <param name="time">The time this request was created</param>
         /// <param name="tag">A custom tag for this request</param>
         /// <param name="properties">The order properties for this request</param>
+        /// <param name="groupOrderManager"></param>
         public SubmitOrderRequest(
             OrderType orderType,
             SecurityType securityType,
@@ -120,12 +129,14 @@ namespace QuantConnect.Orders
             decimal triggerPrice,
             DateTime time,
             string tag,
-            IOrderProperties properties = null
+            IOrderProperties properties = null,
+            GroupOrderManager groupOrderManager = null
             )
             : base(time, (int) OrderResponseErrorCode.UnableToFindOrder, tag)
         {
             SecurityType = securityType;
             Symbol = symbol;
+            GroupOrderManager = groupOrderManager;
             OrderType = orderType;
             Quantity = quantity;
             LimitPrice = limitPrice;
@@ -147,6 +158,7 @@ namespace QuantConnect.Orders
         /// <param name="time">The time this request was created</param>
         /// <param name="tag">A custom tag for this request</param>
         /// <param name="properties">The order properties for this request</param>
+        /// <param name="groupOrderManager"></param>
         public SubmitOrderRequest(
             OrderType orderType,
             SecurityType securityType,
@@ -156,9 +168,10 @@ namespace QuantConnect.Orders
             decimal limitPrice,
             DateTime time,
             string tag,
-            IOrderProperties properties = null
+            IOrderProperties properties = null,
+            GroupOrderManager groupOrderManager = null
             )
-            : this(orderType, securityType, symbol, quantity, stopPrice, limitPrice, 0, time, tag, properties)
+            : this(orderType, securityType, symbol, quantity, stopPrice, limitPrice, 0, time, tag, properties, groupOrderManager)
         {
         }
 
@@ -166,7 +179,7 @@ namespace QuantConnect.Orders
         /// Sets the <see cref="OrderRequest.OrderId"/>
         /// </summary>
         /// <param name="orderId">The order id of the generated order</param>
-        internal void SetOrderId(int orderId)
+        public void SetOrderId(int orderId)
         {
             OrderId = orderId;
         }

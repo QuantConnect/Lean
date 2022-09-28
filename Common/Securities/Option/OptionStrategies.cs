@@ -70,13 +70,11 @@ namespace QuantConnect.Securities.Option
                 {
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = leg1Strike, Quantity = -1,
-                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                        Right = OptionRight.Call, Strike = leg1Strike, Quantity = -1, Expiration = expiration
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = leg2Strike, Quantity = 1,
-                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                        Right = OptionRight.Call, Strike = leg2Strike, Quantity = 1, Expiration = expiration
                     }
                 }
             };
@@ -123,13 +121,12 @@ namespace QuantConnect.Securities.Option
                 {
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Put, Strike = leg1Strike, Quantity = 1, OrderType = Orders.OrderType.Market,
+                        Right = OptionRight.Put, Strike = leg1Strike, Quantity = 1,
                         Expiration = expiration
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Put, Strike = leg2Strike, Quantity = -1,
-                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                        Right = OptionRight.Put, Strike = leg2Strike, Quantity = -1, Expiration = expiration
                     }
                 }
             };
@@ -176,13 +173,11 @@ namespace QuantConnect.Securities.Option
                 {
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = leg1Strike, Quantity = 1,
-                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                        Right = OptionRight.Call, Strike = leg1Strike, Quantity = 1, Expiration = expiration
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = leg2Strike, Quantity = -1,
-                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                        Right = OptionRight.Call, Strike = leg2Strike, Quantity = -1, Expiration = expiration
                     }
                 }
             };
@@ -229,12 +224,11 @@ namespace QuantConnect.Securities.Option
                 {
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Put, Strike = leg1Strike, Quantity = -1,
-                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                        Right = OptionRight.Put, Strike = leg1Strike, Quantity = -1, Expiration = expiration
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Put, Strike = leg2Strike, Quantity = 1, OrderType = Orders.OrderType.Market,
+                        Right = OptionRight.Put, Strike = leg2Strike, Quantity = 1,
                         Expiration = expiration
                     }
                 }
@@ -270,12 +264,12 @@ namespace QuantConnect.Securities.Option
                 {
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = strike, Quantity = 1, OrderType = Orders.OrderType.Market,
+                        Right = OptionRight.Call, Strike = strike, Quantity = 1,
                         Expiration = expiration
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Put, Strike = strike, Quantity = 1, OrderType = Orders.OrderType.Market,
+                        Right = OptionRight.Put, Strike = strike, Quantity = 1,
                         Expiration = expiration
                     }
                 }
@@ -323,12 +317,11 @@ namespace QuantConnect.Securities.Option
                 {
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = leg1Strike, Quantity = 1,
-                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                        Right = OptionRight.Call, Strike = leg1Strike, Quantity = 1, Expiration = expiration
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Put, Strike = leg2Strike, Quantity = 1, OrderType = Orders.OrderType.Market,
+                        Right = OptionRight.Put, Strike = leg2Strike, Quantity = 1,
                         Expiration = expiration
                     }
                 }
@@ -380,18 +373,15 @@ namespace QuantConnect.Securities.Option
                 {
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = leg1Strike, Quantity = 1,
-                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                        Right = OptionRight.Call, Strike = leg1Strike, Quantity = 1, Expiration = expiration
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = leg2Strike, Quantity = -2,
-                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                        Right = OptionRight.Call, Strike = leg2Strike, Quantity = -2, Expiration = expiration
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = leg3Strike, Quantity = 1,
-                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                        Right = OptionRight.Call, Strike = leg3Strike, Quantity = 1, Expiration = expiration
                     }
                 }
             };
@@ -442,17 +432,17 @@ namespace QuantConnect.Securities.Option
                 {
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Put, Strike = leg1Strike, Quantity = 1, OrderType = Orders.OrderType.Market,
+                        Right = OptionRight.Put, Strike = leg1Strike, Quantity = 1,
                         Expiration = expiration
                     },
                     new OptionStrategy.OptionLegData
                     {
                         Right = OptionRight.Put, Strike = leg2Strike, Quantity = -2,
-                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                        Expiration = expiration
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Put, Strike = leg3Strike, Quantity = 1, OrderType = Orders.OrderType.Market,
+                        Right = OptionRight.Put, Strike = leg3Strike, Quantity = 1,
                         Expiration = expiration
                     }
                 }
@@ -501,13 +491,11 @@ namespace QuantConnect.Securities.Option
                 {
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = strike, Quantity = -1, OrderType = Orders.OrderType.Market,
-                        Expiration = expiration1
+                        Right = OptionRight.Call, Strike = strike, Quantity = -1, Expiration = expiration1
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = strike, Quantity = 1, OrderType = Orders.OrderType.Market,
-                        Expiration = expiration2
+                        Right = OptionRight.Call, Strike = strike, Quantity = 1, Expiration = expiration2
                     }
                 }
             };
@@ -555,13 +543,11 @@ namespace QuantConnect.Securities.Option
                 {
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Put, Strike = strike, Quantity = -1, OrderType = Orders.OrderType.Market,
-                        Expiration = expiration1
+                        Right = OptionRight.Put, Strike = strike, Quantity = -1, Expiration = expiration1
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Put, Strike = strike, Quantity = 1, OrderType = Orders.OrderType.Market,
-                        Expiration = expiration2
+                        Right = OptionRight.Put, Strike = strike, Quantity = 1, Expiration = expiration2
                     }
                 }
             };

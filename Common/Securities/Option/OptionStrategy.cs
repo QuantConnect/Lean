@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,10 +13,9 @@
  * limitations under the License.
 */
 
-using QuantConnect.Orders;
 using System;
+using QuantConnect.Orders;
 using System.Collections.Generic;
-using QuantConnect.Securities.Option.StrategyMatcher;
 
 namespace QuantConnect.Securities.Option
 {
@@ -48,29 +47,8 @@ namespace QuantConnect.Securities.Option
         /// <summary>
         /// Defines common properties between <see cref="OptionLegData"/> and <see cref="UnderlyingLegData"/>
         /// </summary>
-        public abstract class LegData
+        public abstract class LegData : Leg
         {
-            /// <summary>
-            /// This is an optional parameter that, if not specified, is resolved by the algorithm's base class.
-            /// If the strategy is produced via the <see cref="OptionStrategyMatcher"/>, then this will be populated.
-            /// </summary>
-            public Symbol Symbol { get; set; }
-
-            /// <summary>
-            /// Quantity multiplier used to specify proper scale (and direction) of the leg within the strategy
-            /// </summary>
-            public int Quantity { get; set; }
-
-            /// <summary>
-            /// Type of order that is to be sent to the market on strategy execution
-            /// </summary>
-            public OrderType OrderType { get; set; }
-
-            /// <summary>
-            /// Order limit price of the leg in case limit order is sent to the market on strategy execution
-            /// </summary>
-            public decimal OrderPrice { get; set; }
-
             /// <summary>
             /// Invokes the correct handler based on the runtime type.
             /// </summary>
@@ -100,15 +78,14 @@ namespace QuantConnect.Securities.Option
             /// <summary>
             /// Creates a new instance of <see cref="OptionLegData"/> from the specified parameters
             /// </summary>
-            public static OptionLegData Create(int quantity, Symbol symbol, OrderType orderType = OrderType.Market, decimal? orderPrice = null)
+            public static OptionLegData Create(int quantity, Symbol symbol, decimal? orderPrice = null)
             {
                 return new OptionLegData
                 {
                     Symbol = symbol,
                     Quantity = quantity,
-                    OrderType = orderType,
                     Expiration = symbol.ID.Date,
-                    OrderPrice = orderPrice ?? 0m,
+                    OrderPrice = orderPrice,
                     Right = symbol.ID.OptionRight,
                     Strike = symbol.ID.StrikePrice
                 };
@@ -131,9 +108,9 @@ namespace QuantConnect.Securities.Option
             /// <summary>
             /// Creates a new instance of <see cref="UnderlyingLegData"/> for the specified <paramref name="quantity"/> of underlying shares.
             /// </summary>
-            public static UnderlyingLegData Create(int quantity, Symbol symbol, OrderType orderType = OrderType.Market, decimal? orderPrice = null)
+            public static UnderlyingLegData Create(int quantity, Symbol symbol, decimal? orderPrice = null)
             {
-                var data = Create(quantity, orderType, orderPrice);
+                var data = Create(quantity, orderPrice);
                 data.Symbol = symbol;
                 return data;
             }
@@ -141,13 +118,12 @@ namespace QuantConnect.Securities.Option
             /// <summary>
             /// Creates a new instance of <see cref="UnderlyingLegData"/> for the specified <paramref name="quantity"/> of underlying shares.
             /// </summary>
-            public static UnderlyingLegData Create(int quantity, OrderType orderType = OrderType.Market, decimal? orderPrice = null)
+            public static UnderlyingLegData Create(int quantity, decimal? orderPrice = null)
             {
                 return new UnderlyingLegData
                 {
                     Quantity = quantity,
-                    OrderType = orderType,
-                    OrderPrice = orderPrice ?? 0m
+                    OrderPrice = orderPrice
                 };
             }
 

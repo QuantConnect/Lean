@@ -2685,9 +2685,9 @@ namespace QuantConnect.Tests.Common.Securities
                 return order;
             }
 
-            public Order GetOrderByBrokerageId(string brokerageId)
+            public List<Order> GetOrdersByBrokerageId(string brokerageId)
             {
-                return _orders.Values.FirstOrDefault(x => x.BrokerId.Contains(brokerageId));
+                return _orders.Values.Where(o => o.BrokerId.Contains(brokerageId)).Select(o => o.Clone()).ToList();
             }
 
             public IEnumerable<OrderTicket> GetOrderTickets(Func<OrderTicket, bool> filter = null)

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -187,7 +187,13 @@ namespace QuantConnect.Orders.Serialization
         /// </summary>
         [JsonProperty("time-in-force-expiry", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public double? TimeInForceExpiry { get; set; }
-        
+
+        /// <summary>
+        ///
+        /// </summary>
+        [JsonProperty("group-order-manager", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public GroupOrderManager GroupOrderManager { get; set; }
+
         /// <summary>
         /// Empty constructor required for JSON converter.
         /// </summary>
@@ -266,6 +272,12 @@ namespace QuantConnect.Orders.Serialization
                 LimitPrice = limitIfTouched.LimitPrice;
                 TriggerPrice = limitIfTouched.TriggerPrice;
                 TriggerTouched = limitIfTouched.TriggerTouched;
+            }
+
+            var groupedOrder = order as IGroupOrder;
+            if(groupedOrder != null)
+            {
+                GroupOrderManager = groupedOrder.GroupOrderManager;
             }
         }
     }

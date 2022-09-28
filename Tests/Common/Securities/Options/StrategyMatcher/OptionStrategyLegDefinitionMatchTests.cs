@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,7 +14,6 @@
 */
 
 using NUnit.Framework;
-using QuantConnect.Orders;
 using QuantConnect.Securities.Option;
 using QuantConnect.Securities.Option.StrategyMatcher;
 
@@ -31,7 +30,6 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             Assert.IsInstanceOf<OptionStrategy.OptionLegData>(leg);
             Assert.AreEqual(3, leg.Quantity);
             Assert.AreEqual(0, leg.OrderPrice);
-            Assert.AreEqual(leg.OrderType, OrderType.Market);
         }
 
         [Test]
@@ -42,7 +40,6 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             Assert.IsInstanceOf<OptionStrategy.UnderlyingLegData>(leg);
             Assert.AreEqual(3, leg.Quantity);
             Assert.AreEqual(0, leg.OrderPrice);
-            Assert.AreEqual(leg.OrderType, OrderType.Market);
         }
 
         [Test]
@@ -55,7 +52,6 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             Assert.IsInstanceOf<OptionStrategy.UnderlyingLegData>(leg);
             Assert.AreEqual(2, leg.Quantity);
             Assert.AreEqual(0, leg.OrderPrice);
-            Assert.AreEqual(leg.OrderType, OrderType.Market);
         }
     }
 }

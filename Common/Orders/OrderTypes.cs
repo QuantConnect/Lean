@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -58,7 +58,22 @@ namespace QuantConnect.Orders
         /// <summary>
         ///  Limit if Touched Order Type - a limit order to be placed after first reaching a trigger value (7)
         /// </summary>
-        LimitIfTouched
+        LimitIfTouched,
+
+        /// <summary>
+        ///  Combo Market Order Type - (8)
+        /// </summary>
+        ComboMarket,
+
+        /// <summary>
+        ///  Combo Limit Order Type - (9)
+        /// </summary>
+        ComboLimit,
+
+        /// <summary>
+        ///  Combo Leg Limit Order Type - (10)
+        /// </summary>
+        ComboLegLimit
     }
 
     /// <summary>

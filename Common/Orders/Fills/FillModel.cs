@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Python;
 using QuantConnect.Orders.Fees;
@@ -65,6 +64,16 @@ namespace QuantConnect.Orders.Fills
             OrderEvent orderEvent;
             switch (order.Type)
             {
+                case OrderType.ComboLimit:
+                    orderEvent = ComboLimitFill(parameters.Security, parameters.Order as ComboLimitOrder);
+                    break;
+                case OrderType.ComboMarket:
+                    orderEvent = ComboMarketFill(parameters.Security, parameters.Order as ComboMarketOrder);
+                    break;
+                case OrderType.ComboLegLimit:
+                    // TODO
+                    orderEvent = null;
+                    break;
                 case OrderType.Market:
                     orderEvent = PythonWrapper != null
                         ? PythonWrapper.MarketFill(parameters.Security, parameters.Order as MarketOrder)
@@ -112,7 +121,28 @@ namespace QuantConnect.Orders.Fills
         /// <param name="asset">Security asset we're filling</param>
         /// <param name="order">Order packet to model</param>
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        public virtual OrderEvent ComboMarketFill(Security asset, ComboMarketOrder order)
+        {
+            return InternalMarketFill(asset, order, order.Quantity * order.GroupOrderManager.Quantity);
+        }
+
+
+        /// <summary>
+        /// Default market fill model for the base security class. Fills at the last traded price.
+        /// </summary>
+        /// <param name="asset">Security asset we're filling</param>
+        /// <param name="order">Order packet to model</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         public virtual OrderEvent MarketFill(Security asset, MarketOrder order)
+        {
+            return InternalMarketFill(asset, order, order.Quantity);
+        }
+
+
+        /// <summary>
+        /// Default market fill model for the base security class. Fills at the last traded price.
+        /// </summary>
+        private OrderEvent InternalMarketFill(Security asset, Order order, decimal quantity)
         {
             //Default order event to return.
             var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
@@ -151,7 +181,7 @@ namespace QuantConnect.Orders.Fills
             }
 
             // assume the order completely filled
-            fill.FillQuantity = order.Quantity;
+            fill.FillQuantity = quantity;
 
             return fill;
         }
@@ -406,7 +436,28 @@ namespace QuantConnect.Orders.Fills
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         /// <seealso cref="StopMarketFill(Security, StopMarketOrder)"/>
         /// <seealso cref="MarketFill(Security, MarketOrder)"/>
+        public virtual OrderEvent ComboLimitFill(Security asset, ComboLimitOrder order)
+        {
+            return InternalLimitFill(asset, order, order.GroupOrderManager.LimitPrice, order.Quantity * order.GroupOrderManager.Quantity);
+        }
+
+        /// <summary>
+        /// Default limit order fill model in the base security class.
+        /// </summary>
+        /// <param name="asset">Security asset we're filling</param>
+        /// <param name="order">Order packet to model</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        /// <seealso cref="StopMarketFill(Security, StopMarketOrder)"/>
+        /// <seealso cref="MarketFill(Security, MarketOrder)"/>
         public virtual OrderEvent LimitFill(Security asset, LimitOrder order)
+        {
+            return InternalLimitFill(asset, order, order.LimitPrice, order.Quantity);
+        }
+
+        /// <summary>
+        /// Default limit order fill model in the base security class.
+        /// </summary>
+        private OrderEvent InternalLimitFill(Security asset, Order order, decimal limitPrice, decimal quantity)
         {
             //Initialise;
             var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
@@ -432,27 +483,27 @@ namespace QuantConnect.Orders.Fills
             {
                 case OrderDirection.Buy:
                     //Buy limit seeks lowest price
-                    if (prices.Low < order.LimitPrice)
+                    if (prices.Low < limitPrice)
                     {
                         //Set order fill:
                         fill.Status = OrderStatus.Filled;
                         // fill at the worse price this bar or the limit price, this allows far out of the money limits
                         // to be executed properly
-                        fill.FillPrice = Math.Min(prices.High, order.LimitPrice);
+                        fill.FillPrice = Math.Min(prices.High, limitPrice);
                         // assume the order completely filled
-                        fill.FillQuantity = order.Quantity;
+                        fill.FillQuantity = quantity;
                     }
                     break;
                 case OrderDirection.Sell:
                     //Sell limit seeks highest price possible
-                    if (prices.High > order.LimitPrice)
+                    if (prices.High > limitPrice)
                     {
                         fill.Status = OrderStatus.Filled;
                         // fill at the worse price this bar or the limit price, this allows far out of the money limits
                         // to be executed properly
-                        fill.FillPrice = Math.Max(prices.Low, order.LimitPrice);
+                        fill.FillPrice = Math.Max(prices.Low, limitPrice);
                         // assume the order completely filled
-                        fill.FillQuantity = order.Quantity;
+                        fill.FillQuantity = quantity;
                     }
                     break;
             }

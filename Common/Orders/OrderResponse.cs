@@ -175,6 +175,16 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Helper method to create an error response due to a missing security
+        /// </summary>
+        public static OrderResponse MissingSecurity(SubmitOrderRequest request)
+        {
+            return Error(request, OrderResponseErrorCode.MissingSecurity,
+                Invariant($"You haven't requested {request.Symbol} data. Add this with AddSecurity() in the Initialize() Method.")
+            );
+        }
+
+        /// <summary>
         /// Helper method to create an error response due to algorithm still in warmup mode
         /// </summary>
         public static OrderResponse WarmingUp(OrderRequest request)

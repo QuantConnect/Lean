@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -52,6 +52,11 @@ namespace QuantConnect.Orders
         /// If set to true, allows orders to also trigger or fill outside of regular trading hours.
         /// </summary>
         public bool OutsideRegularTradingHours { get; set; }
+
+        /// <summary>
+        /// Guaranteed combo orders routing value
+        /// </summary>
+        public bool? GuaranteedComboRouting { get; set; }
 
         /// <summary>
         /// Returns a new instance clone of this object

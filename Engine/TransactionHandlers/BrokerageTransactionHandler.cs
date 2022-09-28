@@ -520,11 +520,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         /// <param name="brokerageId">The brokerage id to fetch</param>
         /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
-        public Order GetOrderByBrokerageId(string brokerageId)
+        public List<Order> GetOrdersByBrokerageId(string brokerageId)
         {
-            var order = _openOrders.FirstOrDefault(x => x.Value.BrokerId.Contains(brokerageId)).Value
-                        ?? _completeOrders.FirstOrDefault(x => x.Value.BrokerId.Contains(brokerageId)).Value;
-            return order?.Clone();
+            var openOrders = _openOrders.Where(x => x.Value.BrokerId.Contains(brokerageId)).Select(kvp => kvp.Value.Clone());
+            var completeOrders = _completeOrders.Where(x => x.Value.BrokerId.Contains(brokerageId)).Select(kvp => kvp.Value.Clone());
+            return openOrders.UnionBy(completeOrders, o => o.Id).ToList();
         }
 
         /// <summary>
@@ -740,15 +740,27 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // update the ticket's internal storage with this new order reference
             ticket.SetOrder(order);
 
-            if (order.Quantity == 0)
+            if (!order.TryGetGroupOrders(TryGetOrder, out var orders))
             {
-                order.Status = OrderStatus.Invalid;
+                // an Order of the group is missing
+                return OrderResponse.Success(request);
+            }
+
+            if (orders.Any(o => o.Quantity == 0))
+            {
                 var response = OrderResponse.ZeroQuantity(request);
                 _algorithm.Error(response.ErrorMessage);
-                HandleOrderEvent(new OrderEvent(order,
-                    _algorithm.UtcTime,
-                    OrderFee.Zero,
-                    "Unable to add order for zero quantity"));
+
+                InvalidateOrders(orders, response.ErrorMessage);
+                return response;
+            }
+
+            if (!orders.TryGetGroupOrdersSecurities(_algorithm.Portfolio, out var securities))
+            {
+                var response = OrderResponse.MissingSecurity(request);
+                _algorithm.Error(response.ErrorMessage);
+
+                InvalidateOrders(orders, response.ErrorMessage);
                 return response;
             }
 
@@ -756,9 +768,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             HasSufficientBuyingPowerForOrderResult hasSufficientBuyingPowerResult;
             try
             {
-                var group = _algorithm.Portfolio.Positions.CreatePositionGroup(order);
+                var group = _algorithm.Portfolio.Positions.CreatePositionGroup(orders);
                 hasSufficientBuyingPowerResult = group.BuyingPowerModel.HasSufficientBuyingPowerForOrder(
-                    _algorithm.Portfolio, group, order
+                    _algorithm.Portfolio, group, orders
                 );
             }
             catch (Exception err)
@@ -774,38 +786,35 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             if (!hasSufficientBuyingPowerResult.IsSufficient)
             {
-                order.Status = OrderStatus.Invalid;
-                var errorMessage = $"Order Error: id: {order.Id}, Insufficient buying power to complete order (Value:{order.GetValue(security).SmartRounding()}), Reason: {hasSufficientBuyingPowerResult.Reason}";
-                var response = OrderResponse.Error(request, OrderResponseErrorCode.InsufficientBuyingPower, errorMessage);
-                _algorithm.Error(response.ErrorMessage);
-                HandleOrderEvent(new OrderEvent(order,
-                    _algorithm.UtcTime,
-                    OrderFee.Zero,
-                    errorMessage));
-                return response;
+                var errorMessage = securities.GetErrorMessage(hasSufficientBuyingPowerResult);
+                _algorithm.Error(errorMessage);
+
+                InvalidateOrders(orders, errorMessage);
+                return OrderResponse.Error(request, OrderResponseErrorCode.InsufficientBuyingPower, errorMessage);
             }
 
             // verify that our current brokerage can actually take the order
-            BrokerageMessageEvent message;
-            if (!_algorithm.BrokerageModel.CanSubmitOrder(security, order, out message))
+            foreach (var kvp in securities)
             {
-                // if we couldn't actually process the order, mark it as invalid and bail
-                order.Status = OrderStatus.Invalid;
-                if (message == null) message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidOrder", "BrokerageModel declared unable to submit order: " + order.Id);
-                var response = OrderResponse.Error(request, OrderResponseErrorCode.BrokerageModelRefusedToSubmitOrder, "OrderID: " + order.Id + " " + message);
-                _algorithm.Error(response.ErrorMessage);
-                HandleOrderEvent(new OrderEvent(order,
-                    _algorithm.UtcTime,
-                    OrderFee.Zero,
-                    "BrokerageModel declared unable to submit order"));
-                return response;
+                if (!_algorithm.BrokerageModel.CanSubmitOrder(kvp.Value, kvp.Key, out var message))
+                {
+                    var errorMessage = $"BrokerageModel declared unable to submit order: [{string.Join(",", orders.Select(o => o.Id))}]";
+
+                    // if we couldn't actually process the order, mark it as invalid and bail
+                    message ??= new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidOrder", string.Empty);
+                    var response = OrderResponse.Error(request, OrderResponseErrorCode.BrokerageModelRefusedToSubmitOrder, $"{errorMessage} {message}");
+
+                    InvalidateOrders(orders, response.ErrorMessage);
+                    _algorithm.Error(response.ErrorMessage);
+                    return response;
+                }
             }
 
             // set the order status based on whether or not we successfully submitted the order to the market
             bool orderPlaced;
             try
             {
-                orderPlaced = _brokerage.PlaceOrder(order);
+                orderPlaced = orders.All(o => _brokerage.PlaceOrder(o));
             }
             catch (Exception err)
             {
@@ -816,15 +825,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             if (!orderPlaced)
             {
                 // we failed to submit the order, invalidate it
-                order.Status = OrderStatus.Invalid;
-                var errorMessage = "Brokerage failed to place order: " + order.Id;
-                var response = OrderResponse.Error(request, OrderResponseErrorCode.BrokerageFailedToSubmitOrder, errorMessage);
-                _algorithm.Error(response.ErrorMessage);
-                HandleOrderEvent(new OrderEvent(order,
-                    _algorithm.UtcTime,
-                    OrderFee.Zero,
-                    "Brokerage failed to place order"));
-                return response;
+                var errorMessage = $"Brokerage failed to place orders: [{string.Join(",", orders.Select(o => o.Id))}]";
+
+                InvalidateOrders(orders, errorMessage);
+                _algorithm.Error(errorMessage);
+                return OrderResponse.Error(request, OrderResponseErrorCode.BrokerageFailedToSubmitOrder, errorMessage);
             }
 
             return OrderResponse.Success(request);
@@ -1502,6 +1507,25 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     }
                 }
                     break;
+            }
+        }
+
+        private Order TryGetOrder(int orderId)
+        {
+            _completeOrders.TryGetValue(orderId, out var order);
+            return order;
+        }
+
+        private void InvalidateOrders(List<Order> orders, string message)
+        {
+            for (var i = 0; i < orders.Count; i++)
+            {
+                var orderInGroup = orders[i];
+                if (!orderInGroup.Status.IsClosed())
+                {
+                    orderInGroup.Status = OrderStatus.Invalid;
+                }
+                HandleOrderEvent(new OrderEvent(orderInGroup, _algorithm.UtcTime, OrderFee.Zero, message));
             }
         }
 
