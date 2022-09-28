@@ -319,6 +319,8 @@ namespace QuantConnect.Tests.Common.Securities
         public void TryParseFailsInvalidProperties(string value)
         {
             Assert.IsFalse(SecurityIdentifier.TryParse(value, out var _));
+            // On the second call, we test the cache to increase speed and remove redundant logging
+            Assert.IsFalse(SecurityIdentifier.TryParse(value, out var _));
         }
 
         [Test, Category("TravisExclude")]

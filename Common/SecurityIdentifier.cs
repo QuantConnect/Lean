@@ -769,7 +769,7 @@ namespace QuantConnect
                 // for performance, we first verify if we already have parsed this SecurityIdentifier
                 if (SecurityIdentifierCache.TryGetValue(value, out identifier))
                 {
-                    return true;
+                    return identifier != null;
                 }
 
                 if (string.IsNullOrWhiteSpace(value) || value == " 0")
@@ -810,6 +810,7 @@ namespace QuantConnect
                 {
                     exception = error;
                     Log.Error($"SecurityIdentifier.TryParseProperties(): Error parsing SecurityIdentifier: '{value}', Exception: {exception}");
+                    SecurityIdentifierCache[value] = null;
                     return false;
                 }
 
