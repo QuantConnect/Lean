@@ -211,7 +211,7 @@ namespace QuantConnect.Tests
         {
             var args = $"-m papermill \"{notebookPath}\" \"{notebookoutputPath}\" --log-output --cwd {workingDirectoryForNotebook}";
 
-            TestUtils.RunPythonProcess(args, out process);
+            TestProcess.RunPythonProcess(args, out process);
 
             return File.ReadAllText(notebookoutputPath);
         }

@@ -17,13 +17,13 @@ using NUnit.Framework;
 
 namespace QuantConnect.Tests.Research
 {
-    [TestFixture]
+    [TestFixture, Category("ResearchRegressionTests")]
     public class StartTests
     {
         [Test]
         public void RunStartFromPython()
         {
-            TestUtils.RunPythonProcess("start.py", out var process, timeout: 10000);
+            TestProcess.RunPythonProcess("start.py", out var process, timeout: 10000);
 
             Assert.AreEqual(0, process.ExitCode);
 

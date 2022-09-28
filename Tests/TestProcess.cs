@@ -21,7 +21,7 @@ using QuantConnect.Configuration;
 
 namespace QuantConnect.Tests
 {
-    internal static class TestUtils
+    internal static class TestProcess
     {
         // Update in config.json to specify the alternate path to python.exe
         private static readonly string _pythonLocation = Config.Get("python-location", "python");
@@ -33,7 +33,7 @@ namespace QuantConnect.Tests
 
         public static void RunProcess(string targetProcess, string args, out Process process, int timeout = 1000 * 30)
         {
-            Log.Trace($"TestUtils.RunProcess(): running '{targetProcess}' args {args}");
+            Log.Trace($"TestProcess.RunProcess(): running '{targetProcess}' args {args}");
 
             // Use ProcessStartInfo class
             var startInfo = new ProcessStartInfo(targetProcess, args)
