@@ -314,12 +314,13 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(sid.ToString(), value);
         }
 
-        [Test]
-        public void TryParseFailsInvalidProperties()
+        [TestCase("SPY WhatEver")]
+        [TestCase("Sharpe ratio")]
+        public void TryParseFailsInvalidProperties(string value)
         {
-            const string value = "SPY WhatEver";
-            SecurityIdentifier sid;
-            Assert.IsFalse(SecurityIdentifier.TryParse(value, out sid));
+            Assert.IsFalse(SecurityIdentifier.TryParse(value, out var _));
+            // On the second call, we test the cache to increase speed and remove redundant logging
+            Assert.IsFalse(SecurityIdentifier.TryParse(value, out var _));
         }
 
         [Test, Category("TravisExclude")]

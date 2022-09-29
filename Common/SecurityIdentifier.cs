@@ -567,7 +567,6 @@ namespace QuantConnect
             }
 
             // normalize input strings
-            market = market.ToLowerInvariant();
             symbol = forceSymbolToUpper ? symbol.LazyToUpper() : symbol;
 
             if (securityType == SecurityType.FutureOption)
@@ -577,19 +576,12 @@ namespace QuantConnect
                 symbol = FuturesOptionsSymbolMappings.Map(symbol);
             }
 
-            var marketIdentifier = QuantConnect.Market.Encode(market);
-            if (!marketIdentifier.HasValue)
-            {
-                throw new ArgumentOutOfRangeException(nameof(market), "The specified market wasn't found in the  markets lookup. " +
-                    $"Requested: {market}. You can add markets by calling QuantConnect.Market.AddMarket(string,ushort)"
-                );
-            }
+            var marketIdentifier = GetMarketIdentifier(market);
 
             var days = (ulong)date.ToOADate() * DaysOffset;
             var marketCode = (ulong)marketIdentifier * MarketOffset;
 
-            ulong strikeScale;
-            var strk = NormalizeStrike(strike, out strikeScale) * StrikeOffset;
+            var strk = NormalizeStrike(strike, out ulong strikeScale) * StrikeOffset;
             strikeScale *= StrikeScaleOffset;
             var style = (ulong)optionStyle * OptionStyleOffset;
             var putcall = (ulong)optionRight * PutCallOffset;
@@ -777,7 +769,7 @@ namespace QuantConnect
                 // for performance, we first verify if we already have parsed this SecurityIdentifier
                 if (SecurityIdentifierCache.TryGetValue(value, out identifier))
                 {
-                    return true;
+                    return identifier != null;
                 }
 
                 if (string.IsNullOrWhiteSpace(value) || value == " 0")
@@ -809,12 +801,16 @@ namespace QuantConnect
 
                         // toss the previous in as the underlying, if Empty, ignored by ctor
                         identifier = new SecurityIdentifier(symbol, props, identifier);
+
+                        // the following method will test if the market is supported/valid
+                        GetMarketIdentifier(identifier.Market);
                     }
                 }
                 catch (Exception error)
                 {
                     exception = error;
                     Log.Error($"SecurityIdentifier.TryParseProperties(): Error parsing SecurityIdentifier: '{value}', Exception: {exception}");
+                    SecurityIdentifierCache[value] = null;
                     return false;
                 }
 
@@ -840,6 +836,24 @@ namespace QuantConnect
             return (properties / offset) % width;
         }
 
+        /// <summary>
+        /// Gets the market code for the specified market. Raise exception if the market is not found
+        /// </summary>
+        /// <param name="market">The market to check for (case sensitive)</param>
+        /// <returns>The internal code used for the market. Corresponds to the value used when calling <see cref="Market.Add"/></returns>
+        private static int GetMarketIdentifier(string market)
+        {
+            market = market.ToLowerInvariant();
+
+            var marketIdentifier = QuantConnect.Market.Encode(market);
+            if (marketIdentifier.HasValue)
+            {
+                return marketIdentifier.Value;
+            }
+
+            throw new ArgumentOutOfRangeException(nameof(market), "The specified market wasn't found in the markets lookup. " +
+                $"Requested: {market}. You can add markets by calling QuantConnect.Market.Add(string,int)");
+        }
         #endregion
 
         #region Equality members and ToString
