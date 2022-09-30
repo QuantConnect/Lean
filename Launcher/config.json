@@ -236,6 +236,9 @@
   // specify supported languages when running regression tests
   "regression-test-languages": [ "CSharp", "Python" ],
 
+  // Additional paths to include in python for import resolution
+  "python-additional-paths": [],
+
   "environments": {
 
     // defines the 'backtesting' environment
