@@ -137,14 +137,15 @@ namespace QuantConnect.Algorithm
             //- Note - ideally these wouldn't be here, but because of the DLL we need to make the classes shared across
             //  the Worker & Algorithm, limiting ability to do anything else.
 
-            //Initialise Start and End Dates:
+            //Initialise Start Date:
             _startDate = new DateTime(1998, 01, 01);
-            _endDate = DateTime.Now.AddDays(-1);
-
             // intialize our time keeper with only new york
             _timeKeeper = new TimeKeeper(_startDate, new[] { TimeZones.NewYork });
             // set our local time zone
             _localTimeKeeper = _timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork);
+            //Initialise End Date:
+            SetEndDate(DateTime.UtcNow.ConvertFromUtc(TimeZone));
+
             _securityDefinitionSymbolResolver = new SecurityDefinitionSymbolResolver();
 
             Settings = new AlgorithmSettings();
@@ -1504,25 +1505,22 @@ namespace QuantConnect.Algorithm
             // no need to set this value in live mode, will be set using the current time.
             if (_liveMode) return;
 
-            //Validate:
-            //1. Check Range:
-            if (end > DateTime.Now.Date.AddDays(-1))
-            {
-                end = DateTime.Now.Date.AddDays(-1);
-            }
-
-            //2. Make this at the very end of the requested date
-            end = end.RoundDown(TimeSpan.FromDays(1)).AddDays(1).AddTicks(-1);
-
-            //3. Check not locked already:
-            if (!_locked)
-            {
-                _endDate = end;
-            }
-            else
+            //1. Check not locked already:
+            if (_locked)
             {
                 throw new InvalidOperationException("Algorithm.SetEndDate(): Cannot change end date after algorithm initialized.");
             }
+
+            //Validate:
+            //2. Check Range:
+            var yesterdayInAlgorithmTimeZone = DateTime.UtcNow.ConvertFromUtc(TimeZone).Date.AddDays(-1);
+            if (end > yesterdayInAlgorithmTimeZone)
+            {
+                end = yesterdayInAlgorithmTimeZone;
+            }
+
+            //3. Make this at the very end of the requested date
+            _endDate = end.RoundDown(TimeSpan.FromDays(1)).AddDays(1).AddTicks(-1);
         }
 
         /// <summary>
