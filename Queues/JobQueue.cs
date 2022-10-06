@@ -98,11 +98,11 @@ namespace QuantConnect.Queues
         /// <returns></returns>
         public AlgorithmNodePacket NextJob(out string location)
         {
+            ConfigurePythonPaths();
+
             location = GetAlgorithmLocation();
 
             Log.Trace($"JobQueue.NextJob(): Selected {location}");
-
-            ConfigurePythonPaths();
 
             // check for parameters in the config
             var parameters = new Dictionary<string, string>();

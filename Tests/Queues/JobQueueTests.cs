@@ -32,13 +32,13 @@ namespace QuantConnect.Tests.Queues
         [Test]
         public void NextJobConfiguresPythonPaths()
         {
-            Func<IEnumerable<string>, string, bool> testDirectoryIsInPythonPath = 
+            Func<IEnumerable<string>, string, bool> testDirectoryIsInPythonPath =
                 (paths, directory) => paths.Any(path =>
                     string.Equals(Path.GetFullPath(path), Path.GetFullPath(directory), StringComparison.Ordinal));
 
             var testDirectory = Directory.GetParent(Directory.GetCurrentDirectory()).FullName;
             Config.Set("python-additional-paths", JsonConvert.SerializeObject(new string[] { testDirectory }));
-            
+
             var paths = GetPythonPaths();
 
             Assert.IsFalse(testDirectoryIsInPythonPath(paths, testDirectory));
