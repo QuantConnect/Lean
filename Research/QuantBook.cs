@@ -382,7 +382,7 @@ namespace QuantConnect.Research
                 {
                     if (option.Exchange.DateIsOpen(date))
                     {
-                        allSymbols.AddRange(OptionChainProvider.GetOptionContractList(symbol.Underlying, date));
+                        allSymbols.AddRange(OptionChainProvider.GetOptionContractList(symbol, date));
                     }
                 }
 

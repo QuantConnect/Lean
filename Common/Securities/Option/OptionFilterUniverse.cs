@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -72,7 +72,8 @@ namespace QuantConnect.Securities
                 case SecurityType.FutureOption:
                     return FutureOptionSymbol.IsStandard(symbol);
                 case SecurityType.IndexOption:
-                    return IndexOptionSymbol.IsStandard(symbol);
+                    // standard/weekly filter does not apply, because index option weeklies have different tickers
+                    return true;
                 default:
                     return OptionSymbol.IsStandard(symbol);
             }

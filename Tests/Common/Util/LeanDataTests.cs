@@ -303,6 +303,19 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(date.Date, Parse.DateTime("2016-01-01").Date);
         }
 
+        [TestCase("Data\\indexoption\\usa\\minute\\spx\\20210104_quote_european.zip", "SPX", "SPX")]
+        [TestCase("Data\\indexoption\\usa\\minute\\spxw\\20210104_quote_european.zip", "SPXW", "SPX")]
+        [TestCase("Data\\futureoption\\comex\\minute\\og\\20210428\\20210104_quote_american.zip", "OG", "GC")]
+        public void MappedTickersCorreclty(string path, string expectedSymbol, string expectedUnderlying)
+        {
+            Assert.IsTrue(LeanData.TryParsePath(path, out var symbol, out var date, out var resolution));
+
+            Assert.AreEqual(Resolution.Minute, resolution);
+            Assert.AreEqual(expectedSymbol, symbol.ID.Symbol);
+            Assert.AreEqual(expectedUnderlying, symbol.ID.Underlying.Symbol);
+            Assert.AreEqual(new DateTime(2021, 01, 04), date);
+        }
+
         [TestCase("Data\\alternative\\estimize\\consensus\\aapl.csv", "aapl", null)]
         [TestCase("Data\\alternative\\psychsignal\\aapl\\20161007.zip", "aapl", "2016-10-07")]
         [TestCase("Data\\alternative\\sec\\aapl\\20161007_8K.zip", "aapl", "2016-10-07")]

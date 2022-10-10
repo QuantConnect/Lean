@@ -31,7 +31,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class DataQueueHandlerManager : IDataQueueHandler, IDataQueueUniverseProvider
     {
         private ITimeProvider _frontierTimeProvider;
-        private readonly Dictionary<SubscriptionDataConfig, IDataQueueHandler> _dataConfigAndDataHandler = new();
+        private readonly Dictionary<SubscriptionDataConfig, Queue<IDataQueueHandler>> _dataConfigAndDataHandler = new();
 
         /// <summary>
         /// Collection of data queue handles being used
@@ -73,7 +73,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // Check if the enumerator is not empty
                 if (enumerator != null)
                 {
-                    _dataConfigAndDataHandler.Add(dataConfig, dataHandler);
+                    if(!_dataConfigAndDataHandler.TryGetValue(dataConfig, out var dataQueueHandlers))
+                    {
+                        // we can get the same subscription request multiple times, the aggregator manager handles updating each enumerator
+                        // but we need to keep track so we can call unsubscribe later to the target data queue handler
+                        _dataConfigAndDataHandler[dataConfig] = dataQueueHandlers = new Queue<IDataQueueHandler>();
+                    }
+                    dataQueueHandlers.Enqueue(dataHandler);
 
                     if (immediateEmission)
                     {
@@ -94,9 +100,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="dataConfig">Subscription config to be removed</param>
         public virtual void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            if (_dataConfigAndDataHandler.Remove(dataConfig, out var dataHandler))
+            if (_dataConfigAndDataHandler.TryGetValue(dataConfig, out var dataHandlers))
             {
+                var dataHandler = dataHandlers.Dequeue();
                 dataHandler.Unsubscribe(dataConfig);
+
+                if (dataHandlers.Count == 0)
+                {
+                    // nothing left
+                    _dataConfigAndDataHandler.Remove(dataConfig);
+                }
             }
         }
 

@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace QuantConnect.Securities.IndexOption
@@ -22,15 +24,34 @@ namespace QuantConnect.Securities.IndexOption
     /// </summary>
     public static class IndexOptionSymbol
     {
-        private static readonly HashSet<string> _supportedIndexOptionTickers = new HashSet<string>
+        private static readonly Dictionary<string, string> _nonStandardOptionToIndex = new()
         {
-            "SPX",
-            "NDX",
-            "VIX",
-            "SPXW",
-            "NQX",
-            "VIXW"
+            { "SPXW", "SPX" },
+            { "VIXW", "VIX" },
+            { "NDXP", "NDX" },
+            { "NQX", "NDX" },
         };
+
+        /// <summary>
+        /// These are known assets that are weeklies or end-of-month settled contracts.
+        /// </summary>
+        private static readonly HashSet<string> _nonStandardIndexOptionTickers = new()
+        {
+            // Weeklies
+            "SPXW",
+            "VIXW",
+            // PM-Settled
+            "NDXP",
+            // reduced value index options, 20%
+            "NQX"
+        };
+
+        /// <summary>
+        /// Supported index option tickers
+        /// </summary>
+        public static readonly HashSet<string> SupportedIndexOptionTickers = new string[] { "SPX", "NDX", "VIX" }
+            .Union(_nonStandardIndexOptionTickers)
+            .ToHashSet();
 
         /// <summary>
         /// Determines if the Index Option Symbol is for a monthly contract
@@ -44,18 +65,7 @@ namespace QuantConnect.Securities.IndexOption
                 return true;
             }
 
-            switch (symbol.ID.Symbol)
-            {
-                // These are known assets that are weeklies or end-of-month settled contracts.
-                case "SPXW":
-                case "VIXW":
-                case "NDXP":
-                case "NQX":
-                    return false;
-
-                default:
-                    return true;
-            }
+            return !_nonStandardIndexOptionTickers.Contains(symbol.ID.Symbol.LazyToUpper());
         }
 
         /// <summary>
@@ -71,7 +81,59 @@ namespace QuantConnect.Securities.IndexOption
         /// </remarks>
         public static bool IsIndexOption(string ticker)
         {
-            return _supportedIndexOptionTickers.Contains(ticker.ToUpper());
+            return SupportedIndexOptionTickers.Contains(ticker.LazyToUpper());
+        }
+
+        /// <summary>
+        /// Maps an index option ticker to its underlying index ticker
+        /// </summary>
+        /// <param name="indexOption">Index option ticker to map to the underlying</param>
+        /// <returns>Index ticker</returns>
+        public static string MapToUnderlying(string indexOption)
+        {
+            if(_nonStandardOptionToIndex.TryGetValue(indexOption.LazyToUpper(), out var index))
+            {
+                return index;
+            }
+
+            return indexOption;
+        }
+
+        /// <summary>
+        /// Returns the last trading date for the given index option ticker and expiration date
+        /// </summary>
+        /// <remarks>This is useful for IB brokerage</remarks>
+        public static DateTime GetLastTradingDate(string ticker, DateTime expirationDate)
+        {
+            return expirationDate.AddDays(-GetExpirationOffset(ticker));
+        }
+
+        /// <summary>
+        /// Returns the expiry date for the given index option ticker and last trading date
+        /// </summary>
+        /// <remarks>This is useful for IB brokerage</remarks>
+        public static DateTime GetExpiryDate(string ticker, DateTime lastTradingDate)
+        {
+            return lastTradingDate.AddDays(GetExpirationOffset(ticker));
+        }
+
+        /// <summary>
+        /// Some index options last tradable date is the previous day to the expiration
+        /// https://www.cboe.com/tradable_products/vix/vix_options/specifications/
+        /// </summary>
+        private static int GetExpirationOffset(string ticker)
+        {
+            switch (ticker)
+            {
+                case "SPX":
+                case "NDX":
+                case "VIX":
+                case "VIXW":
+                    return 1;
+                default:
+                    // SPXW, NQX, NDXP
+                    return 0;
+            }
         }
     }
 }

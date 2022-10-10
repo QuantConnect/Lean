@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -17,6 +17,7 @@
 using System;
 using NUnit.Framework;
 using QuantConnect.Securities;
+using QuantConnect.Securities.IndexOption;
 
 namespace QuantConnect.Tests.Common
 {
@@ -29,6 +30,15 @@ namespace QuantConnect.Tests.Common
             const string expected = @"MSFT  060318C00047500";
             var result = SymbolRepresentation.GenerateOptionTickerOSI("MSFT", OptionRight.Call, 47.50m, new DateTime(2006, 03, 18));
             Assert.AreEqual(expected, result);
+        }
+
+        [Test]
+        public void ParseOptionTickerOSI()
+        {
+            var result = SymbolRepresentation.ParseOptionTickerOSI("SPXW  230111C02400000", SecurityType.IndexOption);
+
+            Assert.AreEqual("SPXW", result.ID.Symbol);
+            Assert.AreEqual("SPX", result.Underlying.ID.Symbol);
         }
 
         [Test]
