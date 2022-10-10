@@ -156,7 +156,18 @@ RUN pip install --no-cache-dir      \
     mpmath==1.2.1                   \
     stockstats==0.4.1               \
     QuantStats==0.0.59              \
-    hurst==0.0.5
+    hurst==0.0.5                    \
+    numerapi==2.12.4                \
+    pymdptoolbox==4.0-b3            \
+    fuzzy-c-means==1.6.3            \
+    panel==0.14.0                   \
+    hvplot==0.8.1                   \
+    line-profiler==3.5.1            \
+    py-heat==0.0.6                  \
+    py-heat-magic==0.0.2            \
+    bokeh==2.4.3                    \
+    river==0.13.0                   \
+    stumpy==1.11.1
 
 RUN conda install -y -c conda-forge \
     openmpi=4.1.4 && conda clean -y --all
