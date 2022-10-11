@@ -6,6 +6,25 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "autobuilder",
+            "group": "build",
+            "type": "shell",
+            "isBackground": true,
+            "windows": {
+                "command": "${workspaceFolder}/.vscode/autobuilder.bat",
+            },
+            "linux": {
+                "command": "${workspaceFolder}/.vscode/autobuilder.sh"
+            },
+            "osx": {
+                "command": "${workspaceFolder}/.vscode/autobuilder.sh"
+            },
+            "args" : [
+                "${workspaceFolder}/Launcher",
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
             "label": "build",
             "type": "shell",
             "command": "dotnet",
@@ -49,6 +68,18 @@
             "presentation": {
                 "reveal": "silent"
             },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "start research",
+            "type": "shell",
+            "group": "build",
+            "isBackground": true,
+            "command" : "${workspaceFolder}/.vscode/launch_research.sh",
+            "args" : [
+                "${workspaceFolder}/Launcher/bin/Debug",
+                "${workspaceFolder}/Data"
+            ],
             "problemMatcher": "$msCompile"
         }
     ]
