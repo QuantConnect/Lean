@@ -197,7 +197,8 @@ RUN pip install --no-cache-dir      \
     bokeh==2.4.3                    \
     tensorflow-decision-forests==1.0.1 \
     river==0.13.0                   \
-    stumpy==1.11.1
+    stumpy==1.11.1                  \
+    pyvinecopulib==0.6.2
 
 RUN python -m spacy download en_core_web_md
 

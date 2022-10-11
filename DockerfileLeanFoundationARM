@@ -167,7 +167,8 @@ RUN pip install --no-cache-dir      \
     py-heat-magic==0.0.2            \
     bokeh==2.4.3                    \
     river==0.13.0                   \
-    stumpy==1.11.1
+    stumpy==1.11.1                  \
+    pyvinecopulib==0.6.2
 
 RUN conda install -y -c conda-forge \
     openmpi=4.1.4 && conda clean -y --all
