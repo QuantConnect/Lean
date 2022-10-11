@@ -1709,7 +1709,7 @@ namespace QuantConnect.Algorithm
 
                 // add this security to the user defined universe
                 Universe universe;
-                if (!UniverseManager.TryGetValue(symbol, out universe) && _pendingUniverseAdditions.All(u => u.Configuration.Symbol != symbol))
+                if (!UniverseManager.TryGetValue(symbol, out universe) && !IsAlreadyPending(symbol))
                 {
                     var canonicalConfig = configs.First();
                     var settings = new UniverseSettings(canonicalConfig.Resolution, leverage, fillDataForward, extendedMarketHours, TimeSpan.Zero);
@@ -2047,8 +2047,11 @@ namespace QuantConnect.Algorithm
                     Resolution = underlyingConfigs.GetHighestResolution(),
                     ExtendedMarketHours = extendedMarketHours
                 };
-                universe = _pendingUniverseAdditions.FirstOrDefault(u => u.Configuration.Symbol == universeSymbol)
-                           ?? AddUniverse(new OptionContractUniverse(new SubscriptionDataConfig(configs.First(), symbol: universeSymbol), settings));
+                lock (_pendingUniverseAdditionsLock)
+                {
+                    universe = _pendingUniverseAdditions.FirstOrDefault(u => u.Configuration.Symbol == universeSymbol)
+                               ?? AddUniverse(new OptionContractUniverse(new SubscriptionDataConfig(configs.First(), symbol: universeSymbol), settings));
+                }
             }
 
             // update the universe
@@ -2203,16 +2206,19 @@ namespace QuantConnect.Algorithm
             }
             else
             {
-                // we need to handle existing universes and pending to be added universes, that will be pushed
-                // at the end of this time step see OnEndOfTimeStep()
-                foreach (var universe in UniverseManager.Select(x => x.Value)
-                    .Concat(_pendingUniverseAdditions)
-                    .OfType<UserDefinedUniverse>())
+                lock (_pendingUniverseAdditionsLock)
                 {
-                    universe.Remove(symbol);
+                    // we need to handle existing universes and pending to be added universes, that will be pushed
+                    // at the end of this time step see OnEndOfTimeStep()
+                    foreach (var universe in UniverseManager.Select(x => x.Value)
+                        .Concat(_pendingUniverseAdditions)
+                        .OfType<UserDefinedUniverse>())
+                    {
+                        universe.Remove(symbol);
+                    }
+                    // for existing universes we need to purge pending additions too, also handled at OnEndOfTimeStep()
+                    _pendingUserDefinedUniverseSecurityAdditions.RemoveAll(addition => addition.Security.Symbol == symbol);
                 }
-                // for existing universes we need to purge pending additions too, also handled at OnEndOfTimeStep()
-                _pendingUserDefinedUniverseSecurityAdditions.RemoveAll(addition => addition.Security.Symbol == symbol);
             }
 
             return true;
@@ -2916,6 +2922,17 @@ namespace QuantConnect.Algorithm
             // startDate is set relative to the algorithm's timezone.
             _startDate = _start.Date;
             _endDate = QuantConnect.Time.EndOfTime;
+        }
+
+        /// <summary>
+        /// Check if a symbol is already pending to be added
+        /// </summary>
+        private bool IsAlreadyPending(Symbol symbol)
+        {
+            lock (_pendingUniverseAdditionsLock)
+            {
+                return _pendingUniverseAdditions.Any(u => u.Configuration.Symbol == symbol);
+            }
         }
     }
 }

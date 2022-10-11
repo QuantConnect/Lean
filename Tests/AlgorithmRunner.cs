@@ -166,9 +166,14 @@ namespace QuantConnect.Tests
                         }
                     }).Wait();
 
-                    var backtestingResultHandler = (BacktestingResultHandler)algorithmHandlers.Results;
-                    results = backtestingResultHandler;
-                    statistics = backtestingResultHandler.FinalStatistics;
+                    var regressionResultHandler = (RegressionResultHandler)algorithmHandlers.Results;
+                    results = regressionResultHandler;
+                    statistics = regressionResultHandler.FinalStatistics;
+
+                    if (expectedFinalStatus == AlgorithmStatus.Completed && regressionResultHandler.HasRuntimeError)
+                    {
+                        Assert.Fail($"There was a runtime error running the algorithm");
+                    }
 
                     var defaultAlphaHandler = (DefaultAlphaHandler) algorithmHandlers.Alphas;
                     alphaStatistics = defaultAlphaHandler.RuntimeStatistics;

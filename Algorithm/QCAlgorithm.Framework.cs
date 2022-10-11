@@ -89,9 +89,12 @@ namespace QuantConnect.Algorithm
             }
             foreach (var universe in UniverseSelection.CreateUniverses(this))
             {
-                // on purpose we don't call 'AddUniverse' here so that these universes don't get registered as user added
-                // this is so that later during 'UniverseSelection.CreateUniverses' we wont remove them from UniverseManager
-                _pendingUniverseAdditions.Add(universe);
+                lock(_pendingUniverseAdditionsLock)
+                {
+                    // on purpose we don't call 'AddUniverse' here so that these universes don't get registered as user added
+                    // this is so that later during 'UniverseSelection.CreateUniverses' we wont remove them from UniverseManager
+                    _pendingUniverseAdditions.Add(universe);
+                }
             }
 
             if (DebugMode)
