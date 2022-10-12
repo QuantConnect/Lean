@@ -33,7 +33,7 @@ namespace QuantConnect
         /// <summary>
         /// CPU performance counter measures percentage of CPU used in a background thread.
         /// </summary>
-        public static readonly CpuPerformance CpuPerformanceCounter = new CpuPerformance();
+        private static CpuPerformance CpuPerformanceCounter;
 
         /// <summary>
         /// Global Flag :: Operating System
@@ -124,7 +124,17 @@ namespace QuantConnect
         /// <summary>
         /// Total CPU usage as a percentage
         /// </summary>
-        public static decimal CpuUsage => (decimal)CpuPerformanceCounter.CpuPercentage;
+        public static decimal CpuUsage
+        {
+            get
+            {
+                if(CpuPerformanceCounter != null)
+                {
+                    return (decimal)CpuPerformanceCounter.CpuPercentage;
+                }
+                return 0m;
+            }
+        }
 
         /// <summary>
         /// Gets the statistics of the machine, including CPU% and RAM
@@ -142,9 +152,25 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Initializes the OS internal resources
+        /// </summary>
+        public static void Initialize()
+        {
+            CpuPerformanceCounter = new CpuPerformance();
+        }
+
+        /// <summary>
+        /// Disposes of the OS internal resources
+        /// </summary>
+        public static void Dispose()
+        {
+            CpuPerformanceCounter.DisposeSafely();
+        }
+
+        /// <summary>
         /// Calculates the CPU usage in a background thread
         /// </summary>
-        public class CpuPerformance : IDisposable
+        private class CpuPerformance : IDisposable
         {
             private readonly CancellationTokenSource _cancellationToken;
             private readonly Thread _cpuThread;
@@ -161,7 +187,7 @@ namespace QuantConnect
             public CpuPerformance()
             {
                 _cancellationToken = new CancellationTokenSource();
-                _cpuThread = new Thread(() => CalculateCpu()) {  IsBackground = true, Name = "CpuPerformance" };
+                _cpuThread = new Thread(CalculateCpu) { IsBackground = true, Name = "CpuPerformance" };
                 _cpuThread.Start();
             }
 
