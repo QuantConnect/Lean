@@ -68,16 +68,16 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(HandlingData)]
         public void OnEndOfTimeStep()
         {
-            if (_pendingUniverseAdditions.Count + _pendingUserDefinedUniverseSecurityAdditions.Count == 0)
-            {
-                // no point in looping through everything if there's no pending changes
-                return;
-            }
-
-            var requiredHistoryRequests = new Dictionary<Security, Resolution>();
             // rewrite securities w/ derivatives to be in raw mode
             lock (_pendingUniverseAdditionsLock)
             {
+                if (_pendingUniverseAdditions.Count + _pendingUserDefinedUniverseSecurityAdditions.Count == 0)
+                {
+                    // no point in looping through everything if there's no pending changes
+                    return;
+                }
+
+                var requiredHistoryRequests = new Dictionary<Security, Resolution>();
 
                 foreach (var security in Securities.Select(kvp => kvp.Value).Union(
                     _pendingUserDefinedUniverseSecurityAdditions.Select(x => x.Security)))
@@ -204,10 +204,13 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Universes)]
         public Universe AddUniverse(Universe universe)
         {
-            // The universe will be added at the end of time step, same as the AddData user defined universes.
-            // This is required to be independent of the start and end date set during initialize
-            _pendingUniverseAdditions.Add(universe);
-            _userAddedUniverses.Add(universe.Configuration.Symbol);
+            lock (_pendingUniverseAdditionsLock)
+            {
+                // The universe will be added at the end of time step, same as the AddData user defined universes.
+                // This is required to be independent of the start and end date set during initialize
+                _pendingUniverseAdditions.Add(universe);
+                _userAddedUniverses.Add(universe.Configuration.Symbol);
+            }
             return universe;
         }
 
@@ -505,25 +508,28 @@ namespace QuantConnect.Algorithm
              Universe universe;
              if (!UniverseManager.TryGetValue(underlyingSymbol, out universe))
              {
-                 // The universe might be already added, but not registered with the UniverseManager.
-                 universe = _pendingUniverseAdditions.SingleOrDefault(u => u.Configuration.Symbol == underlyingSymbol);
-                 if (universe == null)
-                 {
-                     underlyingSymbol = AddSecurity(underlyingSymbol).Symbol;
-                 }
+                lock(_pendingUniverseAdditionsLock)
+                {
+                    // The universe might be already added, but not registered with the UniverseManager.
+                    universe = _pendingUniverseAdditions.SingleOrDefault(u => u.Configuration.Symbol == underlyingSymbol);
+                    if (universe == null)
+                    {
+                    underlyingSymbol = AddSecurity(underlyingSymbol).Symbol;
+                    }
 
-                 // Recheck again, we should have a universe addition pending for the provided Symbol
-                 universe = _pendingUniverseAdditions.SingleOrDefault(u => u.Configuration.Symbol == underlyingSymbol);
-                 if (universe == null)
-                 {
-                     // Should never happen, but it could be that the subscription
-                     // created with AddSecurity is not aligned with the Symbol we're using.
-                     throw new InvalidOperationException($"Universe not found for underlying Symbol: {underlyingSymbol}.");
-                 }
-             }
+                    // Recheck again, we should have a universe addition pending for the provided Symbol
+                    universe = _pendingUniverseAdditions.SingleOrDefault(u => u.Configuration.Symbol == underlyingSymbol);
+                }
+                if (universe == null)
+                {
+                    // Should never happen, but it could be that the subscription
+                    // created with AddSecurity is not aligned with the Symbol we're using.
+                    throw new InvalidOperationException($"Universe not found for underlying Symbol: {underlyingSymbol}.");
+                }
+            }
 
-             // Allow all option contracts through without filtering if we're provided a null filter.
-             AddUniverseOptions(universe, optionFilter ?? (_ => _));
+            // Allow all option contracts through without filtering if we're provided a null filter.
+            AddUniverseOptions(universe, optionFilter ?? (_ => _));
         }
 
         /// <summary>
