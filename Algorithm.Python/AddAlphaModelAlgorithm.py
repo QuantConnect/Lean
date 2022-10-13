@@ -18,7 +18,7 @@ from AlgorithmImports import *
 ### </summary>
 class AddAlphaModelAlgorithm(QCAlgorithm):
     def Initialize(self):
-        ''' Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
+        ''' Initialize the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
         self.SetStartDate(2013,10,7)   #Set Start Date
         self.SetEndDate(2013,10,11)    #Set End Date
