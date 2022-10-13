@@ -27,13 +27,13 @@ Before anything we need to ensure a few things have been done for either option:
 
 2. Get [Docker](https://docs.docker.com/get-docker/):
     - Follow the instructions for your Operating System
-    - New to Docker? Try docker getting-started
+    - New to Docker? Try [docker getting-started](https://docs.docker.com/get-started/)
 
 3. Pull Lean’s latest research image from a terminal
     - _docker pull quantconnect/research:latest_
 
 4. Get Lean into VS Code
-    - Download the repo or clone it using: _git clone[https://github.com/QuantConnect/Lean](https://github.com/QuantConnect/Lean)_
+    - Download the repo or clone it using: git clone [https://github.com/QuantConnect/Lean](https://github.com/QuantConnect/Lean)
     - Open the folder using VS Code
 
 5. Open Development Container
@@ -45,7 +45,7 @@ Before anything we need to ensure a few things have been done for either option:
         - Ctrl+Shift+P (Command Palette) and select "Remote-Containers: Rebuild and Reopen in Container"
 
 You should now be in the development container, give VS Code a moment to prepare and you will be ready to go!
-If you would like to mount any additional local files to your container, checkout devcontainer.json "mounts" section for an example! Upon any mount changes you must rebuild the container using Command Palette as in step 5.
+If you would like to mount any additional local files to your container, checkout [devcontainer.json "mounts" section](https://containers.dev/implementors/json_reference/) for an example! Upon any mount changes you must rebuild the container using Command Palette as in step 5.
 
 <br />
 
@@ -106,7 +106,6 @@ In VS Code run build task (Ctrl+Shift+B or "Terminal" dropdown); there are a few
 
 - __Build__ - basic build task, just builds Lean once
 - __Rebuild__ - rebuild task, completely rebuilds the project. Use if having issues with debugging symbols being loaded for your algorithms.
-- __Autobuilder__ - Starts a script that builds then waits for files to change and rebuilds appropriately
 - __Clean__ - deletes out all project build files
 
 <br />
@@ -156,5 +155,7 @@ _Figure 2: Python Debugger Messages_
 <h1>Common Issues</h1>
 Here we will cover some common issues with setting this up. This section will expand as we get user feedback!
 
+- The "project file cannot be loaded" and "nuget packages not found" errors occurs when the project files are open by another process in the host. Closing all applications and/or restarting the computer solve the issue.
+- Syntax error in `launch_research.sh` due to line endings. Open this file and [change the line endings to LF](https://dev.to/wagslane/how-to-get-consistent-line-breaks-in-vs-code-lf-vs-crlf-2c3p).
 - Autocomplete and reference finding with omnisharp can sometimes bug, if this occurs use the command palette to restart omnisharp. (Ctrl+Shift+P "OmniSharp: Restart OmniSharp")
 - Any error messages about building in VSCode that point to comments in JSON. Either select **ignore** or follow steps described [here](https://stackoverflow.com/questions/47834825/in-vs-code-disable-error-comments-are-not-permitted-in-json) to remove the errors entirely.

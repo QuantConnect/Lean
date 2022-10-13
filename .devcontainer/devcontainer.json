@@ -4,8 +4,8 @@
 	"workspaceMount": "source=${localWorkspaceFolder},target=/Lean,type=bind",
 	"workspaceFolder": "/Lean",
 
-	// Use Lean Latest image
-	"image": "quantconnect/research:latest",
+	// Use devcontainer Dockerfile that is based on Lean foundation image
+	"build": { "dockerfile": "Dockerfile" },
 	
 	// Set *default* container specific settings.json values on container create.
 	"settings": { 

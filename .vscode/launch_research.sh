@@ -27,25 +27,8 @@ if [ ! -d "$NOTEBOOK_DIR" ]; then
     mkdir $NOTEBOOK_DIR
 fi
 
-# If the config doesn't exist, create it
-CONFIG=$NOTEBOOK_DIR/config.json
-if [ ! -f "$CONFIG" ]; then
-    echo "Creating research config at $CONFIG"
-    echo "{
-    \"data-folder\": \"${DATA_DIR}\",
-    \"composer-dll-directory\": \"${BUILD_DIR}\",
-    \"algorithm-language\": \"Python\",
-    \"messaging-handler\": \"QuantConnect.Messaging.Messaging\",
-    \"job-queue-handler\": \"QuantConnect.Queues.JobQueue\",
-    \"api-handler\": \"QuantConnect.Api.Api\",
-    \"job-user-id\": \"0\",
-    \"api-access-token\": \"\",
-    }" > $CONFIG
-fi
-
-# Use our startup script for jupyter, needed to set runtime properly
-mkdir -p /root/.ipython/profile_default/startup/ && \
-ln -s /Lean/Launcher/bin/Debug/start.py /root/.ipython/profile_default/startup/start.py
+# Copy config.json to notebook directory
+cp -n $BUILD_DIR/config.json $NOTEBOOK_DIR/config.json
 
 # Copy over any notebooks from build directory to notebook directory
 RESEARCH_FILES=$BUILD_DIR/*.ipynb
