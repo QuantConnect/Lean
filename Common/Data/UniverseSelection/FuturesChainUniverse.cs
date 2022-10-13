@@ -87,41 +87,6 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
-        /// Determines whether or not the specified security can be removed from
-        /// this universe. This is useful to prevent securities from being taken
-        /// out of a universe before the algorithm has had enough time to make
-        /// decisions on the security
-        /// </summary>
-        /// <param name="utcTime">The current utc time</param>
-        /// <param name="security">The security to check if its ok to remove</param>
-        /// <returns>True if we can remove the security, false otherwise</returns>
-        public override bool CanRemoveMember(DateTime utcTime, Security security)
-        {
-            // can always remove securities after dispose requested
-            if (DisposeRequested)
-            {
-                return true;
-            }
-
-            // if we haven't begun receiving data for this security then it's safe to remove
-            var lastData = security.Cache.GetData();
-            if (lastData == null)
-            {
-                return true;
-            }
-
-            // only remove members on day changes, this prevents us from needing to
-            // fast forward contracts continuously as price moves and out filtered
-            // contracts change thoughout the day
-            var localTime = utcTime.ConvertFromUtc(security.Exchange.TimeZone);
-            if (localTime.Date != lastData.Time.Date)
-            {
-                return true;
-            }
-            return false;
-        }
-
-        /// <summary>
         /// Gets the subscription requests to be added for the specified security
         /// </summary>
         /// <param name="security">The security to get subscriptions for</param>

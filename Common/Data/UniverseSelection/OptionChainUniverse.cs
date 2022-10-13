@@ -15,10 +15,10 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using System.Collections.Generic;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Data.UniverseSelection
@@ -37,7 +37,6 @@ namespace QuantConnect.Data.UniverseSelection
         private DateTime _lastExchangeDate;
 
         // used for time-based removals in live mode
-        private readonly TimeSpan _minimumTimeInUniverse = TimeSpan.FromMinutes(15);
         private readonly Dictionary<Symbol, DateTime> _addTimesBySymbol = new Dictionary<Symbol, DateTime>();
 
         /// <summary>
@@ -140,62 +139,6 @@ namespace QuantConnect.Data.UniverseSelection
             }
 
             return added;
-        }
-
-        /// <summary>
-        /// Determines whether or not the specified security can be removed from
-        /// this universe. This is useful to prevent securities from being taken
-        /// out of a universe before the algorithm has had enough time to make
-        /// decisions on the security
-        /// </summary>
-        /// <param name="utcTime">The current utc time</param>
-        /// <param name="security">The security to check if its ok to remove</param>
-        /// <returns>True if we can remove the security, false otherwise</returns>
-        public override bool CanRemoveMember(DateTime utcTime, Security security)
-        {
-            // can always remove securities after dispose requested
-            if (DisposeRequested)
-            {
-                return true;
-            }
-
-            // if we haven't begun receiving data for this security then it's safe to remove
-            var lastData = security.Cache.GetData();
-            if (lastData == null)
-            {
-                return true;
-            }
-
-            if (_liveMode)
-            {
-                // Only remove members when they have been in the universe for a minimum period of time.
-                // This prevents us from needing to move contracts in and out too fast,
-                // as price moves and filtered contracts change throughout the day.
-                DateTime timeAdded;
-
-                // get the date/time this symbol was added to the universe
-                if (!_addTimesBySymbol.TryGetValue(security.Symbol, out timeAdded))
-                {
-                    return true;
-                }
-
-                if (timeAdded.Add(_minimumTimeInUniverse) > utcTime)
-                {
-                    // minimum time span not yet elapsed, do not remove
-                    return false;
-                }
-
-                // ok to remove
-                _addTimesBySymbol.Remove(security.Symbol);
-
-                return true;
-            }
-
-            // only remove members on day changes, this prevents us from needing to
-            // fast forward contracts continuously as price moves and out filtered
-            // contracts change throughout the day
-            var localTime = utcTime.ConvertFromUtc(security.Exchange.TimeZone);
-            return localTime.Date != lastData.Time.Date;
         }
 
         /// <summary>

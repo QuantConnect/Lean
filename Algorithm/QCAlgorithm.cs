@@ -1712,7 +1712,7 @@ namespace QuantConnect.Algorithm
                 if (!UniverseManager.TryGetValue(symbol, out universe) && !IsAlreadyPending(symbol))
                 {
                     var canonicalConfig = configs.First();
-                    var settings = new UniverseSettings(canonicalConfig.Resolution, leverage, fillDataForward, extendedMarketHours, TimeSpan.Zero);
+                    var settings = new UniverseSettings(canonicalConfig.Resolution, leverage, fillDataForward, extendedMarketHours, UniverseSettings.MinimumTimeInUniverse);
                     if (symbol.SecurityType.IsOption())
                     {
                         universe = new OptionChainUniverse((Option)security, settings, LiveMode);
