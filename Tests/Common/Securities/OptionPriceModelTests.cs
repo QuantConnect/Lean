@@ -26,7 +26,6 @@ using Moq;
 using QLNet;
 using Cash = QuantConnect.Securities.Cash;
 using Option = QuantConnect.Securities.Option.Option;
-using Log = QuantConnect.Logging.Log;
 
 namespace QuantConnect.Tests.Common
 {
@@ -68,7 +67,96 @@ namespace QuantConnect.Tests.Common
             var rightPart = putPrice + underlyingPrice; // no yield
             var leftPart = callPrice + contractCall.Strike * (decimal)Math.Exp((double)-riskFreeRate);
 
-            Assert.AreEqual((double)leftPart, (double)rightPart, 0.0001);
+            Assert.AreEqual((double)leftPart, (double)rightPart, (double)rightPart * 0.001);
+        }
+
+        [Test]
+        public void ExpirationDate()
+        {
+            const decimal price = 20.00m;
+            const decimal underlyingPrice = 200m;
+            const decimal underlyingVol = 0.15m;
+            var tz = TimeZones.NewYork;
+            var spy = Symbols.SPY;
+            var SPY_C_192_Feb19_2016E = GetOptionSymbol(spy, OptionStyle.European, OptionRight.Call);
+
+            // setting up underlying
+            var equity = GetEquity(spy, underlyingPrice, underlyingVol, tz);
+
+            // setting up European style call option
+            var contract = GetOptionContract(SPY_C_192_Feb19_2016E, spy, DateTime.MinValue);
+            var optionCall = GetOption(SPY_C_192_Feb19_2016E, equity, tz);
+            optionCall.SetMarketPrice(new Tick { Value = price });
+
+            // running evaluation
+            var priceModel = OptionPriceModels.BlackScholes();
+
+            OptionPriceModelResult results;
+            foreach (var date in new[] { optionCall.Expiry.AddDays(-1), optionCall.Expiry })
+            {
+                contract.Time = date;
+                results = priceModel.Evaluate(optionCall, null, contract);
+
+                Assert.AreNotEqual(0, results.TheoreticalPrice);
+                Assert.AreNotEqual(0, results.Greeks.Gamma);
+                Assert.AreNotEqual(0, results.Greeks.Vega);
+                Assert.AreNotEqual(0, results.Greeks.Delta);
+                Assert.AreNotEqual(0, results.Greeks.Lambda);
+                Assert.AreNotEqual(0, results.Greeks.Theta);
+            }
+
+            // and post expiration they are 0
+            contract.Time = optionCall.Expiry.AddDays(1);
+            results = priceModel.Evaluate(optionCall, null, contract);
+
+            Assert.AreEqual(0, results.TheoreticalPrice);
+            Assert.AreEqual(0, results.Greeks.Gamma);
+            Assert.AreEqual(0, results.Greeks.Vega);
+            Assert.AreEqual(0, results.Greeks.Delta);
+            Assert.AreEqual(0, results.Greeks.Lambda);
+            Assert.AreEqual(0, results.Greeks.Theta);
+        }
+
+        [Test]
+        public void ChangesWithEvaluationDate()
+        {
+            const decimal price = 20.00m;
+            const decimal underlyingPrice = 200m;
+            const decimal underlyingVol = 0.15m;
+             var tz = TimeZones.NewYork;
+            var spy = Symbols.SPY;
+            var SPY_C_192_Feb19_2016E = GetOptionSymbol(spy, OptionStyle.European, OptionRight.Call);
+
+            // setting up underlying
+            var equity = GetEquity(spy, underlyingPrice, underlyingVol, tz);
+
+            // setting up European style call option
+            var contract = GetOptionContract(SPY_C_192_Feb19_2016E, spy, DateTime.MinValue);
+            var optionCall = GetOption(SPY_C_192_Feb19_2016E, equity, tz);
+            optionCall.SetMarketPrice(new Tick { Value = price });
+
+            // running evaluation
+            var priceModel = OptionPriceModels.BlackScholes();
+
+            contract.Time = new DateTime(2015, 02, 19);
+            var results1 = priceModel.Evaluate(optionCall, null, contract);
+            // we need to get the greeks else they will calculated bellow after we change the static evaluation date
+            var gamma = results1.Greeks.Gamma;
+            var delta = results1.Greeks.Delta;
+            var vega = results1.Greeks.Delta;
+            var lambda = results1.Greeks.Lambda;
+            var theta = results1.Greeks.Theta;
+
+            contract.Time = new DateTime(2015, 12, 4);
+            var results2 = priceModel.Evaluate(optionCall, null, contract);
+
+            Assert.AreNotEqual(results1.TheoreticalPrice, results2.TheoreticalPrice);
+
+            Assert.AreNotEqual(gamma, results2.Greeks.Gamma);
+            Assert.AreNotEqual(vega, results2.Greeks.Vega);
+            Assert.AreNotEqual(delta, results2.Greeks.Delta);
+            Assert.AreNotEqual(lambda, results2.Greeks.Lambda);
+            Assert.AreNotEqual(theta, results2.Greeks.Theta);
         }
 
         [Test]

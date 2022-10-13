@@ -14,11 +14,11 @@
  *
 */
 
+using QLNet;
 using System;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QLNet;
 
 namespace QuantConnect.Securities.Option
 {
@@ -82,12 +82,6 @@ namespace QuantConnect.Securities.Option
             _dividendYieldEstimator = dividendYieldEstimator ?? new ConstantQLDividendYieldEstimator();
 
             AllowedOptionStyles = allowedOptionStyles ?? _defaultAllowedOptionStyles;
-
-            // Required for QL to consider the option as not expired on the expiration date.
-            // This is done in the constructor instead of a static contructor because QLNet.Settings attributes are ThreadStatic,
-            // so doing it in a static constructor would only set it for the first thread that instantiates QLOptionPriceModel or
-            // accesses any of its static members.
-            QLNet.Settings.includeReferenceDateEvents = true;
         }
 
         /// <summary>
@@ -121,6 +115,9 @@ namespace QuantConnect.Securities.Option
 
                 var securityExchangeHours = security.Exchange.Hours;
                 var settlementDate = AddDays(contract.Time.Date, Option.DefaultSettlementDays, securityExchangeHours);
+                var evaluationDate = contract.Time.Date;
+                // TODO: static variable
+                Settings.setEvaluationDate(evaluationDate);
                 var maturityDate = AddDays(contract.Expiry.Date, Option.DefaultSettlementDays, securityExchangeHours);
                 var underlyingQuoteValue = new SimpleQuote((double)optionSecurity.Underlying.Price);
 
@@ -147,7 +144,6 @@ namespace QuantConnect.Securities.Option
                             new VanillaOption(payoff, new AmericanExercise(settlementDate, maturityDate)) :
                             new VanillaOption(payoff, new EuropeanExercise(maturityDate));
 
-                QLNet.Settings.setEvaluationDate(settlementDate);
 
                 // preparing pricing engine QL object
                 option.setPricingEngine(_pricingEngineFunc(contract.Symbol, stochasticProcess));
@@ -204,8 +200,17 @@ namespace QuantConnect.Securities.Option
                             var npvPlus = EvaluateOption(option);
                             underlyingQuoteValue.setValue(initial);
 
-                            return Tuple.Create((decimal)((npvPlus - npvMinus) / (2 * step)),
-                                                (decimal)((npvPlus - 2 * npv + npvMinus) / (step * step)));
+                            var delta = (decimal)((npvPlus - npvMinus) / (2 * step));
+                            // because we are using floating point, there is a chance that some decimals get above or bellow absolute '1'
+                            if(delta > 1)
+                            {
+                                delta = 1;
+                            }
+                            else if(delta < -1)
+                            {
+                                delta = -1;
+                            }
+                            return Tuple.Create(delta, (decimal)((npvPlus - 2 * npv + npvMinus) / (step * step)));
                         }
                         else
                             return Tuple.Create(0.0m, 0.0m);
@@ -227,9 +232,10 @@ namespace QuantConnect.Securities.Option
                 {
                     var step = 1.0 / 365.0;
 
-                    Settings.setEvaluationDate(security.Exchange.Hours.GetPreviousTradingDay(settlementDate));
+                    // we get the previous trading date of the 'evaluation date' so we can infer the theta from the (option nvp price variation) / (time)
+                    Settings.setEvaluationDate(security.Exchange.Hours.GetPreviousTradingDay(evaluationDate));
                     var npvMinus = EvaluateOption(option);
-                    QLNet.Settings.setEvaluationDate(settlementDate);
+                    Settings.setEvaluationDate(evaluationDate);
 
                     return (npv - npvMinus) / step;
                 };
