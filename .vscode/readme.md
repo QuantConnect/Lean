@@ -30,10 +30,10 @@ Before anything we need to ensure a few things have been done for either option:
     - New to Docker? Try [docker getting-started](https://docs.docker.com/get-started/)
 
 3. Pull Lean’s latest research image from a terminal
-    - _docker pull quantconnect/research:latest_
+    - `docker pull quantconnect/research:latest`
 
 4. Get Lean into VS Code
-    - Download the repo or clone it using: git clone [https://github.com/QuantConnect/Lean](https://github.com/QuantConnect/Lean)
+    - Download the repo or clone it using: `git clone [https://github.com/QuantConnect/Lean](https://github.com/QuantConnect/Lean)`
     - Open the folder using VS Code
 
 5. Open Development Container
@@ -61,7 +61,7 @@ If you would like to mount any additional local files to your container, checkou
     - Get the Extension [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python) for Python Debugging
 
 4. Get Lean into VS Code
-    - Download the repo or clone it using: _git clone [https://github.com/QuantConnect/Lean](https://github.com/QuantConnect/Lean)_
+    - Download the repo or clone it using: `git clone [https://github.com/QuantConnect/Lean](https://github.com/QuantConnect/Lean)`
     - Open the folder using VS Code
 
 Your environment is prepared and ready to run Lean.
@@ -156,6 +156,5 @@ _Figure 2: Python Debugger Messages_
 Here we will cover some common issues with setting this up. This section will expand as we get user feedback!
 
 - The "project file cannot be loaded" and "nuget packages not found" errors occurs when the project files are open by another process in the host. Closing all applications and/or restarting the computer solve the issue.
-- Syntax error in `launch_research.sh` due to line endings. Open this file and [change the line endings to LF](https://dev.to/wagslane/how-to-get-consistent-line-breaks-in-vs-code-lf-vs-crlf-2c3p).
 - Autocomplete and reference finding with omnisharp can sometimes bug, if this occurs use the command palette to restart omnisharp. (Ctrl+Shift+P "OmniSharp: Restart OmniSharp")
 - Any error messages about building in VSCode that point to comments in JSON. Either select **ignore** or follow steps described [here](https://stackoverflow.com/questions/47834825/in-vs-code-disable-error-comments-are-not-permitted-in-json) to remove the errors entirely.
