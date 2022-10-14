@@ -19,30 +19,33 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm asserting the behavior of option warmup
+    /// Regression algorithm asserting the behavior of a zero time in universe setting. Related to GH issue #6653
     /// </summary>
-    public class WarmupOptionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class OptionNoTimeInUniverseRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const string UnderlyingTicker = "GOOG";
         private Symbol _optionSymbol;
-
-        protected List<DateTime> OptionWarmupTimes { get; } = new();
 
         public override void Initialize()
         {
             SetStartDate(2015, 12, 24);
             SetEndDate(2015, 12, 24);
-            SetCash(100000);
+
+            UniverseSettings.MinimumTimeInUniverse = TimeSpan.Zero;
 
             var option = AddOption(UnderlyingTicker);
             _optionSymbol = option.Symbol;
 
-            option.SetFilter(u => u.Strikes(-5, +5).Expiration(0, 180).IncludeWeeklys());
-            SetWarmUp(TimeSpan.FromDays(1));
+            // set our strike/expiry filter for this option chain
+            option.SetFilter(u => u.Strikes(-1, +1)
+                                   // Expiration method accepts TimeSpan objects or integer for days.
+                                   // The following statements yield the same filtering criteria
+                                   .Expiration(0, 60));
         }
 
         /// <summary>
@@ -51,53 +54,17 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">The current slice of data keyed by symbol string</param>
         public override void OnData(Slice slice)
         {
-            if (slice.OptionChains.TryGetValue(_optionSymbol, out var chain))
-            {
-                // we find at the money (ATM) put contract with farthest expiration
-                var atmContract = chain
-                    .OrderByDescending(x => x.Expiry)
-                    .ThenBy(x => Math.Abs(chain.Underlying.Price - x.Strike))
-                    .ThenByDescending(x => x.Right)
-                    .FirstOrDefault();
+            var optionContracts = slice.OptionChains.GetValue(_optionSymbol);
+            var underlyingPrice = Securities[_optionSymbol.Underlying].Price;
+            var strikes = optionContracts.Select(o => o.Strike)
+                // when the strike matches the underlying price it's not taken into account in the +1 -1 range
+                .Where(strike => strike != underlyingPrice)
+                .ToHashSet();
 
-                if (atmContract != null)
-                {
-                    // during warmup, using daily resolution (with the same TZ as the algorithm) the last bar.EndTime of warmup
-                    // overlaps with the algorithm start time, considered not to be in warmup anymore.
-                    // This bar would also be emitted by lean if no warmup was set and daily resolution used, see 'BasicTemplateDailyAlgorithm'
-                    if (Time <= StartDate)
-                    {
-                        if(atmContract.LastPrice == 0)
-                        {
-                            throw new Exception("Contract price is not set!");
-                        }
-                        OptionWarmupTimes.Add(Time);
-                    }
-                    else if (!Portfolio.Invested && IsMarketOpen(_optionSymbol))
-                    {
-                        // if found, trade it
-                        MarketOrder(atmContract.Symbol, 1);
-                        MarketOnCloseOrder(atmContract.Symbol, -1);
-                    }
-                }
-            }
-        }
-
-        public override void OnEndOfAlgorithm()
-        {
-            var start = new DateTime(2015, 12, 23, 9, 31, 0);
-            var end = new DateTime(2015, 12, 23, 16, 0, 0);
-            var count = 0;
-            do
+            if (strikes.Count > 2)
             {
-                if (OptionWarmupTimes[count] != start)
-                {
-                    throw new Exception($"Unexpected time {OptionWarmupTimes[count]} expected {start}");
-                }
-                count++;
-                start = start.AddMinutes(1);
+                throw new Exception($"At {Time} found {strikes.Count}. Underlying: {underlyingPrice}. Strikes: [{string.Join(",", strikes)}]");
             }
-            while (start < end);
         }
 
         /// <summary>
@@ -113,7 +80,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 1111432;
+        public long DataPoints => 869264;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -123,9 +90,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "2"},
+            {"Total Trades", "0"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
@@ -144,14 +111,14 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$1300000.00"},
-            {"Lowest Capacity Asset", "GOOCV 30AKMEIPOSS1Y|GOOCV VP83T1ZUHROL"},
+            {"Total Fees", "$0.00"},
+            {"Estimated Strategy Capacity", "$0"},
+            {"Lowest Capacity Asset", ""},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
+            {"Sortino Ratio", "0"},
+            {"Return Over Maximum Drawdown", "0"},
             {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -166,7 +133,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "9d9f9248ee8fe30d87ff0a6f6fea5112"}
+            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
         };
     }
 }

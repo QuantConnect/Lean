@@ -3518,7 +3518,7 @@ namespace QuantConnect
             // force option chain security to not be directly tradable AFTER it's configured to ensure it's not overwritten
             optionChain.IsTradable = false;
 
-            return new OptionChainUniverse(optionChain, settings, algorithm.LiveMode);
+            return new OptionChainUniverse(optionChain, settings);
         }
 
         /// <summary>
