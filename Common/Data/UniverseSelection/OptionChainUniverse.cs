@@ -30,30 +30,23 @@ namespace QuantConnect.Data.UniverseSelection
     {
         private readonly OptionFilterUniverse _optionFilterUniverse;
         private readonly UniverseSettings _universeSettings;
-        private readonly bool _liveMode;
         // as an array to make it easy to prepend to selected symbols
         private readonly Symbol[] _underlyingSymbol;
         private DateTime _cacheDate;
         private DateTime _lastExchangeDate;
-
-        // used for time-based removals in live mode
-        private readonly Dictionary<Symbol, DateTime> _addTimesBySymbol = new Dictionary<Symbol, DateTime>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OptionChainUniverse"/> class
         /// </summary>
         /// <param name="option">The canonical option chain security</param>
         /// <param name="universeSettings">The universe settings to be used for new subscriptions</param>
-        /// <param name="liveMode">True if we're running in live mode, false for backtest mode</param>
         public OptionChainUniverse(Option option,
-            UniverseSettings universeSettings,
-            bool liveMode)
+            UniverseSettings universeSettings)
             : base(option.SubscriptionDataConfig)
         {
             Option = option;
             _underlyingSymbol = new[] { Option.Symbol.Underlying };
             _universeSettings = new UniverseSettings(universeSettings) { DataNormalizationMode = DataNormalizationMode.Raw };
-            _liveMode = liveMode;
             _optionFilterUniverse = new OptionFilterUniverse();
         }
 
@@ -131,14 +124,7 @@ namespace QuantConnect.Data.UniverseSelection
                 Securities.TryRemove(security.Symbol, out member);
             }
 
-            var added = Securities.TryAdd(security.Symbol, new Member(utcTime, security, isInternal));
-
-            if (added && _liveMode)
-            {
-                _addTimesBySymbol[security.Symbol] = utcTime;
-            }
-
-            return added;
+            return Securities.TryAdd(security.Symbol, new Member(utcTime, security, isInternal));
         }
 
         /// <summary>

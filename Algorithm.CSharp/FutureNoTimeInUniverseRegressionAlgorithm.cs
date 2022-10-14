@@ -71,7 +71,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
             var futureSymbols = futureContracts.Select(future => future.Symbol).ToHashSet();
 
-            if (futureSymbols.Count > 2)
+            if (futureSymbols.Count > 1)
             {
                 throw new Exception($"At {Time} found {futureSymbols.Count}. Future symbols: [{string.Join(",", futureSymbols)}]");
             }

@@ -1715,7 +1715,7 @@ namespace QuantConnect.Algorithm
                     var settings = new UniverseSettings(canonicalConfig.Resolution, leverage, fillDataForward, extendedMarketHours, UniverseSettings.MinimumTimeInUniverse);
                     if (symbol.SecurityType.IsOption())
                     {
-                        universe = new OptionChainUniverse((Option)security, settings, LiveMode);
+                        universe = new OptionChainUniverse((Option)security, settings);
                     }
                     else
                     {
