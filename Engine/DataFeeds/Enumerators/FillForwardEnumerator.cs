@@ -183,13 +183,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             }
 
             var underlyingCurrent = _enumerator.Current;
-            if (_previous == null)
-            {
-                // first data point we dutifully emit without modification
-                Current = underlyingCurrent;
-                return true;
-            }
-
             if (underlyingCurrent != null && underlyingCurrent.DataType == MarketDataType.Auxiliary)
             {
                 var delisting = underlyingCurrent as Delisting;
@@ -197,6 +190,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 {
                     _delistedTime = delisting.EndTime;
                 }
+            }
+
+            if (_previous == null)
+            {
+                // first data point we dutifully emit without modification
+                Current = underlyingCurrent;
+                return true;
             }
 
             if (RequiresFillForwardData(_fillForwardResolution.Value, _previous, underlyingCurrent, out fillForward))
