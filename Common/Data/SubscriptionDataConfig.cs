@@ -136,6 +136,12 @@ namespace QuantConnect.Data
             set
             {
                 var oldMappedValue = MappedSymbol;
+                if(ContractDepthOffset == 0 && oldMappedValue == value)
+                {
+                    // Do less if we can.
+                    // We can only do this for sure if 'ContractDepthOffset' is 0 else the value we got might be outdated and will change bellow
+                    return;
+                }
                 var oldSymbol = Symbol;
                 Symbol = Symbol.UpdateMappedSymbol(value, ContractDepthOffset);
 

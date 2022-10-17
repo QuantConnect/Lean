@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -215,14 +215,19 @@ namespace QuantConnect.Data.Auxiliary
         /// <returns>An enumerable of all map files</returns>
         public static IEnumerable<MapFile> GetMapFiles(string mapFileDirectory, string market, SecurityType securityType, IDataProvider dataProvider)
         {
-            var mapFiles = new ConcurrentBag<MapFile>();
+            var mapFiles = new List<MapFile>();
             Parallel.ForEach(Directory.EnumerateFiles(mapFileDirectory), file =>
             {
                 if (file.EndsWith(".csv"))
                 {
                     var permtick = Path.GetFileNameWithoutExtension(file);
                     var fileRead = SafeMapFileRowRead(file, market, securityType, dataProvider);
-                    mapFiles.Add(new MapFile(permtick, fileRead));
+                    var mapFile = new MapFile(permtick, fileRead);
+                    lock (mapFiles)
+                    {
+                        // just use a list + lock, not concurrent bag, avoid garbage it creates for features we don't need here. See https://github.com/dotnet/runtime/issues/23103
+                        mapFiles.Add(mapFile);
+                    }
                 }
             });
             return mapFiles;
