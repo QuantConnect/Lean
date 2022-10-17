@@ -102,6 +102,13 @@ namespace QuantConnect.Statistics
         public decimal ProbabilisticSharpeRatio { get; set; }
 
         /// <summary>
+        /// Sortino ratio with respect to risk free rate: measures excess of return per unit of downside risk.
+        /// </summary>
+        /// <remarks>With risk defined as the algorithm's volatility</remarks>
+        [JsonConverter(typeof(JsonRoundingConverter))]
+        public decimal SortinoRatio { get; set; }
+
+        /// <summary>
         /// Algorithm "Alpha" statistic - abnormal returns over the risk free rate and the relationshio (beta) with the benchmark returns.
         /// </summary>
         [JsonConverter(typeof(JsonRoundingConverter))]
@@ -251,6 +258,10 @@ namespace QuantConnect.Statistics
             var riskFreeRate = riskFreeInterestRateModel.GetAverageRiskFreeRate(equity.Select(x => x.Key));
             SharpeRatio = AnnualStandardDeviation == 0 ? 0 : (annualPerformance - riskFreeRate) / AnnualStandardDeviation;
 
+            var annualDownsideVariance = GetAnnualDownsideVariance(listPerformance, tradingDaysPerYear);
+            var annualDownsideDeviation = (decimal)Math.Sqrt((double)annualDownsideVariance);
+            SortinoRatio = annualDownsideDeviation == 0 ? 0 : (annualPerformance - riskFreeRate) / annualDownsideDeviation;
+
             var benchmarkVariance = listBenchmark.Variance();
             Beta = benchmarkVariance.IsNaNOrZero() ? 0 : (decimal) (listPerformance.Covariance(listBenchmark) / benchmarkVariance);
 
@@ -319,6 +330,19 @@ namespace QuantConnect.Statistics
         {
             var variance = performance.Variance();
             return variance.IsNaNOrZero() ? 0 : (decimal)variance * tradingDaysPerYear;
+        }
+
+        /// <summary>
+        /// Annualized variance statistic calculation using the daily performance variance and trading days per year.
+        /// </summary>
+        /// <param name="performance"></param>
+        /// <param name="tradingDaysPerYear"></param>
+        /// <param name="minimumAcceptableReturn">Minimum acceptable return</param>
+        /// <remarks>Invokes the variance extension in the MathNet Statistics class</remarks>
+        /// <returns>Annual variance value</returns>
+        private static decimal GetAnnualDownsideVariance(List<double> performance, int tradingDaysPerYear = 252, double minimumAcceptableReturn = 0)
+        {
+            return GetAnnualVariance(performance.Where(ret => ret < minimumAcceptableReturn).ToList(), tradingDaysPerYear);
         }
     }
 }

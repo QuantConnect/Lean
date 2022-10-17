@@ -146,11 +146,24 @@ namespace QuantConnect.Statistics
         /// </summary>
         /// <remarks>With risk defined as the algorithm's volatility</remarks>
         /// <param name="algoPerformance">Collection of double values for the algorithm daily performance</param>
-        /// <param name="riskFreeRate"></param>
+        /// <param name="riskFreeRate">The risk free rate</param>
         /// <returns>Value for sharpe ratio</returns>
         public static double SharpeRatio(List<double> algoPerformance, double riskFreeRate)
         {
             return (AnnualPerformance(algoPerformance) - riskFreeRate) / (AnnualStandardDeviation(algoPerformance));
+        }
+
+        /// <summary>
+        /// Sortino ratio with respect to risk free rate: measures excess of return per unit of downside risk.
+        /// </summary>
+        /// <remarks>With risk defined as the algorithm's volatility</remarks>
+        /// <param name="algoPerformance">Collection of double values for the algorithm daily performance</param>
+        /// <param name="riskFreeRate">The risk free rate</param>
+        /// <param name="minimumAcceptableReturn">Minimum acceptable return for Sortino ratio calculation</param>
+        /// <returns>Value for Sortino ratio</returns>
+        public static double SortinoRatio(List<double> algoPerformance, double riskFreeRate, double minimumAcceptableReturn = 0)
+        {
+            return (AnnualPerformance(algoPerformance) - riskFreeRate) / (AnnualStandardDeviation(algoPerformance.Where(ret => ret < minimumAcceptableReturn).ToList()));
         }
 
         /// <summary>

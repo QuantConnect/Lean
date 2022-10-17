@@ -174,11 +174,12 @@ namespace QuantConnect.Api
                 { PerformanceMetrics.ProbabilisticSharpeRatio, jStatistics[13].Value<string>() },
                 { PerformanceMetrics.ProfitLossRatio, jStatistics[14].Value<string>() },
                 { PerformanceMetrics.SharpeRatio, jStatistics[15].Value<string>() },
-                { PerformanceMetrics.TotalFees, jStatistics[16].Value<string>() },
-                { PerformanceMetrics.TotalTrades, jStatistics[17].Value<string>() },
-                { PerformanceMetrics.TrackingError, jStatistics[18].Value<string>() },
-                { PerformanceMetrics.TreynorRatio, jStatistics[19].Value<string>() },
-                { PerformanceMetrics.WinRate, jStatistics[20].Value<string>() },
+                { PerformanceMetrics.SortinoRatio, jStatistics[16].Value<string>() },
+                { PerformanceMetrics.TotalFees, jStatistics[17].Value<string>() },
+                { PerformanceMetrics.TotalTrades, jStatistics[18].Value<string>() },
+                { PerformanceMetrics.TrackingError, jStatistics[19].Value<string>() },
+                { PerformanceMetrics.TreynorRatio, jStatistics[20].Value<string>() },
+                { PerformanceMetrics.WinRate, jStatistics[21].Value<string>() },
             };
 
             var parameterSet = serializer.Deserialize<ParameterSet>(jObject["parameterSet"].CreateReader());

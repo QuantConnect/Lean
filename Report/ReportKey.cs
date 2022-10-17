@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -33,6 +33,7 @@ namespace QuantConnect.Report
         public const string MaxDrawdown = @"{{$KPI-DRAWDOWN}}";
         public const string KellyEstimate = @"{{$KPI-KELLY-ESTIMATE}}";
         public const string SharpeRatio = @"{{$KPI-SHARPE}}";
+        public const string SortinoRatio = @"{{$KPI-SORTINO}}";
         public const string BacktestDays = @"{{$KPI-BACKTEST-DAYS}}";
         public const string DaysLive = @"{{$KPI-DAYS-LIVE}}";
         public const string InformationRatio = @"{{$KPI-INFORMATION-RATIO}}";
