@@ -98,6 +98,8 @@ namespace QuantConnect.Queues
         /// <returns></returns>
         public AlgorithmNodePacket NextJob(out string location)
         {
+            // Make sure all paths that may have been provider by the user are added before the algorithm location,
+            // so it has the highest priority
             PythonInitializer.ConfigurePythonPaths();
 
             location = GetAlgorithmLocation();

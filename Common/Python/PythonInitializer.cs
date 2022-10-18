@@ -22,6 +22,7 @@ using QuantConnect.Util;
 using QuantConnect.Logging;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
+using System.Collections.Concurrent;
 
 namespace QuantConnect.Python
 {
@@ -39,8 +40,13 @@ namespace QuantConnect.Python
         // Used to hold pending path additions before Initialize is called
         private static List<string> _pendingPathAdditions = new List<string>();
 
+        private static readonly ConcurrentQueue<Py.GILState> _threadsState = new();
+
         /// <summary>
-        /// Initialize python
+        /// Initialize python.
+        ///
+        /// See DebuggerHelper.DebugpyThreadInitialization doc for info on why we keep the GIL state
+        /// before calling BeginAllowThreads.
         /// </summary>
         public static void Initialize()
         {
@@ -50,11 +56,12 @@ namespace QuantConnect.Python
                 PythonEngine.Initialize();
 
                 // required for multi-threading usage
+                _threadsState.Enqueue(Py.GIL());
                 PythonEngine.BeginAllowThreads();
 
                 _isInitialized = true;
 
-                AddPythonPaths(new []{ Environment.CurrentDirectory });
+                ConfigurePythonPaths();
 
                 TryInitPythonVirtualEnvironment();
                 Log.Trace("PythonInitializer.Initialize(): ended");
@@ -97,7 +104,7 @@ namespace QuantConnect.Python
             }
 
             // Add these paths to our pending additions
-            _pendingPathAdditions.AddRange(paths);
+            _pendingPathAdditions.AddRange(paths.Where(x => !_pendingPathAdditions.Contains(x)));
 
             if (_isInitialized)
             {
@@ -189,6 +196,25 @@ namespace QuantConnect.Python
             return true;
         }
 
+        /// <summary>
+        /// Gets the python additional paths from the config and adds them to Python using the PythonInitializer
+        /// </summary>
+        public static void ConfigurePythonPaths()
+        {
+            var pythonAdditionalPaths = new List<string> { Environment.CurrentDirectory };
+            pythonAdditionalPaths.AddRange(Config.GetValue("python-additional-paths", Enumerable.Empty<string>()));
+            AddPythonPaths(pythonAdditionalPaths.Where(path =>
+            {
+                var pathExists = Directory.Exists(path);
+                if (!pathExists)
+                {
+                    Log.Error($"PythonInitializer.ConfigurePythonPaths(): Unable to find python path: {path}. Skipping.");
+                }
+
+                return pathExists;
+            }));
+        }
+
         private static void TryInitPythonVirtualEnvironment()
         {
             if (!_isInitialized || string.IsNullOrEmpty(PathToVirtualEnv))
@@ -243,26 +269,6 @@ namespace QuantConnect.Python
                         $" sys.path: [{string.Join(",", path)}]");
                 }
             }
-        }
-
-
-
-        /// <summary>
-        /// Gets the python additional paths from the config and adds them to Python using the PythonInitializer
-        /// </summary>
-        public static void ConfigurePythonPaths()
-        {
-            var pythonAdditionalPaths = Config.GetValue("python-additional-paths", Enumerable.Empty<string>());
-            AddPythonPaths(pythonAdditionalPaths.Where(path =>
-            {
-                var pathExists = Directory.Exists(path);
-                if (!pathExists)
-                {
-                    Log.Error($"JobQueue.ConfigurePythonPaths(): Unable to find python path: {path}. Skipping.");
-                }
-
-                return pathExists;
-            }));
         }
     }
 }
