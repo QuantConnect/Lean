@@ -23,9 +23,9 @@ from AlgorithmImports import *
 class CoarseFineFundamentalRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        self.SetStartDate(2014,3,24)   #Set Start Date
-        self.SetEndDate(2014,4,7)      #Set End Date
-        self.SetCash(50000)            #Set Strategy Cash
+        self.SetStartDate(2016,1,1)   #Set Start Date
+        self.SetEndDate(2021,1,1)      #Set End Date
+        self.SetCash(100000)            #Set Strategy Cash
 
         self.UniverseSettings.Resolution = Resolution.Daily
 
@@ -39,10 +39,10 @@ class CoarseFineFundamentalRegressionAlgorithm(QCAlgorithm):
 
     # return a list of three fixed symbol objects
     def CoarseSelectionFunction(self, coarse):
-        tickers = [ "GOOG", "BAC", "SPY" ]
+        tickers = [ "MSTR", "SQ", "ABBV" ]
 
         if self.Time.date() < date(2014, 4, 1):
-            tickers = [ "AAPL", "AIG", "IBM" ]
+            tickers = [ "MRSN", "PLUG", "FCEL" ]
 
         return [ Symbol.Create(x, SecurityType.Equity, Market.USA) for x in tickers ]
 
