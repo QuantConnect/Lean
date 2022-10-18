@@ -18,6 +18,7 @@ using System.IO;
 using QuantConnect.Util;
 using QuantConnect.Logging;
 using QuantConnect.Configuration;
+using QuantConnect.Python;
 
 namespace QuantConnect.Lean.Engine
 {
@@ -49,6 +50,9 @@ namespace QuantConnect.Lean.Engine
 
                 Log.Trace($"Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v{Globals.Version} Mode: {mode} ({(Environment.Is64BitProcess ? "64" : "32")}bit) Host: {Environment.MachineName}");
                 Log.Trace("Engine.Main(): Started " + DateTime.Now.ToShortTimeString());
+
+                PythonInitializer.Initialize();
+                PythonInitializer.ConfigurePythonPaths();
             }
             catch (Exception e)
             {

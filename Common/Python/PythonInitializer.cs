@@ -21,6 +21,7 @@ using Python.Runtime;
 using QuantConnect.Util;
 using QuantConnect.Logging;
 using System.Collections.Generic;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Python
 {
@@ -242,6 +243,26 @@ namespace QuantConnect.Python
                         $" sys.path: [{string.Join(",", path)}]");
                 }
             }
+        }
+
+
+
+        /// <summary>
+        /// Gets the python additional paths from the config and adds them to Python using the PythonInitializer
+        /// </summary>
+        public static void ConfigurePythonPaths()
+        {
+            var pythonAdditionalPaths = Config.GetValue("python-additional-paths", Enumerable.Empty<string>());
+            AddPythonPaths(pythonAdditionalPaths.Where(path =>
+            {
+                var pathExists = Directory.Exists(path);
+                if (!pathExists)
+                {
+                    Log.Error($"JobQueue.ConfigurePythonPaths(): Unable to find python path: {path}. Skipping.");
+                }
+
+                return pathExists;
+            }));
         }
     }
 }
