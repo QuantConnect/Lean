@@ -196,6 +196,14 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
+        /// Resets the algorithm location path so another can be set
+        /// </summary>
+        public static void ResetAlgorithmLocationPath()
+        {
+            _algorithmLocation = null;
+        }
+
+        /// <summary>
         /// "Activate" a virtual Python environment by prepending its library storage to Pythons
         /// path. This allows the libraries in this venv to be selected prior to our base install.
         /// Requires PYTHONNET_PYDLL to be set to base install.
