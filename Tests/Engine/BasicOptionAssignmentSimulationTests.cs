@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -120,9 +120,12 @@ namespace QuantConnect.Tests.Engine
             Assert.AreEqual(132, countSims);
 
         }
-        [Test]
-        public void SimulatesAssignment()
+        [TestCase(SecurityType.Equity)]
+        [TestCase(SecurityType.Index)]
+        public void SimulatesAssignment(SecurityType securityType)
         {
+            var underlyingSymbol = securityType == SecurityType.Index ? Symbols.SPX : Symbols.SPY;
+            var settlementType = securityType == SecurityType.Index ? SettlementType.Cash : SettlementType.PhysicalDelivery;
             var algorithm = new QCAlgorithm();
             var sim = new BasicOptionAssignmentSimulation();
             var securities = new SecurityManager(TimeKeeper);
@@ -159,7 +162,7 @@ namespace QuantConnect.Tests.Engine
             Func<OptionRight, decimal, decimal, decimal, Option> optionDef =
                 (right, strikePrice, bidPrice, askPrice) =>
                 {
-                    var symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, right, strikePrice, expiration);
+                    var symbol = Symbol.CreateOption(underlyingSymbol, Market.USA, OptionStyle.American, right, strikePrice, expiration);
                     var option = new Option(
                         SecurityExchangeHours,
                         CreateTradeBarDataConfig(SecurityType.Option, symbol),
@@ -167,7 +170,7 @@ namespace QuantConnect.Tests.Engine
                         new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
                         ErrorCurrencyConverter.Instance,
                         RegisteredSecurityDataTypesProvider.Null
-                    );
+                    ) { ExerciseSettlement = settlementType };
                     securities.Add(symbol, option);
 
                     securities[symbol].Holdings.SetHoldings(1, -1000);
@@ -177,10 +180,10 @@ namespace QuantConnect.Tests.Engine
 
             // setting up the underlying instrument
             securities.Add(
-                Symbols.SPY,
+                underlyingSymbol,
                 new Security(
                     SecurityExchangeHours,
-                    CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY),
+                    CreateTradeBarDataConfig(securityType, underlyingSymbol),
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
@@ -188,7 +191,7 @@ namespace QuantConnect.Tests.Engine
                     new SecurityCache()
                 )
             );
-            securities[Symbols.SPY].SetMarketPrice(new Tick { Symbol = Symbols.SPY, AskPrice = 217.94m, BidPrice = 217.86m, Value = 217.90m, Time = securities.UtcTime });
+            securities[underlyingSymbol].SetMarketPrice(new Tick { Symbol = underlyingSymbol, AskPrice = 217.94m, BidPrice = 217.86m, Value = 217.90m, Time = securities.UtcTime });
 
             foreach (var def in optionChain)
             {
@@ -211,6 +214,8 @@ namespace QuantConnect.Tests.Engine
             if (type == SecurityType.Forex)
                 return new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, true);
             if (type == SecurityType.Option)
+                return new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, true);
+            if (type == SecurityType.Index)
                 return new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, true);
             throw new NotImplementedException(type.ToString());
         }
