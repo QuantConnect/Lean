@@ -54,12 +54,12 @@
         {
             "label": "start research",
             "type": "shell",
+            "dependsOn": ["build"],
             "group": "build",
             "isBackground": true,
             "command" : "${workspaceFolder}/.vscode/launch_research.sh",
             "args" : [
-                "${workspaceFolder}/Launcher/bin/Debug",
-                "${workspaceFolder}/Data"
+                "${workspaceFolder}/Launcher/bin/Debug"
             ],
             "problemMatcher": "$msCompile"
         }
