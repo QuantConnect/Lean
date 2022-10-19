@@ -26,7 +26,7 @@
             "program": "${workspaceFolder}/Launcher/bin/Debug/QuantConnect.Lean.Launcher.dll",
             "args": [
                 "--config",
-                "${workspaceFolder}/Launcher/config.json"
+                "${workspaceFolder}/Launcher/bin/Debug/config.json"
             ],
             "cwd": "${workspaceFolder}/Launcher/bin/Debug/",
             "stopAtEntry": false,
