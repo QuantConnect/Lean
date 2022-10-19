@@ -38,7 +38,7 @@ algorithmHandlers = Initializer.GetAlgorithmHandlers()
 
 # Required to configure pythonpath with additional paths the user may have 
 # set in the config.
-PythonInitializer.Initialize()
+PythonInitializer.Initialize(False)
 
 try:
     get_ipython().run_line_magic('matplotlib', 'inline')

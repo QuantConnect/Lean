@@ -42,24 +42,24 @@ namespace QuantConnect.Python
 
         private static string _algorithmLocation;
 
-        private static readonly ConcurrentQueue<Py.GILState> _threadsState = new();
-
         /// <summary>
         /// Initialize python.
         ///
         /// See DebuggerHelper.DebugpyThreadInitialization doc for info on why we keep the GIL state
         /// before calling BeginAllowThreads.
         /// </summary>
-        public static void Initialize()
+        public static void Initialize(bool beginAllowThreads = true)
         {
             if (!_isInitialized)
             {
                 Log.Trace("PythonInitializer.Initialize(): start...");
                 PythonEngine.Initialize();
 
-                // required for multi-threading usage
-                _threadsState.Enqueue(Py.GIL());
-                PythonEngine.BeginAllowThreads();
+                if (beginAllowThreads)
+                {
+                    // required for multi-threading usage
+                    PythonEngine.BeginAllowThreads();
+                }
 
                 _isInitialized = true;
 

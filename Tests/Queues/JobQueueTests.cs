@@ -33,8 +33,8 @@ namespace QuantConnect.Tests.Queues
         [Test]
         public void NextJobAddsAlgorithmLocationAtTheBeginning()
         {
-
-            var algorithmFile = "Python/PandasTests/PandasIndexingTests.py";
+            var algorithmDirectory = "Python/PandasTests";
+            var algorithmFile = $"{algorithmDirectory}/PandasIndexingTests.py";
             Config.Set("algorithm-location", algorithmFile);
             Config.Set("algorithm-language", "Python");
             
@@ -46,7 +46,8 @@ namespace QuantConnect.Tests.Queues
 
             var paths = GetPythonPaths();
 
-            Assert.IsTrue(Path.GetFullPath(paths.First()).Equals(new FileInfo(algorithmFile).Directory.FullName, StringComparison.Ordinal));
+            Assert.IsTrue(paths.First().EndsWith(algorithmDirectory, StringComparison.Ordinal),
+                $"Expected {paths.First()} to end with {algorithmDirectory}");
         }
 
         private static IEnumerable<string> GetPythonPaths()
