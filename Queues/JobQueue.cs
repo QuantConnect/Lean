@@ -98,10 +98,6 @@ namespace QuantConnect.Queues
         /// <returns></returns>
         public AlgorithmNodePacket NextJob(out string location)
         {
-            // Make sure all paths that may have been provider by the user are added before the algorithm location,
-            // so it has the highest priority
-            PythonInitializer.ConfigurePythonPaths();
-
             location = GetAlgorithmLocation();
 
             Log.Trace($"JobQueue.NextJob(): Selected {location}");
@@ -237,7 +233,7 @@ namespace QuantConnect.Queues
 
                 // Add this directory to our Python Path so it may be imported properly
                 var pythonFile = new FileInfo(AlgorithmLocation);
-                PythonInitializer.AddPythonPaths(new string[] { pythonFile.Directory.FullName });
+                PythonInitializer.AddAlgorithmLocationPath(pythonFile.Directory.FullName);
             }
 
             return AlgorithmLocation;

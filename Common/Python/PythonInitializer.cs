@@ -40,6 +40,8 @@ namespace QuantConnect.Python
         // Used to hold pending path additions before Initialize is called
         private static List<string> _pendingPathAdditions = new List<string>();
 
+        private static string _algorithmLocation;
+
         private static readonly ConcurrentQueue<Py.GILState> _threadsState = new();
 
         /// <summary>
@@ -105,7 +107,7 @@ namespace QuantConnect.Python
 
             // Add these paths to our pending additions
             _pendingPathAdditions.AddRange(paths.Where(x => !_pendingPathAdditions.Contains(x)));
-
+            
             if (_isInitialized)
             {
                 using (Py.GIL())
@@ -119,11 +121,29 @@ namespace QuantConnect.Python
                     var currentPath = pythonCurrentPath.As<List<string>>();
                     _pendingPathAdditions = _pendingPathAdditions.Where(x => !currentPath.Contains(x.Replace('\\', '/'))).ToList();
 
+                    // Algorithm location most always be before any other path added through this method
+                    var insertionIndex = 0;
+                    if (!_algorithmLocation.IsNullOrEmpty())
+                    {
+                        if (currentPath.Contains(_algorithmLocation.Replace('\\', '/')))
+                        {
+                            // The algorithm location is already there. Let's add the other paths after it
+                            insertionIndex = currentPath.IndexOf(_algorithmLocation.Replace('\\', '/')) + 1;
+                        }
+                        else
+                        {
+                            // The algorithm location is in the pending additions list. Let's move it to the back so it
+                            // ends up added at the beginning of the path list
+                            _pendingPathAdditions.Remove(_algorithmLocation);
+                            _pendingPathAdditions.Add(_algorithmLocation);
+                        }
+                    }
+
                     // Insert any pending path additions
                     if (!_pendingPathAdditions.IsNullOrEmpty())
                     {
                         var code = string.Join(";", _pendingPathAdditions
-                            .Select(s => $"sys.path.insert(0, '{s}')")).Replace('\\', '/');
+                            .Select(s => $"sys.path.insert({insertionIndex}, '{s}')")).Replace('\\', '/');
                         PythonEngine.Exec(code, locals: locals);
 
                         _pendingPathAdditions.Clear();
@@ -132,6 +152,47 @@ namespace QuantConnect.Python
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Gets the python additional paths from the config and adds them to Python using the PythonInitializer
+        /// </summary>
+        public static void ConfigurePythonPaths()
+        {
+            var pythonAdditionalPaths = new List<string> { Environment.CurrentDirectory };
+            pythonAdditionalPaths.AddRange(Config.GetValue("python-additional-paths", Enumerable.Empty<string>()));
+            AddPythonPaths(pythonAdditionalPaths.Where(path =>
+            {
+                var pathExists = Directory.Exists(path);
+                if (!pathExists)
+                {
+                    Log.Error($"PythonInitializer.ConfigurePythonPaths(): Unable to find python path: {path}. Skipping.");
+                }
+
+                return pathExists;
+            }));
+        }
+
+        /// <summary>
+        /// Adds the algorithm location to the python path.
+        /// This will make sure that <see cref="AddPythonPaths" /> keeps the algorithm location path 
+        /// at the beginning of the pythonpath.
+        /// </summary>
+        public static void AddAlgorithmLocationPath(string algorithmLocation)
+        {
+            if (!_algorithmLocation.IsNullOrEmpty())
+            {
+                return;
+            }
+
+            if (!Directory.Exists(algorithmLocation))
+            {
+                Log.Error($"PythonInitializer.AddAlgorithmLocationPath(): Unable to find algorithm location path: {algorithmLocation}.");
+                return;
+            }
+
+            _algorithmLocation = algorithmLocation;
+            AddPythonPaths(new[] { _algorithmLocation });
         }
 
         /// <summary>
@@ -194,25 +255,6 @@ namespace QuantConnect.Python
 
             TryInitPythonVirtualEnvironment();
             return true;
-        }
-
-        /// <summary>
-        /// Gets the python additional paths from the config and adds them to Python using the PythonInitializer
-        /// </summary>
-        public static void ConfigurePythonPaths()
-        {
-            var pythonAdditionalPaths = new List<string> { Environment.CurrentDirectory };
-            pythonAdditionalPaths.AddRange(Config.GetValue("python-additional-paths", Enumerable.Empty<string>()));
-            AddPythonPaths(pythonAdditionalPaths.Where(path =>
-            {
-                var pathExists = Directory.Exists(path);
-                if (!pathExists)
-                {
-                    Log.Error($"PythonInitializer.ConfigurePythonPaths(): Unable to find python path: {path}. Skipping.");
-                }
-
-                return pathExists;
-            }));
         }
 
         private static void TryInitPythonVirtualEnvironment()

@@ -23,6 +23,7 @@ using Newtonsoft.Json;
 
 using QuantConnect.Configuration;
 using QuantConnect.Queues;
+using QuantConnect.Python;
 
 namespace QuantConnect.Tests.Queues
 {
@@ -30,25 +31,22 @@ namespace QuantConnect.Tests.Queues
     public class JobQueueTests
     {
         [Test]
-        public void NextJobConfiguresPythonPaths()
+        public void NextJobAddsAlgorithmLocationAtTheBeginning()
         {
-            Func<IEnumerable<string>, string, bool> testDirectoryIsInPythonPath =
-                (paths, directory) => paths.Any(path =>
-                    string.Equals(Path.GetFullPath(path), Path.GetFullPath(directory), StringComparison.Ordinal));
+
+            var algorithmFile = "Python/PandasTests/PandasIndexingTests.py";
+            Config.Set("algorithm-location", algorithmFile);
+            Config.Set("algorithm-language", "Python");
+            
+            JobQueue jobQueue = new JobQueue();
+            var job = jobQueue.NextJob(out _);
 
             var testDirectory = Directory.GetParent(Directory.GetCurrentDirectory()).FullName;
-            Config.Set("python-additional-paths", JsonConvert.SerializeObject(new string[] { testDirectory }));
+            PythonInitializer.AddPythonPaths(new string[] { testDirectory });
 
             var paths = GetPythonPaths();
 
-            Assert.IsFalse(testDirectoryIsInPythonPath(paths, testDirectory));
-
-            var jobQueue = new JobQueue();
-            var job = jobQueue.NextJob(out _);
-
-            paths = GetPythonPaths();
-
-            Assert.IsTrue(testDirectoryIsInPythonPath(paths, testDirectory));
+            Assert.IsTrue(Path.GetFullPath(paths.First()).Equals(new FileInfo(algorithmFile).Directory.FullName, StringComparison.Ordinal));
         }
 
         private static IEnumerable<string> GetPythonPaths()
