@@ -29,7 +29,7 @@ namespace QuantConnect.Util
     public static class StreamReaderExtensions
     {
         // we use '-1' value as a flag to determine whether we have decimal places or not, so we avoid having another variable required
-        private const decimal NoDecimalPlaces = -1;
+        private const int NoDecimalPlaces = -1;
         private const char NoMoreData = unchecked((char)-1);
         private const char DefaultDelimiter = ',';
 
