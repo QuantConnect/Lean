@@ -22,7 +22,6 @@ using QuantConnect.Util;
 using QuantConnect.Logging;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
-using System.Collections.Concurrent;
 
 namespace QuantConnect.Python
 {
@@ -45,8 +44,9 @@ namespace QuantConnect.Python
         /// <summary>
         /// Initialize python.
         ///
-        /// See DebuggerHelper.DebugpyThreadInitialization doc for info on why we keep the GIL state
-        /// before calling BeginAllowThreads.
+        /// In some cases, we might not need to call BeginAllowThreads, like when we're running
+        /// in a python or non-threaded environment. 
+        /// In those cases, we can set the beginAllowThreads parameter to false.
         /// </summary>
         public static void Initialize(bool beginAllowThreads = true)
         {
@@ -125,15 +125,12 @@ namespace QuantConnect.Python
                     var insertionIndex = 0;
                     if (!_algorithmLocation.IsNullOrEmpty())
                     {
-                        if (currentPath.Contains(_algorithmLocation.Replace('\\', '/')))
+                        insertionIndex = currentPath.IndexOf(_algorithmLocation.Replace('\\', '/')) + 1;
+
+                        if (insertionIndex == 0)
                         {
-                            // The algorithm location is already there. Let's add the other paths after it
-                            insertionIndex = currentPath.IndexOf(_algorithmLocation.Replace('\\', '/')) + 1;
-                        }
-                        else
-                        {
-                            // The algorithm location is in the pending additions list. Let's move it to the back so it
-                            // ends up added at the beginning of the path list
+                            // The algorithm location is not in the current path so it must be in the pending additions list.
+                            // Let's move it to the back so it ends up added at the beginning of the path list
                             _pendingPathAdditions.Remove(_algorithmLocation);
                             _pendingPathAdditions.Add(_algorithmLocation);
                         }
@@ -152,25 +149,6 @@ namespace QuantConnect.Python
             }
 
             return true;
-        }
-
-        /// <summary>
-        /// Gets the python additional paths from the config and adds them to Python using the PythonInitializer
-        /// </summary>
-        public static void ConfigurePythonPaths()
-        {
-            var pythonAdditionalPaths = new List<string> { Environment.CurrentDirectory };
-            pythonAdditionalPaths.AddRange(Config.GetValue("python-additional-paths", Enumerable.Empty<string>()));
-            AddPythonPaths(pythonAdditionalPaths.Where(path =>
-            {
-                var pathExists = Directory.Exists(path);
-                if (!pathExists)
-                {
-                    Log.Error($"PythonInitializer.ConfigurePythonPaths(): Unable to find python path: {path}. Skipping.");
-                }
-
-                return pathExists;
-            }));
         }
 
         /// <summary>
@@ -319,6 +297,25 @@ namespace QuantConnect.Python
                         $" sys.path: [{string.Join(",", path)}]");
                 }
             }
+        }
+
+        /// <summary>
+        /// Gets the python additional paths from the config and adds them to Python using the PythonInitializer
+        /// </summary>
+        private static void ConfigurePythonPaths()
+        {
+            var pythonAdditionalPaths = new List<string> { Environment.CurrentDirectory };
+            pythonAdditionalPaths.AddRange(Config.GetValue("python-additional-paths", Enumerable.Empty<string>()));
+            AddPythonPaths(pythonAdditionalPaths.Where(path =>
+            {
+                var pathExists = Directory.Exists(path);
+                if (!pathExists)
+                {
+                    Log.Error($"PythonInitializer.ConfigurePythonPaths(): Unable to find python path: {path}. Skipping.");
+                }
+
+                return pathExists;
+            }));
         }
     }
 }
