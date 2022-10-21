@@ -3183,11 +3183,13 @@ namespace QuantConnect
         /// Scale data based on factor function
         /// </summary>
         /// <param name="data">Data to Adjust</param>
-        /// <param name="factor">Function to factor prices by</param>
+        /// <param name="factorFunc">Function to factor prices by</param>
         /// <param name="volumeFactor">Factor to multiply volume/askSize/bidSize/quantity by</param>
+        /// <param name="factor">Price scale</param>
+        /// <param name="sumOfDividends">The current dividend sum</param>
         /// <remarks>Volume values are rounded to the nearest integer, lot size purposefully not considered
         /// as scaling only applies to equities</remarks>
-        public static BaseData Scale(this BaseData data, Func<decimal, decimal> factor, decimal volumeFactor)
+        public static BaseData Scale(this BaseData data, Func<decimal, decimal, decimal, decimal> factorFunc, decimal volumeFactor, decimal factor, decimal sumOfDividends)
         {
             switch (data.DataType)
             {
@@ -3195,10 +3197,10 @@ namespace QuantConnect
                     var tradeBar = data as TradeBar;
                     if (tradeBar != null)
                     {
-                        tradeBar.Open = factor(tradeBar.Open);
-                        tradeBar.High = factor(tradeBar.High);
-                        tradeBar.Low = factor(tradeBar.Low);
-                        tradeBar.Close = factor(tradeBar.Close);
+                        tradeBar.Open = factorFunc(tradeBar.Open, factor, sumOfDividends);
+                        tradeBar.High = factorFunc(tradeBar.High, factor, sumOfDividends);
+                        tradeBar.Low = factorFunc(tradeBar.Low, factor, sumOfDividends);
+                        tradeBar.Close = factorFunc(tradeBar.Close, factor, sumOfDividends);
                         tradeBar.Volume = Math.Round(tradeBar.Volume * volumeFactor);
                     }
                     break;
@@ -3219,14 +3221,14 @@ namespace QuantConnect
 
                     if (tick.TickType == TickType.Trade)
                     {
-                        tick.Value = factor(tick.Value);
+                        tick.Value = factorFunc(tick.Value, factor, sumOfDividends);
                         tick.Quantity = Math.Round(tick.Quantity * volumeFactor);
                         break;
                     }
 
-                    tick.BidPrice = tick.BidPrice != 0 ? factor(tick.BidPrice) : 0;
+                    tick.BidPrice = tick.BidPrice != 0 ? factorFunc(tick.BidPrice, factor, sumOfDividends) : 0;
                     tick.BidSize = Math.Round(tick.BidSize * volumeFactor);
-                    tick.AskPrice = tick.AskPrice != 0 ? factor(tick.AskPrice) : 0;
+                    tick.AskPrice = tick.AskPrice != 0 ? factorFunc(tick.AskPrice, factor, sumOfDividends) : 0;
                     tick.AskSize = Math.Round(tick.AskSize * volumeFactor);
 
                     if (tick.BidPrice == 0)
@@ -3248,17 +3250,17 @@ namespace QuantConnect
                     {
                         if (quoteBar.Ask != null)
                         {
-                            quoteBar.Ask.Open = factor(quoteBar.Ask.Open);
-                            quoteBar.Ask.High = factor(quoteBar.Ask.High);
-                            quoteBar.Ask.Low = factor(quoteBar.Ask.Low);
-                            quoteBar.Ask.Close = factor(quoteBar.Ask.Close);
+                            quoteBar.Ask.Open = factorFunc(quoteBar.Ask.Open, factor, sumOfDividends);
+                            quoteBar.Ask.High = factorFunc(quoteBar.Ask.High, factor, sumOfDividends);
+                            quoteBar.Ask.Low = factorFunc(quoteBar.Ask.Low, factor, sumOfDividends);
+                            quoteBar.Ask.Close = factorFunc(quoteBar.Ask.Close, factor, sumOfDividends);
                         }
                         if (quoteBar.Bid != null)
                         {
-                            quoteBar.Bid.Open = factor(quoteBar.Bid.Open);
-                            quoteBar.Bid.High = factor(quoteBar.Bid.High);
-                            quoteBar.Bid.Low = factor(quoteBar.Bid.Low);
-                            quoteBar.Bid.Close = factor(quoteBar.Bid.Close);
+                            quoteBar.Bid.Open = factorFunc(quoteBar.Bid.Open, factor, sumOfDividends);
+                            quoteBar.Bid.High = factorFunc(quoteBar.Bid.High, factor, sumOfDividends);
+                            quoteBar.Bid.Low = factorFunc(quoteBar.Bid.Low, factor, sumOfDividends);
+                            quoteBar.Bid.Close = factorFunc(quoteBar.Bid.Close, factor, sumOfDividends);
                         }
                         quoteBar.Value = quoteBar.Close;
                         quoteBar.LastAskSize = Math.Round(quoteBar.LastAskSize * volumeFactor);
@@ -3290,21 +3292,39 @@ namespace QuantConnect
             {
                 case DataNormalizationMode.Adjusted:
                 case DataNormalizationMode.SplitAdjusted:
-                    return data?.Scale(p => p * factor, 1/factor);
+                    return data?.Scale(TimesFactor, 1/factor, factor, decimal.Zero);
                 case DataNormalizationMode.TotalReturn:
-                    return data.Scale(p => p * factor + sumOfDividends, 1/factor);
+                    return data.Scale(TimesFactor, 1/factor, factor, sumOfDividends);
 
                 case DataNormalizationMode.BackwardsRatio:
-                    return data.Scale(p => p * factor, 1);
+                    return data.Scale(TimesFactor, 1, factor, decimal.Zero);
                 case DataNormalizationMode.BackwardsPanamaCanal:
-                    return data.Scale(p => p + factor, 1);
+                    return data.Scale(AdditionFactor, 1, factor, decimal.Zero);
                 case DataNormalizationMode.ForwardPanamaCanal:
-                    return data.Scale(p => p + factor, 1);
+                    return data.Scale(AdditionFactor, 1, factor, decimal.Zero);
 
                 case DataNormalizationMode.Raw:
                 default:
                     return data;
             }
+        }
+
+        /// <summary>
+        /// Applies a times factor. We define this so we don't need to create it constantly
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static decimal TimesFactor(decimal target, decimal factor, decimal sumOfDividends)
+        {
+            return target * factor + sumOfDividends;
+        }
+
+        /// <summary>
+        /// Applies an addition factor. We define this so we don't need to create it constantly
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static decimal AdditionFactor(decimal target, decimal factor, decimal _)
+        {
+            return target + factor;
         }
 
         /// <summary>

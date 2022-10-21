@@ -31,14 +31,30 @@ namespace QuantConnect.Python
     /// </summary>
     public class PandasData
     {
-        private static dynamic _pandas;
+        // we keep these so we don't need to ask for them each time
+        private static PyString _empty;
+        private static PyObject _pandas;
+        private static PyObject _seriesFactory;
+        private static PyObject _dataFrameFactory;
+        private static PyObject _multiIndexFactory;
+
+        private static PyList _defaultNames;
+        private static PyList _level2Names;
+        private static PyList _level3Names;
+
         private readonly static HashSet<string> _baseDataProperties = typeof(BaseData).GetProperties().ToHashSet(x => x.Name.ToLowerInvariant());
-        private readonly static ConcurrentDictionary<Type, List<MemberInfo>> _membersByType = new ConcurrentDictionary<Type, List<MemberInfo>>();
+        private readonly static ConcurrentDictionary<Type, IEnumerable<MemberInfo>> _membersByType = new ();
+        private readonly static IReadOnlyList<string> _standardColumns = new string []
+        {
+                "open",    "high",    "low",    "close", "lastprice",  "volume",
+            "askopen", "askhigh", "asklow", "askclose",  "askprice", "asksize", "quantity", "suspicious",
+            "bidopen", "bidhigh", "bidlow", "bidclose",  "bidprice", "bidsize", "exchange", "openinterest"
+        };
 
         private readonly Symbol _symbol;
         private readonly Dictionary<string, Tuple<List<DateTime>, List<object>>> _series;
 
-        private readonly List<MemberInfo> _members;
+        private readonly IEnumerable<MemberInfo> _members = Enumerable.Empty<MemberInfo>();
 
         /// <summary>
         /// Gets true if this is a custom data request, false for normal QC data
@@ -61,6 +77,18 @@ namespace QuantConnect.Python
                 {
                     // Use our PandasMapper class that modifies pandas indexing to support tickers, symbols and SIDs
                     _pandas = Py.Import("PandasMapper");
+                    _seriesFactory = _pandas.GetAttr("Series");
+                    _dataFrameFactory = _pandas.GetAttr("DataFrame");
+                    using var multiIndex = _pandas.GetAttr("MultiIndex");
+                    _multiIndexFactory = multiIndex.GetAttr("from_tuples");
+                    _empty = new PyString(string.Empty);
+
+                    var time = new PyString("time");
+                    var symbol = new PyString("symbol");
+                    var expiry = new PyString("expiry");
+                    _defaultNames = new PyList(new PyObject[] { expiry, new PyString("strike"), new PyString("type"), symbol, time });
+                    _level2Names = new PyList(new PyObject[] { symbol, time });
+                    _level3Names = new PyList(new PyObject[] { expiry, symbol, time });
                 }
             }
 
@@ -77,18 +105,12 @@ namespace QuantConnect.Python
 
             var type = data.GetType();
             IsCustomData = type.Namespace != typeof(Bar).Namespace;
-            _members = new List<MemberInfo>();
             _symbol = ((IBaseData)data).Symbol;
 
             if (_symbol.SecurityType == SecurityType.Future) Levels = 3;
             if (_symbol.SecurityType.IsOption()) Levels = 5;
 
-            var columns = new HashSet<string>
-            {
-                   "open",    "high",    "low",    "close", "lastprice",  "volume",
-                "askopen", "askhigh", "asklow", "askclose",  "askprice", "asksize", "quantity", "suspicious",
-                "bidopen", "bidhigh", "bidlow", "bidclose",  "bidprice", "bidsize", "exchange", "openinterest"
-            };
+            IEnumerable<string> columns = _standardColumns;
 
             if (IsCustomData)
             {
@@ -124,8 +146,11 @@ namespace QuantConnect.Python
                     }
                 }
 
-                columns.Add("value");
-                columns.UnionWith(keys);
+                var customColumns = new HashSet<string>(columns);
+                customColumns.Add("value");
+                customColumns.UnionWith(keys);
+
+                columns = customColumns;
             }
 
             _series = columns.ToDictionary(k => k, v => Tuple.Create(new List<DateTime>(), new List<object>()));
@@ -140,7 +165,7 @@ namespace QuantConnect.Python
             foreach (var member in _members)
             {
                 var key = member.Name.ToLowerInvariant();
-                var endTime = ((IBaseData) baseData).EndTime;
+                var endTime = ((IBaseData)baseData).EndTime;
                 var propertyMember = member as PropertyInfo;
                 if (propertyMember != null)
                 {
@@ -271,76 +296,130 @@ namespace QuantConnect.Python
         /// <returns>pandas.DataFrame object</returns>
         public PyObject ToPandasDataFrame(int levels = 2)
         {
-            var empty = new PyString(string.Empty);
-            var list = Enumerable.Repeat<PyObject>(empty, 5).ToList();
+            var list = Enumerable.Repeat<PyObject>(_empty, 5).ToList();
             list[3] = _symbol.ID.ToString().ToPython();
 
             if (_symbol.SecurityType == SecurityType.Future)
             {
                 list[0] = _symbol.ID.Date.ToPython();
-                list[3] = _symbol.ID.ToString().ToPython();
             }
-            if (_symbol.SecurityType.IsOption())
+            else if (_symbol.SecurityType.IsOption())
             {
                 list[0] = _symbol.ID.Date.ToPython();
                 list[1] = _symbol.ID.StrikePrice.ToPython();
                 list[2] = _symbol.ID.OptionRight.ToString().ToPython();
-                list[3] = _symbol.ID.ToString().ToPython();
             }
 
             // Create the index labels
-            var names = "expiry,strike,type,symbol,time";
+            var names = _defaultNames;
             if (levels == 2)
             {
-                names = "symbol,time";
+                names = _level2Names;
+                for (int i = 0; i < 3; i++)
+                {
+                    // dispose of existing entry unless it's our static empty
+                    DisposeIfNotEmpty(list[i]);
+                }
                 list.RemoveRange(0, 3);
             }
             if (levels == 3)
             {
-                names = "expiry,symbol,time";
+                names = _level3Names;
+                for (int i = 1; i < 2; i++)
+                {
+                    // dispose of existing entry unless it's our static empty
+                    DisposeIfNotEmpty(list[i]);
+                }
                 list.RemoveRange(1, 2);
             }
 
-            Func<object, bool> filter = x =>
-            {
-                var isNaNOrZero = x is double && ((double)x).IsNaNOrZero();
-                var isNullOrWhiteSpace = x is string && string.IsNullOrWhiteSpace((string)x);
-                var isFalse = x is bool && !(bool)x;
-                return x == null || isNaNOrZero || isNullOrWhiteSpace || isFalse;
-            };
-            Func<DateTime, PyTuple> selector = x =>
-            {
-                list[list.Count - 1] = x.ToPython();
-                return new PyTuple(list.ToArray());
-            };
             // creating the pandas MultiIndex is expensive so we keep a cash
-            var indexCache = new Dictionary<List<DateTime>, dynamic>(new ListComparer<DateTime>());
+            var indexCache = new Dictionary<List<DateTime>, PyObject>(new ListComparer<DateTime>());
             using (Py.GIL())
             {
                 // Returns a dictionary keyed by column name where values are pandas.Series objects
-                var pyDict = new PyDict();
-                var splitNames = names.Split(',');
+                using var pyDict = new PyDict();
                 foreach (var kvp in _series)
                 {
                     var values = kvp.Value.Item2;
-                    if (values.All(filter)) continue;
+                    if (values.All(Filter)) continue;
 
-                    dynamic index;
-                    if (!indexCache.TryGetValue(kvp.Value.Item1, out index))
+                    if (!indexCache.TryGetValue(kvp.Value.Item1, out var index))
                     {
-                        var tuples = kvp.Value.Item1.Select(selector).ToArray();
-                        index = _pandas.MultiIndex.from_tuples(tuples, names: splitNames);
-                        indexCache[kvp.Value.Item1] = index;
+                        using var tuples = kvp.Value.Item1.Select(time => CreateTupleIndex(time, list)).ToPyList();
+                        using var namesDic = Py.kw("names", names);
+
+                        indexCache[kvp.Value.Item1] = index = _multiIndexFactory.Invoke(new[] { tuples }, namesDic);
+
+                        foreach (var pyObject in tuples)
+                        {
+                            pyObject.Dispose();
+                        }
                     }
 
                     // Adds pandas.Series value keyed by the column name
-                    pyDict.SetItem(kvp.Key, _pandas.Series(values, index));
+                    using var pyvalues = values.ToPyList();
+                    using var series = _seriesFactory.Invoke(pyvalues, index);
+                    pyDict.SetItem(kvp.Key, series);
+
+                    foreach (var value in pyvalues)
+                    {
+                        value.Dispose();
+                    }
                 }
                 _series.Clear();
+                foreach (var kvp in indexCache)
+                {
+                    kvp.Value.Dispose();
+                }
+
+                for (var i = 0; i < list.Count; i++)
+                {
+                    DisposeIfNotEmpty(list[i]);
+                }
 
                 // Create the DataFrame
-                return _pandas.DataFrame(pyDict);
+                var result = _dataFrameFactory.Invoke(pyDict);
+
+                foreach (var item in pyDict)
+                {
+                    item.Dispose();
+                }
+
+                return result;
             }
+        }
+
+        /// <summary>
+        /// Will determine if the given object should be used to create the pandas data frame or not
+        /// </summary>
+        private static bool Filter(object x)
+        {
+            var isNaNOrZero = x is double && ((double)x).IsNaNOrZero();
+            var isNullOrWhiteSpace = x is string && string.IsNullOrWhiteSpace((string)x);
+            var isFalse = x is bool && !(bool)x;
+            return x == null || isNaNOrZero || isNullOrWhiteSpace || isFalse;
+        }
+
+        /// <summary>
+        /// Only dipose of the PyObject if it was set to something different than empty
+        /// </summary>
+        private static void DisposeIfNotEmpty(PyObject pyObject)
+        {
+            if (!ReferenceEquals(pyObject, _empty))
+            {
+                pyObject.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Create a new tuple index
+        /// </summary>
+        private static PyTuple CreateTupleIndex(DateTime index, List<PyObject> list)
+        {
+            DisposeIfNotEmpty(list[list.Count - 1]);
+            list[list.Count - 1] = index.ToPython();
+            return new PyTuple(list.ToArray());
         }
 
         /// <summary>

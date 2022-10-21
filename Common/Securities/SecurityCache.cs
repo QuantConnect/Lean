@@ -18,7 +18,6 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 
 namespace QuantConnect.Securities
@@ -32,13 +31,18 @@ namespace QuantConnect.Securities
     /// </remarks>
     public class SecurityCache
     {
+        // let's share the empty readonly version, so we don't need null checks
+        private static readonly IReadOnlyList<BaseData> _empty = new List<BaseData>();
+
         // this is used to prefer quote bar data over the tradebar data
         private DateTime _lastQuoteBarUpdate;
         private DateTime _lastOHLCUpdate;
         private BaseData _lastData;
-        private IReadOnlyList<BaseData> _lastTickQuotes = new List<BaseData>();
-        private IReadOnlyList<BaseData> _lastTickTrades = new List<BaseData>();
-        private ConcurrentDictionary<Type, IReadOnlyList<BaseData>> _dataByType = new();
+
+        private readonly object _locker = new ();
+        private IReadOnlyList<BaseData> _lastTickQuotes = _empty;
+        private IReadOnlyList<BaseData> _lastTickTrades = _empty;
+        private Dictionary<Type, IReadOnlyList<BaseData>> _dataByType;
 
         /// <summary>
         /// Gets the most recent price submitted to this cache
@@ -260,7 +264,11 @@ namespace QuantConnect.Securities
                 }
             }
 
-            _dataByType[dataType] = data;
+            lock (_locker)
+            {
+                _dataByType ??= new();
+                _dataByType[dataType] = data;
+            }
         }
 
         /// <summary>
@@ -300,13 +308,15 @@ namespace QuantConnect.Securities
                 return _lastTickTrades.Concat(_lastTickQuotes).Cast<T>();
             }
 
-            IReadOnlyList<BaseData> list;
-            if (!_dataByType.TryGetValue(typeof(T), out list))
+            lock (_locker)
             {
-                return new List<T>();
-            }
+                if (_dataByType == null || !_dataByType.TryGetValue(typeof(T), out var list))
+                {
+                    return new List<T>();
+                }
 
-            return list.Cast<T>();
+                return list.Cast<T>();
+            }
         }
 
         /// <summary>
@@ -329,9 +339,9 @@ namespace QuantConnect.Securities
             Volume = 0;
             OpenInterest = 0;
 
-            _dataByType.Clear();
-            _lastTickQuotes = new List<BaseData>();
-            _lastTickTrades = new List<BaseData>();
+            _dataByType = null;
+            _lastTickQuotes = _empty;
+            _lastTickTrades = _empty;
         }
 
         /// <summary>
@@ -339,8 +349,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public bool HasData(Type type)
         {
-            IReadOnlyList<BaseData> data;
-            return TryGetValue(type, out data);
+            return TryGetValue(type, out _);
         }
 
         /// <summary>
@@ -367,7 +376,8 @@ namespace QuantConnect.Securities
                 return data?.Count > 0;
             }
 
-            return _dataByType.TryGetValue(type, out data);
+            data = default;
+            return _dataByType != null && _dataByType.TryGetValue(type, out data);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -388,18 +398,22 @@ namespace QuantConnect.Securities
             }
             else
             {
-                // Always keep track of the last observation
-                IReadOnlyList<BaseData> list;
-                if (!_dataByType.TryGetValue(data.GetType(), out list))
+                lock (_locker)
                 {
-                    list = new List<BaseData> { data };
-                    _dataByType[data.GetType()] = list;
-                }
-                else
-                {
-                    // we KNOW this one is actually a list, so this is safe
-                    // we overwrite the zero entry so we're not constantly newing up lists
-                    ((List<BaseData>)list)[0] = data;
+                    _dataByType ??= new();
+                    // Always keep track of the last observation
+                    IReadOnlyList<BaseData> list;
+                    if (!_dataByType.TryGetValue(data.GetType(), out list))
+                    {
+                        list = new List<BaseData> { data };
+                        _dataByType[data.GetType()] = list;
+                    }
+                    else
+                    {
+                        // we KNOW this one is actually a list, so this is safe
+                        // we overwrite the zero entry so we're not constantly newing up lists
+                        ((List<BaseData>)list)[0] = data;
+                    }
                 }
             }
         }
@@ -415,9 +429,19 @@ namespace QuantConnect.Securities
         /// <param name="targetToModify">The target security cache that will be modified</param>
         public static void ShareTypeCacheInstance(SecurityCache sourceToShare, SecurityCache targetToModify)
         {
-            foreach (var kvp in targetToModify._dataByType)
+            sourceToShare._dataByType ??= new();
+            if (targetToModify._dataByType != null)
             {
-                sourceToShare._dataByType.TryAdd(kvp.Key, kvp.Value);
+                lock (targetToModify._locker)
+                {
+                    lock (sourceToShare._locker)
+                    {
+                        foreach (var kvp in targetToModify._dataByType)
+                        {
+                            sourceToShare._dataByType.TryAdd(kvp.Key, kvp.Value);
+                        }
+                    }
+                }
             }
             targetToModify._dataByType = sourceToShare._dataByType;
             targetToModify._lastTickTrades = sourceToShare._lastTickTrades;

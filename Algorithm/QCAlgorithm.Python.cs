@@ -849,7 +849,7 @@ namespace QuantConnect.Algorithm
         public PyObject History(PyObject tickers, int periods, Resolution? resolution = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
-            return PandasConverter.GetDataFrame(History(symbols, periods, resolution));
+            return GetDataFrame(History(symbols, periods, resolution));
         }
 
         /// <summary>
@@ -864,7 +864,7 @@ namespace QuantConnect.Algorithm
         public PyObject History(PyObject tickers, TimeSpan span, Resolution? resolution = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
-            return PandasConverter.GetDataFrame(History(symbols, span, resolution));
+            return GetDataFrame(History(symbols, span, resolution));
         }
 
         /// <summary>
@@ -887,7 +887,7 @@ namespace QuantConnect.Algorithm
             int? contractDepthOffset = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
-            return PandasConverter.GetDataFrame(History(symbols, start, end, resolution, fillForward, extendedMarket, dataMappingMode,
+            return GetDataFrame(History(symbols, start, end, resolution, fillForward, extendedMarket, dataMappingMode,
                 dataNormalizationMode, contractDepthOffset));
         }
 
@@ -903,7 +903,7 @@ namespace QuantConnect.Algorithm
         public PyObject History(PyObject tickers, DateTime start, DateTime end, Resolution? resolution = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
-            return PandasConverter.GetDataFrame(History(symbols, start, end, resolution));
+            return GetDataFrame(History(symbols, start, end, resolution));
         }
 
         /// <summary>
@@ -930,7 +930,7 @@ namespace QuantConnect.Algorithm
             var requestedType = type.CreateType();
             var requests = CreateDateRangeHistoryRequests(symbols, requestedType, start, end, resolution, fillForward, extendedMarket,
                 dataMappingMode, dataNormalizationMode, contractDepthOffset);
-            return PandasConverter.GetDataFrame(History(requests.Where(x => x != null)), requestedType);
+            return GetDataFrame(History(requests.Where(x => x != null)), requestedType);
         }
 
         /// <summary>
@@ -955,7 +955,7 @@ namespace QuantConnect.Algorithm
             var requestedType = type.CreateType();
             var requests = CreateBarCountHistoryRequests(symbols, requestedType, periods, resolution);
 
-            return PandasConverter.GetDataFrame(History(requests.Where(x => x != null)).Memoize(), requestedType);
+            return GetDataFrame(History(requests.Where(x => x != null)), requestedType);
         }
 
         /// <summary>
@@ -993,7 +993,7 @@ namespace QuantConnect.Algorithm
                     $"This could be due to the specified security not being of the requested type. Symbol: {symbol} Requested Type: {requestedType.Name}");
             }
 
-            return PandasConverter.GetDataFrame(History(requests).Memoize(), requestedType);
+            return GetDataFrame(History(requests), requestedType);
         }
 
         /// <summary>
@@ -1390,6 +1390,18 @@ namespace QuantConnect.Algorithm
             }
 
             return pythonIndicator;
+        }
+
+        private PyObject GetDataFrame(IEnumerable<Slice> data, Type dataType = null)
+        {
+            var memoizingEnumerable = data as MemoizingEnumerable<Slice>;
+            if (memoizingEnumerable != null)
+            {
+                // we don't need the internal buffer which will just generate garbage, so we disable it
+                // the user will only have access to the final pandas data frame object
+                memoizingEnumerable.Enabled = false;
+            }
+            return PandasConverter.GetDataFrame(data, dataType);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -17,6 +17,7 @@ using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
+using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,6 +30,7 @@ namespace QuantConnect.Python
     public class PandasConverter
     {
         private static dynamic _pandas;
+        private static PyObject _concat;
 
         /// <summary>
         /// Creates an instance of <see cref="PandasConverter"/>.
@@ -39,7 +41,10 @@ namespace QuantConnect.Python
             {
                 using (Py.GIL())
                 {
-                    _pandas = Py.Import("pandas");
+                    var pandas = Py.Import("pandas");
+                    _pandas = pandas;
+                    // keep it so we don't need to ask for it each time
+                    _concat = pandas.GetAttr("concat");
                 }
             }
         }
@@ -73,8 +78,15 @@ namespace QuantConnect.Python
                 {
                     return _pandas.DataFrame();
                 }
-                var dataFrames = sliceDataDict.Select(x => x.Value.ToPandasDataFrame(maxLevels));
-                return _pandas.concat(dataFrames.ToArray(), Py.kw("sort", true));
+                using var dataFrames = sliceDataDict.Select(x => x.Value.ToPandasDataFrame(maxLevels)).ToPyList();
+                using var sortDic = Py.kw("sort", true);
+                var result = _concat.Invoke(new[] { dataFrames }, sortDic);
+
+                foreach (var df in dataFrames)
+                {
+                    df.Dispose();
+                }
+                return result;
             }
         }
 
