@@ -41,7 +41,7 @@ RUN git clone https://github.com/QuantConnect/Lean.git && \
     && cd ../.. && rm -irf Lean
 
 # conda libc is old and causes issues in research we want to use the hosts version which is updated
-RUN rm /opt/miniconda3/lib/libstdc++.so.6 && ln -s /lib/x86_64-linux-gnu/libstdc++.so.6 /opt/miniconda3/lib/libstdc++.so.6
+RUN mkdir -p /opt/miniconda3/lib/ && ln -vsf /lib/x86_64-linux-gnu/libstdc++.so.6 /opt/miniconda3/lib/libstdc++.so.6
 
 RUN find ${WORK} -type f -not -name '*.py*' -not -name '*.xml' -not -name '*.exe.config' -not -name '*.exe' -not -name '*.so' -not -name '*.dll' -not -name '*.ipynb' -not -name '*.csx' -not -name 'QuantConnect.Lean.Launcher.runtimeconfig.json' -not -name 'decimal.py' -delete
 
