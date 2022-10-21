@@ -27,7 +27,10 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class SharpeRatio : IndicatorBase<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
-        private readonly int _period;
+        /// <summary>
+        /// Length of lookback period for the Sharpe ratio calculation
+        /// </summary>
+        protected readonly int _period;
 
         /// <summary>
         /// RateOfChange indicator for calculating the sharpe ratio
@@ -62,13 +65,23 @@ namespace QuantConnect.Indicators
 
             // calculate sharpe ratio using indicators
             _roc = new RateOfChange(1);
-            var std = new StandardDeviation(period).Of(_roc);
+            var std = CreateStandardDeviation(_roc);
             var sma = _roc.SMA(period);
             _sharpeRatio = sma.Minus(riskFreeRate).Over(std);
 
             // define warmup value; 
             // _roc is the base of our indicator chain + period of STD and SMA
             WarmUpPeriod = _roc.WarmUpPeriod + _period;
+        }
+
+        /// <summary>
+        /// Create the denominator of the Sharpe Ratio equation
+        /// </summary>
+        /// <param name="roc">The denominator is a function of the returns</param>
+        /// <returns>An Indicator object representing the denominator</returns>
+        protected virtual IndicatorBase CreateStandardDeviation(RateOfChange roc)
+        {
+            return new StandardDeviation(_period).Of(roc);
         }
 
         /// <summary>
