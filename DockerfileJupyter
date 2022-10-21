@@ -24,8 +24,6 @@ RUN if [ "$(uname -m)" = "aarch64" ]; then \
 # Install clr-loader for PythonNet
 RUN pip install --no-cache-dir clr-loader==0.1.6
 
-ENV LD_LIBRARY_PATH=/lib/
-
 # Install .NET Interactive to support C# in Jupyter notebooks
 ENV PATH="${PATH}:/root/.dotnet/tools"
 RUN dotnet tool install -g --no-cache --version 1.0.340501 --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive && \
@@ -41,6 +39,9 @@ RUN git clone https://github.com/QuantConnect/Lean.git && \
     ln -s /Lean/Launcher/bin/Debug/start.py /root/.ipython/profile_default/startup/start.py && \
     cd Lean/PythonToolbox && python setup.py install \
     && cd ../.. && rm -irf Lean
+
+# conda libc is old and causes issues in research we want to use the hosts version which is updated
+RUN rm /opt/miniconda3/lib/libstdc++.so.6 && ln -s /lib/x86_64-linux-gnu/libstdc++.so.6 /opt/miniconda3/lib/libstdc++.so.6
 
 RUN find ${WORK} -type f -not -name '*.py*' -not -name '*.xml' -not -name '*.exe.config' -not -name '*.exe' -not -name '*.so' -not -name '*.dll' -not -name '*.ipynb' -not -name '*.csx' -not -name 'QuantConnect.Lean.Launcher.runtimeconfig.json' -not -name 'decimal.py' -delete
 
