@@ -98,8 +98,6 @@ namespace QuantConnect.Queues
         /// <returns></returns>
         public AlgorithmNodePacket NextJob(out string location)
         {
-            ConfigurePythonPaths();
-
             location = GetAlgorithmLocation();
 
             Log.Trace($"JobQueue.NextJob(): Selected {location}");
@@ -235,7 +233,7 @@ namespace QuantConnect.Queues
 
                 // Add this directory to our Python Path so it may be imported properly
                 var pythonFile = new FileInfo(AlgorithmLocation);
-                PythonInitializer.AddPythonPaths(new string[] { pythonFile.Directory.FullName });
+                PythonInitializer.AddAlgorithmLocationPath(pythonFile.Directory.FullName);
             }
 
             return AlgorithmLocation;
@@ -255,24 +253,6 @@ namespace QuantConnect.Queues
                 Console.WriteLine("Engine.Main(): Press any key to continue.");
                 System.Console.Read();
             }
-        }
-
-        /// <summary>
-        /// Gets the python additional paths from the config and adds them to Python using the PythonInitializer
-        /// </summary>
-        private static void ConfigurePythonPaths()
-        {
-            var pythonAdditionalPaths = Config.GetValue("python-additional-paths", Enumerable.Empty<string>());
-            PythonInitializer.AddPythonPaths(pythonAdditionalPaths.Where(path =>
-            {
-                var pathExists = Directory.Exists(path);
-                if (!pathExists)
-                {
-                    Log.Error($"JobQueue.ConfigurePythonPaths(): Unable to find python path: {path}. Skipping.");
-                }
-
-                return pathExists;
-            }));
         }
     }
 }

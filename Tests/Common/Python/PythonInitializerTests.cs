@@ -13,42 +13,41 @@
  * limitations under the License.
 */
 
-using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using Python.Runtime;
-using Newtonsoft.Json;
 
-using QuantConnect.Configuration;
-using QuantConnect.Queues;
+using QuantConnect.Python;
 
-namespace QuantConnect.Tests.Queues
+namespace QuantConnect.Tests.Common.Python
 {
     [TestFixture]
-    public class JobQueueTests
+    public class PythonInitializerTests
     {
         [Test]
-        public void NextJobConfiguresPythonPaths()
+        public void AlgorithmLocationIsAlwaysBeforeOtherPaths()
         {
-            Func<IEnumerable<string>, string, bool> testDirectoryIsInPythonPath =
-                (paths, directory) => paths.Any(path =>
-                    string.Equals(Path.GetFullPath(path), Path.GetFullPath(directory), StringComparison.Ordinal));
+            PythonInitializer.Initialize();
+            PythonInitializer.ResetAlgorithmLocationPath();
 
-            var testDirectory = Directory.GetParent(Directory.GetCurrentDirectory()).FullName;
-            Config.Set("python-additional-paths", JsonConvert.SerializeObject(new string[] { testDirectory }));
+            var testDirectory = Directory.CreateDirectory("TestDir").FullName.Replace('\\', '/');
+            var algorithmDirectory = Directory.CreateDirectory("AlgoDir").FullName.Replace('\\', '/');
 
-            var paths = GetPythonPaths();
+            PythonInitializer.AddAlgorithmLocationPath(algorithmDirectory);
+            PythonInitializer.AddPythonPaths(new string[] { testDirectory });
+            
+            var paths = GetPythonPaths().ToList();
 
-            Assert.IsFalse(testDirectoryIsInPythonPath(paths, testDirectory));
+            Directory.Delete("TestDir", true);
+            Directory.Delete("AlgoDir", true);
 
-            var jobQueue = new JobQueue();
-            var job = jobQueue.NextJob(out _);
+            var algorithmDirectoryIndex = paths.IndexOf(algorithmDirectory);
+            var testDirectoryIndex = paths.IndexOf(testDirectory);
 
-            paths = GetPythonPaths();
-
-            Assert.IsTrue(testDirectoryIsInPythonPath(paths, testDirectory));
+            Assert.AreNotEqual(-1, algorithmDirectoryIndex, string.Join(", ", paths));
+            Assert.Less(algorithmDirectoryIndex, testDirectoryIndex);
         }
 
         private static IEnumerable<string> GetPythonPaths()
