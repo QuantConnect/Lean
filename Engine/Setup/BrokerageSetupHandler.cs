@@ -268,13 +268,14 @@ namespace QuantConnect.Lean.Engine.Setup
                         // set the object store
                         algorithm.SetObjectStore(parameters.ObjectStore);
 
-                        // If we're going to receive market data from IB,
-                        // set the default subscription limit to 100,
-                        // algorithms can override this setting in the Initialize method
-                        if (brokerage.ToString().EndsWith("InteractiveBrokersBrokerage") &&
-                            liveJob.DataQueueHandler.EndsWith("InteractiveBrokersBrokerage"))
+                        // If we're going to receive market data from IB, set the default subscription limit to 100, algorithms can override this setting in the Initialize method
+                        if (liveJob.DataQueueHandler.Contains("InteractiveBrokersBrokerage", StringComparison.InvariantCultureIgnoreCase))
                         {
                             algorithm.Settings.DataSubscriptionLimit = 100;
+                            var message = $"Detected 'InteractiveBrokers' data feed. Adjusting algorithm Settings.DataSubscriptionLimit to {algorithm.Settings.DataSubscriptionLimit}." +
+                            $" Can override this setting on Initialize.";
+                            algorithm.Debug(message);
+                            Log.Trace($"BrokerageSetupHandler.Setup(): {message}");
                         }
 
                         //Initialise the algorithm, get the required data:
