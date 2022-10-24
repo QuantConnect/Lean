@@ -21,6 +21,7 @@ using QuantConnect.Packets;
 using QuantConnect.Logging;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -29,6 +30,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class DataQueueHandlerManager : IDataQueueHandler, IDataQueueUniverseProvider
     {
+        private ITimeProvider _frontierTimeProvider = RealTimeProvider.Instance;
         private readonly Dictionary<SubscriptionDataConfig, IDataQueueHandler> _dataConfigAndDataHandler = new();
 
         /// <summary>
@@ -50,6 +52,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
+            var utcNow = _frontierTimeProvider.GetUtcNow();
             foreach (var dataHandler in DataHandlers)
             {
                 var enumerator = dataHandler.Subscribe(dataConfig, newDataAvailableHandler);
@@ -57,7 +60,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (enumerator != null)
                 {
                     _dataConfigAndDataHandler.Add(dataConfig, dataHandler);
-                    return enumerator;
+
+                    if (dataConfig.Resolution == Resolution.Tick || dataConfig.IsCustomData)
+                    {
+                        // Emit ticks & custom data as soon as we get them, they don't need any kind of batching behavior applied to them
+                        return enumerator;
+                    }
+                    return new FrontierAwareEnumerator(enumerator, _frontierTimeProvider,
+                        new TimeZoneOffsetProvider(
+                            dataConfig.ExchangeTimeZone,
+                            utcNow,
+                            Time.EndOfTime
+                        )
+                    );
                 }
             }
             return null;
@@ -89,6 +104,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 dataHandler.SetJob(job);
                 DataHandlers.Add(dataHandler);
             }
+
+            InitializeFrontierTimeProvider();
         }
 
         /// <summary>
@@ -137,6 +154,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public bool CanPerformSelection()
         {
             return GetUniverseProviders().Any(provider => provider.CanPerformSelection());
+        }
+
+        /// <summary>
+        /// Creates the frontier time provider instance
+        /// </summary>
+        /// <remarks>Protected for testing purposes</remarks>
+        protected void InitializeFrontierTimeProvider()
+        {
+            _frontierTimeProvider = new CompositeTimeProvider(DataHandlers.OfType<ITimeProvider>());
         }
 
         private IEnumerable<IDataQueueUniverseProvider> GetUniverseProviders()
