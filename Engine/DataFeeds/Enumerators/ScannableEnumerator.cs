@@ -38,6 +38,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private readonly DateTimeZone _timeZone;
         private readonly ConcurrentQueue<T> _queue;
         private readonly ITimeProvider _timeProvider;
+        private readonly EventHandler _newDataAvailableHandler;
         private readonly IDataConsolidator _consolidator;
 
         /// <summary>
@@ -74,14 +75,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             _queue = new ConcurrentQueue<T>();
             _consolidatorInputType = consolidator.InputType;
             _validateInputType = _consolidatorInputType != typeof(BaseData);
-            var newDataAvailableHandler1 = newDataAvailableHandler ?? ((s, e) => { });
+            _newDataAvailableHandler = newDataAvailableHandler ?? ((s, e) => { });
 
-            _consolidator.DataConsolidated += (sender, data) =>
-            {
-                _consolidated = true;
-                Enqueue(data as T);
-                newDataAvailableHandler1(sender, EventArgs.Empty);
-            };
+            _consolidator.DataConsolidated += DataConsolidatedHandler;
         }
 
         /// <summary>
@@ -164,6 +160,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
+            _consolidator.DataConsolidated -= DataConsolidatedHandler;
+        }
+
+        private void DataConsolidatedHandler(object sender, IBaseData data)
+        {
+            var dataPoint = data as T;
+            _consolidated = true;
+            Enqueue(dataPoint);
+            _newDataAvailableHandler(sender, new NewDataAvailableEventArgs { DataPoint = dataPoint });
         }
     }
 }
