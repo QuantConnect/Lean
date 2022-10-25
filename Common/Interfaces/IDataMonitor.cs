@@ -20,22 +20,19 @@ using System;
 namespace QuantConnect.Interfaces
 {
     /// <summary>
-    /// Fetches a remote file for a security.
-    /// Must save the file to Globals.DataFolder.
+    /// Monitors data requests and reports on missing data
     /// </summary>
-    [InheritedExport(typeof(IDataProvider))]
-    public interface IDataProvider
+    [InheritedExport(typeof(IDataMonitor))]
+    public interface IDataMonitor
     {
         /// <summary>
-        /// Event raised each time data fetch is finished (successfully or not)
+        /// Generates a report on missing data
         /// </summary>
-        event EventHandler<DataProviderNewDataRequestEventArgs> NewDataRequest;
+        DataMonitorReport GenerateReport();
 
         /// <summary>
-        /// Retrieves data to be used in an algorithm
+        /// Event handler for the <see cref="IDataProvider.NewDataRequest"/> event
         /// </summary>
-        /// <param name="key">A string representing where the data is stored</param>
-        /// <returns>A <see cref="Stream"/> of the data requested</returns>
-        Stream Fetch(string key);
+        void OnNewDataRequest(object sender, DataProviderNewDataRequestEventArgs e);
     }
 }

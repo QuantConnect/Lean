@@ -96,6 +96,11 @@ namespace QuantConnect.Lean.Engine
         public IDataPermissionManager DataPermissionsManager { get; }
 
         /// <summary>
+        /// Monitors data requests and reports on missing data
+        /// </summary>
+        public IDataMonitor DataMonitor { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="LeanEngineAlgorithmHandlers"/> class from the specified handlers
         /// </summary>
         /// <param name="results">The result handler for communicating results from the algorithm</param>
@@ -181,6 +186,9 @@ namespace QuantConnect.Lean.Engine
             ObjectStore = objectStore;
             DataPermissionsManager = dataPermissionsManager;
             DataCacheProvider = new ZipDataCacheProvider(DataProvider, isDataEphemeral: liveMode);
+            DataMonitor = new DataMonitor();
+
+            DataProvider.NewDataRequest += DataMonitor.OnNewDataRequest;
         }
 
         /// <summary>

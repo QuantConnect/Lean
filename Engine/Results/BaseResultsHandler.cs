@@ -45,6 +45,8 @@ namespace QuantConnect.Lean.Engine.Results
 
         private string _hostName;
 
+        private IDataMonitor _dataMonitor;
+
         /// <summary>
         /// The main loop update interval
         /// </summary>
@@ -235,6 +237,9 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         public virtual void Exit()
         {
+            var dataReport = _dataMonitor.GenerateReport();
+            // TODO: Log and save the report
+
             // reset standard out/error
             Console.SetOut(StandardOut);
             Console.SetError(StandardError);
@@ -314,19 +319,17 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Initialize the result handler with this result packet.
         /// </summary>
-        /// <param name="job">Algorithm job packet for this result handler</param>
-        /// <param name="messagingHandler">The handler responsible for communicating messages to listeners</param>
-        /// <param name="api">The api instance used for handling logs</param>
-        /// <param name="transactionHandler">The transaction handler used to get the algorithms <see cref="Order"/> information</param>
-        public virtual void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, ITransactionHandler transactionHandler)
+        /// <param name="parameters">Initialize parameters</param>
+        public virtual void Initialize(ResultHandlerInitializeParameters parameters)
         {
-            _hostName = job.HostName ?? Environment.MachineName;
-            MessagingHandler = messagingHandler;
-            TransactionHandler = transactionHandler;
-            CompileId = job.CompileId;
-            AlgorithmId = job.AlgorithmId;
-            ProjectId = job.ProjectId;
-            RamAllocation = job.RamAllocation.ToStringInvariant();
+            _hostName = parameters.Job.HostName ?? Environment.MachineName;
+            _dataMonitor = parameters.DataMonitor;
+            MessagingHandler = parameters.MessagingHandler;
+            TransactionHandler = parameters.TransactionHandler;
+            CompileId = parameters.Job.CompileId;
+            AlgorithmId = parameters.Job.AlgorithmId;
+            ProjectId = parameters.Job.ProjectId;
+            RamAllocation = parameters.Job.RamAllocation.ToStringInvariant();
             OrderEventJsonConverter = new OrderEventJsonConverter(AlgorithmId);
             _updateRunner = new Thread(Run, 0) { IsBackground = true, Name = "Result Thread" };
             _updateRunner.Start();

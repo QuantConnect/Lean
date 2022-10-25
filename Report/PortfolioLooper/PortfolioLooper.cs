@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -87,6 +87,7 @@ namespace QuantConnect.Report
             // Create MHDB and Symbol properties DB instances for the DataManager
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
+            var dataProvider = new DefaultDataProvider();
             _dataManager = new DataManager(feed,
                 new UniverseSelection(
                     Algorithm,
@@ -97,7 +98,7 @@ namespace QuantConnect.Report
                         RegisteredSecurityDataTypesProvider.Null,
                         new SecurityCacheProvider(Algorithm.Portfolio)),
                     dataPermissionManager,
-                    new DefaultDataProvider()),
+                    dataProvider),
                 Algorithm,
                 Algorithm.TimeKeeper,
                 marketHoursDatabase,
@@ -128,7 +129,7 @@ namespace QuantConnect.Report
             Algorithm.FromOrders(orders);
 
             // More initialization, this time with Algorithm and other misc. classes
-            _resultHandler.Initialize(job, new Messaging.Messaging(), new Api.Api(), transactions);
+            _resultHandler.Initialize(new ResultHandlerInitializeParameters(job, new Messaging.Messaging(), new Api.Api(), transactions, new DataMonitor()));
             _resultHandler.SetAlgorithm(Algorithm, Algorithm.Portfolio.TotalPortfolioValue);
 
             Algorithm.Transactions.SetOrderProcessor(transactions);
