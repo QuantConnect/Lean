@@ -1,4 +1,4 @@
-/* 
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -46,6 +46,14 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice data)
         {
+            foreach (var point in data)
+            {
+                if (point.Value.IsFillForward)
+                {
+                    throw new Exception("We requested no fill forwarding!");
+                }
+            }
+
             foreach (var chain in data.FutureChains)
             {
                 _receivedData = true;
@@ -79,6 +87,16 @@ namespace QuantConnect.Algorithm.CSharp
         public Language[] Languages { get; } = { Language.CSharp };
 
         /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 136444;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
@@ -99,8 +117,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-3.432"},
-            {"Tracking Error", "0.098"},
+            {"Information Ratio", "-3.102"},
+            {"Tracking Error", "0.091"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},

@@ -128,18 +128,20 @@ live = [time, six, time, twelve]
 result = charts.GetRollingBeta(live)
 
 ## Test GetRollingSharpeRatioPlot
-data = list(np.random.uniform(1, 3, 365 * 2))
+six = list(np.random.uniform(1, 3, 365 * 2))
+twelve = [np.nan for x in range(365)] + list(np.random.uniform(1, 3, 365))
 time = [pd.Timestamp(x).to_pydatetime() for x in pd.date_range('2012-10-01 00:00:00', periods=365 * 2)]
-backtest = [time, data]
+six_live = list(np.random.uniform(1, 3, 365 + 180))
+twelve_live = [np.nan for x in range(180)] + list(np.random.uniform(1, 3, 365))
+time_live = [pd.Timestamp(x).to_pydatetime() for x in pd.date_range('2014-10-01 00:00:00', periods=365 + 180)]
 
-data = list(np.random.uniform(1, 3, 365))
-time = [pd.Timestamp(x).to_pydatetime() for x in pd.date_range('2014-10-01 00:00:00', periods=365)]
-live = [time, data]
-
-empty = [[], []]
-result = charts.GetRollingSharpeRatio(empty, empty)
-result = charts.GetRollingSharpeRatio(backtest, empty)
-result = charts.GetRollingSharpeRatio(backtest, live)
+empty = [[], [], [], []]
+result = charts.GetRollingSharpeRatio([time, six, time, twelve], empty)
+result = charts.GetRollingSharpeRatio([time, six, [], []], empty)
+result = charts.GetRollingSharpeRatio([time, six, time, twelve], [time_live, six_live, time_live, twelve_live])
+result = charts.GetRollingSharpeRatio([time, six, [], []], [time_live, six_live, time_live, twelve_live])
+result = charts.GetRollingSharpeRatio([time, six, time, twelve], [time_live, six_live, [], []])
+result = charts.GetRollingSharpeRatio([time, six, [], []], [time_live, six_live, [], []])
 
 ## Test GetAssetAllocationPlot
 backtest = [['SPY', 'IBM', 'NFLX', 'AAPL'], [0.50, 0.25, 0.125, 0.125]]
@@ -161,16 +163,16 @@ result = charts.GetLeverage(backtest, live)
 
 ## Test GetExposurePlot
 time = [pd.Timestamp(x).to_pydatetime() for x in pd.date_range('2014-10-01', periods=365)]
-long_securities = ['Equity']
-short_securities = ['Forex']
-long = [np.random.uniform(0, 0.5, 365)]
-short = [np.random.uniform(-0.5, 0, 365)]
+long_securities = ['Equity', 'Option', 'Commodity', 'Forex', 'Future', 'Cfd', 'Crypto', 'FutureOption', 'IndexOption']
+short_securities = long_securities
+long = [np.random.uniform(0, 0.5, 365) for x in long_securities]
+short = [np.random.uniform(-0.5, 0, 365) for x in short_securities]
 
 live_time = [pd.Timestamp(x).to_pydatetime() for x in pd.date_range('2015-10-01', periods=100)]
-live_long = [np.random.uniform(0, 0.5, 100)]
-live_short = [np.random.uniform(-0.5, -0, 100)]
-live_long_securities = ['Equity']
-live_short_securities = ['Forex']
+live_long_securities = long_securities
+live_short_securities = long_securities
+live_long = [np.random.uniform(0, 0.5, 100) for x in live_long_securities]
+live_short = [np.random.uniform(-0.5, -0, 100) for x in live_short_securities]
 
 result = charts.GetExposure()
 result = charts.GetExposure(time, long_securities = long_securities, long_data=long, short_securities=[], short_data=[list(np.zeros(len(long[0])))])

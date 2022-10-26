@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 
@@ -33,6 +34,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2018, 04, 04);
             SetEndDate(2018, 04, 04);
+            SetBrokerageModel(BrokerageName.GDAX, AccountType.Cash);
 
             // GDAX doesn't have LTCETH or ETHLTC, but they do have ETHUSD and LTCUSD to form a path between ETH and LTC
             SetAccountCurrency("ETH");
@@ -102,6 +104,16 @@ namespace QuantConnect.Algorithm.CSharp
         public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 5765;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 120;
+
+        /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
@@ -125,8 +137,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$2000.00"},
+            {"Total Fees", "Ξ0.00"},
+            {"Estimated Strategy Capacity", "Ξ2000.00"},
             {"Lowest Capacity Asset", "LTCUSD XJ"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},

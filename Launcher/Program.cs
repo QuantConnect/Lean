@@ -15,13 +15,12 @@
 */
 
 using System;
-using System.ComponentModel.Composition;
-using System.IO;
 using System.Threading;
 using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Python;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Launcher
@@ -78,6 +77,9 @@ namespace QuantConnect.Lean.Launcher
                 throw new ArgumentException(jobNullMessage);
             }
 
+            // Activate our PythonVirtualEnvironment
+            PythonInitializer.ActivatePythonVirtualEnvironment(job.PythonVirtualEnvironment);
+
             // if the job version doesn't match this instance version then we can't process it
             // we also don't want to reprocess redelivered jobs
             if (job.Redelivered)
@@ -101,6 +103,8 @@ namespace QuantConnect.Lean.Launcher
                 algorithmManager = new AlgorithmManager(liveMode, job);
 
                 leanEngineSystemHandlers.LeanManager.Initialize(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, job, algorithmManager);
+
+                OS.Initialize();
 
                 var engine = new Engine.Engine(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, liveMode);
                 engine.Run(job, algorithmManager, assemblyPath, WorkerThread.Instance);
@@ -133,7 +137,9 @@ namespace QuantConnect.Lean.Launcher
             leanEngineSystemHandlers.DisposeSafely();
             leanEngineAlgorithmHandlers.DisposeSafely();
             Log.LogHandler.DisposeSafely();
-            OS.CpuPerformanceCounter.DisposeSafely();
+            OS.Dispose();
+
+            PythonInitializer.Shutdown();
 
             Log.Trace("Program.Main(): Exiting Lean...");
             Environment.Exit(exitCode);

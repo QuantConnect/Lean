@@ -80,7 +80,7 @@ class DualThrustAlphaModel(AlphaModel):
                 from the standard resolution - 1m 1h etc. - we need to pass this parameters along
                 with proper data resolution'''
 
-        # coefficient that used to determinte upper and lower borders of a breakout channel
+        # coefficient that used to determine upper and lower borders of a breakout channel
         self.k1 = k1
         self.k2 = k2
 

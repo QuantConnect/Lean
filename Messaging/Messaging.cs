@@ -13,18 +13,14 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Notifications;
-using QuantConnect.Orders.Serialization;
 using QuantConnect.Packets;
 using QuantConnect.Util;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Messaging
 {
@@ -33,11 +29,6 @@ namespace QuantConnect.Messaging
     /// </summary>
     public class Messaging : IMessagingHandler
     {
-        private static readonly bool UpdateRegressionStatistics = Config.GetBool("regression-update-statistics", false);
-
-        private AlgorithmNodePacket _job;
-        private OrderEventJsonConverter _orderEventJsonConverter;
-
         /// <summary>
         /// This implementation ignores the <seealso cref="HasSubscribers"/> flag and
         /// instead will always write to the log.
@@ -51,7 +42,8 @@ namespace QuantConnect.Messaging
         /// <summary>
         /// Initialize the messaging system
         /// </summary>
-        public void Initialize()
+        /// <param name="initializeParameters">The parameters required for initialization</param>
+        public void Initialize(MessagingHandlerInitializeParameters initializeParameters)
         {
             //
         }
@@ -59,21 +51,19 @@ namespace QuantConnect.Messaging
         /// <summary>
         /// Set the messaging channel
         /// </summary>
-        public void SetAuthentication(AlgorithmNodePacket job)
+        public virtual void SetAuthentication(AlgorithmNodePacket job)
         {
-            _job = job;
-            _orderEventJsonConverter = new OrderEventJsonConverter(job.AlgorithmId);
         }
 
         /// <summary>
         /// Send a generic base packet without processing
         /// </summary>
-        public void Send(Packet packet)
+        public virtual void Send(Packet packet)
         {
             switch (packet.Type)
             {
                 case PacketType.Debug:
-                    var debug = (DebugPacket) packet;
+                    var debug = (DebugPacket)packet;
                     Log.Trace("Debug: " + debug.Message);
                     break;
 
@@ -83,33 +73,27 @@ namespace QuantConnect.Messaging
                     break;
 
                 case PacketType.Log:
-                    var log = (LogPacket) packet;
+                    var log = (LogPacket)packet;
                     Log.Trace("Log: " + log.Message);
                     break;
 
                 case PacketType.RuntimeError:
-                    var runtime = (RuntimeErrorPacket) packet;
+                    var runtime = (RuntimeErrorPacket)packet;
                     var rstack = (!string.IsNullOrEmpty(runtime.StackTrace) ? (Environment.NewLine + " " + runtime.StackTrace) : string.Empty);
                     Log.Error(runtime.Message + rstack);
                     break;
 
                 case PacketType.HandledError:
-                    var handled = (HandledErrorPacket) packet;
+                    var handled = (HandledErrorPacket)packet;
                     var hstack = (!string.IsNullOrEmpty(handled.StackTrace) ? (Environment.NewLine + " " + handled.StackTrace) : string.Empty);
                     Log.Error(handled.Message + hstack);
                     break;
 
                 case PacketType.AlphaResult:
-                    // spams the logs
-                    //var insights = ((AlphaResultPacket) packet).Insights;
-                    //foreach (var insight in insights)
-                    //{
-                    //    Log.Trace("Insight: " + insight);
-                    //}
                     break;
 
                 case PacketType.BacktestResult:
-                    var result = (BacktestResultPacket) packet;
+                    var result = (BacktestResultPacket)packet;
 
                     if (result.Progress == 1)
                     {
@@ -124,13 +108,8 @@ namespace QuantConnect.Messaging
                         var orderHash = result.Results.Orders.GetHash();
                         result.Results.Statistics.Add("OrderListHash", orderHash);
 
-                        if (UpdateRegressionStatistics && _job.Language == Language.CSharp)
-                        {
-                            UpdateRegressionStatisticsInSourceFile(result);
-                        }
-
                         var statisticsStr = $"{Environment.NewLine}" +
-                            $"{string.Join(Environment.NewLine,result.Results.Statistics.Select(x => $"STATISTICS:: {x.Key} {x.Value}"))}";
+                            $"{string.Join(Environment.NewLine, result.Results.Statistics.Select(x => $"STATISTICS:: {x.Key} {x.Value}"))}";
                         Log.Trace(statisticsStr);
                     }
                     break;
@@ -143,75 +122,15 @@ namespace QuantConnect.Messaging
         public void SendNotification(Notification notification)
         {
             var type = notification.GetType();
-            if (type == typeof (NotificationEmail)
-             || type == typeof (NotificationWeb)
-             || type == typeof (NotificationSms)
+            if (type == typeof(NotificationEmail)
+             || type == typeof(NotificationWeb)
+             || type == typeof(NotificationSms)
              || type == typeof(NotificationTelegram))
             {
                 Log.Error("Messaging.SendNotification(): Send not implemented for notification of type: " + type.Name);
                 return;
             }
             notification.Send();
-        }
-
-        private void UpdateRegressionStatisticsInSourceFile(BacktestResultPacket result)
-        {
-            if (!result.Results.Statistics.Any())
-            {
-                Log.Error("Messaging.UpdateRegressionStatisticsInSourceFile(): No statistics generated. Skipping update.");
-                return;
-            }
-
-            var algorithmSource = Directory.EnumerateFiles("../../../Algorithm.CSharp", $"{_job.AlgorithmId}.cs", SearchOption.AllDirectories).SingleOrDefault();
-            if (algorithmSource == null)
-            {
-                algorithmSource = Directory.EnumerateFiles("../../../Algorithm.CSharp", $"*{_job.AlgorithmId}.cs", SearchOption.AllDirectories).Single();
-            }
-            var file = File.ReadAllLines(algorithmSource).ToList().GetEnumerator();
-            var lines = new List<string>();
-            while (file.MoveNext())
-            {
-                var line = file.Current;
-                if (line == null)
-                {
-                    continue;
-                }
-
-                if (line.Contains("public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>")
-                    || line.Contains("public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>")
-                    || line.Contains("public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>"))
-                {
-                    lines.Add(line);
-                    lines.Add("        {");
-
-                    foreach (var pair in result.Results.Statistics)
-                    {
-                        lines.Add($"            {{\"{pair.Key}\", \"{pair.Value}\"}},");
-                    }
-
-                    // remove trailing comma
-                    var lastLine = lines[lines.Count - 1];
-                    lines[lines.Count - 1] = lastLine.Substring(0, lastLine.Length - 1);
-
-                    // now we skip existing expected statistics in file
-                    while (file.MoveNext())
-                    {
-                        line = file.Current;
-                        if (line != null && line.Contains("};"))
-                        {
-                            lines.Add(line);
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    lines.Add(line);
-                }
-            }
-
-            file.DisposeSafely();
-            File.WriteAllLines(algorithmSource, lines);
         }
 
         /// <summary>

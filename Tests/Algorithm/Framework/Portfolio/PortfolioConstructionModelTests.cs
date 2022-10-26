@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -22,6 +22,7 @@ using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
+using QuantConnect.Tests.Common.Data.UniverseSelection;
 using DateTime = System.DateTime;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
@@ -39,7 +40,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 constructionModel = new TestPortfolioConstructionModel();
                 using (Py.GIL())
                 {
-                    var func = PythonEngine.ModuleFromString("RebalanceFunc",
+                    var func = PyModule.FromString("RebalanceFunc",
                         @"
 from datetime import timedelta
 
@@ -73,7 +74,7 @@ def RebalanceFunc(time):
                 constructionModel = new TestPortfolioConstructionModel();
                 using (Py.GIL())
                 {
-                    var func = PythonEngine.ModuleFromString("RebalanceFunc",
+                    var func = PyModule.FromString("RebalanceFunc",
                         @"
 from datetime import timedelta
 
@@ -98,7 +99,7 @@ def RebalanceFunc(time):
                 new RegisteredSecurityDataTypesProvider(),
                 new SecurityCache());
 
-            constructionModel.OnSecuritiesChanged(null, SecurityChanges.Added(security));
+            constructionModel.OnSecuritiesChanged(null, SecurityChangesTests.AddedNonInternal(security));
             Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 2), new Insight[0]));
             Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 2), new Insight[0]));
         }
@@ -113,7 +114,7 @@ def RebalanceFunc(time):
                 constructionModel = new TestPortfolioConstructionModel();
                 using (Py.GIL())
                 {
-                    var func = PythonEngine.ModuleFromString("RebalanceFunc",
+                    var func = PyModule.FromString("RebalanceFunc",
                         @"
 from datetime import timedelta
 
@@ -147,7 +148,7 @@ def RebalanceFunc(time):
                 constructionModel = new TestPortfolioConstructionModel();
                 using (Py.GIL())
                 {
-                    var func = PythonEngine.ModuleFromString("RebalanceFunc",
+                    var func = PyModule.FromString("RebalanceFunc",
                         @"
 from datetime import timedelta
 
@@ -178,7 +179,7 @@ def RebalanceFunc(time):
                 constructionModel = new TestPortfolioConstructionModel();
                 using (Py.GIL())
                 {
-                    var func = PythonEngine.ModuleFromString(
+                    var func = PyModule.FromString(
                         "RebalanceFunc",
                         @"
 from datetime import timedelta
@@ -206,7 +207,7 @@ def RebalanceFunc():
                 new RegisteredSecurityDataTypesProvider(),
                 new SecurityCache());
 
-            constructionModel.OnSecuritiesChanged(null, SecurityChanges.Added(security));
+            constructionModel.OnSecuritiesChanged(null, SecurityChangesTests.AddedNonInternal(security));
             Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), new Insight[0]));
             constructionModel.OnSecuritiesChanged(null, SecurityChanges.None);
             Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), new Insight[0]));
@@ -222,7 +223,7 @@ def RebalanceFunc():
                 constructionModel = new TestPortfolioConstructionModel();
                 using (Py.GIL())
                 {
-                    var func = PythonEngine.ModuleFromString(
+                    var func = PyModule.FromString(
                         "RebalanceFunc",
                         @"
 from datetime import timedelta
@@ -289,7 +290,7 @@ def RebalanceFunc(time):
                 constructionModel = new TestPortfolioConstructionModel();
                 using (Py.GIL())
                 {
-                    dynamic func = PythonEngine.ModuleFromString("RebalanceFunc",
+                    dynamic func = PyModule.FromString("RebalanceFunc",
                         @"
 import datetime
 
@@ -313,6 +314,7 @@ def RebalanceFunc(dateRules):
             Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 10, 2), new Insight[0]));
         }
 
+        [TestCase(Language.Python, 2)]
         [TestCase(Language.Python, 1)]
         [TestCase(Language.Python, 0)]
         [TestCase(Language.CSharp, 0)]
@@ -326,7 +328,7 @@ def RebalanceFunc(dateRules):
                 {
                     if (version == 1)
                     {
-                        dynamic func = PythonEngine.ModuleFromString("RebalanceFunc",
+                        dynamic func = PyModule.FromString("RebalanceFunc",
                             @"
 from System import *
 
@@ -334,9 +336,19 @@ def RebalanceFunc(timeSpan):
     return timeSpan").GetAttr("RebalanceFunc");
                         constructionModel.SetRebalancingFunc(func(TimeSpan.FromMinutes(20)));
                     }
+                    else if(version == 2)
+                    {
+                        dynamic func = PyModule.FromString("RebalanceFunc",
+                            @"
+from datetime import timedelta
+
+def RebalanceFunc(constructionModel):
+    return constructionModel.SetRebalancingFunc(timedelta(minutes = 20))").GetAttr("RebalanceFunc");
+                        func(constructionModel);
+                    }
                     else
                     {
-                        dynamic func = PythonEngine.ModuleFromString("RebalanceFunc",
+                        dynamic func = PyModule.FromString("RebalanceFunc",
                             @"
 from datetime import timedelta
 

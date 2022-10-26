@@ -19,8 +19,8 @@ from AlgorithmImports import *
 ###
 ###   * Initial entry, buy ES Put Option (expiring OTM)
 ###     - contract expires worthless, not exercised, so never opened a position in the underlying
-###   
-###   * Liquidation of worthless ES Put OTM contract 
+###
+###   * Liquidation of worthless ES Put OTM contract
 ###
 ### Additionally, we test delistings for future options and assert that our
 ### portfolio holdings reflect the orders the algorithm has submitted.
@@ -70,7 +70,7 @@ class FutureOptionPutOTMExpiryRegressionAlgorithm(QCAlgorithm):
             if delisting.Type == DelistingType.Delisted:
                 if delisting.Time != datetime(2020, 6, 20):
                     raise AssertionError(f"Delisting happened at unexpected date: {delisting.Time}")
-        
+
 
     def OnOrderEvent(self, orderEvent: OrderEvent):
         if orderEvent.Status != OrderStatus.Filled:
@@ -83,7 +83,7 @@ class FutureOptionPutOTMExpiryRegressionAlgorithm(QCAlgorithm):
         security = self.Securities[orderEvent.Symbol]
         if security.Symbol == self.es19m20:
             raise AssertionError("Invalid state: did not expect a position for the underlying to be opened, since this contract expires OTM")
-        
+
         # Expected contract is ES19M20 Put Option expiring OTM @ 3200
         if (security.Symbol == self.expectedContract):
             self.AssertFutureOptionContractOrder(orderEvent, security)
@@ -91,7 +91,7 @@ class FutureOptionPutOTMExpiryRegressionAlgorithm(QCAlgorithm):
             raise AssertionError(f"Received order event for unknown Symbol: {orderEvent.Symbol}")
 
         self.Log(f"{orderEvent}")
-        
+
 
     def AssertFutureOptionContractOrder(self, orderEvent: OrderEvent, option: Security):
         if orderEvent.Direction == OrderDirection.Buy and option.Holdings.Quantity != 1:

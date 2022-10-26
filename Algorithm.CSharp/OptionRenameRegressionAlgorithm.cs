@@ -121,7 +121,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Order fill event handler. On an order fill update the resulting information is passed to this method.
         /// </summary>
-        /// <param name="orderEvent">Order event details containing details of the evemts</param>
+        /// <param name="orderEvent">Order event details containing details of the events</param>
         /// <remarks>This method can be called asynchronously and so should only be used by seasoned C# experts. Ensure you use proper locks on thread-unsafe objects</remarks>
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
@@ -139,6 +139,16 @@ namespace QuantConnect.Algorithm.CSharp
         public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 297190;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
@@ -150,20 +160,20 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "0.000%"},
             {"Expectancy", "-1"},
             {"Net Profit", "-0.006%"},
-            {"Sharpe Ratio", "-3.94"},
-            {"Probabilistic Sharpe Ratio", "0%"},
+            {"Sharpe Ratio", "-3.318"},
+            {"Probabilistic Sharpe Ratio", "29.496%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
             {"Alpha", "0"},
             {"Beta", "0"},
-            {"Annual Standard Deviation", "0.002"},
+            {"Annual Standard Deviation", "0.001"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-3.94"},
-            {"Tracking Error", "0.002"},
+            {"Information Ratio", "-3.318"},
+            {"Tracking Error", "0.001"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$4.00"},
-            {"Estimated Strategy Capacity", "$760000.00"},
+            {"Estimated Strategy Capacity", "$620000.00"},
             {"Lowest Capacity Asset", "NWSA VJ5IKAXU7WBQ|NWSA T3MO1488O0H1"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},

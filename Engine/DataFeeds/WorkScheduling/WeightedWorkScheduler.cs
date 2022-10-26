@@ -18,6 +18,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
 {
@@ -47,6 +48,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
 
         private readonly ConcurrentQueue<WorkItem> _newWork;
         private readonly AutoResetEvent _newWorkEvent;
+        private Task _initializationTask;
+        private readonly List<WeightedWorkQueue> _workerQueues;
 
         /// <summary>
         /// Singleton instance
@@ -57,9 +60,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
         {
             _newWork = new ConcurrentQueue<WorkItem>();
             _newWorkEvent = new AutoResetEvent(false);
+            _workerQueues = new List<WeightedWorkQueue>(WorkersCount);
 
-            var work = new List<WeightedWorkQueue>();
-            var queueManager = new Thread(() =>
+            _initializationTask = Task.Run(() =>
             {
                 MaxWorkWeight = Configuration.Config.GetInt("data-feed-max-work-weight", 400);
                 Logging.Log.Trace($"WeightedWorkScheduler(): will use {WorkersCount} workers and MaxWorkWeight is {MaxWorkWeight}");
@@ -67,7 +70,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
                 for (var i = 0; i < WorkersCount; i++)
                 {
                     var workQueue = new WeightedWorkQueue();
-                    work.Add(workQueue);
+                    _workerQueues.Add(workQueue);
                     var thread = new Thread(() => workQueue.WorkerThread(_newWork, _newWorkEvent))
                     {
                         IsBackground = true,
@@ -76,22 +79,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
                     };
                     thread.Start();
                 }
-
-                // make sure that the WorkQueue are kept sorted and the weights up to date
-                while (true)
-                {
-                    Thread.Sleep(TimeSpan.FromMilliseconds(1));
-                    for (var i = 0; i < work.Count; i++)
-                    {
-                        work[i].Sort();
-                    }
-                }
-            })
-            {
-                IsBackground = true,
-                Name = "WeightedWorkManager"
-            };
-            queueManager.Start();
+            });
         }
 
         /// <summary>
@@ -105,6 +93,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
         {
             _newWork.Enqueue(new WorkItem(workFunc, weightFunc));
             _newWorkEvent.Set();
+        }
+
+        /// <summary>
+        /// Execute the given action in all workers once
+        /// </summary>
+        public void AddSingleCallForAll(Action action)
+        {
+            if (!_initializationTask.Wait(TimeSpan.FromSeconds(10)))
+            {
+                throw new TimeoutException("Timeout waiting for worker threads to start");
+            }
+
+            for (var i = 0; i < _workerQueues.Count; i++)
+            {
+                _workerQueues[i].AddSingleCall(action);
+            }
         }
     }
 }

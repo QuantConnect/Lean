@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="resolution">Analysis resolution</param>
         /// <param name="threshold">The percent [0, 100] deviation of the ratio from the mean before emitting an insight</param>
         /// <param name="minimumCorrelation">The minimum correlation to consider a tradable pair</param>
-        public PearsonCorrelationPairsTradingAlphaModel(int lookback, Resolution resolution, decimal threshold = 1m, double minimumCorrelation = .5)
+        public PearsonCorrelationPairsTradingAlphaModel(int lookback = 15, Resolution resolution = Resolution.Minute, decimal threshold = 1m, double minimumCorrelation = .5)
             : base(lookback, resolution, threshold)
         {
             _lookback = lookback;

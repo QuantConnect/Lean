@@ -355,8 +355,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // the subscription could of ended but might still be part of the universe
             if (subscription.RemovedFromUniverse.Value)
             {
-                SubscriptionDataConfig config;
-                _subscriptionManagerSubscriptions.TryRemove(subscription.Configuration, out config);
+                _subscriptionManagerSubscriptions.TryRemove(subscription.Configuration, out var _);
             }
         }
 
@@ -389,11 +388,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             bool isFilteredSubscription = true,
             bool isInternalFeed = false,
             bool isCustomData = false,
-            DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted
+            DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted,
+            DataMappingMode dataMappingMode = DataMappingMode.OpenInterest,
+            uint contractDepthOffset = 0
             )
         {
             return Add(symbol, resolution, fillForward, extendedMarketHours, isFilteredSubscription, isInternalFeed, isCustomData,
-                new List<Tuple<Type, TickType>> { new Tuple<Type, TickType>(dataType, LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType))}, dataNormalizationMode)
+                new List<Tuple<Type, TickType>> { new Tuple<Type, TickType>(dataType, LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType))},
+                dataNormalizationMode, dataMappingMode, contractDepthOffset)
                 .First();
         }
 
@@ -411,7 +413,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             bool isInternalFeed = false,
             bool isCustomData = false,
             List<Tuple<Type, TickType>> subscriptionDataTypes = null,
-            DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted
+            DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted,
+            DataMappingMode dataMappingMode = DataMappingMode.OpenInterest,
+            uint contractDepthOffset = 0
             )
         {
             var dataTypes = subscriptionDataTypes ??
@@ -462,7 +466,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             var exchangeHours = marketHoursDbEntry.ExchangeHours;
             if (symbol.ID.SecurityType.IsOption() ||
-                symbol.ID.SecurityType == SecurityType.Future ||
                 symbol.ID.SecurityType == SecurityType.Index)
             {
                 dataNormalizationMode = DataNormalizationMode.Raw;
@@ -496,7 +499,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     isCustomData,
                     isFilteredSubscription: isFilteredSubscription,
                     tickType: tickType,
-                    dataNormalizationMode: dataNormalizationMode)).ToList();
+                    dataNormalizationMode: dataNormalizationMode,
+                    dataMappingMode: dataMappingMode,
+                    contractDepthOffset: contractDepthOffset)).ToList();
 
             for (int i = 0; i < result.Count; i++)
             {
@@ -526,13 +531,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return new List<Tuple<Type, TickType>> { new Tuple<Type, TickType>(typeof(ZipEntryName), TickType.Quote) };
             }
 
-            IEnumerable<TickType> availableDataType = AvailableDataTypes[symbolSecurityType];
-            // Equities will only look for trades in case of low resolutions.
-            if (symbolSecurityType == SecurityType.Equity && (resolution == Resolution.Daily || resolution == Resolution.Hour))
-            {
-                // we filter out quote tick type
-                availableDataType = availableDataType.Where(t => t != TickType.Quote);
-            }
+            IEnumerable<TickType> availableDataType = AvailableDataTypes[symbolSecurityType]
+                // Equities will only look for trades in case of low resolutions.
+                .Where(tickType => LeanData.IsValidConfiguration(symbolSecurityType, resolution, tickType));
 
             return availableDataType
                 .Select(tickType => new Tuple<Type, TickType>(LeanData.GetDataType(resolution, tickType), tickType)).ToList();

@@ -294,6 +294,16 @@ namespace QuantConnect.Algorithm.CSharp
         public Language[] Languages { get; } = { Language.CSharp };
 
         /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 1748811;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
@@ -305,18 +315,18 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "0.400%"},
             {"Expectancy", "-1"},
             {"Net Profit", "-0.329%"},
-            {"Sharpe Ratio", "-11.083"},
-            {"Probabilistic Sharpe Ratio", "0%"},
+            {"Sharpe Ratio", "-7.887"},
+            {"Probabilistic Sharpe Ratio", "1.216%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.003"},
+            {"Alpha", "-0.001"},
             {"Beta", "0.097"},
             {"Annual Standard Deviation", "0.002"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "9.742"},
-            {"Tracking Error", "0.021"},
-            {"Treynor Ratio", "-0.26"},
+            {"Information Ratio", "7.39"},
+            {"Tracking Error", "0.015"},
+            {"Treynor Ratio", "-0.131"},
             {"Total Fees", "$2.00"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "GOOCV VP83T1ZUHROL"},
@@ -339,7 +349,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "7f99e1a8ce4675a1e8bbe1ba45967ccd"}
+            {"OrderListHash", "f67306bc706a2cf66288f1cadf6148ed"}
         };
     }
 }

@@ -15,10 +15,10 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using System.Collections.Generic;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Data.UniverseSelection
@@ -30,31 +30,23 @@ namespace QuantConnect.Data.UniverseSelection
     {
         private readonly OptionFilterUniverse _optionFilterUniverse;
         private readonly UniverseSettings _universeSettings;
-        private readonly bool _liveMode;
         // as an array to make it easy to prepend to selected symbols
         private readonly Symbol[] _underlyingSymbol;
         private DateTime _cacheDate;
         private DateTime _lastExchangeDate;
-
-        // used for time-based removals in live mode
-        private readonly TimeSpan _minimumTimeInUniverse = TimeSpan.FromMinutes(15);
-        private readonly Dictionary<Symbol, DateTime> _addTimesBySymbol = new Dictionary<Symbol, DateTime>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OptionChainUniverse"/> class
         /// </summary>
         /// <param name="option">The canonical option chain security</param>
         /// <param name="universeSettings">The universe settings to be used for new subscriptions</param>
-        /// <param name="liveMode">True if we're running in live mode, false for backtest mode</param>
         public OptionChainUniverse(Option option,
-            UniverseSettings universeSettings,
-            bool liveMode)
+            UniverseSettings universeSettings)
             : base(option.SubscriptionDataConfig)
         {
             Option = option;
             _underlyingSymbol = new[] { Option.Symbol.Underlying };
             _universeSettings = new UniverseSettings(universeSettings) { DataNormalizationMode = DataNormalizationMode.Raw };
-            _liveMode = liveMode;
             _optionFilterUniverse = new OptionFilterUniverse();
         }
 
@@ -79,12 +71,6 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>The data that passes the filter</returns>
         public override IEnumerable<Symbol> SelectSymbols(DateTime utcTime, BaseDataCollection data)
         {
-            var optionsUniverseDataCollection = data as OptionChainUniverseDataCollection;
-            if (optionsUniverseDataCollection == null)
-            {
-                throw new ArgumentException($"Expected data of type '{typeof(OptionChainUniverseDataCollection).Name}'");
-            }
-
             // date change detection needs to be done in exchange time zone
             var exchangeDate = data.Time.ConvertFromUtc(Option.Exchange.TimeZone).Date;
             if (_cacheDate == exchangeDate)
@@ -92,9 +78,9 @@ namespace QuantConnect.Data.UniverseSelection
                 return Unchanged;
             }
 
-            var availableContracts = optionsUniverseDataCollection.Data.Select(x => x.Symbol);
+            var availableContracts = data.Data.Select(x => x.Symbol);
             // we will only update unique strikes when there is an exchange date change
-            _optionFilterUniverse.Refresh(availableContracts, optionsUniverseDataCollection.Underlying, _lastExchangeDate != exchangeDate);
+            _optionFilterUniverse.Refresh(availableContracts, data.Underlying, _lastExchangeDate != exchangeDate);
             _lastExchangeDate = exchangeDate;
 
             var results = Option.ContractFilter.Filter(_optionFilterUniverse);
@@ -106,15 +92,7 @@ namespace QuantConnect.Data.UniverseSelection
             }
 
             // always prepend the underlying symbol
-            var resultingSymbols = _underlyingSymbol.Concat(results).ToHashSet();
-
-            // we save off the filtered results to the universe data collection for later
-            // population into the OptionChain. This is non-ideal and could be remedied by
-            // the universe subscription emitting a special type after selection that could
-            // be checked for in TimeSlice.Create, but for now this will do
-            optionsUniverseDataCollection.FilteredContracts = resultingSymbols;
-
-            return resultingSymbols;
+            return _underlyingSymbol.Concat(results);
         }
 
         /// <summary>
@@ -122,9 +100,10 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         /// <param name="utcTime">The current utc date time</param>
         /// <param name="security">The security to be added</param>
+        /// <param name="isInternal">True if internal member</param>
         /// <returns>True if the security was successfully added,
         /// false if the security was already in the universe</returns>
-        internal override bool AddMember(DateTime utcTime, Security security)
+        internal override bool AddMember(DateTime utcTime, Security security, bool isInternal)
         {
             // never add members to disposed universes
             if (DisposeRequested)
@@ -145,70 +124,7 @@ namespace QuantConnect.Data.UniverseSelection
                 Securities.TryRemove(security.Symbol, out member);
             }
 
-            var added = Securities.TryAdd(security.Symbol, new Member(utcTime, security));
-
-            if (added && _liveMode)
-            {
-                _addTimesBySymbol[security.Symbol] = utcTime;
-            }
-
-            return added;
-        }
-
-        /// <summary>
-        /// Determines whether or not the specified security can be removed from
-        /// this universe. This is useful to prevent securities from being taken
-        /// out of a universe before the algorithm has had enough time to make
-        /// decisions on the security
-        /// </summary>
-        /// <param name="utcTime">The current utc time</param>
-        /// <param name="security">The security to check if its ok to remove</param>
-        /// <returns>True if we can remove the security, false otherwise</returns>
-        public override bool CanRemoveMember(DateTime utcTime, Security security)
-        {
-            // can always remove securities after dispose requested
-            if (DisposeRequested)
-            {
-                return true;
-            }
-
-            // if we haven't begun receiving data for this security then it's safe to remove
-            var lastData = security.Cache.GetData();
-            if (lastData == null)
-            {
-                return true;
-            }
-
-            if (_liveMode)
-            {
-                // Only remove members when they have been in the universe for a minimum period of time.
-                // This prevents us from needing to move contracts in and out too fast,
-                // as price moves and filtered contracts change throughout the day.
-                DateTime timeAdded;
-
-                // get the date/time this symbol was added to the universe
-                if (!_addTimesBySymbol.TryGetValue(security.Symbol, out timeAdded))
-                {
-                    return true;
-                }
-
-                if (timeAdded.Add(_minimumTimeInUniverse) > utcTime)
-                {
-                    // minimum time span not yet elapsed, do not remove
-                    return false;
-                }
-
-                // ok to remove
-                _addTimesBySymbol.Remove(security.Symbol);
-
-                return true;
-            }
-
-            // only remove members on day changes, this prevents us from needing to
-            // fast forward contracts continuously as price moves and out filtered
-            // contracts change throughout the day
-            var localTime = utcTime.ConvertFromUtc(security.Exchange.TimeZone);
-            return localTime.Date != lastData.Time.Date;
+            return Securities.TryAdd(security.Symbol, new Member(utcTime, security, isInternal));
         }
 
         /// <summary>

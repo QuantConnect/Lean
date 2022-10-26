@@ -32,7 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class RawDataRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const string Ticker = "GOOGL";
-        private FactorFile _factorFile;
+        private CorporateFactorProvider _factorFile;
         private readonly IEnumerator<decimal> _expectedRawPrices = new List<decimal> { 1157.93m, 1158.72m,
             1131.97m, 1114.28m, 1120.15m, 1114.51m, 1134.89m, 567.55m, 571.50m, 545.25m, 540.63m }.GetEnumerator();
         private Symbol _googl;
@@ -56,7 +56,7 @@ namespace QuantConnect.Algorithm.CSharp
             mapFileProvider.Initialize(dataProvider);
             var factorFileProvider = new LocalDiskFactorFileProvider();
             factorFileProvider.Initialize(mapFileProvider, dataProvider);
-            _factorFile = factorFileProvider.Get(_googl);
+            _factorFile = factorFileProvider.Get(_googl) as CorporateFactorProvider;
 
             // Prime our expected values
             _expectedRawPrices.MoveNext();
@@ -81,7 +81,7 @@ namespace QuantConnect.Algorithm.CSharp
                 if (_expectedRawPrices.Current != googlData.Close)
                 {
                     // Our values don't match lets try and give a reason why
-                    var dayFactor = _factorFile.GetPriceScaleFactor(googlData.Time);
+                    var dayFactor = _factorFile.GetPriceFactor(googlData.Time, DataNormalizationMode.Adjusted);
                     var probableRawPrice = googlData.Close / dayFactor; // Undo adjustment
 
                     if (_expectedRawPrices.Current == probableRawPrice)
@@ -110,6 +110,16 @@ namespace QuantConnect.Algorithm.CSharp
         public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 92;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
@@ -121,18 +131,18 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "7.300%"},
             {"Expectancy", "0"},
             {"Net Profit", "-7.279%"},
-            {"Sharpe Ratio", "-3.01"},
-            {"Probabilistic Sharpe Ratio", "3.061%"},
+            {"Sharpe Ratio", "-2.885"},
+            {"Probabilistic Sharpe Ratio", "4.001%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.835"},
-            {"Beta", "-0.236"},
-            {"Annual Standard Deviation", "0.262"},
-            {"Annual Variance", "0.069"},
-            {"Information Ratio", "-2.045"},
-            {"Tracking Error", "0.29"},
-            {"Treynor Ratio", "3.349"},
+            {"Alpha", "-0.38"},
+            {"Beta", "1.927"},
+            {"Annual Standard Deviation", "0.254"},
+            {"Annual Variance", "0.064"},
+            {"Information Ratio", "-2.852"},
+            {"Tracking Error", "0.192"},
+            {"Treynor Ratio", "-0.38"},
             {"Total Fees", "$1.00"},
             {"Estimated Strategy Capacity", "$110000000.00"},
             {"Lowest Capacity Asset", "GOOG T1AZ164W5VTX"},

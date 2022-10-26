@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,11 +15,12 @@
 */
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Util;
+using System.Collections;
+using QuantConnect.Logging;
+using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -28,29 +29,38 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// </summary>
     public class ConcatEnumerator : IEnumerator<BaseData>
     {
-        private readonly IEnumerator<BaseData> _concatEnumerator;
         private readonly List<IEnumerator<BaseData>> _enumerators;
         private readonly bool _skipDuplicateEndTimes;
         private DateTime? _lastEnumeratorEndTime;
+        private int _currentIndex;
 
         /// <summary>
         /// The current BaseData object
         /// </summary>
         public BaseData Current { get; set; }
+
+        /// <summary>
+        /// True if emitting a null data point is expected
+        /// </summary>
+        /// <remarks>Warmup enumerators are not allowed to return true and setting current to Null, this is because it's not a valid behavior for backtesting enumerators,
+        /// for example <see cref="FillForwardEnumerator"/></remarks>
+        public bool CanEmitNull { get; set; }
+
         object IEnumerator.Current => Current;
 
         /// <summary>
         /// Creates a new instance
         /// </summary>
         /// <param name="skipDuplicateEndTimes">True will skip data points from enumerators if before or at the last end time</param>
-        /// <param name="enumerators">The sequence of enumerators to concatenate</param>
+        /// <param name="enumerators">The sequence of enumerators to concatenate. Note that the order here matters, it will consume enumerators
+        /// and dispose of them, even if they return true and their current is null, except for the last which will be kept!</param>
         public ConcatEnumerator(bool skipDuplicateEndTimes,
             params IEnumerator<BaseData>[] enumerators
             )
         {
-            _enumerators = enumerators.ToList();
+            CanEmitNull = true;
             _skipDuplicateEndTimes = skipDuplicateEndTimes;
-            _concatEnumerator = GetConcatEnumerator();
+            _enumerators = enumerators.Where(enumerator => enumerator != null).ToList();
         }
 
         /// <summary>
@@ -59,9 +69,46 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <returns>True if the enumerator was successfully advanced to the next element; false if the enumerator has passed the end of the collection.</returns>
         public bool MoveNext()
         {
-            var moveNext = _concatEnumerator.MoveNext();
-            Current = moveNext ? _concatEnumerator.Current : null;
-            return moveNext;
+            for (; _currentIndex < _enumerators.Count; _currentIndex++)
+            {
+                var enumerator = _enumerators[_currentIndex];
+                while (enumerator.MoveNext())
+                {
+                    if (enumerator.Current == null && (_currentIndex < _enumerators.Count - 1 || !CanEmitNull))
+                    {
+                        // if there are more enumerators and the current stopped providing data drop it
+                        // in live trading, some enumerators will always return true (see TimeTriggeredUniverseSubscriptionEnumeratorFactory & InjectionEnumerator)
+                        // but unless it's the last enumerator we drop it, because these first are the warmup enumerators
+                        // or we are not allowed to return null
+                        break;
+                    }
+
+                    if (_skipDuplicateEndTimes
+                        && _lastEnumeratorEndTime.HasValue
+                        && enumerator.Current != null
+                        && enumerator.Current.EndTime <= _lastEnumeratorEndTime)
+                    {
+                        continue;
+                    }
+
+                    Current = enumerator.Current;
+                    return true;
+                }
+
+                _lastEnumeratorEndTime = Current?.EndTime;
+
+                if (Log.DebuggingEnabled)
+                {
+                    Log.Debug($"ConcatEnumerator.MoveNext(): disposing enumerator at position: {_currentIndex} Name: {enumerator.GetType().Name}");
+                }
+
+                // we wont be using this enumerator again, dispose of it and clear reference
+                enumerator.DisposeSafely();
+                _enumerators[_currentIndex] = null;
+            }
+
+            Current = null;
+            return false;
         }
 
         /// <summary>
@@ -69,11 +116,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         public void Reset()
         {
-            foreach (var enumerator in _enumerators)
-            {
-                enumerator.Reset();
-            }
-            _concatEnumerator.Reset();
+            throw new InvalidOperationException($"Can not reset {nameof(ConcatEnumerator)}");
         }
 
         /// <summary>
@@ -84,28 +127,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             foreach (var enumerator in _enumerators)
             {
                 enumerator.DisposeSafely();
-            }
-            _concatEnumerator.DisposeSafely();
-        }
-
-        private IEnumerator<BaseData> GetConcatEnumerator()
-        {
-            foreach (var enumerator in _enumerators)
-            {
-                while (enumerator.MoveNext())
-                {
-                    if (_skipDuplicateEndTimes
-                        && _lastEnumeratorEndTime.HasValue
-                        && enumerator.Current != null
-                        && enumerator.Current.EndTime < _lastEnumeratorEndTime)
-                    {
-                        continue;
-                    }
-
-                    Current = enumerator.Current;
-                    yield return Current;
-                }
-                _lastEnumeratorEndTime = Current?.EndTime;
             }
         }
     }

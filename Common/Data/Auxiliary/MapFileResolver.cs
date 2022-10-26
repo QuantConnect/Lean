@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using QuantConnect.Interfaces;
 using QuantConnect.Util;
 
 namespace QuantConnect.Data.Auxiliary
@@ -82,20 +83,6 @@ namespace QuantConnect.Data.Auxiliary
         }
 
         /// <summary>
-        /// Creates a new instance of the <see cref="MapFileResolver"/> class by reading all map files
-        /// for the specified market into memory
-        /// </summary>
-        /// <param name="dataDirectory">The root data directory</param>
-        /// <param name="market">The equity market to produce a map file collection for</param>
-        /// <returns>The collection of map files capable of mapping equity symbols within the specified market</returns>
-        public static MapFileResolver Create(string dataDirectory, string market)
-        {
-            market = market.ToLowerInvariant();
-            var path = Path.Combine(dataDirectory, "equity", market, "map_files");
-            return new MapFileResolver(MapFile.GetMapFiles(path, market));
-        }
-
-        /// <summary>
         /// Gets the map file matching the specified permtick
         /// </summary>
         /// <param name="permtick">The permtick to match on</param>
@@ -121,7 +108,7 @@ namespace QuantConnect.Data.Auxiliary
             {
                 if (entries.Count == 0)
                 {
-                    return new MapFile(symbol, new List<MapFileRow>());
+                    return new MapFile(symbol, Enumerable.Empty<MapFileRow>());
                 }
 
                 // Return value of BinarySearch (from MSDN):
@@ -152,9 +139,9 @@ namespace QuantConnect.Data.Auxiliary
             // secondary search for exact mapping, find path than ends with symbol.csv
             MapFile mapFile;
             if (!_mapFilesByPermtick.TryGetValue(symbol, out mapFile)
-                || mapFile.FirstDate > date)
+                || mapFile.FirstDate > date && date != SecurityIdentifier.DefaultDate)
             {
-                return new MapFile(symbol, new List<MapFileRow>());
+                return new MapFile(symbol, Enumerable.Empty<MapFileRow>());
             }
             return mapFile;
         }

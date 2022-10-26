@@ -22,17 +22,21 @@ from AlgorithmImports import *
 ### <meta name="tag" content="filter selection" />
 class OptionChainConsistencyRegressionAlgorithm(QCAlgorithm):
 
+    UnderlyingTicker = "GOOG"
+
     def Initialize(self):
+
         self.SetCash(10000)
         self.SetStartDate(2015,12,24)
         self.SetEndDate(2015,12,24)
 
-        option = self.AddOption("GOOG")
+        self.equity = self.AddEquity(self.UnderlyingTicker);
+        self.option = self.AddOption(self.UnderlyingTicker);
 
         # set our strike/expiry filter for this option chain
-        option.SetFilter(self.UniverseFunc)
+        self.option.SetFilter(self.UniverseFunc)
 
-        self.SetBenchmark("GOOG")
+        self.SetBenchmark(self.equity.Symbol)
 
     def OnData(self, slice):
         if self.Portfolio.Invested: return

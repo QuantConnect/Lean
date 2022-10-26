@@ -24,8 +24,8 @@ namespace QuantConnect.Tests.Brokerages
         private readonly decimal _highLimit;
         private readonly decimal _lowLimit;
 
-        public StopLimitOrderTestParameters(Symbol symbol, decimal highLimit, decimal lowLimit, IOrderProperties properties = null)
-            : base(symbol, properties)
+        public StopLimitOrderTestParameters(Symbol symbol, decimal highLimit, decimal lowLimit, IOrderProperties properties = null, OrderSubmissionData orderSubmissionData = null)
+            : base(symbol, properties, orderSubmissionData)
         {
             _highLimit = highLimit;
             _lowLimit = lowLimit;
@@ -49,30 +49,19 @@ namespace QuantConnect.Tests.Brokerages
 
         public override bool ModifyOrderToFill(IBrokerage brokerage, Order order, decimal lastMarketPrice)
         {
+            var symbolProperties = SPDB.GetSymbolProperties(order.Symbol.ID.Market, order.Symbol, order.SecurityType, order.PriceCurrency);
+            var roundOffPlaces = symbolProperties.MinimumPriceVariation.GetDecimalPlaces();
             var stop = (StopLimitOrder)order;
             var previousStop = stop.StopPrice;
             if (order.Quantity > 0)
             {
                 // for stop buys we need to decrease the stop price
-                stop.StopPrice = Math.Min(stop.StopPrice, Math.Max(stop.StopPrice / 2, Math.Round(lastMarketPrice, 2, MidpointRounding.AwayFromZero)));
-
-                //change behaviour for forex type unit tests
-                if (order.SecurityType == SecurityType.Forex || order.SecurityType == SecurityType.Crypto)
-                {
-                    stop.StopPrice = Math.Min(stop.StopPrice, Math.Max(stop.StopPrice / 2, Math.Round(lastMarketPrice, 4, MidpointRounding.AwayFromZero)));
-                }
+                stop.StopPrice = Math.Min(stop.StopPrice, Math.Max(stop.StopPrice / 2, Math.Round(lastMarketPrice, roundOffPlaces, MidpointRounding.AwayFromZero)));
             }
             else
             {
                 // for stop sells we need to increase the stop price
-                stop.StopPrice = Math.Max(stop.StopPrice, Math.Min(stop.StopPrice * 2, Math.Round(lastMarketPrice, 2, MidpointRounding.AwayFromZero)));
-
-
-                //change behaviour for forex type unit tests
-                if (order.SecurityType == SecurityType.Forex || order.SecurityType == SecurityType.Crypto)
-                {
-                    stop.StopPrice = Math.Max(stop.StopPrice, Math.Min(stop.StopPrice * 2, Math.Round(lastMarketPrice, 4, MidpointRounding.AwayFromZero)));
-                }
+                stop.StopPrice = Math.Max(stop.StopPrice, Math.Min(stop.StopPrice * 2, Math.Round(lastMarketPrice, roundOffPlaces, MidpointRounding.AwayFromZero)));
             }
             stop.LimitPrice = stop.StopPrice;
             return stop.StopPrice != previousStop;

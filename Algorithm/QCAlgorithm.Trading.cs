@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -29,10 +29,12 @@ namespace QuantConnect.Algorithm
     {
         private int _maxOrders = 10000;
         private bool _isMarketOnOpenOrderWarningSent;
+        private bool _isMarketOnOpenOrderRestrictedForFuturesWarningSent;
 
         /// <summary>
         /// Transaction Manager - Process transaction fills and order management.
         /// </summary>
+        [DocumentationAttribute(TradingAndOrders)]
         public SecurityTransactionManager Transactions { get; set; }
 
         /// <summary>
@@ -42,6 +44,7 @@ namespace QuantConnect.Algorithm
         /// <param name="quantity">int Quantity of the asset to trade</param>
         /// <seealso cref="Buy(Symbol, double)"/>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket Buy(Symbol symbol, int quantity)
         {
             return Order(symbol, (decimal)Math.Abs(quantity));
@@ -54,6 +57,7 @@ namespace QuantConnect.Algorithm
         /// <param name="quantity">double Quantity of the asset to trade</param>
         /// <seealso cref="Buy(Symbol, decimal)"/>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket Buy(Symbol symbol, double quantity)
         {
             return Order(symbol, Math.Abs(quantity).SafeDecimalCast());
@@ -66,6 +70,7 @@ namespace QuantConnect.Algorithm
         /// <param name="quantity">decimal Quantity of the asset to trade</param>
         /// <seealso cref="Order(Symbol, int)"/>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket Buy(Symbol symbol, decimal quantity)
         {
             return Order(symbol, Math.Abs(quantity));
@@ -78,6 +83,7 @@ namespace QuantConnect.Algorithm
         /// <param name="quantity">float Quantity of the asset to trade</param>
         /// <seealso cref="Buy(Symbol, decimal)"/>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket Buy(Symbol symbol, float quantity)
         {
             return Order(symbol, (decimal)Math.Abs(quantity));
@@ -91,6 +97,7 @@ namespace QuantConnect.Algorithm
         /// <param name="quantity">int Quantity of the asset to trade</param>
         /// <seealso cref="Sell(Symbol, decimal)"/>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket Sell(Symbol symbol, int quantity)
         {
             return Order(symbol, (decimal)Math.Abs(quantity) * -1);
@@ -102,6 +109,7 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">String symbol to sell</param>
         /// <param name="quantity">Quantity to order</param>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket Sell(Symbol symbol, double quantity)
         {
             return Order(symbol, Math.Abs(quantity).SafeDecimalCast() * -1m);
@@ -113,6 +121,7 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">String symbol</param>
         /// <param name="quantity">Quantity to sell</param>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket Sell(Symbol symbol, float quantity)
         {
             return Order(symbol, (decimal)Math.Abs(quantity) * -1m);
@@ -124,6 +133,7 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">String symbol to sell</param>
         /// <param name="quantity">Quantity to sell</param>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket Sell(Symbol symbol, decimal quantity)
         {
             return Order(symbol, Math.Abs(quantity) * -1);
@@ -136,6 +146,7 @@ namespace QuantConnect.Algorithm
         /// <param name="quantity">Quantity to order</param>
         /// <seealso cref="Order(Symbol, decimal)"/>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket Order(Symbol symbol, double quantity)
         {
             return Order(symbol, quantity.SafeDecimalCast());
@@ -147,6 +158,7 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">Symbol to order</param>
         /// <param name="quantity">Quantity to order</param>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket Order(Symbol symbol, int quantity)
         {
             return MarketOrder(symbol, (decimal)quantity);
@@ -158,6 +170,7 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">Symbol to order</param>
         /// <param name="quantity">Quantity to order</param>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket Order(Symbol symbol, decimal quantity)
         {
             return MarketOrder(symbol, quantity);
@@ -173,6 +186,7 @@ namespace QuantConnect.Algorithm
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
         /// <seealso cref="MarketOrder(Symbol, decimal, bool, string)"/>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket Order(Symbol symbol, decimal quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
             return MarketOrder(symbol, quantity, asynchronous, tag, orderProperties);
@@ -187,6 +201,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket MarketOrder(Symbol symbol, int quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
             return MarketOrder(symbol, (decimal)quantity, asynchronous, tag, orderProperties);
@@ -201,6 +216,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket MarketOrder(Symbol symbol, double quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
             return MarketOrder(symbol, quantity.SafeDecimalCast(), asynchronous, tag, orderProperties);
@@ -215,6 +231,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket MarketOrder(Symbol symbol, decimal quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
             var security = Securities[symbol];
@@ -230,11 +247,12 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket MarketOrder(Security security, decimal quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            // check the exchange is open before sending a market order, if it's not open
-            // then convert it into a market on open order
-            if (!security.Exchange.ExchangeOpen)
+            // check the exchange is open before sending a market order, if it's not open then convert it into a market on open order.
+            // For futures and FOPs, market orders can be submitted on extended hours, so we let them through.
+            if ((security.Type != SecurityType.Future && security.Type != SecurityType.FutureOption) && !security.Exchange.ExchangeOpen)
             {
                 var mooTicket = MarketOnOpenOrder(security.Symbol, quantity, tag);
                 if (!_isMarketOnOpenOrderWarningSent)
@@ -251,21 +269,8 @@ namespace QuantConnect.Algorithm
 
             var request = CreateSubmitOrderRequest(OrderType.Market, security, quantity, tag, orderProperties ?? DefaultOrderProperties?.Clone());
 
-            // If warming up, do not submit
-            if (IsWarmingUp)
-            {
-                return OrderTicket.InvalidWarmingUp(Transactions, request);
-            }
-
-            //Initialize the Market order parameters:
-            var preOrderCheckResponse = PreOrderChecks(request);
-            if (preOrderCheckResponse.IsError)
-            {
-                return OrderTicket.InvalidSubmitRequest(Transactions, request, preOrderCheckResponse);
-            }
-
             //Add the order and create a new order Id.
-            var ticket = Transactions.AddOrder(request);
+            var ticket = SubmitOrderRequest(request);
 
             // Wait for the order event to process, only if the exchange is open
             if (!asynchronous)
@@ -284,6 +289,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket MarketOnOpenOrder(Symbol symbol, double quantity, string tag = "", IOrderProperties orderProperties = null)
         {
             return MarketOnOpenOrder(symbol, quantity.SafeDecimalCast(), tag, orderProperties);
@@ -297,6 +303,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket MarketOnOpenOrder(Symbol symbol, int quantity, string tag = "", IOrderProperties orderProperties = null)
         {
             return MarketOnOpenOrder(symbol, (decimal)quantity, tag, orderProperties);
@@ -310,17 +317,13 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket MarketOnOpenOrder(Symbol symbol, decimal quantity, string tag = "", IOrderProperties orderProperties = null)
         {
             var security = Securities[symbol];
             var request = CreateSubmitOrderRequest(OrderType.MarketOnOpen, security, quantity, tag, orderProperties ?? DefaultOrderProperties?.Clone());
-            var response = PreOrderChecks(request);
-            if (response.IsError)
-            {
-                return OrderTicket.InvalidSubmitRequest(Transactions, request, response);
-            }
 
-            return Transactions.AddOrder(request);
+            return SubmitOrderRequest(request);
         }
 
         /// <summary>
@@ -331,6 +334,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket MarketOnCloseOrder(Symbol symbol, int quantity, string tag = "", IOrderProperties orderProperties = null)
         {
             return MarketOnCloseOrder(symbol, (decimal)quantity, tag, orderProperties);
@@ -344,6 +348,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket MarketOnCloseOrder(Symbol symbol, double quantity, string tag = "", IOrderProperties orderProperties = null)
         {
             return MarketOnCloseOrder(symbol, quantity.SafeDecimalCast(), tag, orderProperties);
@@ -357,17 +362,13 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket MarketOnCloseOrder(Symbol symbol, decimal quantity, string tag = "", IOrderProperties orderProperties = null)
         {
             var security = Securities[symbol];
             var request = CreateSubmitOrderRequest(OrderType.MarketOnClose, security, quantity, tag, orderProperties ?? DefaultOrderProperties?.Clone());
-            var response = PreOrderChecks(request);
-            if (response.IsError)
-            {
-                return OrderTicket.InvalidSubmitRequest(Transactions, request, response);
-            }
 
-            return Transactions.AddOrder(request);
+            return SubmitOrderRequest(request);
         }
 
         /// <summary>
@@ -379,6 +380,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">String tag for the order (optional)</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket LimitOrder(Symbol symbol, int quantity, decimal limitPrice, string tag = "", IOrderProperties orderProperties = null)
         {
             return LimitOrder(symbol, (decimal)quantity, limitPrice, tag, orderProperties);
@@ -393,6 +395,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">String tag for the order (optional)</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket LimitOrder(Symbol symbol, double quantity, decimal limitPrice, string tag = "", IOrderProperties orderProperties = null)
         {
             return LimitOrder(symbol, quantity.SafeDecimalCast(), limitPrice, tag, orderProperties);
@@ -407,17 +410,13 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">String tag for the order (optional)</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket LimitOrder(Symbol symbol, decimal quantity, decimal limitPrice, string tag = "", IOrderProperties orderProperties = null)
         {
             var security = Securities[symbol];
             var request = CreateSubmitOrderRequest(OrderType.Limit, security, quantity, tag, limitPrice: limitPrice, properties: orderProperties ?? DefaultOrderProperties?.Clone());
-            var response = PreOrderChecks(request);
-            if (response.IsError)
-            {
-                return OrderTicket.InvalidSubmitRequest(Transactions, request, response);
-            }
 
-            return Transactions.AddOrder(request);
+            return SubmitOrderRequest(request);
         }
 
         /// <summary>
@@ -429,6 +428,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Optional string data tag for the order</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket StopMarketOrder(Symbol symbol, int quantity, decimal stopPrice, string tag = "", IOrderProperties orderProperties = null)
         {
             return StopMarketOrder(symbol, (decimal)quantity, stopPrice, tag, orderProperties);
@@ -443,6 +443,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Optional string data tag for the order</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket StopMarketOrder(Symbol symbol, double quantity, decimal stopPrice, string tag = "", IOrderProperties orderProperties = null)
         {
             return StopMarketOrder(symbol, quantity.SafeDecimalCast(), stopPrice, tag, orderProperties);
@@ -457,17 +458,13 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Optional string data tag for the order</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket StopMarketOrder(Symbol symbol, decimal quantity, decimal stopPrice, string tag = "", IOrderProperties orderProperties = null)
         {
             var security = Securities[symbol];
             var request = CreateSubmitOrderRequest(OrderType.StopMarket, security, quantity, tag, stopPrice: stopPrice, properties: orderProperties ?? DefaultOrderProperties?.Clone());
-            var response = PreOrderChecks(request);
-            if (response.IsError)
-            {
-                return OrderTicket.InvalidSubmitRequest(Transactions, request, response);
-            }
 
-            return Transactions.AddOrder(request);
+            return SubmitOrderRequest(request);
         }
 
         /// <summary>
@@ -480,6 +477,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">String tag for the order (optional)</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket StopLimitOrder(Symbol symbol, int quantity, decimal stopPrice, decimal limitPrice, string tag = "", IOrderProperties orderProperties = null)
         {
             return StopLimitOrder(symbol, (decimal)quantity, stopPrice, limitPrice, tag, orderProperties);
@@ -495,6 +493,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">String tag for the order (optional)</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket StopLimitOrder(Symbol symbol, double quantity, decimal stopPrice, decimal limitPrice, string tag = "", IOrderProperties orderProperties = null)
         {
             return StopLimitOrder(symbol, quantity.SafeDecimalCast(), stopPrice, limitPrice, tag, orderProperties);
@@ -510,18 +509,13 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">String tag for the order (optional)</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket StopLimitOrder(Symbol symbol, decimal quantity, decimal stopPrice, decimal limitPrice, string tag = "", IOrderProperties orderProperties = null)
         {
             var security = Securities[symbol];
             var request = CreateSubmitOrderRequest(OrderType.StopLimit, security, quantity, tag, stopPrice: stopPrice, limitPrice: limitPrice, properties: orderProperties ?? DefaultOrderProperties?.Clone());
-            var response = PreOrderChecks(request);
-            if (response.IsError)
-            {
-                return OrderTicket.InvalidSubmitRequest(Transactions, request, response);
-            }
 
-            //Add the order and create a new order Id.
-            return Transactions.AddOrder(request);
+            return SubmitOrderRequest(request);
         }
 
         /// <summary>
@@ -534,6 +528,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">String tag for the order (optional)</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket LimitIfTouchedOrder(Symbol symbol, int quantity, decimal triggerPrice, decimal limitPrice, string tag = "", IOrderProperties orderProperties = null)
         {
             return LimitIfTouchedOrder(symbol, (decimal)quantity, triggerPrice, limitPrice, tag, orderProperties);
@@ -549,6 +544,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">String tag for the order (optional)</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket LimitIfTouchedOrder(Symbol symbol, double quantity, decimal triggerPrice, decimal limitPrice, string tag = "", IOrderProperties orderProperties = null)
         {
             return LimitIfTouchedOrder(symbol, quantity.SafeDecimalCast(), triggerPrice, limitPrice, tag, orderProperties);
@@ -564,18 +560,13 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">String tag for the order (optional)</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket LimitIfTouchedOrder(Symbol symbol, decimal quantity, decimal triggerPrice, decimal limitPrice, string tag = "", IOrderProperties orderProperties = null)
         {
             var security = Securities[symbol];
             var request = CreateSubmitOrderRequest(OrderType.LimitIfTouched, security, quantity, tag, triggerPrice: triggerPrice, limitPrice: limitPrice, properties: orderProperties ?? DefaultOrderProperties?.Clone());
-            var response = PreOrderChecks(request);
-            if (response.IsError)
-            {
-                return OrderTicket.InvalidSubmitRequest(Transactions, request, response);
-            }
 
-            //Add the order and create a new order Id.
-            return Transactions.AddOrder(request);
+            return SubmitOrderRequest(request);
         }
 
         /// <summary>
@@ -587,6 +578,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">String tag for the order (optional)</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket ExerciseOption(Symbol optionSymbol, int quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
             var option = (Option) Securities[optionSymbol];
@@ -594,12 +586,6 @@ namespace QuantConnect.Algorithm
             // SubmitOrderRequest.Quantity indicates the change in holdings quantity, therefore manual exercise quantities must be negative
             // PreOrderChecksImpl confirms that we don't hold a short position, so we're lenient here and accept +/- quantity values
             var request = CreateSubmitOrderRequest(OrderType.OptionExercise, option, -Math.Abs(quantity), tag, orderProperties ?? DefaultOrderProperties?.Clone());
-
-            // If warming up, do not submit
-            if (IsWarmingUp)
-            {
-                return OrderTicket.InvalidWarmingUp(Transactions, request);
-            }
 
             //Initialize the exercise order parameters
             var preOrderCheckResponse = PreOrderChecks(request);
@@ -629,6 +615,7 @@ namespace QuantConnect.Algorithm
         /// <param name="quantity">Quantity of the strategy to trade</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>Sequence of order tickets</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public IEnumerable<OrderTicket> Buy(OptionStrategy strategy, int quantity, IOrderProperties orderProperties = null)
         {
             return Order(strategy, Math.Abs(quantity), orderProperties);
@@ -641,6 +628,7 @@ namespace QuantConnect.Algorithm
         /// <param name="quantity">Quantity of the strategy to trade</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>Sequence of order tickets</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public IEnumerable<OrderTicket> Sell(OptionStrategy strategy, int quantity, IOrderProperties orderProperties = null)
         {
             return Order(strategy, Math.Abs(quantity) * -1, orderProperties);
@@ -653,6 +641,7 @@ namespace QuantConnect.Algorithm
         /// <param name="quantity">Quantity of the strategy to trade</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>Sequence of order tickets</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public IEnumerable<OrderTicket> Order(OptionStrategy strategy, int quantity, IOrderProperties orderProperties = null)
         {
             return GenerateOrders(strategy, quantity, orderProperties);
@@ -736,7 +725,23 @@ namespace QuantConnect.Algorithm
             return orders;
         }
 
+        /// <summary>
+        /// Will submit an order request to the algorithm
+        /// </summary>
+        /// <param name="request">The request to submit</param>
+        /// <remarks>Will run order prechecks, which include making sure the algorithm is not warming up, security is added and has data among others</remarks>
+        /// <returns>The order ticket</returns>
+        public OrderTicket SubmitOrderRequest(SubmitOrderRequest request)
+        {
+            var response = PreOrderChecks(request);
+            if (response.IsError)
+            {
+                return OrderTicket.InvalidSubmitRequest(Transactions, request, response);
+            }
 
+            //Add the order and create a new order Id.
+            return Transactions.AddOrder(request);
+        }
 
         /// <summary>
         /// Perform pre-order checks to ensure we have sufficient capital,
@@ -812,6 +817,20 @@ namespace QuantConnect.Algorithm
             {
                 return OrderResponse.Error(request, OrderResponseErrorCode.ExchangeNotOpen,
                     $"{request.OrderType} order and exchange not open."
+                );
+            }
+
+            //Check the exchange is open before sending a market on open order for futures
+            if ((security.Type == SecurityType.Future || security.Type == SecurityType.FutureOption) && request.OrderType == OrderType.MarketOnOpen)
+            {
+                if (!_isMarketOnOpenOrderRestrictedForFuturesWarningSent)
+                {
+                    Debug("Warning: Market-On-Open orders are not allowed for futures and future options. Consider using limit orders during extended market hours.");
+                    _isMarketOnOpenOrderRestrictedForFuturesWarningSent = true;
+                }
+
+                return OrderResponse.Error(request, OrderResponseErrorCode.ExchangeNotOpen,
+                    $"{request.OrderType} orders not supported for {security.Type}."
                 );
             }
 
@@ -896,8 +915,20 @@ namespace QuantConnect.Algorithm
                 }
             }
 
-            if (request.OrderType == OrderType.MarketOnClose)
+            if (request.OrderType == OrderType.MarketOnOpen)
             {
+                if (security.Exchange.Hours.IsMarketAlwaysOpen)
+                {
+                    throw new InvalidOperationException($"Market never closes for this symbol {security.Symbol}, can no submit a {nameof(OrderType.MarketOnOpen)} order.");
+                }
+            }
+            else if (request.OrderType == OrderType.MarketOnClose)
+            {
+                if (security.Exchange.Hours.IsMarketAlwaysOpen)
+                {
+                    throw new InvalidOperationException($"Market never closes for this symbol {security.Symbol}, can no submit a {nameof(OrderType.MarketOnClose)} order.");
+                }
+
                 var nextMarketClose = security.Exchange.Hours.GetNextMarketClose(security.LocalTime, false);
 
                 // Enforce MarketOnClose submission buffer
@@ -925,6 +956,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Custom tag to know who is calling this.</param>
         /// <returns>Array of order ids for liquidated symbols</returns>
         /// <seealso cref="MarketOrder(QuantConnect.Symbol,decimal,bool,string)"/>
+        [DocumentationAttribute(TradingAndOrders)]
         public List<int> Liquidate(Symbol symbolToLiquidate = null, string tag = "Liquidated")
         {
             var orderIdList = new List<int>();
@@ -997,6 +1029,7 @@ namespace QuantConnect.Algorithm
         /// Maximum number of orders for the algorithm
         /// </summary>
         /// <param name="max"></param>
+        [DocumentationAttribute(TradingAndOrders)]
         public void SetMaximumOrders(int max)
         {
             if (!_locked)
@@ -1015,6 +1048,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Tag the order with a short string.</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <seealso cref="MarketOrder(QuantConnect.Symbol,decimal,bool,string)"/>
+        [DocumentationAttribute(TradingAndOrders)]
         public void SetHoldings(List<PortfolioTarget> targets, bool liquidateExistingHoldings = false, string tag = "", IOrderProperties orderProperties = null)
         {
             foreach (var portfolioTarget in targets
@@ -1035,6 +1069,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Tag the order with a short string.</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <seealso cref="MarketOrder(QuantConnect.Symbol,decimal,bool,string)"/>
+        [DocumentationAttribute(TradingAndOrders)]
         public void SetHoldings(Symbol symbol, double percentage, bool liquidateExistingHoldings = false, string tag = "", IOrderProperties orderProperties = null)
         {
             SetHoldings(symbol, percentage.SafeDecimalCast(), liquidateExistingHoldings, tag, orderProperties);
@@ -1049,6 +1084,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Tag the order with a short string.</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <seealso cref="MarketOrder(QuantConnect.Symbol,decimal,bool,string)"/>
+        [DocumentationAttribute(TradingAndOrders)]
         public void SetHoldings(Symbol symbol, float percentage, bool liquidateExistingHoldings = false, string tag = "", IOrderProperties orderProperties = null)
         {
             SetHoldings(symbol, (decimal)percentage, liquidateExistingHoldings, tag, orderProperties);
@@ -1063,6 +1099,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Tag the order with a short string.</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <seealso cref="MarketOrder(QuantConnect.Symbol,decimal,bool,string)"/>
+        [DocumentationAttribute(TradingAndOrders)]
         public void SetHoldings(Symbol symbol, int percentage, bool liquidateExistingHoldings = false, string tag = "", IOrderProperties orderProperties = null)
         {
             SetHoldings(symbol, (decimal)percentage, liquidateExistingHoldings, tag, orderProperties);
@@ -1080,6 +1117,7 @@ namespace QuantConnect.Algorithm
         /// <param name="tag">Tag the order with a short string.</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <seealso cref="MarketOrder(QuantConnect.Symbol,decimal,bool,string)"/>
+        [DocumentationAttribute(TradingAndOrders)]
         public void SetHoldings(Symbol symbol, decimal percentage, bool liquidateExistingHoldings = false, string tag = "", IOrderProperties orderProperties = null)
         {
             SetHoldingsImpl(symbol, CalculateOrderQuantity(symbol, percentage), liquidateExistingHoldings, tag, orderProperties);
@@ -1142,6 +1180,7 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">Security object we're asking for</param>
         /// <param name="target">Target percentage holdings</param>
         /// <returns>Order quantity to achieve this percentage</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public decimal CalculateOrderQuantity(Symbol symbol, double target)
         {
             return CalculateOrderQuantity(symbol, target.SafeDecimalCast());
@@ -1155,6 +1194,7 @@ namespace QuantConnect.Algorithm
         /// if you have 2x leverage and request 100% holdings, it will utilize half of the
         /// available margin</param>
         /// <returns>Order quantity to achieve this percentage</returns>
+        [DocumentationAttribute(TradingAndOrders)]
         public decimal CalculateOrderQuantity(Symbol symbol, decimal target)
         {
             var percent = PortfolioTarget.Percent(this, symbol, target, true);
@@ -1178,6 +1218,7 @@ namespace QuantConnect.Algorithm
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>The order ticket instance.</returns>
         [Obsolete("This Order method has been made obsolete, use Order(string, int, bool, string) method instead. Calls to the obsolete method will only generate market orders.")]
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket Order(Symbol symbol, int quantity, OrderType type, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
             return Order(symbol, quantity, asynchronous, tag, orderProperties);
@@ -1191,6 +1232,7 @@ namespace QuantConnect.Algorithm
         /// <param name="type">The order type</param>
         /// <returns>The order ticket instance.</returns>
         [Obsolete("This Order method has been made obsolete, use the specialized Order helper methods instead. Calls to the obsolete method will only generate market orders.")]
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket Order(Symbol symbol, decimal quantity, OrderType type)
         {
             return Order(symbol, quantity);
@@ -1204,6 +1246,7 @@ namespace QuantConnect.Algorithm
         /// <param name="type">The order type</param>
         /// <returns>The order ticket instance.</returns>
         [Obsolete("This Order method has been made obsolete, use the specialized Order helper methods instead. Calls to the obsolete method will only generate market orders.")]
+        [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket Order(Symbol symbol, int quantity, OrderType type)
         {
             return Order(symbol, (decimal)quantity);
@@ -1214,15 +1257,15 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The symbol</param>
         /// <returns>True if the exchange is considered open at the current time, false otherwise</returns>
+        [DocumentationAttribute(TradingAndOrders)]
+        [DocumentationAttribute(SecuritiesAndPortfolio)]
         public bool IsMarketOpen(Symbol symbol)
         {
-            var exchangeHours = MarketHoursDatabase
-                .FromDataFolder()
-                .GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
-
-            var time = UtcTime.ConvertFromUtc(exchangeHours.TimeZone);
-
-            return exchangeHours.IsOpen(time, false);
+            if (Securities.TryGetValue(symbol, out var security))
+            {
+                return security.IsMarketOpen(false);
+            }
+            return symbol.IsMarketOpen(UtcTime, false);
         }
 
         private SubmitOrderRequest CreateSubmitOrderRequest(OrderType orderType, Security security, decimal quantity, string tag, IOrderProperties properties, decimal stopPrice = 0m, decimal limitPrice = 0m,  decimal triggerPrice = 0m)

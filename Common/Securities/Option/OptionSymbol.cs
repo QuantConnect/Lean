@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Securities.Option
 {
@@ -22,6 +23,8 @@ namespace QuantConnect.Securities.Option
     /// </summary>
     public static class OptionSymbol
     {
+        private static readonly Dictionary<string, byte> _optionExpirationErrorLog = new();
+
         /// <summary>
         /// Returns true if the option is a standard contract that expires 3rd Friday of the month
         /// </summary>
@@ -112,10 +115,33 @@ namespace QuantConnect.Securities.Option
                 .GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
 
             var currentTime = currentTimeUtc.ConvertFromUtc(exchangeHours.TimeZone);
-            var expiryTime = exchangeHours.GetNextMarketClose(symbol.ID.Date, false);
+
+            // Ideally we can calculate expiry on the date of the symbol ID, but if that exchange is not open on that day we 
+            // will consider expired on the last trading day close before this; Example in AddOptionContractExpiresRegressionAlgorithm
+            var expiryDay = exchangeHours.IsDateOpen(symbol.ID.Date)
+                ? symbol.ID.Date
+                : exchangeHours.GetPreviousTradingDay(symbol.ID.Date);
+
+            var expiryTime = exchangeHours.GetNextMarketClose(expiryDay, false);
+
+            // Once bug 6189 was solved in ´GetNextMarketClose()´ there was found possible bugs on some futures symbol.ID.Date or delisting/liquidation handle event.
+            // Specifically see 'DelistingFutureOptionRegressionAlgorithm' where Symbol.ID.Date: 4/1/2012 00:00 ExpiryTime: 4/2/2012 16:00 for Milk 3 futures options.
+            // See 'bug-milk-class-3-future-options-expiration' branch. So let's limit the expiry time to up to end of day of expiration
+            if (expiryTime >= symbol.ID.Date.AddDays(1).Date)
+            {
+                lock (_optionExpirationErrorLog)
+                {
+                    if (symbol.ID.Underlying != null
+                        // let's log this once per underlying and expiration date: avoiding the same log for multiple option contracts with different strikes/rights
+                        && _optionExpirationErrorLog.TryAdd($"{symbol.ID.Underlying}-{symbol.ID.Date}", 1))
+                    {
+                        Logging.Log.Error($"OptionSymbol.IsOptionContractExpired(): limiting unexpected option expiration time for symbol {symbol.ID}. Symbol.ID.Date {symbol.ID.Date}. ExpiryTime: {expiryTime}");
+                    }
+                }
+                expiryTime = symbol.ID.Date.AddDays(1).Date;
+            }
 
             return currentTime >= expiryTime;
         }
-
     }
 }

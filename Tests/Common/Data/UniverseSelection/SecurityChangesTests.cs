@@ -44,7 +44,7 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCache());
 
-            var changes = new SecurityChanges(new List<Security> { security, customSecurity },
+            var changes = CreateNonInternal(new List<Security> { security, customSecurity },
                 new List<Security> { security, customSecurity });
 
             Assert.IsTrue(changes.AddedSecurities.Contains(customSecurity));
@@ -73,7 +73,7 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCache());
 
-            var changes = new SecurityChanges(new List<Security> { security, customSecurity },
+            var changes = CreateNonInternal(new List<Security> { security, customSecurity },
                 new List<Security> { security, customSecurity });
 
             changes.FilterCustomSecurities = true;
@@ -86,6 +86,41 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
             {
                 Assert.AreNotEqual(SecurityType.Base, removedSecurity.Type);
             }
+        }
+
+        /// <summary>
+        /// Returns a new instance of <see cref="SecurityChanges"/> with the specified securities marked as added
+        /// </summary>
+        /// <param name="securities">The added securities</param>
+        /// <remarks>Useful for testing</remarks>
+        /// <returns>A new security changes instance with the specified securities marked as added</returns>
+        public static SecurityChanges AddedNonInternal(params Security[] securities)
+        {
+            if (securities == null || securities.Length == 0) return SecurityChanges.None;
+            return CreateNonInternal(securities, Enumerable.Empty<Security>());
+        }
+
+        /// <summary>
+        /// Returns a new instance of <see cref="SecurityChanges"/> with the specified securities marked as removed
+        /// </summary>
+        /// <param name="securities">The removed securities</param>
+        /// <remarks>Useful for testing</remarks>
+        /// <returns>A new security changes instance with the specified securities marked as removed</returns>
+        public static SecurityChanges RemovedNonInternal(params Security[] securities)
+        {
+            if (securities == null || securities.Length == 0) return SecurityChanges.None;
+            return CreateNonInternal(Enumerable.Empty<Security>(), securities);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SecurityChanges"/> class all none internal
+        /// </summary>
+        /// <param name="addedSecurities">Added symbols list</param>
+        /// <param name="removedSecurities">Removed symbols list</param>
+        /// <remarks>Useful for testing</remarks>
+        public static SecurityChanges CreateNonInternal(IEnumerable<Security> addedSecurities, IEnumerable<Security> removedSecurities)
+        {
+            return SecurityChanges.Create(addedSecurities.ToList(), removedSecurities.ToList(), new List<Security>(), new List<Security>());
         }
     }
 }

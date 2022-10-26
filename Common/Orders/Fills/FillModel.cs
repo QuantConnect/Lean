@@ -240,11 +240,7 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             // make sure the exchange is open before filling -- allow pre/post market fills to occur
-            if (!IsExchangeOpen(
-                asset,
-                Parameters.ConfigProvider
-                    .GetSubscriptionDataConfigs(asset.Symbol)
-                    .IsExtendedMarketHours()))
+            if (!IsExchangeOpen(asset))
             {
                 return fill;
             }
@@ -326,25 +322,22 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             // Fill only if open or extended
-            if (!IsExchangeOpen(asset,
-                Parameters.ConfigProvider
-                    .GetSubscriptionDataConfigs(asset.Symbol)
-                    .IsExtendedMarketHours()))
+            if (!IsExchangeOpen(asset))
             {
                 return fill;
             }
-            
+
             // Get the range of prices in the last bar:
             var tradeHigh = 0m;
             var tradeLow = 0m;
             var pricesEndTime = DateTime.MinValue;
-            
+
             var subscribedTypes = GetSubscribedTypes(asset);
 
             if (subscribedTypes.Contains(typeof(Tick)))
             {
                 var trade = GetPricesCheckingPythonWrapper(asset, order.Direction);
-                
+
                 if (trade != null)
                 {
                     tradeHigh = trade.Current;
@@ -352,7 +345,7 @@ namespace QuantConnect.Orders.Fills
                     pricesEndTime = trade.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
                 }
             }
-            
+
             else if (subscribedTypes.Contains(typeof(TradeBar)))
             {
                 var tradeBar = asset.Cache.GetData<TradeBar>();
@@ -373,12 +366,12 @@ namespace QuantConnect.Orders.Fills
                     if (tradeHigh >= order.TriggerPrice || order.TriggerTouched)
                     {
                         order.TriggerTouched = true;
-                        
+
                         //-> 1.1 Limit surpassed: Sell.
                         if (GetAskPrice(asset, out pricesEndTime) >= order.LimitPrice)
                         {
                             fill.Status = OrderStatus.Filled;
-                            fill.FillPrice = order.LimitPrice;                            
+                            fill.FillPrice = order.LimitPrice;
                             // assume the order completely filled
                             fill.FillQuantity = order.Quantity;
                         }
@@ -394,7 +387,7 @@ namespace QuantConnect.Orders.Fills
                         if (GetBidPrice(asset, out pricesEndTime) <= order.LimitPrice)
                         {
                             fill.Status = OrderStatus.Filled;
-                            fill.FillPrice = order.LimitPrice;                            
+                            fill.FillPrice = order.LimitPrice;
                             // assume the order completely filled
                             fill.FillQuantity = order.Quantity;
                         }
@@ -423,10 +416,7 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             // make sure the exchange is open before filling -- allow pre/post market fills to occur
-            if (!IsExchangeOpen(asset,
-                Parameters.ConfigProvider
-                    .GetSubscriptionDataConfigs(asset.Symbol)
-                    .IsExtendedMarketHours()))
+            if (!IsExchangeOpen(asset))
             {
                 return fill;
             }
@@ -478,6 +468,11 @@ namespace QuantConnect.Orders.Fills
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         public virtual OrderEvent MarketOnOpenFill(Security asset, MarketOnOpenOrder order)
         {
+            if (asset.Exchange.Hours.IsMarketAlwaysOpen)
+            {
+                throw new InvalidOperationException($"Market never closes for this symbol {asset.Symbol}, can no submit a {nameof(OrderType.MarketOnOpen)} order.");
+            }
+
             var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
             var fill = new OrderEvent(order, utcTime, OrderFee.Zero);
 
@@ -534,6 +529,11 @@ namespace QuantConnect.Orders.Fills
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         public virtual OrderEvent MarketOnCloseFill(Security asset, MarketOnCloseOrder order)
         {
+            if (asset.Exchange.Hours.IsMarketAlwaysOpen)
+            {
+                throw new InvalidOperationException($"Market never closes for this symbol {asset.Symbol}, can no submit a {nameof(OrderType.MarketOnClose)} order.");
+            }
+
             var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
             var fill = new OrderEvent(order, utcTime, OrderFee.Zero);
 
@@ -699,7 +699,9 @@ namespace QuantConnect.Orders.Fills
         {
             var subscribedTypes = Parameters
                 .ConfigProvider
-                .GetSubscriptionDataConfigs(asset.Symbol)
+                // even though data from internal configurations are not sent to the algorithm.OnData they still drive security cache and data
+                // this is specially relevant for the continuous contract underlying mapped contracts which are internal configurations
+                .GetSubscriptionDataConfigs(asset.Symbol, includeInternalConfigs: true)
                 .ToHashSet(x => x.Type);
 
             if (subscribedTypes.Count == 0)
@@ -709,12 +711,52 @@ namespace QuantConnect.Orders.Fills
 
             return subscribedTypes;
         }
-        
+
+        /// <summary>
+        /// Helper method to determine if the exchange is open before filling. Will allow pre/post market fills to occur based on configuration
+        /// </summary>
+        /// <param name="asset">Security which has subscribed data types</param>
+        private bool IsExchangeOpen(Security asset)
+        {
+            // even though data from internal configurations are not sent to the algorithm.OnData they still drive security cache and data
+            // this is specially relevant for the continuous contract underlying mapped contracts which are internal configurations
+            var configs = Parameters.ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol, includeInternalConfigs: true);
+            if (configs.Count == 0)
+            {
+                throw new InvalidOperationException($"Cannot perform fill for {asset.Symbol} because no data subscription were found.");
+            }
+
+            var hasNonInternals = false;
+            var exchangeOpenNonInternals = false;
+            var exchangeOpenInternals = false;
+            for (int i = 0; i < configs.Count; i++)
+            {
+                var config = configs[i];
+
+                if (config.IsInternalFeed)
+                {
+                    exchangeOpenInternals |= config.ExtendedMarketHours;
+                }
+                else
+                {
+                    hasNonInternals = true;
+                    exchangeOpenNonInternals |= config.ExtendedMarketHours;
+                }
+            }
+
+            if (hasNonInternals)
+            {
+                // give priority to non internals if any
+                return IsExchangeOpen(asset, exchangeOpenNonInternals);
+            }
+            return IsExchangeOpen(asset, exchangeOpenInternals);
+        }
+
         /// <summary>
         /// This is required due to a limitation in PythonNet to resolved
         /// overriden methods. <see cref="GetPrices"/>
         /// </summary>
-        private Prices GetPricesCheckingPythonWrapper(Security asset, OrderDirection direction)
+        protected Prices GetPricesCheckingPythonWrapper(Security asset, OrderDirection direction)
         {
             if (PythonWrapper != null)
             {
@@ -743,9 +785,7 @@ namespace QuantConnect.Orders.Fills
             }
 
             // Only fill with data types we are subscribed to
-            var subscriptionTypes = Parameters.ConfigProvider
-                .GetSubscriptionDataConfigs(asset.Symbol)
-                .Select(x => x.Type).ToList();
+            var subscriptionTypes = GetSubscribedTypes(asset);
             // Tick
             var tick = asset.Cache.GetData<Tick>();
             if (tick != null && subscriptionTypes.Contains(typeof(Tick)))
@@ -790,17 +830,7 @@ namespace QuantConnect.Orders.Fills
         /// </summary>
         protected static bool IsExchangeOpen(Security asset, bool isExtendedMarketHours)
         {
-            if (!asset.Exchange.DateTimeIsOpen(asset.LocalTime))
-            {
-                // if we're not open at the current time exactly, check the bar size, this handle large sized bars (hours/days)
-                var currentBar = asset.GetLastData();
-                if (asset.LocalTime.Date != currentBar.EndTime.Date
-                    || !asset.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, isExtendedMarketHours))
-                {
-                    return false;
-                }
-            }
-            return true;
+            return asset.IsMarketOpen(isExtendedMarketHours);
         }
     }
 }

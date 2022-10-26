@@ -54,6 +54,7 @@ namespace QuantConnect.Lean.Engine.Results
         private CapacityEstimate _capacityEstimate;
 
         //Processing Time:
+        private DateTime _initialTime;
         private DateTime _nextSample;
         private string _algorithmId;
         private int _projectId;
@@ -105,10 +106,10 @@ namespace QuantConnect.Lean.Engine.Results
         {
             try
             {
-                while (!(ExitTriggered && Messages.Count == 0))
+                while (!(ExitTriggered && Messages.IsEmpty))
                 {
                     //While there's no work to do, go back to the algorithm:
-                    if (Messages.Count == 0)
+                    if (Messages.IsEmpty)
                     {
                         ExitEvent.WaitOne(50);
                     }
@@ -144,7 +145,7 @@ namespace QuantConnect.Lean.Engine.Results
             try
             {
                 //Sometimes don't run the update, if not ready or we're ending.
-                if (Algorithm?.Transactions == null || ExitTriggered)
+                if (Algorithm?.Transactions == null || ExitTriggered || !Algorithm.GetLocked())
                 {
                     return;
                 }
@@ -185,7 +186,7 @@ namespace QuantConnect.Lean.Engine.Results
                             deltaCharts.Add(chart.Name, updates);
                         }
 
-                        // Update our algorithm performance charts 
+                        // Update our algorithm performance charts
                         if (AlgorithmPerformanceCharts.Contains(kvp.Key))
                         {
                             performanceCharts[kvp.Key] = chart.Clone();
@@ -194,17 +195,8 @@ namespace QuantConnect.Lean.Engine.Results
                 }
 
                 //Get the runtime statistics from the user algorithm:
-                var runtimeStatistics = new Dictionary<string, string>();
-                lock (RuntimeStatistics)
-                {
-
-                    foreach (var pair in RuntimeStatistics)
-                    {
-                        runtimeStatistics.Add(pair.Key, pair.Value);
-                    }
-                }
                 var summary = GenerateStatisticsResults(performanceCharts, estimatedStrategyCapacity: _capacityEstimate).Summary;
-                GetAlgorithmRuntimeStatistics(summary, runtimeStatistics, _capacityEstimate);
+                var runtimeStatistics = GetAlgorithmRuntimeStatistics(summary, _capacityEstimate);
 
                 var progress = (decimal)_daysProcessed / _jobDays;
                 if (progress > 0.999m) progress = 0.999m;
@@ -252,7 +244,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Run over all the data and break it into smaller packets to ensure they all arrive at the terminal
         /// </summary>
-        public virtual IEnumerable<BacktestResultPacket> SplitPackets(Dictionary<string, Chart> deltaCharts, Dictionary<int, Order> deltaOrders, Dictionary<string, string> runtimeStatistics, decimal progress, Dictionary<string, string> serverStatistics)
+        public virtual IEnumerable<BacktestResultPacket> SplitPackets(Dictionary<string, Chart> deltaCharts, Dictionary<int, Order> deltaOrders, SortedDictionary<string, string> runtimeStatistics, decimal progress, Dictionary<string, string> serverStatistics)
         {
             // break the charts into groups
             var splitPackets = new List<BacktestResultPacket>();
@@ -279,6 +271,7 @@ namespace QuantConnect.Lean.Engine.Results
 
             //Add any user runtime statistics into the backtest.
             splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult { ServerStatistics = serverStatistics, RuntimeStatistics = runtimeStatistics }, Algorithm.EndDate, Algorithm.StartDate, progress));
+
 
             return splitPackets;
         }
@@ -314,7 +307,8 @@ namespace QuantConnect.Lean.Engine.Results
                             result.Results.RollingWindow,
                             null, // null order events, we store them separately
                             result.Results.TotalPerformance,
-                            result.Results.AlphaRuntimeStatistics));
+                            result.Results.AlphaRuntimeStatistics,
+                            result.Results.AlgorithmConfiguration));
                     }
                     // Save results
                     SaveResults(key, results);
@@ -361,7 +355,9 @@ namespace QuantConnect.Lean.Engine.Results
                     var orderEvents = TransactionHandler.OrderEvents.ToList();
                     //Create a result packet to send to the browser.
                     result = new BacktestResultPacket(_job,
-                        new BacktestResult(new BacktestResultParameters(charts, orders, profitLoss, statisticsResults.Summary, runtime, statisticsResults.RollingPerformances, orderEvents, statisticsResults.TotalPerformance, AlphaRuntimeStatistics)),
+                        new BacktestResult(new BacktestResultParameters(charts, orders, profitLoss, statisticsResults.Summary, runtime,
+                            statisticsResults.RollingPerformances, orderEvents, statisticsResults.TotalPerformance, AlphaRuntimeStatistics,
+                            AlgorithmConfiguration.Create(Algorithm))),
                         Algorithm.EndDate, Algorithm.StartDate);
                 }
                 else
@@ -398,8 +394,8 @@ namespace QuantConnect.Lean.Engine.Results
         public virtual void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue)
         {
             Algorithm = algorithm;
+            _initialTime = Algorithm.Time;
             StartingPortfolioValue = startingPortfolioValue;
-            PreviousUtcSampleTime = Algorithm.UtcTime;
             DailyPortfolioValue = StartingPortfolioValue;
             CumulativeMaxPortfolioValue = StartingPortfolioValue;
             AlgorithmCurrencySymbol = Currencies.GetCurrencySymbol(Algorithm.AccountCurrency);
@@ -413,8 +409,8 @@ namespace QuantConnect.Lean.Engine.Results
 
             //Setup the sampling periods:
             _jobDays = Algorithm.Securities.Count > 0
-                ? Time.TradeableDates(Algorithm.Securities.Values, algorithm.StartDate, algorithm.EndDate)
-                : Convert.ToInt32((algorithm.EndDate.Date - algorithm.StartDate.Date).TotalDays) + 1;
+                ? Time.TradeableDates(Algorithm.Securities.Values, _initialTime, algorithm.EndDate)
+                : Convert.ToInt32((algorithm.EndDate.Date - _initialTime.Date).TotalDays) + 1;
 
             //Set the security / market types.
             var types = new List<SecurityType>();
@@ -476,7 +472,7 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Send list of security asset types the algortihm uses to browser.
+        /// Send list of security asset types the algorithm uses to browser.
         /// </summary>
         public virtual void SecurityType(List<SecurityType> types)
         {
@@ -562,25 +558,6 @@ namespace QuantConnect.Lean.Engine.Results
                 {
                     series.AddPoint(time, value);
                 }
-            }
-        }
-
-        /// <summary>
-        /// Sample the current equity of the strategy directly with time-value pair.
-        /// </summary>
-        /// <param name="time">Current backtest time.</param>
-        /// <param name="value">Current equity value.</param>
-        protected override void SampleEquity(DateTime time, decimal value)
-        {
-            base.SampleEquity(time, value);
-
-            try
-            {
-                //Recalculate the days processed. We use 'int' so it's thread safe
-                _daysProcessed = (int) (time - Algorithm.StartDate).TotalDays;
-            }
-            catch (OverflowException)
-            {
             }
         }
 
@@ -731,6 +708,14 @@ namespace QuantConnect.Lean.Engine.Results
             _capacityEstimate.UpdateMarketCapacity(forceProcess);
 
             var time = Algorithm.UtcTime;
+            try
+            {
+                //Recalculate the days processed. We use 'int' so it's thread safe
+                _daysProcessed = (int)(Algorithm.Time - _initialTime).TotalDays;
+            }
+            catch (OverflowException)
+            {
+            }
 
             if (time > _nextSample || forceProcess)
             {

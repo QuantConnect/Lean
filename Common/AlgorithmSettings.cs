@@ -96,6 +96,29 @@ namespace QuantConnect
         public TimeSpan StalePriceTimeSpan { get; set; }
 
         /// <summary>
+        /// The warmup resolution to use if any
+        /// </summary>
+        /// <remarks>This allows improving the warmup speed by setting it to a lower resolution than the one added in the algorithm</remarks>
+        public Resolution? WarmupResolution { get; set; }
+
+        /// <summary>
+        /// The warmup resolution to use if any
+        /// </summary>
+        /// <remarks>This allows improving the warmup speed by setting it to a lower resolution than the one added in the algorithm.
+        /// Pass through version to be user friendly</remarks>
+        public Resolution? WarmUpResolution
+        {
+            get
+            {
+                return WarmupResolution;
+            }
+            set
+            {
+                WarmupResolution = value;
+            }
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="AlgorithmSettings"/> class
         /// </summary>
         public AlgorithmSettings()

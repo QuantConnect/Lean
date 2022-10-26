@@ -35,9 +35,9 @@ namespace QuantConnect.Data.Consolidators
         private SecurityIdentifier _securityIdentifier;
         private bool _securityIdentifierIsSet;
         //The number of data updates between creating new bars.
-        private readonly int? _maxCount;
+        private int? _maxCount;
         //
-        private readonly IPeriodSpecification _periodSpecification;
+        private IPeriodSpecification _periodSpecification;
         //The minimum timespan between creating new bars.
         private TimeSpan? _period;
         //The number of pieces of data we've accumulated since our last emit
@@ -46,6 +46,7 @@ namespace QuantConnect.Data.Consolidators
         private TConsolidated _workingBar;
         //The last time we emitted a consolidated bar
         private DateTime? _lastEmit;
+        private bool _validateTimeSpan;
 
         private PeriodCountConsolidatorBase(IPeriodSpecification periodSpecification)
         {
@@ -148,6 +149,17 @@ namespace QuantConnect.Data.Consolidators
                 return;
             }
 
+            if (!_validateTimeSpan && _period.HasValue && _periodSpecification is TimeSpanPeriodSpecification)
+            {
+                // only do this check once
+                _validateTimeSpan = true;
+                var dataLength = data.EndTime - data.Time;
+                if (dataLength > _period)
+                {
+                    throw new ArgumentException($"For Symbol {data.Symbol} can not consolidate bars of period: {_period}, using data of the same or higher period: {data.EndTime - data.Time}");
+                }
+            }
+
             //Decide to fire the event
             var fireDataConsolidated = false;
 
@@ -175,7 +187,7 @@ namespace QuantConnect.Data.Consolidators
             if (_period.HasValue)
             {
                 // we're in time span mode and initialized
-                if (_workingBar != null && data.Time - _workingBar.Time >= _period.Value && GetRoundedBarTime(data.Time) > _lastEmit)
+                if (_workingBar != null && data.Time - _workingBar.Time >= _period.Value && GetRoundedBarTime(data) > _lastEmit)
                 {
                     fireDataConsolidated = true;
                 }
@@ -275,7 +287,7 @@ namespace QuantConnect.Data.Consolidators
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected DateTime GetRoundedBarTime(DateTime time)
         {
-            var barTime = _periodSpecification.GetRoundedBarTime(time);
+            var startTime = _periodSpecification.GetRoundedBarTime(time);
 
             // In the case of a new bar, define the period defined at opening time
             if (_workingBar == null)
@@ -283,7 +295,25 @@ namespace QuantConnect.Data.Consolidators
                 _period = _periodSpecification.Period;
             }
 
-            return barTime;
+            return startTime;
+        }
+
+        /// <summary>
+        /// Gets a rounded-down bar start time. Called by AggregateBar in derived classes.
+        /// </summary>
+        /// <param name="inputData">The input data point</param>
+        /// <returns>The rounded bar start time</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected DateTime GetRoundedBarTime(IBaseData inputData)
+        {
+            var potentialStartTime = GetRoundedBarTime(inputData.Time);
+            if(_period.HasValue && potentialStartTime + _period < inputData.EndTime)
+            {
+                // whops! the end time we were giving is beyond our potential end time, so let's use the giving bars star time instead
+                potentialStartTime = inputData.Time;
+            }
+
+            return potentialStartTime;
         }
 
         /// <summary>
@@ -370,19 +400,21 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        /// Special case for bars where the open time is defined by a function
+        /// Special case for bars where the open time is defined by a function.
+        /// We assert on construction that the function returns a date time in the past or equal to the given time instant.
         /// </summary>
         private class FuncPeriodSpecification : IPeriodSpecification
         {
+            private static readonly DateTime _verificationDate = new DateTime(2022, 01, 03, 10, 10, 10);
             public TimeSpan? Period { get; private set; }
 
             public readonly Func<DateTime, CalendarInfo> _calendarInfoFunc;
 
             public FuncPeriodSpecification(Func<DateTime, CalendarInfo> expiryFunc)
             {
-                if (expiryFunc(DateTime.Now).Start > DateTime.Now)
+                if (expiryFunc(_verificationDate).Start > _verificationDate)
                 {
-                    throw new ArgumentException($"{nameof(FuncPeriodSpecification)}: Please use a function that computes a date/time in the past (e.g.: Time.StartOfWeek and Time.StartOfMonth)");
+                    throw new ArgumentException($"{nameof(FuncPeriodSpecification)}: Please use a function that computes the start of the bar associated with the given date time. Should never return a time later than the one passed in.");
                 }
                 _calendarInfoFunc = expiryFunc;
             }

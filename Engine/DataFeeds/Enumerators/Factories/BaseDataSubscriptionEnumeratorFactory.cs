@@ -15,11 +15,11 @@
 */
 
 using System;
-using System.Collections.Generic;
 using QuantConnect.Data;
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Interfaces;
+using System.Collections.Generic;
+using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 {
@@ -29,35 +29,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     /// </summary>
     public class BaseDataSubscriptionEnumeratorFactory : ISubscriptionEnumeratorFactory
     {
+        private readonly IOptionChainProvider _optionChainProvider;
+        private readonly IFutureChainProvider _futureChainProvider;
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
-        private readonly MapFileResolver _mapFileResolver;
-        private readonly bool _isLiveMode;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseDataSubscriptionEnumeratorFactory"/> class
         /// </summary>
-        /// <param name="isLiveMode">True for live mode, false otherwise</param>
-        /// <param name="mapFileResolver">Used for resolving the correct map files</param>
-        /// <param name="factorFileProvider">Used for getting factor files</param>
-        /// <param name="tradableDaysProvider">Function used to provide the tradable dates to be enumerator.
-        /// Specify null to default to <see cref="SubscriptionRequest.TradableDays"/></param>
-        public BaseDataSubscriptionEnumeratorFactory(bool isLiveMode, MapFileResolver mapFileResolver, IFactorFileProvider factorFileProvider, Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null)
+        /// <param name="optionChainProvider">The option chain provider</param>
+        /// <param name="futureChainProvider">The future chain provider</param>
+        public BaseDataSubscriptionEnumeratorFactory(IOptionChainProvider optionChainProvider, IFutureChainProvider futureChainProvider)
         {
-            _isLiveMode = isLiveMode;
-            _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
-            _mapFileResolver = mapFileResolver;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="BaseDataSubscriptionEnumeratorFactory"/> class
-        /// </summary>
-        /// <param name="isLiveMode">True for live mode, false otherwise</param>
-        /// <param name="tradableDaysProvider">Function used to provide the tradable dates to be enumerator.
-        /// Specify null to default to <see cref="SubscriptionRequest.TradableDays"/></param>
-        public BaseDataSubscriptionEnumeratorFactory(bool isLiveMode, Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null)
-        {
-            _isLiveMode = isLiveMode;
-            _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
+            _futureChainProvider = futureChainProvider;
+            _optionChainProvider = optionChainProvider;
+            _tradableDaysProvider = (request => request.TradableDays);
         }
 
         /// <summary>
@@ -73,30 +58,27 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             // It has the added benefit of caching any zip files that we request from the filesystem, and reading
             // files contained within the zip file, which the SingleEntryDataCacheProvider does not support.
             var sourceFactory = request.Configuration.GetBaseDataInstance();
-            using (var dataCacheProvider = new ZipDataCacheProvider(dataProvider))
+            foreach (var date in _tradableDaysProvider(request))
             {
-                foreach (var date in _tradableDaysProvider(request))
+                IEnumerable<Symbol> symbols;
+                if (request.Configuration.SecurityType.IsOption())
                 {
-                    if (sourceFactory.RequiresMapping())
-                    {
-                        request.Configuration.MappedSymbol = GetMappedSymbol(request.Configuration, date);
-                    }
+                    symbols = _optionChainProvider.GetOptionContractList(request.Configuration.Symbol.Underlying, date);
+                }
+                else if (request.Configuration.SecurityType == SecurityType.Future)
+                {
+                    symbols = _futureChainProvider.GetFutureContractList(request.Configuration.Symbol, date);
+                }
+                else
+                {
+                    throw new NotImplementedException($"{request.Configuration.SecurityType} is not supported");
+                }
 
-                    var source = sourceFactory.GetSource(request.Configuration, date, _isLiveMode);
-                    var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, request.Configuration, date, _isLiveMode, sourceFactory, dataProvider);
-                    var entriesForDate = factory.Read(source);
-                    foreach (var entry in entriesForDate)
-                    {
-                        yield return entry;
-                    }
+                foreach (var symbol in symbols)
+                {
+                    yield return new ZipEntryName { Symbol = symbol, Time = date };
                 }
             }
-        }
-
-        private string GetMappedSymbol(SubscriptionDataConfig config, DateTime date)
-        {
-            return _mapFileResolver.ResolveMapFile(config.Symbol, config.Type)
-                .GetMappedSymbol(date, config.MappedSymbol);
         }
     }
 }

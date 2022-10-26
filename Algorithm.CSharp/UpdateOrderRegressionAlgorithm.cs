@@ -190,6 +190,16 @@ namespace QuantConnect.Algorithm.CSharp
         public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 4031;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
@@ -197,22 +207,22 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "21"},
             {"Average Win", "0%"},
             {"Average Loss", "-1.51%"},
-            {"Compounding Annual Return", "-7.320%"},
+            {"Compounding Annual Return", "-7.319%"},
             {"Drawdown", "15.000%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "-14.103%"},
-            {"Sharpe Ratio", "-1.182"},
-            {"Probabilistic Sharpe Ratio", "0.043%"},
+            {"Net Profit", "-14.102%"},
+            {"Sharpe Ratio", "-1.09"},
+            {"Probabilistic Sharpe Ratio", "0.026%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.066"},
-            {"Beta", "0.034"},
-            {"Annual Standard Deviation", "0.05"},
-            {"Annual Variance", "0.003"},
-            {"Information Ratio", "-2.23"},
-            {"Tracking Error", "0.11"},
-            {"Treynor Ratio", "-1.716"},
+            {"Alpha", "0.015"},
+            {"Beta", "-0.417"},
+            {"Annual Standard Deviation", "0.046"},
+            {"Annual Variance", "0.002"},
+            {"Information Ratio", "-1.525"},
+            {"Tracking Error", "0.135"},
+            {"Treynor Ratio", "0.12"},
             {"Total Fees", "$21.00"},
             {"Estimated Strategy Capacity", "$3000000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},

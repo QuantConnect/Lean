@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Python
 
             using (Py.GIL())
             {
-                dynamic test = PythonEngine.ModuleFromString("testModule",
+                dynamic test = PyModule.FromString("testModule",
                     $@"
 def Test(df, symbol):
     df = df.lastprice.unstack(level=0){method}").GetAttr("Test");
@@ -51,7 +51,7 @@ def Test(df, symbol):
 
             using (Py.GIL())
             {
-                dynamic test = PythonEngine.ModuleFromString("testModule",
+                dynamic test = PyModule.FromString("testModule",
                     $@"
 def Test(df, symbol):
     df = df.lastprice.unstack(level=0){method}
@@ -78,7 +78,7 @@ def Test(df, symbol):
 
             using (Py.GIL())
             {
-                dynamic test = PythonEngine.ModuleFromString("testModule",
+                dynamic test = PyModule.FromString("testModule",
                     $@"
 def Test(df, other, symbol):
     df = df{method}
@@ -100,7 +100,7 @@ def Test(df, other, symbol):
 
             using (Py.GIL())
             {
-                dynamic test = PythonEngine.ModuleFromString("testModule",
+                dynamic test = PyModule.FromString("testModule",
                     $@"
 def Test(df, symbol):
     series = df.lastprice
@@ -117,7 +117,7 @@ def Test(df, symbol):
 
             using (Py.GIL())
             {
-                dynamic test = PythonEngine.ModuleFromString("testModule",
+                dynamic test = PyModule.FromString("testModule",
                     $@"
 def Test(df, symbol):
     series = df.lastprice
@@ -145,7 +145,7 @@ def Test(df, symbol):
 
             using (Py.GIL())
             {
-                dynamic test = PythonEngine.ModuleFromString("testModule",
+                dynamic test = PyModule.FromString("testModule",
                     $@"
 def Test(df, other, symbol):
     series, other = other.lastprice, df.lastprice
@@ -304,7 +304,7 @@ def Test(df, other, symbol):
 
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString("Test",
+                var module = PyModule.FromString("Test",
                     @"import pandas
 from inspect import getmembers, isfunction, signature
 
@@ -313,7 +313,7 @@ skipped = [ 'boxplot', 'hist', 'plot',        # <- Graphics
     'equals', 'ewm', 'fillna', 'filter', 'groupby', 'join', 'mask', 'melt',
     'pivot', 'pivot_table', 'reindex_like', 'rename', 'reset_index', 'select_dtypes',
     'slice_shift', 'swaplevel', 'to_clipboard', 'to_excel', 'to_feather', 'to_gbq',
-    'to_hdf', 'to_list', 'tolist', 'to_parquet', 'to_period', 'to_pickle', 'to_sql',
+    'to_hdf', 'to_list', 'tolist', 'to_parquet', 'to_period', 'to_pickle', 'to_sql', 'to_xml',
     'to_stata', 'to_timestamp', 'to_xarray', 'tshift', 'update', 'value_counts', 'where']
 
 newPandas = int(pandas.__version__.split('.')[0]) >= 1

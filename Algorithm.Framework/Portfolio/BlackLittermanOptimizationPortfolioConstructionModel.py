@@ -51,6 +51,7 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
             risk_free_rate(float): The risk free rate
             delta(float): The risk aversion coeffficient of the market portfolio
             tau(float): The model parameter indicating the uncertainty of the CAPM prior"""
+        super().__init__()
         self.lookback = lookback
         self.period = period
         self.resolution = resolution
@@ -228,6 +229,8 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
         try:
             P = {}
             Q = {}
+            symbols = set(insight.Symbol for insight in insights)
+            
             for model, group in groupby(insights, lambda x: x.SourceModel):
                 group = list(group)
 
@@ -251,7 +254,7 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
                     value = insight.Direction * np.abs(insight.Magnitude)
                     P[model][insight.Symbol] = value / q
                 # Add zero for other symbols that are listed but active insight
-                for symbol in self.symbolDataBySymbol.keys():
+                for symbol in symbols:
                     if symbol not in P[model]:
                         P[model][symbol] = 0
 

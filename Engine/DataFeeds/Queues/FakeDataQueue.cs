@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,30 +15,32 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
-using QuantConnect.Interfaces;
+using QuantConnect.Util;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
-using QuantConnect.Util;
+using QuantConnect.Interfaces;
+using QuantConnect.Data.Market;
+using System.Collections.Generic;
+using QuantConnect.Configuration;
 using Timer = System.Timers.Timer;
+using QuantConnect.Lean.Engine.HistoricalData;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Queues
 {
     /// <summary>
-    /// This is an implementation of <see cref="IDataQueueHandler"/> used for testing
+    /// This is an implementation of <see cref="IDataQueueHandler"/> used for testing. <see cref="FakeHistoryProvider"/>
     /// </summary>
-    public class FakeDataQueue : IDataQueueHandler
+    public class FakeDataQueue : IDataQueueHandler, IDataQueueUniverseProvider
     {
         private int _count;
         private readonly Random _random = new Random();
 
         private readonly Timer _timer;
+        private readonly IDataCacheProvider _dataCacheProvider;
+        private readonly IOptionChainProvider _optionChainProvider;
         private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
-        private readonly object _sync = new object();
         private readonly IDataAggregator _aggregator;
         private readonly MarketHoursDatabase _marketHoursDatabase;
         private readonly Dictionary<Symbol, TimeZoneOffsetProvider> _symbolExchangeTimeZones;
@@ -63,6 +65,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         public FakeDataQueue(IDataAggregator dataAggregator)
         {
             _aggregator = dataAggregator;
+            _dataCacheProvider = new ZipDataCacheProvider(new DefaultDataProvider(), true);
+            var mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"), false);
+            _optionChainProvider = new LiveOptionChainProvider(_dataCacheProvider, mapFileProvider);
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             _symbolExchangeTimeZones = new Dictionary<Symbol, TimeZoneOffsetProvider>();
             _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
@@ -148,6 +153,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         {
             _timer.Stop();
             _timer.DisposeSafely();
+            _dataCacheProvider.DisposeSafely();
         }
 
         /// <summary>
@@ -204,6 +210,35 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
                 _symbolExchangeTimeZones[symbol] = offsetProvider = new TimeZoneOffsetProvider(exchangeTimeZone, TimeProvider.GetUtcNow(), Time.EndOfTime);
             }
             return offsetProvider;
+        }
+
+        /// <summary>
+        /// Method returns a collection of Symbols that are available at the data source.
+        /// </summary>
+        /// <param name="symbol">Symbol to lookup</param>
+        /// <param name="includeExpired">Include expired contracts</param>
+        /// <param name="securityCurrency">Expected security currency(if any)</param>
+        /// <returns>Enumerable of Symbols, that are associated with the provided Symbol</returns>
+        public IEnumerable<Symbol> LookupSymbols(Symbol symbol, bool includeExpired, string securityCurrency = null)
+        {
+            switch (symbol.SecurityType)
+            {
+                case SecurityType.Option:
+                case SecurityType.IndexOption:
+                case SecurityType.FutureOption:
+                    foreach (var result in _optionChainProvider.GetOptionContractList(symbol.Underlying, DateTime.UtcNow.Date))
+                    {
+                        yield return result;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        public bool CanPerformSelection()
+        {
+            return true;
         }
     }
 }

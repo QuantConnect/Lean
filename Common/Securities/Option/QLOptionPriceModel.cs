@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,10 +14,11 @@
  *
 */
 
+using QLNet;
 using System;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QLNet;
 
 namespace QuantConnect.Securities.Option
 {
@@ -28,8 +29,10 @@ namespace QuantConnect.Securities.Option
     /// <summary>
     /// Provides QuantLib(QL) implementation of <see cref="IOptionPriceModel"/> to support major option pricing models, available in QL.
     /// </summary>
-    class QLOptionPriceModel : IOptionPriceModel
+    public class QLOptionPriceModel : IOptionPriceModel
     {
+        private static readonly OptionStyle[] _defaultAllowedOptionStyles = new[] { OptionStyle.European, OptionStyle.American };
+
         private readonly IQLUnderlyingVolatilityEstimator _underlyingVolEstimator;
         private readonly IQLRiskFreeRateEstimator _riskFreeRateEstimator;
         private readonly IQLDividendYieldEstimator _dividendYieldEstimator;
@@ -42,19 +45,27 @@ namespace QuantConnect.Securities.Option
         public bool EnableGreekApproximation { get; set; } = true;
 
         /// <summary>
+        /// True if volatility model is warmed up, i.e. has generated volatility value different from zero, otherwise false.
+        /// </summary>
+        public bool VolatilityEstimatorWarmedUp => _underlyingVolEstimator.IsReady;
+
+        /// <summary>
+        /// List of option styles supported by the pricing model.
+        /// By default, both American and European option styles are supported.
+        /// </summary>
+        public OptionStyle[] AllowedOptionStyles { get; }
+
+        /// <summary>
         /// Method constructs QuantLib option price model with necessary estimators of underlying volatility, risk free rate, and underlying dividend yield
         /// </summary>
         /// <param name="pricingEngineFunc">Function modeled stochastic process, and returns new pricing engine to run calculations for that option</param>
         /// <param name="underlyingVolEstimator">The underlying volatility estimator</param>
         /// <param name="riskFreeRateEstimator">The risk free rate estimator</param>
         /// <param name="dividendYieldEstimator">The underlying dividend yield estimator</param>
-        public QLOptionPriceModel(PricingEngineFunc pricingEngineFunc, IQLUnderlyingVolatilityEstimator underlyingVolEstimator, IQLRiskFreeRateEstimator riskFreeRateEstimator, IQLDividendYieldEstimator dividendYieldEstimator)
-        {
-            _pricingEngineFunc = (option, process) => pricingEngineFunc(process);
-            _underlyingVolEstimator = underlyingVolEstimator ?? new ConstantQLUnderlyingVolatilityEstimator();
-            _riskFreeRateEstimator = riskFreeRateEstimator ?? new ConstantQLRiskFreeRateEstimator();
-            _dividendYieldEstimator = dividendYieldEstimator ?? new ConstantQLDividendYieldEstimator();
-        }
+        /// <param name="allowedOptionStyles">List of option styles supported by the pricing model. It defaults to both American and European option styles</param>
+        public QLOptionPriceModel(PricingEngineFunc pricingEngineFunc, IQLUnderlyingVolatilityEstimator underlyingVolEstimator, IQLRiskFreeRateEstimator riskFreeRateEstimator, IQLDividendYieldEstimator dividendYieldEstimator, OptionStyle[] allowedOptionStyles = null)
+            : this((option, process) => pricingEngineFunc(process), underlyingVolEstimator, riskFreeRateEstimator, dividendYieldEstimator, allowedOptionStyles)
+        {}
         /// <summary>
         /// Method constructs QuantLib option price model with necessary estimators of underlying volatility, risk free rate, and underlying dividend yield
         /// </summary>
@@ -62,12 +73,15 @@ namespace QuantConnect.Securities.Option
         /// <param name="underlyingVolEstimator">The underlying volatility estimator</param>
         /// <param name="riskFreeRateEstimator">The risk free rate estimator</param>
         /// <param name="dividendYieldEstimator">The underlying dividend yield estimator</param>
-        public QLOptionPriceModel(PricingEngineFuncEx pricingEngineFunc, IQLUnderlyingVolatilityEstimator underlyingVolEstimator, IQLRiskFreeRateEstimator riskFreeRateEstimator, IQLDividendYieldEstimator dividendYieldEstimator)
+        /// <param name="allowedOptionStyles">List of option styles supported by the pricing model. It defaults to both American and European option styles</param>
+        public QLOptionPriceModel(PricingEngineFuncEx pricingEngineFunc, IQLUnderlyingVolatilityEstimator underlyingVolEstimator, IQLRiskFreeRateEstimator riskFreeRateEstimator, IQLDividendYieldEstimator dividendYieldEstimator, OptionStyle[] allowedOptionStyles = null)
         {
             _pricingEngineFunc = pricingEngineFunc;
             _underlyingVolEstimator = underlyingVolEstimator ?? new ConstantQLUnderlyingVolatilityEstimator();
             _riskFreeRateEstimator = riskFreeRateEstimator ?? new ConstantQLRiskFreeRateEstimator();
             _dividendYieldEstimator = dividendYieldEstimator ?? new ConstantQLDividendYieldEstimator();
+
+            AllowedOptionStyles = allowedOptionStyles ?? _defaultAllowedOptionStyles;
         }
 
         /// <summary>
@@ -81,15 +95,30 @@ namespace QuantConnect.Securities.Option
         /// price of the specified option contract</returns>
         public OptionPriceModelResult Evaluate(Security security, Slice slice, OptionContract contract)
         {
+            if (!AllowedOptionStyles.Contains(contract.Symbol.ID.OptionStyle))
+            {
+               throw new ArgumentException($"{contract.Symbol.ID.OptionStyle} style options are not supported by option price model '{this.GetType().Name}'");
+            }
+
             try
             {
+                // expired options have no price
+                if (contract.Time.Date > contract.Expiry.Date)
+                {
+                    return OptionPriceModelResult.None;
+                }
+
                 // setting up option pricing parameters
                 var calendar = new UnitedStates();
                 var dayCounter = new Actual365Fixed();
                 var optionSecurity = (Option)security;
 
-                var settlementDate = contract.Time.Date.AddDays(Option.DefaultSettlementDays);
-                var maturityDate = contract.Expiry.Date.AddDays(Option.DefaultSettlementDays);
+                var securityExchangeHours = security.Exchange.Hours;
+                var settlementDate = AddDays(contract.Time.Date, Option.DefaultSettlementDays, securityExchangeHours);
+                var evaluationDate = contract.Time.Date;
+                // TODO: static variable
+                Settings.setEvaluationDate(evaluationDate);
+                var maturityDate = AddDays(contract.Expiry.Date, Option.DefaultSettlementDays, securityExchangeHours);
                 var underlyingQuoteValue = new SimpleQuote((double)optionSecurity.Underlying.Price);
 
                 var dividendYieldValue = new SimpleQuote(_dividendYieldEstimator.Estimate(security, slice, contract));
@@ -101,6 +130,11 @@ namespace QuantConnect.Securities.Option
                 var underlyingVolValue = new SimpleQuote(_underlyingVolEstimator.Estimate(security, slice, contract));
                 var underlyingVol = new Handle<BlackVolTermStructure>(new BlackConstantVol(0, calendar, new Handle<Quote>(underlyingVolValue), dayCounter));
 
+                if (!_underlyingVolEstimator.IsReady)
+                {
+                    return OptionPriceModelResult.None;
+                }
+
                 // preparing stochastic process and payoff functions
                 var stochasticProcess = new BlackScholesMertonProcess(new Handle<Quote>(underlyingQuoteValue), dividendYield, riskFreeRate, underlyingVol);
                 var payoff = new PlainVanillaPayoff(contract.Right == OptionRight.Call ? QLNet.Option.Type.Call : QLNet.Option.Type.Put, (double)contract.Strike);
@@ -110,13 +144,13 @@ namespace QuantConnect.Securities.Option
                             new VanillaOption(payoff, new AmericanExercise(settlementDate, maturityDate)) :
                             new VanillaOption(payoff, new EuropeanExercise(maturityDate));
 
-                Settings.setEvaluationDate(settlementDate);
 
                 // preparing pricing engine QL object
                 option.setPricingEngine(_pricingEngineFunc(contract.Symbol, stochasticProcess));
 
                 // running calculations
-                var npv = EvaluateOption(option);
+                // can return negative value in neighbourhood of 0
+                var npv = Math.Max(0, EvaluateOption(option));
 
                 // function extracts QL greeks catching exception if greek is not generated by the pricing engine and reevaluates option to get numerical estimate of the seisitivity
                 Func<Func<double>, Func<double>, decimal> tryGetGreekOrReevaluate = (greek, reevalFunc) =>
@@ -166,8 +200,17 @@ namespace QuantConnect.Securities.Option
                             var npvPlus = EvaluateOption(option);
                             underlyingQuoteValue.setValue(initial);
 
-                            return Tuple.Create((decimal)((npvPlus - npvMinus) / (2 * step)),
-                                                (decimal)((npvPlus - 2 * npv + npvMinus) / (step * step)));
+                            var delta = (decimal)((npvPlus - npvMinus) / (2 * step));
+                            // because we are using floating point, there is a chance that some decimals get above or bellow absolute '1'
+                            if(delta > 1)
+                            {
+                                delta = 1;
+                            }
+                            else if(delta < -1)
+                            {
+                                delta = -1;
+                            }
+                            return Tuple.Create(delta, (decimal)((npvPlus - 2 * npv + npvMinus) / (step * step)));
                         }
                         else
                             return Tuple.Create(0.0m, 0.0m);
@@ -189,9 +232,10 @@ namespace QuantConnect.Securities.Option
                 {
                     var step = 1.0 / 365.0;
 
-                    Settings.setEvaluationDate(settlementDate.AddDays(-1));
+                    // we get the previous trading date of the 'evaluation date' so we can infer the theta from the (option nvp price variation) / (time)
+                    Settings.setEvaluationDate(security.Exchange.Hours.GetPreviousTradingDay(evaluationDate));
                     var npvMinus = EvaluateOption(option);
-                    Settings.setEvaluationDate(settlementDate);
+                    Settings.setEvaluationDate(evaluationDate);
 
                     return (npv - npvMinus) / step;
                 };
@@ -217,10 +261,10 @@ namespace QuantConnect.Securities.Option
                                             () => tryGetGreekOrReevaluate(() => option.rho(), reevalRho),
                                             () => tryGetGreek(() => option.elasticity())));
             }
-            catch(Exception err)
+            catch (Exception err)
             {
                 Log.Debug($"QLOptionPriceModel.Evaluate() error: {err.Message}");
-                return new OptionPriceModelResult(0m, new Greeks());
+                return OptionPriceModelResult.None;
             }
         }
 
@@ -246,6 +290,18 @@ namespace QuantConnect.Securities.Option
                 Log.Debug($"QLOptionPriceModel.EvaluateOption() error: {err.Message}");
                 return 0.0;
             }
+        }
+
+        private static DateTime AddDays(DateTime date, int days, SecurityExchangeHours marketHours)
+        {
+            var forwardDate = date.AddDays(days);
+
+            if (!marketHours.IsDateOpen(forwardDate))
+            {
+                forwardDate = marketHours.GetNextTradingDay(forwardDate);
+            }
+
+            return forwardDate;
         }
     }
 }

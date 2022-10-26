@@ -13,6 +13,7 @@
 * limitations under the License.
 */
 
+using QuantConnect.Util;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Orders.Fees
@@ -58,7 +59,8 @@ namespace QuantConnect.Orders.Fees
             var security = parameters.Security;
             var order = parameters.Order;
 
-            decimal fee = _takerFee;
+            // apply fee factor, currently we do not model 30-day volume, so we use the first tier
+            var fee = _takerFee;
             var props = order.Properties as BinanceOrderProperties;
 
             if (order.Type == OrderType.Limit &&
@@ -66,6 +68,13 @@ namespace QuantConnect.Orders.Fees
             {
                 // limit order posted to the order book
                 fee = _makerFee;
+            }
+
+            if (order.Direction == OrderDirection.Buy)
+            {
+                // fees taken in the received currency
+                CurrencyPairUtil.DecomposeCurrencyPair(order.Symbol, out var baseCurrency, out _);
+                return new OrderFee(new CashAmount(order.AbsoluteQuantity * fee, baseCurrency));
             }
 
             // get order value in quote currency
@@ -78,7 +87,6 @@ namespace QuantConnect.Orders.Fees
 
             unitPrice *= security.SymbolProperties.ContractMultiplier;
 
-            // apply fee factor, currently we do not model 30-day volume, so we use the first tier
             return new OrderFee(new CashAmount(
                 unitPrice * order.AbsoluteQuantity * fee,
                 security.QuoteCurrency.Symbol));

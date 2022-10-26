@@ -25,6 +25,7 @@ class BasicTemplateFuturesFrameworkAlgorithm(QCAlgorithm):
     def Initialize(self):
 
         self.UniverseSettings.Resolution = Resolution.Minute
+        self.UniverseSettings.ExtendedMarketHours = self.GetExtendedMarketHours()
 
         self.SetStartDate(2013, 10, 7)
         self.SetEndDate(2013, 10, 11)
@@ -44,6 +45,9 @@ class BasicTemplateFuturesFrameworkAlgorithm(QCAlgorithm):
             return [ Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME) ]
         else:
             return [ Symbol.Create(Futures.Metals.Gold, SecurityType.Future, Market.COMEX) ]
+
+    def GetExtendedMarketHours(self):
+        return False
 
 class FrontMonthFutureUniverseSelectionModel(FutureUniverseSelectionModel):
     '''Creates futures chain universes that select the front month contract and runs a user

@@ -183,6 +183,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.IsTrue(LeanData.IsCommonLeanDataType(typeof(OpenInterest)));
             Assert.IsTrue(LeanData.IsCommonLeanDataType(typeof(TradeBar)));
             Assert.IsTrue(LeanData.IsCommonLeanDataType(typeof(QuoteBar)));
+            Assert.IsTrue(LeanData.IsCommonLeanDataType(typeof(Tick)));
             Assert.IsFalse(LeanData.IsCommonLeanDataType(typeof(Bitcoin)));
         }
 
@@ -193,22 +194,23 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(LeanData.GetCommonTickTypeForCommonDataTypes(typeof(Tick), SecurityType.Forex), TickType.Quote);
         }
 
-        [TestCase("forex/fxcm/eurusd/20160101_quote.zip", true, SecurityType.Forex)]
-        [TestCase("Data/f/fxcm/eurusd/20160101_quote.zip", false, SecurityType.Base)]
-        [TestCase("ooooooooooooooooooooooooooooooooooooooooooooooooooooooo", false, SecurityType.Base)]
-        [TestCase("", false, SecurityType.Base)]
-        [TestCase(null, false, SecurityType.Base)]
+        [TestCase("forex/fxcm/eurusd/20160101_quote.zip", true, SecurityType.Forex, Market.FXCM)]
+        [TestCase("Data/f/fxcm/eurusd/20160101_quote.zip", false, SecurityType.Base, "")]
+        [TestCase("ooooooooooooooooooooooooooooooooooooooooooooooooooooooo", false, SecurityType.Base, "")]
+        [TestCase("", false, SecurityType.Base, "")]
+        [TestCase(null, false, SecurityType.Base, "")]
 
-        [TestCase("Data/option/u sa/minute/aapl/20140606_trade_american.zip", true, SecurityType.Option)]
-        [TestCase("../Data/equity/usa/daily/aapl.zip", true, SecurityType.Equity)]
-        [TestCase("Data/cfd/oanda/minute/bcousd/20160101_trade.zip", true, SecurityType.Cfd)]
-        [TestCase("Data\\alternative\\estimize\\consensus\\aapl.csv", true, SecurityType.Base)]
-        [TestCase("../../../Data/option/usa/minute/spy/20200922_quote_american.zip", true, SecurityType.Option)]
-        [TestCase("../../../Data/futureoption/comex/minute/og/20200428/20200105_quote_american.zip", true, SecurityType.FutureOption)]
-        public void TryParseSecurityType(string path, bool result, SecurityType expectedSecurityType)
+        [TestCase("Data/option/u sa/minute/aapl/20140606_trade_american.zip", true, SecurityType.Option, "")]
+        [TestCase("../Data/equity/usa/daily/aapl.zip", true, SecurityType.Equity, "usa")]
+        [TestCase("Data/cfd/oanda/minute/bcousd/20160101_trade.zip", true, SecurityType.Cfd, "oanda")]
+        [TestCase("Data\\alternative\\estimize\\consensus\\aapl.csv", true, SecurityType.Base, "")]
+        [TestCase("../../../Data/option/usa/minute/spy/20200922_quote_american.zip", true, SecurityType.Option, "usa")]
+        [TestCase("../../../Data/futureoption/comex/minute/og/20200428/20200105_quote_american.zip", true, SecurityType.FutureOption, "comex")]
+        public void TryParseSecurityType(string path, bool result, SecurityType expectedSecurityType, string market)
         {
-            Assert.AreEqual(result, LeanData.TryParseSecurityType(path, out var securityType));
+            Assert.AreEqual(result, LeanData.TryParseSecurityType(path, out var securityType, out var parsedMarket));
             Assert.AreEqual(expectedSecurityType, securityType);
+            Assert.AreEqual(market, parsedMarket);
         }
 
         [Test]
@@ -444,6 +446,75 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual("../../../Data/futureoption/comex/minute/og/20200428/20200105_quote_american.zip", optionZipFilePath);
             Assert.AreEqual($"20200105_og_minute_quote_american_{right.ToLower()}_{strike}0000_{expiry:yyyyMMdd}.csv", optionEntryFilePath);
         }
+        
+        [Test, TestCaseSource(nameof(AggregateTradeBarsTestData))]
+        public void AggregateTradeBarsTest(TimeSpan resolution, TradeBar expectedFirstTradeBar)
+        {
+            var initialTime = new DateTime(2020, 1, 5, 12, 0, 0);
+            var symbol = Symbols.AAPL;
+            var initialBars = new[]
+            {
+                new TradeBar {Time = initialTime, Open = 10, High = 15, Low = 8, Close = 11, Volume = 50, Period = TimeSpan.FromSeconds(1), Symbol = symbol},
+                new TradeBar {Time = initialTime.Add(TimeSpan.FromSeconds(15)), Open = 13, High = 14, Low = 7, Close = 9, Volume = 150, Period = TimeSpan.FromSeconds(1), Symbol = symbol},
+                new TradeBar {Time = initialTime.Add(TimeSpan.FromMinutes(15)), Open = 11, High = 25, Low = 10, Close = 21, Volume = 90, Period = TimeSpan.FromMinutes(1), Symbol = symbol},
+                new TradeBar {Time = initialTime.Add(TimeSpan.FromHours(6)), Open = 17, High = 19, Low = 12, Close = 11, Volume = 20, Period = TimeSpan.FromMinutes(1), Symbol = symbol},
+            };
+
+            var aggregated = LeanData.AggregateTradeBars(initialBars, symbol, resolution).ToList();
+            
+            Assert.True(aggregated.All(i => i.Period == resolution));
+
+            var firstBar = aggregated.First();
+
+            AssertBarsAreEqual(expectedFirstTradeBar, firstBar);
+
+        }
+        
+        [Test, TestCaseSource(nameof(AggregateQuoteBarsTestData))]
+        public void AggregateQuoteBarsTest(TimeSpan resolution, QuoteBar expectedFirstBar)
+        {
+            var initialTime = new DateTime(2020, 1, 5, 12, 0, 0);
+            var symbol = Symbols.AAPL;
+            var initialBars = new[]
+            {
+                new QuoteBar {Time = initialTime, Ask = new Bar {Open = 10, High = 15, Low = 8, Close = 11}, Bid = {Open = 7, High = 14, Low = 5, Close = 10}, Period = TimeSpan.FromMinutes(1), Symbol = symbol},
+                new QuoteBar {Time = initialTime.Add(TimeSpan.FromSeconds(15)), Ask = new Bar {Open = 13, High = 14, Low = 7, Close = 9}, Bid = {Open = 10, High = 11, Low = 4, Close = 5}, Period = TimeSpan.FromMinutes(1), Symbol = symbol},
+                new QuoteBar {Time = initialTime.Add(TimeSpan.FromMinutes(15)), Ask = new Bar {Open = 11, High = 25, Low = 10, Close = 21}, Bid = {Open = 10, High = 22, Low = 9, Close = 20}, Period = TimeSpan.FromMinutes(1), Symbol = symbol},
+                new QuoteBar {Time = initialTime.Add(TimeSpan.FromHours(6)), Ask = new Bar {Open = 17, High = 19, Low = 12, Close = 11}, Bid = {Open = 16, High = 17, Low = 10, Close = 10}, Period = TimeSpan.FromMinutes(1), Symbol = symbol},
+            };
+        
+            var aggregated = LeanData.AggregateQuoteBars(initialBars, symbol, resolution).ToList();
+            
+            Assert.True(aggregated.All(i => i.Period == resolution));
+        
+            var firstBar = aggregated.First();
+            
+            AssertBarsAreEqual(expectedFirstBar.Ask, firstBar.Ask);
+            AssertBarsAreEqual(expectedFirstBar.Bid, firstBar.Bid);
+        }
+        
+        [Test, TestCaseSource(nameof(AggregateTickTestData))]
+        public void AggregateTicksTest(TimeSpan resolution, QuoteBar expectedFirstBar)
+        {
+            var initialTime = new DateTime(2020, 1, 5, 12, 0, 0);
+            var symbol = Symbols.AAPL;
+            var initialTicks = new[]
+            {
+                new Tick(initialTime, symbol, string.Empty, string.Empty, 10, 11, 12, 13),
+                new Tick(initialTime.Add(TimeSpan.FromSeconds(1)), symbol, string.Empty, string.Empty, 14, 15, 16, 17),
+                new Tick(initialTime.Add(TimeSpan.FromSeconds(10)), symbol, string.Empty, string.Empty, 18, 19, 20, 21),
+                new Tick(initialTime.Add(TimeSpan.FromSeconds(61)), symbol, string.Empty, string.Empty, 22, 23, 24, 25),
+            };
+
+            var aggregated = LeanData.AggregateTicks(initialTicks, symbol, resolution).ToList();
+
+            Assert.True(aggregated.All(i => i.Period == resolution));
+
+            var firstBar = aggregated.First();
+
+            AssertBarsAreEqual(expectedFirstBar.Ask, firstBar.Ask);
+            AssertBarsAreEqual(expectedFirstBar.Bid, firstBar.Bid);
+        }
 
         private static void AssertBarsAreEqual(IBar expected, IBar actual)
         {
@@ -482,10 +553,10 @@ namespace QuantConnect.Tests.Common.Util
                 new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Second, TickType.Quote, "20160217_quote_american.zip", "20160217_spy_second_quote_american_put_1920000_20160219.csv", "option/usa/second/spy"),
                 new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Minute, TickType.Trade, "20160217_trade_american.zip", "20160217_spy_minute_trade_american_put_1920000_20160219.csv", "option/usa/minute/spy"),
                 new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Minute, TickType.Quote, "20160217_quote_american.zip", "20160217_spy_minute_quote_american_put_1920000_20160219.csv", "option/usa/minute/spy"),
-                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Hour, TickType.Trade, "spy_trade_american.zip", "spy_trade_american_put_1920000_20160219.csv", "option/usa/hour"),
-                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Hour, TickType.Quote, "spy_quote_american.zip", "spy_quote_american_put_1920000_20160219.csv", "option/usa/hour"),
-                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Daily, TickType.Trade, "spy_trade_american.zip", "spy_trade_american_put_1920000_20160219.csv", "option/usa/daily"),
-                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Daily, TickType.Quote, "spy_quote_american.zip", "spy_quote_american_put_1920000_20160219.csv", "option/usa/daily"),
+                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Hour, TickType.Trade, "spy_2016_trade_american.zip", "spy_trade_american_put_1920000_20160219.csv", "option/usa/hour"),
+                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Hour, TickType.Quote, "spy_2016_quote_american.zip", "spy_quote_american_put_1920000_20160219.csv", "option/usa/hour"),
+                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Daily, TickType.Trade, "spy_2016_trade_american.zip", "spy_trade_american_put_1920000_20160219.csv", "option/usa/daily"),
+                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Daily, TickType.Quote, "spy_2016_quote_american.zip", "spy_quote_american_put_1920000_20160219.csv", "option/usa/daily"),
 
                 // forex
                 new LeanDataTestParameters(Symbols.EURUSD, date, Resolution.Tick, TickType.Quote, "20160217_quote.zip", "20160217_eurusd_tick_quote.csv", "forex/oanda/tick/eurusd"),
@@ -495,11 +566,11 @@ namespace QuantConnect.Tests.Common.Util
                 new LeanDataTestParameters(Symbols.EURUSD, date, Resolution.Daily, TickType.Quote, "eurusd.zip", "eurusd.csv", "forex/oanda/daily"),
 
                 // cfd
-                new LeanDataTestParameters(Symbols.DE10YBEUR, date, Resolution.Tick, TickType.Quote, "20160217_quote.zip", "20160217_de10ybeur_tick_quote.csv", "cfd/fxcm/tick/de10ybeur"),
-                new LeanDataTestParameters(Symbols.DE10YBEUR, date, Resolution.Second, TickType.Quote, "20160217_quote.zip", "20160217_de10ybeur_second_quote.csv", "cfd/fxcm/second/de10ybeur"),
-                new LeanDataTestParameters(Symbols.DE10YBEUR, date, Resolution.Minute, TickType.Quote, "20160217_quote.zip", "20160217_de10ybeur_minute_quote.csv", "cfd/fxcm/minute/de10ybeur"),
-                new LeanDataTestParameters(Symbols.DE10YBEUR, date, Resolution.Hour, TickType.Quote, "de10ybeur.zip", "de10ybeur.csv", "cfd/fxcm/hour"),
-                new LeanDataTestParameters(Symbols.DE10YBEUR, date, Resolution.Daily, TickType.Quote, "de10ybeur.zip", "de10ybeur.csv", "cfd/fxcm/daily"),
+                new LeanDataTestParameters(Symbols.DE10YBEUR, date, Resolution.Tick, TickType.Quote, "20160217_quote.zip", "20160217_de10ybeur_tick_quote.csv", "cfd/oanda/tick/de10ybeur"),
+                new LeanDataTestParameters(Symbols.DE10YBEUR, date, Resolution.Second, TickType.Quote, "20160217_quote.zip", "20160217_de10ybeur_second_quote.csv", "cfd/oanda/second/de10ybeur"),
+                new LeanDataTestParameters(Symbols.DE10YBEUR, date, Resolution.Minute, TickType.Quote, "20160217_quote.zip", "20160217_de10ybeur_minute_quote.csv", "cfd/oanda/minute/de10ybeur"),
+                new LeanDataTestParameters(Symbols.DE10YBEUR, date, Resolution.Hour, TickType.Quote, "de10ybeur.zip", "de10ybeur.csv", "cfd/oanda/hour"),
+                new LeanDataTestParameters(Symbols.DE10YBEUR, date, Resolution.Daily, TickType.Quote, "de10ybeur.zip", "de10ybeur.csv", "cfd/oanda/daily"),
 
                 // Crypto - trades
                 new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Tick, TickType.Trade, "20160217_trade.zip", "20160217_btcusd_tick_trade.csv", "crypto/gdax/tick/btcusd"),
@@ -639,6 +710,44 @@ namespace QuantConnect.Tests.Common.Util
                     "20160218 00:00,1,2,3,4,5"),
 
             }.Select(x => new TestCaseData(x).SetName(x.Name)).ToArray();
+        }
+
+        private static TestCaseData[] AggregateTradeBarsTestData
+        {
+            get
+            {
+                return new[]
+                {
+                    new TestCaseData(TimeSpan.FromMinutes(1), new TradeBar {Open = 10, Close = 9, High = 15, Low = 7, Volume = 200, Period = TimeSpan.FromMinutes(1)}),
+                    new TestCaseData(TimeSpan.FromHours(1), new TradeBar {Open = 10, Close = 21, High = 25, Low = 7, Volume = 290, Period = TimeSpan.FromHours(1)}),
+                    new TestCaseData(TimeSpan.FromDays(1), new TradeBar {Open = 10, Close = 11, High = 25, Low = 7, Volume = 310, Period = TimeSpan.FromDays(1)}),
+                };
+            }
+        }
+        
+        private static TestCaseData[] AggregateQuoteBarsTestData
+        {
+            get
+            {
+                return new[]
+                {
+                    new TestCaseData(TimeSpan.FromMinutes(1), new QuoteBar {Ask = new Bar {Open = 10, High = 15, Low = 7, Close = 9}, Bid = {Open = 7, High = 14, Low = 4, Close = 5}, Period = TimeSpan.FromMinutes(1)}),
+                    new TestCaseData(TimeSpan.FromHours(1), new QuoteBar {Ask = new Bar {Open = 10, High = 25, Low = 7, Close = 21}, Bid = {Open = 7, High = 22, Low = 4, Close = 20}, Period = TimeSpan.FromMinutes(1)}),
+                    new TestCaseData(TimeSpan.FromDays(1), new QuoteBar {Ask = new Bar {Open = 10, High = 25, Low = 7, Close = 11}, Bid = {Open = 7, High = 22, Low = 4, Close = 10}, Period = TimeSpan.FromMinutes(1)}),
+                };
+            }
+        }
+        
+        private static TestCaseData[] AggregateTickTestData
+        {
+            get
+            {
+                return new[]
+                {
+                    new TestCaseData(TimeSpan.FromSeconds(1), new QuoteBar {Ask = new Bar {Open = 13, High = 13, Low = 13, Close = 13}, Bid = {Open = 11, High = 11, Low = 11, Close = 11}, Period = TimeSpan.FromSeconds(1)}),
+                    new TestCaseData(TimeSpan.FromMinutes(1), new QuoteBar {Ask = new Bar {Open = 13, High = 21, Low = 13, Close = 21}, Bid = {Open = 11, High = 19, Low = 11, Close = 19}, Period = TimeSpan.FromMinutes(1)}),
+                };
+            }
         }
 
         public class LeanDataTestParameters

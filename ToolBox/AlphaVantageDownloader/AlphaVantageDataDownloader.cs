@@ -62,15 +62,23 @@ namespace QuantConnect.ToolBox.AlphaVantageDownloader
         }
 
         /// <summary>
-        /// Get data from API
+        /// Get historical data enumerable for a single symbol, type and resolution given this start and end time (in UTC).
         /// </summary>
-        /// <param name="symbol">Symbol to download</param>
-        /// <param name="resolution">Resolution to download</param>
-        /// <param name="startUtc">Start time</param>
-        /// <param name="endUtc">End time</param>
-        /// <returns></returns>
-        public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
+        /// <param name="dataDownloaderGetParameters">model class for passing in parameters for historical data</param>
+        /// <returns>Enumerable of base data for this symbol</returns>
+        public IEnumerable<BaseData> Get(DataDownloaderGetParameters dataDownloaderGetParameters)
         {
+            var symbol = dataDownloaderGetParameters.Symbol;
+            var resolution = dataDownloaderGetParameters.Resolution;
+            var startUtc = dataDownloaderGetParameters.StartUtc;
+            var endUtc = dataDownloaderGetParameters.EndUtc;
+            var tickType = dataDownloaderGetParameters.TickType;
+
+            if (tickType != TickType.Trade)
+            {
+                return Enumerable.Empty<BaseData>();
+            }
+
             var request = new RestRequest("query", DataFormat.Json);
             request.AddParameter("symbol", symbol.Value);
             request.AddParameter("datatype", "csv");

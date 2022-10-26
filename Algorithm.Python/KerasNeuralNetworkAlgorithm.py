@@ -13,11 +13,10 @@
 
 from AlgorithmImports import *
 
-from io import StringIO
-from keras.models import Sequential
+from keras.models import *
+from tensorflow import keras
 from keras.layers import Dense, Activation
 from keras.optimizers import SGD
-from keras.utils.generic_utils import serialize_keras_object
 
 class KerasNeuralNetworkAlgorithm(QCAlgorithm):
 
@@ -32,11 +31,13 @@ class KerasNeuralNetworkAlgorithm(QCAlgorithm):
             symbol = self.AddEquity(ticker).Symbol
 
             # Read the model saved in the ObjectStore
-            if self.ObjectStore.ContainsKey(f'{symbol}_model'):
-                modelStr = self.ObjectStore.Read(f'{symbol}_model')
-                config = json.loads(modelStr)['config']
-                self.modelBySymbol[symbol] = Sequential.from_config(config)
-                self.Debug(f'Model for {symbol} sucessfully retrieved from the ObjectStore')
+            for kvp in self.ObjectStore:
+                key = f'{symbol}_model'
+                if not key == kvp.Key or kvp.Value is None:
+                    continue
+                filePath = self.ObjectStore.GetFilePath(kvp.Key)
+                self.modelBySymbol[symbol] = keras.models.load_model(filePath)
+                self.Debug(f'Model for {symbol} sucessfully retrieved. File {filePath}. Size {kvp.Value.Length}. Weights {self.modelBySymbol[symbol].get_weights()}')
 
         # Look-back period for training set
         self.lookback = 30
@@ -51,19 +52,21 @@ class KerasNeuralNetworkAlgorithm(QCAlgorithm):
         self.Schedule.On(
             self.DateRules.EveryDay("SPY"),
             self.TimeRules.AfterMarketOpen("SPY", 30),
-            self.Trade) 
+            self.Trade)
 
 
     def OnEndOfAlgorithm(self):
         ''' Save the data and the mode using the ObjectStore '''
         for symbol, model in self.modelBySymbol.items():
-            modelStr = json.dumps(serialize_keras_object(model))
-            self.ObjectStore.Save(f'{symbol}_model', modelStr)
+            key = f'{symbol}_model'
+            file = self.ObjectStore.GetFilePath(key)
+            model.save(file)
+            self.ObjectStore.Save(key)
             self.Debug(f'Model for {symbol} sucessfully saved in the ObjectStore')
 
 
     def NeuralNetworkTraining(self):
-        '''Train the Neural Network and save the model in the ObjectStore'''        
+        '''Train the Neural Network and save the model in the ObjectStore'''
         symbols = self.Securities.keys()
 
         # Daily historical data is used to train the machine learning model
@@ -89,19 +92,18 @@ class KerasNeuralNetworkAlgorithm(QCAlgorithm):
             # choose loss function and optimizing method
             model.compile(loss='mse', optimizer=sgd)
 
-            # pick an iteration number large enough for convergence 
+            # pick an iteration number large enough for convergence
             for step in range(200):
                 # training the model
                 cost = model.train_on_batch(predictor, predictand)
 
             self.modelBySymbol[symbol] = model
 
-
     def Trade(self):
         '''
         Predict the price using the trained model and out-of-sample data
         Enter or exit positions based on relationship of the open price of the current bar and the prices defined by the machine learning model.
-        Liquidate if the open price is below the sell price and buy if the open price is above the buy price 
+        Liquidate if the open price is below the sell price and buy if the open price is above the buy price
         '''
         target = 1 / len(self.Securities)
 

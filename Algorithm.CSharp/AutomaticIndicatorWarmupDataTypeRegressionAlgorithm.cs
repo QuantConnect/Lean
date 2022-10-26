@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.CSharp
             UniverseSettings.DataNormalizationMode = DataNormalizationMode.Raw;
             EnableAutomaticIndicatorWarmUp = true;
             SetStartDate(2013, 10, 08);
-            SetEndDate(2013, 10, 09);
+            SetEndDate(2013, 10, 10);
 
             var SP500 = QuantConnect.Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME);
             _symbol = FutureChainProvider.GetFutureContractList(SP500, StartDate).First();
@@ -67,7 +67,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // Test case: custom IndicatorBase<QuoteBar> indicator using Future subscribed symbol
             var indicator = new CustomIndicator();
-            var consolidator = CreateConsolidator(TimeSpan.FromMinutes(1), typeof(QuoteBar));
+            var consolidator = CreateConsolidator(TimeSpan.FromMinutes(2), typeof(QuoteBar));
             RegisterIndicator(_symbol, indicator, consolidator);
 
             AssertIndicatorState(indicator, isReady: false);
@@ -144,6 +144,16 @@ namespace QuantConnect.Algorithm.CSharp
         public Language[] Languages { get; } = { Language.CSharp };
 
         /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 6426;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 84;
+
+        /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
@@ -151,31 +161,31 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-99.999%"},
-            {"Drawdown", "16.100%"},
+            {"Compounding Annual Return", "733913.744%"},
+            {"Drawdown", "15.900%"},
             {"Expectancy", "0"},
-            {"Net Profit", "-6.366%"},
-            {"Sharpe Ratio", "1.194"},
+            {"Net Profit", "6.828%"},
+            {"Sharpe Ratio", "203744786353.302"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "5.56"},
-            {"Beta", "-71.105"},
-            {"Annual Standard Deviation", "0.434"},
-            {"Annual Variance", "0.188"},
-            {"Information Ratio", "1.016"},
-            {"Tracking Error", "0.44"},
-            {"Treynor Ratio", "-0.007"},
-            {"Total Fees", "$20.35"},
-            {"Estimated Strategy Capacity", "$19000000.00"},
+            {"Alpha", "456382350698.561"},
+            {"Beta", "9.229"},
+            {"Annual Standard Deviation", "2.24"},
+            {"Annual Variance", "5.017"},
+            {"Information Ratio", "228504036840.953"},
+            {"Tracking Error", "1.997"},
+            {"Treynor Ratio", "49450701625.718"},
+            {"Total Fees", "$23.65"},
+            {"Estimated Strategy Capacity", "$200000000.00"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
-            {"Fitness Score", "0.138"},
+            {"Fitness Score", "0.518"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-1.727"},
-            {"Return Over Maximum Drawdown", "-12.061"},
-            {"Portfolio Turnover", "4.916"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "-7.708"},
+            {"Portfolio Turnover", "5.277"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -189,7 +199,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "7c841ca58a4385f42236838e5bf0c382"}
+            {"OrderListHash", "dd38e7b94027d20942a5aa9ac31a9a7f"}
         };
     }
 }

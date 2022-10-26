@@ -21,16 +21,12 @@ RUN if [ "$(uname -m)" = "aarch64" ]; then \
     mv tini /usr/local/bin/tini && \
     chmod +x /usr/local/bin/tini
 
-RUN conda install -y -c conda-forge notebook=6.0.3 && conda clean -y --all
-
 # Install clr-loader for PythonNet
 RUN pip install --no-cache-dir clr-loader==0.1.6
 
-ENV LD_LIBRARY_PATH=/lib/
-
 # Install .NET Interactive to support C# in Jupyter notebooks
 ENV PATH="${PATH}:/root/.dotnet/tools"
-RUN dotnet tool install -g --no-cache --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive && \
+RUN dotnet tool install -g --no-cache --version 1.0.340501 --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive && \
     dotnet interactive jupyter install
 
 # Setting some environment variables
@@ -44,6 +40,9 @@ RUN git clone https://github.com/QuantConnect/Lean.git && \
     cd Lean/PythonToolbox && python setup.py install \
     && cd ../.. && rm -irf Lean
 
+# conda libc is old and causes issues in research we want to use the hosts version which is updated
+RUN mkdir -p /opt/miniconda3/lib/ && ln -vsf /lib/x86_64-linux-gnu/libstdc++.so.6 /opt/miniconda3/lib/libstdc++.so.6
+
 RUN find ${WORK} -type f -not -name '*.py*' -not -name '*.xml' -not -name '*.exe.config' -not -name '*.exe' -not -name '*.so' -not -name '*.dll' -not -name '*.ipynb' -not -name '*.csx' -not -name 'QuantConnect.Lean.Launcher.runtimeconfig.json' -not -name 'decimal.py' -delete
 
 #Create initialize script
@@ -54,7 +53,9 @@ RUN echo "if [ ! -d \"${WORK}Notebooks\" ]; then mkdir ${WORK}Notebooks; fi && \
     \"api-handler\": \"QuantConnect.Api.Api\" }' > ${WORK}Notebooks/config.json; fi && \
     echo \"Starting JupyterLab, access in your browser at localhost:8888\" && \
     jupyter lab --ip='0.0.0.0' --port=8888 --no-browser --allow-root --notebook-dir=\"Notebooks\" --LabApp.token='' " \
-    > start.sh && echo "from QuantConnect.AlphaStream import *" >> ${WORK}AlgorithmImports.py
+    > start.sh
+
+RUN echo "{\"argv\":[\"dotnet\",\"interactive\",\"jupyter\",\"--default-kernel\",\"csharp\",\"{connection_file}\",\"--http-port-range\",\"1000-3000\"],\"display_name\":\"Foundation-C#-Default\",\"language\":\"C#\",\"metadata\":{\"vscode\":{\"extension_id\":\"ms-dotnettools.dotnet-interactive-vscode\",\"kernel_id\":\"dotnet-interactive\"}}}" > /root/.local/share/jupyter/kernels/.net-csharp/kernel.json
 
 RUN chmod -R 777 ${WORK}
 EXPOSE 8888

@@ -27,6 +27,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class MinimumOrderSizeRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private bool _sentOrders;
         public override void Initialize()
         {
             SetStartDate(2013, 10, 1);
@@ -37,17 +38,19 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
-            if (!Portfolio.Invested)
+            if (!_sentOrders)
             {
+                _sentOrders = true;
+
                 // Place an order that will fail because of the size
-                var invalidOrder = MarketOnOpenOrder("BTCUSD", 0.00002);
+                var invalidOrder = MarketOrder("BTCUSD", 0.00002);
                 if (invalidOrder.Status != OrderStatus.Invalid)
                 {
                     throw new Exception("Invalid order expected, order size is less than allowed");
                 }
 
                 // Update an order that fails because of the size
-                var validOrderOne = MarketOnOpenOrder("BTCUSD", 0.0002, "NotUpdated");
+                var validOrderOne = LimitOrder("BTCUSD", 0.0002, Securities["BTCUSD"].Price - 0.1m,  "NotUpdated");
                 validOrderOne.Update(new UpdateOrderFields()
                 {
                     Quantity = 0.00002m,
@@ -55,7 +58,7 @@ namespace QuantConnect.Algorithm.CSharp
                 });
 
                 // Place and update an order that will succeed
-                var validOrderTwo = MarketOnOpenOrder("BTCUSD", 0.0002, "NotUpdated");
+                var validOrderTwo = LimitOrder("BTCUSD", 0.0002, Securities["BTCUSD"].Price - 0.1m, "NotUpdated");
                 validOrderTwo.Update(new UpdateOrderFields()
                 {
                     Quantity = 0.002m,
@@ -92,11 +95,21 @@ namespace QuantConnect.Algorithm.CSharp
         public Language[] Languages { get; } = { Language.CSharp };
 
         /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 54;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 4;
+
+        /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "40"},
+            {"Total Trades", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
@@ -115,7 +128,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.01"},
+            {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "BTCUSD E3"},
             {"Fitness Score", "0"},
@@ -137,7 +150,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "dda3d03e8154ae0aad7ee17bdfd306cb"}
+            {"OrderListHash", "9ada3df9647e0e638d12ba0b14eabe05"}
         };
     }
 }

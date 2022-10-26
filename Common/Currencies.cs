@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,7 +13,11 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace QuantConnect
 {
@@ -23,24 +27,44 @@ namespace QuantConnect
     public static class Currencies
     {
         /// <summary>
-        /// USD currency string
+        /// USD (United States Dollar) currency string
         /// </summary>
-        public static string USD = "USD";
+        public const string USD = "USD";
 
         /// <summary>
-        /// EUR currency string
+        /// EUR (Euro) currency string
         /// </summary>
-        public static string EUR = "EUR";
+        public const string EUR = "EUR";
 
         /// <summary>
-        /// GBP currency string
+        /// GBP (British pound sterling) currency string
         /// </summary>
-        public static string GBP = "GBP";
+        public const string GBP = "GBP";
 
         /// <summary>
-        /// INR currency string
+        /// INR (Indian rupee) currency string
         /// </summary>
-        public static string INR = "INR";
+        public const string INR = "INR";
+
+        /// <summary>
+        /// IDR (Indonesian rupiah) currency string
+        /// </summary>
+        public const string IDR = "IDR";
+
+        /// <summary>
+        /// CNH (Chinese Yuan Renminbi) currency string
+        /// </summary>
+        public const string CNH = "CNH";
+
+        /// <summary>
+        /// CHF (Swiss Franc) currency string
+        /// </summary>
+        public const string CHF = "CHF";
+
+        /// <summary>
+        /// HKD (Hong Kong dollar) currency string
+        /// </summary>
+        public const string HKD = "HKD";
 
         /// <summary>
         /// Null currency used when a real one is not required
@@ -55,19 +79,19 @@ namespace QuantConnect
         /// </remarks>
         public static readonly IReadOnlyDictionary<string, string> CurrencySymbols = new Dictionary<string, string>
         {
-            {"USD", "$"},
-            {"GBP", "₤"},
+            {USD, "$"},
+            {GBP, "₤"},
             {"JPY", "¥"},
-            {"EUR", "€"},
+            {EUR, "€"},
             {"NZD", "$"},
             {"AUD", "$"},
             {"CAD", "$"},
-            {"CHF", "Fr"},
-            {"HKD", "$"},
+            {CHF, "Fr"},
+            {HKD, "$"},
             {"SGD", "$"},
             {"XAG", "Ag"},
             {"XAU", "Au"},
-            {"CNH", "¥"},
+            {CNH, "¥"},
             {"CNY", "¥"},
             {"CZK", "Kč"},
             {"DKK", "kr"},
@@ -82,39 +106,137 @@ namespace QuantConnect
             {"TRY", "₺"},
             {"TWD", "NT$"},
             {"ZAR", "R"},
+            {"RUB", "₽"},
+            {"BRL", "R$"},
+            {"GNF", "Fr"},
+            {IDR, "Rp"},
 
-            {"BTC", "฿"},
-            {"BCH", "฿"},
+            {"BTC", "₿"},
+            {"BCH", "Ƀ"},
+            {"BSV", "Ɓ"},
             {"LTC", "Ł"},
             {"ETH", "Ξ"},
-
-            {"EOS", "EOS"},
-            {"XRP", "XRP"},
-            {"XLM", "XLM"},
-            {"ETC", "ETC"},
+            {"EOS", "ε"},
+            {"XRP", "✕"},
+            {"XLM", "*"},
+            {"ETC", "ξ"},
             {"ZRX", "ZRX"},
-            {"USDT", "USDT"}
+            {"USDT", "₮"},
+            {"ADA", "₳"},
+            {"SOL", "◎"},
+            {"DOT", "●"},
+            {"DOGE", "Ð"},
+            {"DAI", "◈"},
+            {"ALGO", "Ⱥ"},
+            {"ICP", "∞"},
+            {"XMR", "ɱ"},
+            {"XTZ", "ꜩ"},
+            {"IOTA", "ɨ"},
+            {"MIOTA", "ɨ"},
+            {"MKR", "Μ"},
+            {"ZEC", "ⓩ"},
+            {"DASH", "Đ"},
+            {"XNO", "Ӿ"},
+            {"REP", "Ɍ"},
+            {"STEEM", "ȿ"},
+            {"THETA", "ϑ"},
+            {"FIL", "⨎"},
+            {"BAT", "⟁"},
+            {"LSK", "Ⱡ"},
+            {"NAV", "Ꞥ"}
         };
 
         /// <summary>
-        /// Define some StableCoins that don't have direct pairs for base currencies in our SPDB
+        /// Stable pairs in GDAX. We defined them because they have different fees in GDAX market
+        /// </summary>
+        public static HashSet<string> StablePairsGDAX = new HashSet<string>
+        {
+            "DAIUSDC",
+            "DAIUSD",
+            "GYENUSD",
+            "PAXUSD",
+            "PAXUSDT",
+            "MUSDUSD",
+            "USDCEUR",
+            "USDCGBP",
+            "USDTEUR",
+            "USDTGBP",
+            "USDTUSD",
+            "USDTUSDC",
+            "USTEUR",
+            "USTUSD",
+            "USTUSDT",
+            "WBTCBTC"
+        };
+
+        /// <summary>
+        /// Define some StableCoins that don't have direct pairs for base currencies in our SPDB in GDAX market
+        /// This is because some CryptoExchanges do not define direct pairs with the stablecoins they offer.
+        ///
+        /// We use this to allow setting cash amounts for these stablecoins without needing a conversion
+        /// security.
+        private static readonly HashSet<string> _stableCoinsWithoutPairsGDAX = new HashSet<string>
+        {
+            "USDCUSD"
+        };
+
+        /// <summary>
+        /// Define some StableCoins that don't have direct pairs for base currencies in our SPDB in Binance market
         /// This is because some CryptoExchanges do not define direct pairs with the stablecoins they offer.
         ///
         /// We use this to allow setting cash amounts for these stablecoins without needing a conversion
         /// security.
         /// </summary>
-        public static HashSet<Symbol> StableCoinsWithoutPairs = new HashSet<Symbol>
+        private static readonly HashSet<string> _stableCoinsWithoutPairsBinance = new HashSet<string>
         {
-            // Binance StableCoins Missing 1-1 Pairs
-            Symbol.Create("USDCUSD", SecurityType.Crypto, Market.Binance), // USD -> USDC
-            Symbol.Create("BGBPGBP", SecurityType.Crypto, Market.Binance), // GBP -> BGBP
-
-            // Coinbase StableCoins Missing 1-1 Pairs
-            Symbol.Create("USDCUSD", SecurityType.Crypto, Market.GDAX), // USD -> USDC
-
-            // Bitfinex StableCoins Missing 1-1 Pairs
-            Symbol.Create("EURSEUR", SecurityType.Crypto, Market.Bitfinex), // EUR -> EURS
+            "USDCUSD",
+            "USDTUSD",
+            "USDPUSD",
+            "SUSDUSD",
+            "BUSDUSD",
+            "USTUSD",
+            "TUSDUSD",
+            "DAIUSD",
+            "IDRTIDR"
         };
+
+        /// <summary>
+        /// Define some StableCoins that don't have direct pairs for base currencies in our SPDB in Bitfinex market
+        /// This is because some CryptoExchanges do not define direct pairs with the stablecoins they offer.
+        ///
+        /// We use this to allow setting cash amounts for these stablecoins without needing a conversion
+        /// security.
+        /// </summary>
+        private static readonly HashSet<string> _stableCoinsWithoutPairsBitfinex = new HashSet<string>
+        {
+            "EURSEUR",
+            "XCHFCHF"
+        };
+
+        /// <summary>
+        /// Dictionary to save StableCoins in different Markets
+        /// </summary>
+        private static readonly Dictionary<string, HashSet<string>> _stableCoinsWithoutPairsMarkets = new Dictionary<string, HashSet<string>>
+        {
+            { Market.Binance , _stableCoinsWithoutPairsBinance},
+            { Market.Bitfinex , _stableCoinsWithoutPairsBitfinex},
+            { Market.GDAX , _stableCoinsWithoutPairsGDAX},
+        };
+
+        /// <summary>
+        /// Checks whether or not certain symbol is a StableCoin without pair in a given market
+        /// </summary>
+        /// <param name="symbol">The Symbol from wich we want to know if it's a StableCoin without pair</param>
+        /// <param name="market">The market in which we want to search for that StableCoin</param>
+        /// <returns>True if the given symbol is a StableCoin without pair in the given market</returns>
+        public static bool IsStableCoinWithoutPair(string symbol, string market)
+        {
+            if (_stableCoinsWithoutPairsMarkets.TryGetValue(market, out var stableCoins) && stableCoins.Contains(symbol))
+            {
+                return true;
+            }
+            return false;
+        }
 
         /// <summary>
         /// Gets the currency symbol for the specified currency code
@@ -124,7 +246,38 @@ namespace QuantConnect
         public static string GetCurrencySymbol(string currency)
         {
             string currencySymbol;
-            return CurrencySymbols.TryGetValue(currency, out currencySymbol) ? currencySymbol : "$";
+            return CurrencySymbols.TryGetValue(currency, out currencySymbol) ? currencySymbol : currency;
+        }
+
+        /// <summary>
+        /// Converts the string representation of number with currency in the format {currency}{value} to its decimal equivalent.
+        /// It throws if the value cannot be converted to a decimal number.
+        /// </summary>
+        /// <param name="value">The value with currency</param>
+        /// <returns>The decimal equivalent to the value</returns>
+        public static decimal Parse(string value)
+        {
+            decimal parsedValue;
+
+            if (!TryParse(value, out parsedValue))
+            {
+                throw new ArgumentException($"The value {value} cannot be converted to a decimal number");
+            }
+
+            return parsedValue;
+        }
+
+        /// <summary>
+        /// Converts the string representation of number with currency in the format {currency}{value} to its decimal equivalent.
+        /// </summary>
+        /// <param name="value">The value with currency</param>
+        /// <param name="parsedValue">The decimal equivalent to the string value after conversion</param>
+        /// <returns>True if the value was succesfuly converted</returns>
+        public static bool TryParse(string value, out decimal parsedValue)
+        {
+            // Strip out the currency (any character before the first number) ignoring blank spaces since they are not supposed to be in numbers with currency
+            value = Regex.Replace(value, @"^[^\d\s-+]+", string.Empty);
+            return decimal.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out parsedValue);
         }
     }
 }

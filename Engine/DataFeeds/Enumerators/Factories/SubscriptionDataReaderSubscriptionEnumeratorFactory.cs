@@ -15,15 +15,14 @@
 */
 
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Util;
+using QuantConnect.Interfaces;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
+using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 {
@@ -33,44 +32,39 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     /// <remarks>Only used on backtesting by the <see cref="FileSystemDataFeed"/></remarks>
     public class SubscriptionDataReaderSubscriptionEnumeratorFactory : ISubscriptionEnumeratorFactory, IDisposable
     {
-        private readonly bool _isLiveMode;
         private readonly IResultHandler _resultHandler;
         private readonly IFactorFileProvider _factorFileProvider;
-        private readonly ZipDataCacheProvider _zipDataCacheProvider;
+        private readonly IDataCacheProvider _dataCacheProvider;
         private readonly ConcurrentDictionary<Symbol, string> _numericalPrecisionLimitedWarnings;
         private readonly int _numericalPrecisionLimitedWarningsMaxCount = 10;
         private readonly ConcurrentDictionary<Symbol, string> _startDateLimitedWarnings;
         private readonly int _startDateLimitedWarningsMaxCount = 10;
-        private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
         private readonly IMapFileProvider _mapFileProvider;
         private readonly bool _enablePriceScaling;
-        
+
         /// <summary>
         /// Initializes a new instance of the <see cref="SubscriptionDataReaderSubscriptionEnumeratorFactory"/> class
         /// </summary>
         /// <param name="resultHandler">The result handler for the algorithm</param>
         /// <param name="mapFileProvider">The map file provider</param>
         /// <param name="factorFileProvider">The factor file provider</param>
-        /// <param name="dataProvider">Provider used to get data when it is not present on disk</param>
+        /// <param name="cacheProvider">Provider used to get data when it is not present on disk</param>
         /// <param name="tradableDaysProvider">Function used to provide the tradable dates to be enumerator.
         /// Specify null to default to <see cref="SubscriptionRequest.TradableDays"/></param>
         /// <param name="enablePriceScaling">Applies price factor</param>
         public SubscriptionDataReaderSubscriptionEnumeratorFactory(IResultHandler resultHandler,
             IMapFileProvider mapFileProvider,
             IFactorFileProvider factorFileProvider,
-            IDataProvider dataProvider,
-            Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null,
+            IDataCacheProvider cacheProvider,
             bool enablePriceScaling = true
             )
         {
             _resultHandler = resultHandler;
             _mapFileProvider = mapFileProvider;
             _factorFileProvider = factorFileProvider;
-            _zipDataCacheProvider = new ZipDataCacheProvider(dataProvider, isDataEphemeral: false);
+            _dataCacheProvider = cacheProvider;
             _numericalPrecisionLimitedWarnings = new ConcurrentDictionary<Symbol, string>();
             _startDateLimitedWarnings = new ConcurrentDictionary<Symbol, string>();
-            _isLiveMode = false;
-            _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
             _enablePriceScaling = enablePriceScaling;
         }
 
@@ -82,18 +76,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <returns>An enumerator reading the subscription request</returns>
         public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataProvider dataProvider)
         {
-            var mapFileResolver = request.Configuration.TickerShouldBeMapped()
-                                    ? _mapFileProvider.Get(request.Security.Symbol.ID.Market)
-                                    : MapFileResolver.Empty;
-
             var dataReader = new SubscriptionDataReader(request.Configuration,
-                request.StartTimeLocal,
-                request.EndTimeLocal,
-                mapFileResolver,
+                request,
+                _mapFileProvider,
                 _factorFileProvider,
-                _tradableDaysProvider(request),
-                _isLiveMode,
-                 _zipDataCacheProvider,
+                _dataCacheProvider,
                 dataProvider
                 );
 
@@ -122,7 +109,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 request.Configuration,
                 _factorFileProvider,
                 dataReader,
-                mapFileResolver,
+                _mapFileProvider,
                 request.StartTimeLocal,
                 _enablePriceScaling);
 
@@ -164,8 +151,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 
                 _resultHandler.DebugMessage(message);
             }
-
-            _zipDataCacheProvider?.DisposeSafely();
         }
     }
 }

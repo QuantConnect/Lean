@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -282,8 +282,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             }
                         }
 
-                        // special handling of futures data to build the futures chain
-                        if (symbol.SecurityType == SecurityType.Future)
+                        // special handling of futures data to build the futures chain. Don't push canonical continuous contract
+                        if (symbol.SecurityType == SecurityType.Future && !symbol.IsCanonical())
                         {
                             // internal feeds, like open interest, will not create the chain but will update it if it exists
                             // this is because the open interest could arrive at some closed market hours in which there is no other data and we don't
@@ -363,7 +363,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
-            slice = new Slice(algorithmTime, allDataForAlgorithm, tradeBars ?? _emptyTradeBars, quoteBars ?? _emptyQuoteBars, ticks ?? _emptyTicks, optionChains ?? _emptyOptionChains, futuresChains ?? _emptyFuturesChains, splits ?? _emptySplits, dividends ?? _emptyDividends, delistings ?? _emptyDelistings, symbolChanges ?? _emptySymbolChangedEvents, allDataForAlgorithm.Count > 0);
+            slice = new Slice(algorithmTime, allDataForAlgorithm, tradeBars ?? _emptyTradeBars, quoteBars ?? _emptyQuoteBars, ticks ?? _emptyTicks, optionChains ?? _emptyOptionChains, futuresChains ?? _emptyFuturesChains, splits ?? _emptySplits, dividends ?? _emptyDividends, delistings ?? _emptyDelistings, symbolChanges ?? _emptySymbolChangedEvents, utcDateTime, allDataForAlgorithm.Count > 0);
 
             return new TimeSlice(utcDateTime, count, slice, data, security, consolidator, custom ?? _emptyCustom, changes, universeData);
         }
@@ -430,7 +430,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 chain.Underlying = underlyingData;
             }
 
-            var universeData = baseData as OptionChainUniverseDataCollection;
+            var universeData = baseData as BaseDataCollection;
             if (universeData != null)
             {
                 if (universeData.Underlying != null)
@@ -450,19 +450,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             OptionContract contract;
             if (!chain.Contracts.TryGetValue(baseData.Symbol, out contract))
             {
-                var underlyingSymbol = baseData.Symbol.Underlying;
-                contract = new OptionContract(baseData.Symbol, underlyingSymbol)
-                {
-                    Time = baseData.EndTime,
-                    LastPrice = security.Close,
-                    Volume = (long)security.Volume,
-                    BidPrice = security.BidPrice,
-                    BidSize = (long)security.BidSize,
-                    AskPrice = security.AskPrice,
-                    AskSize = (long)security.AskSize,
-                    OpenInterest = security.OpenInterest,
-                    UnderlyingLastPrice = chain.Underlying.Price
-                };
+                contract = OptionContract.Create(baseData, security, chain.Underlying.Price);
 
                 chain.Contracts[baseData.Symbol] = contract;
 
@@ -513,7 +501,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 futuresChains[canonical] = chain;
             }
 
-            var universeData = baseData as FuturesChainUniverseDataCollection;
+            var universeData = baseData as BaseDataCollection;
             if (universeData != null)
             {
                 foreach (var contractSymbol in universeData.FilteredContracts)

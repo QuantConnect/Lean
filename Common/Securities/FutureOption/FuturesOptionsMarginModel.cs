@@ -107,6 +107,13 @@ namespace QuantConnect.Securities.Option
             var curveGrowthRate = -7.8m;
             var underlyingPrice = option.Underlying.Price;
 
+            // If the underlying price is 0, we can't calculate a margin requirement, so return the underlying requirement.
+            // This could be removed after GH issue #6523 is resolved.
+            if (option.Underlying == null || option.Underlying.Price == 0m)
+            {
+                return 0;
+            }
+
             if (positionSide == PositionSide.Short)
             {
                 if (option.Right == OptionRight.Call)

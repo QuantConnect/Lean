@@ -57,10 +57,13 @@ namespace QuantConnect.Report
             var backtestOrders = backtest?.Orders?.Values.ToList() ?? new List<Order>();
             var liveOrders = live?.Orders?.Values.ToList() ?? new List<Order>();
 
+            var backtestConfiguration = backtest?.AlgorithmConfiguration;
+            var liveConfiguration = live?.AlgorithmConfiguration;
+
             Log.Trace($"QuantConnect.Report.Report(): Processing backtesting orders");
-            var backtestPortfolioInTime = PortfolioLooper.FromOrders(backtestCurve, backtestOrders).ToList();
+            var backtestPortfolioInTime = PortfolioLooper.FromOrders(backtestCurve, backtestOrders, backtestConfiguration).ToList();
             Log.Trace($"QuantConnect.Report.Report(): Processing live orders");
-            var livePortfolioInTime = PortfolioLooper.FromOrders(liveCurve, liveOrders, liveSeries: true).ToList();
+            var livePortfolioInTime = PortfolioLooper.FromOrders(liveCurve, liveOrders, liveConfiguration, liveSeries: true).ToList();
 
             var destination = pointInTimePortfolioDestination ?? Config.Get("report-destination");
             if (!string.IsNullOrWhiteSpace(destination))
@@ -105,7 +108,7 @@ namespace QuantConnect.Report
                 new TextReportElement("live marker key", ReportKey.LiveMarker, live == null ? string.Empty : "Live "),
 
                 //KPI's Backtest:
-                new DaysLiveReportElement("days live kpi", ReportKey.DaysLive, live),
+                new RuntimeDaysReportElement("runtime days kpi", ReportKey.BacktestDays, backtest, live),
                 new CAGRReportElement("cagr kpi", ReportKey.CAGR, backtest, live),
                 new TurnoverReportElement("turnover kpi", ReportKey.Turnover, backtest, live),
                 new MaxDrawdownReportElement("max drawdown kpi", ReportKey.MaxDrawdown, backtest, live),

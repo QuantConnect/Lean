@@ -23,22 +23,22 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
     public enum PredicateTargetValue
     {
         /// <summary>
-        /// Predicate matches on <see cref="OptionPosition.Right"/>
+        /// Predicate matches on <see cref="OptionPosition.Right"/> (0)
         /// </summary>
         Right,
 
         /// <summary>
-        /// Predicate match on <see cref="OptionPosition.Quantity"/>
+        /// Predicate match on <see cref="OptionPosition.Quantity"/> (1)
         /// </summary>
         Quantity,
 
         /// <summary>
-        /// Predicate matches on <see cref="OptionPosition.Strike"/>
+        /// Predicate matches on <see cref="OptionPosition.Strike"/> (2)
         /// </summary>
         Strike,
 
         /// <summary>
-        /// Predicate matches on <see cref="OptionPosition.Expiration"/>
+        /// Predicate matches on <see cref="OptionPosition.Expiration"/> (3)
         /// </summary>
         Expiration
     }

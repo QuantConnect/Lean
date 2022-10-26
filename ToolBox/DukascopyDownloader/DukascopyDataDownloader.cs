@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -21,6 +21,7 @@ using System.Net;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.DukascopyDownloader
 {
@@ -55,13 +56,21 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
         /// <summary>
         /// Get historical data enumerable for a single symbol, type and resolution given this start and end time (in UTC).
         /// </summary>
-        /// <param name="symbol">Symbol for the data we're looking for.</param>
-        /// <param name="resolution">Resolution of the data request</param>
-        /// <param name="startUtc">Start time of the data in UTC</param>
-        /// <param name="endUtc">End time of the data in UTC</param>
+        /// <param name="dataDownloaderGetParameters">model class for passing in parameters for historical data</param>
         /// <returns>Enumerable of base data for this symbol</returns>
-        public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
+        public IEnumerable<BaseData> Get(DataDownloaderGetParameters dataDownloaderGetParameters)
         {
+            var symbol = dataDownloaderGetParameters.Symbol;
+            var resolution = dataDownloaderGetParameters.Resolution;
+            var startUtc = dataDownloaderGetParameters.StartUtc;
+            var endUtc = dataDownloaderGetParameters.EndUtc;
+            var tickType = dataDownloaderGetParameters.TickType;
+
+            if (tickType != TickType.Quote)
+            {
+                yield break;
+            }
+
             if (!_symbolMapper.IsKnownLeanSymbol(symbol))
                 throw new ArgumentException("Invalid symbol requested: " + symbol.Value);
 
@@ -93,7 +102,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
                     case Resolution.Minute:
                     case Resolution.Hour:
                     case Resolution.Daily:
-                        foreach (var bar in AggregateTicks(symbol, ticks, resolution.ToTimeSpan()))
+                        foreach (var bar in LeanData.AggregateTicks(ticks, symbol, resolution.ToTimeSpan()))
                         {
                             yield return bar;
                         }
@@ -102,40 +111,6 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
 
                 date = date.AddDays(1);
             }
-        }
-
-        /// <summary>
-        /// Aggregates a list of ticks at the requested resolution
-        /// </summary>
-        /// <param name="symbol"></param>
-        /// <param name="ticks"></param>
-        /// <param name="resolution"></param>
-        /// <returns></returns>
-        internal static IEnumerable<QuoteBar> AggregateTicks(Symbol symbol, IEnumerable<Tick> ticks, TimeSpan resolution)
-        {
-            return
-                from t in ticks
-                group t by t.Time.RoundDown(resolution)
-                into g
-                select new QuoteBar
-                {
-                    Symbol = symbol,
-                    Time = g.Key,
-                    Bid = new Bar
-                    {
-                        Open = g.First().BidPrice,
-                        High = g.Max(b => b.BidPrice),
-                        Low = g.Min(b => b.BidPrice),
-                        Close = g.Last().BidPrice
-                    },
-                    Ask = new Bar
-                    {
-                        Open = g.First().AskPrice,
-                        High = g.Max(b => b.AskPrice),
-                        Low = g.Min(b => b.AskPrice),
-                        Close = g.Last().AskPrice
-                    }
-                };
         }
 
         /// <summary>

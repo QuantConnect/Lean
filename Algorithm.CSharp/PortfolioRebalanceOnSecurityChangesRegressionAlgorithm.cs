@@ -93,6 +93,16 @@ namespace QuantConnect.Algorithm.CSharp
         public Language[] Languages { get; } = { Language.CSharp };
 
         /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 5568;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
@@ -104,23 +114,23 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "30.500%"},
             {"Expectancy", "-0.081"},
             {"Net Profit", "-8.951%"},
-            {"Sharpe Ratio", "-0.149"},
-            {"Probabilistic Sharpe Ratio", "3.637%"},
+            {"Sharpe Ratio", "-0.137"},
+            {"Probabilistic Sharpe Ratio", "2.627%"},
             {"Loss Rate", "56%"},
             {"Win Rate", "44%"},
             {"Profit-Loss Ratio", "1.07"},
-            {"Alpha", "-0.026"},
-            {"Beta", "0.029"},
-            {"Annual Standard Deviation", "0.166"},
-            {"Annual Variance", "0.027"},
-            {"Information Ratio", "-0.418"},
-            {"Tracking Error", "0.208"},
-            {"Treynor Ratio", "-0.842"},
+            {"Alpha", "-0.071"},
+            {"Beta", "0.978"},
+            {"Annual Standard Deviation", "0.152"},
+            {"Annual Variance", "0.023"},
+            {"Information Ratio", "-0.748"},
+            {"Tracking Error", "0.097"},
+            {"Treynor Ratio", "-0.021"},
             {"Total Fees", "$264.99"},
             {"Estimated Strategy Capacity", "$55000000.00"},
             {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
             {"Fitness Score", "0.027"},
-            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Estimate", "-0.996"},
             {"Kelly Criterion Probability Value", "1"},
             {"Sortino Ratio", "-0.323"},
             {"Return Over Maximum Drawdown", "-0.15"},
@@ -131,9 +141,9 @@ namespace QuantConnect.Algorithm.CSharp
             {"Long Insight Count", "534"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$0"},
-            {"Total Accumulated Estimated Alpha Value", "$0"},
-            {"Mean Population Estimated Insight Value", "$0"},
+            {"Estimated Monthly Alpha Value", "$-389341000"},
+            {"Total Accumulated Estimated Alpha Value", "$-9476668000"},
+            {"Mean Population Estimated Insight Value", "$-17746570"},
             {"Mean Population Direction", "0%"},
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},

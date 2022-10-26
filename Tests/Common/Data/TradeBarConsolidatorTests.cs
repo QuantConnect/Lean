@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -30,7 +30,7 @@ namespace QuantConnect.Tests.Common.Data
             // defining a TradeBarConsolidator with a zero max count should cause it to always fire identity
 
             TradeBar consolidated = null;
-            var consolidator = new TradeBarConsolidator(0);
+            using var consolidator = new TradeBarConsolidator(0);
             consolidator.DataConsolidated += (sender, bar) =>
             {
                 consolidated = bar;
@@ -46,7 +46,7 @@ namespace QuantConnect.Tests.Common.Data
             // defining a TradeBarConsolidator with a one max count should cause it to always fire identity
 
             TradeBar consolidated = null;
-            var consolidator = new TradeBarConsolidator(1);
+            using var consolidator = new TradeBarConsolidator(1);
             consolidator.DataConsolidated += (sender, bar) =>
             {
                 consolidated = bar;
@@ -62,7 +62,7 @@ namespace QuantConnect.Tests.Common.Data
             // defining a TradeBarConsolidator with a two max count should cause it to fire every other TradeBar
 
             TradeBar consolidated = null;
-            var consolidator = new TradeBarConsolidator(2);
+            using var consolidator = new TradeBarConsolidator(2);
             consolidator.DataConsolidated += (sender, bar) =>
             {
                 consolidated = bar;
@@ -84,56 +84,19 @@ namespace QuantConnect.Tests.Common.Data
         }
 
         [Test]
-        public void ZeroSpanAlwaysFires()
+        public void ZeroSpanAlwaysThrows()
         {
-            // defining a TradeBarConsolidator with a zero period should cause it to always fire identity
+            // defining a TradeBarConsolidator with a zero period should cause it to always throw an exception
 
             TradeBar consolidated = null;
-            var consolidator = new TradeBarConsolidator(TimeSpan.Zero);
+            using var consolidator = new TradeBarConsolidator(TimeSpan.Zero);
             consolidator.DataConsolidated += (sender, bar) =>
             {
                 consolidated = bar;
             };
 
             var reference = new DateTime(2014, 12, 01, 01, 01, 00);
-            consolidator.Update(new TradeBar {Close = 1m, Time = reference});
-            Assert.IsNotNull(consolidated);
-            Assert.AreEqual(1, consolidated.Close);
-
-            consolidator.Update(new TradeBar {Close = 2m, Time = reference});
-            Assert.IsNotNull(consolidated);
-            Assert.AreEqual(2, consolidated.Close);
-
-            consolidator.Update(new TradeBar {Close = 3m, Time = reference});
-            Assert.IsNotNull(consolidated);
-            Assert.AreEqual(3, consolidated.Close);
-        }
-
-        [Test]
-        public void OneMinuteAlwaysFiresEveryTimeOnMinuteDataExceptFirstPoint()
-        {
-            // defining a TradeBarConsolidator with the same period as the resolution of input data will cause
-            // it to not fire on the first piece of data as it is initializing, but will then fire for each
-            // consecutive data point
-
-            TradeBar consolidated = null;
-            var consolidator = new TradeBarConsolidator(TimeSpan.FromMinutes(1));
-            consolidator.DataConsolidated += (sender, bar) =>
-            {
-                consolidated = bar;
-            };
-
-            var reference = new DateTime(2014, 12, 01, 01, 01, 00);
-            consolidator.Update(new TradeBar {Close = 1m, Time = reference});
-            Assert.IsNull(consolidated);
-
-            consolidator.Update(new TradeBar {Close = 2m, Time = reference.AddMinutes(1)});
-            Assert.IsNotNull(consolidated);
-            Assert.AreEqual(1, consolidated.Close);
-
-            consolidator.Update(new TradeBar {Close = 3m, Time = reference.AddMinutes(2)});
-            Assert.IsNotNull(consolidated);
-            Assert.AreEqual(2, consolidated.Close);
+            Assert.Throws<ArgumentException>(() => consolidator.Update(new TradeBar { Time = reference, Period = Time.OneDay }));
         }
 
         [Test]
@@ -142,7 +105,7 @@ namespace QuantConnect.Tests.Common.Data
             // verifies that the TradeBarConsolidator correctly consolidates OHLCV data into a new TradeBar instance
 
             TradeBar consolidated = null;
-            var consolidator = new TradeBarConsolidator(3);
+            using var consolidator = new TradeBarConsolidator(3);
             consolidator.DataConsolidated += (sender, bar) =>
             {
                 consolidated = bar;
@@ -199,7 +162,7 @@ namespace QuantConnect.Tests.Common.Data
         {
             // verifies that the TradeBarConsolidator does not consolidate data with different symbols
 
-            var consolidator = new TradeBarConsolidator(2);
+            using var consolidator = new TradeBarConsolidator(2);
 
             var tb1 = new TradeBar
             {
@@ -226,7 +189,7 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.Update(tb1);
 
             Exception ex = Assert.Throws<InvalidOperationException>(() => consolidator.Update(tb2));
-            Assert.IsTrue(ex.Message.Contains("is not the same"));
+            Assert.IsTrue(ex.Message.Contains("is not the same", StringComparison.InvariantCultureIgnoreCase));
         }
 
         [Test]
@@ -235,7 +198,7 @@ namespace QuantConnect.Tests.Common.Data
             // verifies that the consolidated bar uses the time from the beginning of the first bar
             // in the period that covers the current bar
 
-            var consolidator = new TradeBarConsolidator(TimeSpan.FromMinutes(1));
+            using var consolidator = new TradeBarConsolidator(TimeSpan.FromMinutes(2));
 
             TradeBar consolidated = null;
             consolidator.DataConsolidated += (sender, bar) =>
@@ -245,46 +208,50 @@ namespace QuantConnect.Tests.Common.Data
 
             var reference = new DateTime(2014, 12, 1, 10, 00, 0);
 
-            //10:00 - new
+            //10:00 - start new
             consolidator.Update(new TradeBar {Time = reference});
             Assert.IsNull(consolidated);
 
-            //10:01 - aggregate/fire
+            //10:01 - aggregate
             consolidator.Update(new TradeBar {Time = reference.AddMinutes(1)});
+            Assert.IsNull(consolidated);
+
+            //10:02 - fire & start new
+            consolidator.Update(new TradeBar {Time = reference.AddMinutes(2)});
             Assert.IsNotNull(consolidated);
             Assert.AreEqual(reference, consolidated.Time);
+            consolidated = null;
 
-            //10:02 - new/fire
-            consolidator.Update(new TradeBar {Time = reference.AddMinutes(2)});
-            Assert.AreEqual(reference.AddMinutes(1), consolidated.Time);
-
-            //10:03 - new/fire
+            //10:03 - aggregate
             consolidator.Update(new TradeBar {Time = reference.AddMinutes(3)});
-            Assert.AreEqual(reference.AddMinutes(2), consolidated.Time);
+            Assert.IsNull(consolidated);
 
-            //10:05 - new/fire
+            //10:05 - fire & start new
             consolidator.Update(new TradeBar {Time = reference.AddMinutes(5)});
-            Assert.AreEqual(reference.AddMinutes(3), consolidated.Time);
+            Assert.IsNotNull(consolidated);
+            Assert.AreEqual(reference.AddMinutes(2), consolidated.Time);
+            consolidated = null;
 
-            //10:08 - new/fire
+            //10:08 - fire & start new
             consolidator.Update(new TradeBar {Time = reference.AddMinutes(8)});
-            Assert.AreEqual(reference.AddMinutes(5), consolidated.Time);
+            Assert.IsNotNull(consolidated);
+            Assert.AreEqual(reference.AddMinutes(4), consolidated.Time);
+            consolidated = null;
 
-            //10:08:01 - new
+            //10:08:01 - aggregate
             consolidator.Update(new TradeBar {Time = reference.AddMinutes(8).AddSeconds(1)});
-            Assert.AreEqual(reference.AddMinutes(5), consolidated.Time);
+            Assert.IsNull(consolidated);
 
-            //10:09 - new/fire
+            //10:09 - aggregate
             consolidator.Update(new TradeBar {Time = reference.AddMinutes(9)});
-            Assert.AreEqual(reference.AddMinutes(8), consolidated.Time);
-
+            Assert.IsNull(consolidated);
         }
 
         [Test]
         public void HandlesDataGapsInMixedMode()
         {
             // define a three minute consolidator on a one minute stream of data
-            var consolidator = new TradeBarConsolidator(3, TimeSpan.FromMinutes(3));
+            using var consolidator = new TradeBarConsolidator(3, TimeSpan.FromMinutes(3));
 
             TradeBar consolidated = null;
             consolidator.DataConsolidated += (sender, bar) =>
@@ -325,7 +292,7 @@ namespace QuantConnect.Tests.Common.Data
         {
             // this test requires inspection to verify we're getting clean bars on the correct times
 
-            var consolidator = new TradeBarConsolidator(TimeSpan.FromHours(1));
+            using var consolidator = new TradeBarConsolidator(TimeSpan.FromHours(1));
 
             TradeBar consolidated = null;
             consolidator.DataConsolidated += (sender, bar) =>
@@ -353,7 +320,7 @@ namespace QuantConnect.Tests.Common.Data
         {
             // define a three minute consolidator 
             int timeSpanUnits = 3;
-            var consolidator = new TradeBarConsolidator(TimeSpan.FromMinutes(timeSpanUnits));
+            using var consolidator = new TradeBarConsolidator(TimeSpan.FromMinutes(timeSpanUnits));
 
             TradeBar consolidated = null;
             consolidator.DataConsolidated += (sender, bar) =>
@@ -390,7 +357,7 @@ namespace QuantConnect.Tests.Common.Data
         {
             TradeBar consolidated = null;
             var period = TimeSpan.FromDays(1);
-            var consolidator = new TradeBarConsolidator(2);
+            using var consolidator = new TradeBarConsolidator(2);
             consolidator.DataConsolidated += (sender, bar) =>
             {
                 consolidated = bar;
@@ -419,78 +386,83 @@ namespace QuantConnect.Tests.Common.Data
         public void AggregatesPeriodInPeriodModeWithDailyData()
         {
             TradeBar consolidated = null;
-            var period = TimeSpan.FromDays(1);
-            var consolidator = new TradeBarConsolidator(period);
+            var period = TimeSpan.FromDays(2);
+            using var consolidator = new TradeBarConsolidator(period);
             consolidator.DataConsolidated += (sender, bar) =>
             {
                 consolidated = bar;
             };
 
             var reference = new DateTime(2015, 04, 13);
-            consolidator.Update(new TradeBar { Time = reference, Period = period});
+            consolidator.Update(new TradeBar { Time = reference, Period = Time.OneDay});
             Assert.IsNull(consolidated);
 
-            consolidator.Update(new TradeBar { Time = reference.AddDays(1), Period = period });
+            consolidator.Update(new TradeBar { Time = reference.AddDays(1), Period = Time.OneDay });
+            Assert.IsNull(consolidated);
+
+            consolidator.Update(new TradeBar { Time = reference.AddDays(2), Period = Time.OneDay });
             Assert.IsNotNull(consolidated);
             Assert.AreEqual(period, consolidated.Period);
             consolidated = null;
 
-            consolidator.Update(new TradeBar { Time = reference.AddDays(2), Period = period });
-            Assert.IsNotNull(consolidated);
-            Assert.AreEqual(period, consolidated.Period);
-            consolidated = null;
+            consolidator.Update(new TradeBar { Time = reference.AddDays(3), Period = Time.OneDay });
+            Assert.IsNull(consolidated);
 
-            consolidator.Update(new TradeBar { Time = reference.AddDays(3), Period = period });
+            consolidator.Update(new TradeBar { Time = reference.AddDays(4), Period = Time.OneDay });
             Assert.IsNotNull(consolidated);
             Assert.AreEqual(period, consolidated.Period);
         }
 
         [Test]
-        public void AggregatesPeriodInPeriodModeWithDailyDataAndRoundedTime()
+        public void ThrowsWhenPeriodIsSmallerThanDataPeriod()
         {
             TradeBar consolidated = null;
-            var period = TimeSpan.FromDays(1);
-            var consolidator = new TradeBarConsolidator(period);
+            using var consolidator = new TradeBarConsolidator(Time.OneHour);
             consolidator.DataConsolidated += (sender, bar) =>
             {
                 consolidated = bar;
             };
 
             var reference = new DateTime(2015, 04, 13);
-            consolidator.Update(new TradeBar { Time = reference.AddSeconds(45), Period = period });
+            Assert.Throws<ArgumentException>(() => consolidator.Update(new TradeBar { Time = reference, Period = Time.OneDay }));
+        }
+
+        [Test]
+        public void GentlyHandlesPeriodAndDataAreSameResolution()
+        {
+            TradeBar consolidated = null;
+            using var consolidator = new TradeBarConsolidator(Time.OneDay);
+            consolidator.DataConsolidated += (sender, bar) =>
+            {
+                consolidated = bar;
+            };
+
+            var reference = new DateTime(2015, 04, 13);
+            var bar = new TradeBar { Time = reference, Period = Time.OneDay };
+            consolidator.Update(bar);
+
             Assert.IsNull(consolidated);
-
-            consolidator.Update(new TradeBar { Time = reference.AddDays(1).AddMinutes(1), Period = period });
+            consolidator.Scan(bar.EndTime);
             Assert.IsNotNull(consolidated);
-            Assert.AreEqual(period, consolidated.Period);
+
+            Assert.IsNotNull(consolidated);
             Assert.AreEqual(reference, consolidated.Time);
-            consolidated = null;
-
-            consolidator.Update(new TradeBar { Time = reference.AddDays(2).AddHours(1), Period = period });
-            Assert.IsNotNull(consolidated);
-            Assert.AreEqual(period, consolidated.Period);
-            Assert.AreEqual(reference.AddDays(1), consolidated.Time);
-            consolidated = null;
-
-            consolidator.Update(new TradeBar { Time = reference.AddDays(3).AddMinutes(1).AddSeconds(1), Period = period });
-            Assert.IsNotNull(consolidated);
-            Assert.AreEqual(period, consolidated.Period);
-            Assert.AreEqual(reference.AddDays(2), consolidated.Time);
+            Assert.AreEqual(Time.OneDay, consolidated.Period);
         }
 
         [Test]
         public void FiresEventAfterTimePassesViaScan()
         {
             TradeBar consolidated = null;
-            var period = TimeSpan.FromDays(1);
-            var consolidator = new TradeBarConsolidator(period);
+            var period = TimeSpan.FromDays(2);
+            using var consolidator = new TradeBarConsolidator(period);
             consolidator.DataConsolidated += (sender, bar) =>
             {
                 consolidated = bar;
             };
 
             var reference = new DateTime(2015, 04, 13);
-            consolidator.Update(new TradeBar { Time = reference.AddSeconds(45), Period = period });
+            consolidator.Update(new TradeBar { Time = reference, Period = Time.OneDay });
             Assert.IsNull(consolidated);
 
             consolidator.Scan(reference + period);
@@ -503,7 +475,7 @@ namespace QuantConnect.Tests.Common.Data
         {
             TradeBar consolidated = null;
             var period = TimeSpan.FromMinutes(2);
-            var consolidator = new TradeBarConsolidator(period);
+            using var consolidator = new TradeBarConsolidator(period);
             consolidator.DataConsolidated += (sender, bar) =>
             {
                 consolidated = bar;
@@ -525,7 +497,7 @@ namespace QuantConnect.Tests.Common.Data
         {
             TradeBar consolidated = null;
             var period = TimeSpan.FromMinutes(2);
-            var consolidator = new TradeBarConsolidator(period);
+            using var consolidator = new TradeBarConsolidator(period);
             consolidator.DataConsolidated += (sender, bar) =>
             {
                 consolidated = bar;

@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -164,7 +165,7 @@ namespace QuantConnect.Algorithm.CSharp
                     return;
                 }
 
-                // if niether order has filled, bring in the limits by a penny
+                // if neither order has filled, bring in the limits by a penny
 
                 var newLongLimit = longOrder.Get(OrderField.LimitPrice) + 0.01m;
                 var newShortLimit = shortOrder.Get(OrderField.LimitPrice) - 0.01m;
@@ -233,7 +234,7 @@ namespace QuantConnect.Algorithm.CSharp
                     return;
                 }
 
-                // if niether order has filled, bring in the stops by a penny
+                // if neither order has filled, bring in the stops by a penny
 
                 var newLongStop = longOrder.Get(OrderField.StopPrice) - 0.01m;
                 var newShortStop = shortOrder.Get(OrderField.StopPrice) + 0.01m;
@@ -257,7 +258,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// StopLimitOrders work as a combined stop and limit order. First, the
         /// price must pass the stop price in the same way a StopMarketOrder works,
-        /// but then we're also gauranteed a fill price at least as good as the
+        /// but then we're also guaranteed a fill price at least as good as the
         /// limit price. This order type can be beneficial in gap down scenarios
         /// where a StopMarketOrder would have triggered and given the not as beneficial
         /// gapped down price, whereas the StopLimitOrder could protect you from
@@ -278,7 +279,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 // a long stop is triggered when the price rises above the value
                 // so we'll set a long stop .25% above the current bar's close
-                // now we'll also be setting a limit, this means we are gauranteed
+                // now we'll also be setting a limit, this means we are guaranteed
                 // to get at least the limit price for our fills, so make the limit
                 // price a little softer than the stop price
 
@@ -290,7 +291,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 // a short stop is triggered when the price falls below the value
                 // so we'll set a short stop .25% below the current bar's close
-                // now we'll also be setting a limit, this means we are gauranteed
+                // now we'll also be setting a limit, this means we are guaranteed
                 // to get at least the limit price for our fills, so make the limit
                 // price a little softer than the stop price
 
@@ -313,7 +314,7 @@ namespace QuantConnect.Algorithm.CSharp
                     return;
                 }
 
-                // if niether order has filled, bring in the stops/limits in by a penny
+                // if neither order has filled, bring in the stops/limits in by a penny
 
                 var newLongStop = longOrder.Get(OrderField.StopPrice) - 0.01m;
                 var newLongLimit = longOrder.Get(OrderField.LimitPrice) + 0.01m;
@@ -473,6 +474,62 @@ namespace QuantConnect.Algorithm.CSharp
             return Time.Day == day && Time.Hour == hour && Time.Minute == minute;
         }
 
+        public override void OnEndOfAlgorithm()
+        {
+            Func<OrderTicket, bool> basicOrderTicketFilter = x => x.Symbol == symbol;
+
+            var filledOrders = Transactions.GetOrders(x => x.Status == OrderStatus.Filled);
+            var orderTickets = Transactions.GetOrderTickets(basicOrderTicketFilter);
+            var openOrders = Transactions.GetOpenOrders(x => x.Symbol == symbol);
+            var openOrderTickets = Transactions.GetOpenOrderTickets(basicOrderTicketFilter);
+            var remainingOpenOrders = Transactions.GetOpenOrdersRemainingQuantity(basicOrderTicketFilter);
+
+            if (filledOrders.Count() != 8 || orderTickets.Count() != 10)
+            {
+                throw new Exception($"There were expected 8 filled orders and 10 order tickets");
+            }
+            if (openOrders.Count != 0 || openOrderTickets.Any())
+            {
+                throw new Exception($"No open orders or tickets were expected");
+            }
+            if (remainingOpenOrders != 0m)
+            {
+                throw new Exception($"No remaining quantity to be filled from open orders was expected");
+            }
+
+            var symbolOpenOrders = Transactions.GetOpenOrders(symbol).Count;
+            var symbolOpenOrdersTickets = Transactions.GetOpenOrderTickets(symbol).Count();
+            var symbolOpenOrdersRemainingQuantity = Transactions.GetOpenOrdersRemainingQuantity(symbol);
+
+            if (symbolOpenOrders != 0 || symbolOpenOrdersTickets != 0)
+            {
+                throw new Exception($"No open orders or tickets were expected");
+            }
+            if (symbolOpenOrdersRemainingQuantity != 0)
+            {
+                throw new Exception($"No remaining quantity to be filled from open orders was expected");
+            }
+
+            var defaultOrders = Transactions.GetOrders();
+            var defaultOrderTickets = Transactions.GetOrderTickets();
+            var defaultOpenOrders = Transactions.GetOpenOrders();
+            var defaultOpenOrderTickets = Transactions.GetOpenOrderTickets();
+            var defaultOpenOrdersRemaining = Transactions.GetOpenOrdersRemainingQuantity();
+
+            if (defaultOrders.Count() != 10 || defaultOrderTickets.Count() != 10)
+            {
+                throw new Exception($"There were expected 10 orders and 10 order tickets");
+            }
+            if (defaultOpenOrders.Count != 0 || defaultOpenOrderTickets.Any())
+            {
+                throw new Exception($"No open orders or tickets were expected");
+            }
+            if (defaultOpenOrdersRemaining != 0m)
+            {
+                throw new Exception($"No remaining quantity to be filled from open orders was expected");
+            }
+        }
+
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
@@ -482,6 +539,16 @@ namespace QuantConnect.Algorithm.CSharp
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
         public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 3943;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm

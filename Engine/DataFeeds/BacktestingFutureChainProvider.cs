@@ -14,27 +14,23 @@
 */
 
 using System;
-using System.Collections.Generic;
 using QuantConnect.Interfaces;
-using QuantConnect.Logging;
-using QuantConnect.Util;
+using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
     /// An implementation of <see cref="IFutureChainProvider"/> that reads the list of contracts from open interest zip data files
     /// </summary>
-    public class BacktestingFutureChainProvider : IFutureChainProvider
+    public class BacktestingFutureChainProvider : BacktestingChainProvider, IFutureChainProvider
     {
-        private IDataProvider _dataProvider;
-
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        /// <param name="dataProvider">The data provider instance to use</param>
-        public BacktestingFutureChainProvider(IDataProvider dataProvider)
+        /// <param name="dataCacheProvider">The data cache provider instance to use</param>
+        public BacktestingFutureChainProvider(IDataCacheProvider dataCacheProvider)
+            : base(dataCacheProvider)
         {
-            _dataProvider = dataProvider;
         }
 
         /// <summary>
@@ -43,40 +39,31 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="symbol">The underlying symbol</param>
         /// <param name="date">The date for which to request the future chain (only used in backtesting)</param>
         /// <returns>The list of future contracts</returns>
-        public IEnumerable<Symbol> GetFutureContractList(Symbol symbol, DateTime date)
+        public virtual IEnumerable<Symbol> GetFutureContractList(Symbol symbol, DateTime date)
+        {
+            return GetSymbols(GetSymbol(symbol), date);
+        }
+
+        /// <summary>
+        /// Helper method to get the symbol to use
+        /// </summary>
+        protected static Symbol GetSymbol(Symbol symbol)
         {
             if (symbol.SecurityType != SecurityType.Future)
             {
-                throw new NotSupportedException($"BacktestingFutureChainProvider.GetFutureContractList(): SecurityType.Future is expected but was {symbol.SecurityType}");
-            }
-
-            // build the future contract list from the open interest zip file entry names
-
-            // build the zip file name for open interest data
-            var zipFileName = LeanData.GenerateZipFilePath(Globals.DataFolder, symbol, date, Resolution.Minute, TickType.OpenInterest);
-            var stream = _dataProvider.Fetch(zipFileName);
-
-            // If the file isn't found lets give quote a chance - some futures do not have an open interest file
-            if (stream == null)
-            {
-                var zipFileNameQuote = LeanData.GenerateZipFilePath(Globals.DataFolder, symbol, date, Resolution.Minute, TickType.Quote);
-                stream = _dataProvider.Fetch(zipFileNameQuote);
-
-                if (stream == null) 
+                if (symbol.SecurityType == SecurityType.FutureOption && symbol.Underlying != null)
                 {
-                    Log.Error($"BacktestingFutureChainProvider.GetFutureContractList(): Failed, files not found: {zipFileName} {zipFileNameQuote}");
-                    yield break;
+                    // be user friendly and take the underlying
+                    symbol = symbol.Underlying;
+                }
+                else
+                {
+                    throw new NotSupportedException($"BacktestingFutureChainProvider.GetFutureContractList():" +
+                        $" {nameof(SecurityType.Future)} or {nameof(SecurityType.FutureOption)} is expected but was {symbol.SecurityType}");
                 }
             }
 
-            // generate and return the contract symbol for each zip entry
-            var zipEntryNames = Compression.GetZipEntryFileNames(stream);
-            foreach (var zipEntryName in zipEntryNames)
-            {
-                yield return LeanData.ReadSymbolFromZipEntry(symbol, Resolution.Minute, zipEntryName);
-            }
-
-            stream.DisposeSafely();
+            return symbol.Canonical;
         }
     }
 }

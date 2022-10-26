@@ -30,6 +30,7 @@ using QuantConnect.Lean.Engine.Alphas;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.Setup;
+using QuantConnect.Lean.Engine.Storage;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
@@ -66,6 +67,12 @@ namespace QuantConnect.Tests
             SymbolCache.Clear();
             MarketOnCloseOrder.SubmissionTimeBuffer = MarketOnCloseOrder.DefaultSubmissionTimeBuffer;
 
+            // clean up object storage
+            if (Directory.Exists(LocalObjectStore.DefaultObjectStore))
+            {
+                Directory.Delete(LocalObjectStore.DefaultObjectStore, true);
+            }
+
             var ordersLogFile = string.Empty;
             var logFile = $"./regression/{algorithm}.{language.ToLower()}.log";
             Directory.CreateDirectory(Path.GetDirectoryName(logFile));
@@ -80,7 +87,7 @@ namespace QuantConnect.Tests
                 Config.Set("algorithm-type-name", algorithm);
                 Config.Set("live-mode", "false");
                 Config.Set("environment", "");
-                Config.Set("messaging-handler", "QuantConnect.Messaging.Messaging");
+                Config.Set("messaging-handler", "QuantConnect.Tests.RegressionTestMessageHandler");
                 Config.Set("job-queue-handler", "QuantConnect.Queues.JobQueue");
                 Config.Set("setup-handler", setupHandler);
                 Config.Set("history-provider", "RegressionHistoryProviderWrapper");
@@ -125,7 +132,6 @@ namespace QuantConnect.Tests
                     Log.Trace("{0}: Running " + algorithm + "...", DateTime.UtcNow);
                     Log.Trace("");
 
-
                     // run the algorithm in its own thread
                     var engine = new Lean.Engine.Engine(systemHandlers, algorithmHandlers, false);
                     Task.Factory.StartNew(() =>
@@ -143,6 +149,12 @@ namespace QuantConnect.Tests
                             }
                             algorithmManager = new AlgorithmManager(false, job);
 
+                            var regressionTestMessageHandler = systemHandlers.Notify as RegressionTestMessageHandler;
+                            if (regressionTestMessageHandler != null)
+                            {
+                                regressionTestMessageHandler.SetAlgorithmManager(algorithmManager);
+                            }
+
                             systemHandlers.LeanManager.Initialize(systemHandlers, algorithmHandlers, job, algorithmManager);
 
                             engine.Run(job, algorithmManager, algorithmPath, workerThread);
@@ -154,9 +166,14 @@ namespace QuantConnect.Tests
                         }
                     }).Wait();
 
-                    var backtestingResultHandler = (BacktestingResultHandler)algorithmHandlers.Results;
-                    results = backtestingResultHandler;
-                    statistics = backtestingResultHandler.FinalStatistics;
+                    var regressionResultHandler = (RegressionResultHandler)algorithmHandlers.Results;
+                    results = regressionResultHandler;
+                    statistics = regressionResultHandler.FinalStatistics;
+
+                    if (expectedFinalStatus == AlgorithmStatus.Completed && regressionResultHandler.HasRuntimeError)
+                    {
+                        Assert.Fail($"There was a runtime error running the algorithm");
+                    }
 
                     var defaultAlphaHandler = (DefaultAlphaHandler) algorithmHandlers.Alphas;
                     alphaStatistics = defaultAlphaHandler.RuntimeStatistics;
@@ -275,7 +292,8 @@ namespace QuantConnect.Tests
             public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
             {
                 requests = requests.ToList();
-                if (requests.Any(r => RegressionSetupHandlerWrapper.Algorithm.UniverseManager.ContainsKey(r.Symbol)))
+                if (requests.Any(r => RegressionSetupHandlerWrapper.Algorithm.UniverseManager.ContainsKey(r.Symbol)
+                    && (r.Symbol.SecurityType != SecurityType.Future || !r.Symbol.IsCanonical())))
                 {
                     throw new Exception("History requests should not be submitted for universe symbols");
                 }

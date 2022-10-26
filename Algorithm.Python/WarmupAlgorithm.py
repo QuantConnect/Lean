@@ -14,7 +14,7 @@
 from AlgorithmImports import *
 
 ### <summary>
-### Demonstration algorthm for the Warm Up feature with basic indicators.
+### Demonstration algorithm for the Warm Up feature with basic indicators.
 ### </summary>
 ### <meta name="tag" content="indicators" />
 ### <meta name="tag" content="warm up" />

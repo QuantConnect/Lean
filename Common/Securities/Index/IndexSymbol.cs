@@ -25,10 +25,10 @@ namespace QuantConnect.Securities.Index
         private static readonly Dictionary<string, string> _indexMarket = new Dictionary<string, string>
         {
             { "SPX", Market.CBOE },
-            { "NDX", Market.CBOE },
+            { "NDX", "NASDAQ" },
             { "VIX", Market.CBOE },
             { "SPXW", Market.CBOE },
-            { "NQX", Market.CBOE },
+            { "NQX", "NASDAQ" },
             { "VIXW", Market.CBOE }
         };
 

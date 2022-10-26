@@ -157,6 +157,16 @@ namespace QuantConnect.Algorithm.CSharp
         public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 20443;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
@@ -168,18 +178,18 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "9.800%"},
             {"Expectancy", "-1"},
             {"Net Profit", "2.644%"},
-            {"Sharpe Ratio", "7.691"},
-            {"Probabilistic Sharpe Ratio", "91.027%"},
+            {"Sharpe Ratio", "5.789"},
+            {"Probabilistic Sharpe Ratio", "89.964%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "3.219"},
-            {"Beta", "-0.229"},
-            {"Annual Standard Deviation", "0.417"},
-            {"Annual Variance", "0.174"},
-            {"Information Ratio", "6.893"},
-            {"Tracking Error", "0.457"},
-            {"Treynor Ratio", "-14.008"},
+            {"Alpha", "2.169"},
+            {"Beta", "-0.238"},
+            {"Annual Standard Deviation", "0.373"},
+            {"Annual Variance", "0.139"},
+            {"Information Ratio", "5.17"},
+            {"Tracking Error", "0.409"},
+            {"Treynor Ratio", "-9.071"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$44000000.00"},
             {"Lowest Capacity Asset", "SPX XL80P3GHDZXQ|SPX 31"},
@@ -202,7 +212,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "3cccf8c2409ee8a9020ba79a6c45742a"}
+            {"OrderListHash", "bd96db56c80107572e8fc13c8794279b"}
         };
     }
 }

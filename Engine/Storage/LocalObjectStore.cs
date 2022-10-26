@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -19,7 +19,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
@@ -52,14 +52,19 @@ namespace QuantConnect.Lean.Engine.Storage
         public event EventHandler<ObjectStoreErrorRaisedEventArgs> ErrorRaised;
 
         /// <summary>
+        /// Gets the default object store location
+        /// </summary>
+        public static string DefaultObjectStore => Path.GetFullPath(Config.Get("object-store-root", "./storage"));
+
+        /// <summary>
         /// Flag indicating the state of this object storage has changed since the last <seealso cref="Persist"/> invocation
         /// </summary>
         private volatile bool _dirty;
 
         private Timer _persistenceTimer;
-        private TimeSpan _persistenceInterval;
-        private readonly string _storageRoot = Path.GetFullPath(Config.Get("object-store-root", "./storage"));
-        private readonly ConcurrentDictionary<string, byte[]> _storage = new ConcurrentDictionary<string, byte[]>();
+        private readonly string _storageRoot = DefaultObjectStore;
+        private Regex _pathRegex = new (@"^\.?[a-zA-Z0-9\\/_#\-\$= ]+\.?[a-zA-Z0-9]*$", RegexOptions.Compiled);
+        private readonly ConcurrentDictionary<string, ObjectStoreEntry> _storage = new();
         private readonly object _persistLock = new object();
 
         /// <summary>
@@ -75,113 +80,189 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <summary>
         /// Initializes the object store
         /// </summary>
-        /// <param name="algorithmName">The algorithm name</param>
         /// <param name="userId">The user id</param>
         /// <param name="projectId">The project id</param>
         /// <param name="userToken">The user token</param>
         /// <param name="controls">The job controls instance</param>
-        public virtual void Initialize(string algorithmName, int userId, int projectId, string userToken, Controls controls)
+        public virtual void Initialize(int userId, int projectId, string userToken, Controls controls)
         {
             // absolute path including algorithm name
-            AlgorithmStorageRoot = Path.Combine(_storageRoot, algorithmName);
+            AlgorithmStorageRoot = _storageRoot;
 
             // create the root path if it does not exist
             Directory.CreateDirectory(AlgorithmStorageRoot);
 
-            Log.Trace($"LocalObjectStore.Initialize(): Storage Root: {new FileInfo(AlgorithmStorageRoot).FullName}. StorageFileCount {controls.StorageFileCount}. StorageLimitMB {controls.StorageLimitMB}");
-
             Controls = controls;
-
-            // Load in any already existing objects in the storage directory
-            LoadExistingObjects();
 
             // if <= 0 we disable periodic persistence and make it synchronous
             if (Controls.PersistenceIntervalSeconds > 0)
             {
-                _persistenceInterval = TimeSpan.FromSeconds(Controls.PersistenceIntervalSeconds);
-                _persistenceTimer = new Timer(_ => Persist(), null, _persistenceInterval, _persistenceInterval);
+                _persistenceTimer = new Timer(_ => Persist(), null, Controls.PersistenceIntervalSeconds * 1000, Timeout.Infinite);
             }
+
+            Log.Trace($"LocalObjectStore.Initialize(): Storage Root: {new FileInfo(AlgorithmStorageRoot).FullName}. StorageFileCount {controls.StorageFileCount}. StorageLimit {BytesToMb(controls.StorageLimit)}MB");
         }
 
         /// <summary>
         /// Loads objects from the AlgorithmStorageRoot into the ObjectStore
         /// </summary>
-        protected virtual void LoadExistingObjects()
+        private IEnumerable<ObjectStoreEntry> GetObjectStoreEntries(bool loadContent)
         {
             if (Controls.StoragePermissions.HasFlag(FileAccess.Read))
             {
-                foreach (var file in Directory.EnumerateFiles(AlgorithmStorageRoot))
+                // Acquire the persist lock to avoid yielding twice the same value, just in case
+                lock (_persistLock)
                 {
-                    // Read the contents of the file and decode the filename to get our key
-                    var contents = File.ReadAllBytes(file);
-                    var key = Base64ToKey(Path.GetFileName(file));
-                    _storage[key] = contents;
+                    foreach (var kvp in _storage)
+                    {
+                        if (!loadContent || kvp.Value.Data != null)
+                        {
+                            // let's first serve what we already have in memory because it might include files which are not on disk yet
+                            yield return kvp.Value;
+                        }
+                    }
+
+                    var rootFolder = new DirectoryInfo(AlgorithmStorageRoot);
+                    foreach (var file in rootFolder.EnumerateFiles("*", SearchOption.AllDirectories))
+                    {
+                        var path = NormalizePath(file.FullName.RemoveFromStart(rootFolder.FullName));
+
+                        ObjectStoreEntry objectStoreEntry;
+                        if (loadContent)
+                        {
+                            if (!_storage.TryGetValue(path, out objectStoreEntry) || objectStoreEntry.Data == null)
+                            {
+                                // load file if content is null or not present, we prioritize the version we have in memory
+                                yield return _storage[path] = new ObjectStoreEntry(path, File.ReadAllBytes(file.FullName));
+                            }
+                        }
+                        else
+                        {
+                            if (!_storage.ContainsKey(path))
+                            {
+                                // we do not read the file contents yet, just the name. We read the contents on demand
+                                yield return _storage[path] = new ObjectStoreEntry(path, null);
+                            }
+                        }
+                    }
                 }
             }
         }
 
         /// <summary>
-        /// Determines whether the store contains data for the specified key
+        /// Returns the file paths present in the object store. This is specially useful not to load the object store into memory
         /// </summary>
-        /// <param name="key">The object key</param>
-        /// <returns>True if the key was found</returns>
-        public bool ContainsKey(string key)
+        public ICollection<string> Keys
         {
-            if (key == null)
+            get
             {
-                throw new ArgumentNullException(nameof(key));
+                return GetObjectStoreEntries(loadContent: false).Select(objectStoreEntry => objectStoreEntry.Path).ToList();
+            }
+        }
+
+        /// <summary>
+        /// Will clear the object store state cache. This is useful when the object store is used concurrently by nodes which want to share information
+        /// </summary>
+        public void Clear()
+        {
+            // write to disk anything pending first
+            Persist();
+
+            _storage.Clear();
+        }
+
+        /// <summary>
+        /// Determines whether the store contains data for the specified path
+        /// </summary>
+        /// <param name="path">The object path</param>
+        /// <returns>True if the key was found</returns>
+        public bool ContainsKey(string path)
+        {
+            if (path == null)
+            {
+                throw new ArgumentNullException(nameof(path));
             }
             if (!Controls.StoragePermissions.HasFlag(FileAccess.Read))
             {
                 throw new InvalidOperationException($"LocalObjectStore.ContainsKey(): {NoReadPermissionsError}");
             }
 
-            return _storage.ContainsKey(key);
+            path = NormalizePath(path);
+            if (_storage.ContainsKey(path))
+            {
+                return true;
+            }
+
+            // if we don't have the file but it exists, be friendly and register it
+            var filePath = PathForKey(path);
+            if (File.Exists(filePath))
+            {
+                _storage[path] = new ObjectStoreEntry(path, null);
+                return true;
+            }
+            return false;
         }
 
         /// <summary>
-        /// Returns the object data for the specified key
+        /// Returns the object data for the specified path
         /// </summary>
-        /// <param name="key">The object key</param>
+        /// <param name="path">The object path</param>
         /// <returns>A byte array containing the data</returns>
-        public byte[] ReadBytes(string key)
+        public byte[] ReadBytes(string path)
         {
             // Ensure we have the key, also takes care of null or improper access
-            if (!ContainsKey(key))
+            if (!ContainsKey(path))
             {
-                throw new KeyNotFoundException($"Object with key '{key}' was not found in the current project. " +
+                throw new KeyNotFoundException($"Object with path '{path}' was not found in the current project. " +
                     "Please use ObjectStore.ContainsKey(key) to check if an object exists before attempting to read."
                 );
             }
+            path = NormalizePath(path);
 
-            byte[] data;
-            _storage.TryGetValue(key, out data);
-
-            return data;
+            if(!_storage.TryGetValue(path, out var objectStoreEntry) || objectStoreEntry.Data == null)
+            {
+                var filePath = PathForKey(path);
+                if (File.Exists(filePath))
+                {
+                    // if there is no data in the cache and the file exists on disk let's load it
+                    objectStoreEntry = _storage[path] = new ObjectStoreEntry(path, File.ReadAllBytes(filePath));
+                }
+            }
+            return objectStoreEntry?.Data;
         }
 
         /// <summary>
-        /// Saves the object data for the specified key
+        /// Saves the object data for the specified path
         /// </summary>
-        /// <param name="key">The object key</param>
+        /// <param name="path">The object path</param>
         /// <param name="contents">The object data</param>
         /// <returns>True if the save operation was successful</returns>
-        public bool SaveBytes(string key, byte[] contents)
+        public bool SaveBytes(string path, byte[] contents)
         {
-            if (key == null)
+            if (path == null)
             {
-                throw new ArgumentNullException(nameof(key));
+                throw new ArgumentNullException(nameof(path));
             }
-            if (key.Contains("?"))
-            {
-                throw new ArgumentException($"LocalObjectStore.SaveBytes(): char '?' is not supported in the key {key}");
-            }
-            if (!Controls.StoragePermissions.HasFlag(FileAccess.Write))
+            else if (!Controls.StoragePermissions.HasFlag(FileAccess.Write))
             {
                 throw new InvalidOperationException($"LocalObjectStore.SaveBytes(): {NoWritePermissionsError}");
             }
+            else if (!_pathRegex.IsMatch(path))
+            {
+                throw new ArgumentException($"LocalObjectStore: path is not supported: '{path}'");
+            }
+            else if (path.Count(c => c == '/') > 100 || path.Count(c => c == '\\') > 100)
+            {
+                // just in case
+                throw new ArgumentException($"LocalObjectStore: path is not supported: '{path}'");
+            }
 
-            if (InternalSaveBytes(key, contents))
+            // after we check the regex
+            path = NormalizePath(path);
+
+            if (InternalSaveBytes(path, contents)
+                // only persist if we actually stored some new data, else can skip
+                && contents != null)
             {
                 _dirty = true;
                 // if <= 0 we disable periodic persistence and make it synchronous
@@ -198,15 +279,15 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <summary>
         /// Won't trigger persist nor will check storage write permissions, useful on initialization since it allows read only permissions to load the object store
         /// </summary>
-        protected bool InternalSaveBytes(string key, byte[] contents)
+        protected bool InternalSaveBytes(string path, byte[] contents)
         {
             // Before saving confirm we are abiding by the control rules
             // Start by counting our file and its length
             var fileCount = 1;
-            var expectedStorageSizeBytes = contents.Length;
-            foreach (var kvp in _storage)
+            var expectedStorageSizeBytes = contents?.Length ?? 0L;
+            foreach (var kvp in GetObjectStoreEntries(loadContent: false))
             {
-                if (key.Equals(kvp.Key))
+                if (path.Equals(kvp.Path))
                 {
                     // Skip we have already counted this above
                     // If this key was already in storage it will be replaced.
@@ -214,86 +295,100 @@ namespace QuantConnect.Lean.Engine.Storage
                 else
                 {
                     fileCount++;
-                    expectedStorageSizeBytes += kvp.Value.Length;
+                    if(kvp.Data != null)
+                    {
+                        // if the data is in memory use it
+                        expectedStorageSizeBytes += kvp.Data.Length;
+                    }
+                    else
+                    {
+                        var fileInfo = new FileInfo(PathForKey(kvp.Path));
+                        if (fileInfo.Exists)
+                        {
+                            expectedStorageSizeBytes += fileInfo.Length;
+                        }
+                    }
                 }
             }
 
             // Verify we are within FileCount limit
             if (fileCount > Controls.StorageFileCount)
             {
-                var message = $"LocalObjectStore.InternalSaveBytes(): You have reached the ObjectStore limit for files it can save: {fileCount}. Unable to save the new file: '{key}'";
+                var message = $"LocalObjectStore.InternalSaveBytes(): You have reached the ObjectStore limit for files it can save: {fileCount}. Unable to save the new file: '{path}'";
                 Log.Error(message);
                 OnErrorRaised(new StorageLimitExceededException(message));
                 return false;
             }
 
             // Verify we are within Storage limit
-            var expectedStorageSizeMb = BytesToMb(expectedStorageSizeBytes);
-            if (expectedStorageSizeMb > Controls.StorageLimitMB)
+            if (expectedStorageSizeBytes > Controls.StorageLimit)
             {
-                var message = $"LocalObjectStore.InternalSaveBytes(): at storage capacity: {expectedStorageSizeMb}MB/{Controls.StorageLimitMB}MB. Unable to save: '{key}'";
+                var message = $"LocalObjectStore.InternalSaveBytes(): at storage capacity: {BytesToMb(expectedStorageSizeBytes)}MB/{BytesToMb(Controls.StorageLimit)}MB. Unable to save: '{path}'";
                 Log.Error(message);
                 OnErrorRaised(new StorageLimitExceededException(message));
                 return false;
             }
 
-            // Add the entry
-            _storage.AddOrUpdate(key, k => contents, (k, v) => contents);
+            // Add the dirty entry
+            var entry = _storage[path] = new ObjectStoreEntry(path, contents);
+            entry.SetDirty();
             return true;
         }
 
         /// <summary>
-        /// Deletes the object data for the specified key
+        /// Deletes the object data for the specified path
         /// </summary>
-        /// <param name="key">The object key</param>
+        /// <param name="path">The object path</param>
         /// <returns>True if the delete operation was successful</returns>
-        public bool Delete(string key)
+        public bool Delete(string path)
         {
-            if (key == null)
+            if (path == null)
             {
-                throw new ArgumentNullException(nameof(key));
+                throw new ArgumentNullException(nameof(path));
             }
             if (!Controls.StoragePermissions.HasFlag(FileAccess.Write))
             {
                 throw new InvalidOperationException($"LocalObjectStore.Delete(): {NoWritePermissionsError}");
             }
 
-            byte[] _;
-            if (_storage.TryRemove(key, out _))
-            {
-                _dirty = true;
+            path = NormalizePath(path);
 
-                // if <= 0 we disable periodic persistence and make it synchronous
-                if (Controls.PersistenceIntervalSeconds <= 0)
-                {
-                    Persist();
-                }
+            var wasInCache = _storage.TryRemove(path, out var _);
+
+            var filePath = PathForKey(path);
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
                 return true;
             }
 
-            return false;
+            return wasInCache;
         }
 
         /// <summary>
-        /// Returns the file path for the specified key
+        /// Returns the file path for the specified path
         /// </summary>
-        /// <param name="key">The object key</param>
+        /// <remarks>If the key is not already inserted it will just return a path associated with it
+        /// and add the key with null value</remarks>
+        /// <param name="path">The object path</param>
         /// <returns>The path for the file</returns>
-        public virtual string GetFilePath(string key)
+        public virtual string GetFilePath(string path)
         {
             // Ensure we have an object for that key
-            if (!ContainsKey(key))
+            if (!ContainsKey(path))
             {
-                throw new KeyNotFoundException($"Object with key '{key}' was not found in the current project. " +
-                    "Please use ObjectStore.ContainsKey(key) to check if an object exists before attempting to read."
-                );
+                // Add a key with null value to tell Persist() not to delete the file created in the path associated
+                // with this key and not update it with the value associated with the key(null)
+                SaveBytes(path, null);
+            }
+            else
+            {
+                // Persist to ensure pur files are up to date
+                Persist();
             }
 
-            // Persist to ensure pur files are up to date
-            Persist();
-
             // Fetch the path to file and return it
-            return PathForKey(key);
+            return PathForKey(path);
         }
 
         /// <summary>
@@ -311,14 +406,6 @@ namespace QuantConnect.Lean.Engine.Storage
 
                     _persistenceTimer.DisposeSafely();
                 }
-
-                // if the object store was not used, delete the empty storage directory created in Initialize.
-                if (AlgorithmStorageRoot != null &&
-                    Directory.Exists(AlgorithmStorageRoot) &&
-                    !Directory.GetFileSystemEntries(AlgorithmStorageRoot).Any())
-                {
-                    Directory.Delete(AlgorithmStorageRoot);
-                }
             }
             catch (Exception err)
             {
@@ -331,7 +418,7 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <filterpriority>1</filterpriority>
         public IEnumerator<KeyValuePair<string, byte[]>> GetEnumerator()
         {
-            return _storage.GetEnumerator();
+            return GetObjectStoreEntries(loadContent: true).Select(objectStore => new KeyValuePair<string, byte[]>(objectStore.Path, objectStore.Data)).GetEnumerator();
         }
 
         /// <summary>Returns an enumerator that iterates through a collection.</summary>
@@ -343,16 +430,12 @@ namespace QuantConnect.Lean.Engine.Storage
         }
 
         /// <summary>
-        /// Get's a file path for a given key.
+        /// Get's a file path for a given path.
         /// Internal use only because it does not guarantee the existence of the file.
         /// </summary>
-        protected string PathForKey(string key)
+        protected string PathForKey(string path)
         {
-            // We use an encoded filename because certain keys will cause problems with persisting
-            // data to a file; we use Base64 because it allow us to use all chars except '?' in our
-            // key, this is because '?' in the right place will output '/' which will break during
-            // persist
-            return Path.Combine(AlgorithmStorageRoot, $"{KeyToBase64(key)}");
+            return Path.Combine(AlgorithmStorageRoot, NormalizePath(path));
         }
 
         /// <summary>
@@ -363,18 +446,15 @@ namespace QuantConnect.Lean.Engine.Storage
             // Acquire the persist lock
             lock (_persistLock)
             {
-                // If there are no changes we are fine
-                if (!_dirty)
-                {
-                    return;
-                }
-
                 try
                 {
-                    // Pause timer while persisting
-                    _persistenceTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+                    // If there are no changes we are fine
+                    if (!_dirty)
+                    {
+                        return;
+                    }
 
-                    if (PersistData(this))
+                    if (PersistData())
                     {
                         _dirty = false;
                     }
@@ -386,8 +466,18 @@ namespace QuantConnect.Lean.Engine.Storage
                 }
                 finally
                 {
-                    // restart timer following end of persistence
-                    _persistenceTimer?.Change(_persistenceInterval, _persistenceInterval);
+                    try
+                    {
+                        if(_persistenceTimer != null)
+                        {
+                            // restart timer following end of persistence
+                            _persistenceTimer.Change(Time.GetSecondUnevenWait(Controls.PersistenceIntervalSeconds * 1000), Timeout.Infinite);
+                        }
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        // ignored disposed
+                    }
                 }
             }
         }
@@ -395,35 +485,37 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <summary>
         /// Overridable persistence function
         /// </summary>
-        /// <param name="data">The data to be persisted</param>
         /// <returns>True if persistence was successful, otherwise false</returns>
-        protected virtual bool PersistData(IEnumerable<KeyValuePair<string, byte[]>> data)
+        protected virtual bool PersistData()
         {
             try
             {
-                // Delete any files that are no longer saved in the store
-                foreach (var filepath in Directory.EnumerateFiles(AlgorithmStorageRoot))
+                // Write our store data to disk
+                // Skip the key associated with null values. They are not linked to a file yet or not loaded
+                // Also skip fails which are not flagged as dirty
+                foreach (var kvp in _storage)
                 {
-                    var filename = Path.GetFileName(filepath);
-                    if (!_storage.ContainsKey(Base64ToKey(filename)))
+                    if(kvp.Value.Data != null && kvp.Value.IsDirty)
                     {
-                        File.Delete(filepath);
-                    }
-                }
+                        var filePath = PathForKey(kvp.Key);
+                        // directory might not exist for custom prefix
+                        var parentDirectory = Path.GetDirectoryName(filePath);
+                        if (!Directory.Exists(parentDirectory))
+                        {
+                            Directory.CreateDirectory(parentDirectory);
+                        }
+                        File.WriteAllBytes(filePath, kvp.Value.Data);
 
-                // Write all our store data to disk
-                foreach (var kvp in data)
-                {
-                    // Get a path for this key and write to it
-                    var path = PathForKey(kvp.Key);
-                    File.WriteAllBytes(path, kvp.Value);
+                        // clear the dirty flag
+                        kvp.Value.SetClean();
+                    }
                 }
 
                 return true;
             }
             catch (Exception err) 
             {
-                Log.Error("LocalObjectStore.PersistData()", err);
+                Log.Error(err, "LocalObjectStore.PersistData()");
                 OnErrorRaised(err);
                 return false;
             }
@@ -445,26 +537,38 @@ namespace QuantConnect.Lean.Engine.Storage
             return bytes / 1024.0 / 1024.0;
         }
 
-        /// <summary>
-        /// Convert a given key to a Base64 string
-        /// </summary>
-        /// <param name="key">Key to be encoded</param>
-        /// <returns>Base64 hash string</returns>
-        private static string KeyToBase64(string key)
+        private static string NormalizePath(string path)
         {
-            var textAsBytes = Encoding.UTF8.GetBytes(key);
-            return Convert.ToBase64String(textAsBytes);
+            if (string.IsNullOrEmpty(path))
+            {
+                return path;
+            }
+            return path.TrimStart('.').TrimStart('/', '\\').Replace('\\', '/');
         }
 
         /// <summary>
-        /// Convert a given Base64 string back to a key
+        /// Helper class to hold the state of an object store file
         /// </summary>
-        /// <param name="hash">Hash to be decoded</param>
-        /// <returns>Key string</returns>
-        private static string Base64ToKey(string hash)
+        private class ObjectStoreEntry
         {
-            var textAsBytes = Convert.FromBase64String(hash);
-            return Encoding.UTF8.GetString(textAsBytes);
+            private long _isDirty;
+            public byte[] Data { get; }
+            public string Path { get; }
+            public bool IsDirty => Interlocked.Read(ref _isDirty) != 0;
+            public ObjectStoreEntry(string path, byte[] data)
+            {
+                Path = path;
+                Data = data;
+            }
+            public void SetDirty()
+            {
+                // flag as dirty
+                Interlocked.CompareExchange(ref _isDirty, 1, 0);
+            }
+            public void SetClean()
+            {
+                Interlocked.CompareExchange(ref _isDirty, 0, 1);
+            }
         }
     }
 }

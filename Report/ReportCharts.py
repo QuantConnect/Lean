@@ -642,7 +642,8 @@ class ReportCharts:
         return base64
 
     def GetRollingBeta(self, data = [[],[],[],[]], live_data = [[],[],[],[]], name = "rolling-portfolio-beta-to-equity.png",
-                           width = 11.5, height = 2.5):
+                        width = 11.5, height = 2.5, live_six_months_color = "#ff9914", live_twelve_months_color = "#ffd700",
+                        backtest_six_months_color = "#71c3fc", backtest_twelve_months_color = "#1d7dc1"):
 
         if len(data[0]) == 0 and len(live_data[0]) == 0:
             fig = plt.figure()
@@ -683,26 +684,34 @@ class ReportCharts:
         rectangles = []
 
         if len(backtest_six_month_beta) > 0:
-            labels += ['6 mo.', '12 mo.']
-            rectangles += [plt.Rectangle((0, 0), 1, 1, fc="#71c3fc"), plt.Rectangle((0, 0), 1, 1, fc="#1d7dc1")]
+            labels += ['6 mo.']
+            rectangles += [plt.Rectangle((0, 0), 1, 1, fc=backtest_six_months_color)]
+        if len(backtest_twelve_month_beta) > 0:
+            labels += ['12 mo.']
+            rectangles += [plt.Rectangle((0, 0), 1, 1, fc=backtest_twelve_months_color)]
         if len(live_six_month_beta) > 0:
-            labels += ['Live 6 mo.', 'Live 12 mo.']
-            rectangles += [plt.Rectangle((0, 0), 1, 1, fc="#ff9914"), plt.Rectangle((0, 0), 1, 1, fc="#ffd700")]
+            labels += ['Live 6 mo.']
+            rectangles += [plt.Rectangle((0, 0), 1, 1, fc=live_six_months_color)]
+        if len(live_twelve_month_beta) > 0:
+            labels += ['Live 12 mo.']
+            rectangles += [plt.Rectangle((0, 0), 1, 1, fc=live_twelve_months_color)]
 
         plt.figure()
         ax = plt.gca()
         fig = ax.get_figure()
         ax.xaxis.set_major_formatter(DateFormatter("%b %Y"))
 
-        if len(backtest_six_month_beta_dates) > 0:
-            # Backtest
-            ax.plot(backtest_six_month_beta_dates, backtest_six_month_beta, linewidth = 0.5, color = "#71c3fc")
-            ax.plot(backtest_twelve_month_beta_dates, backtest_twelve_month_beta, linewidth=0.5, color="#1d7dc1")
+        # Backtest
+        if len(backtest_six_month_beta) > 0:
+            ax.plot(backtest_six_month_beta_dates, backtest_six_month_beta, linewidth=0.5, color=backtest_six_months_color)
+        if len(backtest_twelve_month_beta) > 0:
+            ax.plot(backtest_twelve_month_beta_dates, backtest_twelve_month_beta, linewidth=0.5, color=backtest_twelve_months_color)
 
         # Live
         if len(live_six_month_beta) > 0:
-            ax.plot(live_six_month_beta_dates, live_six_month_beta, linewidth=0.5, color="#ff9914")
-            ax.plot(live_twelve_month_beta_dates, live_twelve_month_beta, linewidth=0.5, color="#ffd700")
+            ax.plot(live_six_month_beta_dates, live_six_month_beta, linewidth=0.5, color=live_six_months_color)
+        if len(live_twelve_month_beta) > 0:
+            ax.plot(live_twelve_month_beta_dates, live_twelve_month_beta, linewidth=0.5, color=live_twelve_months_color)
 
         leg = ax.legend(rectangles, labels, handlelength=0.8, handleheight=0.8,
                         frameon=False, fontsize=8, ncol=2)
@@ -725,7 +734,8 @@ class ReportCharts:
         return base64
 
     def GetRollingSharpeRatio(self, data = [[],[]], live_data = [[],[]], name = "rolling-sharpe-ratio.png",
-                                  width = 11.5, height = 2.5, live_color = "#ff9914", backtest_color = "#71c3fc"):
+                                width = 11.5, height = 2.5, live_six_months_color = "#ff9914", live_twelve_months_color = "#ffd700",
+                                backtest_six_months_color = "#71c3fc", backtest_twelve_months_color = "#1d7dc1"):
         if len(data[0]) == 0:
             fig = plt.figure()
             fig.set_size_inches(width, height)
@@ -753,27 +763,44 @@ class ReportCharts:
             plt.close('all')
             return base64
 
-        labels = ['6 mo.']
-        rectangles = [plt.Rectangle((0, 0), 1, 1, fc=backtest_color)]
-
         plt.figure()
         ax = plt.gca()
         ax.xaxis.set_major_formatter(DateFormatter("%b %Y"))
 
-        backtest_rolling_sharpe_dates, backtest_rolling_sharpe = (data[0], data[1])
-        live_rolling_sharpe_dates, live_rolling_sharpe = (live_data[0], live_data[1])
+        # Data will come in the following format:
+        # [six month rolling sharpe time, six month rolling sharpe, twelve month rolling sharpe time, twelve month rolling sharpe]
+        backtest_six_month_rolling_sharpe_dates, backtest_six_month_rolling_sharpe = (data[0], data[1])
+        backtest_twelve_month_rolling_sharpe_dates, backtest_twelve_month_rolling_sharpe = (data[2], data[3])
+        live_six_month_rolling_sharpe_dates, live_six_month_rolling_sharpe = (live_data[0], live_data[1])
+        live_twelve_month_rolling_sharpe_dates, live_twelve_month_rolling_sharpe = (live_data[2], live_data[3])
 
-        # Check after the fact if we have any live values since we might not be far
-        # enough into live trading to generate the live rolling sharpe graph
-        if len(live_rolling_sharpe) > 0:
-            rectangles += [plt.Rectangle((0, 0,), 1, 1, fc=live_color)]
-            labels += ["Live 6 mo."]
+        labels = []
+        rectangles = []
+
+        if len(backtest_six_month_rolling_sharpe) > 0:
+            labels += ['6 mo.']
+            rectangles += [plt.Rectangle((0, 0), 1, 1, fc=backtest_six_months_color)]
+        if len(backtest_twelve_month_rolling_sharpe) > 0:
+            labels += ['12 mo.']
+            rectangles += [plt.Rectangle((0, 0), 1, 1, fc=backtest_twelve_months_color)]
+        if len(live_six_month_rolling_sharpe) > 0:
+            labels += ['Live 6 mo.']
+            rectangles += [plt.Rectangle((0, 0), 1, 1, fc=live_six_months_color)]
+        if len(live_twelve_month_rolling_sharpe) > 0:
+            labels += ['Live 12 mo.']
+            rectangles += [plt.Rectangle((0, 0), 1, 1, fc=live_twelve_months_color)]
 
         # Backtest
-        ax.plot(backtest_rolling_sharpe_dates, backtest_rolling_sharpe, color=backtest_color, linewidth=0.5, zorder=2)
+        if len(backtest_six_month_rolling_sharpe) > 0:
+            ax.plot(backtest_six_month_rolling_sharpe_dates, backtest_six_month_rolling_sharpe, linewidth=0.5, color=backtest_six_months_color)
+        if len(backtest_twelve_month_rolling_sharpe) > 0:
+            ax.plot(backtest_twelve_month_rolling_sharpe_dates, backtest_twelve_month_rolling_sharpe, linewidth=0.5, color=backtest_twelve_months_color)
 
         # Live
-        ax.plot(live_rolling_sharpe_dates, live_rolling_sharpe, color=live_color, linewidth=0.5, zorder=2)
+        if len(live_six_month_rolling_sharpe) > 0:
+            ax.plot(live_six_month_rolling_sharpe_dates, live_six_month_rolling_sharpe, linewidth=0.5, color=live_six_months_color)
+        if len(live_twelve_month_rolling_sharpe) > 0:
+            ax.plot(live_twelve_month_rolling_sharpe_dates, live_twelve_month_rolling_sharpe, linewidth=0.5, color=live_twelve_months_color)
 
         leg = ax.legend(rectangles, labels, handlelength=0.8, handleheight=0.8,
                         frameon=False, fontsize=8)
@@ -961,19 +988,26 @@ class ReportCharts:
             plt.close('all')
             return base64
 
-        color_map = {'Equity': "#71c3fc", 'Option':'#A0522D', 'Commodity':'#4B0082',
-                    'Forex':'#0000FF', 'Future':'#6B8E23', 'Cfd':'#FF8C00', 'Crypto':'#BDB76B'}
-        live_color_map = {'Equity': "#ff9914" , 'Option': '#DAA520', 'Commodity': '#9400D3',
-                          'Forex':'#6495ED', 'Future':'#808000', 'Cfd':'#FFD700', 'Crypto':'#FFDAB9'}
+        color_map = {
+            "Equity": "#ff9914",
+            "Option": "#DAA520",
+            "Commodity": "#9400D3",
+            "Forex": "#6495ED",
+            "Future": "#808000",
+            "Cfd": "#FFD700",
+            "Crypto": "#FFDAB9",
+            "FutureOption": "#1ED3A9",
+            "IndexOption": "#A4AACC",
+        }
 
         for k, v in list(color_map.items()):
             color_map[k + ' - Short'] = '#' + hex(int(v[1:], 16) ^ 0xffffff)[2:].zfill(6)
 
-        for k, v in list(live_color_map.items()):
-            live_color_map[k + ' - Short'] = '#' + hex(int(v[1:], 16) ^ 0xffffff)[2:].zfill(6)
-
-        labels = long_securities + short_securities
-        live_labels = live_long_securities + live_short_securities
+        # None if no colors can be mapped, so stackplot gets None and doesn't try to access this color list
+        long_colors = [color_map[security] for security in long_securities] if len(long_securities) > 0 else None
+        long_live_colors = [color_map[security] for security in live_long_securities] if len(live_long_securities) > 0 else None
+        short_colors = [color_map[security + ' - Short'] for security in short_securities] if len(short_securities) > 0 else None
+        short_live_colors = [color_map[security + ' - Short'] for security in live_short_securities] if len(live_short_securities) > 0 else None
 
         ax = plt.gca()
 
@@ -1057,26 +1091,25 @@ class ReportCharts:
 
         # No need to check if live is empty or not, this will handle it, just needs to plot whichever has the longer time index first
         if max([len(x) for x in long_data_copy]) > max([len(x) for x in short_data_copy]):
-            ax.stackplot(time_copy[:max([len(x) for x in long_data_copy])], np.vstack(long_data_copy),
-                         color=[color_map[security] for security in long_securities], alpha = 0.75)
-            ax.stackplot(time_copy[:max([len(x) for x in short_data_copy])], np.vstack(short_data_copy),
-                         color=[color_map[security + ' - Short'] for security in short_securities], alpha=0.75)
+            ax.stackplot(time_copy[:max([len(x) for x in long_data_copy])], np.vstack(long_data_copy), colors=long_colors, alpha = 0.75)
+            ax.stackplot(time_copy[:max([len(x) for x in short_data_copy])], np.vstack(short_data_copy), colors=short_colors, alpha=0.75)
         else:
-            ax.stackplot(time_copy[:max([len(x) for x in short_data_copy])], np.vstack(short_data_copy),
-                         color=[color_map[security + ' - Short'] for security in short_securities], alpha=0.75)
-            ax.stackplot(time_copy[:max([len(x) for x in long_data_copy])], np.vstack(long_data_copy),
-                         color=[color_map[security] for security in long_securities], alpha=0.75)
+            ax.stackplot(time_copy[:max([len(x) for x in short_data_copy])], np.vstack(short_data_copy), colors=short_colors, alpha=0.75)
+            ax.stackplot(time_copy[:max([len(x) for x in long_data_copy])], np.vstack(long_data_copy), colors=long_colors, alpha=0.75)
 
         if max([len(x) for x in live_long_data_copy]) > max([len(x) for x in live_short_data_copy]):
             ax.stackplot(live_time_copy[:max([len(x) for x in live_long_data_copy])], np.vstack(live_long_data_copy),
-                         color=[live_color_map[security] for security in live_long_securities], alpha = 0.75)
+                         colors=long_live_colors, alpha = 0.75)
             ax.stackplot(live_time_copy[:max([len(x) for x in live_short_data_copy])], np.vstack(live_short_data_copy),
-                         color=[live_color_map[security + ' - Short'] for security in live_short_securities], alpha = 0.75)
+                         colors=short_live_colors, alpha = 0.75)
         else:
             ax.stackplot(live_time_copy[:max([len(x) for x in live_short_data_copy])], np.vstack(live_short_data_copy),
-                         color=[live_color_map[security + ' - Short'] for security in live_short_securities], alpha=0.75)
+                         colors=short_live_colors, alpha=0.75)
             ax.stackplot(live_time_copy[:max([len(x) for x in live_long_data_copy])], np.vstack(live_long_data_copy),
-                         color=[live_color_map[security] for security in live_long_securities], alpha=0.75)
+                         colors=long_live_colors, alpha=0.75)
+
+        labels = long_securities + short_securities
+        live_labels = live_long_securities + live_short_securities
 
         for security in short_securities:
             if not all([all([abs(y) == 0.0 for y in x]) for x in short_data]):
@@ -1086,10 +1119,11 @@ class ReportCharts:
             if not all([all([abs(y) == 0.0 for y in x]) for x in live_short_data]):
                 live_labels.append(security + ' - Short')
 
-        labels = list(set(labels))
-        live_labels = list(set(live_labels))
+        # use dict.fromkeys() instead of set() to remove duplicates and preserve order
+        labels = list(dict.fromkeys(labels))
+        live_labels = list(dict.fromkeys(live_labels))
         rectangles = [plt.Rectangle((0, 0), 1, 1, fc=color_map[lab]) for lab in labels]
-        live_rectangles = [plt.Rectangle((0, 0), 1, 1, fc=live_color_map[lab]) for lab in live_labels]
+        live_rectangles = [plt.Rectangle((0, 0), 1, 1, fc=color_map[lab]) for lab in live_labels]
         ax.legend(rectangles + live_rectangles, labels + [f'{lab} - Live' for lab in live_labels], handlelength=0.8,
                   handleheight=0.8, frameon=False, fontsize=8, ncol=len(labels), loc='upper right')
         fig = ax.get_figure()

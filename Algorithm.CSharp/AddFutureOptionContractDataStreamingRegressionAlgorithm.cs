@@ -40,8 +40,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void Initialize()
         {
-            SetStartDate(2020, 1, 5);
-            SetEndDate(2020, 1, 6);
+            SetStartDate(2020, 1, 4);
+            SetEndDate(2020, 1, 8);
 
             _es20h20 = AddFutureContract(
                 QuantConnect.Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 3, 20)),
@@ -51,8 +51,9 @@ namespace QuantConnect.Algorithm.CSharp
                 QuantConnect.Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 6, 19)),
                 Resolution.Minute).Symbol;
 
-            var optionChains = OptionChainProvider.GetOptionContractList(_es20h20, Time)
-                .Concat(OptionChainProvider.GetOptionContractList(_es19m20, Time));
+            // Get option contract lists for 2020/01/05 (Time.AddDays(1)) because Lean has local data for that date
+            var optionChains = OptionChainProvider.GetOptionContractList(_es20h20, Time.AddDays(1))
+                .Concat(OptionChainProvider.GetOptionContractList(_es19m20, Time.AddDays(1)));
 
             foreach (var optionContract in optionChains)
             {
@@ -161,6 +162,16 @@ namespace QuantConnect.Algorithm.CSharp
         public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 311879;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
@@ -168,31 +179,31 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "217.585%"},
-            {"Drawdown", "0.600%"},
+            {"Compounding Annual Return", "5512.811%"},
+            {"Drawdown", "1.000%"},
             {"Expectancy", "0"},
-            {"Net Profit", "0.635%"},
-            {"Sharpe Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
+            {"Net Profit", "5.333%"},
+            {"Sharpe Ratio", "64.137"},
+            {"Probabilistic Sharpe Ratio", "95.977%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-14.395"},
-            {"Tracking Error", "0.043"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$7.40"},
-            {"Estimated Strategy Capacity", "$28000000.00"},
+            {"Alpha", "25.72"},
+            {"Beta", "2.914"},
+            {"Annual Standard Deviation", "0.423"},
+            {"Annual Variance", "0.179"},
+            {"Information Ratio", "66.11"},
+            {"Tracking Error", "0.403"},
+            {"Treynor Ratio", "9.315"},
+            {"Total Fees", "$8.60"},
+            {"Estimated Strategy Capacity", "$22000000.00"},
             {"Lowest Capacity Asset", "ES XFH59UK0MYO1"},
             {"Fitness Score", "1"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
             {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
-            {"Portfolio Turnover", "3.199"},
+            {"Portfolio Turnover", "2.035"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -206,7 +217,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "35738733ff791eeeaf508faec804cab0"}
+            {"OrderListHash", "e7021bd385f366771ae00abd3a46a22e"}
         };
     }
 }

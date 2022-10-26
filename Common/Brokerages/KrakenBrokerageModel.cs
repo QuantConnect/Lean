@@ -96,6 +96,16 @@ namespace QuantConnect.Brokerages
 
                 return false;
             }
+            
+            if (order.Type == OrderType.MarketOnClose || order.Type == OrderType.MarketOnOpen || order.Type == OrderType.OptionExercise)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    StringExtensions.Invariant($"{order.Type} orders are not supported by Kraken.")
+                );
+
+                return false;
+            }
+            
             return base.CanSubmitOrder(security, order, out message);
         }
 
@@ -121,23 +131,6 @@ namespace QuantConnect.Brokerages
         public override IFeeModel GetFeeModel(Security security)
         {
             return new KrakenFeeModel();
-        }
-
-        /// <summary>
-        /// Gets a new buying power model for the security, returning the default model with the security's configured leverage.
-        /// For cash accounts, leverage = 1 is used.
-        /// For margin trading, max leverage = 5
-        /// </summary>
-        /// <param name="security">The security to get a buying power model for</param>
-        /// <returns>The buying power model for this brokerage/security</returns>
-        public override IBuyingPowerModel GetBuyingPowerModel(Security security)
-        {
-            if (AccountType == AccountType.Margin)
-            {
-                return new SecurityMarginModel(GetLeverage(security));
-            }
-                   
-            return new CashBuyingPowerModel();
         }
 
         /// <summary>

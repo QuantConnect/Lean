@@ -50,8 +50,8 @@ namespace QuantConnect.Algorithm.CSharp
             // We must set the volatility model on the underlying, since the defaults are
             // too strict to calculate greeks with when we only have data for a single day
             _es19m20.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(
-                60, 
-                Resolution.Minute, 
+                60,
+                Resolution.Minute,
                 TimeSpan.FromMinutes(1));
 
             // Select a future option expiring ITM, and adds it to the algorithm.
@@ -163,38 +163,48 @@ namespace QuantConnect.Algorithm.CSharp
         public Language[] Languages { get; } = { Language.CSharp };
 
         /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 211475;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "3"},
-            {"Average Win", "8.71%"},
-            {"Average Loss", "-34.89%"},
-            {"Compounding Annual Return", "-50.850%"},
-            {"Drawdown", "29.200%"},
-            {"Expectancy", "-0.375"},
-            {"Net Profit", "-29.224%"},
-            {"Sharpe Ratio", "-1.025"},
-            {"Probabilistic Sharpe Ratio", "0.019%"},
+            {"Average Win", "16.44%"},
+            {"Average Loss", "-35.38%"},
+            {"Compounding Annual Return", "-44.262%"},
+            {"Drawdown", "26.200%"},
+            {"Expectancy", "-0.268"},
+            {"Net Profit", "-24.757%"},
+            {"Sharpe Ratio", "-0.932"},
+            {"Probabilistic Sharpe Ratio", "0.060%"},
             {"Loss Rate", "50%"},
             {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "0.25"},
-            {"Alpha", "-0.387"},
-            {"Beta", "0.017"},
-            {"Annual Standard Deviation", "0.377"},
-            {"Annual Variance", "0.142"},
-            {"Information Ratio", "-0.751"},
-            {"Tracking Error", "0.548"},
-            {"Treynor Ratio", "-22.299"},
-            {"Total Fees", "$37.00"},
-            {"Estimated Strategy Capacity", "$33000000.00"},
-            {"Lowest Capacity Asset", "ES XFH59UK0MYO1"},
-            {"Fitness Score", "0.056"},
+            {"Profit-Loss Ratio", "0.46"},
+            {"Alpha", "-0.292"},
+            {"Beta", "0.016"},
+            {"Annual Standard Deviation", "0.313"},
+            {"Annual Variance", "0.098"},
+            {"Information Ratio", "-0.649"},
+            {"Tracking Error", "0.483"},
+            {"Treynor Ratio", "-17.96"},
+            {"Total Fees", "$7.10"},
+            {"Estimated Strategy Capacity", "$24000000.00"},
+            {"Lowest Capacity Asset", "ES XFH59UPBIJ7O|ES XFH59UK0MYO1"},
+            {"Fitness Score", "0.108"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-0.155"},
-            {"Return Over Maximum Drawdown", "-1.741"},
-            {"Portfolio Turnover", "0.152"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "-1.692"},
+            {"Portfolio Turnover", "0.171"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -208,7 +218,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "ca0898608da51d972723b1065a3f0d47"}
+            {"OrderListHash", "c1c4c793696f75c528527334563ae8df"}
         };
     }
 }

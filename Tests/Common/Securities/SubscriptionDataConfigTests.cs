@@ -55,5 +55,37 @@ namespace QuantConnect.Tests.Common.Securities
                 Assert.DoesNotThrow(() => config.Consolidators.Remove(consolidator));
             }
         }
+
+        [TestCase(1, 0, DataMappingMode.OpenInterest, DataMappingMode.OpenInterest)]
+        [TestCase(0, 0, DataMappingMode.OpenInterest, DataMappingMode.FirstDayMonth)]
+        public void NotEqualsMappingAndOffset(int offsetA, int offsetB, DataMappingMode mappingModeA, DataMappingMode mappingModeB)
+        {
+            var configA = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork,
+                TimeZones.NewYork, false, false, false, dataMappingMode: mappingModeA, contractDepthOffset: (uint)offsetA);
+            var configB = new SubscriptionDataConfig(configA, dataMappingMode: mappingModeB, contractDepthOffset: (uint)offsetB);
+
+            Assert.AreNotEqual(configA, configB);
+            Assert.AreNotEqual(configA.GetHashCode(), configB.GetHashCode());
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void EqualityMapped(bool mapped)
+        {
+            var configA = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork,
+                TimeZones.NewYork, false, false, false);
+            var configB = new SubscriptionDataConfig(configA, mappedConfig: mapped);
+
+            if (mapped)
+            {
+                Assert.AreNotEqual(configA, configB);
+                Assert.AreNotEqual(configA.GetHashCode(), configB.GetHashCode());
+            }
+            else
+            {
+                Assert.AreEqual(configA, configB);
+                Assert.AreEqual(configA.GetHashCode(), configB.GetHashCode());
+            }
+        }
     }
 }

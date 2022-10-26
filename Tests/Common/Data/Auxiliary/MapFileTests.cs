@@ -1,4 +1,4 @@
-﻿/*
+/*
 * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 *
@@ -17,9 +17,8 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Data.Auxiliary;
 
@@ -28,6 +27,30 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
     [TestFixture]
     public class MapFileTests
     {
+        [Test]
+        public void HandlesUnknownMappingMode()
+        {
+            var fileName = "testMapFile.csv";
+            var lines = new string[]
+            {
+                "20110221,cl uucg3i0a3zy9,NYMEX,1",
+                "20110418,cl uvvl4qhqe8xt,NYMEX,999"
+            };
+            File.WriteAllLines(fileName, lines);
+
+            var result = MapFileRow.Read(fileName, QuantConnect.Market.NYMEX, SecurityType.Future, TestGlobals.DataProvider).ToList();
+            File.Delete(fileName);
+
+            Assert.AreEqual(1, result.Count);
+            Assert.AreEqual(new DateTime(2011,2,21), result[0].Date);
+        }
+
+        [Test]
+        public void RowThrowsForUnknownMappingMode()
+        {
+            Assert.Throws<ArgumentException>(() => MapFileRow.Parse("20110418,cl uvvl4qhqe8xt,NYMEX,999", QuantConnect.Market.NYMEX, SecurityType.Future));
+        }
+
         [Test]
         public void ResolvesFirstTicker()
         {
@@ -106,7 +129,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
                 rowParts[1],
                 rowParts[2]);
             // Act
-            var actualMapFileRow = MapFileRow.Parse(mapFileRow, QuantConnect.Market.USA);
+            var actualMapFileRow = MapFileRow.Parse(mapFileRow, QuantConnect.Market.USA, SecurityType.Equity);
             // Assert
             Assert.AreEqual(expectedExchange, actualMapFileRow.PrimaryExchange);
             Assert.AreEqual(expectedMapFileRow, actualMapFileRow);
@@ -122,7 +145,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
                 DateTime.ParseExact(rowParts[0], DateFormat.EightCharacter, CultureInfo.InvariantCulture),
                 rowParts[1]);
             // Act
-            var actualMapFileRow = MapFileRow.Parse(mapFileRow, QuantConnect.Market.USA);
+            var actualMapFileRow = MapFileRow.Parse(mapFileRow, QuantConnect.Market.USA, SecurityType.Equity);
             // Assert
             Assert.AreEqual(Exchange.UNKNOWN, actualMapFileRow.PrimaryExchange);
             Assert.AreEqual(expectedMapFileRow, actualMapFileRow);

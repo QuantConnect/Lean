@@ -80,7 +80,7 @@ namespace QuantConnect.Tests.Algorithm
         {
             using (Py.GIL())
             {
-                var model = PythonEngine.ModuleFromString("testModule",
+                var model = PyModule.FromString("testModule",
                     @"
 from AlgorithmImports import *
 

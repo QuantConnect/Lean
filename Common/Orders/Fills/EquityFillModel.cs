@@ -843,7 +843,7 @@ namespace QuantConnect.Orders.Fills
                 return bestEffortAskPrice;
             }
 
-            throw new InvalidOperationException($"Cannot get ask price to perform fill for {asset.Symbol} because no market data subscription were found.");
+            throw new InvalidOperationException($"Cannot get ask price to perform fill for {asset.Symbol} because no market data was found. SubscribedTypes: [{string.Join(",", subscribedTypes.Select(type => type.Name))}]");
         }
 
         /// <summary>
@@ -942,7 +942,7 @@ namespace QuantConnect.Orders.Fills
                 return bestEffortBidPrice;
             }
 
-            throw new InvalidOperationException($"Cannot get ask price to perform fill for {asset.Symbol} because no market data subscription were found.");
+            throw new InvalidOperationException($"Cannot get bid price to perform fill for {asset.Symbol} because no market data was found. SubscribedTypes: [{string.Join(",", subscribedTypes.Select(type => type.Name))}]");
         }
 
         /// <summary>
@@ -1030,7 +1030,8 @@ namespace QuantConnect.Orders.Fills
             {
                 // if we're not open at the current time exactly, check the bar size, this handle large sized bars (hours/days)
                 var currentBar = asset.GetLastData();
-                if (asset.LocalTime.Date != currentBar.EndTime.Date
+                if (currentBar == null
+                    || asset.LocalTime.Date != currentBar.EndTime.Date
                     || !asset.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, isExtendedMarketHours))
                 {
                     return false;

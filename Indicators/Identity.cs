@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -19,7 +19,7 @@ namespace QuantConnect.Indicators
     ///     Represents an indicator that is a ready after ingesting a single sample and
     ///     always returns the same value as it is given.
     /// </summary>
-    public class Identity : Indicator
+    public class Identity : Indicator, IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
         ///     Initializes a new instance of the Identity indicator with the specified name
@@ -37,6 +37,11 @@ namespace QuantConnect.Indicators
         {
             get { return Samples > 0; }
         }
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized
+        /// </summary>
+        public int WarmUpPeriod => 1;
 
         /// <summary>
         ///     Computes the next value of this indicator from the given state

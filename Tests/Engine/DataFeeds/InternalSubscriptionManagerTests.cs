@@ -21,7 +21,6 @@ using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages.Paper;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -32,6 +31,7 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -56,16 +56,22 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _dataFeed.Exit();
             _dataManager.RemoveAllSubscriptions();
             _resultHandler.Exit();
+            _synchronizer.Dispose();
         }
 
         [TestCaseSource(nameof(DataTypeTestCases))]
-        public void CreatesSubscriptions(SubscriptionRequest subscriptionRequest, bool liveMode, bool expectNewSubscription)
+        public void CreatesSubscriptions(SubscriptionRequest subscriptionRequest, bool liveMode, bool expectNewSubscription, bool isWarmup)
         {
             _algorithm.SetLiveMode(liveMode);
+            if (isWarmup)
+            {
+                _algorithm.SetWarmUp(10, Resolution.Daily);
+            }
+            _algorithm.PostInitialize();
 
             var added = false;
             var start = DateTime.UtcNow;
-            var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(15));
             foreach (var timeSlice in _synchronizer.StreamData(tokenSource.Token))
             {
                 if (!added)
@@ -83,6 +89,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                     if (expectNewSubscription)
                     {
+                        var utcStartTime = _dataManager.DataFeedSubscriptions
+                            .Where(subscription => subscription.Configuration.IsInternalFeed && subscription.Configuration.Symbol == Symbols.BTCUSD)
+                            .Select(subscription => subscription.UtcStartTime)
+                            .First();
+                        Assert.Greater(utcStartTime.Ticks, start.Ticks);
+
                         // let's wait for a data point
                         if (timeSlice.DataPointCount > 0)
                         {
@@ -99,27 +111,33 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         break;
                     }
                 }
+                _algorithm.OnEndOfTimeStep();
                 // give time for the base exchange to pick up the data point that will trigger the universe selection
                 // so next step we assert the internal config is there
                 Thread.Sleep(100);
-                _algorithm.OnEndOfTimeStep();
             }
             Assert.IsFalse(tokenSource.IsCancellationRequested);
+            tokenSource.DisposeSafely();
         }
 
         [TestCaseSource(nameof(DataTypeTestCases))]
-        public void RemoveSubscriptions(SubscriptionRequest subscriptionRequest, bool liveMode, bool expectNewSubscription)
+        public void RemoveSubscriptions(SubscriptionRequest subscriptionRequest, bool liveMode, bool expectNewSubscription, bool isWarmup)
         {
-            _algorithm.SetLiveMode(liveMode);
             if (!expectNewSubscription)
             {
                 // we only test cases where we expect an internal subscription
                 return;
             }
+            _algorithm.SetLiveMode(liveMode);
+            if (isWarmup)
+            {
+                _algorithm.SetWarmUp(10, Resolution.Daily);
+            }
+            _algorithm.PostInitialize();
             var added = false;
             var shouldRemoved = false;
             var count = 0;
-            var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(15));
             foreach (var timeSlice in _synchronizer.StreamData(tokenSource.Token))
             {
                 if (!added)
@@ -161,15 +179,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             dataQueueTest.ManualTimeProvider.SetCurrentTimeUtc(new DateTime(2020, 09, 03, 10, 0, 0));
             TearDown();
             var liveSynchronizer = new TestableLiveSynchronizer(dataQueueTest.ManualTimeProvider);
-            var dataAggregator = new TestAggregationManager(dataQueueTest.ManualTimeProvider);
+            using var dataAggregator = new TestAggregationManager(dataQueueTest.ManualTimeProvider);
             SetupImpl(dataQueueTest, liveSynchronizer, dataAggregator);
 
             _algorithm.SetDateTime(dataQueueTest.ManualTimeProvider.GetUtcNow());
             _algorithm.SetLiveMode(true);
+            _algorithm.PostInitialize();
             var added = false;
             var first = true;
             var internalDataCount = 0;
-            var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
             foreach (var timeSlice in _synchronizer.StreamData(tokenSource.Token))
             {
                 dataQueueTest.ManualTimeProvider.AdvanceSeconds(60);
@@ -228,11 +247,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void UniverseSelectionAddAndRemove()
         {
             _algorithm.SetLiveMode(true);
+            _algorithm.PostInitialize();
             _algorithm.UniverseSettings.Resolution = Resolution.Hour;
             _algorithm.UniverseSettings.MinimumTimeInUniverse = TimeSpan.Zero;
             var added = false;
-            var manualEvent = new ManualResetEvent(false);
-            var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            using var manualEvent = new ManualResetEvent(false);
+            using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(15));
             foreach (var timeSlice in _synchronizer.StreamData(tokenSource.Token))
             {
                 if (!added)
@@ -271,6 +291,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     }
                 }
                 _algorithm.OnEndOfTimeStep();
+                // we need to give time for the base data exchange to pick up the new data point which will trigger the selection
+                Thread.Sleep(100);
             }
             Assert.IsFalse(tokenSource.IsCancellationRequested, "Test timed out");
         }
@@ -281,18 +303,21 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 var result = new List<TestCaseData>();
                 var config = GetConfig(Symbols.BTCUSD, Resolution.Second);
-                result.Add(new TestCaseData(new SubscriptionRequest(false, null, CreateSecurity(config), config, DateTime.UtcNow, DateTime.UtcNow), true, false));
+                result.Add(new TestCaseData(new SubscriptionRequest(false, null, CreateSecurity(config), config, DateTime.UtcNow, DateTime.UtcNow), true, false, false));
 
                 config = GetConfig(Symbols.BTCUSD, Resolution.Minute);
-                result.Add(new TestCaseData(new SubscriptionRequest(false, null, CreateSecurity(config), config, DateTime.UtcNow, DateTime.UtcNow), true, false));
+                result.Add(new TestCaseData(new SubscriptionRequest(false, null, CreateSecurity(config), config, DateTime.UtcNow, DateTime.UtcNow), true, false, false));
 
                 config = GetConfig(Symbols.BTCUSD, Resolution.Hour);
-                result.Add(new TestCaseData(new SubscriptionRequest(false, null, CreateSecurity(config), config, DateTime.UtcNow, DateTime.UtcNow), true, true));
+                result.Add(new TestCaseData(new SubscriptionRequest(false, null, CreateSecurity(config), config, DateTime.UtcNow, DateTime.UtcNow), true, true, false));
 
                 config = GetConfig(Symbols.BTCUSD, Resolution.Daily);
-                result.Add(new TestCaseData(new SubscriptionRequest(false, null, CreateSecurity(config), config, DateTime.UtcNow, DateTime.UtcNow), true, true));
+                result.Add(new TestCaseData(new SubscriptionRequest(false, null, CreateSecurity(config), config, DateTime.UtcNow, DateTime.UtcNow), true, true, false));
 
-                result.Add(new TestCaseData(new SubscriptionRequest(false, null, CreateSecurity(config), config, DateTime.UtcNow, DateTime.UtcNow), false, false));
+                config = GetConfig(Symbols.BTCUSD, Resolution.Daily);
+                result.Add(new TestCaseData(new SubscriptionRequest(false, null, CreateSecurity(config), config, DateTime.UtcNow, DateTime.UtcNow), true, true, true));
+
+                result.Add(new TestCaseData(new SubscriptionRequest(false, null, CreateSecurity(config), config, DateTime.UtcNow, DateTime.UtcNow), false, false, false));
 
                 return result.ToArray();
             }
@@ -327,7 +352,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _dataFeed = new TestableLiveTradingDataFeed(dataQueueHandler ?? new FakeDataQueue(dataAggregator ?? new AggregationManager()));
             _algorithm = new AlgorithmStub(createDataManager: false);
             _synchronizer = synchronizer ?? new LiveSynchronizer();
-
+            _algorithm.SetStartDate(new DateTime(2022, 04, 13));
 
             var registeredTypesProvider = new RegisteredSecurityDataTypesProvider();
             var securityService = new SecurityService(_algorithm.Portfolio.CashBook,
@@ -360,11 +385,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new DataChannelProvider());
             _algorithm.SubscriptionManager.SetDataManager(_dataManager);
             _algorithm.Securities.SetSecurityService(securityService);
-            _algorithm.SetFinishedWarmingUp();
             var backtestingTransactionHandler = new BacktestingTransactionHandler();
             backtestingTransactionHandler.Initialize(_algorithm, new PaperBrokerage(_algorithm, new LiveNodePacket()), _resultHandler);
             _algorithm.Transactions.SetOrderProcessor(backtestingTransactionHandler);
-            _algorithm.PostInitialize();
         }
         private class TestAggregationManager : AggregationManager
         {

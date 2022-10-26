@@ -94,7 +94,7 @@ class BubbleAlgorithm(QCAlgorithm):
                         and self.Time.hour == 9 and self.Time.minute == 31:
                             self.BuyStock(stock)
                 
-                # Cape Ratio is missing from orignial data
+                # Cape Ratio is missing from original data
                 # Most recent cape data is most likely to be missing 
                 elif self._currCape == 0:
                     self.Debug("Exiting due to no CAPE!")
@@ -158,7 +158,7 @@ class Cape(PythonData):
         return SubscriptionDataSource("https://www.dropbox.com/s/ggt6blmib54q36e/CAPE.csv?dl=1", SubscriptionTransportMedium.RemoteFile)
     
     
-    ''' Reader Method : using set of arguements we specify read out type. Enumerate until 
+    ''' Reader Method : using set of arguments we specify read out type. Enumerate until 
         the end of the data stream or file. E.g. Read CSV file line by line and convert into data types. '''
         
     # <returns>BaseData type set by Subscription Method.</returns>

@@ -120,17 +120,7 @@ namespace QuantConnect
             CurrencySymbol = Currencies.GetCurrencySymbol(security.QuoteCurrency.Symbol);
             ConversionRate = security.QuoteCurrency.ConversionRate;
 
-            var rounding = 2;
-            if (holding.Type == SecurityType.Forex || holding.Type == SecurityType.Cfd || holding.Type == SecurityType.Index)
-            {
-                rounding = 5;
-            }
-            //do not round crypto
-            else if (holding.Type == SecurityType.Crypto)
-            {
-                rounding = 28;
-            }
-
+            var rounding = security.SymbolProperties.MinimumPriceVariation.GetDecimalPlaces();
 
             AveragePrice = Math.Round(holding.AveragePrice, rounding);
             MarketPrice = Math.Round(holding.Price, rounding);
@@ -181,13 +171,13 @@ namespace QuantConnect
     public enum BrokerageEnvironment
     {
         /// <summary>
-        /// Live trading
+        /// Live trading (0)
         /// </summary>
         [EnumMember(Value = "live")]
         Live,
 
         /// <summary>
-        /// Paper trading
+        /// Paper trading (1)
         /// </summary>
         [EnumMember(Value = "paper")]
         Paper
@@ -200,58 +190,35 @@ namespace QuantConnect
     public enum Language
     {
         /// <summary>
-        /// C# Language Project
+        /// C# Language Project (0)
         /// </summary>
         [EnumMember(Value = "C#")]
         CSharp,
 
         /// <summary>
-        /// FSharp Project
+        /// FSharp Project (1)
         /// </summary>
         [EnumMember(Value = "F#")]
         FSharp,
 
         /// <summary>
-        /// Visual Basic Project
+        /// Visual Basic Project (2)
         /// </summary>
         [EnumMember(Value = "VB")]
         VisualBasic,
 
         /// <summary>
-        /// Java Language Project
+        /// Java Language Project (3)
         /// </summary>
         [EnumMember(Value = "Ja")]
         Java,
 
         /// <summary>
-        /// Python Language Project
+        /// Python Language Project (4)
         /// </summary>
         [EnumMember(Value = "Py")]
         Python
     }
-
-
-    /// <summary>
-    /// User / Algorithm Job Subscription Level
-    /// </summary>
-    public enum UserPlan
-    {
-        /// <summary>
-        /// Free User (Backtesting).
-        /// </summary>
-        Free,
-
-        /// <summary>
-        /// Hobbyist User with Included 512mb Server.
-        /// </summary>
-        Hobbyist,
-
-        /// <summary>
-        /// Professional plan for financial advisors
-        /// </summary>
-        Professional
-    }
-
 
     /// <summary>
     /// Live server types available through the web IDE. / QC deployment.
@@ -259,17 +226,17 @@ namespace QuantConnect
     public enum ServerType
     {
         /// <summary>
-        /// Additional server
+        /// Additional server (0)
         /// </summary>
         Server512,
 
         /// <summary>
-        /// Upgraded server
+        /// Upgraded server (1)
         /// </summary>
         Server1024,
 
         /// <summary>
-        /// Server with 2048 MB Ram.
+        /// Server with 2048 MB Ram (2)
         /// </summary>
         Server2048
     }
@@ -280,47 +247,47 @@ namespace QuantConnect
     public enum SecurityType
     {
         /// <summary>
-        /// Base class for all security types:
+        /// Base class for all security types (0)
         /// </summary>
         Base,
 
         /// <summary>
-        /// US Equity Security
+        /// US Equity Security (1)
         /// </summary>
         Equity,
 
         /// <summary>
-        /// Option Security Type
+        /// Option Security Type (2)
         /// </summary>
         Option,
 
         /// <summary>
-        /// Commodity Security Type
+        /// Commodity Security Type (3)
         /// </summary>
         Commodity,
 
         /// <summary>
-        /// FOREX Security
+        /// FOREX Security (4)
         /// </summary>
         Forex,
 
         /// <summary>
-        /// Future Security Type
+        /// Future Security Type (5)
         /// </summary>
         Future,
 
         /// <summary>
-        /// Contract For a Difference Security Type.
+        /// Contract For a Difference Security Type (6)
         /// </summary>
         Cfd,
 
         /// <summary>
-        /// Cryptocurrency Security Type.
+        /// Cryptocurrency Security Type (7)
         /// </summary>
         Crypto,
 
         /// <summary>
-        /// Futures Options Security Type.
+        /// Futures Options Security Type (8)
         /// </summary>
         /// <remarks>
         /// Futures options function similar to equity options, but with a few key differences.
@@ -332,12 +299,12 @@ namespace QuantConnect
         FutureOption,
 
         /// <summary>
-        /// Index Security Type.
+        /// Index Security Type (9)
         /// </summary>
         Index,
 
         /// <summary>
-        /// Index Option Security Type.
+        /// Index Option Security Type (10)
         /// </summary>
         /// <remarks>
         /// For index options traded on American markets, they tend to be European-style options and are Cash-settled.
@@ -351,12 +318,12 @@ namespace QuantConnect
     public enum AccountType
     {
         /// <summary>
-        /// Margin account type
+        /// Margin account type (0)
         /// </summary>
         Margin,
 
         /// <summary>
-        /// Cash account type
+        /// Cash account type (1)
         /// </summary>
         Cash
     }
@@ -366,19 +333,19 @@ namespace QuantConnect
     /// </summary>
     public enum MarketDataType
     {
-        /// Base market data type
+        /// Base market data type (0)
         Base,
-        /// TradeBar market data type (OHLC summary bar)
+        /// TradeBar market data type (OHLC summary bar) (1)
         TradeBar,
-        /// Tick market data type (price-time pair)
+        /// Tick market data type (price-time pair) (2)
         Tick,
-        /// Data associated with an instrument
+        /// Data associated with an instrument (3)
         Auxiliary,
-        /// QuoteBar market data type [Bid(OHLC), Ask(OHLC) and Mid(OHLC) summary bar]
+        /// QuoteBar market data type (4) [Bid(OHLC), Ask(OHLC) and Mid(OHLC) summary bar]
         QuoteBar,
-        /// Option chain data
+        /// Option chain data (5)
         OptionChain,
-        /// Futures chain data
+        /// Futures chain data (6)
         FuturesChain
     }
 
@@ -387,13 +354,13 @@ namespace QuantConnect
     /// </summary>
     public enum DataFeedEndpoint
     {
-        /// Backtesting Datafeed Endpoint
+        /// Backtesting Datafeed Endpoint (0)
         Backtesting,
-        /// Loading files off the local system
+        /// Loading files off the local system (1)
         FileSystem,
-        /// Getting datafeed from a QC-Live-Cloud
+        /// Getting datafeed from a QC-Live-Cloud (2)
         LiveTrading,
-        /// Database
+        /// Database (3)
         Database
     }
 
@@ -402,10 +369,10 @@ namespace QuantConnect
     /// </summary>
     public enum StoragePermissions
     {
-        /// Public Storage Permissions
+        /// Public Storage Permissions (0)
         Public,
 
-        /// Authenticated Read Storage Permissions
+        /// Authenticated Read Storage Permissions (1)
         Authenticated
     }
 
@@ -415,11 +382,11 @@ namespace QuantConnect
     /// <remarks>QuantConnect currently only has trade, quote, open interest tick data.</remarks>
     public enum TickType
     {
-        /// Trade type tick object.
-        Trade,
-        /// Quote type tick object.
+        /// Trade type tick object (0)
+        Trade ,
+        /// Quote type tick object (1)
         Quote,
-        /// Open Interest type tick object (for options, futures)
+        /// Open Interest type tick object (for options, futures) (2)
         OpenInterest
     }
 
@@ -429,12 +396,12 @@ namespace QuantConnect
     public enum DelistingType
     {
         /// <summary>
-        /// Specifies a warning of an imminent delisting
+        /// Specifies a warning of an imminent delisting (0)
         /// </summary>
         Warning = 0,
 
         /// <summary>
-        /// Specifies the symbol has been delisted
+        /// Specifies the symbol has been delisted (1)
         /// </summary>
         Delisted = 1
     }
@@ -445,12 +412,12 @@ namespace QuantConnect
     public enum SplitType
     {
         /// <summary>
-        /// Specifies a warning of an imminent split event
+        /// Specifies a warning of an imminent split event (0)
         /// </summary>
         Warning = 0,
 
         /// <summary>
-        /// Specifies the symbol has been split
+        /// Specifies the symbol has been split (1)
         /// </summary>
         SplitOccurred = 1
     }
@@ -461,15 +428,15 @@ namespace QuantConnect
     /// <remarks>Always sort the enum from the smallest to largest resolution</remarks>
     public enum Resolution
     {
-        /// Tick Resolution (1)
+        /// Tick Resolution (0)
         Tick,
-        /// Second Resolution (2)
+        /// Second Resolution (1)
         Second,
-        /// Minute Resolution (3)
+        /// Minute Resolution (2)
         Minute,
-        /// Hour Resolution (4)
+        /// Hour Resolution (3)
         Hour,
-        /// Daily Resolution (5)
+        /// Daily Resolution (4)
         Daily
     }
 
@@ -479,17 +446,17 @@ namespace QuantConnect
     public enum PositionSide
     {
         /// <summary>
-        /// A short position, quantity less than zero
+        /// A short position, quantity less than zero (-1)
         /// </summary>
         Short = -1,
 
         /// <summary>
-        /// No position, quantity equals zero
+        /// No position, quantity equals zero (0)
         /// </summary>
         None = 0,
 
         /// <summary>
-        /// A long position, quantity greater than zero
+        /// A long position, quantity greater than zero (1)
         /// </summary>
         Long = 1
     }
@@ -500,12 +467,12 @@ namespace QuantConnect
     public enum OptionRight
     {
         /// <summary>
-        /// A call option, the right to buy at the strike price
+        /// A call option, the right to buy at the strike price (0)
         /// </summary>
         Call,
 
         /// <summary>
-        /// A put option, the right to sell at the strike price
+        /// A put option, the right to sell at the strike price (1)
         /// </summary>
         Put
     }
@@ -516,12 +483,12 @@ namespace QuantConnect
     public enum OptionStyle
     {
         /// <summary>
-        /// American style options are able to be exercised at any time on or before the expiration date
+        /// American style options are able to be exercised at any time on or before the expiration date (0)
         /// </summary>
         American,
 
         /// <summary>
-        /// European style options are able to be exercised on the expiration date only.
+        /// European style options are able to be exercised on the expiration date only (1)
         /// </summary>
         European
     }
@@ -532,12 +499,12 @@ namespace QuantConnect
     public enum SettlementType
     {
         /// <summary>
-        /// Physical delivery of the underlying security
+        /// Physical delivery of the underlying security (0)
         /// </summary>
         PhysicalDelivery,
 
         /// <summary>
-        /// Cash is paid/received on settlement
+        /// Cash is paid/received on settlement (1)
         /// </summary>
         Cash
     }
@@ -585,29 +552,29 @@ namespace QuantConnect
     /// </summary>
     public enum AlgorithmStatus
     {
-        /// Error compiling algorithm at start
-        DeployError,    //1
-        /// Waiting for a server
-        InQueue,        //2
-        /// Running algorithm
-        Running,        //3
-        /// Stopped algorithm or exited with runtime errors
-        Stopped,        //4
-        /// Liquidated algorithm
-        Liquidated,     //5
-        /// Algorithm has been deleted
-        Deleted,        //6
-        /// Algorithm completed running
-        Completed,      //7
-        /// Runtime Error Stoped Algorithm
-        RuntimeError,    //8
-        /// Error in the algorithm id (not used).
+        /// Error compiling algorithm at start (0)
+        DeployError,
+        /// Waiting for a server (1)
+        InQueue,
+        /// Running algorithm (2)
+        Running,
+        /// Stopped algorithm or exited with runtime errors (3)
+        Stopped,
+        /// Liquidated algorithm (4)
+        Liquidated,
+        /// Algorithm has been deleted (5)
+        Deleted,
+        /// Algorithm completed running (6)
+        Completed,
+        /// Runtime Error Stoped Algorithm (7)
+        RuntimeError,
+        /// Error in the algorithm id (not used) (8)
         Invalid,
-        /// The algorithm is logging into the brokerage
+        /// The algorithm is logging into the brokerage (9)
         LoggingIn,
-        /// The algorithm is initializing
+        /// The algorithm is initializing (10)
         Initializing,
-        /// History status update
+        /// History status update (11)
         History
     }
 
@@ -617,24 +584,45 @@ namespace QuantConnect
     public enum SubscriptionTransportMedium
     {
         /// <summary>
-        /// The subscription's data comes from disk
+        /// The subscription's data comes from disk (0)
         /// </summary>
         LocalFile,
 
         /// <summary>
-        /// The subscription's data is downloaded from a remote source
+        /// The subscription's data is downloaded from a remote source (1)
         /// </summary>
         RemoteFile,
 
         /// <summary>
-        /// The subscription's data comes from a rest call that is polled and returns a single line/data point of information
+        /// The subscription's data comes from a rest call that is polled and returns a single line/data point of information (2)
         /// </summary>
         Rest,
 
         /// <summary>
-        /// The subscription's data is streamed
+        /// The subscription's data is streamed (3)
         /// </summary>
         Streaming
+    }
+
+    /// <summary>
+    /// Used by the <see cref="Data.LeanDataWriter"/> to determine which merge write policy should be applied
+    /// </summary>
+    public enum WritePolicy
+    {
+        /// <summary>
+        /// Will overwrite any existing file or zip entry with the new content (0)
+        /// </summary>
+        Overwrite = 0,
+
+        /// <summary>
+        /// Will inject and merge new content with the existings file content (1)
+        /// </summary>
+        Merge,
+
+        /// <summary>
+        /// Will append new data to the end of the file or zip entry (2)
+        /// </summary>
+        Append
     }
 
     /// <summary>
@@ -678,21 +666,62 @@ namespace QuantConnect
     public enum DataNormalizationMode
     {
         /// <summary>
-        /// The raw price with dividends added to cash book
+        /// No modifications to the asset price at all. For Equities, dividends are paid in cash and splits are applied directly to your portfolio quantity. (0)
         /// </summary>
         Raw,
         /// <summary>
-        /// The adjusted prices with splits and dividends factored in
+        /// Splits and dividends are backward-adjusted into the price of the asset. The price today is identical to the current market price. (1)
         /// </summary>
         Adjusted,
         /// <summary>
-        /// The adjusted prices with only splits factored in, dividends paid out to the cash book
+        /// Equity splits are applied to the price adjustment but dividends are paid in cash to your portfolio. This normalization mode allows you to manage dividend payments (e.g. reinvestment) while still giving a smooth time series of prices for indicators. (2)
         /// </summary>
         SplitAdjusted,
         /// <summary>
-        /// The split adjusted price plus dividends
+        /// Equity splits are applied to the price adjustment and the value of all future dividend payments is added to the initial asset price. (3)
         /// </summary>
-        TotalReturn
+        TotalReturn,
+        /// <summary>
+        /// Eliminates price jumps between two consecutive contracts, adding a factor based on the difference of their prices. The first contract has the true price. Factor 0. (4)
+        /// </summary>
+        /// <remarks>First contract is the true one, factor 0</remarks>
+        ForwardPanamaCanal,
+        /// <summary>
+        /// Eliminates price jumps between two consecutive contracts, adding a factor based on the difference of their prices. The last contract has the true price. Factor 0. (5)
+        /// </summary>
+        /// <remarks>Last contract is the true one, factor 0</remarks>
+        BackwardsPanamaCanal,
+        /// <summary>
+        /// Eliminates price jumps between two consecutive contracts, multiplying the prices by their ratio. The last contract has the true price. Factor 1. (6)
+        /// </summary>
+        /// <remarks>Last contract is the true one, factor 1</remarks>
+        BackwardsRatio
+    }
+
+    /// <summary>
+    /// Continuous contracts mapping modes
+    /// </summary>
+    public enum DataMappingMode
+    {
+        /// <summary>
+        /// The contract maps on the previous day of expiration of the front month (0)
+        /// </summary>
+        LastTradingDay,
+        /// <summary>
+        /// The contract maps on the first date of the delivery month of the front month. If the contract expires prior to this date,
+        /// then it rolls on the contract's last trading date instead (1)
+        /// </summary>
+        /// <remarks>For example, the Crude Oil WTI (CL) 'DEC 2021 CLZ1' contract expires on November, 19 2021, so the mapping date will be its expiration date.</remarks>
+        /// <remarks>Another example is the Corn 'DEC 2021 ZCZ1' contract, which expires on December, 14 2021, so the mapping date will be December 1, 2021.</remarks>
+        FirstDayMonth,
+        /// <summary>
+        /// The contract maps when the following back month contract has a higher open interest that the current front month (2)
+        /// </summary>
+        OpenInterest,
+        /// <summary>
+        /// The contract maps when any of the back month contracts of the next year have a higher volume that the current front month (3)
+        /// </summary>
+        OpenInterestAnnual,
     }
 
     /// <summary>
@@ -709,29 +738,6 @@ namespace QuantConnect
             string market = Market.USA)
         {
             return exchange.GetPrimaryExchange(securityType, market).Code;
-        }
-
-        /// <summary>
-        /// Gets the exchange as single character representation.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [Obsolete("This overload has not enough information to determine the exchange. " +
-            "Please use overload expecting a SecurityType and Market")]
-        public static string GetPrimaryExchangeAsSingleCharacter(this string exchange)
-        {
-            return exchange.GetPrimaryExchange().Code;
-        }
-
-        /// <summary>
-        /// Returns the main Exchange from the single character encoding.
-        /// </summary>
-        /// <param name="exchange"></param>
-        /// <returns></returns>
-        [Obsolete("This overload has not enough information to determine the exchange. " +
-            "Please use overload expecting a string, SecurityType and Market")]
-        public static Exchange GetPrimaryExchange(char exchange)
-        {
-            return exchange.ToString().GetPrimaryExchange();
         }
 
         /// <summary>
@@ -848,6 +854,26 @@ namespace QuantConnect
                     case "W":
                     case "C2":
                         return Exchange.C2;
+                    default:
+                        return Exchange.UNKNOWN;
+                }
+            }
+            else if (securityType == SecurityType.Future || securityType == SecurityType.FutureOption)
+            {
+                switch (exchange.LazyToUpper())
+                {
+                    case "CME":
+                        return Exchange.CME;
+                    case "CBOT":
+                        return Exchange.CBOT;
+                    case "NYMEX":
+                        return Exchange.NYMEX;
+                    case "ICE":
+                        return Exchange.ICE;
+                    case "CFE":
+                        return Exchange.CFE;
+                    case "COMEX":
+                        return Exchange.COMEX;
                     default:
                         return Exchange.UNKNOWN;
                 }

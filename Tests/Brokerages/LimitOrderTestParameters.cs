@@ -16,6 +16,7 @@
 using System;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Brokerages
 {
@@ -24,8 +25,8 @@ namespace QuantConnect.Tests.Brokerages
         private readonly decimal _highLimit;
         private readonly decimal _lowLimit;
 
-        public LimitOrderTestParameters(Symbol symbol, decimal highLimit, decimal lowLimit, IOrderProperties properties = null)
-            : base(symbol, properties)
+        public LimitOrderTestParameters(Symbol symbol, decimal highLimit, decimal lowLimit, IOrderProperties properties = null, OrderSubmissionData orderSubmissionData = null)
+            : base(symbol, properties, orderSubmissionData)
         {
             _highLimit = highLimit;
             _lowLimit = lowLimit;
@@ -51,16 +52,18 @@ namespace QuantConnect.Tests.Brokerages
         {
             // limit orders will process even if they go beyond the market price
 
+            var symbolProperties = SPDB.GetSymbolProperties(order.Symbol.ID.Market, order.Symbol, order.SecurityType, order.PriceCurrency);
+            var roundOffPlaces = symbolProperties.MinimumPriceVariation.GetDecimalPlaces();
             var limit = (LimitOrder) order;
             if (order.Quantity > 0)
             {
                 // for limit buys we need to increase the limit price
-                limit.LimitPrice = lastMarketPrice*1.05m;
+                limit.LimitPrice = Math.Round(lastMarketPrice *1.02m, roundOffPlaces);
             }
             else
             {
                 // for limit sells we need to decrease the limit price
-                limit.LimitPrice =  lastMarketPrice/ 1.05m;
+                limit.LimitPrice = Math.Round(lastMarketPrice / 1.02m, roundOffPlaces);
             }
             return true;
         }

@@ -293,7 +293,7 @@ namespace QuantConnect.Tests.Research
                 var future = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, expiry);
                 var start = new DateTime(2020, 1, 5);
                 var end = new DateTime(2020, 1, 6);
-                var history = qb.GetOptionHistory(future, start, end, Resolution.Minute);
+                var history = qb.GetOptionHistory(future, start, end, Resolution.Minute, extendedMarket: true);
                 dynamic df = history.GetAllData();
 
                 Assert.IsNotNull(df);
@@ -322,7 +322,7 @@ namespace QuantConnect.Tests.Research
 
                 var start = new DateTime(2020, 1, 5);
                 var end = new DateTime(2020, 1, 6);
-                var history = qb.GetOptionHistory(futureOption, start, end, Resolution.Minute);
+                var history = qb.GetOptionHistory(futureOption, start, end, Resolution.Minute, extendedMarket: true);
                 dynamic df = history.GetAllData();
 
                 Assert.IsNotNull(df);
@@ -343,6 +343,46 @@ namespace QuantConnect.Tests.Research
             {
                 qb.GetOptionHistory(future, default(DateTime), DateTime.MaxValue, Resolution.Minute);
             });
+        }
+
+        [TestCase(true, true, 1920)]
+        [TestCase(true, false, 780)]
+        [TestCase(false, true, 776)]
+        [TestCase(false, false, 390)]
+        public void OptionHistorySpecifyingFillForwardAndExtendedMarket(bool fillForward, bool extendedMarket, int expectedCount)
+        {
+            using (Py.GIL())
+            {
+                var qb = new QuantBook();
+                var start = new DateTime(2013, 10, 11);
+                var end = new DateTime(2013, 10, 15);
+
+                var spy = qb.AddEquity("SPY");
+                dynamic history = qb.GetOptionHistory(spy.Symbol, start, end, Resolution.Minute, fillForward, extendedMarket).GetAllData();
+                var historyCount = (history.shape[0] as PyObject).As<int>();
+
+                Assert.AreEqual(expectedCount, historyCount);
+            }
+        }
+
+        [TestCase(true, true, 8640)]
+        [TestCase(true, false, 2700)]
+        [TestCase(false, true, 6899)]
+        [TestCase(false, false, 2249)]
+        public void FutureHistorySpecifyingFillForwardAndExtendedMarket(bool fillForward, bool extendedMarket, int expectedCount)
+        {
+            using (Py.GIL())
+            {
+                var qb = new QuantBook();
+                var start = new DateTime(2013, 10, 6);
+                var end = new DateTime(2013, 10, 15);
+
+                var future = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2013, 12, 20));
+                dynamic history = qb.GetFutureHistory(future, start, end, Resolution.Minute, fillForward, extendedMarket).GetAllData();
+                var historyCount = (history.shape[0] as PyObject).As<int>();
+
+                Assert.AreEqual(expectedCount, historyCount);
+            }
         }
     }
 }

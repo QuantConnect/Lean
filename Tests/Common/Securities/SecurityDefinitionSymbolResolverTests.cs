@@ -43,27 +43,33 @@ namespace QuantConnect.Tests.Common.Securities
         public void SetUp()
         {
             _testingDataDirectory = Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "testing_data"));
-            
             var symbolPropertiesDirectory = Directory.CreateDirectory(Path.Combine(_testingDataDirectory.FullName, "symbol-properties"));
-            var securityDatabaseLines = string.Join("\n", new[]
-            {
+            var securityDatabaseFilePath = Path.Combine(symbolPropertiesDirectory.FullName, "security-database.csv");
+            _instance = new SecurityDefinitionSymbolResolver(TestGlobals.DataProvider, securityDatabaseFilePath);
+
+            var securityDatabaseLines = string.Join("\n",
                 "AAPL R735QTJ8XC9X,03783310,BBG000B9XRY4,2046251,US0378331005",
                 "GOOG T1AZ164W5VTX,38259P50,BBG000BHSKN9,B020QX2,US38259P5089",
                 "GOOCV VP83T1ZUHROL,38259P70,BBG002W96FT9,BKM4JZ7,US38259P7069",
-                "QQQ RIWIV7K5Z9LX,73935A10,BBG000BSWKH7,BDQYP67,US46090E1038"
-            });
-
-            var securityDatabaseFilePath = Path.Combine(symbolPropertiesDirectory.FullName, "security-database.csv");
+                "QQQ RIWIV7K5Z9LX,73935A10,BBG000BSWKH7,BDQYP67,US46090E1038");
             File.WriteAllText(securityDatabaseFilePath,securityDatabaseLines);
-
-            // Initialize the resolver now that we have data
-            _instance = new SecurityDefinitionSymbolResolver(new DefaultDataProvider(), securityDatabaseFilePath);
         }
 
         [OneTimeTearDown]
         public void TearDown()
         {
             _testingDataDirectory.Delete(true);
+        }
+
+        [Test]
+        public void NoExistingSecurityDefinitions()
+        {
+            var date = DateTime.UtcNow;
+            var definitionSymbolResolver = new SecurityDefinitionSymbolResolver(TestGlobals.DataProvider);
+            Assert.IsNull(definitionSymbolResolver.ISIN("US46090E1038", date));
+            Assert.IsNull(definitionSymbolResolver.CUSIP("03783310", date));
+            Assert.IsNull(definitionSymbolResolver.CompositeFIGI("BBG000BSWKH7", date));
+            Assert.IsNull(definitionSymbolResolver.SEDOL("bdqyp67", date));
         }
         
         [TestCase("03783310", 2021, 9, 9, "AAPL", Market.USA)]

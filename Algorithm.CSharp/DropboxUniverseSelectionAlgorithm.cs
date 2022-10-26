@@ -24,7 +24,7 @@ using QuantConnect.Interfaces;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// In this algortihm we show how you can easily use the universe selection feature to fetch symbols
+    /// In this algorithm we show how you can easily use the universe selection feature to fetch symbols
     /// to be traded using the AddUniverse method. This method accepts a function that will return the
     /// desired current set of symbols. Return Universe.Unchanged if no universe changes should be made
     /// </summary>
@@ -157,6 +157,16 @@ namespace QuantConnect.Algorithm.CSharp
         public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 5291;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
@@ -168,18 +178,18 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "10.300%"},
             {"Expectancy", "0.081"},
             {"Net Profit", "16.153%"},
-            {"Sharpe Ratio", "1.17"},
-            {"Probabilistic Sharpe Ratio", "54.048%"},
+            {"Sharpe Ratio", "1.062"},
+            {"Probabilistic Sharpe Ratio", "50.224%"},
             {"Loss Rate", "45%"},
             {"Win Rate", "55%"},
             {"Profit-Loss Ratio", "0.97"},
-            {"Alpha", "0.147"},
-            {"Beta", "-0.068"},
-            {"Annual Standard Deviation", "0.119"},
-            {"Annual Variance", "0.014"},
-            {"Information Ratio", "0.11"},
-            {"Tracking Error", "0.169"},
-            {"Treynor Ratio", "-2.057"},
+            {"Alpha", "0.018"},
+            {"Beta", "0.979"},
+            {"Annual Standard Deviation", "0.109"},
+            {"Annual Variance", "0.012"},
+            {"Information Ratio", "0.38"},
+            {"Tracking Error", "0.041"},
+            {"Treynor Ratio", "0.118"},
             {"Total Fees", "$5869.25"},
             {"Estimated Strategy Capacity", "$320000.00"},
             {"Lowest Capacity Asset", "BNO UN3IMQ2JU1YD"},

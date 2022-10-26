@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,7 +15,7 @@
 
 using Python.Runtime;
 using QuantConnect.Data;
-using QuantConnect.Data.Custom;
+using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
 
@@ -32,7 +32,7 @@ namespace QuantConnect.Python
         static PythonSlice()
         {
             // Python Data class: Converts custom data (PythonData) into a python object'''
-            _converter = PythonEngine.ModuleFromString("converter",
+            _converter = PyModule.FromString("converter",
                 "class Data(object):\n" +
                 "    def __init__(self, data):\n" +
                 "        self.data = data\n" +
@@ -111,7 +111,7 @@ namespace QuantConnect.Python
         /// Gets the data corresponding to the specified symbol. If the requested data
         /// is of <see cref="MarketDataType.Tick"/>, then a <see cref="List{Tick}"/> will
         /// be returned, otherwise, it will be the subscribed type, for example, <see cref="TradeBar"/>
-        /// or event <see cref="Quandl"/> for custom data.
+        /// or event <see cref="UnlinkedData"/> for custom data.
         /// </summary>
         /// <param name="symbol">The data's symbols</param>
         /// <returns>The data for the specified symbol</returns>

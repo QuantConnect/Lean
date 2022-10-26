@@ -168,6 +168,16 @@ namespace QuantConnect.Algorithm.CSharp
         public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 16486;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
@@ -179,8 +189,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "0.000%"},
             {"Expectancy", "-1"},
             {"Net Profit", "-0.010%"},
-            {"Sharpe Ratio", "-5.154"},
-            {"Probabilistic Sharpe Ratio", "0.016%"},
+            {"Sharpe Ratio", "-4.584"},
+            {"Probabilistic Sharpe Ratio", "0.015%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
@@ -188,9 +198,9 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-0.374"},
-            {"Tracking Error", "0.155"},
-            {"Treynor Ratio", "-4.059"},
+            {"Information Ratio", "-0.334"},
+            {"Tracking Error", "0.138"},
+            {"Treynor Ratio", "-9.47"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$22000.00"},
             {"Lowest Capacity Asset", "SPX XL80P59H5E6M|SPX 31"},
@@ -213,7 +223,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "177477b78d9264384a09f1607e8c7d11"}
+            {"OrderListHash", "e971949fb0d1cc8d034ad7cba97d09cc"}
         };
     }
 }

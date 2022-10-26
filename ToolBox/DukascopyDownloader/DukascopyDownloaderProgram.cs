@@ -61,7 +61,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
                 {
                     var securityType = downloader.GetSecurityType(ticker);
                     var symbolObject = Symbol.Create(ticker, securityType, Market.Dukascopy);
-                    var data = downloader.Get(symbolObject, castResolution, startDate, endDate);
+                    var data = downloader.Get(new DataDownloaderGetParameters(symbolObject, castResolution, startDate, endDate, TickType.Quote));
 
                     if (allResolutions)
                     {
@@ -74,7 +74,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
                         // Save the data (other resolutions)
                         foreach (var res in new[] { Resolution.Second, Resolution.Minute, Resolution.Hour, Resolution.Daily })
                         {
-                            var resData = DukascopyDataDownloader.AggregateTicks(symbolObject, ticks, res.ToTimeSpan());
+                            var resData = LeanData.AggregateTicks(ticks, symbolObject, res.ToTimeSpan());
 
                             writer = new LeanDataWriter(res, symbolObject, dataDirectory);
                             writer.Write(resData);

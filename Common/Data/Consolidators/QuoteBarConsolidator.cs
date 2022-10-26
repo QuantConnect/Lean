@@ -84,7 +84,7 @@ namespace QuantConnect.Data.Consolidators
 
             if (workingBar == null)
             {
-                workingBar = new QuoteBar(GetRoundedBarTime(data.Time), data.Symbol, null, 0, null, 0, IsTimeBased && Period.HasValue ? Period : data.Period);
+                workingBar = new QuoteBar(GetRoundedBarTime(data), data.Symbol, null, 0, null, 0, IsTimeBased && Period.HasValue ? Period : data.Period);
 
                 // open ask and bid should match previous close ask and bid
                 if (Consolidated != null)
@@ -93,6 +93,12 @@ namespace QuantConnect.Data.Consolidators
                     var previous = Consolidated as QuoteBar;
                     workingBar.Update(0, previous.Bid?.Close ?? 0, previous.Ask?.Close ?? 0, 0, previous.LastBidSize, previous.LastAskSize);
                 }
+            }
+            else if (!IsTimeBased)
+            {
+                // we should only increment the period after the first data we get, else we would be accouting twice for the inital bars period
+                // because in the `if` above we are already providing the `data.Period` as argument. See test 'AggregatesNewCountQuoteBarProperly' which assert period
+                workingBar.Period += data.Period;
             }
 
             // update the bid and ask
@@ -126,7 +132,6 @@ namespace QuantConnect.Data.Consolidators
             }
 
             workingBar.Value = data.Value;
-            if (!IsTimeBased) workingBar.Period += data.Period;
         }
     }
 }

@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
+using System;
 using NodaTime;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Util;
-using System;
 
 namespace QuantConnect.Data
 {
@@ -45,17 +45,30 @@ namespace QuantConnect.Data
         /// <param name="endAlgoTz">History request end time in algorithm time zone</param>
         /// <param name="exchangeHours">Security exchange hours</param>
         /// <param name="resolution">The resolution to use. If null will use <see cref="SubscriptionDataConfig.Resolution"/></param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
+        /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
+        /// For example, 0 (default) will use the front month, 1 will use the back month contract</param>
         /// <returns>The new <see cref="HistoryRequest"/></returns>
         public HistoryRequest CreateHistoryRequest(SubscriptionDataConfig subscription,
             DateTime startAlgoTz,
             DateTime endAlgoTz,
             SecurityExchangeHours exchangeHours,
-            Resolution? resolution)
+            Resolution? resolution,
+            DataMappingMode? dataMappingMode = null,
+            DataNormalizationMode? dataNormalizationMode = null,
+            int? contractDepthOffset = null)
         {
-            resolution = resolution ?? subscription.Resolution;
+            resolution ??= subscription.Resolution;
 
-            // find the correct data type for the history request
-            var dataType = subscription.IsCustomData ? subscription.Type : LeanData.GetDataType(resolution.Value, subscription.TickType);
+            var dataType = subscription.Type;
+
+            // if we change resolution the data type can change, for example subscription being Tick type and resolution daily
+            // data type here won't be Tick anymore, but TradeBar/QuoteBar
+            if (resolution.Value != subscription.Resolution && LeanData.IsCommonLeanDataType(dataType))
+            {
+                dataType = LeanData.GetDataType(resolution.Value, subscription.TickType);
+            }
 
             var request = new HistoryRequest(subscription,
                 exchangeHours,
@@ -67,6 +80,21 @@ namespace QuantConnect.Data
                 FillForwardResolution = subscription.FillDataForward ? resolution : null,
                 TickType = subscription.TickType
             };
+
+            if (dataMappingMode != null)
+            {
+                request.DataMappingMode = dataMappingMode.Value;
+            }
+
+            if (dataNormalizationMode != null)
+            {
+                request.DataNormalizationMode = dataNormalizationMode.Value;
+            }
+
+            if (contractDepthOffset != null)
+            {
+                request.ContractDepthOffset = (uint)Math.Abs(contractDepthOffset.Value);
+            }
 
             return request;
         }

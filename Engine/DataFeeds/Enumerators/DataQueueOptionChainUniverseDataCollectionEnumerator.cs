@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -22,20 +22,21 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Data.Auxiliary;
 using System.Collections;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
     /// <summary>
     /// Enumerates live options symbol universe data into <see cref="OptionChainUniverseDataCollection"/> instances
     /// </summary>
-    public class DataQueueOptionChainUniverseDataCollectionEnumerator : IEnumerator<OptionChainUniverseDataCollection>
+    public class DataQueueOptionChainUniverseDataCollectionEnumerator : IEnumerator<BaseDataCollection>
     {
         private readonly SubscriptionRequest _subscriptionRequest;
         private readonly IDataQueueUniverseProvider _universeProvider;
         private readonly ITimeProvider _timeProvider;
         private bool _needNewCurrent;
         private DateTime _lastEmitTime;
-        private OptionChainUniverseDataCollection _currentData;
+        private BaseDataCollection _currentData;
 
         /// <summary>
         /// Gets the enumerator for the underlying asset
@@ -66,7 +67,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <summary>
         /// Returns current option chain enumerator position
         /// </summary>
-        public OptionChainUniverseDataCollection Current { get; private set; }
+        public BaseDataCollection Current { get; private set; }
 
         /// <summary>
         /// Returns current option chain enumerator position
@@ -112,13 +113,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 }
 
                 var localTime = _timeProvider.GetUtcNow()
-                    .RoundDown(_subscriptionRequest.Configuration.Increment)
-                    .ConvertFromUtc(_subscriptionRequest.Configuration.ExchangeTimeZone);
+                    .ConvertFromUtc(_subscriptionRequest.Configuration.ExchangeTimeZone)
+                    .RoundDown(_subscriptionRequest.Configuration.Increment);
 
                 // loading the list of futures contracts and converting them into zip entries
                 var symbols = _universeProvider.LookupSymbols(_subscriptionRequest.Security.Symbol, false);
                 var zipEntries = symbols.Select(x => new ZipEntryName { Time = localTime, Symbol = x } as BaseData).ToList();
-                _currentData = new OptionChainUniverseDataCollection
+                _currentData = new BaseDataCollection
                 {
                     Symbol = _subscriptionRequest.Security.Symbol,
                     Underlying = Underlying.Current,
@@ -126,6 +127,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     Time = localTime,
                     EndTime = localTime
                 };
+
+                Log.Trace($"DataQueueOptionChainUniverseDataCollectionEnumerator({_currentData.Symbol}): Emitting data point: {_currentData.EndTime}. " +
+                    $"Count: {_currentData.Data.Count}. Underlying: {_currentData.Underlying}");
 
                 _lastEmitTime = localTime;
 
@@ -139,6 +143,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     Current = _currentData;
                 }
 
+                Current = (BaseDataCollection)Current.Clone(fillForward: true);
                 Current.Underlying = Underlying.Current;
                 Current.Time = Underlying.Current.EndTime;
                 Current.EndTime = Underlying.Current.EndTime;

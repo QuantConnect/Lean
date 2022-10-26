@@ -21,6 +21,7 @@ using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Brokerages
@@ -162,6 +163,7 @@ namespace QuantConnect.Brokerages
 
         private void StartCheckReconnected(TimeSpan delay, BrokerageMessageEvent message)
         {
+            _cancellationTokenSource.DisposeSafely();
             _cancellationTokenSource = new CancellationTokenSource(delay);
 
             Task.Run(() =>

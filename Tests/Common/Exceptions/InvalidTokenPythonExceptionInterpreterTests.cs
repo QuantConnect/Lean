@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Common.Exceptions
                 try
                 {
                     // importing a module with syntax error 'x = 01' will throw
-                    PythonEngine.ModuleFromString(Guid.NewGuid().ToString(), "x = 01");
+                    PyModule.FromString(Guid.NewGuid().ToString(), "x = 01");
                 }
                 catch (PythonException pythonException)
                 {
@@ -44,19 +44,17 @@ namespace QuantConnect.Tests.Common.Exceptions
             }
         }
 
-        [Test]
-        [TestCase(typeof(Exception), ExpectedResult = false)]
-        [TestCase(typeof(KeyNotFoundException), ExpectedResult = false)]
-        [TestCase(typeof(DivideByZeroException), ExpectedResult = false)]
-        [TestCase(typeof(InvalidOperationException), ExpectedResult = false)]
-        [TestCase(typeof(PythonException), ExpectedResult = true)]
-        public bool CanInterpretReturnsTrueForOnlyInvalidTokenPythonExceptionType(Type exceptionType)
+        [TestCase(typeof(Exception), false)]
+        [TestCase(typeof(KeyNotFoundException), false)]
+        [TestCase(typeof(DivideByZeroException), false)]
+        [TestCase(typeof(InvalidOperationException), false)]
+        [TestCase(typeof(PythonException), true)]
+        public void CanInterpretReturnsTrueForOnlyInvalidTokenPythonExceptionType(Type exceptionType, bool expectedResult)
         {
             var exception = CreateExceptionFromType(exceptionType);
-            return new InvalidTokenPythonExceptionInterpreter().CanInterpret(exception);
+            Assert.AreEqual(expectedResult, new InvalidTokenPythonExceptionInterpreter().CanInterpret(exception), $"Unexpected response for: {exception}");
         }
 
-        [Test]
         [TestCase(typeof(Exception), true)]
         [TestCase(typeof(KeyNotFoundException), true)]
         [TestCase(typeof(DivideByZeroException), true)]

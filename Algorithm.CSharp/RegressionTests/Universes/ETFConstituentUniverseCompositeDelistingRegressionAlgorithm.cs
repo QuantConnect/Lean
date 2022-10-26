@@ -134,6 +134,16 @@ namespace QuantConnect.Algorithm.CSharp
         public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public virtual long DataPoints => 825;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public virtual int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
@@ -145,18 +155,18 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "5.400%"},
             {"Expectancy", "0"},
             {"Net Profit", "3.893%"},
-            {"Sharpe Ratio", "1.652"},
-            {"Probabilistic Sharpe Ratio", "57.203%"},
+            {"Sharpe Ratio", "1.309"},
+            {"Probabilistic Sharpe Ratio", "53.929%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.203"},
-            {"Beta", "0.696"},
-            {"Annual Standard Deviation", "0.169"},
-            {"Annual Variance", "0.029"},
-            {"Information Ratio", "1.139"},
-            {"Tracking Error", "0.149"},
-            {"Treynor Ratio", "0.402"},
+            {"Alpha", "0.131"},
+            {"Beta", "0.697"},
+            {"Annual Standard Deviation", "0.139"},
+            {"Annual Variance", "0.019"},
+            {"Information Ratio", "0.889"},
+            {"Tracking Error", "0.122"},
+            {"Treynor Ratio", "0.261"},
             {"Total Fees", "$2.04"},
             {"Estimated Strategy Capacity", "$260000000.00"},
             {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},

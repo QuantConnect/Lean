@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -28,6 +28,8 @@ namespace QuantConnect.Util
     /// <see cref="StreamReader.ReadLine"/> and having to create intermediate substrings, parsing and splitting</remarks>
     public static class StreamReaderExtensions
     {
+        // we use '-1' value as a flag to determine whether we have decimal places or not, so we avoid having another variable required
+        private const int NoDecimalPlaces = -1;
         private const char NoMoreData = unchecked((char)-1);
         private const char DefaultDelimiter = ',';
 
@@ -40,8 +42,7 @@ namespace QuantConnect.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static decimal GetDecimal(this StreamReader stream, char delimiter = DefaultDelimiter)
         {
-            bool pastEndLine;
-            return GetDecimal(stream, out pastEndLine, delimiter);
+            return GetDecimal(stream, out _, delimiter);
         }
 
         /// <summary>
@@ -55,8 +56,7 @@ namespace QuantConnect.Util
         public static decimal GetDecimal(this StreamReader stream, out bool pastEndLine, char delimiter = DefaultDelimiter)
         {
             long value = 0;
-            var decimalPlaces = 0;
-            var hasDecimals = false;
+            var decimalPlaces = NoDecimalPlaces;
             var current = (char)stream.Read();
 
             while (current == ' ')
@@ -75,13 +75,15 @@ namespace QuantConnect.Util
             {
                 if (current == '.')
                 {
-                    hasDecimals = true;
                     decimalPlaces = 0;
                 }
                 else
                 {
                     value = value * 10 + (current - '0');
-                    decimalPlaces++;
+                    if(decimalPlaces != NoDecimalPlaces)
+                    {
+                        decimalPlaces++;
+                    }
                 }
                 current = (char)stream.Read();
                 pastEndLine = current == '\n' || current == '\r' && (stream.Peek() != '\n' || stream.Read() == '\n') || current == NoMoreData;
@@ -89,7 +91,7 @@ namespace QuantConnect.Util
 
             var lo = (int)value;
             var mid = (int)(value >> 32);
-            return new decimal(lo, mid, 0, isNegative, (byte)(hasDecimals ? decimalPlaces : 0));
+            return new decimal(lo, mid, 0, isNegative, (byte)(decimalPlaces != NoDecimalPlaces ? decimalPlaces : 0));
         }
 
         /// <summary>
@@ -108,14 +110,16 @@ namespace QuantConnect.Util
                 current = (char)stream.Read();
             }
 
-            var builder = new StringBuilder(12);
+            var index = 0;
+            // we know the exact format we want to parse so we can allocate the char array and not use an expensive string builder
+            var data = new char[format.Length];
             while (!(current == delimiter || current == '\n' || current == '\r' && (stream.Peek() != '\n' || stream.Read() == '\n') || current == NoMoreData))
             {
-                builder.Append(current);
+                data[index++] = current;
                 current = (char)stream.Read();
             }
 
-            return DateTime.ParseExact(builder.ToString(),
+            return DateTime.ParseExact(data,
                 format,
                 CultureInfo.InvariantCulture);
         }

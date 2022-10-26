@@ -66,9 +66,38 @@ namespace QuantConnect.Tests.Common.Securities
             var krakenSymbolProperties = db.GetSymbolProperties(krakenSymbol.ID.Market, krakenSymbol, krakenSymbol.SecurityType, "CAD");
 
             Assert.AreEqual(bitfinexSymbolProperties.MinimumOrderSize, 0.00006m);
-            Assert.AreEqual(binanceSymbolProperties.MinimumOrderSize, 0.00001m);
-            Assert.AreEqual(gdaxSymbolProperties.MinimumOrderSize, 0.0001m);
+            Assert.AreEqual(binanceSymbolProperties.MinimumOrderSize, 10m); // in quote currency, MIN_NOTIONAL
+            Assert.AreEqual(gdaxSymbolProperties.MinimumOrderSize, 0.000015m);
             Assert.AreEqual(krakenSymbolProperties.MinimumOrderSize, 0.0001m);
+        }
+
+        [TestCase("KE", Market.CBOT, 100)]
+        [TestCase("ZC", Market.CBOT, 100)]
+        [TestCase("ZL", Market.CBOT, 100)]
+        [TestCase("ZO", Market.CBOT, 100)]
+        [TestCase("ZS", Market.CBOT, 100)]
+        [TestCase("ZW", Market.CBOT, 100)]
+
+        [TestCase("CB", Market.CME, 100)]
+        [TestCase("DY", Market.CME, 100)]
+        [TestCase("GF", Market.CME, 100)]
+        [TestCase("GNF", Market.CME, 100)]
+        [TestCase("HE", Market.CME, 100)]
+        [TestCase("LE", Market.CME, 100)]
+
+        [TestCase("CSC", Market.CME, 1)]
+        public void LoadsPriceMagnifier(string ticker, string market, int expectedPriceMagnifier)
+        {
+            var db = SymbolPropertiesDatabase.FromDataFolder();
+            var symbol = Symbol.Create(ticker, SecurityType.Future, market);
+
+            var symbolProperties = db.GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, "USD");
+            Assert.AreEqual(expectedPriceMagnifier, symbolProperties.PriceMagnifier);
+
+            var futureOption = Symbol.CreateOption(symbol, symbol.ID.Market, OptionStyle.American,
+                OptionRight.Call, 1, new DateTime(2021, 10, 14));
+            var symbolPropertiesFop = db.GetSymbolProperties(futureOption.ID.Market, futureOption, futureOption.SecurityType, "USD");
+            Assert.AreEqual(expectedPriceMagnifier, symbolPropertiesFop.PriceMagnifier);
         }
 
         [Test]
@@ -437,6 +466,27 @@ namespace QuantConnect.Tests.Common.Securities
 
             SecurityDatabaseKey key;
             Assert.DoesNotThrow(() => TestingSymbolPropertiesDatabase.TestFromCsvLine(line, out key));
+        }
+
+        [Test]
+        public void HandlesEmptyOrderSizePriceMagnifierCorrectly()
+        {
+            var line = string.Join(",",
+                "usa",
+                "ABC",
+                "equity",
+                "Example Asset",
+                "USD",
+                "100",
+                "0.01",
+                "1",
+                "",
+                "");
+
+            var result = TestingSymbolPropertiesDatabase.TestFromCsvLine(line, out _);
+
+            Assert.IsNull(result.MinimumOrderSize);
+            Assert.AreEqual(1, result.PriceMagnifier);
         }
 
         private class TestingSymbolPropertiesDatabase : SymbolPropertiesDatabase

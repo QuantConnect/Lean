@@ -24,8 +24,8 @@ namespace QuantConnect.Tests.Brokerages
         private readonly decimal _highLimit;
         private readonly decimal _lowLimit;
 
-        public StopMarketOrderTestParameters(Symbol symbol, decimal highLimit, decimal lowLimit, IOrderProperties properties = null)
-            : base(symbol, properties)
+        public StopMarketOrderTestParameters(Symbol symbol, decimal highLimit, decimal lowLimit, IOrderProperties properties = null, OrderSubmissionData orderSubmissionData = null)
+            : base(symbol, properties, orderSubmissionData)
         {
             _highLimit = highLimit;
             _lowLimit = lowLimit;

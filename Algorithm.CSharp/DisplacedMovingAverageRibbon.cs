@@ -64,7 +64,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // define an indicator that takes the output of the sma and pipes it into our delay indicator
                 var delayedSma = delay.Of(sma);
 
-                // register our new 'delayedSma' for automaic updates on a daily resolution
+                // register our new 'delayedSma' for automatic updates on a daily resolution
                 RegisterIndicator(_spy, delayedSma, Resolution.Daily, data => data.Value);
 
                 return delayedSma;
@@ -162,6 +162,16 @@ namespace QuantConnect.Algorithm.CSharp
         public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 12074;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
@@ -173,18 +183,18 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "12.400%"},
             {"Expectancy", "0"},
             {"Net Profit", "153.224%"},
-            {"Sharpe Ratio", "1.233"},
-            {"Probabilistic Sharpe Ratio", "65.906%"},
+            {"Sharpe Ratio", "1.116"},
+            {"Probabilistic Sharpe Ratio", "56.426%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "100%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.146"},
-            {"Beta", "-0.016"},
-            {"Annual Standard Deviation", "0.117"},
-            {"Annual Variance", "0.014"},
-            {"Information Ratio", "-0.052"},
-            {"Tracking Error", "0.204"},
-            {"Treynor Ratio", "-8.847"},
+            {"Alpha", "0.054"},
+            {"Beta", "0.507"},
+            {"Annual Standard Deviation", "0.107"},
+            {"Annual Variance", "0.011"},
+            {"Information Ratio", "-0.082"},
+            {"Tracking Error", "0.105"},
+            {"Treynor Ratio", "0.235"},
             {"Total Fees", "$49.43"},
             {"Estimated Strategy Capacity", "$740000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},

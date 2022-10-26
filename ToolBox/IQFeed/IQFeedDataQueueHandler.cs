@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -91,7 +91,7 @@ namespace QuantConnect.ToolBox.IQFeed
         {
             if (!CanSubscribe(dataConfig.Symbol))
             {
-                return Enumerable.Empty<BaseData>().GetEnumerator();
+                return null;
             }
 
             var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
@@ -646,6 +646,7 @@ namespace QuantConnect.ToolBox.IQFeed
             var ticker = _symbolUniverse.GetBrokerageSymbol(request.Symbol);
             var start = request.StartTimeUtc.ConvertFromUtc(TimeZones.NewYork);
             DateTime? end = request.EndTimeUtc.ConvertFromUtc(TimeZones.NewYork);
+            var exchangeTz = request.ExchangeHours.TimeZone;
             // if we're within a minute of now, don't set the end time
             if (request.EndTimeUtc >= DateTime.UtcNow.AddMinutes(-1))
             {
@@ -692,7 +693,7 @@ namespace QuantConnect.ToolBox.IQFeed
                     foreach (var tradeBar in tradeBars)
                     {
                         // Returns IEnumerable<Slice> object
-                        yield return new Slice(tradeBar.EndTime, new[] { tradeBar });
+                        yield return new Slice(tradeBar.EndTime, new[] { tradeBar }, tradeBar.EndTime.ConvertToUtc(exchangeTz));
                     }
                 }
             }

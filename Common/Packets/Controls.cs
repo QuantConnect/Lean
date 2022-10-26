@@ -26,6 +26,12 @@ namespace QuantConnect.Packets
     public class Controls
     {
         /// <summary>
+        /// The maximum runtime in minutes
+        /// </summary>
+        [JsonProperty(PropertyName = "iMaximumRuntimeMinutes")]
+        public int MaximumRuntimeMinutes;
+
+        /// <summary>
         /// The maximum number of minute symbols
         /// </summary>
         [JsonProperty(PropertyName = "iMinuteLimit")]
@@ -107,13 +113,13 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Limits the total size of storage used by <see cref="IObjectStore"/>
         /// </summary>
-        [JsonProperty(PropertyName = "storageLimitMB")]
-        public int StorageLimitMB;
+        [JsonProperty(PropertyName = "storageLimit")]
+        public long StorageLimit;
 
         /// <summary>
         /// Limits the number of files to be held under the <see cref="IObjectStore"/>
         /// </summary>
-        [JsonProperty(PropertyName = "storageFileCountMB")]
+        [JsonProperty(PropertyName = "storageFileCount")]
         public int StorageFileCount;
 
         /// <summary>
@@ -148,37 +154,17 @@ namespace QuantConnect.Packets
             BacktestingMaxOrders = int.MaxValue;
             DailyLogLimit = 3000000;
             RemainingLogAllowance = 10000;
+            MaximumRuntimeMinutes = 60 * 24 * 100; // 100 days default
             BacktestingMaxInsights = 10000;
             MaximumDataPointsPerChartSeries = 4000;
             SecondTimeOut = 300;
-            StorageLimitMB = 5;
-            StorageFileCount = 100;
+            StorageLimit = 10737418240;
+            StorageFileCount = 10000;
             PersistenceIntervalSeconds = 5;
             StoragePermissions = FileAccess.ReadWrite;
 
             // initialize to default leaky bucket values in case they're not specified
             TrainingLimits = new LeakyBucketControlParameters();
-        }
-
-        /// <summary>
-        /// Gets the maximum number of subscriptions for the specified resolution
-        /// </summary>
-        public int GetLimit(Resolution resolution)
-        {
-            switch (resolution)
-            {
-                case Resolution.Tick:
-                    return TickLimit;
-
-                case Resolution.Second:
-                    return SecondLimit;
-
-                case Resolution.Minute:
-                case Resolution.Hour:
-                case Resolution.Daily:
-                default:
-                    return MinuteLimit;
-            }
         }
     }
 }

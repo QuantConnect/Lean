@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,19 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-import pandas
-AddReference("System")
-AddReference("QuantConnect.Research")
-AddReference("QuantConnect.Common")
+from AlgorithmImports import *
 
-from System import *
-from QuantConnect import *
-from QuantConnect.Data import *
-from QuantConnect.Research import *
-from datetime import datetime, timedelta
-from custom_data import QuandlFuture, Nifty
-import pandas as pd
+from custom_data import *
 
 class SecurityHistoryTest():
     def __init__(self, start_date, security_type, symbol):
@@ -85,9 +75,9 @@ class CustomDataHistoryTest(SecurityHistoryTest):
         if security_type == 'Nifty':
             type = Nifty
             self.column = 'close'
-        elif security_type == 'QuandlFuture':
-            type = QuandlFuture
-            self.column = 'settle'
+        elif security_type == 'CustomPythonData':
+            type = CustomPythonData
+            self.column = 'close'
         else:
             raise
 

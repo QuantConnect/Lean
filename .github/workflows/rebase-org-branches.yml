@@ -1,0 +1,21 @@
+name: Rebase Organization Branches
+
+on:
+  push:
+    branches:
+      - 'master'
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Rebase Organization Branches
+        run: |
+          chmod +x rebase_organization_branches.sh
+          ./rebase_organization_branches.sh
+        env:
+          QC_GIT_TOKEN: ${{ secrets.QC_GIT_TOKEN }}

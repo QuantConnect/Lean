@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Common.Brokerages
 
             order.Object.Quantity = orderQuantity;
 
-            Assert.AreEqual(isValidOrderQuantity, _krakenBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(), order.Object, out message));
+            Assert.AreEqual(isValidOrderQuantity, _krakenBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(market: Market.Kraken), order.Object, out message));
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -37,8 +37,17 @@ namespace QuantConnect.Exceptions
         /// <returns>True if the exception can be interpreted, false otherwise</returns>
         public override bool CanInterpret(Exception exception)
         {
-            return base.CanInterpret(exception) &&
-                exception.Message.Contains("KeyError");
+            var pythonException = exception as PythonException;
+            if (pythonException == null)
+            {
+                return false;
+            }
+
+            using (Py.GIL())
+            {
+                return base.CanInterpret(exception) &&
+                    pythonException.Type.Name.Contains("KeyError", StringComparison.InvariantCultureIgnoreCase);
+            }
         }
         /// <summary>
         /// Interprets the specified exception into a new exception

@@ -105,6 +105,44 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(CurrencyPairUtil.Match.NoMatch, ethusd.ComparePair("BTC", "USD"));
         }
 
+        [Test]
+        public void ComparePairWorksCorrectlyStableCoinsExactMatch()
+        {
+            var btcusdt = Symbol.Create("BTCUSDT", SecurityType.Crypto, Market.Binance);
+            var btcxchf = Symbol.Create("BTCXCHF", SecurityType.Crypto, Market.Bitfinex);
+
+            Assert.AreEqual(CurrencyPairUtil.Match.ExactMatch, btcusdt.ComparePair("BTC", "USD"));
+            Assert.AreEqual(CurrencyPairUtil.Match.ExactMatch, btcxchf.ComparePair("BTC", "CHF"));
+        }
+
+        [Test]
+        public void ComparePairWorksCorrectlyStableCoinsInverseMatch()
+        {
+            var btcusdt = Symbol.Create("BTCUSDT", SecurityType.Crypto, Market.Binance);
+            var btcxchf = Symbol.Create("BTCXCHF", SecurityType.Crypto, Market.Bitfinex);
+
+            Assert.AreEqual(CurrencyPairUtil.Match.InverseMatch, btcusdt.ComparePair("USD", "BTC"));
+            Assert.AreEqual(CurrencyPairUtil.Match.InverseMatch, btcxchf.ComparePair("CHF", "BTC"));
+        }
+
+        [Test]
+        public void ComparePairWorksCorrectlyStableCoinsNoMatch()
+        {
+            var btceur = Symbol.Create("BTCEUR", SecurityType.Crypto, Market.Binance);
+            var btcidr = Symbol.Create("BTCIDR", SecurityType.Crypto, Market.Binance);
+
+            Assert.AreEqual(CurrencyPairUtil.Match.NoMatch, btceur.ComparePair("BTC", "USD"));
+            Assert.AreEqual(CurrencyPairUtil.Match.NoMatch, btcidr.ComparePair("BTC", "EUR"));
+        }
+
+        [Test]
+        public void ComparePairWorksCorrectlyWithDoubleStableCoinMatch()
+        {
+            var idrusd = Symbol.Create("IDRUSD", SecurityType.Crypto, Market.Binance);
+
+            Assert.AreEqual(CurrencyPairUtil.Match.ExactMatch, idrusd.ComparePair("IDRT", "USDT"));
+        }
+
         /// <summary>
         /// DecomposeCurrencyPair test cases with successful results:
         /// symbol, expectedBaseCurrency, expectedQuoteCurrency

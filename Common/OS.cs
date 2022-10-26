@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,12 +14,12 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Threading;
-using System.Threading.Tasks;
+using System.Reflection;
+using QuantConnect.Util;
+using System.Diagnostics;
+using System.Collections.Generic;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
@@ -33,7 +33,7 @@ namespace QuantConnect
         /// <summary>
         /// CPU performance counter measures percentage of CPU used in a background thread.
         /// </summary>
-        public static readonly CpuPerformance CpuPerformanceCounter = new CpuPerformance();
+        private static CpuPerformance CpuPerformanceCounter;
 
         /// <summary>
         /// Global Flag :: Operating System
@@ -124,7 +124,17 @@ namespace QuantConnect
         /// <summary>
         /// Total CPU usage as a percentage
         /// </summary>
-        public static decimal CpuUsage => (decimal)CpuPerformanceCounter.CpuPercentage;
+        public static decimal CpuUsage
+        {
+            get
+            {
+                if(CpuPerformanceCounter != null)
+                {
+                    return (decimal)CpuPerformanceCounter.CpuPercentage;
+                }
+                return 0m;
+            }
+        }
 
         /// <summary>
         /// Gets the statistics of the machine, including CPU% and RAM
@@ -142,12 +152,28 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Initializes the OS internal resources
+        /// </summary>
+        public static void Initialize()
+        {
+            CpuPerformanceCounter = new CpuPerformance();
+        }
+
+        /// <summary>
+        /// Disposes of the OS internal resources
+        /// </summary>
+        public static void Dispose()
+        {
+            CpuPerformanceCounter.DisposeSafely();
+        }
+
+        /// <summary>
         /// Calculates the CPU usage in a background thread
         /// </summary>
-        public class CpuPerformance : IDisposable
+        private class CpuPerformance : IDisposable
         {
             private readonly CancellationTokenSource _cancellationToken;
-            private readonly Task _cpuPerformanceTask;
+            private readonly Thread _cpuThread;
 
             /// <summary>
             /// CPU usage as a percentage (0-100)
@@ -161,7 +187,8 @@ namespace QuantConnect
             public CpuPerformance()
             {
                 _cancellationToken = new CancellationTokenSource();
-                _cpuPerformanceTask = Task.Factory.StartNew(CalculateCpu, _cancellationToken.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                _cpuThread = new Thread(CalculateCpu) { IsBackground = true, Name = "CpuPerformance" };
+                _cpuThread.Start();
             }
 
             /// <summary>
@@ -175,7 +202,7 @@ namespace QuantConnect
                     var startTime = DateTime.UtcNow;
                     var startCpuUsage = process.TotalProcessorTime;
 
-                    if (_cancellationToken.Token.WaitHandle.WaitOne(1000))
+                    if (_cancellationToken.Token.WaitHandle.WaitOne(startTime.GetSecondUnevenWait(5000)))
                     {
                         return;
                     }
@@ -196,9 +223,8 @@ namespace QuantConnect
             /// </summary>
             public void Dispose()
             {
-                _cancellationToken.Cancel();
-                _cpuPerformanceTask.Wait();
-                _cpuPerformanceTask.Dispose();
+                _cpuThread.StopSafely(TimeSpan.FromSeconds(5), _cancellationToken);
+                _cancellationToken.DisposeSafely();
             }
         }
     }

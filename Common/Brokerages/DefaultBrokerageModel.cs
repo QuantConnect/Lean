@@ -49,7 +49,7 @@ namespace QuantConnect.Brokerages
             {SecurityType.Future, Market.CME},
             {SecurityType.FutureOption, Market.CME},
             {SecurityType.Forex, Market.Oanda},
-            {SecurityType.Cfd, Market.FXCM},
+            {SecurityType.Cfd, Market.Oanda},
             {SecurityType.Crypto, Market.GDAX},
             {SecurityType.Index, Market.USA},
             {SecurityType.IndexOption, Market.USA}
@@ -115,6 +115,13 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
         public virtual bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
+            if ((security.Type == SecurityType.Future || security.Type == SecurityType.FutureOption) && order.Type == OrderType.MarketOnOpen)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NorSupported",
+                    "MarketOnOpen orders are not supported for futures and future options.");
+                return false;
+            }
+
             message = null;
             return true;
         }
@@ -231,13 +238,13 @@ namespace QuantConnect.Brokerages
                 case SecurityType.Option:
                     break;
                 case SecurityType.FutureOption:
-                    break;
+                    return new FutureOptionFillModel();
                 case SecurityType.Commodity:
                     break;
                 case SecurityType.Forex:
                     break;
                 case SecurityType.Future:
-                    break;
+                    return new FutureFillModel();
                 case SecurityType.Cfd:
                     break;
                 case SecurityType.Crypto:
@@ -351,33 +358,21 @@ namespace QuantConnect.Brokerages
         /// <returns>The buying power model for this brokerage/security</returns>
         public virtual IBuyingPowerModel GetBuyingPowerModel(Security security)
         {
-            var leverage = GetLeverage(security);
-            IBuyingPowerModel model;
+            IBuyingPowerModel getCurrencyBuyingPowerModel() =>
+                AccountType == AccountType.Cash
+                    ? new CashBuyingPowerModel()
+                    : new SecurityMarginModel(GetLeverage(security), RequiredFreeBuyingPowerPercent);
 
-            switch (security.Type)
+            return security?.Type switch
             {
-                case SecurityType.Crypto:
-                    model = new CashBuyingPowerModel();
-                    break;
-                case SecurityType.Forex:
-                case SecurityType.Cfd:
-                    model = new SecurityMarginModel(leverage, RequiredFreeBuyingPowerPercent);
-                    break;
-                case SecurityType.Option:
-                    model = new OptionMarginModel(RequiredFreeBuyingPowerPercent);
-                    break;
-                case SecurityType.FutureOption:
-                    model = new FuturesOptionsMarginModel(RequiredFreeBuyingPowerPercent, (Option)security);
-                    break;
-                case SecurityType.Future:
-                    model = new FutureMarginModel(RequiredFreeBuyingPowerPercent, security);
-                    break;
-                case SecurityType.Index:
-                default:
-                    model = new SecurityMarginModel(leverage, RequiredFreeBuyingPowerPercent);
-                    break;
-            }
-            return model;
+                SecurityType.Crypto => getCurrencyBuyingPowerModel(),
+                SecurityType.Forex => getCurrencyBuyingPowerModel(),
+                SecurityType.Future => new FutureMarginModel(RequiredFreeBuyingPowerPercent, security),
+                SecurityType.FutureOption => new FuturesOptionsMarginModel(RequiredFreeBuyingPowerPercent, (Option)security),
+                SecurityType.IndexOption => new OptionMarginModel(RequiredFreeBuyingPowerPercent),
+                SecurityType.Option => new OptionMarginModel(RequiredFreeBuyingPowerPercent),
+                _ => new SecurityMarginModel(GetLeverage(security), RequiredFreeBuyingPowerPercent)
+            };
         }
 
         /// <summary>

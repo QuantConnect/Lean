@@ -69,7 +69,7 @@ Tick files are located in the market / tick / symbol folder.
 
 The ZIP files have the filename format: `YYYYMMDD_quote.zip`. The CSV file contained within has the filename format: `YYYYMMDD_symbol_resolution_quote.csv`
 
-Tick quotes format and examlpe data is as follows:
+Tick quotes format and example data is as follows:
 
 | Time | Bid Price | Ask Price |
 | ---- | --------- | --------- |

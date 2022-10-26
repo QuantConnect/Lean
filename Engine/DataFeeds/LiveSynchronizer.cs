@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -31,6 +31,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class LiveSynchronizer : Synchronizer
     {
         private ITimeProvider _timeProvider;
+        private LiveTimeProvider _frontierTimeProvider;
         private RealTimeScheduleEventService _realTimeScheduleEventService;
         private readonly int _batchingDelay = Config.GetInt("consumer-batching-timeout-ms");
         private readonly ManualResetEventSlim _newLiveDataEmitted = new ManualResetEventSlim(false);
@@ -49,8 +50,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             base.Initialize(algorithm, dataFeedSubscriptionManager);
 
+            // the time provider, is the real time provider
             _timeProvider = GetTimeProvider();
-            SubscriptionSynchronizer.SetTimeProvider(TimeProvider);
+            _frontierTimeProvider = new LiveTimeProvider(realTime: TimeProvider);
+            // the synchronizer will use our '_frontierTimeProvider' which initially during warmup will be using
+            // the base time provider which is the subscription based time provider (like backtesting)
+            // once wawrmup finishes it will start using the realtime provider
+            SubscriptionSynchronizer.SetTimeProvider(_frontierTimeProvider);
 
             // attach event handlers to subscriptions
             dataFeedSubscriptionManager.SubscriptionAdded += (sender, subscription) =>
@@ -89,7 +95,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var now = DateTime.UtcNow;
                 if (!previousWasTimePulse)
                 {
-                    if (!_newLiveDataEmitted.IsSet)
+                    if (!_newLiveDataEmitted.IsSet
+                        // we warmup as fast as we can even if no new data point is available
+                        && !Algorithm.IsWarmingUp)
                     {
                         // if we just crossed into the next second let's loop again, we will flush any consolidator bar
                         // else we will wait to be notified by the subscriptions or our scheduled event service every second
@@ -112,6 +120,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // the enumerator ended
                         break;
                     }
+
                     timeSlice = enumerator.Current;
                 }
                 catch (Exception err)
@@ -135,9 +144,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     previousWasTimePulse = timeSlice.IsTimePulse;
                     yield return timeSlice;
 
-                    // force emitting every second since the data feed is
-                    // the heartbeat of the application
-                    nextEmit = frontierUtc.RoundDown(Time.OneSecond).Add(Time.OneSecond);
+                    // ignore if time pulse because we will emit a slice with the same time just after this one
+                    if (!timeSlice.IsTimePulse)
+                    {
+                        // force emitting every second since the data feed is
+                        // the heartbeat of the application
+                        nextEmit = frontierUtc.RoundDown(Time.OneSecond).Add(Time.OneSecond);
+                    }
                 }
             }
 
@@ -180,6 +193,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         protected override ITimeProvider GetTimeProvider()
         {
             return RealTimeProvider.Instance;
+        }
+
+        /// <summary>
+        /// Performs additional initialization steps after algorithm initialization
+        /// </summary>
+        protected override void PostInitialize()
+        {
+            base.PostInitialize();
+            _frontierTimeProvider.Initialize(base.GetTimeProvider());
         }
 
         /// <summary>

@@ -107,6 +107,16 @@ namespace QuantConnect.Algorithm.CSharp
         public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 10491;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
@@ -114,30 +124,30 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "157.498%"},
+            {"Compounding Annual Return", "155.211%"},
             {"Drawdown", "84.800%"},
             {"Expectancy", "0"},
-            {"Net Profit", "5319.081%"},
-            {"Sharpe Ratio", "2.086"},
-            {"Probabilistic Sharpe Ratio", "69.456%"},
+            {"Net Profit", "5123.242%"},
+            {"Sharpe Ratio", "2.067"},
+            {"Probabilistic Sharpe Ratio", "68.833%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "1.736"},
-            {"Beta", "0.142"},
-            {"Annual Standard Deviation", "0.84"},
-            {"Annual Variance", "0.706"},
-            {"Information Ratio", "1.925"},
-            {"Tracking Error", "0.846"},
-            {"Treynor Ratio", "12.334"},
+            {"Alpha", "1.732"},
+            {"Beta", "0.043"},
+            {"Annual Standard Deviation", "0.841"},
+            {"Annual Variance", "0.707"},
+            {"Information Ratio", "1.902"},
+            {"Tracking Error", "0.848"},
+            {"Treynor Ratio", "40.467"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "BTC.Bitcoin 2S"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "2.269"},
-            {"Return Over Maximum Drawdown", "1.858"},
+            {"Sortino Ratio", "2.236"},
+            {"Return Over Maximum Drawdown", "1.83"},
             {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -179,6 +189,16 @@ namespace QuantConnect.Algorithm.CSharp
             [JsonProperty("volume")]
             public decimal VolumeBTC = 0;
             public decimal VolumeUSD = 0;
+
+            /// <summary>
+            /// The end time of this data. Some data covers spans (trade bars)
+            /// and as such we want to know the entire time span covered
+            /// </summary>
+            /// <remarks>
+            /// This property is overriden to allow different values for Time and EndTime
+            /// if they are set in the Reader. In the base implementation EndTime equals Time
+            /// </remarks>
+            public override DateTime EndTime { get; set; }
 
             /// <summary>
             /// 1. DEFAULT CONSTRUCTOR: Custom data types need a default constructor.

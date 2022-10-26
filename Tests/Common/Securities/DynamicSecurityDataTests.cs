@@ -153,7 +153,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             using (Py.GIL())
             {
-                dynamic test = PythonEngine.ModuleFromString("testModule",
+                dynamic test = PyModule.FromString("testModule",
                     @"
 from AlgorithmImports import *
 
@@ -179,7 +179,7 @@ def Test(dynamicData):
 
             using (Py.GIL())
             {
-                dynamic test = PythonEngine.ModuleFromString("testModule",
+                dynamic test = PyModule.FromString("testModule",
                     @"
 from AlgorithmImports import *
 
@@ -203,7 +203,7 @@ def Test(dynamicData):
 
             using (Py.GIL())
             {
-                dynamic test = PythonEngine.ModuleFromString("testModule",
+                dynamic test = PyModule.FromString("testModule",
                     @"
 from AlgorithmImports import *
 
@@ -227,7 +227,7 @@ def Test(dynamicData):
 
             using (Py.GIL())
             {
-                dynamic test = PythonEngine.ModuleFromString("testModule",
+                dynamic test = PyModule.FromString("testModule",
                     @"
 from AlgorithmImports import *
 
@@ -254,7 +254,7 @@ def Test(dynamicData):
 
             using (Py.GIL())
             {
-                dynamic test = PythonEngine.ModuleFromString("testModule",
+                dynamic test = PyModule.FromString("testModule",
                     @"
 from AlgorithmImports import *
 
@@ -279,7 +279,7 @@ def Test(dynamicData):
 
             using (Py.GIL())
             {
-                dynamic test = PythonEngine.ModuleFromString("testModule",
+                dynamic test = PyModule.FromString("testModule",
                     @"
 from AlgorithmImports import *
 
@@ -304,7 +304,7 @@ def Test(dynamicData):
 
             using (Py.GIL())
             {
-                dynamic test = PythonEngine.ModuleFromString("testModule",
+                dynamic test = PyModule.FromString("testModule",
                     @"
 from AlgorithmImports import *
 
@@ -329,7 +329,7 @@ def Test(dynamicData):
 
             using (Py.GIL())
             {
-                dynamic test = PythonEngine.ModuleFromString("testModule",
+                dynamic test = PyModule.FromString("testModule",
                     @"
 from AlgorithmImports import *
 
@@ -350,14 +350,14 @@ def Test(dynamicData):
 
             using (Py.GIL())
             {
-                dynamic test = PythonEngine.ModuleFromString("testModule",
+                dynamic test = PyModule.FromString("testModule",
                     @"
 from AlgorithmImports import *
 
 def Test(dynamicData):
     data = dynamicData.Get(TradeBar)").GetAttr("Test");
 
-                Assert.Throws<PythonException>(() => test(securityData));
+                Assert.Throws<KeyNotFoundException>(() => test(securityData));
             }
         }
 
@@ -370,7 +370,7 @@ def Test(dynamicData):
 
             using (Py.GIL())
             {
-                dynamic test = PythonEngine.ModuleFromString("testModule",
+                dynamic test = PyModule.FromString("testModule",
                     @"
 from AlgorithmImports import *
 

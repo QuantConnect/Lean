@@ -14,13 +14,14 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using QuantConnect.Data;
-using QuantConnect.Logging;
 using QuantConnect.Util;
+using QuantConnect.Logging;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace QuantConnect.Brokerages
 {
@@ -83,8 +84,7 @@ namespace QuantConnect.Brokerages
                 // symbol weighting enabled, create all websocket instances
                 for (var i = 0; i < _maximumWebSocketConnections; i++)
                 {
-                    var webSocket = _webSocketFactory();
-                    webSocket.Open += OnOpen;
+                    var webSocket = CreateWebSocket();
 
                     _webSocketEntries.Add(new BrokerageMultiWebSocketEntry(symbolWeights, webSocket));
                 }
@@ -174,10 +174,27 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
-        public void Dispose()
+        public override void Dispose()
         {
             _reconnectTimer?.Stop();
             _reconnectTimer.DisposeSafely();
+            lock (_locker)
+            {
+                foreach (var entry in _webSocketEntries)
+                {
+                    try
+                    {
+                        entry.WebSocket.Open -= OnOpen;
+                        entry.WebSocket.Message -= EventHandler;
+                        entry.WebSocket.Close();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex);
+                    }
+                }
+                _webSocketEntries.Clear();
+            }
         }
 
         private BrokerageMultiWebSocketEntry GetWebSocketEntryBySymbol(Symbol symbol)
@@ -210,8 +227,7 @@ namespace QuantConnect.Brokerages
                     }
 
                     // symbol limit reached on all, create new websocket instance
-                    var webSocket = _webSocketFactory();
-                    webSocket.Open += OnOpen;
+                    var webSocket = CreateWebSocket();
 
                     _webSocketEntries.Add(new BrokerageMultiWebSocketEntry(webSocket));
                 }
@@ -239,11 +255,28 @@ namespace QuantConnect.Brokerages
             return entry.WebSocket;
         }
 
+        /// <summary>
+        /// When we create a websocket we will subscribe to it's events once and initialize it
+        /// </summary>
+        /// <remarks>Note that the websocket is no connected yet <see cref="Connect(IWebSocket)"/></remarks>
+        private IWebSocket CreateWebSocket()
+        {
+            var webSocket = _webSocketFactory();
+            webSocket.Open += OnOpen;
+            webSocket.Message += EventHandler;
+            webSocket.Initialize(_webSocketUrl);
+
+            return webSocket;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void EventHandler(object _, WebSocketMessage message)
+        {
+            _messageHandler(message);
+        }
+
         private void Connect(IWebSocket webSocket)
         {
-            webSocket.Initialize(_webSocketUrl);
-            webSocket.Message += (s, e) => _messageHandler(e);
-
             var connectedEvent = new ManualResetEvent(false);
             EventHandler onOpenAction = (_, _) =>
             {

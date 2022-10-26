@@ -245,38 +245,61 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(12345, result.OrderEvent.FillPrice);
         }
 
-        [Test]
-        public void OldBaseFillModel_MarketOnOpenFill()
+        [TestCase(true)]
+        [TestCase(false)]
+        public void OldBaseFillModel_MarketOnOpenFill(bool isMarketAlwaysOpen)
         {
             var model = new TestFillModelInheritBaseClass();
-            _security.SetMarketPrice(new Tick(orderDateTime, _security.Symbol, 88, 88) {TickType = TickType.Trade});
+            var security = SecurityTests.GetSecurity(isMarketAlwaysOpen);
+            var reference = new DateTime(2022, 4, 5, 10, 0, 0);
+            var referenceUtc = reference.ConvertToUtc(TimeZones.NewYork);
+            var timeKeeper = new TimeKeeper(referenceUtc);
+            security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            security.SetMarketPrice(new Tick(orderDateTime, security.Symbol, 88, 88) { TickType = TickType.Trade });
 
-            var result = model.Fill(
-                new FillModelParameters(_security,
-                    new MarketOnOpenOrder(_security.Symbol, 1, orderDateTime),
-                    new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour));
+            var args = new FillModelParameters(security, new MarketOnOpenOrder(security.Symbol, 1, orderDateTime),
+                new MockSubscriptionDataConfigProvider(_config), Time.OneHour);
+            if (isMarketAlwaysOpen)
+            {
+                Assert.Throws<InvalidOperationException>(() => model.Fill(args));
+            }
+            else
+            {
+                var result = model.Fill(args);
 
-            Assert.True(model.MarketOnOpenFillWasCalled);
-            Assert.IsNotNull(result);
-            Assert.True(model.GetPricesWasCalled);
-            Assert.AreEqual(12345, result.OrderEvent.FillPrice);
+                Assert.True(model.MarketOnOpenFillWasCalled);
+                Assert.IsNotNull(result);
+                Assert.True(model.GetPricesWasCalled);
+                Assert.AreEqual(12345, result.OrderEvent.FillPrice);
+            }
         }
 
-        [Test]
-        public void OldBaseFillModel_MarketOnCloseFill()
+        [TestCase(true)]
+        [TestCase(false)]
+        public void OldBaseFillModel_MarketOnCloseFill(bool isMarketAlwaysOpen)
         {
             var model = new TestFillModelInheritBaseClass();
-            var result = model.Fill(
-                new FillModelParameters(_security,
-                    new MarketOnCloseOrder(_security.Symbol, 1, orderDateTime),
-                    new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour));
+            var security = SecurityTests.GetSecurity(isMarketAlwaysOpen);
+            var reference = new DateTime(2022, 4, 5, 10, 0, 0);
+            var referenceUtc = reference.ConvertToUtc(TimeZones.NewYork);
+            var timeKeeper = new TimeKeeper(referenceUtc);
+            security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
 
-            Assert.True(model.MarketOnCloseFillWasCalled);
-            Assert.IsNotNull(result);
-            Assert.True(model.GetPricesWasCalled);
-            Assert.AreEqual(12345, result.OrderEvent.FillPrice);
+            var args = new FillModelParameters(security, new MarketOnCloseOrder(security.Symbol, 1, orderDateTime),
+                new MockSubscriptionDataConfigProvider(_config), Time.OneHour);
+            if (isMarketAlwaysOpen)
+            {
+                Assert.Throws<InvalidOperationException>(() => model.Fill(args));
+            }
+            else
+            {
+                var result = model.Fill(args);
+
+                Assert.True(model.MarketOnCloseFillWasCalled);
+                Assert.IsNotNull(result);
+                Assert.True(model.GetPricesWasCalled);
+                Assert.AreEqual(12345, result.OrderEvent.FillPrice);
+            }
         }
 
         #endregion
@@ -288,7 +311,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
                     "from AlgorithmImports import *\n" +
                     "class CustomFillModel(ImmediateFillModel):\n" +
                     "   def __init__(self):\n" +
@@ -320,7 +343,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
                     "from AlgorithmImports import *\n" +
                     "class CustomFillModel(FillModel):\n" +
                     "   def __init__(self):\n" +
@@ -352,7 +375,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
                     "from AlgorithmImports import *\n" +
                     "class CustomFillModel(FillModel):\n" +
                     "   def __init__(self):\n" +
@@ -384,7 +407,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
                     "from AlgorithmImports import *\n" +
                     "class CustomFillModel(FillModel):\n" +
                     "   def __init__(self):\n" +
@@ -423,7 +446,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
                     "from AlgorithmImports import *\n" +
                     "class CustomFillModel(FillModel):\n" +
                     "   def __init__(self):\n" +
@@ -462,7 +485,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
                     "from AlgorithmImports import *\n" +
                     "class CustomFillModel(ImmediateFillModel):\n" +
                     "   def __init__(self):\n" +

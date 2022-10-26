@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,9 +15,9 @@
 */
 
 using System;
-using System.Collections.Generic;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using System.Collections.Generic;
 
 namespace QuantConnect.Packets
 {
@@ -53,7 +53,8 @@ namespace QuantConnect.Packets
             IDictionary<string, string> runtimeStatistics,
             List<OrderEvent> orderEvents,
             IDictionary<string, string> serverStatistics = null,
-            AlphaRuntimeStatistics alphaRuntimeStatistics = null)
+            AlphaRuntimeStatistics alphaRuntimeStatistics = null,
+            AlgorithmConfiguration algorithmConfiguration = null)
         {
             Charts = charts;
             Orders = orders;
@@ -65,6 +66,7 @@ namespace QuantConnect.Packets
             OrderEvents = orderEvents;
             ServerStatistics = serverStatistics ?? OS.GetServerStatistics();
             AlphaRuntimeStatistics = alphaRuntimeStatistics;
+            AlgorithmConfiguration = algorithmConfiguration;
         }
     }
 }

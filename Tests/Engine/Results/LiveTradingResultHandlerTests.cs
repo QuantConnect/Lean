@@ -17,33 +17,113 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Lean.Engine.Results;
-using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
+using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.TransactionHandlers;
+using QuantConnect.Tests.Common.Data.UniverseSelection;
 
 namespace QuantConnect.Tests.Engine.Results
 {
     [TestFixture]
     public class LiveTradingResultHandlerTests
     {
+        [Test]
+        public void UninitializedAlgorithm()
+        {
+            using var messagging = new QuantConnect.Messaging.Messaging();
+            var result = new LiveTradingResultHandler();
+            result.Initialize(new LiveNodePacket(), messagging, null, new BacktestingTransactionHandler());
+
+            var algorithm = new AlgorithmStub();
+            algorithm.AddEquity("SPY");
+            result.SetAlgorithm(algorithm, 10);
+
+            Assert.DoesNotThrow(() => result.Exit());
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void GetHoldingsPositions(bool invested)
+        {
+            var algorithm = new AlgorithmStub();
+            algorithm.AddFuture(Futures.Indices.SP500EMini);
+            var equity = algorithm.AddEquity("SPY");
+            equity.Holdings.SetHoldings(1, 10);
+            var result = LiveTradingResultHandler.GetHoldings(algorithm.Securities.Values, algorithm.SubscriptionManager.SubscriptionDataConfigService, invested);
+
+            if (invested)
+            {
+                Assert.AreEqual(1, result.Count);
+            }
+            else
+            {
+                Assert.AreEqual(2, result.Count);
+                Assert.IsTrue(result.TryGetValue("/ES", out var holding));
+                Assert.AreEqual(0, holding.Quantity);
+            }
+
+            Assert.IsTrue(result.TryGetValue("SPY", out var holding2));
+            Assert.AreEqual(10, holding2.Quantity);
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void GetHoldingsNoPosition(bool invested)
+        {
+            var algorithm = new AlgorithmStub();
+            algorithm.AddFuture(Futures.Indices.SP500EMini);
+            algorithm.AddEquity("SPY");
+            var result = LiveTradingResultHandler.GetHoldings(algorithm.Securities.Values, algorithm.SubscriptionManager.SubscriptionDataConfigService, invested);
+
+            if (invested)
+            {
+                Assert.AreEqual(0, result.Count);
+            }
+            else
+            {
+                Assert.AreEqual(2, result.Count);
+                Assert.IsTrue(result.TryGetValue("/ES", out var holding));
+                Assert.AreEqual(0, holding.Quantity);
+                Assert.IsTrue(result.TryGetValue("SPY", out var holding2));
+                Assert.AreEqual(0, holding2.Quantity);
+            }
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void GetHoldingsSkipCanonicalOption(bool invested)
+        {
+            var algorithm = new AlgorithmStub();
+            algorithm.AddEquity("SPY");
+            algorithm.AddOption("SPY");
+            var result = LiveTradingResultHandler.GetHoldings(algorithm.Securities.Values, algorithm.SubscriptionManager.SubscriptionDataConfigService, invested);
+
+            if (invested)
+            {
+                Assert.AreEqual(0, result.Count);
+            }
+            else
+            {
+                Assert.AreEqual(1, result.Count);
+                Assert.IsTrue(result.TryGetValue("SPY", out var holding));
+                Assert.AreEqual(0, holding.Quantity);
+            }
+        }
+
         [TestCase(true)]
         [TestCase(false)]
         public void DailySampleValueBasedOnMarketHour(bool extendedMarketHoursEnabled)
         {
+            using var api = new Api.Api();
+            using var messagging = new QuantConnect.Messaging.Messaging();
             var referenceDate = new DateTime(2020, 11, 25);
-            var resultHandler = new TestLiveTradingResultHandler
-            {
-                // market is open
-                InitialSampleTime = referenceDate.AddHours(10)
-            };
-            resultHandler.Initialize(new LiveNodePacket(),
-                new QuantConnect.Messaging.Messaging(),
-                new Api.Api(), 
-                new BacktestingTransactionHandler());
+            var resultHandler = new LiveTradingResultHandler();
+            resultHandler.Initialize(new LiveNodePacket(), messagging, api, new BacktestingTransactionHandler());
 
             var algo = new AlgorithmStub(createDataManager:false);
             algo.SetFinishedWarmingUp();
@@ -52,41 +132,31 @@ namespace QuantConnect.Tests.Engine.Results
             var aapl = algo.AddEquity("AAPL", extendedMarketHours: extendedMarketHoursEnabled);
             algo.PostInitialize();
             resultHandler.SetAlgorithm(algo, 100000);
-            resultHandler.OnSecuritiesChanged(SecurityChanges.Added(aapl));
+            resultHandler.OnSecuritiesChanged(SecurityChangesTests.AddedNonInternal(aapl));
 
+            // Add values during market hours, should always update
             algo.Portfolio.CashBook["USD"].AddAmount(1000);
             algo.Portfolio.InvalidateTotalPortfolioValue();
+
             resultHandler.Sample(referenceDate.AddHours(15));
+            Assert.IsTrue(resultHandler.Charts.ContainsKey("Strategy Equity"));
+            Assert.AreEqual(1, resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Count);
 
-            Assert.IsFalse(resultHandler.Charts.ContainsKey("Strategy Equity"), "Should not sample on the same start date");
+            var currentEquityValue = resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Last().y;
+            Assert.AreEqual(101000, currentEquityValue);
 
-            // will be ignored based on 'extendedMarketHoursEnabled'
+            // Add value to portfolio, see if portfolio updates with new sample
+            // will be changed to 'extendedMarketHoursEnabled' = true
             algo.Portfolio.CashBook["USD"].AddAmount(10000);
             algo.Portfolio.InvalidateTotalPortfolioValue();
+
             resultHandler.Sample(referenceDate.AddHours(22));
+            Assert.AreEqual(2, resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Count);
 
-            Assert.IsFalse(resultHandler.Charts.ContainsKey("Strategy Equity"), "Should not sample on the same start date");
-
-            resultHandler.Sample(referenceDate.AddHours(24));
-            Assert.IsTrue(resultHandler.Charts.ContainsKey("Strategy Equity"), "Expect sample of date change");
-
-            Assert.AreEqual(extendedMarketHoursEnabled ? 111000 : 101000,
-                resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Single().y);
+            currentEquityValue = resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Last().y;
+            Assert.AreEqual(extendedMarketHoursEnabled ? 111000 : 101000, currentEquityValue);
 
             resultHandler.Exit();
-        }
-
-        private class TestLiveTradingResultHandler : LiveTradingResultHandler
-        {
-            public DateTime InitialSampleTime { get; set; }
-            public override void Initialize(AlgorithmNodePacket job,
-                IMessagingHandler messagingHandler,
-                IApi api,
-                ITransactionHandler transactionHandler)
-            {
-                base.Initialize(job, messagingHandler, api, transactionHandler);
-                PreviousUtcSampleTime = InitialSampleTime;
-            }
         }
 
         private class TestDataFeed : IDataFeed

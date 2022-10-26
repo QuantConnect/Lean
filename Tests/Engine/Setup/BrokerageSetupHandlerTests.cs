@@ -79,6 +79,12 @@ namespace QuantConnect.Tests.Engine.Setup
 
             Assert.AreEqual(_transactionHandler.OrderTickets.Count, 4);
 
+            // Check Price Currency is not null
+            foreach (var order in _transactionHandler.Orders.Values)
+            {
+                Assert.IsFalse(string.IsNullOrEmpty(order.PriceCurrency));
+            }
+
             // Warn the user about each open order
             Assert.AreEqual(_resultHandler.PersistentMessages.Count, 4);
 
@@ -147,7 +153,7 @@ namespace QuantConnect.Tests.Engine.Setup
             setupHandler.CreateBrokerage(job, algorithm, out factory);
 
             var result = setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
-                transactionHandler.Object, realTimeHandler.Object, objectStore.Object, TestGlobals.DataProvider));
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider));
 
             Assert.AreEqual(expected, result);
 
@@ -191,7 +197,7 @@ namespace QuantConnect.Tests.Engine.Setup
             setupHandler.CreateBrokerage(job, algorithm, out factory);
 
             var result = setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
-                transactionHandler.Object, realTimeHandler.Object, objectStore.Object, TestGlobals.DataProvider));
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider));
 
             if (result != expected)
             {
@@ -201,7 +207,7 @@ namespace QuantConnect.Tests.Engine.Setup
             foreach (var symbol in algorithm.Securities.Keys)
             {
                 var config = algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol).First();
-                
+
                 // Assert Resolution and FillForward settings persisted
                 Assert.AreEqual(algorithm.UniverseSettings.Resolution, config.Resolution);
                 Assert.AreEqual(algorithm.UniverseSettings.FillForward, config.FillDataForward);
@@ -246,7 +252,7 @@ namespace QuantConnect.Tests.Engine.Setup
             setupHandler.CreateBrokerage(job, algorithm, out factory);
 
             var result = setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
-                transactionHandler.Object, realTimeHandler.Object, objectStore.Object, TestGlobals.DataProvider));
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider));
 
             Assert.AreEqual(expected, result);
 
@@ -291,7 +297,7 @@ namespace QuantConnect.Tests.Engine.Setup
             setupHandler.CreateBrokerage(job, algorithm, out factory);
 
             Assert.AreEqual(!fails, setupHandler.Setup(new SetupHandlerParameters(algorithm.DataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
-                transactionHandler.Object, realTimeHandler.Object, objectStore.Object, TestGlobals.DataProvider)));
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider)));
 
             Assert.AreEqual(10000, algorithm.Portfolio.CashBook[Currencies.USD].Amount);
             Assert.AreEqual(11, algorithm.Portfolio.CashBook[Currencies.GBP].Amount);
@@ -326,9 +332,42 @@ namespace QuantConnect.Tests.Engine.Setup
             setupHandler.CreateBrokerage(job, algorithm, out factory);
 
             Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
-                transactionHandler.Object, realTimeHandler.Object, objectStore.Object, TestGlobals.DataProvider)));
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider)));
 
             Assert.AreEqual(enforceAccountCurrency ? Currencies.USD : Currencies.EUR, algorithm.AccountCurrency);
+        }
+
+        [Test]
+        public void HandlesErrorOnInitializeCorrectly()
+        {
+            var algorithm = new BacktestingSetupHandlerTests.TestAlgorithmThrowsOnInitialize();
+
+            algorithm.SetHistoryProvider(new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.EmptyHistoryProvider());
+            var job = GetJob();
+
+            var resultHandler = new Mock<IResultHandler>();
+            var transactionHandler = new Mock<ITransactionHandler>();
+            var realTimeHandler = new Mock<IRealTimeHandler>();
+            var brokerage = new Mock<IBrokerage>();
+            var objectStore = new Mock<IObjectStore>();
+
+            brokerage.Setup(x => x.IsConnected).Returns(true);
+            brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
+            brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount>());
+            brokerage.Setup(x => x.GetAccountHoldings()).Returns(new List<Holding>());
+            brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>());
+
+            var setupHandler = new BrokerageSetupHandler();
+
+            IBrokerageFactory factory;
+            setupHandler.CreateBrokerage(job, algorithm, out factory);
+
+            Assert.IsFalse(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider)));
+
+            setupHandler.DisposeSafely();
+            Assert.AreEqual(1, setupHandler.Errors.Count);
+            Assert.IsTrue(setupHandler.Errors[0].InnerException.Message.Equals("Some failure"));
         }
 
         [Test]
@@ -363,7 +402,7 @@ namespace QuantConnect.Tests.Engine.Setup
             setupHandler.CreateBrokerage(job, algorithm, out factory);
 
             Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
-                transactionHandler.Object, realTimeHandler.Object, objectStore.Object, TestGlobals.DataProvider)));
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider)));
 
             Security security;
             Assert.IsTrue(algorithm.Portfolio.Securities.TryGetValue(symbol, out security));
@@ -402,7 +441,7 @@ namespace QuantConnect.Tests.Engine.Setup
             setupHandler.CreateBrokerage(job, algorithm, out factory);
 
             Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
-                transactionHandler.Object, realTimeHandler.Object, objectStore.Object, TestGlobals.DataProvider)));
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider)));
 
             Security security;
             Assert.IsTrue(algorithm.Portfolio.Securities.TryGetValue(symbol, out security));
@@ -447,7 +486,7 @@ namespace QuantConnect.Tests.Engine.Setup
             setupHandler.CreateBrokerage(job, algorithm, out factory);
 
             Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
-                transactionHandler.Object, realTimeHandler.Object, objectStore.Object, TestGlobals.DataProvider)));
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider)));
 
             Assert.Greater(algorithm.UtcTime, time);
         }
@@ -497,11 +536,11 @@ namespace QuantConnect.Tests.Engine.Setup
             var dataManager = new DataManagerStub(algorithm, new MockDataFeed(), true);
 
             Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
-                transactionHandler.Object, realTimeHandler.Object, objectStore.Object, TestGlobals.DataProvider)));
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider)));
 
             if (!hasCashBalance && !hasHoldings)
             {
-                Assert.That(algorithm.DebugMessages.Count > 0);
+                Assert.IsFalse(algorithm.DebugMessages.IsEmpty);
 
                 Assert.That(algorithm.DebugMessages.Any(x => x.Contains("No cash balances or holdings were found in the brokerage account.")));
             }

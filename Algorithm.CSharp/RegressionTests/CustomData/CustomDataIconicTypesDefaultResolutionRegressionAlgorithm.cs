@@ -69,24 +69,12 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception("Was expecting resolution to be set to Hour");
             }
 
-            try
-            {
-                AddOption("AAPL", Resolution.Daily);
-                throw new Exception("Was expecting an ArgumentException to be thrown");
-            }
-            catch (ArgumentException)
-            {
-                // expected, options only support minute resolution
-            }
-
             var option = AddOption("AAPL");
             if (SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(option.Symbol)
                 .Any(config => config.Resolution != Resolution.Minute))
             {
                 throw new Exception("Was expecting resolution to be set to Minute");
             }
-
-            Quit();
         }
 
         private class DailyUnlinkedData : UnlinkedData
@@ -122,6 +110,16 @@ namespace QuantConnect.Algorithm.CSharp
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
         public Language[] Languages { get; } = { Language.CSharp };
+
+        /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 796;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm

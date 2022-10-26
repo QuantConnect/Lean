@@ -25,18 +25,33 @@ class CustomDataRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
 
-        self.SetStartDate(2011,9,13)   # Set Start Date
+        self.SetStartDate(2011,9,14)   # Set Start Date
         self.SetEndDate(2015,12,1)     # Set End Date
         self.SetCash(100000)           # Set Strategy Cash
 
         resolution = Resolution.Second if self.LiveMode else Resolution.Daily
         self.AddData(Bitcoin, "BTC", resolution)
 
+        seeder = FuncSecuritySeeder(self.GetLastKnownPrices)
+        self.SetSecurityInitializer(lambda x: seeder.SeedSecurity(x))
+        self._warmedUpChecked = False
+
     def OnData(self, data):
         if not self.Portfolio.Invested:
             if data['BTC'].Close != 0 :
                 self.Order('BTC', self.Portfolio.MarginRemaining/abs(data['BTC'].Close + 1))
 
+    def OnSecuritiesChanged(self, changes):
+        changes.FilterCustomSecurities = False
+        for addedSecurity in changes.AddedSecurities:
+            if addedSecurity.Symbol.Value == "BTC":
+                self._warmedUpChecked = True
+            if not addedSecurity.HasData:
+                raise ValueError(f"Security {addedSecurity.Symbol} was not warmed up!")
+
+    def OnEndOfAlgorithm(self):
+        if not self._warmedUpChecked:
+            raise ValueError("Security was not warmed up!")
 
 class Bitcoin(PythonData):
     '''Custom Data Type: Bitcoin data from Quandl - http://www.quandl.com/help/api-for-bitcoin-data'''

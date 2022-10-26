@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Engine.HistoricalData
         public void OptionsAreMappedCorrectly()
         {
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
-            var zipCache = new ZipDataCacheProvider(new DefaultDataProvider());
+            var zipCache = new ZipDataCacheProvider(TestGlobals.DataProvider);
 
             historyProvider.Initialize(new HistoryProviderInitializeParameters(
                 null,
@@ -90,14 +90,14 @@ namespace QuantConnect.Tests.Engine.HistoricalData
         public void EquitiesAreMappedCorrectly()
         {
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
-            var zipCache = new ZipDataCacheProvider(new DefaultDataProvider());
+            var zipCache = new ZipDataCacheProvider(TestGlobals.DataProvider);
             historyProvider.Initialize(new HistoryProviderInitializeParameters(
                 null,
                 null,
-                new DefaultDataProvider(),
+                TestGlobals.DataProvider,
                 zipCache,
-                new LocalDiskMapFileProvider(),
-                new LocalDiskFactorFileProvider(),
+               TestGlobals.MapFileProvider,
+                TestGlobals.FactorFileProvider,
                 null,
                 false,
                 new DataPermissionManager()));

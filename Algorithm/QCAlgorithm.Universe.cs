@@ -16,13 +16,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NodaTime;
 using QuantConnect.Algorithm.Selection;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Future;
+
 using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm
@@ -43,6 +44,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Gets universe manager which holds universes keyed by their symbol
         /// </summary>
+        [DocumentationAttribute(Universes)]
         public UniverseManager UniverseManager
         {
             get;
@@ -52,6 +54,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Gets the universe settings to be used when adding securities via universe selection
         /// </summary>
+        [DocumentationAttribute(Universes)]
         public UniverseSettings UniverseSettings
         {
             get;
@@ -62,18 +65,19 @@ namespace QuantConnect.Algorithm
         /// Invoked at the end of every time step. This allows the algorithm
         /// to process events before advancing to the next time step.
         /// </summary>
+        [DocumentationAttribute(HandlingData)]
         public void OnEndOfTimeStep()
         {
-            if (_pendingUniverseAdditions.Count + _pendingUserDefinedUniverseSecurityAdditions.Count == 0)
-            {
-                // no point in looping through everything if there's no pending changes
-                return;
-            }
-
-            var requiredHistoryRequests = new Dictionary<Security, Resolution>();
             // rewrite securities w/ derivatives to be in raw mode
             lock (_pendingUniverseAdditionsLock)
             {
+                if (_pendingUniverseAdditions.Count + _pendingUserDefinedUniverseSecurityAdditions.Count == 0)
+                {
+                    // no point in looping through everything if there's no pending changes
+                    return;
+                }
+
+                var requiredHistoryRequests = new Dictionary<Security, Resolution>();
 
                 foreach (var security in Securities.Select(kvp => kvp.Value).Union(
                     _pendingUserDefinedUniverseSecurityAdditions.Select(x => x.Security)))
@@ -186,6 +190,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Gets a helper that provides pre-defined universe definitions, such as top dollar volume
         /// </summary>
+        [DocumentationAttribute(Universes)]
         public UniverseDefinitions Universe
         {
             get;
@@ -196,12 +201,16 @@ namespace QuantConnect.Algorithm
         /// Adds the universe to the algorithm
         /// </summary>
         /// <param name="universe">The universe to be added</param>
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse(Universe universe)
         {
-            // The universe will be added at the end of time step, same as the AddData user defined universes.
-            // This is required to be independent of the start and end date set during initialize
-            _pendingUniverseAdditions.Add(universe);
-            _userAddedUniverses.Add(universe.Configuration.Symbol);
+            lock (_pendingUniverseAdditionsLock)
+            {
+                // The universe will be added at the end of time step, same as the AddData user defined universes.
+                // This is required to be independent of the start and end date set during initialize
+                _pendingUniverseAdditions.Add(universe);
+                _userAddedUniverses.Add(universe.Configuration.Symbol);
+            }
             return universe;
         }
 
@@ -213,6 +222,7 @@ namespace QuantConnect.Algorithm
         /// <typeparam name="T">The data type</typeparam>
         /// <param name="name">A unique name for this universe</param>
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse<T>(string name, Func<IEnumerable<T>, IEnumerable<Symbol>> selector)
         {
             return AddUniverse(SecurityType.Equity, name, Resolution.Daily, Market.USA, UniverseSettings, selector);
@@ -226,6 +236,7 @@ namespace QuantConnect.Algorithm
         /// <typeparam name="T">The data type</typeparam>
         /// <param name="name">A unique name for this universe</param>
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse<T>(string name, Func<IEnumerable<T>, IEnumerable<string>> selector)
         {
             return AddUniverse(SecurityType.Equity, name, Resolution.Daily, Market.USA, UniverseSettings, selector);
@@ -240,6 +251,7 @@ namespace QuantConnect.Algorithm
         /// <param name="name">A unique name for this universe</param>
         /// <param name="universeSettings">The settings used for securities added by this universe</param>
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse<T>(string name, UniverseSettings universeSettings, Func<IEnumerable<T>, IEnumerable<Symbol>> selector)
         {
             return AddUniverse(SecurityType.Equity, name, Resolution.Daily, Market.USA, universeSettings, selector);
@@ -254,6 +266,7 @@ namespace QuantConnect.Algorithm
         /// <param name="name">A unique name for this universe</param>
         /// <param name="universeSettings">The settings used for securities added by this universe</param>
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse<T>(string name, UniverseSettings universeSettings, Func<IEnumerable<T>, IEnumerable<string>> selector)
         {
             return AddUniverse(SecurityType.Equity, name, Resolution.Daily, Market.USA, universeSettings, selector);
@@ -266,8 +279,9 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <typeparam name="T">The data type</typeparam>
         /// <param name="name">A unique name for this universe</param>
-        /// <param name="resolution">The epected resolution of the universe data</param>
+        /// <param name="resolution">The expected resolution of the universe data</param>
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse<T>(string name, Resolution resolution, Func<IEnumerable<T>, IEnumerable<Symbol>> selector)
         {
             return AddUniverse(SecurityType.Equity, name, resolution, Market.USA, UniverseSettings, selector);
@@ -280,8 +294,9 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <typeparam name="T">The data type</typeparam>
         /// <param name="name">A unique name for this universe</param>
-        /// <param name="resolution">The epected resolution of the universe data</param>
+        /// <param name="resolution">The expected resolution of the universe data</param>
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse<T>(string name, Resolution resolution, Func<IEnumerable<T>, IEnumerable<string>> selector)
         {
             return AddUniverse(SecurityType.Equity, name, resolution, Market.USA, UniverseSettings, selector);
@@ -294,9 +309,10 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <typeparam name="T">The data type</typeparam>
         /// <param name="name">A unique name for this universe</param>
-        /// <param name="resolution">The epected resolution of the universe data</param>
+        /// <param name="resolution">The expected resolution of the universe data</param>
         /// <param name="universeSettings">The settings used for securities added by this universe</param>
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse<T>(string name, Resolution resolution, UniverseSettings universeSettings, Func<IEnumerable<T>, IEnumerable<Symbol>> selector)
         {
             return AddUniverse(SecurityType.Equity, name, resolution, Market.USA, universeSettings, selector);
@@ -309,9 +325,10 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <typeparam name="T">The data type</typeparam>
         /// <param name="name">A unique name for this universe</param>
-        /// <param name="resolution">The epected resolution of the universe data</param>
+        /// <param name="resolution">The expected resolution of the universe data</param>
         /// <param name="universeSettings">The settings used for securities added by this universe</param>
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse<T>(string name, Resolution resolution, UniverseSettings universeSettings, Func<IEnumerable<T>, IEnumerable<string>> selector)
         {
             return AddUniverse(SecurityType.Equity, name, resolution, Market.USA, universeSettings, selector);
@@ -324,9 +341,10 @@ namespace QuantConnect.Algorithm
         /// <typeparam name="T">The data type</typeparam>
         /// <param name="securityType">The security type the universe produces</param>
         /// <param name="name">A unique name for this universe</param>
-        /// <param name="resolution">The epected resolution of the universe data</param>
+        /// <param name="resolution">The expected resolution of the universe data</param>
         /// <param name="market">The market for selected symbols</param>
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse<T>(SecurityType securityType, string name, Resolution resolution, string market, Func<IEnumerable<T>, IEnumerable<Symbol>> selector)
         {
             return AddUniverse(securityType, name, resolution, market, UniverseSettings, selector);
@@ -339,9 +357,10 @@ namespace QuantConnect.Algorithm
         /// <typeparam name="T">The data type</typeparam>
         /// <param name="securityType">The security type the universe produces</param>
         /// <param name="name">A unique name for this universe</param>
-        /// <param name="resolution">The epected resolution of the universe data</param>
+        /// <param name="resolution">The expected resolution of the universe data</param>
         /// <param name="market">The market for selected symbols</param>
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse<T>(SecurityType securityType, string name, Resolution resolution, string market, Func<IEnumerable<T>, IEnumerable<string>> selector)
         {
             return AddUniverse(securityType, name, resolution, market, UniverseSettings, selector);
@@ -353,10 +372,11 @@ namespace QuantConnect.Algorithm
         /// <typeparam name="T">The data type</typeparam>
         /// <param name="securityType">The security type the universe produces</param>
         /// <param name="name">A unique name for this universe</param>
-        /// <param name="resolution">The epected resolution of the universe data</param>
+        /// <param name="resolution">The expected resolution of the universe data</param>
         /// <param name="market">The market for selected symbols</param>
         /// <param name="universeSettings">The subscription settings to use for newly created subscriptions</param>
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse<T>(SecurityType securityType, string name, Resolution resolution, string market, UniverseSettings universeSettings, Func<IEnumerable<T>, IEnumerable<Symbol>> selector)
         {
             var marketHoursDbEntry = MarketHoursDatabase.GetEntry(market, name, securityType);
@@ -373,10 +393,11 @@ namespace QuantConnect.Algorithm
         /// <typeparam name="T">The data type</typeparam>
         /// <param name="securityType">The security type the universe produces</param>
         /// <param name="name">A unique name for this universe</param>
-        /// <param name="resolution">The epected resolution of the universe data</param>
+        /// <param name="resolution">The expected resolution of the universe data</param>
         /// <param name="market">The market for selected symbols</param>
         /// <param name="universeSettings">The subscription settings to use for newly created subscriptions</param>
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse<T>(SecurityType securityType, string name, Resolution resolution, string market, UniverseSettings universeSettings, Func<IEnumerable<T>, IEnumerable<string>> selector)
         {
             var marketHoursDbEntry = MarketHoursDatabase.GetEntry(market, name, securityType);
@@ -394,6 +415,7 @@ namespace QuantConnect.Algorithm
         /// will be executed on day changes in the NewYork time zone (<see cref="TimeZones.NewYork"/>
         /// </summary>
         /// <param name="selector">Defines an initial coarse selection</param>
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> selector)
         {
             return AddUniverse(new CoarseFundamentalUniverse(UniverseSettings, selector));
@@ -405,6 +427,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="coarseSelector">Defines an initial coarse selection</param>
         /// <param name="fineSelector">Defines a more detailed selection with access to more data</param>
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarseSelector, Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> fineSelector)
         {
             var coarse = new CoarseFundamentalUniverse(UniverseSettings, coarseSelector);
@@ -418,6 +441,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="universe">The universe to be filtered with fine fundamental selection</param>
         /// <param name="fineSelector">Defines a more detailed selection with access to more data</param>
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse(Universe universe, Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> fineSelector)
         {
             return AddUniverse(new FineFundamentalFilteredUniverse(universe, fineSelector));
@@ -429,6 +453,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="name">A unique name for this universe</param>
         /// <param name="selector">Function delegate that accepts a DateTime and returns a collection of string symbols</param>
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse(string name, Func<DateTime, IEnumerable<string>> selector)
         {
             return AddUniverse(SecurityType.Equity, name, Resolution.Daily, Market.USA, UniverseSettings, selector);
@@ -441,6 +466,7 @@ namespace QuantConnect.Algorithm
         /// <param name="name">A unique name for this universe</param>
         /// <param name="resolution">The resolution this universe should be triggered on</param>
         /// <param name="selector">Function delegate that accepts a DateTime and returns a collection of string symbols</param>
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse(string name, Resolution resolution, Func<DateTime, IEnumerable<string>> selector)
         {
             return AddUniverse(SecurityType.Equity, name, resolution, Market.USA, UniverseSettings, selector);
@@ -455,6 +481,7 @@ namespace QuantConnect.Algorithm
         /// <param name="market">The market of the universe</param>
         /// <param name="universeSettings">The subscription settings used for securities added from this universe</param>
         /// <param name="selector">Function delegate that accepts a DateTime and returns a collection of string symbols</param>
+        [DocumentationAttribute(Universes)]
         public Universe AddUniverse(SecurityType securityType, string name, Resolution resolution, string market, UniverseSettings universeSettings, Func<DateTime, IEnumerable<string>> selector)
         {
             var marketHoursDbEntry = MarketHoursDatabase.GetEntry(market, name, securityType);
@@ -472,6 +499,7 @@ namespace QuantConnect.Algorithm
         /// <param name="underlyingSymbol">Underlying Symbol to add as an option. For Futures, the option chain constructed will be per-contract, as long as a canonical Symbol is provided.</param>
         /// <param name="optionFilter">User-defined filter used to select the options we want out of the option chain provided.</param>
         /// <exception cref="InvalidOperationException">The underlying Symbol's universe is not found.</exception>
+        [DocumentationAttribute(Universes)]
         public void AddUniverseOptions(Symbol underlyingSymbol, Func<OptionFilterUniverse, OptionFilterUniverse> optionFilter)
         {
              // We need to load the universe associated with the provided Symbol and provide that universe to the option filter universe.
@@ -480,25 +508,28 @@ namespace QuantConnect.Algorithm
              Universe universe;
              if (!UniverseManager.TryGetValue(underlyingSymbol, out universe))
              {
-                 // The universe might be already added, but not registered with the UniverseManager.
-                 universe = _pendingUniverseAdditions.SingleOrDefault(u => u.Configuration.Symbol == underlyingSymbol);
-                 if (universe == null)
-                 {
-                     underlyingSymbol = AddSecurity(underlyingSymbol).Symbol;
-                 }
+                lock(_pendingUniverseAdditionsLock)
+                {
+                    // The universe might be already added, but not registered with the UniverseManager.
+                    universe = _pendingUniverseAdditions.SingleOrDefault(u => u.Configuration.Symbol == underlyingSymbol);
+                    if (universe == null)
+                    {
+                    underlyingSymbol = AddSecurity(underlyingSymbol).Symbol;
+                    }
 
-                 // Recheck again, we should have a universe addition pending for the provided Symbol
-                 universe = _pendingUniverseAdditions.SingleOrDefault(u => u.Configuration.Symbol == underlyingSymbol);
-                 if (universe == null)
-                 {
-                     // Should never happen, but it could be that the subscription
-                     // created with AddSecurity is not aligned with the Symbol we're using.
-                     throw new InvalidOperationException($"Universe not found for underlying Symbol: {underlyingSymbol}.");
-                 }
-             }
+                    // Recheck again, we should have a universe addition pending for the provided Symbol
+                    universe = _pendingUniverseAdditions.SingleOrDefault(u => u.Configuration.Symbol == underlyingSymbol);
+                }
+                if (universe == null)
+                {
+                    // Should never happen, but it could be that the subscription
+                    // created with AddSecurity is not aligned with the Symbol we're using.
+                    throw new InvalidOperationException($"Universe not found for underlying Symbol: {underlyingSymbol}.");
+                }
+            }
 
-             // Allow all option contracts through without filtering if we're provided a null filter.
-             AddUniverseOptions(universe, optionFilter ?? (_ => _));
+            // Allow all option contracts through without filtering if we're provided a null filter.
+            AddUniverseOptions(universe, optionFilter ?? (_ => _));
         }
 
         /// <summary>
@@ -507,6 +538,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="universe">The universe we want to chain an option universe selection model too</param>
         /// <param name="optionFilter">The option filter universe to use</param>
+        [DocumentationAttribute(Universes)]
         public void AddUniverseOptions(Universe universe, Func<OptionFilterUniverse, OptionFilterUniverse> optionFilter)
         {
             AddUniverseSelection(new OptionChainedUniverseSelectionModel(universe, optionFilter));
@@ -523,8 +555,7 @@ namespace QuantConnect.Algorithm
         {
             var subscription = configurations.First();
             // if we are adding a non-internal security which already has an internal feed, we remove it first
-            Security existingSecurity;
-            if (Securities.TryGetValue(security.Symbol, out existingSecurity))
+            if (Securities.TryGetValue(security.Symbol, out var existingSecurity))
             {
                 if (!subscription.IsInternalFeed && existingSecurity.IsInternalFeed())
                 {
@@ -536,8 +567,11 @@ namespace QuantConnect.Algorithm
                 }
                 else
                 {
-                    // we will reuse existing so we return it to the user
+                    var isTradable = security.IsTradable;
+                    // We will reuse existing so we return it to the user.
+                    // We will use the IsTradable flag of the new security, since existing could of been set to false when removed
                     security = existingSecurity;
+                    security.IsTradable = isTradable;
                 }
             }
             else
@@ -557,14 +591,15 @@ namespace QuantConnect.Algorithm
                     {
                         // create a new universe, these subscription settings don't currently get used
                         // since universe selection proper is never invoked on this type of universe
-                        var uconfig = new SubscriptionDataConfig(subscription, symbol: universeSymbol, isInternalFeed: true, fillForward: false);
+                        var uconfig = new SubscriptionDataConfig(subscription, symbol: universeSymbol, isInternalFeed: true, fillForward: false,
+                            exchangeTimeZone: DateTimeZone.Utc,
+                            dataTimeZone: DateTimeZone.Utc);
 
-                        if (security.Type == SecurityType.Base)
-                        {
-                            // set entry in market hours database for the universe subscription to match the custom data
-                            var symbolString = MarketHoursDatabase.GetDatabaseSymbolKey(uconfig.Symbol);
-                            MarketHoursDatabase.SetEntry(uconfig.Market, symbolString, uconfig.SecurityType, security.Exchange.Hours, uconfig.DataTimeZone);
-                        }
+                        // this is the universe symbol, has no real entry in the mhdb, will default to market and security type
+                        // set entry in market hours database for the universe subscription to match the config
+                        var symbolString = MarketHoursDatabase.GetDatabaseSymbolKey(uconfig.Symbol);
+                        MarketHoursDatabase.SetEntry(uconfig.Market, symbolString, uconfig.SecurityType,
+                            SecurityExchangeHours.AlwaysOpen(uconfig.ExchangeTimeZone), uconfig.DataTimeZone);
 
                         universe = new UserDefinedUniverse(uconfig,
                             new UniverseSettings(
@@ -593,7 +628,7 @@ namespace QuantConnect.Algorithm
             else
             {
                 // should never happen, someone would need to add a non-user defined universe with this symbol
-                throw new Exception("Expected universe with symbol '" + universeSymbol.Value + "' to be of type UserDefinedUniverse.");
+                throw new Exception($"Expected universe with symbol '{universeSymbol.Value}' to be of type {nameof(UserDefinedUniverse)} but was {universe.GetType().Name}.");
             }
 
             return security;
@@ -630,27 +665,9 @@ namespace QuantConnect.Algorithm
                 bar.Symbol = security.Symbol;
                 
                 var maxSupportedResolution = bar.SupportedResolutions().Max();
-
                 var updateFrequency = maxSupportedResolution.ToTimeSpan();
-                int periods;
-                switch (maxSupportedResolution)
-                {
-                    case Resolution.Tick:
-                    case Resolution.Second:
-                        periods = 600;
-                        break;
-                    case Resolution.Minute:
-                        periods = 60 * 24;
-                        break;
-                    case Resolution.Hour:
-                        periods = 24 * 30;
-                        break;
-                    default:
-                        periods = 30;
-                        break;
-                }
                 
-                security.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(periods, maxSupportedResolution, updateFrequency);
+                security.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(maxSupportedResolution, updateFrequency);
             }
         }
 

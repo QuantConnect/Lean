@@ -154,9 +154,9 @@ namespace QuantConnect
     /// </summary>
     public enum ChartType
     {
-        /// Overlayed stacked
+        /// Overlayed stacked (0)
         Overlay,
-        /// Stacked series on top of each other.
+        /// Stacked series on top of each other. (1)
         Stacked
     }
 }

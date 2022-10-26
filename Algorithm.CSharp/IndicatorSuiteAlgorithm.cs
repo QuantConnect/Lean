@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
-using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
@@ -34,7 +33,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class IndicatorSuiteAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private string _ticker = "SPY";
-        private string _customTicker = "WIKI/FB";
+        private string _customTicker = "IBM";
 
         private Symbol _symbol;
         private Symbol _customSymbol;
@@ -64,7 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
             _symbol = AddSecurity(SecurityType.Equity, _ticker, Resolution.Daily).Symbol;
 
             //Add the Custom Data:
-            _customSymbol = AddData<Quandl>(_customTicker, Resolution.Daily).Symbol;
+            _customSymbol = AddData<CustomData>(_customTicker, Resolution.Daily).Symbol;
 
             //Set up default Indicators, these indicators are defined on the Value property of incoming data (except ATR and AROON which use the full TradeBar object)
             _indicators = new Indicators
@@ -118,9 +117,9 @@ namespace QuantConnect.Algorithm.CSharp
             // these are indicators that require multiple inputs. the most common of which is a ratio.
             // suppose we seek the ratio of BTC to SPY, we could write the following:
             var spyClose = Identity(_symbol);
-            var fbClose = Identity(_customSymbol);
+            var ibmClose = Identity(_customSymbol);
             // this will create a new indicator whose value is FB/SPY
-            _ratio = fbClose.Over(spyClose);
+            _ratio = ibmClose.Over(spyClose);
             // we can also easily plot our indicators each time they update using th PlotIndicator function
             PlotIndicator("Ratio", _ratio);
         }
@@ -128,8 +127,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Custom data event handler:
         /// </summary>
-        /// <param name="data">Quandl - dictionary Bars of Quandl Data</param>
-        public void OnData(Quandl data)
+        /// <param name="data">CustomData - dictionary Bars of custom data</param>
+        public void OnData(CustomData data)
         {
         }
 
@@ -239,6 +238,16 @@ namespace QuantConnect.Algorithm.CSharp
         public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 4537;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
@@ -250,18 +259,18 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "7.300%"},
             {"Expectancy", "0"},
             {"Net Profit", "41.748%"},
-            {"Sharpe Ratio", "1.596"},
-            {"Probabilistic Sharpe Ratio", "76.886%"},
+            {"Sharpe Ratio", "1.448"},
+            {"Probabilistic Sharpe Ratio", "72.548%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.171"},
-            {"Beta", "-0.064"},
-            {"Annual Standard Deviation", "0.1"},
-            {"Annual Variance", "0.01"},
-            {"Information Ratio", "-0.186"},
-            {"Tracking Error", "0.147"},
-            {"Treynor Ratio", "-2.51"},
+            {"Alpha", "-0.017"},
+            {"Beta", "0.963"},
+            {"Annual Standard Deviation", "0.092"},
+            {"Annual Variance", "0.008"},
+            {"Information Ratio", "-1.289"},
+            {"Tracking Error", "0.018"},
+            {"Treynor Ratio", "0.138"},
             {"Total Fees", "$1.00"},
             {"Estimated Strategy Capacity", "$580000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},

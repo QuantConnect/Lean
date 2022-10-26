@@ -14,12 +14,10 @@
 */
 
 using System;
-using System.IO;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Logging;
 using QuantConnect.Interfaces;
-using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
@@ -65,20 +63,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 && _config.Type != typeof(FineFundamental) && _config.Type != typeof(CoarseFundamental)
                 && !DataCacheProvider.IsDataEphemeral;
 
-            // we know these type implement the streamReader interface lets avoid dynamic reflection call to figure it out
-            if (_config.Type == typeof(TradeBar) || _config.Type == typeof(QuoteBar) || _config.Type == typeof(Tick))
-            {
-                _implementsStreamReader = true;
-            }
-            else
-            {
-                var method = _config.Type.GetMethod("Reader",
-                    new[] { typeof(SubscriptionDataConfig), typeof(StreamReader), typeof(DateTime), typeof(bool) });
-                if (method != null && method.DeclaringType == _config.Type)
-                {
-                    _implementsStreamReader = true;
-                }
-            }
+            _implementsStreamReader = _config.Type.ImplementsStreamReader();
         }
 
         /// <summary>

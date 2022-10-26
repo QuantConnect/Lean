@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -33,6 +33,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// Gets the number of targets in this collection
         /// </summary>
         public int Count => _targets.Skip(0).Count();
+
+        /// <summary>
+        /// True if there is no target in the collection
+        /// </summary>
+        public bool IsEmpty => _targets.IsEmpty;
 
         /// <summary>
         /// Gets `false`. This collection is not read-only.
@@ -255,7 +260,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// Gets or sets the portfolio target for the specified symbol
         /// </summary>
         /// <param name="symbol">The symbol</param>
-        /// <returns>The symbol's portolio target if it exists in this collection, if not a <see cref="KeyNotFoundException"/> will be thrown.</returns>
+        /// <returns>The symbol's portfolio target if it exists in this collection, if not a <see cref="KeyNotFoundException"/> will be thrown.</returns>
         public IPortfolioTarget this[Symbol symbol]
         {
             get { return _targets[symbol]; }
@@ -317,6 +322,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="algorithm">The algorithm instance</param>
         public IEnumerable<IPortfolioTarget> OrderByMarginImpact(IAlgorithm algorithm)
         {
+            if (IsEmpty)
+            {
+                return Enumerable.Empty<IPortfolioTarget>();
+            }
             return this.OrderTargetsByMarginImpact(algorithm);
         }
     }

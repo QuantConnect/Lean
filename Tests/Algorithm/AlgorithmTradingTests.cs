@@ -1186,6 +1186,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(-3000m, actual);
 
             var btcusd = algo.AddCrypto("BTCUSD", market: Market.GDAX);
+            btcusd.BuyingPowerModel = new CashBuyingPowerModel();
             btcusd.FeeModel = new ConstantFeeModel(0);
             // Set Price to $26
             Update(btcusd, 26);
@@ -1384,6 +1385,71 @@ namespace QuantConnect.Tests.Algorithm
 
             int expected = 35;
             Assert.AreEqual(expected, algo.Transactions.LastOrderId);
+        }
+
+        [Test]
+        public void MarketOrdersAreSupportedForFuturesOnExtendedMarketHours()
+        {
+            var algo = GetAlgorithm(out _, 1, 0);
+
+            var mockOrderProcessor = new Mock<ITransactionHandler>();
+            var mockRequest = new Mock<SubmitOrderRequest>(null, null, null, null, null, null, null, null, null, null);
+            var mockTicket = new OrderTicket(algo.Transactions, mockRequest.Object);
+            mockOrderProcessor.Setup(m => m.Process(It.IsAny<OrderRequest>())).Returns(mockTicket);
+            mockOrderProcessor.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns(mockTicket);
+            algo.Transactions.SetOrderProcessor(mockOrderProcessor.Object);
+
+            var es20h20 = algo.AddFutureContract(
+                QuantConnect.Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 3, 20)),
+                Resolution.Minute,
+                extendedMarketHours: true);
+            var es20h20FOP = algo.AddFutureOptionContract(
+                Symbol.CreateOption(es20h20.Symbol, Market.CME, OptionStyle.American, OptionRight.Call, 2550m, new DateTime(2020, 3, 20)),
+                Resolution.Minute);
+
+            //Set price to $25
+            Update(es20h20, 25);
+            Update(es20h20FOP, 25);
+            algo.Portfolio.SetCash(150000);
+
+            var testOrders = (DateTime dateTime) =>
+            {
+                algo.SetDateTime(dateTime);
+
+                var ticket = algo.Buy(es20h20.Symbol, 1);
+                Assert.AreEqual(OrderStatus.New, ticket.Status, $"Future buy market order status should be new at {dateTime}, but was {ticket.Status}");
+                ticket = algo.Sell(es20h20.Symbol, 1);
+                Assert.AreEqual(OrderStatus.New, ticket.Status, $"Future sell market order status should be new at {dateTime}, but was {ticket.Status}");
+
+                ticket = algo.Buy(es20h20FOP.Symbol, 1);
+                Assert.AreEqual(OrderStatus.New, ticket.Status, $"Future option buy market order status should be new at {dateTime}, but was {ticket.Status}");
+                ticket = algo.Sell(es20h20FOP.Symbol, 1);
+                Assert.AreEqual(OrderStatus.New, ticket.Status, $"Future option sell market order status should be new at {dateTime}, but was {ticket.Status}");
+            };
+
+            // October 7 to 11 (monday to friday). Testing pre-market hours
+            for (var i = 7; i <= 11; i++)
+            {
+                testOrders(new DateTime(2013, 10, i, 5, 0, 0));
+            }
+
+            // October 6 to 10 (sunday to thrusday). Testing post-market hours
+            for (var i = 6; i <= 10; i++)
+            {
+                testOrders(new DateTime(2013, 10, i, 23, 0, 0));
+            }
+        }
+
+        [Test]
+        public void MarketOnOpenOrdersNotSupportedForFutures()
+        {
+            var algo = GetAlgorithm(out _, 1, 0);
+            var es20h20 = algo.AddFutureContract(
+                QuantConnect.Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 3, 20)),
+                Resolution.Minute);
+
+            var ticket = algo.MarketOnOpenOrder(es20h20.Symbol, 1);
+            Assert.That(ticket, Has.Property("Status").EqualTo(OrderStatus.Invalid));
         }
 
         private class TestShortableProvider : IShortableProvider

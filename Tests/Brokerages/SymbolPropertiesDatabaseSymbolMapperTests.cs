@@ -179,7 +179,6 @@ namespace QuantConnect.Tests.Brokerages
             new TestCaseData("BTC-ETH", SecurityType.Crypto, Market.GDAX),
             new TestCaseData("USDC-BTC", SecurityType.Crypto, Market.GDAX),
 
-            new TestCaseData("AAA-BBB", SecurityType.Crypto, Market.Bitfinex),
             new TestCaseData("USD-BTC", SecurityType.Crypto, Market.Bitfinex),
             new TestCaseData("EUR-USD", SecurityType.Crypto, Market.Bitfinex),
             new TestCaseData("GBP-USD", SecurityType.Crypto, Market.Bitfinex),

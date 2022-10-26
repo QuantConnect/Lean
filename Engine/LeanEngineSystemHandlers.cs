@@ -119,7 +119,7 @@ namespace QuantConnect.Lean.Engine
         public void Initialize()
         {
             Api.Initialize(Config.GetInt("job-user-id", 0), Config.Get("api-access-token", ""), Config.Get("data-folder"));
-            Notify.Initialize();
+            Notify.Initialize(new MessagingHandlerInitializeParameters(Api));
             JobQueue.Initialize(Api);
         }
 
@@ -131,9 +131,9 @@ namespace QuantConnect.Lean.Engine
         {
             Log.Trace("LeanEngineSystemHandlers.Dispose(): start...");
 
-            Api.DisposeSafely();
             LeanManager.DisposeSafely();
             Notify.DisposeSafely();
+            Api.DisposeSafely();
 
             Log.Trace("LeanEngineSystemHandlers.Dispose(): Disposed of system handlers.");
         }

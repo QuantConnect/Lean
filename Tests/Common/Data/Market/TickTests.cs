@@ -18,8 +18,9 @@ using System.IO;
 using System.Text;
 using NUnit.Framework;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
+using System.Globalization;
 using QuantConnect.Securities;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Tests.Common.Data.Market
 {
@@ -44,11 +45,11 @@ namespace QuantConnect.Tests.Common.Data.Market
             Assert.AreEqual(false, tick.Suspicious);
         }
 
-        [Test]
-        public void ConstructsFromLineWithDecimalTimestamp()
+        [TestCase("18000677.3,3669.12,0.0040077,3669.13,3.40618718", "18000677.3", "3669.12", "0.0040077", "3669.13", "3.40618718")]
+        [TestCase("18000677.3111,3669.12,0.0040077,3669.13,3.40618718", "18000677.3111", "3669.12", "0.0040077", "3669.13", "3.40618718")]
+        public void ConstructsFromLineWithDecimalTimestamp(string line, string milliseconds, string bidPrice,
+            string bidSize, string askPrice, string askSize)
         {
-            const string line = "18000677.3,3669.12,0.0040077,3669.13,3.40618718";
-
             var config = new SubscriptionDataConfig(
                 typeof(Tick), Symbols.BTCUSD, Resolution.Tick, TimeZones.Utc, TimeZones.Utc,
                 false, false, false, false, TickType.Quote);
@@ -57,11 +58,11 @@ namespace QuantConnect.Tests.Common.Data.Market
             var tick = new Tick(config, line, baseDate);
 
             var ms = (tick.Time - baseDate).TotalMilliseconds;
-            Assert.AreEqual(18000677, ms);
-            Assert.AreEqual(3669.12, tick.BidPrice);
-            Assert.AreEqual(0.0040077, tick.BidSize);
-            Assert.AreEqual(3669.13, tick.AskPrice);
-            Assert.AreEqual(3.40618718, tick.AskSize);
+            Assert.AreEqual( decimal.Parse(milliseconds, CultureInfo.InvariantCulture), ms);
+            Assert.AreEqual(decimal.Parse(bidPrice, CultureInfo.InvariantCulture), tick.BidPrice);
+            Assert.AreEqual(decimal.Parse(bidSize, CultureInfo.InvariantCulture), tick.BidSize);
+            Assert.AreEqual(decimal.Parse(askPrice, CultureInfo.InvariantCulture), tick.AskPrice);
+            Assert.AreEqual(decimal.Parse(askSize, CultureInfo.InvariantCulture), tick.AskSize);
         }
 
         [Test]

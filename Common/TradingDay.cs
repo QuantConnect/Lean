@@ -24,50 +24,50 @@ namespace QuantConnect
     public enum TradingDayType
     {
         /// <summary>
-        /// Business day
+        /// Business day (0)
         /// </summary>
         BusinessDay,
 
         /// <summary>
-        /// Public Holiday
+        /// Public Holiday (1)
         /// </summary>
         PublicHoliday,
 
         /// <summary>
-        /// Weekend
+        /// Weekend (2)
         /// </summary>
         Weekend,
 
         /// <summary>
-        /// Option Expiration Date
+        /// Option Expiration Date (3)
         /// </summary>
         OptionExpiration,
 
         /// <summary>
-        /// Futures Expiration Date
+        /// Futures Expiration Date (4)
         /// </summary>
         FutureExpiration,
 
         /// <summary>
-        /// Futures Roll Date
+        /// Futures Roll Date (5)
         /// </summary>
         /// <remarks>Not used yet. For future use.</remarks>
         FutureRoll,
 
         /// <summary>
-        /// Symbol Delisting Date
+        /// Symbol Delisting Date (6)
         /// </summary>
         /// <remarks>Not used yet. For future use.</remarks>
         SymbolDelisting,
 
         /// <summary>
-        /// Equity Ex-dividend Date
+        /// Equity Ex-dividend Date (7)
         /// </summary>
         /// <remarks>Not used yet. For future use.</remarks>
         EquityDividends,
 
         /// <summary>
-        /// FX Economic Event
+        /// FX Economic Event (8)
         /// </summary>
         /// <remarks>FX Economic Event e.g. from DailyFx (DailyFx.cs). Not used yet. For future use.</remarks>
         EconomicEvent

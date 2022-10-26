@@ -16,6 +16,7 @@
 using System;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Brokerages
 {
@@ -28,12 +29,15 @@ namespace QuantConnect.Tests.Brokerages
         public SecurityType SecurityType { get; private set; }
         public IOrderProperties Properties { get; private set; }
         public OrderSubmissionData OrderSubmissionData { get; internal set; }
+        public SymbolPropertiesDatabase SPDB { get; internal set; }
 
-        protected OrderTestParameters(Symbol symbol, IOrderProperties properties = null)
+        protected OrderTestParameters(Symbol symbol, IOrderProperties properties = null, OrderSubmissionData orderSubmissionData = null)
         {
             Symbol = symbol;
             SecurityType = symbol.ID.SecurityType;
             Properties = properties;
+            OrderSubmissionData = orderSubmissionData;
+            SPDB = SymbolPropertiesDatabase.FromDataFolder();
         }
 
         public MarketOrder CreateLongMarketOrder(decimal quantity)
@@ -76,9 +80,6 @@ namespace QuantConnect.Tests.Brokerages
         /// <summary>
         /// True to continue modifying the order until it is filled, false otherwise
         /// </summary>
-        public virtual bool ModifyUntilFilled
-        {
-            get { return true; }
-        }
+        public virtual bool ModifyUntilFilled => true;
     }
 }

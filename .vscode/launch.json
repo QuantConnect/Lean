@@ -3,13 +3,13 @@
         VS Code Launch configurations for the LEAN engine
 
         Launch:
-        Builds the project with dotnet 5 and then launches the program using coreclr; supports debugging.
-        In order to use this you need dotnet 5 on your system path, As well as the C# extension from the 
+        Builds the project with dotnet 6 and then launches the program using coreclr; supports debugging.
+        In order to use this you need dotnet 6 on your system path, As well as the C# extension from the 
         marketplace.
 
         Attach to Python:
-        Will attempt to attach to LEAN running locally using PTVSD. Requires that the process is
-        actively running and config is set: "debugging": true, "debugging-method": "PTVSD",
+        Will attempt to attach to LEAN running locally using DebugPy. Requires that the process is
+        actively running and config is set: "debugging": true, "debugging-method": "DebugPy",
         Requires Python extension from the marketplace. Currently only works with algorithms in
         Algorithm.Python directory. This is because we map that directory to our build directory
         that contains the py file at runtime. If using another location change "localRoot" value 
@@ -26,7 +26,7 @@
             "program": "${workspaceFolder}/Launcher/bin/Debug/QuantConnect.Lean.Launcher.dll",
             "args": [
                 "--config",
-                "${workspaceFolder}/Launcher/config.json"
+                "${workspaceFolder}/Launcher/bin/Debug/config.json"
             ],
             "cwd": "${workspaceFolder}/Launcher/bin/Debug/",
             "stopAtEntry": false,

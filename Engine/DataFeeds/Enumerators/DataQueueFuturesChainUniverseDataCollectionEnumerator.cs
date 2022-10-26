@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -22,13 +22,14 @@ using System.Collections;
 using System.Linq;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
     /// <summary>
-    /// Enumerates live futures symbol universe data into <see cref="FuturesChainUniverseDataCollection"/> instances
+    /// Enumerates live futures symbol universe data into <see cref="BaseDataCollection"/> instances
     /// </summary>
-    public class DataQueueFuturesChainUniverseDataCollectionEnumerator : IEnumerator<FuturesChainUniverseDataCollection>
+    public class DataQueueFuturesChainUniverseDataCollectionEnumerator : IEnumerator<BaseDataCollection>
     {
         private readonly SubscriptionRequest _subscriptionRequest;
         private readonly IDataQueueUniverseProvider _universeProvider;
@@ -58,7 +59,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <summary>
         /// Returns current futures chain enumerator position
         /// </summary>
-        public FuturesChainUniverseDataCollection Current { get; private set; }
+        public BaseDataCollection Current { get; private set; }
 
         /// <summary>
         /// Returns current futures chain enumerator position
@@ -95,13 +96,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 }
 
                 var localTime = _timeProvider.GetUtcNow()
-                    .RoundDown(_subscriptionRequest.Configuration.Increment)
-                    .ConvertFromUtc(_subscriptionRequest.Configuration.ExchangeTimeZone);
+                    .ConvertFromUtc(_subscriptionRequest.Configuration.ExchangeTimeZone)
+                    .RoundDown(_subscriptionRequest.Configuration.Increment);
 
                 // loading the list of futures contracts and converting them into zip entries
                 var symbols = _universeProvider.LookupSymbols(_subscriptionRequest.Security.Symbol, false);
                 var zipEntries = symbols.Select(x => new ZipEntryName { Time = localTime, Symbol = x } as BaseData).ToList();
-                var current = new FuturesChainUniverseDataCollection
+                var current = new BaseDataCollection
                 {
                     Symbol = _subscriptionRequest.Security.Symbol,
                     Data = zipEntries,
@@ -110,6 +111,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 };
 
                 _lastEmitTime = localTime;
+
+                Log.Trace($"DataQueueFuturesChainUniverseDataCollectionEnumerator({current.Symbol}): Emitting data point: {current.EndTime}. Count: {current.Data.Count}");
 
                 Current = current;
                 _needNewCurrent = false;

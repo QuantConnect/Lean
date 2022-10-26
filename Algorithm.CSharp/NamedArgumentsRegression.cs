@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -24,8 +24,40 @@ namespace QuantConnect.Algorithm.CSharp
     /// Used to test PythonNet kwargs
     /// </summary>
     /// <meta name="tag" content="using data" />
-    public class NamedArgumentsRegression : IRegressionAlgorithmDefinition
+    public class NamedArgumentsRegression : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        /// <summary>
+        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
+        /// </summary>
+        public override void Initialize()
+        {
+            SetStartDate(2013, 10, 08);  //Set Start Date
+            SetEndDate(2013, 10, 17);    //Set End Date
+            SetCash(100000);             //Set Strategy Cash
+
+            // Find more symbols here: http://quantconnect.com/data
+            // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
+            // Futures Resolution: Tick, Second, Minute
+            // Options Resolution: Minute Only.
+            AddEquity("SPY", Resolution.Daily);
+
+            // There are other assets with similar methods. See "Selecting Options" etc for more details.
+            // AddFuture, AddForex, AddCfd, AddOption
+        }
+
+        /// <summary>
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        /// </summary>
+        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice data)
+        {
+            if (!Portfolio.Invested)
+            {
+                SetHoldings("SPY", percentage: 1);
+                Debug("Purchased Stock");
+            }
+        }
+
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
@@ -34,7 +66,17 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.Python };
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 73;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -48,20 +90,21 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "1.200%"},
             {"Expectancy", "0"},
             {"Net Profit", "3.464%"},
-            {"Sharpe Ratio", "9.933"},
-            {"Probabilistic Sharpe Ratio", "82.470%"},
+            {"Sharpe Ratio", "19.148"},
+            {"Probabilistic Sharpe Ratio", "97.754%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "1.957"},
-            {"Beta", "-0.125"},
-            {"Annual Standard Deviation", "0.164"},
-            {"Annual Variance", "0.027"},
-            {"Information Ratio", "-4.577"},
-            {"Tracking Error", "0.225"},
-            {"Treynor Ratio", "-13.006"},
+            {"Alpha", "-0.005"},
+            {"Beta", "0.998"},
+            {"Annual Standard Deviation", "0.138"},
+            {"Annual Variance", "0.019"},
+            {"Information Ratio", "-34.028"},
+            {"Tracking Error", "0"},
+            {"Treynor Ratio", "2.651"},
             {"Total Fees", "$3.45"},
             {"Estimated Strategy Capacity", "$970000000.00"},
+            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Fitness Score", "0.112"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},

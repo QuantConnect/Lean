@@ -26,25 +26,25 @@ namespace QuantConnect.Securities
     public enum MarketHoursState
     {
         /// <summary>
-        /// The market is not open
+        /// The market is not open (0)
         /// </summary>
         [EnumMember(Value = "closed")]
         Closed,
 
         /// <summary>
-        /// The market is open, but before normal trading hours
+        /// The market is open, but before normal trading hours (1)
         /// </summary>
         [EnumMember(Value = "premarket")]
         PreMarket,
 
         /// <summary>
-        /// The market is open and within normal trading hours
+        /// The market is open and within normal trading hours (2)
         /// </summary>
         [EnumMember(Value = "market")]
         Market,
 
         /// <summary>
-        /// The market is open, but after normal trading hours
+        /// The market is open, but after normal trading hours (3)
         /// </summary>
         [EnumMember(Value = "postmarket")]
         PostMarket

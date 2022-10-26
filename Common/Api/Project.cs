@@ -27,31 +27,31 @@ namespace QuantConnect.Api
         /// Project id
         /// </summary>
         [JsonProperty(PropertyName = "projectId")]
-        public int ProjectId;
+        public int ProjectId { get; set; }
 
         /// <summary>
         /// Name of the project
         /// </summary>
         [JsonProperty(PropertyName = "name")]
-        public string Name;
+        public string Name { get; set; }
 
         /// <summary>
         /// Date the project was created
         /// </summary>
         [JsonProperty(PropertyName = "created")]
-        public DateTime Created;
+        public DateTime Created { get; set; }
 
         /// <summary>
         /// Modified date for the project
         /// </summary>
         [JsonProperty(PropertyName = "modified")]
-        public DateTime Modified;
+        public DateTime Modified { get; set; }
 
         /// <summary>
         /// Programming language of the project
         /// </summary>
         [JsonProperty(PropertyName = "language")]
-        public Language Language;
+        public Language Language { get; set; }
     }
 
     /// <summary>
@@ -63,6 +63,6 @@ namespace QuantConnect.Api
         /// List of projects for the authenticated user
         /// </summary>
         [JsonProperty(PropertyName = "projects")]
-        public List<Project> Projects;
+        public List<Project> Projects { get; set; }
     }
 }

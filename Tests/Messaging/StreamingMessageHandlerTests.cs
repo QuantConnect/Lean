@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -38,7 +38,7 @@ namespace QuantConnect.Tests.Messaging
             Config.Set("desktop-http-port", _port);
 
             _messageHandler = new StreamingMessageHandler();
-            _messageHandler.Initialize();
+            _messageHandler.Initialize(null);
         }
 
         [Test]

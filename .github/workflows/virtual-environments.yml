@@ -1,0 +1,61 @@
+name: Python Virtual Environments
+
+on:
+  push:
+    branches: ['*']
+    tags: ['*']
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    container:
+        image: quantconnect/lean:foundation
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build
+        run: dotnet build /p:Configuration=Release /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
+
+      - name: Python Virtual Environment System Packages
+        run: python -m venv /lean-testenv --system-site-packages && . /lean-testenv/bin/activate && pip install --no-cache-dir lean==1.0.99 && deactivate
+
+      - name: Run Virtual Environment Test System Packages
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonVirtualEnvironmentTests.AssertVirtualEnvironment"
+
+      - name: Python Virtual Environment
+        run: rm -rf /lean-testenv && python -m venv /lean-testenv && . /lean-testenv/bin/activate && pip install --no-cache-dir lean==1.0.99 && deactivate
+
+      - name: Run Virtual Environment Test
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonVirtualEnvironmentTests.AssertVirtualEnvironment"
+
+      - name: Run Python Package Tests
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests"
+
+      - name: Run Pomegranate Python Package Test
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.PomegranateTest"
+
+      - name: Run Tensorforce Python Package Test
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.TensorforceTests"
+
+      - name: Run StableBaselines Python Package Test
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.StableBaselinesTest"
+
+      - name: Run AxPlatform Python Package Test
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.AxPlatformTest"
+
+      - name: Run NeuralTangents Python Package Test
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.NeuralTangentsTest"
+
+      - name: Run NBeats Python Package Test
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.NBeatsTest"
+
+      - name: Run Tensorly Python Package Test
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.TensorlyTest"
+
+      - name: Run Ignite Python Package Test
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.IgniteTest"
+
+      - name: Run Hvplot Python Package Test
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.HvplotTest"

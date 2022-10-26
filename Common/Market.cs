@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace QuantConnect
@@ -26,9 +27,8 @@ namespace QuantConnect
         // the upper bound (non-inclusive) for market identifiers
         private const int MaxMarketIdentifier = 1000;
 
-        private static readonly object _lock = new object();
-        private static readonly Dictionary<string, int> Markets = new Dictionary<string, int>();
-        private static readonly Dictionary<int, string> ReverseMarkets = new Dictionary<int, string>();
+        private static Dictionary<string, int> Markets = new Dictionary<string, int>();
+        private static Dictionary<int, string> ReverseMarkets = new Dictionary<int, string>();
         private static readonly IEnumerable<Tuple<string, int>> HardcodedMarkets = new List<Tuple<string, int>>
         {
             Tuple.Create("empty", 0),
@@ -60,8 +60,12 @@ namespace QuantConnect
             Tuple.Create(CME, 23),
             Tuple.Create(SGX, 24),
             Tuple.Create(HKFE, 25),
+            Tuple.Create(NYSELIFFE, 26),
 
-            Tuple.Create(CFE, 33)
+            Tuple.Create(CFE, 33),
+            Tuple.Create(FTX, 34),
+            Tuple.Create(FTXUS, 35),
+            Tuple.Create(BinanceUS, 36)
         };
 
         static Market()
@@ -157,6 +161,11 @@ namespace QuantConnect
         public const string HKFE = "hkfe";
 
         /// <summary>
+        /// London International Financial Futures and Options Exchange
+        /// </summary>
+        public const string NYSELIFFE = "nyseliffe";
+
+        /// <summary>
         /// GDAX
         /// </summary>
         public const string GDAX = "gdax";
@@ -206,6 +215,20 @@ namespace QuantConnect
         /// </summary>
         public const string Bittrex = "bittrex";
 
+        /// <summary>
+        /// FTX
+        /// </summary>
+        public const string FTX = "ftx";
+
+        /// <summary>
+        /// FTX.US
+        /// </summary>
+        public const string FTXUS = "ftxus";
+
+        /// <summary>
+        /// Binance.US
+        /// </summary>
+        public const string BinanceUS = "binanceus";
 
         /// <summary>
         /// Adds the specified market to the map of available markets with the specified identifier.
@@ -223,30 +246,35 @@ namespace QuantConnect
 
             market = market.ToLowerInvariant();
 
-            // we lock since we don't want multiple threads getting these two dictionaries out of sync
-            lock (_lock)
+            int marketIdentifier;
+            if (Markets.TryGetValue(market, out marketIdentifier) && identifier != marketIdentifier)
             {
-                int marketIdentifier;
-                if (Markets.TryGetValue(market, out marketIdentifier) && identifier != marketIdentifier)
-                {
-                    throw new ArgumentException(
-                        $"Attempted to add an already added market with a different identifier. Market: {market}"
-                    );
-                }
-
-                string existingMarket;
-                if (ReverseMarkets.TryGetValue(identifier, out existingMarket))
-                {
-                    throw new ArgumentException(
-                        "Attempted to add a market identifier that is already in use. " +
-                        $"New Market: {market} Existing Market: {existingMarket}"
-                    );
-                }
-
-                // update our maps
-                Markets[market] = identifier;
-                ReverseMarkets[identifier] = market;
+                throw new ArgumentException(
+                    $"Attempted to add an already added market with a different identifier. Market: {market}"
+                );
             }
+
+            string existingMarket;
+            if (ReverseMarkets.TryGetValue(identifier, out existingMarket))
+            {
+                throw new ArgumentException(
+                    "Attempted to add a market identifier that is already in use. " +
+                    $"New Market: {market} Existing Market: {existingMarket}"
+                );
+            }
+
+            // update our maps.
+            // We make a copy and update the copy, later swap the references so it's thread safe with no lock
+            var newMarketDictionary = Markets.ToDictionary(entry => entry.Key,
+                entry => entry.Value);
+            newMarketDictionary[market] = identifier;
+
+            var newReverseMarketDictionary = ReverseMarkets.ToDictionary(entry => entry.Key,
+                entry => entry.Value);
+            newReverseMarketDictionary[identifier] = market;
+
+            Markets = newMarketDictionary;
+            ReverseMarkets = newReverseMarketDictionary;
         }
 
         /// <summary>
@@ -256,11 +284,7 @@ namespace QuantConnect
         /// <returns>The internal code used for the market. Corresponds to the value used when calling <see cref="Add"/></returns>
         public static int? Encode(string market)
         {
-            lock (_lock)
-            {
-                int code;
-                return !Markets.TryGetValue(market, out code) ? (int?) null : code;
-            }
+            return !Markets.TryGetValue(market, out var code) ? null : code;
         }
 
         /// <summary>
@@ -270,11 +294,15 @@ namespace QuantConnect
         /// <returns>The string representation of the market, or null if not found</returns>
         public static string Decode(int code)
         {
-            lock (_lock)
-            {
-                string market;
-                return !ReverseMarkets.TryGetValue(code, out market) ? null : market;
-            }
+            return !ReverseMarkets.TryGetValue(code, out var market) ? null : market;
+        }
+
+        /// <summary>
+        /// Returns a list of the supported markets
+        /// </summary>
+        public static List<string> SupportedMarkets()
+        {
+            return Markets.Keys.ToList();
         }
     }
 }

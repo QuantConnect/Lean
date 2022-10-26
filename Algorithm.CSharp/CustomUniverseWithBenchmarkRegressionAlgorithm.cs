@@ -103,7 +103,8 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new Exception($"Security Price error. Price should change every new hour");
                 }
                 if (data.Time.Minute != 0
-                    && _previousSecurityValue != security.Price)
+                    && _previousSecurityValue != security.Price
+                    && security.IsTradable)
                 {
                     throw new Exception($"Security Price error. Price should not change every minute");
                 }
@@ -169,6 +170,17 @@ namespace QuantConnect.Algorithm.CSharp
         public Language[] Languages { get; } = { Language.CSharp };
 
         /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        /// <remarks>Using -1 to skip regression test until the gh issue #6253 isn't resolved</remarks>
+        public long DataPoints => -1;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
@@ -189,8 +201,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-2.564"},
-            {"Tracking Error", "0.214"},
+            {"Information Ratio", "-2.094"},
+            {"Tracking Error", "0.175"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},

@@ -30,7 +30,7 @@ namespace QuantConnect.Tests.Python
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
                     "from AlgorithmImports import *\n" +
                     "class CustomConsolidator():\n" +
                     "   def __init__(self):\n" +
@@ -72,7 +72,7 @@ namespace QuantConnect.Tests.Python
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
                     "from AlgorithmImports import *\n" +
                     "class CustomConsolidator():\n" +
                     "   def __init__(self):\n" +
@@ -103,7 +103,7 @@ namespace QuantConnect.Tests.Python
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
                     "from AlgorithmImports import *\n" +
                     "class CustomConsolidator():\n" +
                     "   def __init__(self):\n" +
@@ -128,7 +128,7 @@ namespace QuantConnect.Tests.Python
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
                     "from AlgorithmImports import *\n" +
                     "class CustomConsolidator():\n" +
                     "   def __init__(self):\n" +
@@ -160,18 +160,18 @@ namespace QuantConnect.Tests.Python
                     {"Drawdown", "0.300%"},
                     {"Expectancy", "2.577"},
                     {"Net Profit", "1.067%"},
-                    {"Sharpe Ratio", "8.793"},
-                    {"Probabilistic Sharpe Ratio", "89.147%"},
+                    {"Sharpe Ratio", "6.873"},
+                    {"Probabilistic Sharpe Ratio", "89.382%"},
                     {"Loss Rate", "80%"},
                     {"Win Rate", "20%"},
                     {"Profit-Loss Ratio", "16.88"},
-                    {"Alpha", "0.522"},
-                    {"Beta", "0.345"},
-                    {"Annual Standard Deviation", "0.081"},
-                    {"Annual Variance", "0.007"},
-                    {"Information Ratio", "1.136"},
-                    {"Tracking Error", "0.144"},
-                    {"Treynor Ratio", "2.061"},
+                    {"Alpha", "0.34"},
+                    {"Beta", "0.351"},
+                    {"Annual Standard Deviation", "0.068"},
+                    {"Annual Variance", "0.005"},
+                    {"Information Ratio", "0.865"},
+                    {"Tracking Error", "0.118"},
+                    {"Treynor Ratio", "1.336"},
                     {"Total Fees", "$69.81"}
                 },
                 Language.Python,
@@ -189,17 +189,18 @@ namespace QuantConnect.Tests.Python
         {
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
                     "from AlgorithmImports import *\n" +
                     "class ImplementingClass():\n" +
                     "   def __init__(self):\n" +
                     "       self.EventCalled = False\n" +
-                    "       self.Consolidator = CustomConsolidator(timedelta(minutes=1))\n" +
+                    "       self.Consolidator = CustomConsolidator(timedelta(minutes=2))\n" +
                     "       self.Consolidator.DataConsolidated += self.ConsolidatorEvent\n" +
                     "   def ConsolidatorEvent(self, sender, bar):\n" +
                     "       self.EventCalled = True\n" +
                     "class CustomConsolidator(QuoteBarConsolidator):\n" +
                     "   def __init__(self,span):\n" +
+                    "       super().__init__(span)\n" +
                     "       self.Span = span");
 
                 var implementingClass = module.GetAttr("ImplementingClass").Invoke();
@@ -225,7 +226,7 @@ namespace QuantConnect.Tests.Python
                 };
 
                 wrapper.Update(bar1);
-                wrapper.Scan(time.AddMinutes(1));
+                wrapper.Scan(time.AddMinutes(2));
                 implementingClass.GetAttr("EventCalled").TryConvert(out called);
                 Assert.True(called);
             }

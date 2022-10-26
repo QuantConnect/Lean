@@ -82,9 +82,6 @@ class FutureUniverseSelectionModel(UniverseSelectionModel):
         # set the future chain contract filter function
         futureChain.SetFilter(self.Filter)
 
-        # force future chain security to not be directly tradable AFTER it's configured to ensure it's not overwritten
-        futureChain.IsTradable = False
-
         return FuturesChainUniverse(futureChain, settings)
 
     def CreateFutureChainSecurity(self, algorithm, symbol, settings):

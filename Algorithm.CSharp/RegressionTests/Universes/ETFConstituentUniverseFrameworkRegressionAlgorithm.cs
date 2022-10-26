@@ -48,7 +48,12 @@ namespace QuantConnect.Algorithm.CSharp
             var spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
 
             UniverseSettings.Resolution = Resolution.Hour;
-            AddUniverse(Universe.ETF(spy, UniverseSettings, FilterETFConstituents));
+            AddUniverseWrapper(spy);
+        }
+
+        protected virtual void AddUniverseWrapper(Symbol symbol)
+        {
+            AddUniverse(Universe.ETF(symbol, UniverseSettings, FilterETFConstituents));
         }
 
         /// <summary>
@@ -195,7 +200,17 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+        public virtual Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 1905;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -209,18 +224,18 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "0.800%"},
             {"Expectancy", "0"},
             {"Net Profit", "0.520%"},
-            {"Sharpe Ratio", "1.518"},
-            {"Probabilistic Sharpe Ratio", "57.759%"},
+            {"Sharpe Ratio", "1.247"},
+            {"Probabilistic Sharpe Ratio", "54.498%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.022"},
+            {"Alpha", "0.015"},
             {"Beta", "0.101"},
-            {"Annual Standard Deviation", "0.022"},
+            {"Annual Standard Deviation", "0.018"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-0.653"},
-            {"Tracking Error", "0.117"},
-            {"Treynor Ratio", "0.333"},
+            {"Information Ratio", "-0.528"},
+            {"Tracking Error", "0.096"},
+            {"Treynor Ratio", "0.224"},
             {"Total Fees", "$4.00"},
             {"Estimated Strategy Capacity", "$1300000000.00"},
             {"Lowest Capacity Asset", "AIG R735QTJ8XC9X"},

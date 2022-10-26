@@ -16,7 +16,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Util;
@@ -41,11 +40,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="exchangeTimeZone">The time zone the raw data is time stamped in</param>
         /// <param name="tradeBarAggregator">The trade bar aggregator enumerator</param>
         /// <param name="auxDataEnumerators">The auxiliary data enumerators</param>
-        public LiveAuxiliaryDataSynchronizingEnumerator(ITimeProvider timeProvider, DateTimeZone exchangeTimeZone, IEnumerator<BaseData> tradeBarAggregator, params IEnumerator<BaseData>[] auxDataEnumerators)
+        public LiveAuxiliaryDataSynchronizingEnumerator(ITimeProvider timeProvider, DateTimeZone exchangeTimeZone, IEnumerator<BaseData> tradeBarAggregator, List<IEnumerator<BaseData>> auxDataEnumerators)
         {
             _timeProvider = timeProvider;
             _exchangeTimeZone = exchangeTimeZone;
-            _auxDataEnumerators = auxDataEnumerators.ToList();
+            _auxDataEnumerators = auxDataEnumerators;
             _tradeBarAggregator = tradeBarAggregator;
         }
 

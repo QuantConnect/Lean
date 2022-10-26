@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -111,9 +111,9 @@ namespace QuantConnect.Tests.Optimizer.Strategies
 
             Strategy.PushNewResults(OptimizationResult.Initial);
 
-            while (_pendingOptimizationResults.Count > 0)
+            while (_pendingOptimizationResults.TryDequeue(out var item))
             {
-                Strategy.PushNewResults(_pendingOptimizationResults.Dequeue());
+                Strategy.PushNewResults(item);
             }
 
             Assert.AreEqual(_profit(solution), _parse(Strategy.Solution.JsonBacktestResult, "Profit"));
@@ -133,9 +133,9 @@ namespace QuantConnect.Tests.Optimizer.Strategies
 
             Strategy.PushNewResults(OptimizationResult.Initial);
 
-            while (_pendingOptimizationResults.Count > 0)
+            while (_pendingOptimizationResults.TryDequeue(out var item))
             {
-                Strategy.PushNewResults(_pendingOptimizationResults.Dequeue());
+                Strategy.PushNewResults(item);
             }
 
             Assert.AreEqual(_profit(solution), _parse(Strategy.Solution.JsonBacktestResult, "Profit"));
@@ -164,9 +164,9 @@ namespace QuantConnect.Tests.Optimizer.Strategies
 
             Strategy.PushNewResults(OptimizationResult.Initial);
 
-            while (!reached && _pendingOptimizationResults.Count > 0)
+            while (!reached && _pendingOptimizationResults.TryDequeue(out var item))
             {
-                Strategy.PushNewResults(_pendingOptimizationResults.Dequeue());
+                Strategy.PushNewResults(item);
             }
 
             Assert.IsTrue(reached);
@@ -195,9 +195,9 @@ namespace QuantConnect.Tests.Optimizer.Strategies
 
             Strategy.PushNewResults(OptimizationResult.Initial);
 
-            while (!reached && _pendingOptimizationResults.Count > 0)
+            while (!reached && _pendingOptimizationResults.TryDequeue(out var item))
             {
-                Strategy.PushNewResults(_pendingOptimizationResults.Dequeue());
+                Strategy.PushNewResults(item);
             }
 
             Assert.IsFalse(reached);
