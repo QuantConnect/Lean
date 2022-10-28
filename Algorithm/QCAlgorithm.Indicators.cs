@@ -1773,6 +1773,30 @@ namespace QuantConnect.Algorithm
             return sharpeRatio;
         }
 
+        /// <summary>
+        /// Creates a new Sortino indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose Sortino we want</param>
+        /// <param name="sortinoPeriod">Period of historical observation for Sortino ratio calculation</param>
+        /// <param name="minimumAcceptableReturn">Minimum acceptable return (eg risk-free rate) for the Sortino ratio calculation</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The SortinoRatio indicator for the requested symbol over the specified period</returns>
+        [DocumentationAttribute(Indicators)]
+        public SortinoRatio SORTINO(Symbol symbol, int sortinoPeriod, double minimumAcceptableReturn = 0.0, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"SORTINO({sortinoPeriod},{minimumAcceptableReturn})", resolution);
+            var sortinoRatio = new SortinoRatio(name, sortinoPeriod, minimumAcceptableReturn);
+            RegisterIndicator(symbol, sortinoRatio, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, sortinoRatio, resolution, selector);
+            }
+
+            return sortinoRatio;
+        }
+
 
         /// <summary>
         /// Creates an SimpleMovingAverage indicator for the symbol. The indicator will be automatically
@@ -1846,6 +1870,32 @@ namespace QuantConnect.Algorithm
 
             return standardDeviation;
         }
+
+        /// <summary>
+        /// Creates a new TargetDownsideDeviation indicator. The target downside deviation is defined as the root-mean-square, or RMS, of the deviations of the
+        /// realized return’s underperformance from the target return where all returns above the target return are treated as underperformance of 0.
+        /// </summary>
+        /// <param name="symbol">The symbol whose TDD we want</param>
+        /// <param name="period">The period over which to compute the TDD</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="minimumAcceptableReturn">Minimum acceptable return (MAR) for the target downside deviation calculation</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The TargetDownsideDeviation indicator for the requested symbol over the specified period</returns>
+        [DocumentationAttribute(Indicators)]
+        public TargetDownsideDeviation TDD(Symbol symbol, int period, double minimumAcceptableReturn = 0, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"TDD({period},{minimumAcceptableReturn})", resolution);
+            var targetDownsideDeviation = new TargetDownsideDeviation(name, period, minimumAcceptableReturn);
+            RegisterIndicator(symbol, targetDownsideDeviation, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, targetDownsideDeviation, resolution, selector);
+            }
+
+            return targetDownsideDeviation;
+        }
+
         /// <summary>
         /// Creates a new Stochastic indicator.
         /// </summary>
