@@ -13,9 +13,11 @@
  * limitations under the License.
 */
 
+using Accord.Math;
 using NUnit.Framework;
 using QuantConnect.Indicators;
 using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Indicators 
 {
@@ -29,7 +31,7 @@ namespace QuantConnect.Tests.Indicators
 
         protected override string TestFileName => "spy_sortino.csv";
 
-        protected override string TestColumnName => "sortino_15_rf_0";
+        protected override string TestColumnName => "sortino_rf_0_period_15";
 
         [Test]
         public void TestConstantValues() 
@@ -64,9 +66,35 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
+        public void TestValuesFromCMEGroup()
+        {
+            // Source: https://www.cmegroup.com/education/files/rr-sortino-a-sharper-ratio.pdf
+
+            List<decimal> values = new List<decimal>();
+            values.Add(1m);
+            var annualReturns = new[] { .17, .15, .23, -.05, .12, .09, .13, -.04 };
+            for (var i = 0; i < annualReturns.Count(x => true); i++)
+            {
+                values.Add(values[i] * (decimal)(1 + annualReturns[i]));
+            }
+
+            var periods = annualReturns.Count(x => true);
+            var sr = new SortinoRatio("SORTINO", periods, minimumAcceptableReturn: 0);
+
+            var time = DateTime.MinValue;
+            for (int i = 0; i <= periods; i++)
+            {
+                IndicatorDataPoint point = new IndicatorDataPoint(time.AddDays(i), values[i]);
+                sr.Update(point);
+            }
+
+            Assert.AreEqual(4.417, sr.Current.Value.RoundToSignificantDigits(4));
+        }
+
+        [Test]
         public void RunTestIndicatorWithNonZeroRiskFreeRate()
         {
-            TestHelper.TestIndicator(new SortinoRatio("SORTINO", 15, 0.01m), TestFileName, "sortino_15_rf_0.01", Assertion);
+            TestHelper.TestIndicator(new SortinoRatio("SORTINO", 15, 0.01), TestFileName, "sortino_rf_0.01_period_15", Assertion);
         }
 
     }

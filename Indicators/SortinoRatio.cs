@@ -13,21 +13,20 @@
  * limitations under the License.
 */
 
-using System;
-using System.Linq;
-
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// Calculation of the Sortino Ratio, a modification of the Sharpe Ratio.
+    /// Calculation of the Sortino Ratio, a modification of the <see cref="SharpeRatio"/>.
     ///
-    /// Reference: https://www.investopedia.com/terms/s/sortinoratio.asp
-    /// Formula: S(x) = (mean(Rx) - Rf) / stdDev(Rx_d)
+    /// Reference: https://www.cmegroup.com/education/files/rr-sortino-a-sharper-ratio.pdf
+    /// Formula: S(x) = (R - T) / TDD
     /// Where:
     /// S(x) - Sortino ratio of x
-    /// Rx - trailing returns of x
-    /// Rf - risk-free rate
-    /// Rx_d - trailing downside returns of x
+    /// R - the average period return
+    /// T - the target or required rate of return for the investment strategy under consideration. In
+    /// Sortino’s early work, T was originally known as the minimum acceptable return, or MAR. In his
+    /// more recent work, MAR is now referred to as the Desired Target Return.
+    /// TDD - the target downside deviation. <see cref="TargetDownsideDeviation"/>
     /// </summary>
     public class SortinoRatio : SharpeRatio
     {
@@ -36,30 +35,22 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">Period of historical observation for Sortino ratio calculation</param>
-        /// <param name="riskFreeRate">Risk-free rate for Sortino ratio calculation</param>
-        public SortinoRatio(string name, int period, decimal riskFreeRate = 0.0m)
-            : base(name, period, riskFreeRate)
+        /// <param name="minimumAcceptableReturn">Minimum acceptable return for Sortino ratio calculation</param>
+        public SortinoRatio(string name, int period, double minimumAcceptableReturn = 0)
+             : base(name, period, minimumAcceptableReturn.SafeDecimalCast())
         {
+            var denominator = new TargetDownsideDeviation(period, minimumAcceptableReturn).Of(RateOfChange);
+            Ratio = Numerator.Over(denominator);
         }
-        
+
         /// <summary>
         /// Creates a new SortinoRatio indicator using the specified periods
         /// </summary>
         /// <param name="period">Period of historical observation for Sortino ratio calculation</param>
-        /// <param name="riskFreeRate">Risk-free rate for Sortino ratio calculation</param>
-        public SortinoRatio(int period, decimal riskFreeRate = 0.0m)
-            : this($"SORTINO({period},{riskFreeRate})", period, riskFreeRate)
+        /// <param name="minimumAcceptableReturn">Minimum acceptable return for Sortino ratio calculation</param>
+        public SortinoRatio(int period, double minimumAcceptableReturn = 0)
+            : this($"SORTINO({period},{minimumAcceptableReturn})", period, minimumAcceptableReturn)
         {
-        }
-
-        /// <summary>
-        /// Create the denominator of the Sortino Ratio equation
-        /// </summary>
-        /// <param name="roc">The denominator is a function of the returns</param>
-        /// <returns>An Indicator object representing the denominator</returns>
-        protected override IndicatorBase CreateStandardDeviation(RateOfChange roc)
-        {
-            return new StandardDownsideDeviation(_period).Of(roc);
         }
     }
 }

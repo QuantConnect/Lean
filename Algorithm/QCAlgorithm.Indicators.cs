@@ -1778,20 +1778,20 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The symbol whose Sortino we want</param>
         /// <param name="sortinoPeriod">Period of historical observation for Sortino ratio calculation</param>
-        /// <param name="riskFreeRate">Risk-free rate for Sortino ratio calculation</param>
+        /// <param name="minimumAcceptableReturn">Minimum acceptable return (eg risk-free rate) for the Sortino ratio calculation</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>The SortinoRatio indicator for the requested symbol over the specified period</returns>
         [DocumentationAttribute(Indicators)]
-        public SortinoRatio SORTINO(Symbol symbol, int sortinoPeriod, decimal riskFreeRate = 0.0m, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        public SortinoRatio SORTINO(Symbol symbol, int sortinoPeriod, double minimumAcceptableReturn = 0.0, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            var name = CreateIndicatorName(symbol, $"SORTINO({sortinoPeriod},{riskFreeRate})", resolution);
-            var sortinoRatio = new SortinoRatio(name, sortinoPeriod, riskFreeRate);
+            var name = CreateIndicatorName(symbol, $"SORTINO({sortinoPeriod},{minimumAcceptableReturn})", resolution);
+            var sortinoRatio = new SortinoRatio(name, sortinoPeriod, minimumAcceptableReturn);
             RegisterIndicator(symbol, sortinoRatio, resolution, selector);
 
             if (EnableAutomaticIndicatorWarmUp)
             {
-                WarmUpIndicator(symbol, sortinoRatio, resolution);
+                WarmUpIndicator(symbol, sortinoRatio, resolution, selector);
             }
 
             return sortinoRatio;
@@ -1872,26 +1872,28 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new StandardDownsideDeviation indicator. This will return the population downside standard deviation of samples over the specified period.
+        /// Creates a new TargetDownsideDeviation indicator. The target downside deviation is defined as the root-mean-square, or RMS, of the deviations of the
+        /// realized return’s underperformance from the target return where all returns above the target return are treated as underperformance of 0.
         /// </summary>
-        /// <param name="symbol">The symbol whose STDD we want</param>
-        /// <param name="period">The period over which to compute the STDD</param>
+        /// <param name="symbol">The symbol whose TDD we want</param>
+        /// <param name="period">The period over which to compute the TDD</param>
         /// <param name="resolution">The resolution</param>
+        /// <param name="minimumAcceptableReturn">Minimum acceptable return (MAR) for the target downside deviation calculation</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
-        /// <returns>The StandardDownsideDeviation indicator for the requested symbol over the specified period</returns>
+        /// <returns>The TargetDownsideDeviation indicator for the requested symbol over the specified period</returns>
         [DocumentationAttribute(Indicators)]
-        public StandardDownsideDeviation STDD(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        public TargetDownsideDeviation TDD(Symbol symbol, int period, double minimumAcceptableReturn = 0, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            var name = CreateIndicatorName(symbol, $"STDD({period})", resolution);
-            var standardDownsideDeviation = new StandardDownsideDeviation(name, period);
-            RegisterIndicator(symbol, standardDownsideDeviation, resolution, selector);
+            var name = CreateIndicatorName(symbol, $"TDD({period},{minimumAcceptableReturn})", resolution);
+            var targetDownsideDeviation = new TargetDownsideDeviation(name, period, minimumAcceptableReturn);
+            RegisterIndicator(symbol, targetDownsideDeviation, resolution, selector);
 
             if (EnableAutomaticIndicatorWarmUp)
             {
-                WarmUpIndicator(symbol, standardDownsideDeviation, resolution);
+                WarmUpIndicator(symbol, targetDownsideDeviation, resolution, selector);
             }
 
-            return standardDownsideDeviation;
+            return targetDownsideDeviation;
         }
 
         /// <summary>
@@ -2169,29 +2171,6 @@ namespace QuantConnect.Algorithm
             }
 
             return variance;
-        }
-
-        /// <summary>
-        /// Creates a new DownsideVariance indicator. This will return the population downside variance of samples over the specified period.
-        /// </summary>
-        /// <param name="symbol">The symbol whose VARD we want</param>
-        /// <param name="period">The period over which to compute the DVAR</param>
-        /// <param name="resolution">The resolution</param>
-        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
-        /// <returns>The DownsideVariance indicator for the requested symbol over the specified period</returns>
-        [DocumentationAttribute(Indicators)]
-        public DownsideVariance VARD(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
-        {
-            var name = CreateIndicatorName(symbol, $"VARD({period})", resolution);
-            var downsideVariance = new DownsideVariance(name, period);
-            RegisterIndicator(symbol, downsideVariance, resolution, selector);
-
-            if (EnableAutomaticIndicatorWarmUp)
-            {
-                WarmUpIndicator(symbol, downsideVariance, resolution);
-            }
-
-            return downsideVariance;
         }
 
         /// <summary>
