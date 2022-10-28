@@ -73,10 +73,6 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
             var avg = window.Select(x => Math.Pow(Math.Min(0, (double)x.Value - _minimumAcceptableReturn), 2)).Average();
-            if (IsReady)
-            {
-                var a = 1;
-            }
             return Math.Sqrt(avg).SafeDecimalCast();
         }
     }
