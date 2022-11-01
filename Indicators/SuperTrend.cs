@@ -22,7 +22,7 @@ namespace QuantConnect.Indicators
     /// Formula can be found here via the excel file:
     /// https://tradingtuitions.com/supertrend-indicator-excel-sheet-with-realtime-buy-sell-signals/
     /// </summary>
-    public class SuperTrend : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
+    public class SuperTrend : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
         private readonly decimal _multiplier;
         private decimal _superTrend;
@@ -100,7 +100,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(TradeBar input)
+        protected override decimal ComputeNextValue(IBaseDataBar input)
         {
             if (!_averageTrueRange.Update(input))
             {
