@@ -16,6 +16,8 @@
 using System.IO;
 using System.ComponentModel.Composition;
 using System;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace QuantConnect.Interfaces
 {
@@ -25,6 +27,16 @@ namespace QuantConnect.Interfaces
     [InheritedExport(typeof(IDataMonitor))]
     public interface IDataMonitor
     {
+        /// <summary>
+        /// Initializes the <see cref="DataMonitor"/> instance
+        /// </summary>
+        void Initialize();
+
+        /// <summary>
+        /// Terminates the data monitor generating a final report
+        /// </summary>
+        void Exit();
+
         /// <summary>
         /// Generates a report on missing data
         /// </summary>

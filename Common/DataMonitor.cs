@@ -13,9 +13,11 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using QuantConnect.Interfaces;
-using QuantConnect.Logging;
 using QuantConnect.Util;
 
 namespace QuantConnect
@@ -25,14 +27,65 @@ namespace QuantConnect
     /// </summary>
     public class DataMonitor : IDataMonitor
     {
-        private readonly HashSet<string> _fetchedData = new();
-        private readonly HashSet<string> _missingData = new();
+        private readonly ConcurrentSet<string> _fetchedData = new();
+        private readonly ConcurrentSet<string> _missingData = new();
+
+        private CancellationTokenSource _cancellationTokenSource;
+        private bool _initialized;
+
+        private readonly List<double> _dataRequestRates = new();
+        private int _prevDataRequestsCount;
+        private DateTime _lastDataRequestRateCalculationTime;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="DataMonitor"/> class using the specified data provider
+        /// Initializes a new instance of the <see cref="DataMonitor"/> class
         /// </summary>
         public DataMonitor()
         {
+        }
+
+        /// <summary>
+        /// Initializes the <see cref="DataMonitor"/> instance
+        /// </summary>
+        public void Initialize()
+        {
+            if (_initialized)
+            {
+                return;
+            }
+
+            _initialized = true;
+            _cancellationTokenSource = new CancellationTokenSource();
+            var token = _cancellationTokenSource.Token;
+
+            _lastDataRequestRateCalculationTime = DateTime.UtcNow;
+
+            Task.Run(async () => {
+                while (!token.IsCancellationRequested)
+                {
+                    await Task.Delay(Time.GetSecondUnevenWait(1000), token).ConfigureAwait(false);
+                    ComputeFileRequestFrequency();
+                }
+            }, token);
+        }
+
+        /// <summary>
+        /// Terminates the data monitor generating a final report
+        /// </summary>
+        public void Exit()
+        {
+            if (!_initialized)
+            {
+                return;
+            }
+
+            _cancellationTokenSource.Cancel();
+            _cancellationTokenSource.DisposeSafely();
+            _fetchedData.Clear();
+            _missingData.Clear();
+            _dataRequestRates.Clear();
+            _prevDataRequestsCount = 0;
+            _initialized = false;
         }
 
         /// <summary>
@@ -49,11 +102,11 @@ namespace QuantConnect
                     {
                         source = $"{symbol}|{date:yyyyMMdd}|{resolution}|{tickType}|{dataType.Name}";
                     }
-                    Logging.Log.Debug($"Data from {source} was not fetched");
+                    Logging.Log.Debug($"DataMonitor.GenerateReport(): Data from {source} could not be fetched");
                 }
             }
 
-            return new DataMonitorReport(_fetchedData, _missingData);
+            return new DataMonitorReport(_fetchedData, _missingData, _dataRequestRates);
         }
         
         /// <summary>
@@ -69,6 +122,18 @@ namespace QuantConnect
             {
                 _missingData.Add(e.Path);
             }
+        }
+
+        private void ComputeFileRequestFrequency()
+        {
+            var requestsCount = _fetchedData.Count + _missingData.Count;
+            var requestsCountDelta = requestsCount - _prevDataRequestsCount;
+            var now = DateTime.UtcNow;
+            var timeDelta = now - _lastDataRequestRateCalculationTime;
+
+            _dataRequestRates.Add(requestsCountDelta / timeDelta.TotalSeconds);
+            _prevDataRequestsCount = requestsCount;
+            _lastDataRequestRateCalculationTime = now;
         }
     }
 }

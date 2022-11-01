@@ -188,7 +188,10 @@ namespace QuantConnect.Lean.Engine
             DataCacheProvider = new ZipDataCacheProvider(DataProvider, isDataEphemeral: liveMode);
             DataMonitor = new DataMonitor();
 
-            DataProvider.NewDataRequest += DataMonitor.OnNewDataRequest;
+            if (!liveMode)
+            {
+                DataProvider.NewDataRequest += DataMonitor.OnNewDataRequest;
+            }
         }
 
         /// <summary>

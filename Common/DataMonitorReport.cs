@@ -14,10 +14,7 @@
 */
 
 using System.Collections.Generic;
-using System.Linq;
-using QuantConnect.Data.Fundamental;
 using QuantConnect.Interfaces;
-using QuantConnect.Util;
 
 namespace QuantConnect
 {
@@ -26,9 +23,12 @@ namespace QuantConnect
     /// </summary>
     public class DataMonitorReport
     {
-        private readonly IReadOnlyCollection<string> _fetchedData;
-        private readonly IReadOnlyCollection<string> _missingData;
-        
+        private readonly ISet<string> _fetchedData;
+        private readonly ISet<string> _missingData;
+
+        /// <summary>
+        /// Gets the number of data files that were fetched
+        /// </summary>
         public int MissingDataCount
         {
             get
@@ -37,6 +37,9 @@ namespace QuantConnect
             }
         }
 
+        /// <summary>
+        /// Fets the percentage of data requests that could not be satisfied
+        /// </summary>
         public double MissingDataPercentage
         {
             get
@@ -52,10 +55,25 @@ namespace QuantConnect
             }
         }
 
-        public DataMonitorReport(HashSet<string> fetchedData, HashSet<string> missingData)
+        /// <summary>
+        /// Rates at which data requests were made per second
+        /// </summary>
+        public IEnumerable<double> DataRequestRates { get; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DataMonitorReport"/> class
+        /// </summary>
+        /// <param name="fetchedData">List of data paths that were requested and successfuly served</param>
+        /// <param name="missingData">List of data paths that were requested but could not be served</param>
+        /// <param name="dataRequestRates">Rates at which data requests were made per second</param>
+        public DataMonitorReport(
+            ISet<string> fetchedData,
+            ISet<string> missingData,
+            IEnumerable<double> dataRequestRates)
         {
             _fetchedData = fetchedData;
             _missingData = missingData;
+            DataRequestRates = dataRequestRates;
         }
     }
 }
