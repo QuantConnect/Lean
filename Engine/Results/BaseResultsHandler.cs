@@ -237,8 +237,10 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         public virtual void Exit()
         {
-            var dataReport = _dataMonitor.GenerateReport();
-            // TODO: Log and save the report
+            var report = _dataMonitor.GenerateReport();
+            var jsonReport = JsonConvert.SerializeObject(report, Formatting.Indented);
+
+            Log.Trace("BaseResultsHandler.Exit(): \n" + jsonReport);
 
             // reset standard out/error
             Console.SetOut(StandardOut);
