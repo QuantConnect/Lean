@@ -13,8 +13,11 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
 using QuantConnect.Interfaces;
+using QuantConnect.Util;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect
 {
@@ -31,10 +34,7 @@ namespace QuantConnect
         /// </summary>
         public int MissingDataCount
         {
-            get
-            {
-                return _missingData.Count;
-            }
+            get { return _missingData.Count; }
         }
 
         /// <summary>
@@ -61,6 +61,54 @@ namespace QuantConnect
         public IEnumerable<double> DataRequestRates { get; }
 
         /// <summary>
+        /// Universe data path taht were requested and successfully fetched
+        /// </summary>
+        public IEnumerable<string> FetchedUniverseData
+        {
+            get { return GetUniverseDataPaths(_fetchedData); }
+        }
+
+        /// <summary>
+        /// Universe data paths that were requested but could not be fetched
+        /// </summary>
+        public IEnumerable<string> MissingUniverseData
+        {
+            get { return GetUniverseDataPaths(_missingData); }
+        }
+
+        /// <summary>
+        /// Universe data paths that were requested and successfully fetched, grouped by security type
+        /// </summary>
+        public IEnumerable<IGrouping<string, string>> FetchedUniverseDataBySecurityType
+        {
+            get { return GetUniverseDataBySecurityType(_fetchedData); }
+        }
+
+        /// <summary>
+        /// Universe data paths that were requested and successfully fetched, grouped by market
+        /// </summary>
+        public IEnumerable<IGrouping<string, string>> FetchedUniverseDataByMarket
+        {
+            get { return GetUniverseDataByMarket(_fetchedData); }
+        }
+
+        /// <summary>
+        /// Universe data paths that were requested but could not be fetched, grouped by security type
+        /// </summary>
+        public IEnumerable<IGrouping<string, string>> MissingUniverseDataBySecurityType
+        {
+            get { return GetUniverseDataBySecurityType(_missingData); }
+        }
+
+        /// <summary>
+        /// Universe data paths that were requested but could not be fetched, grouped by market
+        /// </summary>
+        public IEnumerable<IGrouping<string, string>> MissingUniverseDataByMarket
+        {
+            get { return GetUniverseDataByMarket(_missingData); }
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="DataMonitorReport"/> class
         /// </summary>
         /// <param name="fetchedData">List of data paths that were requested and successfuly served</param>
@@ -74,6 +122,53 @@ namespace QuantConnect
             _fetchedData = fetchedData;
             _missingData = missingData;
             DataRequestRates = dataRequestRates;
+        }
+
+        private static char[] _pathSeparators = new[] { '/', '\\' };
+
+        /// <summary>
+        /// Gets the universe data paths from the specified data paths
+        /// </summary>
+        private static IEnumerable<string> GetUniverseDataPaths(ISet<string> paths)
+        {
+            return paths.Where(path =>
+            {
+                var pathParts = path
+                    .Split(_pathSeparators, StringSplitOptions.RemoveEmptyEntries)
+                    // Skip file name
+                    .SkipLast(1)
+                    // Last two are either 'fundamental/coarse' or 'universe'
+                    .TakeLast(2)
+                    .ToArray();
+                return (pathParts[0].Equals("fundamental", System.StringComparison.OrdinalIgnoreCase) &&
+                        pathParts[1].Equals("coarse", System.StringComparison.OrdinalIgnoreCase)) ||
+                       pathParts[1].Equals("universe", System.StringComparison.OrdinalIgnoreCase);
+            });
+        }
+
+        /// <summary>
+        /// Gets the universe data paths from the specified data paths, grouped by security type
+        /// </summary>
+        private static IEnumerable<IGrouping<string, string>> GetUniverseDataBySecurityType(ISet<string> paths)
+        {
+            return GetUniverseDataPaths(paths).GroupBy(path =>
+            {
+                var pathParts = path.Split(_pathSeparators, StringSplitOptions.RemoveEmptyEntries).ToList();
+                return pathParts.Find(x => LeanData.SecurityTypeAsDataPath.Contains(x.ToLowerInvariant()));
+            });
+        }
+
+        /// <summary>
+        /// Gets the universe data paths from the specified data paths, grouped by market
+        /// </summary>
+        private static IEnumerable<IGrouping<string, string>> GetUniverseDataByMarket(ISet<string> paths)
+        {
+            return GetUniverseDataPaths(paths).GroupBy(path =>
+            {
+                var pathParts = path.Split(_pathSeparators, StringSplitOptions.RemoveEmptyEntries).ToList();
+                var index = pathParts.FindIndex(x => LeanData.SecurityTypeAsDataPath.Contains(x.ToLowerInvariant()));
+                return pathParts[index + 1];
+            });
         }
     }
 }

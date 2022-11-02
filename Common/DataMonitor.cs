@@ -27,8 +27,10 @@ namespace QuantConnect
     /// </summary>
     public class DataMonitor : IDataMonitor
     {
-        private readonly ConcurrentSet<string> _fetchedData = new();
-        private readonly ConcurrentSet<string> _missingData = new();
+        private readonly HashSet<string> _fetchedData = new();
+        private readonly HashSet<string> _missingData = new();
+
+        private readonly object _setsLock = new();
 
         private CancellationTokenSource _cancellationTokenSource;
         private bool _initialized;
@@ -60,10 +62,11 @@ namespace QuantConnect
 
             _lastDataRequestRateCalculationTime = DateTime.UtcNow;
 
-            Task.Run(async () => {
-                while (!token.IsCancellationRequested)
+            Task.Run(() =>
+            {
+                var handles = new[] { token.WaitHandle };
+                while (WaitHandle.WaitAny(handles, Time.GetSecondUnevenWait(1000)) == WaitHandle.WaitTimeout)
                 {
-                    await Task.Delay(Time.GetSecondUnevenWait(1000), token).ConfigureAwait(false);
                     ComputeFileRequestFrequency();
                 }
             }, token);
@@ -95,14 +98,14 @@ namespace QuantConnect
         {
             if (Logging.Log.DebuggingEnabled)
             {
+                foreach (string path in _fetchedData)
+                {
+                    Logging.Log.Debug($"DataMonitor.GenerateReport(): Data from {path} was fetched");
+                }
+
                 foreach (string path in _missingData)
                 {
-                    string source = path;
-                    if (LeanData.TryParsePath(source, out var symbol, out var date, out var resolution, out var tickType, out var dataType))
-                    {
-                        source = $"{symbol}|{date:yyyyMMdd}|{resolution}|{tickType}|{dataType.Name}";
-                    }
-                    Logging.Log.Debug($"DataMonitor.GenerateReport(): Data from {source} could not be fetched");
+                    Logging.Log.Debug($"DataMonitor.GenerateReport(): Data from {path} could not be fetched");
                 }
             }
 
@@ -114,13 +117,16 @@ namespace QuantConnect
         /// </summary>
         public void OnNewDataRequest(object sender, DataProviderNewDataRequestEventArgs e)
         {
-            if (e.Succeded)
+            lock (_setsLock)
             {
-                _fetchedData.Add(e.Path);
-            }
-            else
-            {
-                _missingData.Add(e.Path);
+                if (e.Succeded)
+                {
+                    _fetchedData.Add(e.Path);
+                }
+                else
+                {
+                    _missingData.Add(e.Path);
+                }
             }
         }
 
