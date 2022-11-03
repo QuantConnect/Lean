@@ -116,9 +116,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new AggregateException("Option contract Theta was equal to zero");
             }
-            // The strike is far away from the underlying asset's price, and we're very close to expiry.
-            // Zero is an expected value here.
-            if (vega.Any(v => v != 0))
+            if (vega.Any(v => v == 0))
             {
                 throw new AggregateException("Option contract Vega was equal to zero");
             }
