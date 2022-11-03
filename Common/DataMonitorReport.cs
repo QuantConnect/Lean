@@ -87,23 +87,11 @@ namespace QuantConnect
             get { return GetPercentage(TotalUniverseDataRequestsCount, FailedUniverseDataRequestsCount); }
         }
 
-        private IReadOnlyList<double> _requestRates;
-
         /// <summary>
         /// Rates at which data requests were made per second
         /// </summary>
         [JsonProperty(PropertyName = "data-request-rates")]
-        public IReadOnlyList<double> DataRequestRates 
-        {
-            get
-            {
-                return _requestRates;
-            }
-            set
-            {
-                _requestRates = value.Select(x => Math.Round(x)).ToList().AsReadOnly();
-            }
-        }
+        public IReadOnlyList<double> DataRequestRates { get; set; }
 
         /// <summary>
         /// Initializes an empty instance of the <see cref="DataMonitorReport"/> class
@@ -132,6 +120,7 @@ namespace QuantConnect
             FailedUniverseDataRequestsCount = failedUniverseDataRequestsCount;
             DataRequestRates = dataRequestRates;
         }
+        
         private static double GetPercentage(long total, long value)
         {
             if (total == 0)

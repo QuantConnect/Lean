@@ -68,18 +68,5 @@ namespace QuantConnect.Tests.Common
 
             Assert.AreEqual(33d, report.FailedUniverseDataRequestsPercentage);
         }
-
-        [Test]
-        public void RequestRatesAreRounded()
-        {
-            var report = new DataMonitorReport
-            {
-                DataRequestRates = new List<double> { 1.2, 2.3, 3.4, 4.5, 4.51, 5.6, 6.7, 7.8, 8.9 }
-            };
-
-            CollectionAssert.AreEqual(
-                new List<double> { 1, 2, 3, 4, 5, 6, 7, 8, 9 },
-                report.DataRequestRates);
-        }        
     }
 }

@@ -29,7 +29,6 @@ namespace QuantConnect
     /// </summary>
     public class DataMonitor : IDataMonitor
     {
-        private bool _initialized;
         private bool _exited;
 
         private readonly TextWriter _succeededDataRequestsWriter;
@@ -48,25 +47,13 @@ namespace QuantConnect
         private Thread _requestRateCalculationThread;
         private CancellationTokenSource _cancellationTokenSource;
 
+        private string _succeededDataRequestsFileName;
+        private string _failedDataRequestsFileName;
+
         /// <summary>
         /// Directory location to store results
         /// </summary>
-        protected string ResultsDestinationFolder { get; set; }
-
-        /// <summary>
-        /// The algorithm id, which is the algorithm name
-        /// </summary>
-        protected string AlgorithmId { get; set; }
-
-        /// <summary>
-        /// Name of the file to store succeeded data requests
-        /// </summary>
-        protected string SucceededDataRequestsFileName { get; set; }
-
-        /// <summary>
-        /// Name of the file to store failed data requests
-        /// </summary>
-        protected string FailedDataRequestsFileName { get; set; }
+        public string ResultsDestinationFolder { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DataMonitor"/> class
@@ -74,80 +61,12 @@ namespace QuantConnect
         public DataMonitor()
         {
             ResultsDestinationFolder = Config.Get("results-destination-folder", Directory.GetCurrentDirectory());
-            AlgorithmId = Config.Get("algorithm-id", Config.Get("algorithm-type-name"));
-            SucceededDataRequestsFileName = GetResultsPath("succeeded-data-requests.txt");
-            FailedDataRequestsFileName = GetResultsPath("failed-data-requests.txt");
-
-            _succeededDataRequestsWriter = OpenStream(SucceededDataRequestsFileName);            
-            _failedDataRequestsWriter = OpenStream(FailedDataRequestsFileName);
+            _succeededDataRequestsFileName = GetFilePath("succeeded-data-requests.txt");
+            _failedDataRequestsFileName = GetFilePath("failed-data-requests.txt");
+            _succeededDataRequestsWriter = OpenStream(_succeededDataRequestsFileName);
+            _failedDataRequestsWriter = OpenStream(_failedDataRequestsFileName);
         }
 
-        private TextWriter OpenStream(string filename)
-        {
-            var writer = new StreamWriter(filename);
-            return TextWriter.Synchronized(writer);
-        }
-
-        /// <summary>
-        /// Initializes the <see cref="DataMonitor"/> instance
-        /// </summary>
-        private void Initialize()
-        {
-            if (_initialized || _exited)
-            {
-                return;
-            }
-
-            _initialized = true;
-            _cancellationTokenSource = new CancellationTokenSource();
-
-            _requestRateCalculationThread = new Thread(() =>
-            {
-                while (!_cancellationTokenSource.Token.WaitHandle.WaitOne(3000))
-                {
-                    ComputeFileRequestFrequency();
-                }
-            }) { IsBackground = true };
-            _requestRateCalculationThread.Start();
-        }
-
-        /// <summary>
-        /// Terminates the data monitor generating a final report
-        /// </summary>
-        public void Exit()
-        {
-            if (!_initialized || _exited)
-            {
-                return;
-            }
-
-            _requestRateCalculationThread.StopSafely(TimeSpan.FromSeconds(5), _cancellationTokenSource);
-            _succeededDataRequestsWriter.Close();
-            _failedDataRequestsWriter.Close();
-            _initialized = false;
-            _exited = true;
-
-            StoreDataMonitorReport(GenerateReport());
-            
-            _succeededDataRequestsCount = 0;
-            _failedDataRequestsCount = 0;
-            _requestRates.Clear();
-            _prevRequestsCount = 0;
-            _lastRequestRateCalculationTime = default;
-        }
-
-        /// <summary>
-        /// Generates a report on missing data
-        /// </summary>
-        public DataMonitorReport GenerateReport()
-        {
-            return new DataMonitorReport(_succeededDataRequestsCount, 
-                _failedDataRequestsCount, 
-                _succeededUniverseDataRequestsCount, 
-                _failedUniverseDataRequestsCount, 
-                _requestRates);
-        }
-        
         /// <summary>
         /// Event handler for the <see cref="IDataProvider.NewDataRequest"/> event
         /// </summary>
@@ -160,28 +79,28 @@ namespace QuantConnect
 
             Initialize();
 
-            if (!e.Path.StartsWith(Globals.DataFolder, StringComparison.InvariantCulture))
+            if (e.Path.Contains("map_files", StringComparison.OrdinalIgnoreCase) || 
+                e.Path.Contains("factor_files", StringComparison.OrdinalIgnoreCase))
             {
-                Logging.Log.Error($"DataMonitor.OnNewDataRequest(): Invalid data path '{e.Path}'. The path is not under the data folder '{Globals.DataFolder}'.");
                 return;
             }
 
-            var path = e.Path.Substring(Globals.DataFolder.Length);
-            var isUniverseData = path.Contains("coarse", StringComparison.OrdinalIgnoreCase) || path.Contains("universe", StringComparison.OrdinalIgnoreCase);
+            var path = StripDataFolder(e.Path);
+            var isUniverseData = path.Contains("coarse", StringComparison.OrdinalIgnoreCase) || 
+                path.Contains("universe", StringComparison.OrdinalIgnoreCase);
 
             if (e.Succeded)
             {
-                if (TryWriteLineToFile(_succeededDataRequestsWriter, path, SucceededDataRequestsFileName))
+                WriteLineToFile(_succeededDataRequestsWriter, path, _succeededDataRequestsFileName);
+                Interlocked.Increment(ref _succeededDataRequestsCount);
+                if (isUniverseData)
                 {
-                    Interlocked.Increment(ref _succeededDataRequestsCount);
-                    if (isUniverseData)
-                    {
-                        Interlocked.Increment(ref _succeededUniverseDataRequestsCount);
-                    }
+                    Interlocked.Increment(ref _succeededUniverseDataRequestsCount);
                 }
             }
-            else if (TryWriteLineToFile(_failedDataRequestsWriter, path, FailedDataRequestsFileName))
+            else
             {
+                WriteLineToFile(_failedDataRequestsWriter, path, _failedDataRequestsFileName);
                 Interlocked.Increment(ref _failedDataRequestsCount);
                 if (isUniverseData)
                 {
@@ -195,60 +114,28 @@ namespace QuantConnect
             }
         }
 
-        private static bool TryWriteLineToFile(TextWriter writer, string line, string filename)
-        {
-            try
-            {
-                writer.WriteLine(line);
-            }
-            catch (IOException exception)
-            {
-                Logging.Log.Error($"DataMonitor.OnNewDataRequest(): Failed to write to file {filename}: {exception.Message}");
-                return false;
-            }
-            
-            return true;
-        }
-
-        private void ComputeFileRequestFrequency()
-        {
-            var requestsCount = _succeededDataRequestsCount + _failedDataRequestsCount;
-
-            if (_lastRequestRateCalculationTime == default)
-            {
-                _lastRequestRateCalculationTime = DateTime.UtcNow;
-                _prevRequestsCount = requestsCount;
-                return;
-            }
-
-            var requestsCountDelta = requestsCount - _prevRequestsCount;
-            var now = DateTime.UtcNow;
-            var timeDelta = now - _lastRequestRateCalculationTime;
-
-            _requestRates.Add(requestsCountDelta / timeDelta.TotalSeconds);
-            _prevRequestsCount = requestsCount;
-            _lastRequestRateCalculationTime = now;
-        }
-        
-        private string GetResultsPath(string filename)
-        {
-            return Path.Combine(ResultsDestinationFolder, $"{AlgorithmId}-{filename}");
-        }
-
         /// <summary>
-        /// Stores the data monitor report
+        /// Terminates the data monitor generating a final report
         /// </summary>
-        /// <param name="report">The data monitor report to be stored<param>
-        protected virtual void StoreDataMonitorReport(DataMonitorReport report)
+        public void Exit()
         {
-            if (report == null)
+            if (_exited)
             {
                 return;
             }
 
-            var path = GetResultsPath("data-monitor-report.json");
-            var data = JsonConvert.SerializeObject(report, Formatting.Indented);
-            File.WriteAllText(path, data);
+            _requestRateCalculationThread.StopSafely(TimeSpan.FromSeconds(5), _cancellationTokenSource);
+            _succeededDataRequestsWriter.Close();
+            _failedDataRequestsWriter.Close();
+            _exited = true;
+
+            StoreDataMonitorReport(GenerateReport());
+            
+            _succeededDataRequestsCount = 0;
+            _failedDataRequestsCount = 0;
+            _requestRates.Clear();
+            _prevRequestsCount = 0;
+            _lastRequestRateCalculationTime = default;
         }
 
         public void Dispose()
@@ -258,6 +145,121 @@ namespace QuantConnect
             _failedDataRequestsWriter.Close();
             _failedDataRequestsWriter.DisposeSafely();
             _cancellationTokenSource?.DisposeSafely();
+        }
+
+        protected virtual string StripDataFolder(string path)
+        {
+            if (path.StartsWith(Globals.DataFolder, StringComparison.OrdinalIgnoreCase))
+            {
+                return path.Substring(Globals.DataFolder.Length);
+            }
+
+            return path;
+        }
+
+        /// <summary>
+        /// Initializes the <see cref="DataMonitor"/> instance
+        /// </summary>
+        private void Initialize()
+        {
+            if (_requestRateCalculationThread != null)
+            {
+                return;
+            }
+            
+            _cancellationTokenSource = new CancellationTokenSource();
+
+            _requestRateCalculationThread = new Thread(() =>
+            {
+                while (!_cancellationTokenSource.Token.WaitHandle.WaitOne(3000))
+                {
+                    ComputeFileRequestFrequency();
+                }
+            })
+            { IsBackground = true };
+            _requestRateCalculationThread.Start();
+        }
+        
+        private DataMonitorReport GenerateReport()
+        {
+            var report = new DataMonitorReport(_succeededDataRequestsCount, 
+                _failedDataRequestsCount, 
+                _succeededUniverseDataRequestsCount, 
+                _failedUniverseDataRequestsCount, 
+                _requestRates);
+
+            Logging.Log.Trace($"DataMonitor.GenerateReport():{Environment.NewLine}" +
+                $"DATA USAGE:: Total data requests {report.TotalRequestsCount}{Environment.NewLine}" +
+                $"DATA USAGE:: Succeeded data requests {report.SucceededDataRequestsCount}{Environment.NewLine}" +
+                $"DATA USAGE:: Failed data requests {report.FailedDataRequestsCount}{Environment.NewLine}" +
+                $"DATA USAGE:: Failed data requests percentage {report.FailedDataRequestsPercentage}%{Environment.NewLine}" +
+                $"DATA USAGE:: Total universe data requests {report.TotalUniverseDataRequestsCount}{Environment.NewLine}" +
+                $"DATA USAGE:: Succeeded universe data requests {report.SucceededUniverseDataRequestsCount}{Environment.NewLine}" +
+                $"DATA USAGE:: Failed universe data requests {report.FailedUniverseDataRequestsCount}{Environment.NewLine}" +
+                $"DATA USAGE:: Failed universe data requests percentage {report.FailedUniverseDataRequestsPercentage}%");
+
+            return report;
+        }
+
+        private void ComputeFileRequestFrequency()
+        {
+            var requestsCount = _succeededDataRequestsCount + _failedDataRequestsCount;
+
+            if (_lastRequestRateCalculationTime == default)
+            {
+                // First time we calculate the request rate.
+                // We don't have a previous value to compare to so we just store the current value.
+                _lastRequestRateCalculationTime = DateTime.UtcNow;
+                _prevRequestsCount = requestsCount;
+                return;
+            }
+
+            var requestsCountDelta = requestsCount - _prevRequestsCount;
+            var now = DateTime.UtcNow;
+            var timeDelta = now - _lastRequestRateCalculationTime;
+
+            _requestRates.Add(Math.Round(requestsCountDelta / timeDelta.TotalSeconds));
+            _prevRequestsCount = requestsCount;
+            _lastRequestRateCalculationTime = now;
+        }
+
+        /// <summary>
+        /// Stores the data monitor report
+        /// </summary>
+        /// <param name="report">The data monitor report to be stored<param>
+        private void StoreDataMonitorReport(DataMonitorReport report)
+        {
+            if (report == null)
+            {
+                return;
+            }
+
+            var path = GetFilePath("data-monitor-report.json");
+            var data = JsonConvert.SerializeObject(report, Formatting.None  );
+            File.WriteAllText(path, data);
+        }
+        
+        private string GetFilePath(string filename)
+        {
+            return Path.Combine(ResultsDestinationFolder, $"{filename}-{DateTime.Now.ToStringInvariant("yyyyMMddHHmmssfff")}");
+        }
+
+        private static TextWriter OpenStream(string filename)
+        {
+            var writer = new StreamWriter(filename);
+            return TextWriter.Synchronized(writer);
+        }
+
+        private static void WriteLineToFile(TextWriter writer, string line, string filename)
+        {
+            try
+            {
+                writer.WriteLine(line);
+            }
+            catch (IOException exception)
+            {
+                Logging.Log.Error($"DataMonitor.OnNewDataRequest(): Failed to write to file {filename}: {exception.Message}");
+            }
         }
     }
 }

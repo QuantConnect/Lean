@@ -31,12 +31,7 @@ namespace QuantConnect.Interfaces
         /// Terminates the data monitor generating a final report
         /// </summary>
         void Exit();
-
-        /// <summary>
-        /// Generates a report on missing data
-        /// </summary>
-        DataMonitorReport GenerateReport();
-
+        
         /// <summary>
         /// Event handler for the <see cref="IDataProvider.NewDataRequest"/> event
         /// </summary>
