@@ -109,7 +109,7 @@ namespace QuantConnect.Tests.Engine
                         RegisteredSecurityDataTypesProvider.Null,
                         new SecurityCacheProvider(algorithm.Portfolio)),
                     dataPermissionManager,
-                    TestGlobals.DataProvider),
+                    new DefaultDataProvider()),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
@@ -128,7 +128,7 @@ namespace QuantConnect.Tests.Engine
             algorithm.Initialize();
             algorithm.PostInitialize();
 
-            results.Initialize(new ResultHandlerInitializeParameters(job, new QuantConnect.Messaging.Messaging(), new Api.Api(), transactions, new DataMonitor()));
+            results.Initialize(new ResultHandlerInitializeParameters(job, new QuantConnect.Messaging.Messaging(), new Api.Api(), transactions));
             results.SetAlgorithm(algorithm, algorithm.Portfolio.TotalPortfolioValue);
             transactions.Initialize(algorithm, new BacktestingBrokerage(algorithm), results);
             feed.Initialize(algorithm, job, results, null, null, null, dataManager, null, null);

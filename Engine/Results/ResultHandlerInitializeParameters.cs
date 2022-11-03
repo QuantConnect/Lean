@@ -46,11 +46,6 @@ namespace QuantConnect.Lean.Engine.Results
         public ITransactionHandler TransactionHandler { get; }
 
         /// <summary>
-        /// The data monitor used to watch for data requests and report on missing files
-        /// </summary>
-        public IDataMonitor DataMonitor { get; }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="ResultHandlerInitializeParameters"/> class from the specified parameters
         /// </summary>
         /// <param name="job">The job</param>
@@ -62,14 +57,12 @@ namespace QuantConnect.Lean.Engine.Results
             AlgorithmNodePacket job, 
             IMessagingHandler messagingHandler, 
             IApi api, 
-            ITransactionHandler transactionHandler, 
-            IDataMonitor dataMonitor)
+            ITransactionHandler transactionHandler)
         {
             Job = job;
             MessagingHandler = messagingHandler;
             Api = api;
             TransactionHandler = transactionHandler;
-            DataMonitor = dataMonitor;
         }
     }
 }

@@ -25,7 +25,7 @@ namespace QuantConnect.Interfaces
     /// Monitors data requests and reports on missing data
     /// </summary>
     [InheritedExport(typeof(IDataMonitor))]
-    public interface IDataMonitor
+    public interface IDataMonitor : IDisposable
     {
         /// <summary>
         /// Terminates the data monitor generating a final report

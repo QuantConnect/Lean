@@ -45,8 +45,6 @@ namespace QuantConnect.Lean.Engine.Results
 
         private string _hostName;
 
-        private IDataMonitor _dataMonitor;
-
         /// <summary>
         /// The main loop update interval
         /// </summary>
@@ -237,11 +235,6 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         public virtual void Exit()
         {
-            var report = _dataMonitor.GenerateReport();
-            var jsonReport = JsonConvert.SerializeObject(report, Formatting.Indented);
-
-            Log.Trace("BaseResultsHandler.Exit(): \n" + jsonReport);
-
             // reset standard out/error
             Console.SetOut(StandardOut);
             Console.SetError(StandardError);
@@ -325,7 +318,6 @@ namespace QuantConnect.Lean.Engine.Results
         public virtual void Initialize(ResultHandlerInitializeParameters parameters)
         {
             _hostName = parameters.Job.HostName ?? Environment.MachineName;
-            _dataMonitor = parameters.DataMonitor;
             MessagingHandler = parameters.MessagingHandler;
             TransactionHandler = parameters.TransactionHandler;
             CompileId = parameters.Job.CompileId;

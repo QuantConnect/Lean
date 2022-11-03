@@ -18,7 +18,6 @@ using QuantConnect.Interfaces;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 namespace QuantConnect
@@ -29,40 +28,34 @@ namespace QuantConnect
     public class DataMonitorReport
     {
         /// <summary>
-        /// Paths of the files that were requested and successfully fetched
-        /// </summary>
-        [JsonProperty(PropertyName = "succeeded-data-requests")]
-        public IReadOnlySet<string> SucceededDataRequests { get; set; }
-
-        /// <summary>
-        /// Paths of the files that were requested but could not be fetched
-        /// </summary>
-        [JsonProperty(PropertyName = "failed-data-requests")]
-        public IReadOnlySet<string> FailedDataRequests { get; set; }
-
-        /// <summary>
         /// Gets the number of data files that were requested and successfully fetched
         /// </summary>
         [JsonProperty(PropertyName = "succeeded-data-requests-count")]
-        public int SucceededDataRequestsCount
-        {
-            get { return SucceededDataRequests.Count; }
-        }
+        public long SucceededDataRequestsCount { get; set; }
 
         /// <summary>
         /// Gets the number of data files that were requested but could not be fetched
         /// </summary>
         [JsonProperty(PropertyName = "failed-data-requests-count")]
-        public int FailedDataRequestsCount
-        {
-            get { return FailedDataRequests.Count; }
-        }
+        public long FailedDataRequestsCount { get; set; }
+
+        /// <summary>
+        /// Gets the number of universe data files that were requested and successfully fetched
+        /// </summary>
+        [JsonProperty(PropertyName = "succeeded-universe-data-requests-count")]
+        public long SucceededUniverseDataRequestsCount { get; set; }
+
+        /// <summary>
+        /// Gets the number of universe data files that were requested but could not be fetched
+        /// </summary>
+        [JsonProperty(PropertyName = "failed-universe-data-requests-count")]
+        public long FailedUniverseDataRequestsCount { get; set; }
 
         /// <summary>
         /// Gets the number of data files that were requested
         /// </summary>
         [JsonProperty(PropertyName = "total-data-requests-count")]
-        public int TotalRequestsCount
+        public long TotalRequestsCount
         {
             get { return SucceededDataRequestsCount + FailedDataRequestsCount; }
         }
@@ -73,16 +66,25 @@ namespace QuantConnect
         [JsonProperty(PropertyName = "failed-data-requests-percentage")]
         public double FailedDataRequestsPercentage
         {
-            get
-            {
-                var requestsCount = TotalRequestsCount;
-                if (requestsCount == 0)
-                {
-                    return 0;
-                }
+            get { return GetPercentage(TotalRequestsCount, FailedDataRequestsCount); }
+        }
 
-                return Math.Round(FailedDataRequests.Count / (double)requestsCount * 100);
-            }
+        /// <summary>
+        /// Gets the number of universe data files that were requested
+        /// </summary>
+        [JsonProperty(PropertyName = "total-universe-data-requests-count")]
+        public long TotalUniverseDataRequestsCount
+        {
+            get { return SucceededUniverseDataRequestsCount + FailedUniverseDataRequestsCount; }
+        }
+
+        /// <summary>
+        /// Fets the percentage of universe data requests that could not be satisfied
+        /// </summary>
+        [JsonProperty(PropertyName = "failed-universe-data-requests-percentage")]
+        public double FailedUniverseDataRequestsPercentage
+        {
+            get { return GetPercentage(TotalUniverseDataRequestsCount, FailedUniverseDataRequestsCount); }
         }
 
         private IReadOnlyList<double> _requestRates;
@@ -104,63 +106,40 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Universe data path that were requested and successfully fetched
+        /// Initializes an empty instance of the <see cref="DataMonitorReport"/> class
         /// </summary>
-        [JsonProperty(PropertyName = "succeeded-universe-data-requests")]
-        public IEnumerable<string> SucceededUniverseDataRequests
+        public DataMonitorReport()
         {
-            get { return GetUniverseDataPaths(SucceededDataRequests); }
-        }
-
-        /// <summary>
-        /// Universe data paths that were requested but could not be fetched
-        /// </summary>
-        [JsonProperty(PropertyName = "failed-universe-data-requests")]
-        public IEnumerable<string> FailedUniverseDataRequests
-        {
-            get { return GetUniverseDataPaths(FailedDataRequests); }
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DataMonitorReport"/> class
         /// </summary>
-        /// <param name="succeededDataRequests">List of data paths that were requested and successfuly served</param>
-        /// <param name="failedDataRequests">List of data paths that were requested but could not be served</param>
+        /// <param name="succeededDataRequestsCount">Number of data paths that were requested and successfuly served</param>
+        /// <param name="failedDataRequestsCount">Number of data paths that were requested but could not be served</param>
+        /// <param name="succeededUniverseDataRequestsCount">Number of universe data paths that were requested and successfuly served</param>
+        /// <param name="failedUniverseDataRequestsCount">Number of universe data paths that were requested but could not be served</param>
         /// <param name="dataRequestRates">Rates at which data requests were made per second</param>
-        public DataMonitorReport(
-            IReadOnlySet<string> succeededDataRequests,
-            IReadOnlySet<string> failedDataRequests,
+        public DataMonitorReport(long succeededDataRequestsCount, 
+            long failedDataRequestsCount, 
+            long succeededUniverseDataRequestsCount, 
+            long failedUniverseDataRequestsCount, 
             IReadOnlyList<double> dataRequestRates)
         {
-            SucceededDataRequests = succeededDataRequests;
-            FailedDataRequests = failedDataRequests;
+            SucceededDataRequestsCount = succeededDataRequestsCount;
+            FailedDataRequestsCount = failedDataRequestsCount;
+            SucceededUniverseDataRequestsCount = succeededUniverseDataRequestsCount;
+            FailedUniverseDataRequestsCount = failedUniverseDataRequestsCount;
             DataRequestRates = dataRequestRates;
         }
-
-        /// <summary>
-        /// Gets the universe data paths from the specified data paths
-        /// </summary>
-        private static IEnumerable<string> GetUniverseDataPaths(IReadOnlySet<string> paths)
+        private static double GetPercentage(long total, long value)
         {
-            Func<string, string, bool> areEqual = (str1, str2) =>
+            if (total == 0)
             {
-                return str1.Equals(str2, System.StringComparison.OrdinalIgnoreCase);
-            };
-            Func<DirectoryInfo, bool> isUniversePath = directory =>
-            {
-                return areEqual(directory.Name, "coarse") && areEqual(directory.Parent.Name, "fundamental");
-            };
-            Func<DirectoryInfo, bool> isAlternativeDataUniversePath = directory =>
-            {
-                return areEqual(directory.Name, "universe");
-            };
+                return 0;
+            }
 
-            return paths.Where(path =>
-            {
-                var directoryInfo = new DirectoryInfo(path);
-                var directory = directoryInfo.Parent;
-                return isUniversePath(directory) || isAlternativeDataUniversePath(directory);
-            });
+            return Math.Round(value / (double)total * 100);
         }
     }
 }

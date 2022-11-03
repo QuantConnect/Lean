@@ -92,7 +92,7 @@ namespace QuantConnect.Tests.Brokerages.Paper
                     algorithm,
                     new SecurityService(algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, algorithm, RegisteredSecurityDataTypesProvider.Null, new SecurityCacheProvider(algorithm.Portfolio)),
                     dataPermissionManager,
-                    TestGlobals.DataProvider),
+                    new DefaultDataProvider()),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
@@ -121,7 +121,7 @@ namespace QuantConnect.Tests.Brokerages.Paper
             var brokerage = new PaperBrokerage(algorithm, job);
 
             // initialize results and transactions
-            results.Initialize(new ResultHandlerInitializeParameters(job, new EventMessagingHandler(), new Api.Api(), transactions, new DataMonitor()));
+            results.Initialize(new ResultHandlerInitializeParameters(job, new EventMessagingHandler(), new Api.Api(), transactions));
             results.SetAlgorithm(algorithm, algorithm.Portfolio.TotalPortfolioValue);
             transactions.Initialize(algorithm, brokerage, results);
 

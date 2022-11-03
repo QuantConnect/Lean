@@ -253,6 +253,7 @@ namespace QuantConnect.Lean.Engine
             DataCacheProvider.DisposeSafely();
             Setup.DisposeSafely();
             ObjectStore.DisposeSafely();
+            DataMonitor.DisposeSafely();
 
             Log.Trace("LeanEngineAlgorithmHandlers.Dispose(): Disposed of algorithm handlers.");
         }

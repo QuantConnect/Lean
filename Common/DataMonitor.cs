@@ -15,7 +15,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
+using Newtonsoft.Json;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Util;
 
@@ -26,26 +29,51 @@ namespace QuantConnect
     /// </summary>
     public class DataMonitor : IDataMonitor
     {
-        private readonly HashSet<string> _succeededDataRequests = new();
-        private readonly HashSet<string> _failedDataRequests = new();
-
-        private readonly object _setsLock = new();
-        
         private bool _initialized;
         private bool _exited;
 
+        private readonly TextWriter _succeededDataRequestsWriter;
+        private readonly TextWriter _failedDataRequestsWriter;
+
+        private long _succeededDataRequestsCount;
+        private long _failedDataRequestsCount;
+
+        private long _succeededUniverseDataRequestsCount;
+        private long _failedUniverseDataRequestsCount;
+
         private readonly List<double> _requestRates = new();
-        private int _prevRequestsCount;
+        private long _prevRequestsCount;
         private DateTime _lastRequestRateCalculationTime;
 
         private Thread _requestRateCalculationThread;
         private CancellationTokenSource _cancellationTokenSource;
 
         /// <summary>
+        /// Directory location to store results
+        /// </summary>
+        protected string ResultsDestinationFolder { get; set; }
+
+        /// <summary>
+        /// The algorithm id, which is the algorithm name
+        /// </summary>
+        protected string AlgorithmId { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="DataMonitor"/> class
         /// </summary>
         public DataMonitor()
         {
+            ResultsDestinationFolder = Config.Get("results-destination-folder", Directory.GetCurrentDirectory());
+            AlgorithmId = Config.Get("algorithm-id", Config.Get("algorithm-type-name"));
+            
+            _succeededDataRequestsWriter = OpenStream("succeeded-data-requests.txt");            
+            _failedDataRequestsWriter = OpenStream("failed-data-requests.txt");
+        }
+
+        private TextWriter OpenStream(string filename)
+        {
+            var writer = new StreamWriter(GetResultsPath(filename));
+            return TextWriter.Synchronized(writer);
         }
 
         /// <summary>
@@ -63,7 +91,7 @@ namespace QuantConnect
 
             _requestRateCalculationThread = new Thread(() =>
             {
-                while (!_cancellationTokenSource.Token.WaitHandle.WaitOne(500))
+                while (!_cancellationTokenSource.Token.WaitHandle.WaitOne(3000))
                 {
                     ComputeFileRequestFrequency();
                 }
@@ -81,18 +109,19 @@ namespace QuantConnect
                 return;
             }
 
-            _requestRateCalculationThread.StopSafely(TimeSpan.FromSeconds(1), _cancellationTokenSource);
-            _cancellationTokenSource.DisposeSafely();
+            _requestRateCalculationThread.StopSafely(TimeSpan.FromSeconds(5), _cancellationTokenSource);
+            _succeededDataRequestsWriter.Close();
+            _failedDataRequestsWriter.Close();
+            _initialized = false;
+            _exited = true;
 
-            lock (_setsLock)
-            {
-                _succeededDataRequests.Clear();
-                _failedDataRequests.Clear();
-                _requestRates.Clear();
-                _prevRequestsCount = 0;
-                _initialized = false;
-                _exited = true;
-            }
+            StoreDataMonitorReport(GenerateReport());
+            
+            _succeededDataRequestsCount = 0;
+            _failedDataRequestsCount = 0;
+            _requestRates.Clear();
+            _prevRequestsCount = 0;
+            _lastRequestRateCalculationTime = default;
         }
 
         /// <summary>
@@ -100,7 +129,11 @@ namespace QuantConnect
         /// </summary>
         public DataMonitorReport GenerateReport()
         {
-            return new DataMonitorReport(_succeededDataRequests, _failedDataRequests, _requestRates);
+            return new DataMonitorReport(_succeededDataRequestsCount, 
+                _failedDataRequestsCount, 
+                _succeededUniverseDataRequestsCount, 
+                _failedUniverseDataRequestsCount, 
+                _requestRates);
         }
         
         /// <summary>
@@ -113,54 +146,98 @@ namespace QuantConnect
                 return;
             }
 
-            lock (_setsLock)
+            Initialize();
+
+            if (!e.Path.StartsWith(Globals.DataFolder, StringComparison.InvariantCulture))
             {
-                Initialize();
+                Logging.Log.Error($"DataMonitor.OnNewDataRequest(): Invalid data path '{e.Path}'. The path is not under the data folder '{Globals.DataFolder}'.");
+                return;
+            }
 
-                if (!e.Path.StartsWith(Globals.DataFolder, StringComparison.InvariantCulture))
+            var path = e.Path.Substring(Globals.DataFolder.Length);
+            var isUniverseData = path.Contains("coarse", StringComparison.OrdinalIgnoreCase) || path.Contains("universe", StringComparison.OrdinalIgnoreCase);
+
+            if (e.Succeded)
+            {
+                _succeededDataRequestsWriter.WriteLine(path);
+                Interlocked.Increment(ref _succeededDataRequestsCount);
+                if (isUniverseData)
                 {
-                    Logging.Log.Error($"DataMonitor.OnNewDataRequest(): Invalid data path '{e.Path}'. The path is not under the data folder '{Globals.DataFolder}'.");
-                    return;
+                    Interlocked.Increment(ref _succeededUniverseDataRequestsCount);
+                }
+            }
+            else
+            {
+                _failedDataRequestsWriter.WriteLine(path);
+                Interlocked.Increment(ref _failedDataRequestsCount);
+                if (isUniverseData)
+                {
+                    Interlocked.Increment(ref _failedUniverseDataRequestsCount);
                 }
 
-                var path = e.Path.Substring(Globals.DataFolder.Length);
-
-                if (e.Succeded)
+                if (Logging.Log.DebuggingEnabled)
                 {
-                    _succeededDataRequests.Add(path);
-                }
-                else
-                {
-                    _failedDataRequests.Add(path);
-
-                    if (Logging.Log.DebuggingEnabled)
-                    {
-                        Logging.Log.Debug($"DataMonitor.GenerateReport(): Data from {path} could not be fetched");
-                    }
+                    Logging.Log.Debug($"DataMonitor.GenerateReport(): Data from {path} could not be fetched");
                 }
             }
         }
 
         private void ComputeFileRequestFrequency()
         {
-            lock (_setsLock)
+            var requestsCount = _succeededDataRequestsCount + _failedDataRequestsCount;
+
+            if (_lastRequestRateCalculationTime == default)
             {
-                var requestsCount = _succeededDataRequests.Count + _failedDataRequests.Count;
-
-                if (_lastRequestRateCalculationTime == default)
-                {
-                    _lastRequestRateCalculationTime = DateTime.UtcNow;
-                    _prevRequestsCount = requestsCount;
-                    return;
-                }
-
-                var requestsCountDelta = requestsCount - _prevRequestsCount;
-                var now = DateTime.UtcNow;
-                var timeDelta = now - _lastRequestRateCalculationTime;
-
-                _requestRates.Add(requestsCountDelta / timeDelta.TotalSeconds);
+                _lastRequestRateCalculationTime = DateTime.UtcNow;
                 _prevRequestsCount = requestsCount;
-                _lastRequestRateCalculationTime = now;
+                return;
+            }
+
+            var requestsCountDelta = requestsCount - _prevRequestsCount;
+            var now = DateTime.UtcNow;
+            var timeDelta = now - _lastRequestRateCalculationTime;
+
+            _requestRates.Add(requestsCountDelta / timeDelta.TotalSeconds);
+            _prevRequestsCount = requestsCount;
+            _lastRequestRateCalculationTime = now;
+        }
+        
+        private string GetResultsPath(string filename)
+        {
+            return Path.Combine(ResultsDestinationFolder, $"{AlgorithmId}-{filename}");
+        }
+
+        /// <summary>
+        /// Stores the data monitor report
+        /// </summary>
+        /// <param name="report">The data monitor report to be stored<param>
+        protected virtual void StoreDataMonitorReport(DataMonitorReport report)
+        {
+            if (report == null)
+            {
+                return;
+            }
+
+            var path = GetResultsPath("data-monitor-report.json");
+            var data = JsonConvert.SerializeObject(report, Formatting.Indented);
+            File.WriteAllText(path, data);
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+        
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _succeededDataRequestsWriter.Close();
+                _succeededDataRequestsWriter.DisposeSafely();
+                _failedDataRequestsWriter.Close();
+                _failedDataRequestsWriter.DisposeSafely();
+                _cancellationTokenSource?.DisposeSafely();
             }
         }
     }
