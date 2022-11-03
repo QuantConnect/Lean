@@ -28,11 +28,6 @@ namespace QuantConnect.Interfaces
     public interface IDataMonitor
     {
         /// <summary>
-        /// Initializes the <see cref="DataMonitor"/> instance
-        /// </summary>
-        void Initialize();
-
-        /// <summary>
         /// Terminates the data monitor generating a final report
         /// </summary>
         void Exit();

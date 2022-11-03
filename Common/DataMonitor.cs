@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using QuantConnect.Interfaces;
 using QuantConnect.Util;
 
@@ -27,17 +26,20 @@ namespace QuantConnect
     /// </summary>
     public class DataMonitor : IDataMonitor
     {
-        private readonly HashSet<string> _fetchedData = new();
-        private readonly HashSet<string> _missingData = new();
+        private readonly HashSet<string> _succeededDataRequests = new();
+        private readonly HashSet<string> _failedDataRequests = new();
 
         private readonly object _setsLock = new();
-
-        private CancellationTokenSource _cancellationTokenSource;
+        
         private bool _initialized;
+        private bool _exited;
 
-        private readonly List<double> _dataRequestRates = new();
-        private int _prevDataRequestsCount;
-        private DateTime _lastDataRequestRateCalculationTime;
+        private readonly List<double> _requestRates = new();
+        private int _prevRequestsCount;
+        private DateTime _lastRequestRateCalculationTime;
+
+        private Thread _requestRateCalculationThread;
+        private CancellationTokenSource _cancellationTokenSource;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DataMonitor"/> class
@@ -49,27 +51,24 @@ namespace QuantConnect
         /// <summary>
         /// Initializes the <see cref="DataMonitor"/> instance
         /// </summary>
-        public void Initialize()
+        private void Initialize()
         {
-            if (_initialized)
+            if (_initialized || _exited)
             {
                 return;
             }
 
             _initialized = true;
             _cancellationTokenSource = new CancellationTokenSource();
-            var token = _cancellationTokenSource.Token;
 
-            _lastDataRequestRateCalculationTime = DateTime.UtcNow;
-
-            Task.Run(() =>
+            _requestRateCalculationThread = new Thread(() =>
             {
-                var handles = new[] { token.WaitHandle };
-                while (WaitHandle.WaitAny(handles, Time.GetSecondUnevenWait(1000)) == WaitHandle.WaitTimeout)
+                while (!_cancellationTokenSource.Token.WaitHandle.WaitOne(500))
                 {
                     ComputeFileRequestFrequency();
                 }
-            }, token);
+            }) { IsBackground = true };
+            _requestRateCalculationThread.Start();
         }
 
         /// <summary>
@@ -77,18 +76,23 @@ namespace QuantConnect
         /// </summary>
         public void Exit()
         {
-            if (!_initialized)
+            if (!_initialized || _exited)
             {
                 return;
             }
 
-            _cancellationTokenSource.Cancel();
+            _requestRateCalculationThread.StopSafely(TimeSpan.FromSeconds(1), _cancellationTokenSource);
             _cancellationTokenSource.DisposeSafely();
-            _fetchedData.Clear();
-            _missingData.Clear();
-            _dataRequestRates.Clear();
-            _prevDataRequestsCount = 0;
-            _initialized = false;
+
+            lock (_setsLock)
+            {
+                _succeededDataRequests.Clear();
+                _failedDataRequests.Clear();
+                _requestRates.Clear();
+                _prevRequestsCount = 0;
+                _initialized = false;
+                _exited = true;
+            }
         }
 
         /// <summary>
@@ -96,20 +100,7 @@ namespace QuantConnect
         /// </summary>
         public DataMonitorReport GenerateReport()
         {
-            if (Logging.Log.DebuggingEnabled)
-            {
-                foreach (string path in _fetchedData)
-                {
-                    Logging.Log.Debug($"DataMonitor.GenerateReport(): Data from {path} was fetched");
-                }
-
-                foreach (string path in _missingData)
-                {
-                    Logging.Log.Debug($"DataMonitor.GenerateReport(): Data from {path} could not be fetched");
-                }
-            }
-
-            return new DataMonitorReport(_fetchedData, _missingData, _dataRequestRates);
+            return new DataMonitorReport(_succeededDataRequests, _failedDataRequests, _requestRates);
         }
         
         /// <summary>
@@ -117,29 +108,60 @@ namespace QuantConnect
         /// </summary>
         public void OnNewDataRequest(object sender, DataProviderNewDataRequestEventArgs e)
         {
+            if (_exited)
+            {
+                return;
+            }
+
             lock (_setsLock)
             {
+                Initialize();
+
+                if (!e.Path.StartsWith(Globals.DataFolder, StringComparison.InvariantCulture))
+                {
+                    Logging.Log.Error($"DataMonitor.OnNewDataRequest(): Invalid data path '{e.Path}'. The path is not under the data folder '{Globals.DataFolder}'.");
+                    return;
+                }
+
+                var path = e.Path.Substring(Globals.DataFolder.Length);
+
                 if (e.Succeded)
                 {
-                    _fetchedData.Add(e.Path);
+                    _succeededDataRequests.Add(path);
                 }
                 else
                 {
-                    _missingData.Add(e.Path);
+                    _failedDataRequests.Add(path);
+
+                    if (Logging.Log.DebuggingEnabled)
+                    {
+                        Logging.Log.Debug($"DataMonitor.GenerateReport(): Data from {path} could not be fetched");
+                    }
                 }
             }
         }
 
         private void ComputeFileRequestFrequency()
         {
-            var requestsCount = _fetchedData.Count + _missingData.Count;
-            var requestsCountDelta = requestsCount - _prevDataRequestsCount;
-            var now = DateTime.UtcNow;
-            var timeDelta = now - _lastDataRequestRateCalculationTime;
+            lock (_setsLock)
+            {
+                var requestsCount = _succeededDataRequests.Count + _failedDataRequests.Count;
 
-            _dataRequestRates.Add(requestsCountDelta / timeDelta.TotalSeconds);
-            _prevDataRequestsCount = requestsCount;
-            _lastDataRequestRateCalculationTime = now;
+                if (_lastRequestRateCalculationTime == default)
+                {
+                    _lastRequestRateCalculationTime = DateTime.UtcNow;
+                    _prevRequestsCount = requestsCount;
+                    return;
+                }
+
+                var requestsCountDelta = requestsCount - _prevRequestsCount;
+                var now = DateTime.UtcNow;
+                var timeDelta = now - _lastRequestRateCalculationTime;
+
+                _requestRates.Add(requestsCountDelta / timeDelta.TotalSeconds);
+                _prevRequestsCount = requestsCount;
+                _lastRequestRateCalculationTime = now;
+            }
         }
     }
 }

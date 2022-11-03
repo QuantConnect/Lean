@@ -102,8 +102,6 @@ namespace QuantConnect.Lean.Engine
                 //-> Set the result handler type for this algorithm job, and launch the associated result thread.
                 AlgorithmHandlers.Results.Initialize(new ResultHandlerInitializeParameters(job, SystemHandlers.Notify, SystemHandlers.Api, AlgorithmHandlers.Transactions, AlgorithmHandlers.DataMonitor));
 
-                AlgorithmHandlers.DataMonitor.Initialize();
-
                 IBrokerage brokerage = null;
                 DataManager dataManager = null;
                 var synchronizer = _liveMode ? new LiveSynchronizer() : new Synchronizer();
