@@ -425,9 +425,44 @@ namespace QuantConnect.Tests.Common
             }
         }
 
-        private Symbol GetOptionSymbol(Symbol underlying, OptionStyle optionStyle, OptionRight optionRight)
+        [Test]
+        [TestCase(OptionRight.Call, 200, 20.80707831, 0.56552801, 0.00787097, -0.02948410, 0.78709695, 0.92298523)]         // ATM
+        [TestCase(OptionRight.Call, 250, 6.06011876, 0.23343714, 0.00612336, -0.02208350, 0.61233641, 0.40627309)]         // deep OTM
+        [TestCase(OptionRight.Call, 150, 53.94314691, 0.90586737, 0.00335759, -0.01498436, 0.33575894, 1.27230328)]         // deep ITM
+        [TestCase(OptionRight.Put, 200, 18.90107225, -0.43447199, 0.00787097, -0.02405917, 0.78709695, -1.05711443)]        // ATM
+        [TestCase(OptionRight.Put, 150, 2.45317094, -0.09413263, 0.00335759, -0.01091566, 0.33575894, -0.21277148)]         // deep ITM
+        [TestCase(OptionRight.Put, 250, 54.08980489, -0.76656286, 0.00612336, -0.01530234, 0.61233641, -2.06885150)]        // deep OTM
+        public void GreeksTest(OptionRight optionRight, decimal strike, decimal price, decimal ibDelta, decimal ibGamma, decimal ibTheta, decimal ibVega, decimal ibRho)
         {
-            return Symbol.CreateOption(underlying.Value, Market.USA, optionStyle, optionRight, 192m, new DateTime(2016, 02, 19));
+            const decimal underlyingPrice = 200m;
+            const decimal underlyingVol = 0.25m;
+            var tz = TimeZones.NewYork;
+            var evaluationDate = new DateTime(2015, 2, 19);
+            var spy = Symbols.SPY;
+            var optionSymbol = GetOptionSymbol(spy, OptionStyle.American, optionRight, strike);
+
+            // setting up
+            var equity = GetEquity(spy, underlyingPrice, underlyingVol, tz);
+            var contract = GetOptionContract(optionSymbol, spy, evaluationDate);
+            var option = GetOption(optionSymbol, equity, tz);
+            option.SetMarketPrice(new Tick { Value = price });
+
+            // running evaluation
+            var priceModel = OptionPriceModels.BjerksundStensland();
+            var results = priceModel.Evaluate(option, null, contract);
+            var greeks = results.Greeks;
+
+            // Expect minor error due to interest rate and dividend yield used in IB
+            Assert.AreEqual((double)greeks.Delta, (double)ibDelta, 0.005);
+            Assert.AreEqual((double)greeks.Gamma, (double)ibGamma, 0.005);
+            Assert.AreEqual((double)greeks.Theta, (double)ibTheta, 0.005);
+            Assert.AreEqual((double)greeks.Vega, (double)ibVega, 0.005);
+            Assert.AreEqual((double)greeks.Rho, (double)ibRho, 0.005);
+        }
+
+        private Symbol GetOptionSymbol(Symbol underlying, OptionStyle optionStyle, OptionRight optionRight, decimal strike = 192m)
+        {
+            return Symbol.CreateOption(underlying.Value, Market.USA, optionStyle, optionRight, strike, new DateTime(2016, 02, 19));
         }
 
         private Equity GetEquity(Symbol symbol, decimal underlyingPrice, decimal underlyingVol, NodaTime.DateTimeZone tz)
