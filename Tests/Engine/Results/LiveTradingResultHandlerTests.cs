@@ -37,7 +37,7 @@ namespace QuantConnect.Tests.Engine.Results
         {
             using var messagging = new QuantConnect.Messaging.Messaging();
             var result = new LiveTradingResultHandler();
-            result.Initialize(new ResultHandlerInitializeParameters(new LiveNodePacket(), messagging, null, new BacktestingTransactionHandler()));
+            result.Initialize(new LiveNodePacket(), messagging, null, new BacktestingTransactionHandler());
 
             var algorithm = new AlgorithmStub();
             algorithm.AddEquity("SPY");
@@ -123,7 +123,7 @@ namespace QuantConnect.Tests.Engine.Results
             using var messagging = new QuantConnect.Messaging.Messaging();
             var referenceDate = new DateTime(2020, 11, 25);
             var resultHandler = new LiveTradingResultHandler();
-            resultHandler.Initialize(new ResultHandlerInitializeParameters(new LiveNodePacket(), messagging, api, new BacktestingTransactionHandler()));
+            resultHandler.Initialize(new LiveNodePacket(), messagging, api, new BacktestingTransactionHandler());
 
             var algo = new AlgorithmStub(createDataManager:false);
             algo.SetFinishedWarmingUp();

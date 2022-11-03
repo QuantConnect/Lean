@@ -95,14 +95,17 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Initialize the result handler with this result packet.
         /// </summary>
-        /// <param name="parameters">Initialize parameters</param>
-        public override void Initialize(ResultHandlerInitializeParameters parameters)
+        /// <param name="job">Algorithm job packet for this result handler</param>
+        /// <param name="messagingHandler">The handler responsible for communicating messages to listeners</param>
+        /// <param name="api">The api instance used for handling logs</param>
+        /// <param name="transactionHandler">The transaction handler used to get the algorithms Orders information</param>
+        public override void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, ITransactionHandler transactionHandler)
         {
-            _api = parameters.Api;
-            _job = (LiveNodePacket)parameters.Job;
+            _api = api;
+            _job = (LiveNodePacket)job;
             if (_job == null) throw new Exception("LiveResultHandler.Constructor(): Submitted Job type invalid.");
             _currentUtcDate = DateTime.UtcNow.Date;
-            base.Initialize(parameters);
+            base.Initialize(job, messagingHandler, api, transactionHandler);
         }
 
         /// <summary>

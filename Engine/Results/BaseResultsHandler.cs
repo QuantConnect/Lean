@@ -314,16 +314,19 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Initialize the result handler with this result packet.
         /// </summary>
-        /// <param name="parameters">Initialize parameters</param>
-        public virtual void Initialize(ResultHandlerInitializeParameters parameters)
+        /// <param name="job">Algorithm job packet for this result handler</param>
+        /// <param name="messagingHandler">The handler responsible for communicating messages to listeners</param>
+        /// <param name="api">The api instance used for handling logs</param>
+        /// <param name="transactionHandler">The transaction handler used to get the algorithms <see cref="Order"/> information</param>
+        public virtual void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, ITransactionHandler transactionHandler)
         {
-            _hostName = parameters.Job.HostName ?? Environment.MachineName;
-            MessagingHandler = parameters.MessagingHandler;
-            TransactionHandler = parameters.TransactionHandler;
-            CompileId = parameters.Job.CompileId;
-            AlgorithmId = parameters.Job.AlgorithmId;
-            ProjectId = parameters.Job.ProjectId;
-            RamAllocation = parameters.Job.RamAllocation.ToStringInvariant();
+            _hostName = job.HostName ?? Environment.MachineName;
+            MessagingHandler = messagingHandler;
+            TransactionHandler = transactionHandler;
+            CompileId = job.CompileId;
+            AlgorithmId = job.AlgorithmId;
+            ProjectId = job.ProjectId;
+            RamAllocation = job.RamAllocation.ToStringInvariant();
             OrderEventJsonConverter = new OrderEventJsonConverter(AlgorithmId);
             _updateRunner = new Thread(Run, 0) { IsBackground = true, Name = "Result Thread" };
             _updateRunner.Start();

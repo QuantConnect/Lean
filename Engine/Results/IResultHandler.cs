@@ -60,8 +60,11 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Initialize the result handler with this result packet.
         /// </summary>
-        /// <param name="parameters">Initialize parameters</param>
-        void Initialize(ResultHandlerInitializeParameters parameters);
+        /// <param name="job">Algorithm job packet for this result handler</param>
+        /// <param name="messagingHandler">The messaging handler provider to use</param>
+        /// <param name="api">The api implementation to use</param>
+        /// <param name="transactionHandler"></param>
+        void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, ITransactionHandler transactionHandler);
 
         /// <summary>
         /// Process debug messages with the preconfigured settings.

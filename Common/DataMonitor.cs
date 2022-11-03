@@ -59,20 +59,32 @@ namespace QuantConnect
         protected string AlgorithmId { get; set; }
 
         /// <summary>
+        /// Name of the file to store succeeded data requests
+        /// </summary>
+        protected string SucceededDataRequestsFileName { get; set; }
+
+        /// <summary>
+        /// Name of the file to store failed data requests
+        /// </summary>
+        protected string FailedDataRequestsFileName { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="DataMonitor"/> class
         /// </summary>
         public DataMonitor()
         {
             ResultsDestinationFolder = Config.Get("results-destination-folder", Directory.GetCurrentDirectory());
             AlgorithmId = Config.Get("algorithm-id", Config.Get("algorithm-type-name"));
-            
-            _succeededDataRequestsWriter = OpenStream("succeeded-data-requests.txt");            
-            _failedDataRequestsWriter = OpenStream("failed-data-requests.txt");
+            SucceededDataRequestsFileName = GetResultsPath("succeeded-data-requests.txt");
+            FailedDataRequestsFileName = GetResultsPath("failed-data-requests.txt");
+
+            _succeededDataRequestsWriter = OpenStream(SucceededDataRequestsFileName);            
+            _failedDataRequestsWriter = OpenStream(FailedDataRequestsFileName);
         }
 
         private TextWriter OpenStream(string filename)
         {
-            var writer = new StreamWriter(GetResultsPath(filename));
+            var writer = new StreamWriter(filename);
             return TextWriter.Synchronized(writer);
         }
 
@@ -159,16 +171,17 @@ namespace QuantConnect
 
             if (e.Succeded)
             {
-                _succeededDataRequestsWriter.WriteLine(path);
-                Interlocked.Increment(ref _succeededDataRequestsCount);
-                if (isUniverseData)
+                if (TryWriteLineToFile(_succeededDataRequestsWriter, path, SucceededDataRequestsFileName))
                 {
-                    Interlocked.Increment(ref _succeededUniverseDataRequestsCount);
+                    Interlocked.Increment(ref _succeededDataRequestsCount);
+                    if (isUniverseData)
+                    {
+                        Interlocked.Increment(ref _succeededUniverseDataRequestsCount);
+                    }
                 }
             }
-            else
+            else if (TryWriteLineToFile(_failedDataRequestsWriter, path, FailedDataRequestsFileName))
             {
-                _failedDataRequestsWriter.WriteLine(path);
                 Interlocked.Increment(ref _failedDataRequestsCount);
                 if (isUniverseData)
                 {
@@ -177,9 +190,24 @@ namespace QuantConnect
 
                 if (Logging.Log.DebuggingEnabled)
                 {
-                    Logging.Log.Debug($"DataMonitor.GenerateReport(): Data from {path} could not be fetched");
+                    Logging.Log.Debug($"DataMonitor.OnNewDataRequest(): Data from {path} could not be fetched");
                 }
             }
+        }
+
+        private static bool TryWriteLineToFile(TextWriter writer, string line, string filename)
+        {
+            try
+            {
+                writer.WriteLine(line);
+            }
+            catch (IOException exception)
+            {
+                Logging.Log.Error($"DataMonitor.OnNewDataRequest(): Failed to write to file {filename}: {exception.Message}");
+                return false;
+            }
+            
+            return true;
         }
 
         private void ComputeFileRequestFrequency()
@@ -225,20 +253,11 @@ namespace QuantConnect
 
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-        
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                _succeededDataRequestsWriter.Close();
-                _succeededDataRequestsWriter.DisposeSafely();
-                _failedDataRequestsWriter.Close();
-                _failedDataRequestsWriter.DisposeSafely();
-                _cancellationTokenSource?.DisposeSafely();
-            }
+            _succeededDataRequestsWriter.Close();
+            _succeededDataRequestsWriter.DisposeSafely();
+            _failedDataRequestsWriter.Close();
+            _failedDataRequestsWriter.DisposeSafely();
+            _cancellationTokenSource?.DisposeSafely();
         }
     }
 }
