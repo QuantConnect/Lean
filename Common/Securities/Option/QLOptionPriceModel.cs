@@ -208,9 +208,9 @@ namespace QuantConnect.Securities.Option
                             () => impliedVol.SafeDecimalCast(),
                             () => new Greeks(() => tryGetGreekOrReevaluate(() => option.delta(), (black) => black.delta(spot)),
                                             () => tryGetGreekOrReevaluate(() => option.gamma(), (black) => black.gamma(spot)),
-                                            () => tryGetGreekOrReevaluate(() => option.vega(), (black) => black.vega(blackVolatilityMaturity) / 100),
+                                            () => tryGetGreekOrReevaluate(() => option.vega(), (black) => black.vega(blackVolatilityMaturity)) / 100,   // per cent
                                             () => tryGetGreekOrReevaluate(() => option.thetaPerDay(), (black) => black.thetaPerDay(spot, blackVolatilityMaturity)),
-                                            () => tryGetGreekOrReevaluate(() => option.rho(), (black) => black.rho(riskFreeRateMaturity) / 100),
+                                            () => tryGetGreekOrReevaluate(() => option.rho(), (black) => black.rho(riskFreeRateMaturity)) / 100,        // per cent
                                             () => tryGetGreekOrReevaluate(() => option.elasticity(), (black) => black.elasticity(spot))));
             }
             catch (Exception err)

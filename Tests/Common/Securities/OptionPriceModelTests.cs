@@ -182,12 +182,12 @@ namespace QuantConnect.Tests.Common
             // running evaluation
             var priceModel = OptionPriceModels.BlackScholes();
             var results = priceModel.Evaluate(optionCall, null, contract);
-            var callPrice = results.TheoreticalPrice;
+            var impliedVol = results.ImpliedVolatility;
             var greeks = results.Greeks;
 
             // BS equation
-            var rightPart = greeks.Theta + riskFreeRate * underlyingPrice * greeks.Delta + 0.5m * underlyingVol * underlyingVol * underlyingPrice * underlyingPrice * greeks.Gamma;
-            var leftPart = riskFreeRate * callPrice;
+            var rightPart = greeks.Theta * 365 + riskFreeRate * underlyingPrice * greeks.Delta + 0.5m * impliedVol * impliedVol * underlyingPrice * underlyingPrice * greeks.Gamma;
+            var leftPart = riskFreeRate * price;
 
             Assert.AreEqual((double)leftPart, (double)rightPart, 0.0001);
         }
@@ -198,7 +198,6 @@ namespace QuantConnect.Tests.Common
             const decimal price = 30.00m;
             const decimal underlyingPrice = 200m;
             const decimal underlyingVol = 0.25m;
-            const decimal riskFreeRate = 0.01m;
             var tz = TimeZones.NewYork;
             var spy = Symbols.SPY;
             var evaluationDate = new DateTime(2015, 2, 19);
@@ -220,11 +219,12 @@ namespace QuantConnect.Tests.Common
             Assert.Greater(price, callPrice);
             Assert.Greater(impliedVolatility, underlyingVol);
 
-            // BS equation (inequality)
-            var rightPart = greeks.Theta + riskFreeRate * underlyingPrice * greeks.Delta + 0.5m * underlyingVol * underlyingVol * underlyingPrice * underlyingPrice * greeks.Gamma;
-            var leftPart = riskFreeRate * callPrice;
+            // Get BS price to compare
+            priceModel = OptionPriceModels.BaroneAdesiWhaley();
+            results = priceModel.Evaluate(optionCall, null, contract);
+            var bsPrice = results.TheoreticalPrice;
 
-            Assert.GreaterOrEqual(Math.Round(leftPart, 4), Math.Round(rightPart, 4));
+            Assert.GreaterOrEqual(Math.Round(callPrice, 4), Math.Round(bsPrice, 4));
         }
 
         [Test]
@@ -427,11 +427,11 @@ namespace QuantConnect.Tests.Common
 
         [Test]
         [TestCase(OptionRight.Call, 200, 20.80707831, 0.56552801, 0.00787097, -0.02948410, 0.78709695, 0.92298523)]         // ATM
-        [TestCase(OptionRight.Call, 250, 6.06011876, 0.23343714, 0.00612336, -0.02208350, 0.61233641, 0.40627309)]         // deep OTM
+        [TestCase(OptionRight.Call, 250, 6.06011876, 0.23343714, 0.00612336, -0.02208350, 0.61233641, 0.40627309)]          // deep OTM
         [TestCase(OptionRight.Call, 150, 53.94314691, 0.90586737, 0.00335759, -0.01498436, 0.33575894, 1.27230328)]         // deep ITM
         [TestCase(OptionRight.Put, 200, 18.90107225, -0.43447199, 0.00787097, -0.02405917, 0.78709695, -1.05711443)]        // ATM
         [TestCase(OptionRight.Put, 150, 2.45317094, -0.09413263, 0.00335759, -0.01091566, 0.33575894, -0.21277148)]         // deep ITM
-        [TestCase(OptionRight.Put, 250, 54.08980489, -0.76656286, 0.00612336, -0.01530234, 0.61233641, -2.06885150)]        // deep OTM
+        [TestCase(OptionRight.Put, 250, 54.08980489, -0.76656286, 0.00612336, -0.01530234, 0.61233641, -2.07837775)]        // deep OTM
         public void GreeksTest(OptionRight optionRight, decimal strike, decimal price, decimal ibDelta, decimal ibGamma, decimal ibTheta, decimal ibVega, decimal ibRho)
         {
             const decimal underlyingPrice = 200m;
