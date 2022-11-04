@@ -112,6 +112,7 @@ namespace QuantConnect.Securities.Option
                 var calendar = new UnitedStates();
                 var dayCounter = new Actual365Fixed();
                 var optionSecurity = (Option)security;
+                var premium = (double)optionSecurity.Price;
 
                 var securityExchangeHours = security.Exchange.Hours;
                 var settlementDate = AddDays(contract.Time.Date, Option.DefaultSettlementDays, securityExchangeHours);
@@ -149,13 +150,27 @@ namespace QuantConnect.Securities.Option
                 option.setPricingEngine(_pricingEngineFunc(contract.Symbol, stochasticProcess));
 
                 // running calculations
-                // can return negative value in neighbourhood of 0
+                // can return negative value in neighborhood of 0
                 var npv = Math.Max(0, EvaluateOption(option));
 
-                // Calculate Implied Volatility
-                var impliedVol = option.impliedVolatility((double)optionSecurity.Price, stochasticProcess);
+                // Calculate the Implied Volatility
+                var impliedVol = 0d;
+                try
+                {
+                    impliedVol = option.impliedVolatility(premium, stochasticProcess);
+                }
+                catch (ArgumentException exception)
+                {
+                    var message = $"Cannot calculate implied volatility for {contract.Symbol.Value}. " +
+                        $"Premium: {premium} Underlying Price: {spot} Volatility: {underlyingVolValue.value()}";
+                    throw new ArgumentException(message, exception);
+                }
 
-                // Update the Black Vol Term Structure with the Implied Volatility for correct Greeks calculation
+                // Update the Black Vol Term Structure with the Implied Volatility to improve Greek calculation
+                // We assume that the underlying volatility model does not yield a good estimate and 
+                // other sources, e.g. Interactive Brokers, use the implied volatility to calculate the Greeks
+                // After this operation, the Theoretical Price (NPV) will match the Premium, so we do not re-evalute
+                // it and let users compare NPV and the Premium if they wish. 
                 underlyingVolValue.setValue(impliedVol);
 
                 var blackVolatilityMaturity = underlyingVol.link.dayCounter()
@@ -179,11 +194,14 @@ namespace QuantConnect.Securities.Option
                             if (blackLazy == null)
                             {
                                 // Define Black Calculator to calculate Greeks that are not defined by the option object
+                                // Some models do not evaluate all greeks under some circumstances (e.g. low dividend yield)
+                                // We override this restriction to calculate the Greeks directly with the BlackCalculator
                                 var dividendDiscount = dividendYield.link.discount(maturityDate);
                                 var riskFreeDiscount = riskFreeRate.link.discount(maturityDate);
                                 var forwardPrice = spot * dividendDiscount / riskFreeDiscount;
                                 var variance = underlyingVol.link.blackVariance(maturityDate, (double)contract.Strike);
-                                blackLazy = new BlackCalculator(payoff, forwardPrice, Math.Sqrt(variance), riskFreeDiscount);
+                                blackLazy = new BlackCalculator(payoff, forwardPrice, Math.Sqrt(variance),
+                                    riskFreeDiscount);
                             }
 
                             if (EnableGreekApproximation)
@@ -193,7 +211,7 @@ namespace QuantConnect.Securities.Option
 
                             throw new Exception("Greeks approximation was not allowed.");
                         }
-                        catch(Exception exception)
+                        catch (Exception exception)
                         {
                             Log.Error($"No valid Greek value returned from Black Calculator: {exception}");
                             // return zero if no default Greek value in the Option object and no valid Greek value was calculated in the Black Calculator
@@ -203,7 +221,6 @@ namespace QuantConnect.Securities.Option
                 }
 
                 // producing output with lazy calculations of greeks
-
                 return new OptionPriceModelResult((decimal)npv,
                             () => impliedVol.SafeDecimalCast(),
                             () => new Greeks(() => tryGetGreekOrReevaluate(() => option.delta(), (black) => black.delta(spot)),

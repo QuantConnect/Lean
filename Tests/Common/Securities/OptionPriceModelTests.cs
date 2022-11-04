@@ -51,10 +51,11 @@ namespace QuantConnect.Tests.Common
             // setting up European style call option
             var contractCall = GetOptionContract(SPY_C_192_Feb19_2016E, spy, evaluationDate);
             var optionCall = GetOption(SPY_C_192_Feb19_2016E, equity, tz);
-
+            optionCall.SetMarketPrice(new Tick { Value = 17m });  // dummy non-zero price
             // setting up European style put option
             var contractPut = GetOptionContract(SPY_P_192_Feb19_2016E, spy, evaluationDate);
             var optionPut = GetOption(SPY_P_192_Feb19_2016E, equity, tz);
+            optionPut.SetMarketPrice(new Tick { Value = 7m });  // dummy non-zero price
 
             // running evaluation
             var priceModel = OptionPriceModels.BlackScholes();
@@ -198,6 +199,7 @@ namespace QuantConnect.Tests.Common
             const decimal price = 30.00m;
             const decimal underlyingPrice = 200m;
             const decimal underlyingVol = 0.25m;
+            const decimal riskFreeRate = 0.01m;
             var tz = TimeZones.NewYork;
             var spy = Symbols.SPY;
             var evaluationDate = new DateTime(2015, 2, 19);
@@ -219,12 +221,9 @@ namespace QuantConnect.Tests.Common
             Assert.Greater(price, callPrice);
             Assert.Greater(impliedVolatility, underlyingVol);
 
-            // Get BS price to compare
-            priceModel = OptionPriceModels.BaroneAdesiWhaley();
-            results = priceModel.Evaluate(optionCall, null, contract);
-            var bsPrice = results.TheoreticalPrice;
-
-            Assert.GreaterOrEqual(Math.Round(callPrice, 4), Math.Round(bsPrice, 4));
+            var rightPart = greeks.Theta * 365 + riskFreeRate * underlyingPrice * greeks.Delta + 0.5m * impliedVolatility * impliedVolatility * underlyingPrice * underlyingPrice * greeks.Gamma;
+            var leftPart = riskFreeRate * price;
+            Assert.AreEqual((double)leftPart, (double)rightPart, 0.0001);
         }
 
         [Test]
@@ -387,10 +386,12 @@ namespace QuantConnect.Tests.Common
             // setting up European style call option
             var contractCall = GetOptionContract(SPY_C_192_Feb19_2016E, spy, evaluationDate);
             var optionCall = GetOption(SPY_C_192_Feb19_2016E, equity, tz);
+            optionCall.SetMarketPrice(new Tick { Value = 17m });  // dummy non-zero price
 
             // setting up European style put option
             var contractPut = GetOptionContract(SPY_P_192_Feb19_2016E, spy, evaluationDate);
             var optionPut = GetOption(SPY_P_192_Feb19_2016E, equity, tz);
+            optionPut.SetMarketPrice(new Tick { Value = 7m });  // dummy non-zero price
 
             // running evaluation
             var priceModel = (IOptionPriceModel)typeof(OptionPriceModels).GetMethod(qlModelName).Invoke(null, new object[]{});
