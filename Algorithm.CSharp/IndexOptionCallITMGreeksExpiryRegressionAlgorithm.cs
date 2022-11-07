@@ -116,10 +116,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new AggregateException("Option contract Theta was equal to zero");
             }
-            if (vega.Any(v => v == 0))
-            {
-                throw new AggregateException("Option contract Vega was equal to zero");
-            }
+            // Vega can be 0 if the price is too wild that the effect of volatilty change is not sensitive enough
 
             if (!_invested)
             {

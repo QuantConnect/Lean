@@ -66,12 +66,14 @@ class OptionPriceModelForOptionStylesBaseRegressionAlgorithm(QCAlgorithm):
                 if self._optionStyleIsSupported:
                     raise Exception(f'Expected greeks to be calculated for {contract.Symbol.Value}, an {optionStyleStr} style option, using {type(self._option.PriceModel).__name__}, which supports them, but they were not')
 
-            # Greeks shpould be valid if they were successfuly accessed for supported option style
+            # Greeks should be valid if they were successfuly accessed for supported option style
+            # Delta can be {-1, 0, 1} if the price is too wild, rho can be 0 if risk free rate is 0
+            # Vega can be 0 if the price is very off from theoretical price, Gamma = 0 if Delta belongs to {-1, 1}
             if (self._optionStyleIsSupported
-                and ((contract.Right == OptionRight.Call and (greeks.Delta < 0.0 or greeks.Delta > 1.0 or greeks.Rho <= 0.0))
-                    or (contract.Right == OptionRight.Put and (greeks.Delta < -1.0 or greeks.Delta > 0.0 or greeks.Rho >= 0.0))
-                    or greeks.Theta == 0.0 or greeks.Vega <= 0.0 or greeks.Gamma <= 0.0)):
-                raise Exception(f'Expected greeks to have valid values. Greeks were: Delta: {greeks.Delta}, Rho: {greeks.Rho}, Delta: {greeks.Delta}, Vega: {greeks.Vega}, Gamma: {greeks.Gamma}')
+                and ((contract.Right == OptionRight.Call and (greeks.Delta < 0.0 or greeks.Delta > 1.0 or greeks.Rho < 0.0))
+                    or (contract.Right == OptionRight.Put and (greeks.Delta < -1.0 or greeks.Delta > 0.0 or greeks.Rho > 0.0))
+                    or greeks.Theta == 0.0 or greeks.Vega < 0.0 or greeks.Gamma < 0.0)):
+                raise Exception(f'Expected greeks to have valid values. Greeks were: Delta: {greeks.Delta}, Rho: {greeks.Rho}, Theta: {greeks.Theta}, Vega: {greeks.Vega}, Gamma: {greeks.Gamma}')
 
 
 
