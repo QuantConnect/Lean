@@ -49,18 +49,16 @@ namespace QuantConnect
 
         private string _succeededDataRequestsFileName;
         private string _failedDataRequestsFileName;
+        private string _resultsDestinationFolder;
 
-        /// <summary>
-        /// Directory location to store results
-        /// </summary>
-        public string ResultsDestinationFolder { get; }
+        private object _threadLock = new();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DataMonitor"/> class
         /// </summary>
         public DataMonitor()
         {
-            ResultsDestinationFolder = Config.Get("results-destination-folder", Directory.GetCurrentDirectory());
+            _resultsDestinationFolder = Config.Get("results-destination-folder", Directory.GetCurrentDirectory());
             _succeededDataRequestsFileName = GetFilePath("succeeded-data-requests.txt");
             _failedDataRequestsFileName = GetFilePath("failed-data-requests.txt");
             _succeededDataRequestsWriter = OpenStream(_succeededDataRequestsFileName);
@@ -162,22 +160,25 @@ namespace QuantConnect
         /// </summary>
         private void Initialize()
         {
-            if (_requestRateCalculationThread != null)
+            lock (_threadLock)
             {
-                return;
-            }
-            
-            _cancellationTokenSource = new CancellationTokenSource();
-
-            _requestRateCalculationThread = new Thread(() =>
-            {
-                while (!_cancellationTokenSource.Token.WaitHandle.WaitOne(3000))
+                if (_requestRateCalculationThread != null)
                 {
-                    ComputeFileRequestFrequency();
+                    return;
                 }
-            })
-            { IsBackground = true };
-            _requestRateCalculationThread.Start();
+
+                _cancellationTokenSource = new CancellationTokenSource();
+
+                _requestRateCalculationThread = new Thread(() =>
+                {
+                    while (!_cancellationTokenSource.Token.WaitHandle.WaitOne(3000))
+                    {
+                        ComputeFileRequestFrequency();
+                    }
+                })
+                { IsBackground = true };
+                _requestRateCalculationThread.Start();
+            }
         }
         
         private DataMonitorReport GenerateReport()
@@ -194,7 +195,7 @@ namespace QuantConnect
                 $"DATA USAGE:: Failed data requests {report.FailedDataRequestsCount}{Environment.NewLine}" +
                 $"DATA USAGE:: Failed data requests percentage {report.FailedDataRequestsPercentage}%{Environment.NewLine}" +
                 $"DATA USAGE:: Total universe data requests {report.TotalUniverseDataRequestsCount}{Environment.NewLine}" +
-                $"DATA USAGE:: Succeeded universe data requests {report.SucceededUniverseDataRequestsCount}{Environment.NewLine}" +
+                $"DATA USAGE:: Succeeded universe data requests {report.SucceededUniverseDataRequestsCount}{Environment.NewLine}" +                  
                 $"DATA USAGE:: Failed universe data requests {report.FailedUniverseDataRequestsCount}{Environment.NewLine}" +
                 $"DATA USAGE:: Failed universe data requests percentage {report.FailedUniverseDataRequestsPercentage}%");
 
@@ -235,13 +236,16 @@ namespace QuantConnect
             }
 
             var path = GetFilePath("data-monitor-report.json");
-            var data = JsonConvert.SerializeObject(report, Formatting.None  );
+            var data = JsonConvert.SerializeObject(report, Formatting.None);
             File.WriteAllText(path, data);
         }
-        
+
         private string GetFilePath(string filename)
         {
-            return Path.Combine(ResultsDestinationFolder, $"{filename}-{DateTime.Now.ToStringInvariant("yyyyMMddHHmmssfff")}");
+            var baseFilename = Path.GetFileNameWithoutExtension(filename);
+            var timestamp = DateTime.Now.ToStringInvariant("yyyyMMddHHmmssfff");
+            var extension = Path.GetExtension(filename);
+            return Path.Combine(_resultsDestinationFolder, $"{baseFilename}-{timestamp}{extension}");
         }
 
         private static TextWriter OpenStream(string filename)
