@@ -106,12 +106,12 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <summary>
         /// Loads objects from the AlgorithmStorageRoot into the ObjectStore
         /// </summary>
-        private IEnumerable<ObjectStoreEntry> GetObjectStoreEntries(bool loadContent)
+        private IEnumerable<ObjectStoreEntry> GetObjectStoreEntries(bool loadContent, bool takePersistLock = true)
         {
             if (Controls.StoragePermissions.HasFlag(FileAccess.Read))
             {
                 // Acquire the persist lock to avoid yielding twice the same value, just in case
-                lock (_persistLock)
+                lock (takePersistLock ? _persistLock : new object())
                 {
                     foreach (var kvp in _storage)
                     {
@@ -281,11 +281,27 @@ namespace QuantConnect.Lean.Engine.Storage
         /// </summary>
         protected bool InternalSaveBytes(string path, byte[] contents)
         {
+            if(!IsWithinStorageLimit(path, contents, takePersistLock: true))
+            {
+                return false;
+            }
+
+            // Add the dirty entry
+            var entry = _storage[path] = new ObjectStoreEntry(path, contents);
+            entry.SetDirty();
+            return true;
+        }
+
+        /// <summary>
+        /// Validates storage limits are respected on a new save operation
+        /// </summary>
+        protected virtual bool IsWithinStorageLimit(string path, byte[] contents, bool takePersistLock)
+        {
             // Before saving confirm we are abiding by the control rules
             // Start by counting our file and its length
             var fileCount = 1;
             var expectedStorageSizeBytes = contents?.Length ?? 0L;
-            foreach (var kvp in GetObjectStoreEntries(loadContent: false))
+            foreach (var kvp in GetObjectStoreEntries(loadContent: false, takePersistLock: takePersistLock))
             {
                 if (path.Equals(kvp.Path))
                 {
@@ -329,9 +345,6 @@ namespace QuantConnect.Lean.Engine.Storage
                 return false;
             }
 
-            // Add the dirty entry
-            var entry = _storage[path] = new ObjectStoreEntry(path, contents);
-            entry.SetDirty();
             return true;
         }
 
