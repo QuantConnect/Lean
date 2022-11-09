@@ -13,11 +13,8 @@
  * limitations under the License.
 */
 
-using System.IO;
 using System.ComponentModel.Composition;
 using System;
-using System.Threading.Tasks;
-using System.Threading;
 
 namespace QuantConnect.Interfaces
 {

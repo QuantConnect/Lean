@@ -115,7 +115,7 @@ namespace QuantConnect.Data
         /// </summary>
         public void Exit()
         {
-            if (_exited)
+            if (_exited || _requestRateCalculationThread == null)
             {
                 return;
             }
