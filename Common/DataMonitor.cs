@@ -183,10 +183,10 @@ namespace QuantConnect
         
         private DataMonitorReport GenerateReport()
         {
-            var report = new DataMonitorReport(_succeededDataRequestsCount, 
-                _failedDataRequestsCount, 
-                _succeededUniverseDataRequestsCount, 
-                _failedUniverseDataRequestsCount, 
+            var report = new DataMonitorReport(_succeededDataRequestsCount,
+                _failedDataRequestsCount,
+                _succeededUniverseDataRequestsCount,
+                _failedUniverseDataRequestsCount,
                 _requestRates);
 
             Logging.Log.Trace($"DataMonitor.GenerateReport():{Environment.NewLine}" +
@@ -195,7 +195,7 @@ namespace QuantConnect
                 $"DATA USAGE:: Failed data requests {report.FailedDataRequestsCount}{Environment.NewLine}" +
                 $"DATA USAGE:: Failed data requests percentage {report.FailedDataRequestsPercentage}%{Environment.NewLine}" +
                 $"DATA USAGE:: Total universe data requests {report.TotalUniverseDataRequestsCount}{Environment.NewLine}" +
-                $"DATA USAGE:: Succeeded universe data requests {report.SucceededUniverseDataRequestsCount}{Environment.NewLine}" +                  
+                $"DATA USAGE:: Succeeded universe data requests {report.SucceededUniverseDataRequestsCount}{Environment.NewLine}" +
                 $"DATA USAGE:: Failed universe data requests {report.FailedUniverseDataRequestsCount}{Environment.NewLine}" +
                 $"DATA USAGE:: Failed universe data requests percentage {report.FailedUniverseDataRequestsPercentage}%");
 
@@ -243,7 +243,7 @@ namespace QuantConnect
         private string GetFilePath(string filename)
         {
             var baseFilename = Path.GetFileNameWithoutExtension(filename);
-            var timestamp = DateTime.Now.ToStringInvariant("yyyyMMddHHmmssfff");
+            var timestamp = DateTime.UtcNow.ToStringInvariant("yyyyMMddHHmmssfff");
             var extension = Path.GetExtension(filename);
             return Path.Combine(_resultsDestinationFolder, $"{baseFilename}-{timestamp}{extension}");
         }
