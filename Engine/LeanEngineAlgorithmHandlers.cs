@@ -115,6 +115,7 @@ namespace QuantConnect.Lean.Engine
         /// <param name="objectStore">The object store used for persistence</param>
         /// <param name="dataPermissionsManager">The data permission manager to use</param>
         /// <param name="liveMode">True for live mode, false otherwise</param>
+        /// <param name="researchMode">True for research mode, false otherwise. This has less priority than liveMode</param>
         public LeanEngineAlgorithmHandlers(IResultHandler results,
             ISetupHandler setup,
             IDataFeed dataFeed,
@@ -126,7 +127,8 @@ namespace QuantConnect.Lean.Engine
             IAlphaHandler alphas,
             IObjectStore objectStore,
             IDataPermissionManager dataPermissionsManager,
-            bool liveMode
+            bool liveMode,
+            bool researchMode = false
             )
         {
             if (results == null)
@@ -188,7 +190,7 @@ namespace QuantConnect.Lean.Engine
             DataCacheProvider = new ZipDataCacheProvider(DataProvider, isDataEphemeral: liveMode);
             DataMonitor = new DataMonitor();
 
-            if (!liveMode)
+            if (!liveMode && !researchMode)
             {
                 DataProvider.NewDataRequest += DataMonitor.OnNewDataRequest;
             }
@@ -198,9 +200,10 @@ namespace QuantConnect.Lean.Engine
         /// Creates a new instance of the <see cref="LeanEngineAlgorithmHandlers"/> class from the specified composer using type names from configuration
         /// </summary>
         /// <param name="composer">The composer instance to obtain implementations from</param>
+        /// <param name="researchMode">True for research mode, false otherwise</param>
         /// <returns>A fully hydrates <see cref="LeanEngineSystemHandlers"/> instance.</returns>
         /// <exception cref="CompositionException">Throws a CompositionException during failure to load</exception>
-        public static LeanEngineAlgorithmHandlers FromConfiguration(Composer composer)
+        public static LeanEngineAlgorithmHandlers FromConfiguration(Composer composer, bool researchMode = false)
         {
             var setupHandlerTypeName = Config.Get("setup-handler", "ConsoleSetupHandler");
             var transactionHandlerTypeName = Config.Get("transaction-handler", "BacktestingTransactionHandler");
@@ -226,7 +229,8 @@ namespace QuantConnect.Lean.Engine
                 composer.GetExportedValueByTypeName<IAlphaHandler>(alphaHandlerTypeName),
                 composer.GetExportedValueByTypeName<IObjectStore>(objectStoreTypeName),
                 composer.GetExportedValueByTypeName<IDataPermissionManager>(dataPermissionManager),
-                Config.GetBool("live-mode")
+                Config.GetBool("live-mode"),
+                researchMode
                 );
 
             result.FactorFileProvider.Initialize(result.MapFileProvider, result.DataProvider);

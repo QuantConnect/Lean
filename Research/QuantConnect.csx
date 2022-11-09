@@ -1,4 +1,4 @@
-﻿#r "Python.Runtime.dll"
+#r "Python.Runtime.dll"
 #r "QuantConnect.Algorithm.dll"
 #r "QuantConnect.Algorithm.Framework.dll"
 #r "QuantConnect.Common.dll"
@@ -84,4 +84,4 @@ using QuantConnect.Lean.Engine;
 
 Initializer.Start();
 Api api = (Api)Initializer.GetSystemHandlers().Api;
-var algorithmHandlers = Initializer.GetAlgorithmHandlers();
+var algorithmHandlers = Initializer.GetAlgorithmHandlers(researchMode: true);
