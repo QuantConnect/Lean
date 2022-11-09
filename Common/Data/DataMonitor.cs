@@ -22,7 +22,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Util;
 
-namespace QuantConnect
+namespace QuantConnect.Data
 {
     /// <summary>
     /// Monitors data requests and reports on missing data
@@ -31,8 +31,8 @@ namespace QuantConnect
     {
         private bool _exited;
 
-        private readonly TextWriter _succeededDataRequestsWriter;
-        private readonly TextWriter _failedDataRequestsWriter;
+        private TextWriter _succeededDataRequestsWriter;
+        private TextWriter _failedDataRequestsWriter;
 
         private long _succeededDataRequestsCount;
         private long _failedDataRequestsCount;
@@ -47,11 +47,11 @@ namespace QuantConnect
         private Thread _requestRateCalculationThread;
         private CancellationTokenSource _cancellationTokenSource;
 
-        private string _succeededDataRequestsFileName;
-        private string _failedDataRequestsFileName;
-        private string _resultsDestinationFolder;
+        private readonly string _succeededDataRequestsFileName;
+        private readonly string _failedDataRequestsFileName;
+        private readonly string _resultsDestinationFolder;
 
-        private object _threadLock = new();
+        private readonly object _threadLock = new();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DataMonitor"/> class
@@ -61,8 +61,6 @@ namespace QuantConnect
             _resultsDestinationFolder = Config.Get("results-destination-folder", Directory.GetCurrentDirectory());
             _succeededDataRequestsFileName = GetFilePath("succeeded-data-requests.txt");
             _failedDataRequestsFileName = GetFilePath("failed-data-requests.txt");
-            _succeededDataRequestsWriter = OpenStream(_succeededDataRequestsFileName);
-            _failedDataRequestsWriter = OpenStream(_failedDataRequestsFileName);
         }
 
         /// <summary>
@@ -77,14 +75,14 @@ namespace QuantConnect
 
             Initialize();
 
-            if (e.Path.Contains("map_files", StringComparison.OrdinalIgnoreCase) || 
+            if (e.Path.Contains("map_files", StringComparison.OrdinalIgnoreCase) ||
                 e.Path.Contains("factor_files", StringComparison.OrdinalIgnoreCase))
             {
                 return;
             }
 
             var path = StripDataFolder(e.Path);
-            var isUniverseData = path.Contains("coarse", StringComparison.OrdinalIgnoreCase) || 
+            var isUniverseData = path.Contains("coarse", StringComparison.OrdinalIgnoreCase) ||
                 path.Contains("universe", StringComparison.OrdinalIgnoreCase);
 
             if (e.Succeded)
@@ -121,28 +119,22 @@ namespace QuantConnect
             {
                 return;
             }
-
-            _requestRateCalculationThread.StopSafely(TimeSpan.FromSeconds(5), _cancellationTokenSource);
-            _succeededDataRequestsWriter.Close();
-            _failedDataRequestsWriter.Close();
             _exited = true;
 
+            _requestRateCalculationThread.StopSafely(TimeSpan.FromSeconds(5), _cancellationTokenSource);
+            _succeededDataRequestsWriter?.Close();
+            _failedDataRequestsWriter?.Close();
+
             StoreDataMonitorReport(GenerateReport());
-            
-            _succeededDataRequestsCount = 0;
-            _failedDataRequestsCount = 0;
-            _requestRates.Clear();
-            _prevRequestsCount = 0;
-            _lastRequestRateCalculationTime = default;
+
+            _succeededDataRequestsWriter.DisposeSafely();
+            _failedDataRequestsWriter.DisposeSafely();
+            _cancellationTokenSource.DisposeSafely();
         }
 
         public void Dispose()
         {
-            _succeededDataRequestsWriter.Close();
-            _succeededDataRequestsWriter.DisposeSafely();
-            _failedDataRequestsWriter.Close();
-            _failedDataRequestsWriter.DisposeSafely();
-            _cancellationTokenSource?.DisposeSafely();
+            Exit();
         }
 
         protected virtual string StripDataFolder(string path)
@@ -160,12 +152,19 @@ namespace QuantConnect
         /// </summary>
         private void Initialize()
         {
+            if (_requestRateCalculationThread != null)
+            {
+                return;
+            }
             lock (_threadLock)
             {
                 if (_requestRateCalculationThread != null)
                 {
                     return;
                 }
+                // we create the files on demand
+                _succeededDataRequestsWriter = OpenStream(_succeededDataRequestsFileName);
+                _failedDataRequestsWriter = OpenStream(_failedDataRequestsFileName);
 
                 _cancellationTokenSource = new CancellationTokenSource();
 
@@ -180,7 +179,7 @@ namespace QuantConnect
                 _requestRateCalculationThread.Start();
             }
         }
-        
+
         private DataMonitorReport GenerateReport()
         {
             var report = new DataMonitorReport(_succeededDataRequestsCount,
