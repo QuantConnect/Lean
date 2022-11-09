@@ -13,29 +13,25 @@
  * limitations under the License.
 */
 
-using System.IO;
 using System.ComponentModel.Composition;
 using System;
 
 namespace QuantConnect.Interfaces
 {
     /// <summary>
-    /// Fetches a remote file for a security.
-    /// Must save the file to Globals.DataFolder.
+    /// Monitors data requests and reports on missing data
     /// </summary>
-    [InheritedExport(typeof(IDataProvider))]
-    public interface IDataProvider
+    [InheritedExport(typeof(IDataMonitor))]
+    public interface IDataMonitor : IDisposable
     {
         /// <summary>
-        /// Event raised each time data fetch is finished (successfully or not)
+        /// Terminates the data monitor generating a final report
         /// </summary>
-        event EventHandler<DataProviderNewDataRequestEventArgs> NewDataRequest;
-
+        void Exit();
+        
         /// <summary>
-        /// Retrieves data to be used in an algorithm
+        /// Event handler for the <see cref="IDataProvider.NewDataRequest"/> event
         /// </summary>
-        /// <param name="key">A string representing where the data is stored</param>
-        /// <returns>A <see cref="Stream"/> of the data requested</returns>
-        Stream Fetch(string key);
+        void OnNewDataRequest(object sender, DataProviderNewDataRequestEventArgs e);
     }
 }

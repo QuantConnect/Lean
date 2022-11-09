@@ -448,6 +448,7 @@ namespace QuantConnect.Lean.Engine
                 AlgorithmHandlers.DataFeed.Exit();
                 AlgorithmHandlers.Transactions.Exit();
                 AlgorithmHandlers.RealTime.Exit();
+                AlgorithmHandlers.DataMonitor.Exit();
             }
         }
 
