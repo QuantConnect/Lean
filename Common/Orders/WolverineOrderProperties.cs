@@ -21,9 +21,5 @@ namespace QuantConnect.Orders
     /// </summary>
     public class WolverineOrderProperties : OrderProperties
     {
-        /// <summary>
-        /// Post-only order (available when ordertype = limit)
-        /// </summary>
-        public bool PostOnly { get; set; }
     }
 }
