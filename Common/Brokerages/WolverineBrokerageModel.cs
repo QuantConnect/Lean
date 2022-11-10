@@ -114,7 +114,7 @@ namespace QuantConnect.Brokerages
         private static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets()
         {
             var map = DefaultMarketMap.ToDictionary();
-            map[SecurityType.Equity] = Market.Wolverine;
+            map[SecurityType.Equity] = Market.USA;
             return map.ToReadOnlyDictionary();
         }
     }
