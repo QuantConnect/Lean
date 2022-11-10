@@ -150,6 +150,15 @@
   "atreyu-broker-mpid": "",
   "atreyu-locate-rqd": "",
 
+  // wolverine configuration
+  "wolverine-host": "",
+  "wolverine-port": "",
+  "wolverine-account": "",
+  "wolverine-sender-comp-id": "",
+  "wolverine-target-comp-id": "",
+  "wolverine-on-behalf-of-comp-id": "",
+  "wolverine-log-fix-messages": false,
+
   // Trading Technologies configuration
   "tt-user-name": "",
   "tt-session-password": "",
@@ -521,6 +530,19 @@
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
       "history-provider": [ "BrokerageHistoryProvider", "SubscriptionDataReaderHistoryProvider" ]
+    },
+
+    "live-wolverine": {
+      "live-mode": true,
+
+      // real brokerage implementations require the BrokerageTransactionHandler
+      "live-mode-brokerage": "WolverineBrokerage",
+      "history-provider": [ "SubscriptionDataReaderHistoryProvider" ],
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler"
     }
   }
 }
