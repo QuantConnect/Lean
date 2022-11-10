@@ -187,7 +187,7 @@ namespace QuantConnect.Tests.Common
             var greeks = results.Greeks;
 
             // BS equation
-            var rightPart = greeks.Theta * 365 + riskFreeRate * underlyingPrice * greeks.Delta + 0.5m * impliedVol * impliedVol * underlyingPrice * underlyingPrice * greeks.Gamma;
+            var rightPart = greeks.Theta + riskFreeRate * underlyingPrice * greeks.Delta + 0.5m * impliedVol * impliedVol * underlyingPrice * underlyingPrice * greeks.Gamma;
             var leftPart = riskFreeRate * price;
 
             Assert.AreEqual((double)leftPart, (double)rightPart, 0.0001);
@@ -221,7 +221,7 @@ namespace QuantConnect.Tests.Common
             Assert.Greater(price, callPrice);
             Assert.Greater(impliedVolatility, underlyingVol);
 
-            var rightPart = greeks.Theta * 365 + riskFreeRate * underlyingPrice * greeks.Delta + 0.5m * impliedVolatility * impliedVolatility * underlyingPrice * underlyingPrice * greeks.Gamma;
+            var rightPart = greeks.Theta + riskFreeRate * underlyingPrice * greeks.Delta + 0.5m * impliedVolatility * impliedVolatility * underlyingPrice * underlyingPrice * greeks.Gamma;
             var leftPart = riskFreeRate * price;
             Assert.AreEqual((double)leftPart, (double)rightPart, 0.0001);
         }
@@ -256,7 +256,6 @@ namespace QuantConnect.Tests.Common
             Assert.Greater(callPrice1, callPrice2);
         }
 
-        [Test]
         [TestCase("BaroneAdesiWhaleyApproximationEngine")]
         [TestCase("QLNet.BaroneAdesiWhaleyApproximationEngine")]
         public void CreatesOptionPriceModelByName(string priceEngineName)
@@ -309,7 +308,6 @@ namespace QuantConnect.Tests.Common
             Assert.Greater(greeks.Vega, 0);
         }
 
-        [Test]
         [TestCase(true)]
         [TestCase(false)]
         public void HasBeenWarmedUp(bool warmUp)
@@ -361,7 +359,6 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(OptionPriceModelResult.None, resultsCall);
         }
 
-        [Test]
         [TestCase("BlackScholes", OptionStyle.American, true)]
         [TestCase("BlackScholes", OptionStyle.European, false)]
         [TestCase("Integral", OptionStyle.American, true)]
@@ -426,14 +423,13 @@ namespace QuantConnect.Tests.Common
             }
         }
 
-        [Test]
         [TestCase(OptionRight.Call, 200, 20.80707831, 0.56552801, 0.00787097, -0.02948410, 0.78709695, 0.92298523)]         // ATM
         [TestCase(OptionRight.Call, 250, 6.06011876, 0.23343714, 0.00612336, -0.02208350, 0.61233641, 0.40627309)]          // deep OTM
         [TestCase(OptionRight.Call, 150, 53.94314691, 0.90586737, 0.00335759, -0.01498436, 0.33575894, 1.27230328)]         // deep ITM
         [TestCase(OptionRight.Put, 200, 18.90107225, -0.43447199, 0.00787097, -0.02405917, 0.78709695, -1.05711443)]        // ATM
         [TestCase(OptionRight.Put, 150, 2.45317094, -0.09413263, 0.00335759, -0.01091566, 0.33575894, -0.21277148)]         // deep ITM
         [TestCase(OptionRight.Put, 250, 54.08980489, -0.76656286, 0.00612336, -0.01530234, 0.61233641, -2.07837775)]        // deep OTM
-        public void GreeksTest(OptionRight optionRight, decimal strike, decimal price, decimal ibDelta, decimal ibGamma, decimal ibTheta, decimal ibVega, decimal ibRho)
+        public void Greeks(OptionRight optionRight, decimal strike, decimal price, decimal ibDelta, decimal ibGamma, decimal ibTheta, decimal ibVega, decimal ibRho)
         {
             const decimal underlyingPrice = 200m;
             const decimal underlyingVol = 0.25m;
@@ -456,9 +452,37 @@ namespace QuantConnect.Tests.Common
             // Expect minor error due to interest rate and dividend yield used in IB
             Assert.AreEqual((double)greeks.Delta, (double)ibDelta, 0.005);
             Assert.AreEqual((double)greeks.Gamma, (double)ibGamma, 0.005);
-            Assert.AreEqual((double)greeks.Theta, (double)ibTheta, 0.005);
+            Assert.AreEqual((double)greeks.Theta / 365.25, (double)ibTheta, 0.005);
             Assert.AreEqual((double)greeks.Vega, (double)ibVega, 0.005);
             Assert.AreEqual((double)greeks.Rho, (double)ibRho, 0.005);
+        }
+
+        [TestCase(OptionRight.Call, 200, 24.76, 0.3003)]         // ATM
+        [TestCase(OptionRight.Call, 250, 12.33, 0.3430)]         // deep OTM
+        [TestCase(OptionRight.Call, 150, 57.24, 0.3323)]         // deep ITM
+        [TestCase(OptionRight.Put, 200, 22.02, 0.2907)]          // ATM
+        [TestCase(OptionRight.Put, 180, 15.50, 0.3312)]          // deep ITM
+        [TestCase(OptionRight.Put, 220, 36.59, 0.3225)]          // deep OTM
+        public void ImpliedVolatilityEstimator(OptionRight optionRight, decimal strike, double price, double ibImpliedVol)
+        {
+            const double underlyingPrice = 200d;
+            var evaluationDate = new DateTime(2015, 2, 19);
+            var spy = Symbols.SPY;
+            var optionSymbol = GetOptionSymbol(spy, OptionStyle.American, optionRight, strike);
+
+            // setting up
+            var contract = GetOptionContract(optionSymbol, spy, evaluationDate);
+            var payoff = new PlainVanillaPayoff(contract.Right == OptionRight.Call ? QLNet.Option.Type.Call : QLNet.Option.Type.Put, (double)contract.Strike);
+            var forwardPrice = underlyingPrice / 0.99d;
+            BlackCalculator black = null;
+
+            // running evaluation with 0% dividend yield and 1% interest rate
+            var initialGuess = Math.Sqrt(2 * Math.PI) * price / underlyingPrice;
+            var priceModel = new TestOptionPriceModel();
+            var impliedVolEstimate = priceModel.TestImpliedVolEstimator(price, initialGuess, 1, 0.99d, forwardPrice, payoff, out black);
+
+            // Expect minor error due to interest rate and dividend yield used in IB
+            Assert.AreEqual(impliedVolEstimate, ibImpliedVol, 0.001);
         }
 
         private Symbol GetOptionSymbol(Symbol underlying, OptionStyle optionStyle, OptionRight optionRight, decimal strike = 192m)
@@ -528,6 +552,20 @@ namespace QuantConnect.Tests.Common
 
             public void Update(Security security, BaseData data)
             {
+            }
+        }
+
+        class TestOptionPriceModel : QLOptionPriceModel
+        {
+            public TestOptionPriceModel()
+                : base(process => new BjerksundStenslandApproximationEngine(process), null, null, null)
+            {
+            }
+
+            public double TestImpliedVolEstimator(double price, double initialGuess, double timeTillExpiry, double riskFreeDiscount, 
+                                                  double forwardPrice, PlainVanillaPayoff payoff, out BlackCalculator black)
+            {
+                return base.ImpliedVolatilityEstimation(price, initialGuess, timeTillExpiry, riskFreeDiscount, forwardPrice, payoff, out black);
             }
         }
     }

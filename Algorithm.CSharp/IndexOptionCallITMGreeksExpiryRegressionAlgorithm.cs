@@ -90,6 +90,7 @@ namespace QuantConnect.Algorithm.CSharp
             var lambda = data.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.Greeks.Lambda).ToList();
             var rho = data.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.Greeks.Rho).ToList();
             var theta = data.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.Greeks.Theta).ToList();
+            var impliedVol = data.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.ImpliedVolatility).ToList();
             var vega = data.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.Greeks.Vega).ToList();
 
             // The commented out test cases all return zero.
@@ -116,7 +117,11 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new AggregateException("Option contract Theta was equal to zero");
             }
-            // Vega can be 0 if the price is too wild that the effect of volatilty change is not sensitive enough
+            // Vega will equal 0 if the quote price and IV are way too off, causing the price is not sensitive to volatility change
+            if (vega.Zip(impliedVol, (v, iv) => (v, iv)).Any(x => x.v == 0 && x.iv < 10))
+            {
+                throw new AggregateException("Option contract Vega was equal to zero");
+            }
 
             if (!_invested)
             {

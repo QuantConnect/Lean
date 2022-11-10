@@ -123,6 +123,11 @@ namespace QuantConnect.Securities.Option
                 var spot = (double)optionSecurity.Underlying.Price;
                 var underlyingQuoteValue = new SimpleQuote(spot);
 
+                if (spot <= 0d)
+                {
+                    return OptionPriceModelResult.None;
+                }
+
                 var dividendYieldValue = new SimpleQuote(_dividendYieldEstimator.Estimate(security, slice, contract));
                 var dividendYield = new Handle<YieldTermStructure>(new FlatForward(0, calendar, dividendYieldValue, dayCounter));
 
@@ -153,12 +158,16 @@ namespace QuantConnect.Securities.Option
                 // can return negative value in neighborhood of 0
                 var npv = Math.Max(0, EvaluateOption(option));
 
+                // Get time until maturity (in year) and discount factor by dividend and risk free rate
                 var blackVolatilityMaturity = underlyingVol.link.dayCounter()
                     .yearFraction(underlyingVol.link.referenceDate(), maturityDate);
                 var riskFreeRateMaturity = riskFreeRate.link.dayCounter()
                     .yearFraction(riskFreeRate.link.referenceDate(), maturityDate);
+                var dividendDiscount = dividendYield.link.discount(maturityDate);
+                var riskFreeDiscount = riskFreeRate.link.discount(maturityDate);
+                var forwardPrice = spot * dividendDiscount / riskFreeDiscount;
 
-                BlackCalculator blackLazy = null;
+                BlackCalculator blackCalculator = null;
 
                 // Calculate the Implied Volatility
                 var impliedVol = 0d;
@@ -169,31 +178,9 @@ namespace QuantConnect.Securities.Option
                 catch
                 {
                     // initial guess by Brenner and Subrahmanyam (1988)
-                    impliedVol = Math.Sqrt(2 * Math.PI / blackVolatilityMaturity) * premium / spot;
-                    
+                    var initialGuess = Math.Sqrt(2 * Math.PI / blackVolatilityMaturity) * premium / spot;                    
                     // A Newton-Raphson optimization estimate of the implied volatility
-                    double tolerance = 1e-3d, error = Double.MaxValue, guessTheoreticalPrice = 0d, oldImpliedVol = 0d, lowerBound = 1e-7;
-                    decimal guessVega = 0m;
-                    int maxIter = 100, iter = 0;
-                    
-                    while (error > tolerance || maxIter < iter)
-                    {
-                        oldImpliedVol = impliedVol;
-
-                        // Use previous IV estimate to get new theoretical price, vega and IV
-                        underlyingVolValue.setValue(oldImpliedVol);
-                        guessVega = tryGetGreekOrReevaluate(() => option.vega(), (black) => black.vega(blackVolatilityMaturity));
-                        guessTheoreticalPrice = option.NPV();
-                        impliedVol -= (guessTheoreticalPrice - premium) / (double)guessVega;
-
-                        if (impliedVol < lowerBound)
-                        {
-                            impliedVol = oldImpliedVol;
-                        }
-
-                        error = Math.Abs((impliedVol - oldImpliedVol) / impliedVol);
-                        iter++;
-                    }
+                    impliedVol = ImpliedVolatilityEstimation(premium, initialGuess, blackVolatilityMaturity, riskFreeDiscount, forwardPrice, payoff, out blackCalculator);
                 }
 
                 // Update the Black Vol Term Structure with the Implied Volatility to improve Greek calculation
@@ -212,34 +199,21 @@ namespace QuantConnect.Securities.Option
                     }
                     catch (Exception)
                     {
-                        try
+                        if (EnableGreekApproximation)
                         {
-                            if (blackLazy == null)
+                            if (blackCalculator == null)
                             {
                                 // Define Black Calculator to calculate Greeks that are not defined by the option object
                                 // Some models do not evaluate all greeks under some circumstances (e.g. low dividend yield)
                                 // We override this restriction to calculate the Greeks directly with the BlackCalculator
-                                var dividendDiscount = dividendYield.link.discount(maturityDate);
-                                var riskFreeDiscount = riskFreeRate.link.discount(maturityDate);
-                                var forwardPrice = spot * dividendDiscount / riskFreeDiscount;
-                                var variance = underlyingVol.link.blackVariance(maturityDate, (double)contract.Strike);
-                                blackLazy = new BlackCalculator(payoff, forwardPrice, Math.Sqrt(variance),
-                                    riskFreeDiscount);
+                                var vol = underlyingVol.link.blackVol(maturityDate, (double)contract.Strike);
+                                blackCalculator = _createBlackCalculator(forwardPrice, riskFreeDiscount, vol, payoff);
                             }
 
-                            if (EnableGreekApproximation)
-                            {
-                                return black(blackLazy).SafeDecimalCast();
-                            }
+                            return black(blackCalculator).SafeDecimalCast();
+                        }
 
-                            throw new Exception("Greeks approximation was not allowed.");
-                        }
-                        catch (Exception exception)
-                        {
-                            Log.Error($"No valid Greek value returned from Black Calculator: {exception}");
-                            // return zero if no default Greek value in the Option object and no valid Greek value was calculated in the Black Calculator
-                            return 0.0m;
-                        }
+                        return 0.0m;
                     }
                 }
 
@@ -249,7 +223,7 @@ namespace QuantConnect.Securities.Option
                             () => new Greeks(() => tryGetGreekOrReevaluate(() => option.delta(), (black) => black.delta(spot)),
                                             () => tryGetGreekOrReevaluate(() => option.gamma(), (black) => black.gamma(spot)),
                                             () => tryGetGreekOrReevaluate(() => option.vega(), (black) => black.vega(blackVolatilityMaturity)) / 100,   // per cent
-                                            () => tryGetGreekOrReevaluate(() => option.thetaPerDay(), (black) => black.thetaPerDay(spot, blackVolatilityMaturity)),
+                                            () => tryGetGreekOrReevaluate(() => option.theta(), (black) => black.theta(spot, blackVolatilityMaturity)),
                                             () => tryGetGreekOrReevaluate(() => option.rho(), (black) => black.rho(riskFreeRateMaturity)) / 100,        // per cent
                                             () => tryGetGreekOrReevaluate(() => option.elasticity(), (black) => black.elasticity(spot))));
             }
@@ -282,6 +256,68 @@ namespace QuantConnect.Securities.Option
                 Log.Debug($"QLOptionPriceModel.EvaluateOption() error: {err.Message}");
                 return 0.0;
             }
+        }
+
+        /// <summary>
+        /// An implied volatility approximation by Newton-Raphson method
+        /// </summary>
+        /// <remarks>
+        /// Orlando G, Taglialatela G. A review on implied volatility calculation. Journal of Computational and Applied Mathematics. 2017 Aug 15;320:202-20.
+        /// </remarks>
+        /// <param name="price">current price of the option</param>
+        /// <param name="initialGuess">initial guess of the IV</param>
+        /// <param name="timeTillExpiry">time till option contract expiry</param>
+        /// <param name="riskFreeDiscount">risk free rate discount factor</param>
+        /// <param name="forwardPrice">future value of underlying price</param>
+        /// <param name="payoff">payoff structure of the option contract</param>
+        /// <param name="black">black calculator instance</param>
+        /// <returns>implied volatility estimation</returns>
+        protected double ImpliedVolatilityEstimation(double price, double initialGuess, double timeTillExpiry, double riskFreeDiscount, 
+                                                     double forwardPrice, PlainVanillaPayoff payoff, out BlackCalculator black)
+        {
+            // Set up the optimizer
+            const double tolerance = 1e-3d;
+            const double lowerBound = 1e-7d;
+            const double upperBound = 4d;
+            var iterRemain = 10;
+            var error = Double.MaxValue;
+            var impliedVolEstimate = initialGuess;
+
+            // Set up option calculator
+            black = _createBlackCalculator(forwardPrice, riskFreeDiscount, initialGuess, payoff);
+
+            while (error > tolerance || iterRemain > 0)
+            {
+                double oldImpliedVol = impliedVolEstimate;
+                
+                // Set up calculator by previous IV estimate to get new theoretical price, vega and IV
+                black = _createBlackCalculator(forwardPrice, riskFreeDiscount, oldImpliedVol, payoff);
+                impliedVolEstimate -= (black.value() - price) / black.vega(timeTillExpiry);
+
+                if (impliedVolEstimate < lowerBound)
+                {
+                    impliedVolEstimate = lowerBound;
+                }
+                else if (impliedVolEstimate > upperBound)
+                {
+                    impliedVolEstimate = upperBound;
+                }
+
+                error = Math.Abs(impliedVolEstimate - oldImpliedVol) / impliedVolEstimate;
+                iterRemain--;
+            }
+
+            return impliedVolEstimate;
+        }
+
+        /// <summary>
+        /// Define Black Calculator to calculate Greeks that are not defined by the option object
+        /// Some models do not evaluate all greeks under some circumstances (e.g. low dividend yield)
+        /// We override this restriction to calculate the Greeks directly with the BlackCalculator
+        /// </summary>
+        private BlackCalculator _createBlackCalculator(double forwardPrice, double riskFreeDiscount, double stdDev, PlainVanillaPayoff payoff)
+        {
+            return new BlackCalculator(payoff, forwardPrice, stdDev, riskFreeDiscount);
         }
 
         private static DateTime AddDays(DateTime date, int days, SecurityExchangeHours marketHours)
