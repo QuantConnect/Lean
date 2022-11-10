@@ -62,7 +62,7 @@ namespace QuantConnect.Brokerages
             }
 
             message = null;
-            if (! new [] { SecurityType.Equity, SecurityType.Future, SecurityType.Option }.Contains(security.Type))
+            if (security.Type != SecurityType.Equity)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     StringExtensions.Invariant($"The {nameof(WolverineBrokerageModel)} does not support {security.Type} security type.")

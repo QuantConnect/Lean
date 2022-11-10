@@ -30,7 +30,7 @@ namespace QuantConnect.Orders.Fees
         /// Creates a new instance
         /// </summary>
         /// <param name="feesPerShare">The fees per share to apply</param>
-        /// <remarks>Default value is $0.0015 per share</remarks>
+        /// <remarks>Default value is $0.5 per share</remarks>
         public WolverineFeeModel(decimal? feesPerShare = null)
         {
             _feesPerShare = feesPerShare ?? 0.5m;
