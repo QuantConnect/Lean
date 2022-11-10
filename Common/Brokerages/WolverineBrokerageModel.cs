@@ -38,7 +38,7 @@ namespace QuantConnect.Brokerages
         /// Constructor for Wolverine brokerage model
         /// </summary>
         /// <param name="accountType">Cash or Margin</param>
-        public WolverineBrokerageModel(AccountType accountType = AccountType.Cash) : base(accountType)
+        public WolverineBrokerageModel(AccountType accountType = AccountType.Margin) : base(accountType)
         {
             
         }
@@ -80,14 +80,6 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (security.QuoteCurrency.Symbol != Currencies.USD) {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                StringExtensions.Invariant($"{security.QuoteCurrency.Symbol} CASH is not supported by Wolverine. Currently, only USD is supported.")
-                );
-
-                return false;
-            }
-            
             return base.CanSubmitOrder(security, order, out message);
         }
 
