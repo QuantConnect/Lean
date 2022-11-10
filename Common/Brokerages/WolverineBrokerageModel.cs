@@ -14,13 +14,9 @@
  *
 */
 
-using System.Collections.Generic;
-using System.Linq;
-using QuantConnect.Benchmarks;
 using QuantConnect.Orders;
-using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
-using QuantConnect.Util;
+using QuantConnect.Orders.Fees;
 
 namespace QuantConnect.Brokerages
 {
@@ -30,17 +26,11 @@ namespace QuantConnect.Brokerages
     public class WolverineBrokerageModel : DefaultBrokerageModel
     {
         /// <summary>
-        /// Gets a map of the default markets to be used for each security type
-        /// </summary>
-        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets();
-
-        /// <summary>
         /// Constructor for Wolverine brokerage model
         /// </summary>
         /// <param name="accountType">Cash or Margin</param>
         public WolverineBrokerageModel(AccountType accountType = AccountType.Margin) : base(accountType)
         {
-            
         }
 
         /// <summary>
@@ -105,17 +95,6 @@ namespace QuantConnect.Brokerages
         public override IFeeModel GetFeeModel(Security security)
         {
             return new WolverineFeeModel();
-        }
-        
-        /// <summary>
-        /// Get default markets and specify Wolverine as crypto market
-        /// </summary>
-        /// <returns>default markets</returns>
-        private static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets()
-        {
-            var map = DefaultMarketMap.ToDictionary();
-            map[SecurityType.Equity] = Market.USA;
-            return map.ToReadOnlyDictionary();
         }
     }
 }
