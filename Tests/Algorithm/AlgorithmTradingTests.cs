@@ -1452,6 +1452,23 @@ namespace QuantConnect.Tests.Algorithm
             Assert.That(ticket, Has.Property("Status").EqualTo(OrderStatus.Invalid));
         }
 
+        [Test]
+        public void EuropeanOptionsCannotBeExercisedBeforeExpiry()
+        {
+            var algo = GetAlgorithm(out _, 1, 0);
+            var optionExpiry = new DateTime(2020, 3, 20);
+            algo.SetDateTime(optionExpiry.AddDays(-1).AddHours(15));
+
+            var indexSymbol = Symbol.Create("SPX", SecurityType.Index, Market.USA);
+            var optionSymbol = Symbol.CreateOption(indexSymbol, Market.USA, OptionStyle.European, OptionRight.Call, 1, optionExpiry);
+            var europeanOptionContract = algo.AddOptionContract(optionSymbol, Resolution.Minute);
+            europeanOptionContract.SetMarketPrice(new TradeBar() { Symbol = europeanOptionContract.Symbol, Value = 1, Time = algo.Time });
+
+            var ticket = algo.ExerciseOption(europeanOptionContract.Symbol, 1);
+            Assert.AreEqual(OrderStatus.Invalid, ticket.Status);
+            Assert.AreEqual(OrderResponseErrorCode.EuropeanOptionNotExpiredOnExercise, ticket.SubmitRequest.Response.ErrorCode);
+        }
+
         private class TestShortableProvider : IShortableProvider
         {
             public Dictionary<Symbol, long> AllShortableSymbols(DateTime localTime)
