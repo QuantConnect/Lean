@@ -261,7 +261,7 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// An implied volatility approximation by Newton-Raphson method
+        /// An implied volatility approximation by Newton-Raphson method. Return 0 if result is not converged
         /// </summary>
         /// <remarks>
         /// Orlando G, Taglialatela G. A review on implied volatility calculation. Journal of Computational and Applied Mathematics. 2017 Aug 15;320:202-20.
@@ -312,7 +312,7 @@ namespace QuantConnect.Securities.Option
 
             if (iterRemain == 0)
             {
-                Log.Error("Implied Volatility approxiation did not converge, returning 0.");
+                Log.Debug("QLOptionPriceModel.ImpliedVolatilityEstimation() error: Implied Volatility approxiation did not converge, returning 0.");
                 return 0d;
             }
 
