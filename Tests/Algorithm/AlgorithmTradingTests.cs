@@ -28,6 +28,7 @@ using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Orders.Fills;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -1450,6 +1451,30 @@ namespace QuantConnect.Tests.Algorithm
 
             var ticket = algo.MarketOnOpenOrder(es20h20.Symbol, 1);
             Assert.That(ticket, Has.Property("Status").EqualTo(OrderStatus.Invalid));
+        }
+
+        [Test]
+        public void EuropeanOptionsCannotBeExercisedBeforeExpiry()
+        {
+            var algo = GetAlgorithm(out _, 1, 0);
+
+            var optionExpiry = new DateTime(2020, 3, 20);
+
+            var indexSymbol = Symbol.Create("SPX", SecurityType.Index, Market.USA);
+            var optionSymbol = Symbol.CreateOption(indexSymbol, Market.USA, OptionStyle.European, OptionRight.Call, 1, optionExpiry);
+            var europeanOptionContract = algo.AddOptionContract(optionSymbol, Resolution.Minute);
+            europeanOptionContract.SetMarketPrice(new TradeBar() { Symbol = europeanOptionContract.Symbol, Value = 1, Time = algo.Time });
+
+            europeanOptionContract.Holdings.SetHoldings(1, 1);
+
+            algo.SetDateTime(optionExpiry.AddDays(-1).AddHours(15));
+            var ticket = algo.ExerciseOption(europeanOptionContract.Symbol, 1);
+            Assert.AreEqual(OrderStatus.Invalid, ticket.Status);
+            Assert.AreEqual(OrderResponseErrorCode.EuropeanOptionNotExpiredOnExercise, ticket.SubmitRequest.Response.ErrorCode);
+
+            algo.SetDateTime(optionExpiry.AddHours(15));
+            ticket = algo.ExerciseOption(europeanOptionContract.Symbol, 1);
+            Assert.AreEqual(OrderStatus.New, ticket.Status);
         }
 
         private class TestShortableProvider : IShortableProvider
