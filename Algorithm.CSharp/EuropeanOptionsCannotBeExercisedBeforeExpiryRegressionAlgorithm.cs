@@ -16,10 +16,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
-using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -28,7 +30,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class EuropeanOptionsCannotBeExercisedBeforeExpiryRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _optionSymbol;
+        private Option _option;
 
         private bool _done;
 
@@ -42,40 +44,35 @@ namespace QuantConnect.Algorithm.CSharp
             var indexOption = AddIndexOption(index.Symbol, Resolution.Hour, fillDataForward: true);
             indexOption.SetFilter(filterFunc => filterFunc);
 
-            _optionSymbol = indexOption.Symbol;
+            _option = indexOption;
         }
 
         public override void OnData(Slice slice)
         {
-            if (_done || !slice.OptionChains.ContainsKey(_optionSymbol))
+            OptionChain contracts;
+
+            if (_done || !slice.OptionChains.TryGetValue(_option.Symbol, out contracts) || !contracts.Any())
             {
                 return;
             }
 
-            var contracts = slice.OptionChains[_optionSymbol];
-
-            if (!contracts.Any())
-            {
-                return;
-            }
-
-            var contractSymbol = contracts.First().Symbol;
+            var contract = contracts.First();
 
             // Make sure  we test this before the options expiry
-            if (contractSymbol.ID.Date < Time)
+            if (contract.Expiry.ConvertToUtc(_option.Exchange.TimeZone) < UtcTime)
             {
                 return;
             }
 
-            if (MarketOrder(contractSymbol, 1).Status != OrderStatus.Filled)
+            if (MarketOrder(contract.Symbol, 1).Status != OrderStatus.Filled)
             {
                 throw new Exception("Expected market order to fill immediately");
             }
 
-            if (ExerciseOption(contractSymbol, 1).Status == OrderStatus.Filled)
+            if (ExerciseOption(contract.Symbol, 1).Status == OrderStatus.Filled)
             {
-                throw new Exception($"Expected European option to not be exercisable beefore its expiration date. " +
-                                    $"Time: {Time}. Expiry: {_optionSymbol.ID.Date}");
+                throw new Exception($"Expected European option to not be exercisable before its expiration date. " +
+                                    $"Time: {UtcTime}. Expiry: {contract.Expiry.ConvertToUtc(_option.Exchange.TimeZone)}");
             }
 
             _done = true;
