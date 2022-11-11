@@ -109,24 +109,32 @@ namespace QuantConnect.Securities.Option
                 }
 
                 // setting up option pricing parameters
-                var calendar = new UnitedStates();
-                var dayCounter = new Actual365Fixed();
                 var optionSecurity = (Option)security;
                 var premium = (double)optionSecurity.Price;
+                var spot = (double)optionSecurity.Underlying.Price;
 
+                if (spot <= 0d || premium <= 0d)
+                {
+                    return OptionPriceModelResult.None;
+                }
+
+                var underlyingVolValue = new SimpleQuote(_underlyingVolEstimator.Estimate(security, slice, contract));
+
+                // Non-ready volatility model has 0 volatility
+                if (!_underlyingVolEstimator.IsReady)
+                {
+                    return OptionPriceModelResult.None;
+                }
+
+                var calendar = new UnitedStates();
+                var dayCounter = new Actual365Fixed();
                 var securityExchangeHours = security.Exchange.Hours;
                 var settlementDate = AddDays(contract.Time.Date, Option.DefaultSettlementDays, securityExchangeHours);
                 var evaluationDate = contract.Time.Date;
                 // TODO: static variable
                 Settings.setEvaluationDate(evaluationDate);
                 var maturityDate = AddDays(contract.Expiry.Date, Option.DefaultSettlementDays, securityExchangeHours);
-                var spot = (double)optionSecurity.Underlying.Price;
                 var underlyingQuoteValue = new SimpleQuote(spot);
-
-                if (spot <= 0d)
-                {
-                    return OptionPriceModelResult.None;
-                }
 
                 var dividendYieldValue = new SimpleQuote(_dividendYieldEstimator.Estimate(security, slice, contract));
                 var dividendYield = new Handle<YieldTermStructure>(new FlatForward(0, calendar, dividendYieldValue, dayCounter));
@@ -134,13 +142,7 @@ namespace QuantConnect.Securities.Option
                 var riskFreeRateValue = new SimpleQuote(_riskFreeRateEstimator.Estimate(security, slice, contract));
                 var riskFreeRate = new Handle<YieldTermStructure>(new FlatForward(0, calendar, riskFreeRateValue, dayCounter));
 
-                var underlyingVolValue = new SimpleQuote(_underlyingVolEstimator.Estimate(security, slice, contract));
                 var underlyingVol = new Handle<BlackVolTermStructure>(new BlackConstantVol(0, calendar, new Handle<Quote>(underlyingVolValue), dayCounter));
-
-                if (!_underlyingVolEstimator.IsReady)
-                {
-                    return OptionPriceModelResult.None;
-                }
 
                 // preparing stochastic process and payoff functions
                 var stochasticProcess = new BlackScholesMertonProcess(new Handle<Quote>(underlyingQuoteValue), dividendYield, riskFreeRate, underlyingVol);
@@ -199,21 +201,21 @@ namespace QuantConnect.Securities.Option
                     }
                     catch (Exception)
                     {
-                        if (EnableGreekApproximation)
+                        if (!EnableGreekApproximation)
                         {
-                            if (blackCalculator == null)
-                            {
-                                // Define Black Calculator to calculate Greeks that are not defined by the option object
-                                // Some models do not evaluate all greeks under some circumstances (e.g. low dividend yield)
-                                // We override this restriction to calculate the Greeks directly with the BlackCalculator
-                                var vol = underlyingVol.link.blackVol(maturityDate, (double)contract.Strike);
-                                blackCalculator = _createBlackCalculator(forwardPrice, riskFreeDiscount, vol, payoff);
-                            }
-
-                            return black(blackCalculator).SafeDecimalCast();
+                            return 0.0m;
                         }
 
-                        return 0.0m;
+                        if (blackCalculator == null)
+                        {
+                            // Define Black Calculator to calculate Greeks that are not defined by the option object
+                            // Some models do not evaluate all greeks under some circumstances (e.g. low dividend yield)
+                            // We override this restriction to calculate the Greeks directly with the BlackCalculator
+                            var vol = underlyingVol.link.blackVol(maturityDate, (double)contract.Strike);
+                            blackCalculator = CreateBlackCalculator(forwardPrice, riskFreeDiscount, vol, payoff);
+                        }
+
+                        return black(blackCalculator).SafeDecimalCast();
                     }
                 }
 
@@ -280,18 +282,18 @@ namespace QuantConnect.Securities.Option
             const double lowerBound = 1e-7d;
             const double upperBound = 4d;
             var iterRemain = 10;
-            var error = Double.MaxValue;
+            var error = double.MaxValue;
             var impliedVolEstimate = initialGuess;
 
             // Set up option calculator
-            black = _createBlackCalculator(forwardPrice, riskFreeDiscount, initialGuess, payoff);
+            black = CreateBlackCalculator(forwardPrice, riskFreeDiscount, initialGuess, payoff);
 
-            while (error > tolerance || iterRemain > 0)
+            while (error > tolerance && iterRemain > 0)
             {
-                double oldImpliedVol = impliedVolEstimate;
+                var oldImpliedVol = impliedVolEstimate;
                 
                 // Set up calculator by previous IV estimate to get new theoretical price, vega and IV
-                black = _createBlackCalculator(forwardPrice, riskFreeDiscount, oldImpliedVol, payoff);
+                black = CreateBlackCalculator(forwardPrice, riskFreeDiscount, oldImpliedVol, payoff);
                 impliedVolEstimate -= (black.value() - price) / black.vega(timeTillExpiry);
 
                 if (impliedVolEstimate < lowerBound)
@@ -315,7 +317,7 @@ namespace QuantConnect.Securities.Option
         /// Some models do not evaluate all greeks under some circumstances (e.g. low dividend yield)
         /// We override this restriction to calculate the Greeks directly with the BlackCalculator
         /// </summary>
-        private BlackCalculator _createBlackCalculator(double forwardPrice, double riskFreeDiscount, double stdDev, PlainVanillaPayoff payoff)
+        private BlackCalculator CreateBlackCalculator(double forwardPrice, double riskFreeDiscount, double stdDev, PlainVanillaPayoff payoff)
         {
             return new BlackCalculator(payoff, forwardPrice, stdDev, riskFreeDiscount);
         }

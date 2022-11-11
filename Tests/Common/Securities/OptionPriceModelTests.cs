@@ -22,10 +22,12 @@ using QuantConnect.Securities.Option;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Diagnostics;
 using Moq;
 using QLNet;
 using Cash = QuantConnect.Securities.Cash;
 using Option = QuantConnect.Securities.Option.Option;
+using static QLNet.Callability;
 
 namespace QuantConnect.Tests.Common
 {
@@ -483,6 +485,45 @@ namespace QuantConnect.Tests.Common
 
             // Expect minor error due to interest rate and dividend yield used in IB
             Assert.AreEqual(impliedVolEstimate, ibImpliedVol, 0.001);
+        }
+
+        [Test]
+        public void PriceModelEvaluateSpeedTest()
+        {
+            const decimal underlyingPrice = 3820.08m;
+            const decimal underlyingVol = 0.2m;
+            var tz = TimeZones.NewYork;
+            var evaluationDate = new DateTime(2021, 1, 14);
+            var spx = Symbols.SPX;
+            var optionSymbol = Symbol.CreateOption(spx.Value, spx.ID.Market, OptionStyle.European, OptionRight.Put, 4200,
+                new DateTime(2021, 1, 15));
+
+            // setting up
+            var equity = GetEquity(spx, underlyingPrice, underlyingVol, tz);
+            var contract = GetOptionContract(optionSymbol, spx, evaluationDate);
+            var option = GetOption(optionSymbol, equity, tz);
+            option.SetMarketPrice(new Tick { Value = 379.45m });
+
+            // running evaluation
+            var priceModel = OptionPriceModels.BlackScholes();
+
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
+            for (var i = 0; i < 1000; i++)
+            {
+                var results = priceModel.Evaluate(option, null, contract);
+                var greeks = results.Greeks;
+
+                // Expect minor error due to interest rate and dividend yield used in IB
+                Assert.IsNotNull(results.ImpliedVolatility);
+                Assert.IsNotNull(greeks.Delta);
+                Assert.IsNotNull(greeks.Gamma);
+                Assert.IsNotNull(greeks.Theta);
+                Assert.IsNotNull(greeks.Vega);
+                Assert.IsNotNull(greeks.Rho);
+            }
+            stopWatch.Stop();
+            Assert.Greater(stopWatch.ElapsedMilliseconds, 1000);
         }
 
         private Symbol GetOptionSymbol(Symbol underlying, OptionStyle optionStyle, OptionRight optionRight, decimal strike = 192m)
