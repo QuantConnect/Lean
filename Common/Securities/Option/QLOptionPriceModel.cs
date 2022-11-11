@@ -265,6 +265,7 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         /// <remarks>
         /// Orlando G, Taglialatela G. A review on implied volatility calculation. Journal of Computational and Applied Mathematics. 2017 Aug 15;320:202-20.
+        /// https://www.sciencedirect.com/science/article/pii/S0377042717300602
         /// </remarks>
         /// <param name="price">current price of the option</param>
         /// <param name="initialGuess">initial guess of the IV</param>
