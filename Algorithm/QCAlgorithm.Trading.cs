@@ -900,7 +900,7 @@ namespace QuantConnect.Algorithm
                     );
                 }
 
-                if ((security as Option).Style == OptionStyle.European && UtcTime < security.Symbol.ID.Date.ConvertToUtc(security.Exchange.TimeZone))
+                if ((security as Option).Style == OptionStyle.European && UtcTime.Date < security.Symbol.ID.Date.ConvertToUtc(security.Exchange.TimeZone).Date)
                 {
                     return OrderResponse.Error(request, OrderResponseErrorCode.EuropeanOptionNotExpiredOnExercise,
                         $"Cannot exercise European style option with symbol '{request.Symbol}' before its expiration date."

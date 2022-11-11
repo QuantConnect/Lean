@@ -32,7 +32,13 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private Option _option;
 
-        private bool _done;
+        private OptionContract _contract;
+
+        private bool _marketOrderDone;
+
+        private bool _exerciseBeforeExpiryDone;
+
+        private bool _exerciseOnExpiryDone;
 
         public override void Initialize()
         {
@@ -49,42 +55,67 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
-            OptionChain contracts;
-
-            if (_done || !slice.OptionChains.TryGetValue(_option.Symbol, out contracts) || !contracts.Any())
+            if ((_exerciseBeforeExpiryDone && _exerciseOnExpiryDone) || !_option.Exchange.ExchangeOpen)
             {
                 return;
             }
 
-            var contract = contracts.First();
-
-            // Make sure  we test this before the options expiry
-            if (contract.Expiry.ConvertToUtc(_option.Exchange.TimeZone) < UtcTime)
+            if (_contract == null)
             {
+                OptionChain contracts;
+                if (!slice.OptionChains.TryGetValue(_option.Symbol, out contracts) || !contracts.Any())
+                {
+                    return;
+                }
+
+                _contract = contracts.First();
+            }
+
+            var expiry = _contract.Expiry.ConvertToUtc(_option.Exchange.TimeZone).Date;
+
+            if (!_exerciseBeforeExpiryDone && UtcTime.Date < expiry)
+            {
+                if (!_marketOrderDone)
+                {
+                    if (MarketOrder(_contract.Symbol, 1).Status != OrderStatus.Filled)
+                    {
+                        throw new Exception("Expected market order to fill immediately");
+                    }
+
+                    _marketOrderDone = true;
+                }
+
+                if (ExerciseOption(_contract.Symbol, 1).Status == OrderStatus.Filled)
+                {
+                    throw new Exception($"Expected European option to not be exercisable before its expiration date. " +
+                                        $"Time: {UtcTime}. Expiry: {_contract.Expiry.ConvertToUtc(_option.Exchange.TimeZone)}");
+                }
+
+                _exerciseBeforeExpiryDone = true;
+
                 return;
             }
 
-            if (MarketOrder(contract.Symbol, 1).Status != OrderStatus.Filled)
+            if (!_exerciseOnExpiryDone && UtcTime.Date == expiry)
             {
-                throw new Exception("Expected market order to fill immediately");
-            }
+                if (ExerciseOption(_contract.Symbol, 1).Status != OrderStatus.Filled)
+                {
+                    throw new Exception($"Expected European option to be exercisable on its expiration date. " +
+                                        $"Time: {UtcTime}. Expiry: {_contract.Expiry.ConvertToUtc(_option.Exchange.TimeZone)}");
+                }
 
-            if (ExerciseOption(contract.Symbol, 1).Status == OrderStatus.Filled)
-            {
-                throw new Exception($"Expected European option to not be exercisable before its expiration date. " +
-                                    $"Time: {UtcTime}. Expiry: {contract.Expiry.ConvertToUtc(_option.Exchange.TimeZone)}");
-            }
+                _exerciseOnExpiryDone = true;
 
-            _done = true;
-            // We already tested, so we can stop the algorithm
-            Quit();
+                // We already tested everything, so we can stop the algorithm
+                Quit();
+            }
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (!_done)
+            if (!_exerciseBeforeExpiryDone || !_exerciseOnExpiryDone)
             {
-                throw new Exception("Expected to test the option exercise before the option expiry");
+                throw new Exception("Expected to try to exercise option before and on expiry");
             }
         }
 
@@ -101,7 +132,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all time slices of algorithm
         /// </summary>
-        public long DataPoints => 51;
+        public long DataPoints => 1828;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -113,34 +144,34 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "1"},
+            {"Total Trades", "2"},
             {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
+            {"Average Loss", "-4.10%"},
+            {"Compounding Annual Return", "24.075%"},
+            {"Drawdown", "1.900%"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "0.677%"},
+            {"Sharpe Ratio", "5.78"},
+            {"Probabilistic Sharpe Ratio", "89.644%"},
+            {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
+            {"Alpha", "0.95"},
+            {"Beta", "-0.354"},
+            {"Annual Standard Deviation", "0.123"},
+            {"Annual Variance", "0.015"},
+            {"Information Ratio", "0.211"},
+            {"Tracking Error", "0.176"},
+            {"Treynor Ratio", "-2.011"},
             {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$45000000.00"},
+            {"Estimated Strategy Capacity", "$1700000.00"},
             {"Lowest Capacity Asset", "SPX XL80P3HB5O6M|SPX 31"},
-            {"Fitness Score", "0"},
+            {"Fitness Score", "0.004"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "0"},
-            {"Return Over Maximum Drawdown", "0"},
-            {"Portfolio Turnover", "0"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "20.506"},
+            {"Portfolio Turnover", "0.004"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -154,7 +185,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "9412c086aeb15bd443bc9d453996e19e"}
+            {"OrderListHash", "eddce46e44ac8ebb279bc6aa9af85ece"}
         };
     }
 }
