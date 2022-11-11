@@ -312,7 +312,10 @@ namespace QuantConnect.Securities.Option
 
             if (iterRemain == 0)
             {
-                Log.Debug("QLOptionPriceModel.ImpliedVolatilityEstimation() error: Implied Volatility approxiation did not converge, returning 0.");
+                if (Log.DebuggingEnabled)
+                {
+                    Log.Debug("QLOptionPriceModel.ImpliedVolatilityEstimation() error: Implied Volatility approxiation did not converge, returning 0.");
+                }
                 return 0d;
             }
 
