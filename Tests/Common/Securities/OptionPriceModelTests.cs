@@ -523,7 +523,7 @@ namespace QuantConnect.Tests.Common
                 Assert.IsNotNull(greeks.Rho);
             }
             stopWatch.Stop();
-            Assert.Greater(stopWatch.ElapsedMilliseconds, 1000);
+            Assert.Less(stopWatch.ElapsedMilliseconds, 2000);
         }
 
         private Symbol GetOptionSymbol(Symbol underlying, OptionStyle optionStyle, OptionRight optionRight, decimal strike = 192m)

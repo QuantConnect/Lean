@@ -310,6 +310,12 @@ namespace QuantConnect.Securities.Option
                 iterRemain--;
             }
 
+            if (iterRemain == 0)
+            {
+                Log.Error("Implied Volatility approxiation did not converge, returning 0.");
+                return 0d;
+            }
+
             return impliedVolEstimate;
         }
 
