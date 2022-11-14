@@ -11,15 +11,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from AlgorithmImports import *
-from Portfolio.CustomAddRemoveRegressionAlgorithm import *
-
+### <summary>
+### This algorithm demonstrates the runtime addition and removal of one security
+### With LEAN you can add and remove securities with regression with sharpe ratio > 2.
+### </summary>
+### <meta name="tag" content="using data" />
+### <meta name="tag" content="assets" />
+### <meta name="tag" content="regression test" />
 class CustomAddRemoveRegressionAlgorithm(QCAlgorithm):
-    '''Example algorithm of using CustomAddRemoveRegressionAlgorithm'''
-
     def Initialize(self):
-        # Set starting date, cash and ending date of the backtest
-        self.SetStartDate(2017, 1, 1)
-        self.SetEndDate(2017, 12, 1)
+        '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
+        
+        # Set starting date, cash and ending date of the backtest.
+        # Set the date to a 4 week interval.
+        self.SetStartDate(2020, 10, 7)
+        self.SetEndDate(2020, 10, 12)
         self.SetCash(1000000)
 
         self.SetSecurityInitializer(lambda security: security.SetMarketPrice(self.GetLastKnownPrice(security)))
@@ -27,21 +33,29 @@ class CustomAddRemoveRegressionAlgorithm(QCAlgorithm):
         # Subscribe to data of the selected stocks
         self.symbols = [self.AddEquity(ticker, Resolution.Daily).Symbol for ticker in ["SPY"]]
 
-        self.AddAlpha(ConstantAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(1)))
-        self.SetPortfolioConstruction(CustomAddRemoveRegressionAlgorithm())
-
         self._lastAction = None
     
     def OnData(self, data):
         if self._lastAction is not None and self._lastAction.date() == self.Time.date():
             return
-        
-        if not self.Portfolio.Invested:
+                if not self.Portfolio.Invested:
             self.SetHoldings("SPY", .5)
             self._lastAction = self.Time
         
-        if not self.Portfolio.Invested:
-            self.SetHoldings("SPY", .5)
+        if self.Time.weekday() == 1:
+            self.AddEquity("SPY")
+            self._lastAction = self.Time      
+        
+        if self.Time.weekday() == 2:
+            self.SetHoldings("SPY", .50)
+            self._lastAction = self.Time 
+        
+        if self.Time.weekday() == 3:
+            self.SetHoldings("SPY", .50)
+            self._lastAction = self.Time
+        
+        if self.Time.weekday() == 4:
+            self.RemoveSecurity("SPY")
             self._lastAction = self.Time
 
     def OnOrderEvent(self, orderEvent):
