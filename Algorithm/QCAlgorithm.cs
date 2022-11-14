@@ -1827,7 +1827,18 @@ namespace QuantConnect.Algorithm
                 canonicalSymbol = QuantConnect.Symbol.CreateCanonicalOption(underlying, market, alias);
             }
 
-            return (Option)AddSecurity(canonicalSymbol, resolution, fillDataForward, leverage);
+            var option = (Option)AddSecurity(canonicalSymbol, resolution, fillDataForward, leverage);
+
+            if (option.Style == OptionStyle.American)
+            {
+                option.PriceModel = OptionPriceModels.BjerksundStensland();
+            }
+            else
+            {
+                option.PriceModel = OptionPriceModels.BlackScholes();
+            }
+            
+            return option;
         }
 
         /// <summary>
@@ -2062,15 +2073,6 @@ namespace QuantConnect.Algorithm
                 {
                     optionUniverse.Add(subscriptionDataConfig);
                 }
-            }
-
-            if (option.Style == OptionStyle.American)
-            {
-                option.PriceModel = OptionPriceModels.BjerksundStensland();
-            }
-            else
-            {
-                option.PriceModel = OptionPriceModels.BlackScholes();
             }
 
             return option;

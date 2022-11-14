@@ -260,7 +260,6 @@ namespace QuantConnect.Tests.Algorithm
             var contract = _algo.AddOptionContract(contractSymbol.Symbol);
             var priceModel = contract.PriceModel;
 
-            Assert.IsInstanceOf(typeof(QLOptionPriceModel), priceModel);
             Assert.IsNotNull(priceModel);
         }
 
