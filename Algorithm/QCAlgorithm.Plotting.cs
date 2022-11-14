@@ -264,8 +264,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         [DocumentationAttribute(Charting)]
         [DocumentationAttribute(Indicators)]
-        public void PlotIndicator<T>(string chart, params IndicatorBase<T>[] indicators)
-            where T : IBaseData
+        public void PlotIndicator(string chart, params IndicatorBase[] indicators)
         {
             foreach (var i in indicators)
             {
@@ -285,8 +284,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         [DocumentationAttribute(Charting)]
         [DocumentationAttribute(Indicators)]
-        public void PlotIndicator<T>(string chart, bool waitForReady, params IndicatorBase<T>[] indicators)
-            where T : IBaseData
+        public void PlotIndicator(string chart, bool waitForReady, params IndicatorBase[] indicators)
         {
             foreach (var i in indicators)
             {
