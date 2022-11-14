@@ -38,17 +38,21 @@ namespace QuantConnect.Algorithm.CSharp
 
         private bool _triedExercise;
 
+        private bool _automaticallyExercised;
+
+        private decimal _initialCash = 200000;
+
         public override void Initialize()
         {
             SetStartDate(2021, 1, 4);
-            SetEndDate(2021, 2, 1);
-            SetCash(200000);
+            SetEndDate(2021, 1, 30);
+            SetCash(_initialCash);
 
             SetBrokerageModel(new InteractiveBrokersBrokerageModel());
 
             var index = AddIndex("SPX", Resolution.Hour, fillDataForward: true);
             var indexOption = AddIndexOption(index.Symbol, Resolution.Hour, fillDataForward: true);
-            indexOption.SetFilter(filterFunc => filterFunc);
+            indexOption.SetFilter(filterFunc => filterFunc.CallsOnly());
 
             _option = indexOption;
         }
@@ -94,9 +98,24 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 _triedExercise = true;
+            }
+        }
 
-                // We already tested everything, so we can stop the algorithm
-                Quit();
+        public override void OnOrderEvent(OrderEvent orderEvent)
+        {
+            // The manual exercise failed and we are not placing any other orders, so this is the automatic exercise
+            if (orderEvent.Status == OrderStatus.Filled &&
+                _marketOrderDone &&
+                _triedExercise &&
+                UtcTime.Date >= _contract.Expiry.ConvertToUtc(_option.Exchange.TimeZone).Date)
+            {
+                var profit = Portfolio.TotalPortfolioValue - _initialCash;
+                if (profit < 0)
+                {
+                    throw new Exception($"Expected profit to be positive. Actual: {profit}");
+                }
+
+                _automaticallyExercised = true;
             }
         }
 
@@ -105,6 +124,11 @@ namespace QuantConnect.Algorithm.CSharp
             if (!_triedExercise)
             {
                 throw new Exception("Expected to try to exercise index option before and on expiry");
+            }
+
+            if (!_automaticallyExercised || Portfolio.Cash <= _initialCash)
+            {
+                throw new Exception("Expected index option to have ben automatically exercised on expiry and to have received cash");
             }
         }
 
@@ -121,7 +145,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all time slices of algorithm
         /// </summary>
-        public long DataPoints => 1757;
+        public long DataPoints => 2009;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -133,34 +157,34 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "1"},
+            {"Total Trades", "2"},
             {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "32.097%"},
+            {"Average Loss", "-4.10%"},
+            {"Compounding Annual Return", "10.046%"},
             {"Drawdown", "1.900%"},
-            {"Expectancy", "0"},
-            {"Net Profit", "0.874%"},
-            {"Sharpe Ratio", "6.487"},
-            {"Probabilistic Sharpe Ratio", "94.319%"},
-            {"Loss Rate", "0%"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "0.676%"},
+            {"Sharpe Ratio", "3.284"},
+            {"Probabilistic Sharpe Ratio", "86.292%"},
+            {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
             {"Alpha", "0"},
             {"Beta", "0"},
-            {"Annual Standard Deviation", "0.122"},
-            {"Annual Variance", "0.015"},
-            {"Information Ratio", "6.487"},
-            {"Tracking Error", "0.122"},
+            {"Annual Standard Deviation", "0.081"},
+            {"Annual Variance", "0.007"},
+            {"Information Ratio", "3.284"},
+            {"Tracking Error", "0.081"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$1.00"},
-            {"Estimated Strategy Capacity", "$24000000.00"},
+            {"Estimated Strategy Capacity", "$1700000.00"},
             {"Lowest Capacity Asset", "SPX XL80P3HB5O6M|SPX 31"},
-            {"Fitness Score", "0.004"},
+            {"Fitness Score", "0.001"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "20.486"},
-            {"Portfolio Turnover", "0.004"},
+            {"Sortino Ratio", "0.632"},
+            {"Return Over Maximum Drawdown", "6.244"},
+            {"Portfolio Turnover", "0.002"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -174,7 +198,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "acabeaf66c28456d5d3375d80a574b2d"}
+            {"OrderListHash", "a585462f5f7f9b901f253d66edb31316"}
         };
     }
 }
