@@ -18,16 +18,8 @@ using NUnit.Framework;
 using QuantConnect.Brokerages;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
-using QuantConnect.Tests.Brokerages;
-using System;
-using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
-using QuantConnect.Securities.IndexOption;
-using RDotNet;
-using QuantConnect.Algorithm.CSharp.Benchmarks;
-using QuantConnect.Tests.Common.Data;
 using QuantConnect.Data;
-using static QLNet.Callability;
 using System.Collections.Generic;
 using QuantConnect.Securities.Option;
 
@@ -37,7 +29,7 @@ namespace QuantConnect.Tests.Common.Brokerages
     [TestFixture, Parallelizable(ParallelScope.All)]
     public class InteractiveBrokersBrokerageModelTests
     {
-        private static InteractiveBrokersBrokerageModel InteractiveBrokersBrokerageModel => new();
+        private readonly InteractiveBrokersBrokerageModel _interactiveBrokersBrokerageModel = new InteractiveBrokersBrokerageModel();
 
         [TestCaseSource(nameof(GetUnsupportedOptions))]
         public void CannotSubmitOrder_IndexOptionExercise(Security security)
@@ -45,10 +37,10 @@ namespace QuantConnect.Tests.Common.Brokerages
             var order = new Mock<OptionExerciseOrder>();
             order.Setup(x => x.Type).Returns(OrderType.OptionExercise);
 
-            var canSubmit = InteractiveBrokersBrokerageModel.CanSubmitOrder(security, order.Object, out var message);
+            var canSubmit = _interactiveBrokersBrokerageModel.CanSubmitOrder(security, order.Object, out var message);
 
-            Assert.IsFalse(canSubmit);
-            Assert.AreEqual(BrokerageMessageType.Warning, message.Type, message.Message);
+            Assert.IsFalse(canSubmit, message.Message);
+            Assert.AreEqual(BrokerageMessageType.Warning, message.Type);
             Assert.AreEqual("NotSupported", message.Code);
             StringAssert.Contains("exercises for index and cash-settled options", message.Message);
         }
