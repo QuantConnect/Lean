@@ -30,6 +30,7 @@ using QuantConnect.Securities.Option;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Securities.IndexOption;
+using QuantConnect.Data.Market;
 using QuantConnect.Data.Custom.AlphaStreams;
 using Index = QuantConnect.Securities.Index.Index;
 
@@ -247,6 +248,20 @@ namespace QuantConnect.Tests.Algorithm
 
                 return result.ToArray();
             }
+        }
+
+        [TestCase(OptionStyle.American)]
+        [TestCase(OptionStyle.European)]
+        public void PriceModelFromAddOptionContract(OptionStyle style)
+        {
+            var spx = Symbols.SPX;
+            var optionSymbol = Symbol.CreateOption(spx.Value, spx.ID.Market, style, OptionRight.Call, 4200, new DateTime(2021, 1, 15));
+            var contractSymbol = new OptionContract(optionSymbol, spx);
+            var contract = _algo.AddOptionContract(contractSymbol.Symbol);
+            var priceModel = contract.PriceModel;
+
+            Assert.IsInstanceOf(typeof(QLOptionPriceModel), priceModel);
+            Assert.IsNotNull(priceModel);
         }
 
         private static DataNormalizationMode[] GetDataNormalizationModes()

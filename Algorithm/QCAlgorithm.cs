@@ -2064,6 +2064,15 @@ namespace QuantConnect.Algorithm
                 }
             }
 
+            if (option.Style == OptionStyle.American)
+            {
+                option.PriceModel = OptionPriceModels.BjerksundStensland();
+            }
+            else
+            {
+                option.PriceModel = OptionPriceModels.BlackScholes();
+            }
+
             return option;
         }
 
