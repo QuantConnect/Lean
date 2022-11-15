@@ -222,7 +222,21 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         public OptionStyle Style
         {
-            get { return Symbol.ID.OptionStyle;  }
+            get
+            {
+                var style = Symbol.ID.OptionStyle;
+
+                if (style == OptionStyle.American)
+                {
+                    PriceModel = OptionPriceModels.BjerksundStensland();
+                }
+                else
+                {
+                    PriceModel = OptionPriceModels.BlackScholes();
+                }
+
+                return style;
+            }
         }
 
         /// <summary>

@@ -78,7 +78,7 @@ namespace QuantConnect.Securities.Option
         {
             _pricingEngineFunc = pricingEngineFunc;
             _underlyingVolEstimator = underlyingVolEstimator ?? new ConstantQLUnderlyingVolatilityEstimator();
-            _riskFreeRateEstimator = riskFreeRateEstimator ?? new ConstantQLRiskFreeRateEstimator();
+            _riskFreeRateEstimator = riskFreeRateEstimator ?? new FedRateQLRiskFreeRateEstimator();
             _dividendYieldEstimator = dividendYieldEstimator ?? new ConstantQLDividendYieldEstimator();
 
             AllowedOptionStyles = allowedOptionStyles ?? _defaultAllowedOptionStyles;

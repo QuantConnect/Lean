@@ -250,19 +250,6 @@ namespace QuantConnect.Tests.Algorithm
             }
         }
 
-        [TestCase(OptionStyle.American)]
-        [TestCase(OptionStyle.European)]
-        public void PriceModelFromAddOptionContract(OptionStyle style)
-        {
-            var spx = Symbols.SPX;
-            var optionSymbol = Symbol.CreateOption(spx.Value, spx.ID.Market, style, OptionRight.Call, 4200, new DateTime(2021, 1, 15));
-            var contractSymbol = new OptionContract(optionSymbol, spx);
-            var contract = _algo.AddOptionContract(contractSymbol.Symbol);
-            var priceModel = contract.PriceModel;
-
-            Assert.IsNotNull(priceModel);
-        }
-
         private static DataNormalizationMode[] GetDataNormalizationModes()
         {
             return (DataNormalizationMode[])Enum.GetValues(typeof(DataNormalizationMode));

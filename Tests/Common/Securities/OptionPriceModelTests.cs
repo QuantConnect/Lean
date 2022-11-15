@@ -531,7 +531,7 @@ namespace QuantConnect.Tests.Common
             return Symbol.CreateOption(underlying.Value, Market.USA, optionStyle, optionRight, strike, new DateTime(2016, 02, 19));
         }
 
-        private Equity GetEquity(Symbol symbol, decimal underlyingPrice, decimal underlyingVol, NodaTime.DateTimeZone tz)
+        public static Equity GetEquity(Symbol symbol, decimal underlyingPrice, decimal underlyingVol, NodaTime.DateTimeZone tz)
         {
             var equity = new Equity(
                 SecurityExchangeHours.AlwaysOpen(tz),
@@ -552,7 +552,7 @@ namespace QuantConnect.Tests.Common
             return new OptionContract(symbol, underlying) { Time = evaluationDate };
         }
 
-        public Option GetOption(Symbol symbol, Equity underlying, NodaTime.DateTimeZone tz)
+        public static Option GetOption(Symbol symbol, Equity underlying, NodaTime.DateTimeZone tz)
         {
             var option = new Option(
                 SecurityExchangeHours.AlwaysOpen(tz),
