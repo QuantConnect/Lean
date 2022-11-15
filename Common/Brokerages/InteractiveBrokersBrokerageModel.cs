@@ -22,6 +22,7 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Forex;
+using QuantConnect.Securities.Option;
 using QuantConnect.Util;
 using static QuantConnect.StringExtensions;
 
@@ -135,6 +136,18 @@ namespace QuantConnect.Brokerages
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Invariant($"The {nameof(InteractiveBrokersBrokerageModel)} does not support {order.TimeInForce.GetType().Name} time in force.")
+                );
+
+                return false;
+            }
+
+            // IB doesn't support index options and cash-settled options exercise
+            if (order.Type == OrderType.OptionExercise &&
+                (security.Type == SecurityType.IndexOption ||
+                (security.Type == SecurityType.Option && (security as Option).ExerciseSettlement == SettlementType.Cash)))
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Invariant($"The {nameof(InteractiveBrokersBrokerageModel)} does not support {order.Type} exercises for index and cash-settled options.")
                 );
 
                 return false;
