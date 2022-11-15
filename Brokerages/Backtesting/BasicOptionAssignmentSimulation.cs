@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -196,13 +196,22 @@ namespace QuantConnect.Brokerages.Backtesting
             var optionOrderFee2 = currencyConverter.ConvertToAccountCurrency(option.FeeModel.GetOrderFee(
                 new OrderFeeParameters(option, optionExerciseOrder2)).Value);
 
-            var undelyingMarketOrder2 = new MarketOrder(underlying.Symbol, -underlyingQuantity, underlying.LocalTime.ConvertToUtc(underlying.Exchange.TimeZone));
-            var undelyingOrderFee2 = currencyConverter.ConvertToAccountCurrency(underlying.FeeModel.GetOrderFee(
-                new OrderFeeParameters(underlying, undelyingMarketOrder2)).Value);
+            var underlyingOrderFee2Amount = 0m;
+
+            // Cash settlements do not open a position for the underlying.
+            // For Physical Delivery, we calculate the order fee since we have to close the position
+            if (option.ExerciseSettlement == SettlementType.PhysicalDelivery)
+            {
+                var underlyingMarketOrder2 = new MarketOrder(underlying.Symbol, -underlyingQuantity,
+                    underlying.LocalTime.ConvertToUtc(underlying.Exchange.TimeZone));
+                var underlyingOrderFee2 = currencyConverter.ConvertToAccountCurrency(underlying.FeeModel.GetOrderFee(
+                    new OrderFeeParameters(underlying, underlyingMarketOrder2)).Value);
+                underlyingOrderFee2Amount = underlyingOrderFee2.Amount;
+            }
 
             // calculating P/L of the two transactions (exercise option and then close underlying position)
             var altPnL = (underlyingPrice - option.StrikePrice) * underlyingQuantity * underlying.QuoteCurrency.ConversionRate * option.ContractUnitOfTrade
-                        - undelyingOrderFee2.Amount
+                        - underlyingOrderFee2Amount
                         - holding.AveragePrice * holding.AbsoluteQuantity * option.SymbolProperties.ContractMultiplier * option.QuoteCurrency.ConversionRate
                         - optionOrderFee2.Amount;
 

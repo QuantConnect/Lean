@@ -116,7 +116,7 @@ namespace QuantConnect.Research
                 var composer = Composer.Instance;
 
                 // Create our handlers with our composer instance
-                var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(composer);
+                var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(composer, researchMode: true);
                 var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(composer);
 
                 // init the API

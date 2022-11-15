@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -21,10 +21,8 @@ using QuantConnect.Securities;
 namespace QuantConnect.Orders.Fills
 {
     /// <summary>
-    /// This fill model is provided because currently the data sourced for Crypto
-    /// is limited to one minute snapshots for Quote data. This fill model will
-    /// ignore the trade/quote distinction and return the latest pricing information
-    /// in order to determine the correct fill price
+    /// This fill model is provided for cases where the trade/quote distinction should be
+    /// ignored and the fill price should be determined from the latest pricing information.
     /// </summary>
     public class LatestPriceFillModel : ImmediateFillModel
     {

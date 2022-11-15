@@ -25,6 +25,177 @@ namespace QuantConnect.Tests.Python
     public class PythonPackagesTests
     {
         [Test]
+        public void PyvinecopulibTest()
+        {
+            AssertCode(
+                @"
+import pyvinecopulib as pv
+import numpy as np
+
+def RunTest():
+    np.random.seed(1234)  # seed for the random generator
+    n = 1000  # number of observations
+    d = 5  # the dimension
+    mean = np.random.normal(size=d)  # mean vector
+    cov = np.random.normal(size=(d, d))  # covariance matrix
+    cov = np.dot(cov.transpose(), cov)  # make it non-negative definite
+    x = np.random.multivariate_normal(mean, cov, n)
+
+    # Transform copula data using the empirical distribution
+    u = pv.to_pseudo_obs(x)
+
+    # Fit a Gaussian vine
+    # (i.e., properly specified since the data is multivariate normal)
+    controls = pv.FitControlsVinecop(family_set=[pv.BicopFamily.gaussian])
+    cop = pv.Vinecop(u, controls=controls)
+
+    # Sample from the copula
+    n_sim = 1000
+    u_sim = cop.simulate(n_sim, seeds=[1, 2, 3, 4])
+
+    # Transform back simulations to the original scale
+    x_sim = np.asarray([np.quantile(x[:, i], u_sim[:, i]) for i in range(0, d)])
+
+    # Both the mean and covariance matrix look ok!
+    [mean, np.mean(x_sim, 1)]
+    [cov, np.cov(x_sim)]");
+        }
+
+        [Test, Explicit("Needs to be run byitself to avoid exception on init: A colormap named \"cet_gray\" is already registered.")]
+        public void HvplotTest()
+        {
+            AssertCode(
+                @"
+import numpy as np
+import pandas as pd
+import hvplot.pandas
+
+def RunTest():
+    index = pd.date_range('1/1/2000', periods=1000)
+    df = pd.DataFrame(np.random.randn(1000, 4), index=index, columns=list('ABCD')).cumsum()
+
+    df.head()
+    pd.options.plotting.backend = 'holoviews'
+    df.plot()");
+        }
+
+        [Test]
+        public void StumpyTest()
+        {
+            AssertCode(
+                @"
+import stumpy
+import numpy as np
+
+def RunTest():
+    your_time_series = np.random.rand(1000)
+    window_size = 10  # Approximately, how many data points might be found in a pattern
+
+    stumpy.stump(your_time_series, m=window_size)");
+        }
+
+        [Test]
+        public void RiverTest()
+        {
+            AssertCode(
+                @"
+from river import datasets
+
+def RunTest():
+    datasets.Phishing()");
+        }
+
+        [Test]
+        public void BokehTest()
+        {
+            AssertCode(
+                @"
+from bokeh.plotting import figure, output_file, show
+
+def RunTest():
+    # output to static HTML file
+    output_file(""line.html"")
+
+    p = figure(width=400, height=400)
+
+    # add a circle renderer with a size, color, and alpha
+    p.circle([1, 2, 3, 4, 5], [6, 7, 2, 4, 5], size=20, color=""navy"", alpha=0.5)
+
+    # show the results
+    show(p)");
+        }
+
+        [Test]
+        public void LineProfilerTest()
+        {
+            AssertCode(
+                @"
+from line_profiler import LineProfiler
+import random
+
+def RunTest():
+    def do_stuff(numbers):
+        s = sum(numbers)
+        l = [numbers[i]/43 for i in range(len(numbers))]
+        m = ['hello'+str(numbers[i]) for i in range(len(numbers))]
+
+    numbers = [random.randint(1,100) for i in range(1000)]
+    lp = LineProfiler()
+    lp_wrapper = lp(do_stuff)
+    lp_wrapper(numbers)
+    lp.print_stats()");
+        }
+
+        [Test]
+        public void FuzzyCMeansTest()
+        {
+            AssertCode(
+                @"
+import numpy as np
+from fcmeans import FCM
+from matplotlib import pyplot as plt
+
+def RunTest():
+    n_samples = 3000
+
+    X = np.concatenate((
+        np.random.normal((-2, -2), size=(n_samples, 2)),
+        np.random.normal((2, 2), size=(n_samples, 2))
+    ))
+    fcm = FCM(n_clusters=2)
+    fcm.fit(X)
+    # outputs
+    fcm_centers = fcm.centers
+    fcm.predict(X)");
+        }
+
+        [Test]
+        public void MdptoolboxTest()
+        {
+            AssertCode(
+                @"
+import mdptoolbox.example
+
+def RunTest():
+    P, R = mdptoolbox.example.forest()
+    vi = mdptoolbox.mdp.ValueIteration(P, R, 0.9)
+    vi.run()
+    vi.policy");
+        }
+
+        [Test]
+        public void NumerapiTest()
+        {
+            AssertCode(
+                @"
+import numerapi
+
+def RunTest():
+    napi = numerapi.NumerAPI(verbosity=""warning"")
+    napi.get_leaderboard()");
+        }
+
+        [Test]
         public void StockstatsTest()
         {
             AssertCode(
@@ -1387,6 +1558,9 @@ def RunTest():
         [TestCase("tensortrade", "1.0.3", "__version__")]
         [TestCase("quantstats", "0.0.59", "__version__")]
         [TestCase("autokeras", "1.0.20", "__version__")]
+        [TestCase("panel", "0.14.0", "__version__")]
+        [TestCase("pyheat", "pyheat", "__name__")]
+        [TestCase("tensorflow_decision_forests", "1.0.1", "__version__")]
         public void ModuleVersionTest(string module, string value, string attribute)
         {
             AssertCode(

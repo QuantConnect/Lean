@@ -2,7 +2,7 @@
 =========
 
 [![Build Status](https://github.com/QuantConnect/Lean/workflows/Build%20%26%20Test%20Lean/badge.svg)](https://github.com/QuantConnect/Lean/actions?query=workflow%3A%22Build%20%26%20Test%20Lean%22) &nbsp;&nbsp;&nbsp; [![Regression Tests](https://github.com/QuantConnect/Lean/workflows/Regression%20Tests/badge.svg)](https://github.com/QuantConnect/Lean/actions?query=workflow%3A%22Regression%20Tests%22) &nbsp;&nbsp;&nbsp; [![LEAN Forum](https://img.shields.io/badge/debug-LEAN%20Forum-53c82b.svg)](https://www.quantconnect.com/forum/discussions/1/lean) &nbsp;&nbsp;&nbsp; [![Slack Chat](https://img.shields.io/badge/chat-Slack-53c82b.svg)](https://www.quantconnect.com/slack)
-
+ 
 
 [Lean Home][1] | [Documentation][2] | [Download Zip][3] | [Docker Hub][8] | [Nuget][9]
 
@@ -51,6 +51,12 @@ The most important plugins are:
    > Configure the algorithm cash, portfolio and data requested. Initialize all state parameters required.
 
 These are all configurable from the config.json file in the Launcher Project.
+
+## Developing with Visual Studio Code Dev Containers
+
+The [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension lets you use a Docker container as a full-featured development environment. The extension starts (or attaches to) a development container running the _quantconnect/research:latest_ image. 
+
+A full explanation of developing Lean with Visual Studio Code Dev Containers can be found in the [VS Code Integration](https://github.com/QuantConnect/Lean/tree/master/.vscode#readme) project.
 
 ## Developing with Lean CLI ##
 

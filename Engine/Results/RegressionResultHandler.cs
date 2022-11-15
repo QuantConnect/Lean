@@ -64,6 +64,11 @@ namespace QuantConnect.Lean.Engine.Results
             : $"./{AlgorithmId}/{DateTime.Now:yyyy-MM-dd-hh-mm-ss}.{Language.ToLower()}.details.log";
 
         /// <summary>
+        /// True if there was a runtime error running the algorithm
+        /// </summary>
+        public bool HasRuntimeError { get; private set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="RegressionResultHandler"/> class
         /// </summary>
         public RegressionResultHandler()
@@ -254,6 +259,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="stacktrace">Stacktrace information string</param>
         public override void RuntimeError(string message, string stacktrace = "")
         {
+            HasRuntimeError = true;
             base.RuntimeError(message, stacktrace);
 
             stacktrace = string.IsNullOrEmpty(stacktrace) ? null : Environment.NewLine + stacktrace;

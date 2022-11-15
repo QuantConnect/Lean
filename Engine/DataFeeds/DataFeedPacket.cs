@@ -26,6 +26,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class DataFeedPacket
     {
+        private static readonly IReadOnlyRef<bool> _false = Ref.CreateReadOnly(() => false);
         private readonly IReadOnlyRef<bool> _isRemoved;
 
         /// <summary>
@@ -86,7 +87,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Security = security;
             Configuration = configuration;
             Data = data;
-            _isRemoved = isSubscriptionRemoved ?? Ref.Create(false);
+            _isRemoved = isSubscriptionRemoved ?? _false;
         }
 
         /// <summary>

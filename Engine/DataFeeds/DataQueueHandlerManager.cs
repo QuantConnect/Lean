@@ -21,6 +21,7 @@ using QuantConnect.Packets;
 using QuantConnect.Logging;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -29,6 +30,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class DataQueueHandlerManager : IDataQueueHandler, IDataQueueUniverseProvider
     {
+        private ITimeProvider _frontierTimeProvider;
         private readonly Dictionary<SubscriptionDataConfig, IDataQueueHandler> _dataConfigAndDataHandler = new();
 
         /// <summary>
@@ -52,12 +54,35 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             foreach (var dataHandler in DataHandlers)
             {
-                var enumerator = dataHandler.Subscribe(dataConfig, newDataAvailableHandler);
+                // Emit ticks & custom data as soon as we get them, they don't need any kind of batching behavior applied to them
+                // only use the frontier time provider if we need to
+                var immediateEmission = dataConfig.Resolution == Resolution.Tick || dataConfig.IsCustomData || _frontierTimeProvider == null;
+                var exchangeTimeZone = dataConfig.ExchangeTimeZone;
+
+                var enumerator = dataHandler.Subscribe(dataConfig, immediateEmission ? newDataAvailableHandler
+                    : (sender, eventArgs) => {
+                        // let's only wake up the main thread if the data point is allowed to be emitted, else we could fill forward previous bar and not let this one through
+                        var dataAvailable = eventArgs as NewDataAvailableEventArgs;
+                        if (dataAvailable == null || dataAvailable.DataPoint == null
+                            || dataAvailable.DataPoint.EndTime.ConvertToUtc(exchangeTimeZone) <= _frontierTimeProvider.GetUtcNow())
+                        {
+                            newDataAvailableHandler?.Invoke(sender, eventArgs);
+                        }
+                    });
+
                 // Check if the enumerator is not empty
                 if (enumerator != null)
                 {
                     _dataConfigAndDataHandler.Add(dataConfig, dataHandler);
-                    return enumerator;
+
+                    if (immediateEmission)
+                    {
+                        return enumerator;
+                    }
+
+                    return new FrontierAwareEnumerator(enumerator, _frontierTimeProvider,
+                        new TimeZoneOffsetProvider(exchangeTimeZone, _frontierTimeProvider.GetUtcNow(), Time.EndOfTime)
+                    );
                 }
             }
             return null;
@@ -89,6 +114,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 dataHandler.SetJob(job);
                 DataHandlers.Add(dataHandler);
             }
+
+            InitializeFrontierTimeProvider();
         }
 
         /// <summary>
@@ -137,6 +164,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public bool CanPerformSelection()
         {
             return GetUniverseProviders().Any(provider => provider.CanPerformSelection());
+        }
+
+        /// <summary>
+        /// Creates the frontier time provider instance
+        /// </summary>
+        /// <remarks>Protected for testing purposes</remarks>
+        protected void InitializeFrontierTimeProvider()
+        {
+            var timeProviders = DataHandlers.OfType<ITimeProvider>().ToList();
+            if (timeProviders.Any())
+            {
+                Log.Trace($"DataQueueHandlerManager.InitializeFrontierTimeProvider(): will use the following IDQH frontier time providers: [{string.Join(",", timeProviders.Select(x => x.GetType()))}]");
+                _frontierTimeProvider = new CompositeTimeProvider(timeProviders);
+            }
         }
 
         private IEnumerable<IDataQueueUniverseProvider> GetUniverseProviders()

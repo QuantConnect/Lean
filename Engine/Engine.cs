@@ -89,6 +89,7 @@ namespace QuantConnect.Lean.Engine
 
             try
             {
+                Log.Trace($"Engine.Run(): Resource limits '{job.Controls.CpuAllocation}' CPUs. {job.Controls.RamAllocation} MB RAM.");
                 TextSubscriptionDataSourceReader.SetCacheSize((int) (job.RamAllocation * 0.4));
 
                 //Reset thread holders.
@@ -447,6 +448,7 @@ namespace QuantConnect.Lean.Engine
                 AlgorithmHandlers.DataFeed.Exit();
                 AlgorithmHandlers.Transactions.Exit();
                 AlgorithmHandlers.RealTime.Exit();
+                AlgorithmHandlers.DataMonitor.Exit();
             }
         }
 

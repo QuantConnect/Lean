@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,7 +14,7 @@
  *
 */
 
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace QuantConnect.Securities
 {
@@ -27,7 +27,7 @@ namespace QuantConnect.Securities
     /// This is used to directly access custom data types through their underlying</remarks>
     public class SecurityCacheProvider
     {
-        private readonly ConcurrentDictionary<Symbol, ConcurrentBag<Symbol>> _relatedSymbols;
+        private readonly Dictionary<Symbol, List<Symbol>> _relatedSymbols;
         private readonly ISecurityProvider _securityProvider;
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace QuantConnect.Securities
         public SecurityCacheProvider(ISecurityProvider securityProvider)
         {
             _securityProvider = securityProvider;
-            _relatedSymbols = new ConcurrentDictionary<Symbol, ConcurrentBag<Symbol>>();
+            _relatedSymbols = new ();
         }
 
         /// <summary>
@@ -50,38 +50,42 @@ namespace QuantConnect.Securities
         public SecurityCache GetSecurityCache(Symbol symbol)
         {
             var securityCache = new SecurityCache();
-            if (symbol.SecurityType == SecurityType.Base && symbol.HasUnderlying)
+            // lock just in case but we do not expect this class be used by multiple consumers
+            lock (_relatedSymbols)
             {
-                var underlyingSecurity = _securityProvider.GetSecurity(symbol.Underlying);
-                if(underlyingSecurity != null)
+                if (symbol.SecurityType == SecurityType.Base && symbol.HasUnderlying)
                 {
-                    // we found the underlying, lets use its data type cache
-                    SecurityCache.ShareTypeCacheInstance(underlyingSecurity.Cache, securityCache);
+                    var underlyingSecurity = _securityProvider.GetSecurity(symbol.Underlying);
+                    if (underlyingSecurity != null)
+                    {
+                        // we found the underlying, lets use its data type cache
+                        SecurityCache.ShareTypeCacheInstance(underlyingSecurity.Cache, securityCache);
+                    }
+                    else
+                    {
+                        // we didn't find the underlying, lets keep track of the underlying symbol which might get added in the future.
+                        // else when it is added, we would have to go through existing Securities and find any which use it as underlying
+                        if (!_relatedSymbols.TryGetValue(symbol.Underlying, out var relatedSymbols))
+                        {
+                            _relatedSymbols[symbol.Underlying] = relatedSymbols = new List<Symbol>();
+                        }
+                        relatedSymbols.Add(symbol);
+                    }
                 }
                 else
                 {
-                    // we didn't find the underlying, lets keep track of the underlying symbol which might get added in the future.
-                    // else when it is added, we would have to go through existing Securities and find any which use it as underlying
-                    _relatedSymbols.AddOrUpdate(symbol.Underlying,
-                        id => new ConcurrentBag<Symbol> { symbol },
-                        (id, bag) => { bag.Add(symbol); return bag; }
-                    );
-                }
-            }
-            else
-            {
-                ConcurrentBag<Symbol> customSymbols;
-                if (_relatedSymbols.TryRemove(symbol, out customSymbols))
-                {
-                    // if we are here it means we added a symbol which is an underlying of some existing custom symbols
-                    foreach (var customSymbol in customSymbols)
+                    if (_relatedSymbols.Remove(symbol, out var customSymbols))
                     {
-                        var customSecurity = _securityProvider.GetSecurity(customSymbol);
-                        if (customSecurity != null)
+                        // if we are here it means we added a symbol which is an underlying of some existing custom symbols
+                        foreach (var customSymbol in customSymbols)
                         {
-                            // we make each existing custom security cache, use the new instance data type cache
-                            // note that if any data already existed in the custom cache it will be passed
-                            SecurityCache.ShareTypeCacheInstance(securityCache, customSecurity.Cache);
+                            var customSecurity = _securityProvider.GetSecurity(customSymbol);
+                            if (customSecurity != null)
+                            {
+                                // we make each existing custom security cache, use the new instance data type cache
+                                // note that if any data already existed in the custom cache it will be passed
+                                SecurityCache.ShareTypeCacheInstance(securityCache, customSecurity.Cache);
+                            }
                         }
                     }
                 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -14,7 +14,6 @@
  *
 */
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -27,30 +26,23 @@ namespace QuantConnect.Util
     /// <typeparam name="T"></typeparam>
     public class MemoizingEnumerable<T> : IEnumerable<T>
     {
-        private bool _finished;
+        private List<T> _buffer;
+        private IEnumerator<T> _enumerator;
 
-        private readonly List<T> _buffer;
-        private readonly IEnumerator<T> _enumerator;
-
-        private readonly object _lock = new object();
+        /// <summary>
+        /// Allow disableing the buffering
+        /// </summary>
+        /// <remarks>Should be called before the enumeration starts</remarks>
+        public bool Enabled { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MemoizingEnumerable{T}"/> class
         /// </summary>
         /// <param name="enumerable">The source enumerable to be memoized</param>
         public MemoizingEnumerable(IEnumerable<T> enumerable)
-            : this(enumerable.GetEnumerator())
         {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="MemoizingEnumerable{T}"/> class
-        /// </summary>
-        /// <param name="enumerator">The source enumerator to be memoized</param>
-        public MemoizingEnumerable(IEnumerator<T> enumerator)
-        {
-            _buffer = new List<T>();
-            _enumerator = enumerator;
+            Enabled = true;
+            _enumerator = enumerable.GetEnumerator();
         }
 
         /// <summary>
@@ -62,46 +54,63 @@ namespace QuantConnect.Util
         /// <filterpriority>1</filterpriority>
         public IEnumerator<T> GetEnumerator()
         {
-            int i = 0;
-            while (true)
+            if (!Enabled)
             {
-                bool hasValue;
-                
-                // sync for multiple threads access to _enumerator and _buffer
-                lock (_lock)
+                if (_enumerator != null)
                 {
-                    // check to see if we need to move next
-                    if (!_finished && i >= _buffer.Count)
+                    while (_enumerator.MoveNext())
                     {
-                        hasValue = _enumerator.MoveNext();
-                        if (hasValue)
+                        yield return _enumerator.Current;
+                    }
+
+                    // important to avoid leak!
+                    _enumerator.Dispose();
+                    _enumerator = null;
+                }
+            }
+            else
+            {
+                if (_buffer == null)
+                {
+                    // lazy create our buffer
+                    _buffer = new List<T>();
+                }
+
+                int i = 0;
+                while (i <= _buffer.Count)
+                {
+                    // sync for multiple threads access to _enumerator and _buffer
+                    lock (_buffer)
+                    {
+                        // check to see if we need to move next
+                        if (_enumerator != null && i >= _buffer.Count)
                         {
-                            _buffer.Add(_enumerator.Current);
+                            if (_enumerator.MoveNext())
+                            {
+                                var value = _enumerator.Current;
+                                _buffer.Add(value);
+                                yield return value;
+                            }
+                            else
+                            {
+                                // important to avoid leak!
+                                _enumerator.Dispose();
+                                _enumerator = null;
+                            }
                         }
                         else
                         {
-                            _finished = true;
+                            // we have a value if it's in the buffer
+                            if (_buffer.Count > i)
+                            {
+                                yield return _buffer[i];
+                            }
                         }
                     }
-                    else
-                    {
-                        // we have a value if it's in the buffer
-                        hasValue = _buffer.Count > i;
-                    }
-                }
 
-                // yield the i'th element if we have it, otherwise stop enumeration
-                if (hasValue)
-                {
-                    yield return _buffer[i];
+                    // increment for next time
+                    i++;
                 }
-                else
-                {
-                    yield break;
-                }
-
-                // increment for next time
-                i++;
             }
         }
 

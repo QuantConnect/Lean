@@ -183,6 +183,10 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Cannot update/cancel orders with OrderStatus.New (-32)
         /// </summary>
-        InvalidNewOrderStatus = -32
+        InvalidNewOrderStatus = -32,
+
+        /// <summary>
+        /// Exercise time before expiry for European options (-33)
+        EuropeanOptionNotExpiredOnExercise = -33
     }
 }

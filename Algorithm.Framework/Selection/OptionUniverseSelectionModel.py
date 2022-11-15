@@ -86,7 +86,7 @@ class OptionUniverseSelectionModel(UniverseSelectionModel):
         # force option chain security to not be directly tradable AFTER it's configured to ensure it's not overwritten
         optionChain.IsTradable = False
 
-        return OptionChainUniverse(optionChain, settings, algorithm.LiveMode)
+        return OptionChainUniverse(optionChain, settings)
 
     def CreateOptionChainSecurity(self, algorithm, symbol, settings):
         '''Creates the canonical option chain security for a given symbol

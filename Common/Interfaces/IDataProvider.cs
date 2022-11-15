@@ -15,6 +15,7 @@
 
 using System.IO;
 using System.ComponentModel.Composition;
+using System;
 
 namespace QuantConnect.Interfaces
 {
@@ -25,6 +26,11 @@ namespace QuantConnect.Interfaces
     [InheritedExport(typeof(IDataProvider))]
     public interface IDataProvider
     {
+        /// <summary>
+        /// Event raised each time data fetch is finished (successfully or not)
+        /// </summary>
+        event EventHandler<DataProviderNewDataRequestEventArgs> NewDataRequest;
+
         /// <summary>
         /// Retrieves data to be used in an algorithm
         /// </summary>

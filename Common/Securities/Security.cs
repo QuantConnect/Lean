@@ -48,7 +48,8 @@ namespace QuantConnect.Securities
         /// Collection of SubscriptionDataConfigs for this security.
         /// Uses concurrent bag to avoid list enumeration threading issues
         /// </summary>
-        protected readonly ConcurrentBag<SubscriptionDataConfig> SubscriptionsBag;
+        /// <remarks>Just use a list + lock, not concurrent bag, avoid garbage it creates for features we don't need here. See https://github.com/dotnet/runtime/issues/23103</remarks>
+        private readonly List<SubscriptionDataConfig> _subscriptionsBag;
 
         /// <summary>
         /// This securities <see cref="IShortableProvider"/>
@@ -65,7 +66,16 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets all the subscriptions for this security
         /// </summary>
-        public IEnumerable<SubscriptionDataConfig> Subscriptions => SubscriptionsBag;
+        public IEnumerable<SubscriptionDataConfig> Subscriptions
+        {
+            get
+            {
+                lock (_subscriptionsBag)
+                {
+                    return _subscriptionsBag.ToList();
+                }
+            }
+        }
 
         /// <summary>
         /// <see cref="Symbol"/> for the asset.
@@ -125,7 +135,16 @@ namespace QuantConnect.Securities
         /// Gets the subscription configuration for this security
         /// </summary>
         [Obsolete("This property returns only the first subscription. Use the 'Subscriptions' property for all of this security's subscriptions.")]
-        public SubscriptionDataConfig SubscriptionDataConfig => SubscriptionsBag.FirstOrDefault();
+        public SubscriptionDataConfig SubscriptionDataConfig
+        {
+            get
+            {
+                lock (_subscriptionsBag)
+                {
+                    return _subscriptionsBag.FirstOrDefault();
+                }
+            }
+        }
 
         /// <summary>
         /// There has been at least one datapoint since our algorithm started running for us to determine price.
@@ -377,7 +396,7 @@ namespace QuantConnect.Securities
             }
 
             Symbol = symbol;
-            SubscriptionsBag = new ConcurrentBag<SubscriptionDataConfig>();
+            _subscriptionsBag = new ();
             QuoteCurrency = quoteCurrency;
             SymbolProperties = symbolProperties;
             IsTradable = true;
@@ -437,7 +456,7 @@ namespace QuantConnect.Securities
                 registeredTypesProvider
                 )
         {
-            SubscriptionsBag.Add(config);
+            _subscriptionsBag.Add(config);
             UpdateSubscriptionProperties();
         }
 
@@ -645,11 +664,14 @@ namespace QuantConnect.Securities
             " 'SubscriptionManager' and the 'SetDataNormalizationMode()' extension method")]
         public virtual void SetDataNormalizationMode(DataNormalizationMode mode)
         {
-            foreach (var subscription in SubscriptionsBag)
+            lock (_subscriptionsBag)
             {
-                subscription.DataNormalizationMode = mode;
+                foreach (var subscription in _subscriptionsBag)
+                {
+                    subscription.DataNormalizationMode = mode;
+                }
+                UpdateSubscriptionProperties();
             }
-            UpdateSubscriptionProperties();
         }
 
         /// <summary>
@@ -659,10 +681,13 @@ namespace QuantConnect.Securities
         /// </summary>
         public void RefreshDataNormalizationModeProperty()
         {
-            DataNormalizationMode = SubscriptionsBag
-                .Select(x => x.DataNormalizationMode)
-                .DefaultIfEmpty(DataNormalizationMode.Adjusted)
-                .FirstOrDefault();
+            lock (_subscriptionsBag)
+            {
+                DataNormalizationMode = _subscriptionsBag
+                    .Select(x => x.DataNormalizationMode)
+                    .DefaultIfEmpty(DataNormalizationMode.Adjusted)
+                    .FirstOrDefault();
+            }
         }
 
         /// <summary>
@@ -800,10 +825,13 @@ namespace QuantConnect.Securities
         /// <param name="subscription">The subscription configuration to add. The Symbol and ExchangeTimeZone properties must match the existing Security object</param>
         internal void AddData(SubscriptionDataConfig subscription)
         {
-            if (subscription.Symbol != Symbol) throw new ArgumentException("Symbols must match.", "subscription.Symbol");
-            if (!subscription.ExchangeTimeZone.Equals(Exchange.TimeZone)) throw new ArgumentException("ExchangeTimeZones must match.", "subscription.ExchangeTimeZone");
-            SubscriptionsBag.Add(subscription);
-            UpdateSubscriptionProperties();
+            lock (_subscriptionsBag)
+            {
+                if (subscription.Symbol != Symbol) throw new ArgumentException("Symbols must match.", "subscription.Symbol");
+                if (!subscription.ExchangeTimeZone.Equals(Exchange.TimeZone)) throw new ArgumentException("ExchangeTimeZones must match.", "subscription.ExchangeTimeZone");
+                _subscriptionsBag.Add(subscription);
+                UpdateSubscriptionProperties();
+            }
         }
 
         /// <summary>
@@ -812,13 +840,16 @@ namespace QuantConnect.Securities
         /// <param name="subscriptions">The subscription configuration to add. The Symbol and ExchangeTimeZone properties must match the existing Security object</param>
         internal void AddData(SubscriptionDataConfigList subscriptions)
         {
-            foreach (var subscription in subscriptions)
+            lock (_subscriptionsBag)
             {
-                if (subscription.Symbol != Symbol) throw new ArgumentException("Symbols must match.", "subscription.Symbol");
-                if (!subscription.ExchangeTimeZone.Equals(Exchange.TimeZone)) throw new ArgumentException("ExchangeTimeZones must match.", "subscription.ExchangeTimeZone");
-                SubscriptionsBag.Add(subscription);
+                foreach (var subscription in subscriptions)
+                {
+                    if (subscription.Symbol != Symbol) throw new ArgumentException("Symbols must match.", "subscription.Symbol");
+                    if (!subscription.ExchangeTimeZone.Equals(Exchange.TimeZone)) throw new ArgumentException("ExchangeTimeZones must match.", "subscription.ExchangeTimeZone");
+                    _subscriptionsBag.Add(subscription);
+                }
+                UpdateSubscriptionProperties();
             }
-            UpdateSubscriptionProperties();
         }
 
         /// <summary>
@@ -832,11 +863,14 @@ namespace QuantConnect.Securities
             VolatilityModel.Update(this, data);
         }
 
+        /// <summary>
+        /// Caller should hold the lock on '_subscriptionsBag'
+        /// </summary>
         private void UpdateSubscriptionProperties()
         {
-            Resolution = SubscriptionsBag.Select(x => x.Resolution).DefaultIfEmpty(Resolution.Daily).Min();
-            IsFillDataForward = SubscriptionsBag.Any(x => x.FillDataForward);
-            IsExtendedMarketHours = SubscriptionsBag.Any(x => x.ExtendedMarketHours);
+            Resolution = _subscriptionsBag.Select(x => x.Resolution).DefaultIfEmpty(Resolution.Daily).Min();
+            IsFillDataForward = _subscriptionsBag.Any(x => x.FillDataForward);
+            IsExtendedMarketHours = _subscriptionsBag.Any(x => x.ExtendedMarketHours);
             RefreshDataNormalizationModeProperty();
         }
     }

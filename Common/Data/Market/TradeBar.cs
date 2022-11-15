@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -132,7 +132,7 @@ namespace QuantConnect.Data.Market
         {
             Symbol = Symbol.Empty;
             DataType = MarketDataType.TradeBar;
-            Period = TimeSpan.FromMinutes(1);
+            Period = QuantConnect.Time.OneMinute;
         }
 
         /// <summary>
@@ -176,7 +176,7 @@ namespace QuantConnect.Data.Market
             Low = low;
             Close = close;
             Volume = volume;
-            Period = period ?? TimeSpan.FromMinutes(1);
+            Period = period ?? QuantConnect.Time.OneMinute;
             DataType = MarketDataType.TradeBar;
             _initialized = 1;
         }

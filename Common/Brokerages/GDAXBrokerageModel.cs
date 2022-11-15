@@ -154,16 +154,6 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// GDAX fills order using the latest Trade or Quote data
-        /// </summary>
-        /// <param name="security">The security to get fill model for</param>
-        /// <returns>The new fill model for this brokerage</returns>
-        public override IFillModel GetFillModel(Security security)
-        {
-            return new LatestPriceFillModel();
-        }
-
-        /// <summary>
         /// Gets a new buying power model for the security, returning the default model with the security's configured leverage.
         /// For cash accounts, leverage = 1 is used.
         /// </summary>

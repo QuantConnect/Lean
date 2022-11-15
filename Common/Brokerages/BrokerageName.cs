@@ -120,5 +120,10 @@ namespace QuantConnect.Brokerages
         /// Transaction and submit/execution rules will use Binance.US models
         /// </summary>
         BinanceUS,
+
+        /// <summary>
+        /// Transaction and submit/execution rules will use Wolverine models
+        /// </summary>
+        Wolverine,
     }
 }
