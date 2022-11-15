@@ -266,17 +266,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Indicators)]
         public void PlotIndicator(string chart, params IndicatorBase[] indicators)
         {
-            foreach (var i in indicators)
-            {
-                if (i == null) continue;
-
-                // copy loop variable for usage in closure
-                var ilocal = i;
-                i.Updated += (sender, args) =>
-                {
-                    Plot(chart, ilocal);
-                };
-            }
+            PlotIndicator(chart, false, indicators);
         }
 
         /// <summary>
