@@ -14,8 +14,13 @@
 */
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Globalization;
+using QuantConnect.Configuration;
+using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data
 {
@@ -32,7 +37,37 @@ namespace QuantConnect.Data
         /// <summary>
         /// US Primary Credit Rate
         /// </summary>
-        public double InterestRate;
+        public decimal InterestRate;
+
+        /// <summary>
+        /// Reads Fed primary credit rate file and returns a dictionary of historical rate changes
+        /// </summary>
+        /// <param name="file">The csv file to be read</param>
+        /// <returns>Dictionary of historical credit rate change events</returns>
+        public static Dictionary<DateTime, decimal> FromCsvFile(string file)
+        {
+            IDataProvider dataProvider =
+            Composer.Instance.GetExportedValueByTypeName<IDataProvider>(Config.Get("data-provider",
+                "DefaultDataProvider"));
+
+            // skip the first header line, also skip #'s as these are comment lines
+            var interestRateProvider = dataProvider.ReadLines(file)
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Skip(1)
+                .Select(InterestRateProvider.Create)
+                .ToDictionary(x => x.Date, x => x.InterestRate);
+
+            if(interestRateProvider.Count == 0)
+            {
+                Log.Trace($"Unable to locate FED primary credit rate file. Defaulting to 1%. File: {file}");
+
+                return new Dictionary<DateTime, decimal>
+                {
+                    { DateTime.MinValue, 0.01m }
+                };
+            }
+            return interestRateProvider;
+        }
 
         /// <summary>
         /// Creates a new instance of <see cref="InterestRateProvider"/> from the specified csv line
@@ -49,8 +84,8 @@ namespace QuantConnect.Data
                 Log.Trace($"Couldn't parse date/time while reading FED primary credit rate file. Line: {csvLine}");
             }
 
-            double interestRate;
-            if (!double.TryParse(line[1], out interestRate))
+            decimal interestRate;
+            if (!decimal.TryParse(line[1], out interestRate))
             {
                 Log.Trace($"Couldn't parse primary credit rate while reading FED primary credit rate file. Line: {csvLine}");
             }
@@ -58,7 +93,7 @@ namespace QuantConnect.Data
             return new InterestRateProvider
             {
                 Date = date,
-                InterestRate = interestRate / 100d
+                InterestRate = interestRate / 100m
             };
         }
     }

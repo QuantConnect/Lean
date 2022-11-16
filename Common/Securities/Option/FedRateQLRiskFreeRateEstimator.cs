@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using QuantConnect.Configuration;
@@ -21,7 +22,6 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
-using QuantConnect.Util;
 
 namespace QuantConnect.Securities.Option
 {
@@ -34,19 +34,22 @@ namespace QuantConnect.Securities.Option
     /// </remarks>
     public class FedRateQLRiskFreeRateEstimator : IQLRiskFreeRateEstimator
     {
-        private InterestRateProvider[] _riskFreeRateProvider;
-        private int _riskFreeRateIndex;
-        private static readonly object DataFolderSymbolLock = new object();
-
-        private IDataProvider _dataProvider =
-            Composer.Instance.GetExportedValueByTypeName<IDataProvider>(Config.Get("data-provider",
-                "DefaultDataProvider"));
+        private Dictionary<DateTime, decimal> _riskFreeRateProvider;
 
         /// <summary>
         /// Constructor initializes class
         /// </summary>
         public FedRateQLRiskFreeRateEstimator()
         {
+            LoadInterestRateProvider();
+        }
+
+        /// <summary>
+        /// Constructor initializes class
+        /// </summary>
+        public Dictionary<DateTime, decimal> GetRiskFreeRateCollection()
+        {
+            return _riskFreeRateProvider;
         }
 
         /// <summary>
@@ -57,71 +60,46 @@ namespace QuantConnect.Securities.Option
         /// available to the algorithm</param>
         /// <param name="contract">The option contract to evaluate</param>
         /// <returns>The estimate</returns>
-        public double Estimate(Security security, Slice slice, OptionContract contract)
+        public decimal Estimate(Security security, Slice slice, OptionContract contract)
         {
             if (slice == null)
-                return 0d;
-
-            if (_riskFreeRateProvider == null)
-            {
-                _riskFreeRateProvider = LoadInterestRateProvider();
-                _riskFreeRateIndex = 0;
-            }
-
+                return 0.01m;
+            
             var date = slice.Time.Date;
 
-            while (_riskFreeRateIndex + 1 < _riskFreeRateProvider.Length &&
-                _riskFreeRateProvider[_riskFreeRateIndex + 1].Date <= date)
+            if (! _riskFreeRateProvider.ContainsKey(date))
             {
-                _riskFreeRateIndex++;
+                return 0.01m;
             }
-
-            return _riskFreeRateProvider[_riskFreeRateIndex].InterestRate;
+            return _riskFreeRateProvider[date];
         }
 
         /// <summary>
-        /// Gets the sorted list of historical US primary credit rate
+        /// Generate the daily historical US primary credit rate
         /// data found in /option/usa/interest-rate-csv
         /// </summary>
-        /// <returns>Sorted list of historical primary credit rate</returns>
-        protected InterestRateProvider[] LoadInterestRateProvider(string subDirectory = "option/usa", string fileName = "interest-rate.csv")
+        protected void LoadInterestRateProvider(DateTime? endDate = null, string subDirectory = "option/usa", string fileName = "interest-rate.csv")
         {
+            endDate = (DateTime)(endDate ?? (DateTime?)DateTime.Today);
             var directory = Path.Combine(Globals.DataFolder,
                                         subDirectory,
                                         fileName);
-            return FromCsvFile(directory);
-        }
 
-        /// <summary>
-        /// Reads Fed primary credit rate file and returns a sorted list of historical margin changes
-        /// </summary>
-        /// <param name="file">The csv file to be read</param>
-        /// <returns>Sorted list of historical margin changes</returns>
-        private InterestRateProvider[] FromCsvFile(string file)
-        {
-            lock (DataFolderSymbolLock)
+            _riskFreeRateProvider = InterestRateProvider.FromCsvFile(directory);
+            var firstDate = _riskFreeRateProvider.Keys.OrderBy(x => x).First();
+
+            // Sparse the discrete datapoints into continuous credit rate data for every day
+            var currentRate = _riskFreeRateProvider[firstDate];
+            for (DateTime date = firstDate.AddDays(1); date <= endDate; date = date.AddDays(1))
             {
-                // skip the first header line, also skip #'s as these are comment lines
-                var interestRateProvider = _dataProvider.ReadLines(file)
-                    .Where(x => !string.IsNullOrWhiteSpace(x))
-                    .Skip(1)
-                    .Select(InterestRateProvider.Create)
-                    .OrderBy(x => x.Date)
-                    .ToArray();
-
-                if(interestRateProvider.Length == 0)
+                if (_riskFreeRateProvider.ContainsKey(date))
                 {
-                    Log.Trace($"Unable to locate FED primary credit rate file. Defaulting to 1%. File: {file}");
-
-                    return new[] {
-                        new InterestRateProvider
-                        {
-                            Date = DateTime.MinValue,
-                            InterestRate = 0.01d
-                        }
-                    };
+                    currentRate = _riskFreeRateProvider[date];
                 }
-                return interestRateProvider;
+                else
+                {
+                    _riskFreeRateProvider[date] = currentRate;
+                }
             }
         }
     }

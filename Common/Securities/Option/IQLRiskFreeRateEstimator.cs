@@ -31,6 +31,6 @@ namespace QuantConnect.Securities.Option
         /// available to the algorithm</param>
         /// <param name="contract">The option contract to evaluate</param>
         /// <returns>Risk free rate</returns>
-        double Estimate(Security security, Slice slice, OptionContract contract);
+        decimal Estimate(Security security, Slice slice, OptionContract contract);
     }
 }

@@ -45,27 +45,21 @@ namespace QuantConnect.Tests.Common.Data
                 new Slice(evaluationDate, new List<BaseData> { tick }, evaluationDate), 
                 new OptionContract(optionSymbol, spx));
 
-            AssertAreEqual(0.0175d, result);
+            AssertAreEqual(0.0175m, result);
         }
 
         [Test]
         public void LoadInterestRateProvider()
         {
             var estimator = new TestFedRateQLRiskFreeRateEstimator();
-            var result = estimator.TestLoadInterestRateProvider();
+            var endDate = new DateTime(2020, 3, 11);
+            var result = estimator.TestLoadInterestRateProvider(endDate);
 
-            var expected = new[]
+            var expected = new Dictionary<DateTime, decimal>
             {
-                new InterestRateProvider
-                {
-                    Date = new DateTime(2020, 3, 4),
-                    InterestRate = 0.0175d
-                },
-                new InterestRateProvider
-                {
-                    Date = new DateTime(2020, 3, 16),
-                    InterestRate = 0.0025d
-                }
+                { new DateTime(2020, 3, 9), 0.0175m },
+                { new DateTime(2020, 3, 10), 0.0175m },
+                { new DateTime(2020, 3, 11), 0.0025m },
             };
 
             AssertAreEqual(expected, result);
@@ -86,9 +80,10 @@ namespace QuantConnect.Tests.Common.Data
             { 
             }
 
-            public InterestRateProvider[] TestLoadInterestRateProvider()
+            public Dictionary<DateTime, decimal> TestLoadInterestRateProvider(DateTime endDate)
             {
-                return base.LoadInterestRateProvider();
+                base.LoadInterestRateProvider(endDate: endDate);
+                return base.GetRiskFreeRateCollection();
             }
         }
     }

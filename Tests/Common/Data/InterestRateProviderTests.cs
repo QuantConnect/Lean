@@ -14,7 +14,8 @@
 */
 
 using System;
-using System.Linq;
+using System.Collections.Generic;
+using System.IO;
 using NUnit.Framework;
 using QuantConnect.Data;
 
@@ -32,8 +33,29 @@ namespace QuantConnect.Tests.Common.Data
             var expected = new InterestRateProvider
             {
                 Date = new DateTime(2020, 1, 1),
-                InterestRate = 0.025d
+                InterestRate = 0.025m
             };
+
+            AssertAreEqual(expected, result);
+        }
+
+        [TestCase("option/usa/interest-rate.csv", true)]
+        [TestCase("non-existing.csv", false)]
+        public void FromCsvFile(string dir, bool getResults)
+        {
+            var filePath = Path.Combine(Globals.DataFolder, dir);
+            var result = InterestRateProvider.FromCsvFile(filePath);
+
+            var expected = new Dictionary<DateTime, decimal>();
+            if (getResults)
+            {
+                expected.Add(new DateTime(2020, 3, 9), 0.0175m);
+                expected.Add(new DateTime(2020, 3, 11), 0.0025m);
+            }
+            else
+            {
+                expected.Add(DateTime.MinValue, 0.01m);
+            }
 
             AssertAreEqual(expected, result);
         }

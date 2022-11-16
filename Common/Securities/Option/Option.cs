@@ -81,7 +81,12 @@ namespace QuantConnect.Securities.Option
             ExerciseSettlement = SettlementType.PhysicalDelivery;
             SetDataNormalizationMode(DataNormalizationMode.Raw);
             OptionExerciseModel = new DefaultExerciseModel();
-            PriceModel = new CurrentPriceOptionPriceModel();
+            PriceModel = config.Symbol.ID.OptionStyle switch
+            {
+                OptionStyle.American => OptionPriceModels.BjerksundStensland(),
+                OptionStyle.European => OptionPriceModels.BlackScholes(),
+                _ => throw new ArgumentException("Invalid OptionStyle")
+            };
             Holdings = new OptionHolding(this, currencyConverter);
             _symbolProperties = symbolProperties;
             SetFilter(-1, 1, TimeSpan.Zero, TimeSpan.FromDays(35));
@@ -173,7 +178,12 @@ namespace QuantConnect.Securities.Option
             ExerciseSettlement = SettlementType.PhysicalDelivery;
             SetDataNormalizationMode(DataNormalizationMode.Raw);
             OptionExerciseModel = new DefaultExerciseModel();
-            PriceModel = new CurrentPriceOptionPriceModel();
+            PriceModel = symbol.ID.OptionStyle switch
+            {
+                OptionStyle.American => OptionPriceModels.BjerksundStensland(),
+                OptionStyle.European => OptionPriceModels.BlackScholes(),
+                _ => throw new ArgumentException("Invalid OptionStyle")
+            };
             Holdings = new OptionHolding(this, currencyConverter);
             _symbolProperties = (OptionSymbolProperties)symbolProperties;
             SetFilter(-1, 1, TimeSpan.Zero, TimeSpan.FromDays(35));
@@ -222,21 +232,7 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         public OptionStyle Style
         {
-            get
-            {
-                var style = Symbol.ID.OptionStyle;
-
-                if (style == OptionStyle.American)
-                {
-                    PriceModel = OptionPriceModels.BjerksundStensland();
-                }
-                else
-                {
-                    PriceModel = OptionPriceModels.BlackScholes();
-                }
-
-                return style;
-            }
+            get { return Symbol.ID.OptionStyle; }
         }
 
         /// <summary>
