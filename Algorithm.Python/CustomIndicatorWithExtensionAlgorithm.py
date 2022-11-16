@@ -24,14 +24,17 @@ class CustomIndicatorWithExtensionAlgorithm(QCAlgorithm):
         self.spy = self.AddEquity("SPY", Resolution.Minute).Symbol
 
         self.sma_values = []
-
         self.period = 10
-        self.custom_sma = CustomSimpleMovingAverage("My SMA", self.period)
+
         self.sma = self.SMA(self.spy, self.period, Resolution.Minute)
         self.sma.Updated += self.OnSMAUpdated
 
+        self.custom_sma = CustomSimpleMovingAverage("My SMA", self.period)
         self.ext = IndicatorExtensions.Of(self.custom_sma, self.sma)
         self.ext.Updated += self.OnIndicatorExtensionUpdated
+
+        self.sma_minus_custom = IndicatorExtensions.Minus(self.sma, self.custom_sma)
+        self.sma_minus_custom.Updated += self.OnMinusUpdated
 
     def OnSMAUpdated(self, sender, updated):
         if self.sma.IsReady:
@@ -40,11 +43,19 @@ class CustomIndicatorWithExtensionAlgorithm(QCAlgorithm):
     def OnIndicatorExtensionUpdated(self, sender, updated):
         sma_last_values = self.sma_values[-self.period:]
         expected = sum(sma_last_values) / len(sma_last_values)
+
         if not isclose(expected, self.custom_sma.Value):
             raise Exception(f"Expected the custom SMA to calculate the moving average of the last {self.period} values of the SMA. "
                             f"Current expected: {expected}. Actual {self.custom_sma.Value}.")
 
         self.Debug(f"{self.sma.Current.Value} :: {self.custom_sma.Value} :: {updated}")
+
+    def OnMinusUpdated(self, sender, updated):
+        expected = self.sma.Current.Value - self.custom_sma.Value
+
+        if not isclose(expected, self.sma_minus_custom.Current.Value):
+            raise Exception(f"Expected the composite minus indicator to calculate the difference between the SMA and custom SMA indicators. "
+                            f"Expected: {expected}. Actual {self.sma_minus_custom.Current.Value}.")
 
 # Custom indicator
 class CustomSimpleMovingAverage(PythonIndicator):

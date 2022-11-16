@@ -330,25 +330,6 @@ namespace QuantConnect.Indicators
 
         /// The methods overloads bellow are due to python.net not being able to correctly solve generic methods overload
 
-        /// <summary>
-        /// Wraps a custom python indicator and save its reference to _pythonIndicators dictionary
-        /// </summary>
-        /// <param name="pyObject">The python implementation of <see cref="IndicatorBase{IBaseDataBar}"/></param>
-        /// <returns><see cref="PythonIndicator"/> that wraps the python implementation</returns>
-        private static PythonIndicator WrapPythonIndicator(PyObject pyObject)
-        {
-            PythonIndicator pythonIndicator;
-            pyObject.TryConvert(out pythonIndicator);
-            pythonIndicator?.SetIndicator(pyObject);
-
-            if (pythonIndicator == null)
-            {
-                pythonIndicator = new PythonIndicator(pyObject);
-            }
-
-            return pythonIndicator;
-        }
-
         private static dynamic GetIndicatorAsManagedObject(PyObject indicator)
         {
             var indicatorManagedObject = indicator.SafeAsManagedObject();
@@ -358,7 +339,15 @@ namespace QuantConnect.Indicators
                 return indicatorManagedObject;
             }
 
-            return WrapPythonIndicator(indicator);
+            indicator.TryConvert(out PythonIndicator pythonIndicator);
+            pythonIndicator?.SetIndicator(indicator);
+
+            if (pythonIndicator == null)
+            {
+                pythonIndicator = new PythonIndicator(indicator);
+            }
+
+            return pythonIndicator;
         }
 
         /// <summary>
