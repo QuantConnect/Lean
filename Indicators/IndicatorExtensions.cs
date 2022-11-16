@@ -331,6 +331,37 @@ namespace QuantConnect.Indicators
         /// The methods overloads bellow are due to python.net not being able to correctly solve generic methods overload
 
         /// <summary>
+        /// Wraps a custom python indicator and save its reference to _pythonIndicators dictionary
+        /// </summary>
+        /// <param name="pyObject">The python implementation of <see cref="IndicatorBase{IBaseDataBar}"/></param>
+        /// <returns><see cref="PythonIndicator"/> that wraps the python implementation</returns>
+        private static PythonIndicator WrapPythonIndicator(PyObject pyObject)
+        {
+            PythonIndicator pythonIndicator;
+            pyObject.TryConvert(out pythonIndicator);
+            pythonIndicator?.SetIndicator(pyObject);
+
+            if (pythonIndicator == null)
+            {
+                pythonIndicator = new PythonIndicator(pyObject);
+            }
+
+            return pythonIndicator;
+        }
+
+        private static dynamic GetIndicatorAsManagedObject(PyObject indicator)
+        {
+            var indicatorManagedObject = indicator.SafeAsManagedObject();
+
+            if (indicatorManagedObject as PythonIndicator == null)
+            {
+                return indicatorManagedObject;
+            }
+
+            return WrapPythonIndicator(indicator);
+        }
+
+        /// <summary>
         /// Configures the second indicator to receive automatic updates from the first by attaching an event handler
         /// to first.DataConsolidated
         /// </summary>
@@ -340,8 +371,8 @@ namespace QuantConnect.Indicators
         /// <returns>The reference to the second indicator to allow for method chaining</returns>
         public static object Of(PyObject second, PyObject first, bool waitForFirstToReady = true)
         {
-            dynamic indicator1 = first.SafeAsManagedObject();
-            dynamic indicator2 = second.SafeAsManagedObject();
+            dynamic indicator1 = GetIndicatorAsManagedObject(first);
+            dynamic indicator2 = GetIndicatorAsManagedObject(second);
             return Of(indicator2, indicator1, waitForFirstToReady);
         }
 
@@ -355,8 +386,8 @@ namespace QuantConnect.Indicators
         // ReSharper disable once UnusedMember.Global
         public static CompositeIndicator WeightedBy(PyObject value, PyObject weight, int period)
         {
-            dynamic indicator1 = value.SafeAsManagedObject();
-            dynamic indicator2 = weight.SafeAsManagedObject();
+            dynamic indicator1 = GetIndicatorAsManagedObject(value);
+            dynamic indicator2 = GetIndicatorAsManagedObject(weight);
             return WeightedBy(indicator1, indicator2, period);
         }
 
@@ -370,7 +401,7 @@ namespace QuantConnect.Indicators
         /// <returns>A reference to the ExponentialMovingAverage indicator to allow for method chaining</returns>
         public static ExponentialMovingAverage EMA(PyObject left, int period, decimal? smoothingFactor = null, bool waitForFirstToReady = true)
         {
-            dynamic indicator = left.SafeAsManagedObject();
+            dynamic indicator = GetIndicatorAsManagedObject(left);
             return EMA(indicator, period, smoothingFactor, waitForFirstToReady);
         }
 
@@ -383,7 +414,7 @@ namespace QuantConnect.Indicators
         /// <returns>A reference to the Maximum indicator to allow for method chaining</returns>
         public static Maximum MAX(PyObject left, int period, bool waitForFirstToReady = true)
         {
-            dynamic indicator = left.SafeAsManagedObject();
+            dynamic indicator = GetIndicatorAsManagedObject(left);
             return MAX(indicator, period, waitForFirstToReady);
         }
 
@@ -396,7 +427,7 @@ namespace QuantConnect.Indicators
         /// <returns>A reference to the Minimum indicator to allow for method chaining</returns>
         public static Minimum MIN(PyObject left, int period, bool waitForFirstToReady = true)
         {
-            dynamic indicator = left.SafeAsManagedObject();
+            dynamic indicator = GetIndicatorAsManagedObject(left);
             return MIN(indicator, period, waitForFirstToReady);
         }
 
@@ -409,7 +440,7 @@ namespace QuantConnect.Indicators
         /// <returns>The reference to the SimpleMovingAverage indicator to allow for method chaining</returns>
         public static SimpleMovingAverage SMA(PyObject left, int period, bool waitForFirstToReady = true)
         {
-            dynamic indicator = left.SafeAsManagedObject();
+            dynamic indicator = GetIndicatorAsManagedObject(left);
             return SMA(indicator, period, waitForFirstToReady);
         }
 
@@ -424,7 +455,7 @@ namespace QuantConnect.Indicators
         /// <returns>The ratio of the left to the right indicator</returns>
         public static object Over(PyObject left, decimal constant)
         {
-            dynamic indicatorLeft = left.SafeAsManagedObject();
+            dynamic indicatorLeft = GetIndicatorAsManagedObject(left);
             return Over(indicatorLeft, constant);
         }
 
@@ -440,8 +471,8 @@ namespace QuantConnect.Indicators
         /// <returns>The ratio of the left to the right indicator</returns>
         public static object Over(PyObject left, PyObject right, string name = "")
         {
-            dynamic indicatorLeft = left.SafeAsManagedObject();
-            dynamic indicatorRight = right.SafeAsManagedObject();
+            dynamic indicatorLeft = GetIndicatorAsManagedObject(left);
+            dynamic indicatorRight = GetIndicatorAsManagedObject(right);
             if (name.IsNullOrEmpty())
             {
                 return Over(indicatorLeft, indicatorRight);
@@ -460,7 +491,7 @@ namespace QuantConnect.Indicators
         /// <returns>The difference of the left and right indicators</returns>
         public static object Minus(PyObject left, decimal constant)
         {
-            dynamic indicatorLeft = left.SafeAsManagedObject();
+            dynamic indicatorLeft = GetIndicatorAsManagedObject(left);
             return Minus(indicatorLeft, constant);
         }
 
@@ -476,8 +507,8 @@ namespace QuantConnect.Indicators
         /// <returns>The difference of the left and right indicators</returns>
         public static object Minus(PyObject left, PyObject right, string name = "")
         {
-            dynamic indicatorLeft = left.SafeAsManagedObject();
-            dynamic indicatorRight = right.SafeAsManagedObject();
+            dynamic indicatorLeft = GetIndicatorAsManagedObject(left);
+            dynamic indicatorRight = GetIndicatorAsManagedObject(right);
             if (name.IsNullOrEmpty())
             {
                 return Minus(indicatorLeft, indicatorRight);
@@ -496,7 +527,7 @@ namespace QuantConnect.Indicators
         /// <returns>The product of the left to the right indicators</returns>
         public static object Times(PyObject left, decimal constant)
         {
-            dynamic indicatorLeft = left.SafeAsManagedObject();
+            dynamic indicatorLeft = GetIndicatorAsManagedObject(left);
             return Times(indicatorLeft, constant);
         }
 
@@ -512,8 +543,8 @@ namespace QuantConnect.Indicators
         /// <returns>The product of the left to the right indicators</returns>
         public static object Times(PyObject left, PyObject right, string name = "")
         {
-            dynamic indicatorLeft = left.SafeAsManagedObject();
-            dynamic indicatorRight = right.SafeAsManagedObject();
+            dynamic indicatorLeft = GetIndicatorAsManagedObject(left);
+            dynamic indicatorRight = GetIndicatorAsManagedObject(right);
             if (name.IsNullOrEmpty())
             {
                 return Times(indicatorLeft, indicatorRight);
@@ -532,7 +563,7 @@ namespace QuantConnect.Indicators
         /// <returns>The sum of the left and right indicators</returns>
         public static object Plus(PyObject left, decimal constant)
         {
-            dynamic indicatorLeft = left.SafeAsManagedObject();
+            dynamic indicatorLeft = GetIndicatorAsManagedObject(left);
             return Plus(indicatorLeft, constant);
         }
 
@@ -548,8 +579,8 @@ namespace QuantConnect.Indicators
         /// <returns>The sum of the left and right indicators</returns>
         public static object Plus(PyObject left, PyObject right, string name = "")
         {
-            dynamic indicatorLeft = left.SafeAsManagedObject();
-            dynamic indicatorRight = right.SafeAsManagedObject();
+            dynamic indicatorLeft = GetIndicatorAsManagedObject(left);
+            dynamic indicatorRight = GetIndicatorAsManagedObject(right);
             if (name.IsNullOrEmpty())
             {
                 return Plus(indicatorLeft, indicatorRight);

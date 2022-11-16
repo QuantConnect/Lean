@@ -33,6 +33,9 @@
     </PostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="CustomIndicatorWithExtensionAlgorithm.py" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -45,6 +48,7 @@
     <Content Include="AddFutureOptionSingleOptionChainSelectedInUniverseFilterRegressionAlgorithm.py" />
     <Content Include="AddOptionContractExpiresRegressionAlgorithm.py" />
     <Content Include="AddOptionContractFromUniverseRegressionAlgorithm.py" />
+    <Content Include="CustomIndicatorWithExtensionAlgorithm.py" />
     <Content Include="AddRiskManagementAlgorithm.py" />
     <Content Include="AddUniverseSelectionModelAlgorithm.py" />
     <Content Include="Alphas\ContingentClaimsAnalysisDefaultPredictionAlpha.py" />

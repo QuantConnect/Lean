@@ -140,8 +140,8 @@ namespace QuantConnect.Indicators
         {
             using (Py.GIL())
             {
-                _isReady = _indicator.Update(input) ?? _indicator.IsReady;
-                return _indicator.Value;
+                _isReady = _indicator?.Update(input) ?? _indicator?.IsReady;
+                return _indicator?.Value;
             }
         }
     }
