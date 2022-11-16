@@ -25,14 +25,17 @@ namespace QuantConnect.Tests.Common.Data
     [TestFixture]
     public class FedRateQLRiskFreeRateEstimatorTests
     {
-        [Test]
-        public void Estimate()
+        [TestCase("20200306", 0.0175)]      // Friday
+        [TestCase("20200307", 0.0175)]      // Saturday, use Friday's value
+        [TestCase("20200308", 0.0175)]      // Sunday, use Friday's value
+        [TestCase("20200310", 0.0025)]      // Tuesday
+        public void Estimate(string dateString, decimal rate)
         {
             var spx = Symbols.SPX;
             var tz = TimeZones.NewYork;
             var optionSymbol = Symbol.CreateOption(spx.Value, spx.ID.Market, OptionStyle.European, OptionRight.Put, 4200,
                 new DateTime(2021, 1, 15));
-            var evaluationDate = new DateTime(2020, 3, 10);
+            var evaluationDate = Parse.DateTimeExact(dateString, "yyyyMMdd");
 
             // setting up
             var equity = OptionPriceModelTests.GetEquity(spx, 100m, 0.25m, tz);
@@ -45,21 +48,21 @@ namespace QuantConnect.Tests.Common.Data
                 new Slice(evaluationDate, new List<BaseData> { tick }, evaluationDate), 
                 new OptionContract(optionSymbol, spx));
 
-            AssertAreEqual(0.0175m, result);
+            AssertAreEqual(rate, result);
         }
 
         [Test]
         public void LoadInterestRateProvider()
         {
             var estimator = new TestFedRateQLRiskFreeRateEstimator();
-            var endDate = new DateTime(2020, 3, 11);
+            var endDate = new DateTime(2020, 3, 10);
             var result = estimator.TestLoadInterestRateProvider(endDate);
 
             var expected = new Dictionary<DateTime, decimal>
             {
+                { new DateTime(2020, 3, 6), 0.0175m },
                 { new DateTime(2020, 3, 9), 0.0175m },
-                { new DateTime(2020, 3, 10), 0.0175m },
-                { new DateTime(2020, 3, 11), 0.0025m },
+                { new DateTime(2020, 3, 10), 0.0025m },
             };
 
             AssertAreEqual(expected, result);

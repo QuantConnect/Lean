@@ -67,9 +67,9 @@ namespace QuantConnect.Securities.Option
             
             var date = slice.Time.Date;
 
-            if (! _riskFreeRateProvider.ContainsKey(date))
+            while (!_riskFreeRateProvider.ContainsKey(date))
             {
-                return 0.01m;
+                date = date.AddDays(-1);
             }
             return _riskFreeRateProvider[date];
         }
@@ -92,6 +92,12 @@ namespace QuantConnect.Securities.Option
             var currentRate = _riskFreeRateProvider[firstDate];
             for (DateTime date = firstDate.AddDays(1); date <= endDate; date = date.AddDays(1))
             {
+                // Skip Saturday and Sunday (non-trading day)
+                if (date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
+                {
+                    continue;
+                }
+
                 if (_riskFreeRateProvider.ContainsKey(date))
                 {
                     currentRate = _riskFreeRateProvider[date];

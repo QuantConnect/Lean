@@ -49,8 +49,8 @@ namespace QuantConnect.Tests.Common.Data
             var expected = new Dictionary<DateTime, decimal>();
             if (getResults)
             {
-                expected.Add(new DateTime(2020, 3, 9), 0.0175m);
-                expected.Add(new DateTime(2020, 3, 11), 0.0025m);
+                expected.Add(new DateTime(2020, 3, 6), 0.0175m);
+                expected.Add(new DateTime(2020, 3, 10), 0.0025m);
             }
             else
             {
