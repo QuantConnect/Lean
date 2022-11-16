@@ -330,26 +330,6 @@ namespace QuantConnect.Indicators
 
         /// The methods overloads bellow are due to python.net not being able to correctly solve generic methods overload
 
-        private static dynamic GetIndicatorAsManagedObject(PyObject indicator)
-        {
-            var indicatorManagedObject = indicator.SafeAsManagedObject();
-
-            if (indicatorManagedObject as PythonIndicator == null)
-            {
-                return indicatorManagedObject;
-            }
-
-            indicator.TryConvert(out PythonIndicator pythonIndicator);
-            pythonIndicator?.SetIndicator(indicator);
-
-            if (pythonIndicator == null)
-            {
-                pythonIndicator = new PythonIndicator(indicator);
-            }
-
-            return pythonIndicator;
-        }
-
         /// <summary>
         /// Configures the second indicator to receive automatic updates from the first by attaching an event handler
         /// to first.DataConsolidated
@@ -575,6 +555,17 @@ namespace QuantConnect.Indicators
                 return Plus(indicatorLeft, indicatorRight);
             }
             return Plus(indicatorLeft, indicatorRight, name);
+        }
+
+        private static dynamic GetIndicatorAsManagedObject(PyObject indicator)
+        {
+            if (indicator.TryConvert(out PythonIndicator pythonIndicator, true))
+            {
+                pythonIndicator.SetIndicator(indicator);
+                return pythonIndicator;
+            }
+
+            return indicator.SafeAsManagedObject();
         }
     }
 }
