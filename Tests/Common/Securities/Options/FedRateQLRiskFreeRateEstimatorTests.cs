@@ -51,23 +51,6 @@ namespace QuantConnect.Tests.Common.Data
             AssertAreEqual(rate, result);
         }
 
-        [Test]
-        public void LoadInterestRateProvider()
-        {
-            var estimator = new TestFedRateQLRiskFreeRateEstimator();
-            var endDate = new DateTime(2020, 3, 10);
-            var result = estimator.TestLoadInterestRateProvider(endDate);
-
-            var expected = new Dictionary<DateTime, decimal>
-            {
-                { new DateTime(2020, 3, 6), 0.0175m },
-                { new DateTime(2020, 3, 9), 0.0175m },
-                { new DateTime(2020, 3, 10), 0.0025m },
-            };
-
-            AssertAreEqual(expected, result);
-        }
-
         private void AssertAreEqual(object expected, object result)
         {
             foreach (var fieldInfo in expected.GetType().GetFields())
@@ -81,12 +64,6 @@ namespace QuantConnect.Tests.Common.Data
             public TestFedRateQLRiskFreeRateEstimator()
                 : base()
             { 
-            }
-
-            public Dictionary<DateTime, decimal> TestLoadInterestRateProvider(DateTime endDate)
-            {
-                base.LoadInterestRateProvider(endDate: endDate);
-                return base.GetRiskFreeRateCollection();
             }
         }
     }

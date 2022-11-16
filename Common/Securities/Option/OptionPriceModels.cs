@@ -15,7 +15,6 @@
 
 using QLNet;
 using System;
-using System.Globalization;
 using System.Linq;
 using Fasterflect;
 
@@ -34,10 +33,6 @@ namespace QuantConnect.Securities.Option
     /// </remarks>
     public static class OptionPriceModels
     {
-        private static IQLUnderlyingVolatilityEstimator _underlyingVolEstimator = new ConstantQLUnderlyingVolatilityEstimator();
-        private static IQLRiskFreeRateEstimator _riskFreeRateEstimator = new ConstantQLRiskFreeRateEstimator();
-        private static IQLDividendYieldEstimator _dividendYieldEstimator = new ConstantQLDividendYieldEstimator();
-
         private const int _timeStepsBinomial = 100;
         private const int _timeStepsFD = 100;
 
@@ -57,10 +52,8 @@ namespace QuantConnect.Securities.Option
                 .FirstOrDefault(t => t.FullName?.EndsWith(priceEngineName, StringComparison.InvariantCulture) == true);
 
             return new QLOptionPriceModel(process => (IPricingEngine)Activator.CreateInstance(type, process),
-                _underlyingVolEstimator,
-                new ConstantQLRiskFreeRateEstimator(riskFree),
-                _dividendYieldEstimator,
-                allowedOptionStyles);
+                riskFreeRateEstimator: new ConstantQLRiskFreeRateEstimator(riskFree),
+                allowedOptionStyles: allowedOptionStyles);
         }
 
         /// <summary>
@@ -71,10 +64,7 @@ namespace QuantConnect.Securities.Option
         public static IOptionPriceModel BlackScholes()
         {
             return new QLOptionPriceModel(process => new AnalyticEuropeanEngine(process),
-                                           _underlyingVolEstimator,
-                                           _riskFreeRateEstimator,
-                                           _dividendYieldEstimator,
-                                           new[] { OptionStyle.European });
+                                           allowedOptionStyles: new[] { OptionStyle.European });
         }
 
         /// <summary>
@@ -85,10 +75,7 @@ namespace QuantConnect.Securities.Option
         public static IOptionPriceModel BaroneAdesiWhaley()
         {
             return new QLOptionPriceModel(process => new BaroneAdesiWhaleyApproximationEngine(process),
-                                           _underlyingVolEstimator,
-                                           _riskFreeRateEstimator,
-                                           _dividendYieldEstimator,
-                                           new[] { OptionStyle.American });
+                                           allowedOptionStyles: new[] { OptionStyle.American });
         }
 
         /// <summary>
@@ -99,10 +86,7 @@ namespace QuantConnect.Securities.Option
         public static IOptionPriceModel BjerksundStensland()
         {
             return new QLOptionPriceModel(process => new BjerksundStenslandApproximationEngine(process),
-                                           _underlyingVolEstimator,
-                                           _riskFreeRateEstimator,
-                                           _dividendYieldEstimator,
-                                           new[] { OptionStyle.American });
+                                           allowedOptionStyles: new[] { OptionStyle.American });
         }
 
         /// <summary>
@@ -113,10 +97,7 @@ namespace QuantConnect.Securities.Option
         public static IOptionPriceModel Integral()
         {
             return new QLOptionPriceModel(process => new IntegralEngine(process),
-                                           _underlyingVolEstimator,
-                                           _riskFreeRateEstimator,
-                                           _dividendYieldEstimator,
-                                           new[] { OptionStyle.European });
+                                           allowedOptionStyles: new[] { OptionStyle.European });
         }
 
         /// <summary>
@@ -132,10 +113,7 @@ namespace QuantConnect.Securities.Option
                             new FDEuropeanEngine(process, _timeStepsFD, _timeStepsFD - 1) as IPricingEngine;
 
             return new QLOptionPriceModel(pricingEngineFunc,
-                                           _underlyingVolEstimator,
-                                           _riskFreeRateEstimator,
-                                           _dividendYieldEstimator,
-                                           new[] { OptionStyle.American, OptionStyle.European });
+                                           allowedOptionStyles: new[] { OptionStyle.American, OptionStyle.European });
         }
 
         /// <summary>
@@ -146,10 +124,7 @@ namespace QuantConnect.Securities.Option
         public static IOptionPriceModel BinomialJarrowRudd()
         {
             return new QLOptionPriceModel(process => new BinomialVanillaEngine<JarrowRudd>(process, _timeStepsBinomial),
-                                          _underlyingVolEstimator,
-                                          _riskFreeRateEstimator,
-                                          _dividendYieldEstimator,
-                                           new[] { OptionStyle.American, OptionStyle.European });
+                                          allowedOptionStyles: new[] { OptionStyle.American, OptionStyle.European });
         }
 
 
@@ -161,10 +136,7 @@ namespace QuantConnect.Securities.Option
         public static IOptionPriceModel BinomialCoxRossRubinstein()
         {
             return new QLOptionPriceModel(process => new BinomialVanillaEngine<CoxRossRubinstein>(process, _timeStepsBinomial),
-                                          _underlyingVolEstimator,
-                                          _riskFreeRateEstimator,
-                                          _dividendYieldEstimator,
-                                           new[] { OptionStyle.American, OptionStyle.European });
+                                          allowedOptionStyles: new[] { OptionStyle.American, OptionStyle.European });
         }
 
         /// <summary>
@@ -175,10 +147,7 @@ namespace QuantConnect.Securities.Option
         public static IOptionPriceModel AdditiveEquiprobabilities()
         {
             return new QLOptionPriceModel(process => new BinomialVanillaEngine<AdditiveEQPBinomialTree>(process, _timeStepsBinomial),
-                                          _underlyingVolEstimator,
-                                          _riskFreeRateEstimator,
-                                          _dividendYieldEstimator,
-                                           new[] { OptionStyle.American, OptionStyle.European });
+                                          allowedOptionStyles: new[] { OptionStyle.American, OptionStyle.European });
         }
 
         /// <summary>
@@ -189,10 +158,7 @@ namespace QuantConnect.Securities.Option
         public static IOptionPriceModel BinomialTrigeorgis()
         {
             return new QLOptionPriceModel(process => new BinomialVanillaEngine<Trigeorgis>(process, _timeStepsBinomial),
-                                          _underlyingVolEstimator,
-                                          _riskFreeRateEstimator,
-                                          _dividendYieldEstimator,
-                                           new[] { OptionStyle.American, OptionStyle.European });
+                                          allowedOptionStyles: new[] { OptionStyle.American, OptionStyle.European });
         }
 
         /// <summary>
@@ -203,10 +169,7 @@ namespace QuantConnect.Securities.Option
         public static IOptionPriceModel BinomialTian()
         {
             return new QLOptionPriceModel(process => new BinomialVanillaEngine<Tian>(process, _timeStepsBinomial),
-                                          _underlyingVolEstimator,
-                                          _riskFreeRateEstimator,
-                                          _dividendYieldEstimator,
-                                           new[] { OptionStyle.American, OptionStyle.European });
+                                          allowedOptionStyles: new[] { OptionStyle.American, OptionStyle.European });
         }
 
         /// <summary>
@@ -217,10 +180,7 @@ namespace QuantConnect.Securities.Option
         public static IOptionPriceModel BinomialLeisenReimer()
         {
             return new QLOptionPriceModel(process => new BinomialVanillaEngine<LeisenReimer>(process, _timeStepsBinomial),
-                                          _underlyingVolEstimator,
-                                          _riskFreeRateEstimator,
-                                          _dividendYieldEstimator,
-                                           new[] { OptionStyle.American, OptionStyle.European });
+                                          allowedOptionStyles: new[] { OptionStyle.American, OptionStyle.European });
         }
 
         /// <summary>
@@ -231,10 +191,7 @@ namespace QuantConnect.Securities.Option
         public static IOptionPriceModel BinomialJoshi()
         {
             return new QLOptionPriceModel(process => new BinomialVanillaEngine<Joshi4>(process, _timeStepsBinomial),
-                                          _underlyingVolEstimator,
-                                          _riskFreeRateEstimator,
-                                          _dividendYieldEstimator,
-                                           new[] { OptionStyle.American, OptionStyle.European });
+                                          allowedOptionStyles: new[] { OptionStyle.American, OptionStyle.European });
         }
 
     }

@@ -16,7 +16,7 @@
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Securities.Option;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -27,6 +27,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="options" />
     public class DefaultOptionPriceModelRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private Symbol _spxSymbol, _spySymbol;
         public override void Initialize()
         {
             SetStartDate(2015, 12, 24);
@@ -34,24 +35,27 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
 
             AddEquity("SPY");
-            var spy = AddOption("SPY");
-            var expectedPriceModel = OptionPriceModels.BjerksundStensland();
-            foreach (var fieldInfo in spy.PriceModel.GetType().GetFields())
-            {
-                if (fieldInfo.GetValue(spy.PriceModel) != fieldInfo.GetValue(expectedPriceModel))
-                {
-                    throw new Exception("Expected option's price model is OptionPriceModels.BjerksundStensland()");
-                }
-            }
+            _spxSymbol = AddOption("SPY").Symbol;
 
             AddIndex("SPX");
-            var spx = AddIndexOption("SPX");
-            expectedPriceModel = OptionPriceModels.BlackScholes();
-            foreach (var fieldInfo in spx.PriceModel.GetType().GetFields())
+            _spySymbol = AddIndexOption("SPX").Symbol;
+        }
+
+        public override void OnData(Slice slice)
+        {
+            foreach (var symbol in new List<Symbol>{_spxSymbol, _spySymbol})
             {
-                if (fieldInfo.GetValue(spx.PriceModel) != fieldInfo.GetValue(expectedPriceModel))
+                if (slice.OptionChains.ContainsKey(symbol))
                 {
-                    throw new Exception("Expected option's price model is OptionPriceModels.BlackScholes()");
+                    var chain = slice.OptionChains[symbol];
+                    foreach (var contract in chain)
+                    {
+                        if (contract.Greeks.Delta == 0 && contract.Greeks.Gamma == 0 && contract.Greeks.Theta == 0 
+                            && contract.Greeks.Vega == 0 && contract.Greeks.Rho == 0)
+                        {
+                            throw new Exception("All Greeks are zero - Pricing Model is not ready!");
+                        }
+                    }
                 }
             }
         }

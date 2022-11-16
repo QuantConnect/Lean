@@ -32,10 +32,9 @@ namespace QuantConnect.Securities.Option
     public class QLOptionPriceModel : IOptionPriceModel
     {
         private static readonly OptionStyle[] _defaultAllowedOptionStyles = new[] { OptionStyle.European, OptionStyle.American };
-
-        private readonly IQLUnderlyingVolatilityEstimator _underlyingVolEstimator;
-        private readonly IQLRiskFreeRateEstimator _riskFreeRateEstimator;
-        private readonly IQLDividendYieldEstimator _dividendYieldEstimator;
+        private static IQLUnderlyingVolatilityEstimator _underlyingVolEstimator = new ConstantQLUnderlyingVolatilityEstimator();
+        private static IQLRiskFreeRateEstimator _riskFreeRateEstimator = new FedRateQLRiskFreeRateEstimator();
+        private static IQLDividendYieldEstimator _dividendYieldEstimator = new ConstantQLDividendYieldEstimator();
         private readonly PricingEngineFuncEx _pricingEngineFunc;
 
         /// <summary>
@@ -63,7 +62,11 @@ namespace QuantConnect.Securities.Option
         /// <param name="riskFreeRateEstimator">The risk free rate estimator</param>
         /// <param name="dividendYieldEstimator">The underlying dividend yield estimator</param>
         /// <param name="allowedOptionStyles">List of option styles supported by the pricing model. It defaults to both American and European option styles</param>
-        public QLOptionPriceModel(PricingEngineFunc pricingEngineFunc, IQLUnderlyingVolatilityEstimator underlyingVolEstimator, IQLRiskFreeRateEstimator riskFreeRateEstimator, IQLDividendYieldEstimator dividendYieldEstimator, OptionStyle[] allowedOptionStyles = null)
+        public QLOptionPriceModel(PricingEngineFunc pricingEngineFunc, 
+                                  IQLUnderlyingVolatilityEstimator underlyingVolEstimator = null, 
+                                  IQLRiskFreeRateEstimator riskFreeRateEstimator = null, 
+                                  IQLDividendYieldEstimator dividendYieldEstimator = null, 
+                                  OptionStyle[] allowedOptionStyles = null)
             : this((option, process) => pricingEngineFunc(process), underlyingVolEstimator, riskFreeRateEstimator, dividendYieldEstimator, allowedOptionStyles)
         {}
         /// <summary>
@@ -74,12 +77,16 @@ namespace QuantConnect.Securities.Option
         /// <param name="riskFreeRateEstimator">The risk free rate estimator</param>
         /// <param name="dividendYieldEstimator">The underlying dividend yield estimator</param>
         /// <param name="allowedOptionStyles">List of option styles supported by the pricing model. It defaults to both American and European option styles</param>
-        public QLOptionPriceModel(PricingEngineFuncEx pricingEngineFunc, IQLUnderlyingVolatilityEstimator underlyingVolEstimator, IQLRiskFreeRateEstimator riskFreeRateEstimator, IQLDividendYieldEstimator dividendYieldEstimator, OptionStyle[] allowedOptionStyles = null)
+        public QLOptionPriceModel(PricingEngineFuncEx pricingEngineFunc, 
+                                  IQLUnderlyingVolatilityEstimator underlyingVolEstimator = null, 
+                                  IQLRiskFreeRateEstimator riskFreeRateEstimator = null, 
+                                  IQLDividendYieldEstimator dividendYieldEstimator = null, 
+                                  OptionStyle[] allowedOptionStyles = null)
         {
             _pricingEngineFunc = pricingEngineFunc;
-            _underlyingVolEstimator = underlyingVolEstimator ?? new ConstantQLUnderlyingVolatilityEstimator();
-            _riskFreeRateEstimator = riskFreeRateEstimator ?? new FedRateQLRiskFreeRateEstimator();
-            _dividendYieldEstimator = dividendYieldEstimator ?? new ConstantQLDividendYieldEstimator();
+            _underlyingVolEstimator = underlyingVolEstimator ?? _underlyingVolEstimator;
+            _riskFreeRateEstimator = riskFreeRateEstimator ?? _riskFreeRateEstimator;
+            _dividendYieldEstimator = dividendYieldEstimator ?? _dividendYieldEstimator;
 
             AllowedOptionStyles = allowedOptionStyles ?? _defaultAllowedOptionStyles;
         }

@@ -30,11 +30,7 @@ namespace QuantConnect.Tests.Common.Data
             var csvLine = "2020-01-01,2.5";
             var result = InterestRateProvider.Create(csvLine);
 
-            var expected = new InterestRateProvider
-            {
-                Date = new DateTime(2020, 1, 1),
-                InterestRate = 0.025m
-            };
+            var expected = new KeyValuePair<DateTime, decimal>(new DateTime(2020, 1, 1), 0.025m);
 
             AssertAreEqual(expected, result);
         }
@@ -60,11 +56,37 @@ namespace QuantConnect.Tests.Common.Data
             AssertAreEqual(expected, result);
         }
 
+        [TestCase("20200306", 0.0175)]
+        [TestCase("20200307", 0.0175)]
+        [TestCase("20200308", 0.0175)]
+        [TestCase("20200310", 0.0025)]
+        public void GetInterestRate(string dateString, decimal expected)
+        {
+            var provider = new TestInterestRateProvider();
+            var dateTime = Parse.DateTimeExact(dateString, "yyyyMMdd");
+            var result = provider.TestGetInterestRate(dateTime);
+
+            AssertAreEqual(expected, result);
+        }
+
         private void AssertAreEqual(object expected, object result)
         {
             foreach (var fieldInfo in expected.GetType().GetFields())
             {
                 Assert.AreEqual(fieldInfo.GetValue(expected), fieldInfo.GetValue(result));
+            }
+        }
+
+        public class TestInterestRateProvider : InterestRateProvider
+        {
+            public TestInterestRateProvider()
+                : base()
+            {
+            }
+
+            public decimal TestGetInterestRate(DateTime endDate)
+            {
+                return base.GetInterestRate(endDate);
             }
         }
     }

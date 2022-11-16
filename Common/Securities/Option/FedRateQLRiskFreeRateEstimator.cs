@@ -13,15 +13,8 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Interfaces;
-using QuantConnect.Logging;
 
 namespace QuantConnect.Securities.Option
 {
@@ -34,23 +27,7 @@ namespace QuantConnect.Securities.Option
     /// </remarks>
     public class FedRateQLRiskFreeRateEstimator : IQLRiskFreeRateEstimator
     {
-        private Dictionary<DateTime, decimal> _riskFreeRateProvider;
-
-        /// <summary>
-        /// Constructor initializes class
-        /// </summary>
-        public FedRateQLRiskFreeRateEstimator()
-        {
-            LoadInterestRateProvider();
-        }
-
-        /// <summary>
-        /// Constructor initializes class
-        /// </summary>
-        public Dictionary<DateTime, decimal> GetRiskFreeRateCollection()
-        {
-            return _riskFreeRateProvider;
-        }
+        private InterestRateProvider _interestRateProvider = new InterestRateProvider();
 
         /// <summary>
         /// Returns current flat estimate of the risk free rate
@@ -65,48 +42,7 @@ namespace QuantConnect.Securities.Option
             if (slice == null)
                 return 0.01m;
             
-            var date = slice.Time.Date;
-
-            while (!_riskFreeRateProvider.ContainsKey(date))
-            {
-                date = date.AddDays(-1);
-            }
-            return _riskFreeRateProvider[date];
-        }
-
-        /// <summary>
-        /// Generate the daily historical US primary credit rate
-        /// data found in /option/usa/interest-rate-csv
-        /// </summary>
-        protected void LoadInterestRateProvider(DateTime? endDate = null, string subDirectory = "option/usa", string fileName = "interest-rate.csv")
-        {
-            endDate = (DateTime)(endDate ?? (DateTime?)DateTime.Today);
-            var directory = Path.Combine(Globals.DataFolder,
-                                        subDirectory,
-                                        fileName);
-
-            _riskFreeRateProvider = InterestRateProvider.FromCsvFile(directory);
-            var firstDate = _riskFreeRateProvider.Keys.OrderBy(x => x).First();
-
-            // Sparse the discrete datapoints into continuous credit rate data for every day
-            var currentRate = _riskFreeRateProvider[firstDate];
-            for (DateTime date = firstDate.AddDays(1); date <= endDate; date = date.AddDays(1))
-            {
-                // Skip Saturday and Sunday (non-trading day)
-                if (date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
-                {
-                    continue;
-                }
-
-                if (_riskFreeRateProvider.ContainsKey(date))
-                {
-                    currentRate = _riskFreeRateProvider[date];
-                }
-                else
-                {
-                    _riskFreeRateProvider[date] = currentRate;
-                }
-            }
+            return _interestRateProvider.GetInterestRate(slice.Time.Date);
         }
     }
 }
