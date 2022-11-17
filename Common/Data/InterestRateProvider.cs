@@ -120,6 +120,11 @@ namespace QuantConnect.Data
                 }
             }
 
+            if (interestRateProvider.Count == 0)
+            {
+                Log.Error($"InterestRateProvider.FromCsvFile(): no interest rates were loaded, please make sure the file is present '{file}'");
+            }
+
             return interestRateProvider;
         }
 
