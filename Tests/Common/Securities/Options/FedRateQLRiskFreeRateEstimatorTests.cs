@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Common.Data
         [TestCase("20200306", 0.0175)]      // Friday
         [TestCase("20200307", 0.0175)]      // Saturday, use Friday's value
         [TestCase("20200308", 0.0175)]      // Sunday, use Friday's value
-        [TestCase("20200310", 0.0025)]      // Tuesday
+        [TestCase("20200310", 0.0175)]      // Tuesday
         public void Estimate(string dateString, decimal rate)
         {
             var spx = Symbols.SPX;

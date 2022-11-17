@@ -13,11 +13,10 @@
  * limitations under the License.
 */
 
+using System;
+using System.IO;
 using NUnit.Framework;
 using QuantConnect.Data;
-using System;
-using System.Collections.Generic;
-using System.IO;
 
 namespace QuantConnect.Tests.Common.Data
 {
@@ -47,30 +46,22 @@ namespace QuantConnect.Tests.Common.Data
             var filePath = Path.Combine(Globals.DataFolder, dir);
             var result = InterestRateProvider.FromCsvFile(filePath, out _);
 
-            var expected = new Dictionary<DateTime, decimal>();
             if (getResults)
             {
-                expected.Add(new DateTime(2020, 3, 6), 0.0175m);
-                expected.Add(new DateTime(2020, 3, 10), 0.0025m);
+                Assert.GreaterOrEqual(result.Count, 30);
             }
             else
             {
                 Assert.IsEmpty(result);
             }
-
-            foreach (var kvp in expected)
-            {
-                Assert.IsTrue(result.TryGetValue(kvp.Key, out var interestRate));
-                Assert.AreEqual(kvp.Value, interestRate);
-            }
         }
 
-        [TestCase("19700306", 0.0175)]   // Date in before the first date in file
+        [TestCase("19700306", 0.0225)]   // Date in before the first date in file
         [TestCase("20200306", 0.0175)]
         [TestCase("20200307", 0.0175)]
         [TestCase("20200308", 0.0175)]
-        [TestCase("20200310", 0.0025)]
-        [TestCase("20501231", 0.0025)]   // Date in far future
+        [TestCase("20200310", 0.0175)]
+        [TestCase("20501231", 0.04)]   // Date in far future
         public void GetInterestRate(string dateString, decimal expected)
         {
             var provider = new InterestRateProvider();
