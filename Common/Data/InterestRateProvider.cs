@@ -72,7 +72,7 @@ namespace QuantConnect.Data
                 "interest-rate.csv");
             _riskFreeRateProvider = FromCsvFile(directory, out var previousInterestRate);
 
-            var startDate = Time.BeginningOfTime;
+            var startDate = new DateTime(1998, 1, 1);
             _lastInterestRateDate = DateTime.UtcNow.Date;
 
             // Sparse the discrete data points into continuous credit rate data for every day
