@@ -13,7 +13,9 @@
  * limitations under the License.
 */
 
+using Moq;
 using NUnit.Framework;
+using QLNet;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
@@ -21,13 +23,10 @@ using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Option;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Diagnostics;
-using Moq;
-using QLNet;
+using System.Linq;
 using Cash = QuantConnect.Securities.Cash;
 using Option = QuantConnect.Securities.Option.Option;
-using static QLNet.Callability;
 
 namespace QuantConnect.Tests.Common
 {

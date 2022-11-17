@@ -13,16 +13,13 @@
  * limitations under the License.
 */
 
+using QuantConnect.Data;
+using QuantConnect.Interfaces;
+using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using QuantConnect.Data;
-using QuantConnect.Interfaces;
-using QuantConnect.Orders;
-using QuantConnect.Securities;
-using QuantConnect.Securities.Option;
-using QuantConnect.Securities.Volatility;
 
 namespace QuantConnect.Algorithm.CSharp
 {

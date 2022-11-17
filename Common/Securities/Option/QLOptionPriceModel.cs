@@ -15,14 +15,14 @@
 */
 
 using QLNet;
-using System;
-using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Logging;
+using System;
+using System.Linq;
 
 namespace QuantConnect.Securities.Option
 {
-    using Logging;
     using PricingEngineFunc = Func<GeneralizedBlackScholesProcess, IPricingEngine>;
     using PricingEngineFuncEx = Func<Symbol, GeneralizedBlackScholesProcess, IPricingEngine>;
 
@@ -31,7 +31,7 @@ namespace QuantConnect.Securities.Option
     /// </summary>
     public class QLOptionPriceModel : IOptionPriceModel
     {
-        private static readonly OptionStyle[] _defaultAllowedOptionStyles = new[] { OptionStyle.European, OptionStyle.American };
+        private static readonly OptionStyle[] _defaultAllowedOptionStyles = { OptionStyle.European, OptionStyle.American };
         private static IQLUnderlyingVolatilityEstimator _underlyingVolEstimator = new ConstantQLUnderlyingVolatilityEstimator();
         private static IQLRiskFreeRateEstimator _riskFreeRateEstimator = new FedRateQLRiskFreeRateEstimator();
         private static IQLDividendYieldEstimator _dividendYieldEstimator = new ConstantQLDividendYieldEstimator();

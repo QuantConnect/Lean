@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities.Option;
+using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Common.Data
 {
@@ -43,28 +43,12 @@ namespace QuantConnect.Tests.Common.Data
             var tick = new Tick { Time = evaluationDate, Value = 10m };
 
             // get the risk free rate
-            var estimator = new TestFedRateQLRiskFreeRateEstimator();
+            var estimator = new FedRateQLRiskFreeRateEstimator();
             var result = estimator.Estimate(option, 
                 new Slice(evaluationDate, new List<BaseData> { tick }, evaluationDate), 
                 new OptionContract(optionSymbol, spx));
 
-            AssertAreEqual(rate, result);
-        }
-
-        private void AssertAreEqual(object expected, object result)
-        {
-            foreach (var fieldInfo in expected.GetType().GetFields())
-            {
-                Assert.AreEqual(fieldInfo.GetValue(expected), fieldInfo.GetValue(result));
-            }
-        }
-
-        public class TestFedRateQLRiskFreeRateEstimator : FedRateQLRiskFreeRateEstimator
-        {
-            public TestFedRateQLRiskFreeRateEstimator()
-                : base()
-            { 
-            }
+            Assert.AreEqual(rate, result);
         }
     }
 }

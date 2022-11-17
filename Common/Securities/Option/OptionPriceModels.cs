@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
+using Fasterflect;
 using QLNet;
 using System;
 using System.Linq;
-using Fasterflect;
 
 namespace QuantConnect.Securities.Option
 {
@@ -64,7 +64,7 @@ namespace QuantConnect.Securities.Option
         public static IOptionPriceModel BlackScholes()
         {
             return new QLOptionPriceModel(process => new AnalyticEuropeanEngine(process),
-                                           allowedOptionStyles: new[] { OptionStyle.European });
+                                          allowedOptionStyles: new[] { OptionStyle.European });
         }
 
         /// <summary>
@@ -75,7 +75,7 @@ namespace QuantConnect.Securities.Option
         public static IOptionPriceModel BaroneAdesiWhaley()
         {
             return new QLOptionPriceModel(process => new BaroneAdesiWhaleyApproximationEngine(process),
-                                           allowedOptionStyles: new[] { OptionStyle.American });
+                                          allowedOptionStyles: new[] { OptionStyle.American });
         }
 
         /// <summary>
@@ -86,7 +86,7 @@ namespace QuantConnect.Securities.Option
         public static IOptionPriceModel BjerksundStensland()
         {
             return new QLOptionPriceModel(process => new BjerksundStenslandApproximationEngine(process),
-                                           allowedOptionStyles: new[] { OptionStyle.American });
+                                          allowedOptionStyles: new[] { OptionStyle.American });
         }
 
         /// <summary>
@@ -97,7 +97,7 @@ namespace QuantConnect.Securities.Option
         public static IOptionPriceModel Integral()
         {
             return new QLOptionPriceModel(process => new IntegralEngine(process),
-                                           allowedOptionStyles: new[] { OptionStyle.European });
+                                          allowedOptionStyles: new[] { OptionStyle.European });
         }
 
         /// <summary>
@@ -108,12 +108,12 @@ namespace QuantConnect.Securities.Option
         public static IOptionPriceModel CrankNicolsonFD()
         {
             PricingEngineFuncEx pricingEngineFunc = (symbol, process) =>
-                            symbol.ID.OptionStyle == OptionStyle.American ?
-                            new FDAmericanEngine(process, _timeStepsFD, _timeStepsFD - 1) as IPricingEngine :
-                            new FDEuropeanEngine(process, _timeStepsFD, _timeStepsFD - 1) as IPricingEngine;
+                symbol.ID.OptionStyle == OptionStyle.American
+                    ? new FDAmericanEngine(process, _timeStepsFD, _timeStepsFD - 1)
+                    : new FDEuropeanEngine(process, _timeStepsFD, _timeStepsFD - 1);
 
             return new QLOptionPriceModel(pricingEngineFunc,
-                                           allowedOptionStyles: new[] { OptionStyle.American, OptionStyle.European });
+                                          allowedOptionStyles: new[] { OptionStyle.American, OptionStyle.European });
         }
 
         /// <summary>

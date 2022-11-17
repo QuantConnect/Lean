@@ -14,10 +14,11 @@
  *
 */
 
-using System;
-using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -27,7 +28,6 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="options" />
     public class DefaultOptionPriceModelRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _spxSymbol, _spySymbol;
         public override void Initialize()
         {
             SetStartDate(2015, 12, 24);
@@ -35,28 +35,22 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
 
             AddEquity("SPY");
-            _spxSymbol = AddOption("SPY").Symbol;
+            AddOption("SPY");
 
             AddIndex("SPX");
-            _spySymbol = AddIndexOption("SPX").Symbol;
+            AddIndexOption("SPX");
         }
 
         public override void OnData(Slice slice)
         {
-            foreach (var symbol in new List<Symbol>{_spxSymbol, _spySymbol})
+            if (slice.OptionChains.Any(kvp => kvp.Value.Any(
+                    contract => contract.Greeks.Delta == 0 &&
+                        contract.Greeks.Gamma == 0 && 
+                        contract.Greeks.Theta == 0 && 
+                        contract.Greeks.Vega == 0 && 
+                        contract.Greeks.Rho == 0)))
             {
-                if (slice.OptionChains.ContainsKey(symbol))
-                {
-                    var chain = slice.OptionChains[symbol];
-                    foreach (var contract in chain)
-                    {
-                        if (contract.Greeks.Delta == 0 && contract.Greeks.Gamma == 0 && contract.Greeks.Theta == 0 
-                            && contract.Greeks.Vega == 0 && contract.Greeks.Rho == 0)
-                        {
-                            throw new Exception("All Greeks are zero - Pricing Model is not ready!");
-                        }
-                    }
-                }
+                throw new Exception("All Greeks are zero - Pricing Model is not ready!");
             }
         }
 

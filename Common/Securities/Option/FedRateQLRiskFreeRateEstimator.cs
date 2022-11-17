@@ -27,7 +27,7 @@ namespace QuantConnect.Securities.Option
     /// </remarks>
     public class FedRateQLRiskFreeRateEstimator : IQLRiskFreeRateEstimator
     {
-        private InterestRateProvider _interestRateProvider = new InterestRateProvider();
+        private readonly InterestRateProvider _interestRateProvider = new ();
 
         /// <summary>
         /// Returns current flat estimate of the risk free rate
@@ -39,10 +39,9 @@ namespace QuantConnect.Securities.Option
         /// <returns>The estimate</returns>
         public decimal Estimate(Security security, Slice slice, OptionContract contract)
         {
-            if (slice == null)
-                return 0.01m;
-            
-            return _interestRateProvider.GetInterestRate(slice.Time.Date);
+            return slice == null
+                ? InterestRateProvider.DefaultRiskFreeRate
+                : _interestRateProvider.GetInterestRate(slice.Time.Date);
         }
     }
 }

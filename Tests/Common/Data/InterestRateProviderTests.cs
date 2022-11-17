@@ -13,11 +13,11 @@
  * limitations under the License.
 */
 
+using NUnit.Framework;
+using QuantConnect.Data;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using NUnit.Framework;
-using QuantConnect.Data;
 
 namespace QuantConnect.Tests.Common.Data
 {
@@ -27,20 +27,25 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void Create()
         {
-            var csvLine = "2020-01-01,2.5";
-            var result = InterestRateProvider.Create(csvLine);
+            const string csvLine = "2020-01-01,2.5";
+            const decimal expectedInterestRateValue = 0.025m;
+            var expectedInterestRateDate = new DateTime(2020, 1, 1);
 
-            var expected = new KeyValuePair<DateTime, decimal>(new DateTime(2020, 1, 1), 0.025m);
+            if (!InterestRateProvider.TryParse(csvLine, out var date, out var interestRate))
+            {
+                Assert.Fail("Could not convert the line into interest rate data");
+            }
 
-            AssertAreEqual(expected, result);
+            Assert.AreEqual(expectedInterestRateDate, date);
+            Assert.AreEqual(expectedInterestRateValue, interestRate);
         }
 
-        [TestCase("option/usa/interest-rate.csv", true)]
+        [TestCase("alternative/interest-rate/usa/interest-rate.csv", true)]
         [TestCase("non-existing.csv", false)]
         public void FromCsvFile(string dir, bool getResults)
         {
             var filePath = Path.Combine(Globals.DataFolder, dir);
-            var result = InterestRateProvider.FromCsvFile(filePath);
+            var result = InterestRateProvider.FromCsvFile(filePath, out _);
 
             var expected = new Dictionary<DateTime, decimal>();
             if (getResults)
@@ -50,44 +55,29 @@ namespace QuantConnect.Tests.Common.Data
             }
             else
             {
-                expected.Add(DateTime.MinValue, 0.01m);
+                Assert.IsEmpty(result);
             }
 
-            AssertAreEqual(expected, result);
+            foreach (var kvp in expected)
+            {
+                Assert.IsTrue(result.TryGetValue(kvp.Key, out var interestRate));
+                Assert.AreEqual(kvp.Value, interestRate);
+            }
         }
 
+        [TestCase("19700306", 0.0175)]   // Date in before the first date in file
         [TestCase("20200306", 0.0175)]
         [TestCase("20200307", 0.0175)]
         [TestCase("20200308", 0.0175)]
         [TestCase("20200310", 0.0025)]
+        [TestCase("20501231", 0.0025)]   // Date in far future
         public void GetInterestRate(string dateString, decimal expected)
         {
-            var provider = new TestInterestRateProvider();
+            var provider = new InterestRateProvider();
             var dateTime = Parse.DateTimeExact(dateString, "yyyyMMdd");
-            var result = provider.TestGetInterestRate(dateTime);
+            var result = provider.GetInterestRate(dateTime);
 
-            AssertAreEqual(expected, result);
-        }
-
-        private void AssertAreEqual(object expected, object result)
-        {
-            foreach (var fieldInfo in expected.GetType().GetFields())
-            {
-                Assert.AreEqual(fieldInfo.GetValue(expected), fieldInfo.GetValue(result));
-            }
-        }
-
-        public class TestInterestRateProvider : InterestRateProvider
-        {
-            public TestInterestRateProvider()
-                : base()
-            {
-            }
-
-            public decimal TestGetInterestRate(DateTime endDate)
-            {
-                return base.GetInterestRate(endDate);
-            }
+            Assert.AreEqual(expected, result);
         }
     }
 }
