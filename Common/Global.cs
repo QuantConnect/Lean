@@ -826,6 +826,12 @@ namespace QuantConnect
                         return Exchange.BOSTON;
                     case "BSE":
                         return Exchange.BSE;
+                    case "IEX":
+                        return Exchange.IEX;
+                    case "SMART":
+                        return Exchange.SMART;
+                    case "OTCX":
+                        return Exchange.OTCX;
                 }
             }
             else if (securityType == SecurityType.Option)
