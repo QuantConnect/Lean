@@ -656,19 +656,6 @@ namespace QuantConnect.Algorithm
                 // For backward compatibility we need to refresh the security DataNormalizationMode Property
                 security.RefreshDataNormalizationModeProperty();
             }
-
-            // ensure a volatility model has been set on the underlying
-            if (security.VolatilityModel == VolatilityModel.Null)
-            {
-                var config = configs.FirstOrDefault();
-                var bar = config?.Type.GetBaseDataInstance() ?? typeof(TradeBar).GetBaseDataInstance();
-                bar.Symbol = security.Symbol;
-                
-                var maxSupportedResolution = bar.SupportedResolutions().Max();
-                var updateFrequency = maxSupportedResolution.ToTimeSpan();
-                
-                security.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(maxSupportedResolution, updateFrequency);
-            }
         }
 
         /// <summary>
