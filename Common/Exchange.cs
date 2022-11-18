@@ -54,6 +54,25 @@ namespace QuantConnect
             = new("NYSE", "N", "New York Stock Exchange", QuantConnect.Market.USA, SecurityType.Equity);
 
         /// <summary>
+        /// Smart Exchange
+        /// </summary>
+        /// <remarks>Brokerage will route to smart exchange</remarks>
+        public static Exchange SMART { get; }
+            = new("SMART", "SMART", "SMART Exchange", QuantConnect.Market.USA, SecurityType.Equity);
+
+        /// <summary>
+        /// Over The Counter Exchange
+        /// </summary>
+        public static Exchange OTCX { get; }
+            = new("OTCX", "OTCX", "Over the Counter Exchange", QuantConnect.Market.USA, SecurityType.Equity);
+
+        /// <summary>
+        /// The Investors Exchange
+        /// </summary>
+        public static Exchange IEX { get; }
+            = new("IEX", "IEX", "Investors Exchange", QuantConnect.Market.USA, SecurityType.Equity);
+
+        /// <summary>
         /// National Stock Exchange
         /// </summary>
         /// <remarks>Is now known as the NYSE National</remarks>
