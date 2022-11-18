@@ -30,12 +30,9 @@ namespace QuantConnect.Algorithm.CSharp
     {
         public override void Initialize()
         {
-            SetStartDate(2015, 12, 24);
-            SetEndDate(2015, 12, 24);
+            SetStartDate(2021, 1, 4);
+            SetEndDate(2021, 1, 4);
             SetCash(100000);
-
-            AddEquity("SPY");
-            AddOption("SPY");
 
             AddIndex("SPX");
             AddIndexOption("SPX");
@@ -67,7 +64,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 13;
+        public long DataPoints => 7118;
 
         /// <summary>
         /// Data Points count of the algorithm history
