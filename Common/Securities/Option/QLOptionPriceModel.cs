@@ -130,14 +130,6 @@ namespace QuantConnect.Securities.Option
                     return OptionPriceModelResult.None;
                 }
 
-                var underlyingVolValue = new SimpleQuote(_underlyingVolEstimator.Estimate(security, slice, contract));
-
-                // Non-ready volatility model has 0 volatility
-                if (!_underlyingVolEstimator.IsReady)
-                {
-                    return OptionPriceModelResult.None;
-                }
-
                 var calendar = new UnitedStates();
                 var dayCounter = new Actual365Fixed();
                 var securityExchangeHours = security.Exchange.Hours;
@@ -154,6 +146,25 @@ namespace QuantConnect.Securities.Option
                 var riskFreeRateValue = new SimpleQuote((double)_riskFreeRateEstimator.Estimate(security, slice, contract));
                 var riskFreeRate = new Handle<YieldTermStructure>(new FlatForward(0, calendar, riskFreeRateValue, dayCounter));
 
+                // Get time until maturity (in year) and discount factor by dividend and risk free rate
+                var maturity = riskFreeRate.link.dayCounter()
+                    .yearFraction(riskFreeRate.link.referenceDate(), maturityDate);
+                var dividendDiscount = dividendYield.link.discount(maturityDate);
+                var riskFreeDiscount = riskFreeRate.link.discount(maturityDate);
+                var forwardPrice = spot * dividendDiscount / riskFreeDiscount;
+
+                // Initial guess for volatility by Brenner and Subrahmanyam (1988)
+                var initialGuess = Math.Sqrt(2 * Math.PI / maturity) * premium / spot;
+
+                var underlyingVolEstimate = _underlyingVolEstimator.Estimate(security, slice, contract);
+                
+                // If the volatility estimator is not ready, we will use initial guess
+                if (!_underlyingVolEstimator.IsReady)
+                {
+                    underlyingVolEstimate = initialGuess;
+                }
+
+                var underlyingVolValue = new SimpleQuote(underlyingVolEstimate);
                 var underlyingVol = new Handle<BlackVolTermStructure>(new BlackConstantVol(0, calendar, new Handle<Quote>(underlyingVolValue), dayCounter));
 
                 // preparing stochastic process and payoff functions
@@ -172,15 +183,6 @@ namespace QuantConnect.Securities.Option
                 // can return negative value in neighborhood of 0
                 var npv = Math.Max(0, EvaluateOption(option));
 
-                // Get time until maturity (in year) and discount factor by dividend and risk free rate
-                var blackVolatilityMaturity = underlyingVol.link.dayCounter()
-                    .yearFraction(underlyingVol.link.referenceDate(), maturityDate);
-                var riskFreeRateMaturity = riskFreeRate.link.dayCounter()
-                    .yearFraction(riskFreeRate.link.referenceDate(), maturityDate);
-                var dividendDiscount = dividendYield.link.discount(maturityDate);
-                var riskFreeDiscount = riskFreeRate.link.discount(maturityDate);
-                var forwardPrice = spot * dividendDiscount / riskFreeDiscount;
-
                 BlackCalculator blackCalculator = null;
 
                 // Calculate the Implied Volatility
@@ -191,10 +193,8 @@ namespace QuantConnect.Securities.Option
                 }
                 catch
                 {
-                    // initial guess by Brenner and Subrahmanyam (1988)
-                    var initialGuess = Math.Sqrt(2 * Math.PI / blackVolatilityMaturity) * premium / spot;                    
                     // A Newton-Raphson optimization estimate of the implied volatility
-                    impliedVol = ImpliedVolatilityEstimation(premium, initialGuess, blackVolatilityMaturity, riskFreeDiscount, forwardPrice, payoff, out blackCalculator);
+                    impliedVol = ImpliedVolatilityEstimation(premium, initialGuess, maturity, riskFreeDiscount, forwardPrice, payoff, out blackCalculator);
                 }
 
                 // Update the Black Vol Term Structure with the Implied Volatility to improve Greek calculation
@@ -236,9 +236,9 @@ namespace QuantConnect.Securities.Option
                             () => impliedVol.SafeDecimalCast(),
                             () => new Greeks(() => tryGetGreekOrReevaluate(() => option.delta(), (black) => black.delta(spot)),
                                             () => tryGetGreekOrReevaluate(() => option.gamma(), (black) => black.gamma(spot)),
-                                            () => tryGetGreekOrReevaluate(() => option.vega(), (black) => black.vega(blackVolatilityMaturity)) / 100,   // per cent
-                                            () => tryGetGreekOrReevaluate(() => option.theta(), (black) => black.theta(spot, blackVolatilityMaturity)),
-                                            () => tryGetGreekOrReevaluate(() => option.rho(), (black) => black.rho(riskFreeRateMaturity)) / 100,        // per cent
+                                            () => tryGetGreekOrReevaluate(() => option.vega(), (black) => black.vega(maturity)) / 100,   // per cent
+                                            () => tryGetGreekOrReevaluate(() => option.theta(), (black) => black.theta(spot, maturity)),
+                                            () => tryGetGreekOrReevaluate(() => option.rho(), (black) => black.rho(maturity)) / 100,        // per cent
                                             () => tryGetGreekOrReevaluate(() => option.elasticity(), (black) => black.elasticity(spot))));
             }
             catch (Exception err)
