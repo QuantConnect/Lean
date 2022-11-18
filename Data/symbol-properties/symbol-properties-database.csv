@@ -89,10 +89,10 @@ usa,[*],indexoption,,USD,100,0.05,1
 
 # for backwards compatibility, order here is important for futures, since we could have the same symbol for more than 1 market in which case Lean will use the first
 cfe,VX,future,VIX futures ,USD,1000.0,0.05,1.0
-cbot,2YY,future,Micro 2-Year Yield Futures,USD,100,0.001,1
-cbot,5YY,future,Micro 5-Year Yield Futures,USD,100,0.001,1
-cbot,10Y,future,Micro 10-Year Yield Futures,USD,100,0.001,1
-cbot,30Y,future,Micro 30-Year Yield Futures,USD,100,0.001,1
+cbot,2YY,future,Micro 2-Year Yield Futures,USD,1000,0.001,1
+cbot,5YY,future,Micro 5-Year Yield Futures,USD,1000,0.001,1
+cbot,10Y,future,Micro 10-Year Yield Futures,USD,1000,0.001,1
+cbot,30Y,future,Micro 30-Year Yield Futures,USD,1000,0.001,1
 cbot,AW,future,Bloomberg Commodity Index Futures,USD,100.0,0.1,1.0
 cbot,BCF,future,Black Sea Corn Financially Settled (Platts) Futures,USD,50.0,0.25,1.0
 cbot,BWF,future,Black Sea Wheat Financially Settled (Platts) Futures,USD,50.0,0.25,1.0
@@ -127,7 +127,7 @@ cme,6Z,future,South African Rand Futures,USD,500000.0,2.5e-05,1.0
 cme,ACD,future,Australian Dollar/Canadian Dollar Futures,CAD,200000.0,0.0001,1.0
 cme,AJY,future,Australian Dollar/Japanese Yen Futures,JPY,200000.0,0.01,1.0
 cme,ANE,future,Australian Dollar/New Zealand Dollar Futures,NZD,200000.0,0.0001,1.0
-cme,BIO,future,E-mini Nasdaq-100 Biotechnology Index Futures,USD,50.0,0.1,1.0
+cme,BIO,future,E-mini Nasdaq-100 Biotechnology Index Futures,USD,25.0,0.5,1.0
 cme,BTC,future,Bitcoin Futures,USD,5.0,5.0,1.0
 cme,CB,future,Cash-settled Butter Futures,USD,20000.0,0.00025,1.0,,1,100
 cme,CJY,future,Canadian Dollar/Japanese Yen Futures,JPY,200000.0,0.01,1.0
