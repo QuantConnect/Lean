@@ -187,6 +187,7 @@ namespace QuantConnect.Orders
 
         /// <summary>
         /// Exercise time before expiry for European options (-33)
+        /// </summary>
         EuropeanOptionNotExpiredOnExercise = -33
     }
 }
