@@ -23,16 +23,24 @@ using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.ServiceModel.Channels;
 using System.Threading;
 
 namespace QuantConnect.Optimizer.Launcher
 {
     public class Program
     {
-        public static void Main()
+        public static void Main(string[] args)
         {
-            var endedEvent = new ManualResetEvent(false);
-            
+            // Parse report arguments and merge with config to use in the optimizer
+            if (args.Length > 0)
+            {
+                Config.MergeCommandLineArgumentsWithConfiguration(OptimizerArgumentParser.ParseArguments(args));
+            }
+
+            using var endedEvent = new ManualResetEvent(false);
+            var started = false;
+
             try
             {
                 Log.DebuggingEnabled = Config.GetBool("debug-mode");
@@ -46,7 +54,7 @@ namespace QuantConnect.Optimizer.Launcher
                     OptimizationId = Guid.NewGuid().ToString(),
                     OptimizationStrategy = optimizationStrategyName,
                     OptimizationStrategySettings = (OptimizationStrategySettings)JsonConvert.DeserializeObject(Config.Get(
-                        "optimization-strategy-settings", 
+                        "optimization-strategy-settings",
                         "{\"$type\":\"QuantConnect.Optimizer.Strategies.OptimizationStrategySettings, QuantConnect.Optimizer\"}"), new JsonSerializerSettings(){TypeNameHandling = TypeNameHandling.All}),
                     Criterion = JsonConvert.DeserializeObject<Target>(Config.Get("optimization-criterion", "{\"target\":\"Statistics.TotalProfit\", \"extremum\": \"max\"}")),
                     Constraints = JsonConvert.DeserializeObject<List<Constraint>>(Config.Get("constraints", "[]")).AsReadOnly(),
@@ -54,23 +62,39 @@ namespace QuantConnect.Optimizer.Launcher
                     MaximumConcurrentBacktests = Config.GetInt("maximum-concurrent-backtests", Math.Max(1, Environment.ProcessorCount / 2))
                 };
 
-                var optimizer = new ConsoleLeanOptimizer(packet);
+                using var optimizer = new ConsoleLeanOptimizer(packet);
 
-                optimizer.Start();
-
-                optimizer.Ended += (s, e) =>
+                if (Config.GetBool("estimate", false))
                 {
-                    optimizer.DisposeSafely();
-                    endedEvent.Set();
-                };
+                    var backtestEstimateRuntime = Config.GetDouble("backtest-estimate-runtime");
+                    var backtestsCount = optimizer.GetCurrentEstimate();
+                    var totalEstimate = (double) backtestsCount / packet.MaximumConcurrentBacktests * backtestEstimateRuntime;
+
+                    Log.Trace($"Optimization estimate: Backtests count: {backtestsCount}, Maximum concurrent backtest: {packet.MaximumConcurrentBacktests}, Estimate time {totalEstimate}");
+                }
+                else
+                {
+                    optimizer.Start();
+
+                    optimizer.Ended += (s, e) =>
+                    {
+                        optimizer.DisposeSafely();
+                        endedEvent.Set();
+                    };
+
+                    started = true;
+                }
             }
             catch (Exception e)
             {
                 Log.Error(e);
             }
 
-            // Wait until the optimizer has stopped running before exiting
-            endedEvent.WaitOne();
+            if (started)
+            {
+                // Wait until the optimizer has stopped running before exiting
+                endedEvent.WaitOne();
+            }
         }
     }
 }

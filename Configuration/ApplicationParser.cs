@@ -56,8 +56,12 @@ namespace QuantConnect.Configuration
                     var matchingOption = options.Find(o => o.Name == optionKey);
                     switch (matchingOption.Type)
                     {
-                        // Booleans, string and numbers
+                        // Booleans
                         case CommandOptionType.NoValue:
+                            optionsObject[optionKey] = true;
+                            break;
+
+                        // Strings and numbers
                         case CommandOptionType.SingleValue:
                             optionsObject[optionKey] = commandOption.Value();
                             break;
