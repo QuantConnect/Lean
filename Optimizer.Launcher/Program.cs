@@ -66,11 +66,10 @@ namespace QuantConnect.Optimizer.Launcher
 
                 if (Config.GetBool("estimate", false))
                 {
-                    var backtestEstimateRuntime = Config.GetDouble("backtest-estimate-runtime");
                     var backtestsCount = optimizer.GetCurrentEstimate();
-                    var totalEstimate = (double) backtestsCount / packet.MaximumConcurrentBacktests * backtestEstimateRuntime;
+                    Log.Trace($"Optimization estimate: {backtestsCount}");
 
-                    Log.Trace($"Optimization estimate: Backtests count: {backtestsCount}, Maximum concurrent backtest: {packet.MaximumConcurrentBacktests}, Estimate time {totalEstimate}");
+                    return;
                 }
                 else
                 {

@@ -16,8 +16,7 @@ namespace QuantConnect.Configuration
 
         private static readonly List<CommandLineOption> Options = new List<CommandLineOption>
             {
-                new CommandLineOption("estimate", CommandOptionType.NoValue, "Only estimate the optimization run time"),
-                new CommandLineOption("backtest-estimate-runtime", CommandOptionType.SingleValue, "The estimated or average runtime of a single backtest")
+                new CommandLineOption("estimate", CommandOptionType.NoValue, "Only estimate the optimization run time")
             };
 
         /// <summary>
