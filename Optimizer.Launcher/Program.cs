@@ -38,7 +38,6 @@ namespace QuantConnect.Optimizer.Launcher
             }
 
             using var endedEvent = new ManualResetEvent(false);
-            var started = false;
 
             try
             {
@@ -67,6 +66,9 @@ namespace QuantConnect.Optimizer.Launcher
                 {
                     var backtestsCount = optimizer.GetCurrentEstimate();
                     Log.Trace($"Optimization estimate: {backtestsCount}");
+
+                    optimizer.DisposeSafely();
+                    endedEvent.Set();
                 }
                 else
                 {
@@ -77,8 +79,6 @@ namespace QuantConnect.Optimizer.Launcher
                         optimizer.DisposeSafely();
                         endedEvent.Set();
                     };
-
-                    started = true;
                 }
             }
             catch (Exception e)
@@ -86,11 +86,8 @@ namespace QuantConnect.Optimizer.Launcher
                 Log.Error(e);
             }
 
-            if (started)
-            {
-                // Wait until the optimizer has stopped running before exiting
-                endedEvent.WaitOne();
-            }
+            // Wait until the optimizer has stopped running before exiting
+            endedEvent.WaitOne();
         }
     }
 }
