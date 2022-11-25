@@ -159,6 +159,13 @@
   "wolverine-on-behalf-of-comp-id": "",
   "wolverine-log-fix-messages": false,
 
+  // TDAmeritrade configuration
+  "tdameritrade-account-number": "",
+  "tdameritrade-consumer-key": "",
+  "tdameritrade-callback-url": "http://localhost",
+  "tdameritrade-code-from-url": "",
+  "tdameritrade-refresh-token": "",
+
   // Trading Technologies configuration
   "tt-user-name": "",
   "tt-session-password": "",
@@ -538,6 +545,19 @@
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "WolverineBrokerage",
       "history-provider": [ "SubscriptionDataReaderHistoryProvider" ],
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler"
+    },
+
+    "live-tdameritrade": {
+      "live-mode": true,
+
+      // real brokerage implementations require the BrokerageTransactionHandler
+      "live-mode-brokerage": "TDAmeritradeBrokerage",
+      "history-provider": "BrokerageHistoryProvider",
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",

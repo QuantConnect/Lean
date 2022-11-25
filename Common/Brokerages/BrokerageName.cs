@@ -125,5 +125,10 @@ namespace QuantConnect.Brokerages
         /// Transaction and submit/execution rules will use Wolverine models
         /// </summary>
         Wolverine,
+
+        /// <summary>
+        /// Transaction and submit/execution rules will use TDameritrade models
+        /// </summary>
+        TDAmeritrade,
     }
 }
