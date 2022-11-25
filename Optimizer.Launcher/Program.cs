@@ -23,7 +23,6 @@ using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.ServiceModel.Channels;
 using System.Threading;
 
 namespace QuantConnect.Optimizer.Launcher
@@ -62,14 +61,12 @@ namespace QuantConnect.Optimizer.Launcher
                     MaximumConcurrentBacktests = Config.GetInt("maximum-concurrent-backtests", Math.Max(1, Environment.ProcessorCount / 2))
                 };
 
-                using var optimizer = new ConsoleLeanOptimizer(packet);
+                var optimizer = new ConsoleLeanOptimizer(packet);
 
                 if (Config.GetBool("estimate", false))
                 {
                     var backtestsCount = optimizer.GetCurrentEstimate();
                     Log.Trace($"Optimization estimate: {backtestsCount}");
-
-                    return;
                 }
                 else
                 {
