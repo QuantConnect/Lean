@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -39,6 +39,11 @@ namespace QuantConnect.Orders.OptionExercise
             var inTheMoney = option.IsAutoExercised(underlying.Close);
             var isAssignment = inTheMoney && option.Holdings.IsShort;
 
+            if (!inTheMoney)
+            {
+                order.Price = 0;
+            }
+
             yield return new OrderEvent(
                 order.Id,
                 option.Symbol,
@@ -48,7 +53,7 @@ namespace QuantConnect.Orders.OptionExercise
                 0.0m,
                 order.Quantity,
                 OrderFee.Zero,
-                GetContractHoldingsAdjustmentFillTag(inTheMoney, isAssignment)
+                GetContractHoldingsAdjustmentFillTag(inTheMoney, isAssignment, option)
             ) { IsAssignment = isAssignment };
 
             // TODO : Support Manual Exercise of OTM contracts [ inTheMoney = false ]
@@ -70,7 +75,7 @@ namespace QuantConnect.Orders.OptionExercise
             }
         }
 
-        private static string GetContractHoldingsAdjustmentFillTag(bool inTheMoney, bool isAssignment)
+        private static string GetContractHoldingsAdjustmentFillTag(bool inTheMoney, bool isAssignment, Option option)
         {
             var action = isAssignment ? "Assignment" : "Exercise";
             if (inTheMoney)
@@ -78,7 +83,7 @@ namespace QuantConnect.Orders.OptionExercise
                 return $"Automatic {action}";
             }
 
-            return "OTM";
+            return $"OTM. Underlying price: {option.Underlying.Price}";
         }
     }
 }
