@@ -78,12 +78,9 @@ namespace QuantConnect.Orders.OptionExercise
         private static string GetContractHoldingsAdjustmentFillTag(bool inTheMoney, bool isAssignment, Option option)
         {
             var action = isAssignment ? "Assignment" : "Exercise";
-            if (inTheMoney)
-            {
-                return $"Automatic {action}";
-            }
+            var tag = inTheMoney ? $"Automatic {action}" : "OTM";
 
-            return $"OTM. Underlying price: {option.Underlying.Price}";
+            return $"{tag}. Underlying: {option.Underlying.Price}";
         }
     }
 }

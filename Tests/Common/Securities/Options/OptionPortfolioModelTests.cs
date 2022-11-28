@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -99,7 +99,8 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
             Assert.AreEqual(2, fills.Count);
             Assert.IsFalse(fills[0].IsAssignment);
-            Assert.AreEqual("Automatic Exercise", fills[0].Message);
+
+            StringAssert.Contains("Automatic Exercise", fills[0].Message);
             Assert.AreEqual("Option Exercise", fills[1].Message);
 
             foreach (var fill in fills)
