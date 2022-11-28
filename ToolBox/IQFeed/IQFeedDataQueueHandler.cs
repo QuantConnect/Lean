@@ -389,7 +389,7 @@ namespace QuantConnect.ToolBox.IQFeed
     public class AdminPort : IQAdminSocketClient
     {
         public AdminPort()
-            : base(80)
+            : base(IQFeedDefault.BufferSize)
         {
         }
     }
@@ -425,7 +425,7 @@ namespace QuantConnect.ToolBox.IQFeed
         }
 
         public Level1Port(IDataAggregator aggregator, IQFeedDataQueueUniverseProvider symbolUniverse)
-            : base(80)
+            : base(IQFeedDefault.BufferSize)
         {
             start = DateTime.Now;
             _prices = new ConcurrentDictionary<string, double>();
@@ -610,7 +610,7 @@ namespace QuantConnect.ToolBox.IQFeed
         /// ...
         /// </summary>
         public HistoryPort(IQFeedDataQueueUniverseProvider symbolUniverse)
-            : base(80)
+            : base(IQFeedDefault.BufferSize)
         {
             _symbolUniverse = symbolUniverse;
             _requestDataByRequestId = new ConcurrentDictionary<string, HistoryRequest>();
@@ -841,5 +841,10 @@ namespace QuantConnect.ToolBox.IQFeed
                     throw new ArgumentOutOfRangeException("resolution", resolution, null);
             }
         }
+    }
+
+    internal class IQFeedDefault
+    {
+        public static int BufferSize = 8192;
     }
 }
