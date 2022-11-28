@@ -8,7 +8,7 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  ITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
@@ -34,7 +34,7 @@ namespace QuantConnect.Brokerages
         public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets();
 
         /// <summary>
-        /// Constructor for Wolverine brokerage model
+        /// Constructor for TDAmeritrade brokerage model
         /// </summary>
         /// <param name="accountType">Cash or Margin</param>
         public TDAmeritradeBrokerageModel(AccountType accountType = AccountType.Margin) : base(accountType)
@@ -64,7 +64,7 @@ namespace QuantConnect.Brokerages
             if (!new[] { SecurityType.Equity, SecurityType.Option }.Contains(security.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    StringExtensions.Invariant($"The {nameof(WolverineBrokerageModel)} does not support {security.Type} security type.")
+                    StringExtensions.Invariant($"The {nameof(TDAmeritradeBrokerageModel)} does not support {security.Type} security type.")
                 );
 
                 return false;
@@ -73,7 +73,7 @@ namespace QuantConnect.Brokerages
             if (!new[] { OrderType.Market, OrderType.Limit, OrderType.StopMarket, OrderType.StopLimit }.Contains(order.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    StringExtensions.Invariant($"{order.Type} order is not supported by Wolverine. Currently, only Market Order is supported.")
+                    StringExtensions.Invariant($"{order.Type} order is not supported by TDAmeritrade. Currently, only Market Order is supported.")
                 );
 
                 return false;
@@ -83,13 +83,13 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Wolverine does not support update of orders
+        /// TDAmeritrade does not support update of orders
         /// </summary>
         /// <param name="security">Security</param>
         /// <param name="order">Order that should be updated</param>
         /// <param name="request">Update request</param>
         /// <param name="message">Outgoing message</param>
-        /// <returns>Always false as Wolverine does not support update of orders</returns>
+        /// <returns>Always false as TDAmeritrade does not support update of orders</returns>
         public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
             message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, "Brokerage does not support update. You must cancel and re-create instead."); ;
@@ -97,17 +97,17 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Provides Wolverine fee model
+        /// Provides TDAmeritrade fee model
         /// </summary>
         /// <param name="security">Security</param>
-        /// <returns>Wolverine fee model</returns>
+        /// <returns>TDAmeritrade fee model</returns>
         public override IFeeModel GetFeeModel(Security security)
         {
             return new TDAmeritradeFeeModel();
         }
 
         /// <summary>
-        /// Get default markets and specify Wolverine as crypto market
+        /// Get default markets and specify TDAmeritrade as crypto market
         /// </summary>
         /// <returns>default markets</returns>
         private static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets()

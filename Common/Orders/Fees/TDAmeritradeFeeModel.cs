@@ -23,18 +23,6 @@ namespace QuantConnect.Orders.Fees
     /// </summary>
     public class TDAmeritradeFeeModel : FeeModel
     {
-        private readonly decimal _feesPerShare;
-
-        /// <summary>
-        /// Creates a new instance
-        /// </summary>
-        /// <param name="feesPerShare">The fees per share to apply</param>
-        /// <remarks>Default value is $0.0015 per share</remarks>
-        public TDAmeritradeFeeModel(decimal? feesPerShare = null)
-        {
-            _feesPerShare = feesPerShare ?? 0.5m;
-        }
-
         /// <summary>
         /// Get the fee for this order in quote currency
         /// </summary>
@@ -43,7 +31,18 @@ namespace QuantConnect.Orders.Fees
         /// <returns>The cost of the order in quote currency</returns>
         public OrderFee GetOrderFee(OrderFeeParameters parameters)
         {
-            return new OrderFee(new CashAmount(_feesPerShare * parameters.Order.AbsoluteQuantity, Currencies.USD));
+            var order = parameters.Order;
+            var symbolSecurityType = order.Symbol.SecurityType;
+
+            switch(symbolSecurityType)
+            {
+                case SecurityType.Equity:
+                    return new OrderFee(new CashAmount(0 * order.AbsoluteQuantity, Currencies.USD));
+                case SecurityType.Option:
+                    return new OrderFee(new CashAmount(0.65m * order.AbsoluteQuantity, Currencies.USD));
+            };
+
+            throw new System.ArgumentException($"TDAmeritradeFeeModel doesn't return correct fee model for SecurityType = {nameof(symbolSecurityType)}");
         }
     }
 }
