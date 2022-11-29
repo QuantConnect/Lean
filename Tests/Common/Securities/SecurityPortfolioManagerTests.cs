@@ -1261,6 +1261,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsFalse(fills[0].IsAssignment);
             Assert.AreEqual(order.Quantity, fills[0].FillQuantity);
             StringAssert.Contains("Automatic Exercise", fills[0].Message);
+            Assert.IsTrue(fills[0].IsInTheMoney);
             Assert.AreEqual("Option Exercise", fills[1].Message);
 
             foreach (var fill in fills)
@@ -1329,6 +1330,8 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual(1, fills.Count);
             StringAssert.Contains("OTM", fills[0].Message);
+            Assert.IsFalse(fills[0].IsInTheMoney);
+            Assert.AreEqual(0, fills[0].FillPrice);
             Assert.AreEqual(order.Quantity, fills[0].FillQuantity);
 
             foreach (var fill in fills)
@@ -1397,6 +1400,8 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual(1, fills.Count);
             StringAssert.Contains("OTM", fills[0].Message);
+            Assert.IsFalse(fills[0].IsInTheMoney);
+            Assert.AreEqual(0, fills[0].FillPrice);
 
             foreach (var fill in fills)
             {
@@ -1464,6 +1469,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsFalse(fills[0].IsAssignment);
             Assert.AreEqual(order.Quantity, fills[0].FillQuantity);
             StringAssert.Contains("Automatic Exercise", fills[0].Message);
+            Assert.IsTrue(fills[0].IsInTheMoney);
             Assert.AreEqual("Option Exercise", fills[1].Message);
 
             foreach (var fill in fills)
@@ -1536,6 +1542,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsFalse(fills[0].IsAssignment);
             Assert.AreEqual(order.Quantity, fills[0].FillQuantity);
             StringAssert.Contains("Automatic Exercise", fills[0].Message);
+            Assert.IsTrue(fills[0].IsInTheMoney);
             Assert.AreEqual("Option Exercise", fills[1].Message);
 
             foreach (var fill in fills)
@@ -1829,6 +1836,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsFalse(fills[0].IsAssignment);
             Assert.AreEqual(order.Quantity, fills[0].FillQuantity);
             StringAssert.Contains("Automatic Exercise", fills[0].Message);
+            Assert.IsTrue(fills[0].IsInTheMoney);
 
             foreach (var fill in fills)
             {
@@ -1896,6 +1904,9 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(1, fills.Count);
             Assert.IsFalse(fills[0].IsAssignment);
             StringAssert.Contains("OTM", fills[0].Message);
+            Assert.IsFalse(fills[0].IsInTheMoney);
+            Assert.AreEqual(0, fills[0].FillPrice);
+            Assert.AreEqual(0, fills[0].FillPrice);
             Assert.AreEqual(order.Quantity, fills[0].FillQuantity);
 
             foreach (var fill in fills)
@@ -1964,6 +1975,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsFalse(fills[0].IsAssignment);
             Assert.AreEqual(order.Quantity, fills[0].FillQuantity);
             StringAssert.Contains("Automatic Exercise", fills[0].Message);
+            Assert.IsTrue(fills[0].IsInTheMoney);
 
             foreach (var fill in fills)
             {
@@ -2159,6 +2171,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsFalse(fills[0].IsAssignment);
             Assert.AreEqual(order.Quantity, fills[0].FillQuantity);
             StringAssert.Contains("Automatic Exercise", fills[0].Message);
+            Assert.IsTrue(fills[0].IsInTheMoney);
 
             foreach (var fill in fills)
             {
@@ -2298,6 +2311,8 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(1, fills.Count);
             Assert.IsFalse(fills[0].IsAssignment);
             StringAssert.Contains("OTM", fills[0].Message);
+            Assert.IsFalse(fills[0].IsInTheMoney);
+            Assert.AreEqual(0, fills[0].FillPrice);
             Assert.AreEqual(order.Quantity, fills[0].FillQuantity);
 
             // we are simulating assignment by calling a method for this

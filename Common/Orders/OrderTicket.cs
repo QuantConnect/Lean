@@ -257,7 +257,7 @@ namespace QuantConnect.Orders
                         return AccessOrder<StopMarketOrder>(this, field, o => o.StopPrice, r => r.StopPrice);
                     }
                     break;
-                
+
                 case OrderField.TriggerPrice:
                     return AccessOrder<LimitIfTouchedOrder>(this, field, o => o.TriggerPrice, r => r.TriggerPrice);
 
@@ -437,16 +437,24 @@ namespace QuantConnect.Orders
 
                 //Update the ticket and order, if it is a OptionExercise order we must only update it if the fill price is not zero
                 //this fixes issue #2846 where average price is skewed by the removal of the option.
-                if (orderEvent.FillQuantity != 0 && (_order.Type != OrderType.OptionExercise || orderEvent.FillPrice != 0))
+                if (orderEvent.FillQuantity != 0)
                 {
-                    // keep running totals of quantity filled and the average fill price so we
-                    // don't need to compute these on demand
-                    _quantityFilled += orderEvent.FillQuantity;
-                    var quantityWeightedFillPrice = _orderEvents.Where(x => x.Status.IsFill())
-                        .Aggregate(0m, (d, x) => d + x.AbsoluteFillQuantity*x.FillPrice);
-                    _averageFillPrice = quantityWeightedFillPrice/Math.Abs(_quantityFilled);
+                    if (_order.Type != OrderType.OptionExercise || orderEvent.FillPrice != 0)
+                    {
+                        // keep running totals of quantity filled and the average fill price so we
+                        // don't need to compute these on demand
+                        _quantityFilled += orderEvent.FillQuantity;
+                        var quantityWeightedFillPrice = _orderEvents.Where(x => x.Status.IsFill())
+                            .Aggregate(0m, (d, x) => d + x.AbsoluteFillQuantity * x.FillPrice);
+                        _averageFillPrice = quantityWeightedFillPrice / Math.Abs(_quantityFilled);
 
-                    _order.Price = _averageFillPrice;
+                        _order.Price = _averageFillPrice;
+                    }
+                    else if (!orderEvent.IsInTheMoney)
+                    {
+                        // if the option is OTM, the event's fill price is zero
+                        _order.Price = 0;
+                    }
                 }
             }
 

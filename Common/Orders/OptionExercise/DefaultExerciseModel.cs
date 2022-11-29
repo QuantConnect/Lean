@@ -39,11 +39,6 @@ namespace QuantConnect.Orders.OptionExercise
             var inTheMoney = option.IsAutoExercised(underlying.Close);
             var isAssignment = inTheMoney && option.Holdings.IsShort;
 
-            if (!inTheMoney)
-            {
-                order.Price = 0;
-            }
-
             yield return new OrderEvent(
                 order.Id,
                 option.Symbol,
@@ -54,7 +49,11 @@ namespace QuantConnect.Orders.OptionExercise
                 order.Quantity,
                 OrderFee.Zero,
                 GetContractHoldingsAdjustmentFillTag(inTheMoney, isAssignment, option)
-            ) { IsAssignment = isAssignment };
+            )
+            {
+                IsAssignment = isAssignment,
+                IsInTheMoney = inTheMoney
+            };
 
             // TODO : Support Manual Exercise of OTM contracts [ inTheMoney = false ]
             if (inTheMoney && option.ExerciseSettlement == SettlementType.PhysicalDelivery)
@@ -71,7 +70,7 @@ namespace QuantConnect.Orders.OptionExercise
                     exerciseQuantity,
                     OrderFee.Zero,
                     isAssignment ? "Option Assignment" : "Option Exercise"
-                );
+                ) { IsInTheMoney = true } ;
             }
         }
 

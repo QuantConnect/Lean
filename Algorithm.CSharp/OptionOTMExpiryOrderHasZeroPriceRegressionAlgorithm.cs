@@ -98,6 +98,16 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception("Invalid state: did not expect a position for the underlying to be opened, since this contract expires OTM");
             }
+
+            if (_cashAfterMarketOrder > 0)
+            {
+                // This is the exercise order fill event
+                if (orderEvent.IsInTheMoney || orderEvent.FillPrice != 0)
+                {
+                    throw new Exception($"Expected exercise order event fill price to be zero and to be marked as OTM, " +
+                        $"but was the fill price was {orderEvent.FillPrice} and IsInTheMoney = {orderEvent.IsInTheMoney}");
+                }
+            }
         }
 
         /// <summary>
