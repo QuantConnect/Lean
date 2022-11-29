@@ -66,11 +66,11 @@ namespace QuantConnect.Orders.OptionExercise
                     utcTime,
                     OrderStatus.Filled,
                     GetOrderDirection(exerciseQuantity),
-                    order.Price,
+                    option.StrikePrice,
                     exerciseQuantity,
                     OrderFee.Zero,
                     isAssignment ? "Option Assignment" : "Option Exercise"
-                ) { IsInTheMoney = true } ;
+                ) { IsInTheMoney = true };
             }
         }
 

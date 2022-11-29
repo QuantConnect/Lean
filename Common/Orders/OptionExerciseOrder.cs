@@ -44,7 +44,6 @@ namespace QuantConnect.Orders
         public OptionExerciseOrder(Symbol symbol, decimal quantity, DateTime time, string tag = "", IOrderProperties properties = null)
             : base(symbol, quantity, time, tag, properties)
         {
-            Price = Symbol.ID.StrikePrice;
         }
 
         /// <summary>

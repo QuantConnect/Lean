@@ -435,11 +435,10 @@ namespace QuantConnect.Orders
             {
                 _orderEvents.Add(orderEvent);
 
-                //Update the ticket and order, if it is a OptionExercise order we must only update it if the fill price is not zero
-                //this fixes issue #2846 where average price is skewed by the removal of the option.
+                //Update the ticket and order
                 if (orderEvent.FillQuantity != 0)
                 {
-                    if (_order.Type != OrderType.OptionExercise || orderEvent.FillPrice != 0)
+                    if (_order.Type != OrderType.OptionExercise)
                     {
                         // keep running totals of quantity filled and the average fill price so we
                         // don't need to compute these on demand
@@ -450,10 +449,13 @@ namespace QuantConnect.Orders
 
                         _order.Price = _averageFillPrice;
                     }
-                    else if (!orderEvent.IsInTheMoney)
+                    // For ITM option exercise orders we set the order price to the strike price.
+                    // For OTM the fill price should be zero, which is the default for OptionExerciseOrders
+                    else if (orderEvent.IsInTheMoney)
                     {
-                        // if the option is OTM, the event's fill price is zero
-                        _order.Price = 0;
+                        _quantityFilled += orderEvent.FillQuantity;
+                        _order.Price = Symbol.ID.StrikePrice;
+                        _averageFillPrice = _order.Price;
                     }
                 }
             }
