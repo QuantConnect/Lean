@@ -37,7 +37,7 @@ namespace QuantConnect.Orders.Fees
             switch(symbolSecurityType)
             {
                 case SecurityType.Equity:
-                    return new OrderFee(new CashAmount(0 * order.AbsoluteQuantity, Currencies.USD));
+                    return new OrderFee(new CashAmount(0m, Currencies.USD));
                 case SecurityType.Option:
                     return new OrderFee(new CashAmount(0.65m * order.AbsoluteQuantity, Currencies.USD));
             };
