@@ -188,8 +188,9 @@ namespace QuantConnect.Orders
         /// <summary>
         /// True if the order event's option is In-The-Money (ITM)
         /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         [ProtoMember(17)]
-        public bool IsInTheMoney { get; set; } = true;
+        public bool IsInTheMoney { get; set; }
 
         /// <summary>
         /// Order Event empty constructor required for json converter
@@ -232,7 +233,7 @@ namespace QuantConnect.Orders
             OrderFee = orderFee;
             Message = message;
             IsAssignment = false;
-            IsInTheMoney = true;
+            IsInTheMoney = false;
         }
 
         /// <summary>
@@ -258,7 +259,7 @@ namespace QuantConnect.Orders
             OrderFee = orderFee;
             Message = message;
             IsAssignment = false;
-            IsInTheMoney = true;
+            IsInTheMoney = false;
         }
 
         /// <summary>
