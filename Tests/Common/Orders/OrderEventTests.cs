@@ -53,7 +53,7 @@ namespace QuantConnect.Tests.Common.Orders
         }
 
         [Test]
-        public void RoundTripSerialization()
+        public void RoundTripSerialization([Values] bool isInTheMoney)
         {
             var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow);
             var orderEvent = new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero)
@@ -66,7 +66,8 @@ namespace QuantConnect.Tests.Common.Orders
                 FillQuantity = 12,
                 FillPriceCurrency = "USD",
                 Id = 55,
-                Quantity = 16
+                Quantity = 16,
+                IsInTheMoney = isInTheMoney
             };
 
             var converter = new OrderEventJsonConverter("id");
@@ -76,7 +77,7 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.IsFalse(serializeObject.Contains(Currencies.NullCurrency, StringComparison.InvariantCulture));
             Assert.IsFalse(serializeObject.Contains("order-fee-amount", StringComparison.InvariantCulture));
             Assert.IsFalse(serializeObject.Contains("order-fee-currency", StringComparison.InvariantCulture));
-            Assert.IsFalse(serializeObject.Contains("is-in-the-money", StringComparison.InvariantCulture));
+            Assert.AreEqual(isInTheMoney, serializeObject.Contains("is-in-the-money", StringComparison.InvariantCulture));
 
             var deserializeObject = JsonConvert.DeserializeObject<OrderEvent>(serializeObject, converter);
 

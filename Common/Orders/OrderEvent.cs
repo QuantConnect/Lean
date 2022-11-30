@@ -233,7 +233,6 @@ namespace QuantConnect.Orders
             OrderFee = orderFee;
             Message = message;
             IsAssignment = false;
-            IsInTheMoney = false;
         }
 
         /// <summary>
@@ -259,7 +258,6 @@ namespace QuantConnect.Orders
             OrderFee = orderFee;
             Message = message;
             IsAssignment = false;
-            IsInTheMoney = false;
         }
 
         /// <summary>
@@ -383,6 +381,7 @@ namespace QuantConnect.Orders
                 serializedOrderEvent.Message)
             {
                 IsAssignment = serializedOrderEvent.IsAssignment,
+                IsInTheMoney = serializedOrderEvent.IsInTheMoney,
                 LimitPrice = serializedOrderEvent.LimitPrice,
                 StopPrice = serializedOrderEvent.StopPrice,
                 FillPriceCurrency = serializedOrderEvent.FillPriceCurrency,
