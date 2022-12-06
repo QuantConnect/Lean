@@ -27,13 +27,8 @@ namespace QuantConnect.Securities.FutureOption
         /// </summary>
         private static readonly IReadOnlyDictionary<string, decimal> _scalingFactors = new Dictionary<string, decimal>
         {
-            { "ES", 100m },
-            { "NQ", 100m },
-            { "HG", 100m },
-            { "SI", 100m },
-            { "CL", 100m },
-            { "NG", 1000m },
-            { "DC", 100m }
+            { "SI", 0.1m },
+            { "NG", 5m }
         };
 
         /// <summary>
