@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -133,6 +133,12 @@ namespace QuantConnect.Orders.Serialization
         public decimal? LimitPrice { get; set; }
 
         /// <summary>
+        /// True if the order event's option is In-The-Money (ITM)
+        /// </summary>
+        [JsonProperty("is-in-the-money", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool IsInTheMoney { get; set; }
+
+        /// <summary>
         /// Empty constructor required for JSON converter.
         /// </summary>
         protected SerializedOrderEvent()
@@ -161,6 +167,7 @@ namespace QuantConnect.Orders.Serialization
             Direction = orderEvent.Direction;
             Message = orderEvent.Message;
             IsAssignment = orderEvent.IsAssignment;
+            IsInTheMoney = orderEvent.IsInTheMoney;
             Quantity = orderEvent.Quantity;
             StopPrice = orderEvent.StopPrice;
             LimitPrice = orderEvent.LimitPrice;

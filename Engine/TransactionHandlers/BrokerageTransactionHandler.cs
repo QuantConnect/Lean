@@ -1328,11 +1328,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // generate the order events reusing the option exercise model
             var option = (Option)security;
             var orderEvents = option.OptionExerciseModel.OptionExercise(option, order);
-            
+
             foreach (var orderEvent in orderEvents)
             {
                 HandleOrderEvent(orderEvent);
-                
+
                 if (orderEvent.IsAssignment)
                 {
                     orderEvent.Message = order.Tag;

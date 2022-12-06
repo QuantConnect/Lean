@@ -15,7 +15,7 @@ namespace QuantConnect.Algorithm.CSharp
         // two complete weeks starting from the 5th plus the 18th bar
         protected virtual int ExpectedBarCount => 2 * 5 + 1;
         protected int BarCounter = 0;
-        
+
         /// <summary>
         /// Purchase a contract when we are not invested, liquidate otherwise
         /// </summary>
@@ -30,7 +30,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 Liquidate();
             }
-            
+
             // Count how many slices we receive with SPX data in it to assert later
             if (slice.ContainsKey(Spx))
             {
@@ -112,7 +112,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "474e8e0e28ee84c869f8c69ec3efe371"}
+            {"OrderListHash", "0ee6860210d55051c38e494bd24bb6de"}
         };
     }
 }
