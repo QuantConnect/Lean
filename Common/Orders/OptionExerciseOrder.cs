@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -44,7 +44,6 @@ namespace QuantConnect.Orders
         public OptionExerciseOrder(Symbol symbol, decimal quantity, DateTime time, string tag = "", IOrderProperties properties = null)
             : base(symbol, quantity, time, tag, properties)
         {
-            Price = Symbol.ID.StrikePrice;
         }
 
         /// <summary>
