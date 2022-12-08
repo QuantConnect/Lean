@@ -1384,7 +1384,7 @@ namespace QuantConnect.Tests.Algorithm
             algo.SetHoldings(Symbols.MSFT, 1.0m);
             algo.SetHoldings(Symbols.MSFT, 1.0f);
 
-            int expected = 35;
+            const int expected = 38;
             Assert.AreEqual(expected, algo.Transactions.LastOrderId);
         }
 
