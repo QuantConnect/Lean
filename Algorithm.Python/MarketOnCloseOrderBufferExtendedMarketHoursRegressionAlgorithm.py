@@ -14,7 +14,8 @@
 from AlgorithmImports import *
 
 class MarketOnCloseOrderBufferExtendedMarketHoursRegressionAlgorithm(QCAlgorithm):
-    '''See MarketOnCloseOrderBufferRegressionAlgorithm'''
+    '''This regression test is a version of "MarketOnCloseOrderBufferRegressionAlgorithm"
+     where we test market-on-close modeling with data from the post market.'''
     validOrderTicket = None
     invalidOrderTicket = None
     validOrderTicketExtendedMarketHours = None

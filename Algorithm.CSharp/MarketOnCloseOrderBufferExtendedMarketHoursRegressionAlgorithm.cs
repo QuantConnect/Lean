@@ -23,7 +23,8 @@ using QuantConnect.Orders;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// See <see cref="MarketOnCloseOrderBufferExtendedMarketHoursRegressionAlgorithm"/>
+    /// This regression test is a version of <see cref="MarketOnCloseOrderBufferRegressionAlgorithm"/>
+    /// where we test market-on-close modeling with data from the post market.
     /// </summary>
     public class MarketOnCloseOrderBufferExtendedMarketHoursRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
