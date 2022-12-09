@@ -163,9 +163,7 @@
   // TDAmeritrade configuration
   "tdameritrade-account-number": "",
   "tdameritrade-api-key": "",
-  "tdameritrade-callback-url": "http://localhost",
-  "tdameritrade-code-from-url": "",
-  "tdameritrade-refresh-token": "",
+  "tdameritrade-access-token": "",
 
   // Trading Technologies configuration
   "tt-user-name": "",
