@@ -557,12 +557,13 @@
 
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "TDAmeritradeBrokerage",
-      "history-provider": "BrokerageHistoryProvider",
+      "history-provider": [ "BrokerageHistoryProvider" ],
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
-      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler"
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+      "data-queue-handler": [ "TDAmeritradeBrokerage" ]
     }
   }
 }

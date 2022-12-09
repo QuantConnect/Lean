@@ -29,9 +29,14 @@ namespace QuantConnect.Brokerages
     public class TDAmeritradeBrokerageModel : DefaultBrokerageModel
     {
         /// <summary>
-        /// Gets a map of the default markets to be used for each security type
+        /// Array's TD Ameritrade supports security types 
         /// </summary>
-        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets();
+        private readonly SecurityType[] _supportSecurityTypes = new[] { SecurityType.Equity, SecurityType.Option, SecurityType.Future };
+
+        /// <summary>
+        /// Array's TD Ameritrade supports order types 
+        /// </summary>
+        private readonly OrderType[] _supportOrderTypes = new[] { OrderType.Market, OrderType.Limit, OrderType.StopMarket, OrderType.StopLimit };
 
         /// <summary>
         /// Constructor for TDAmeritrade brokerage model
@@ -61,7 +66,8 @@ namespace QuantConnect.Brokerages
             }
 
             message = null;
-            if (!new[] { SecurityType.Equity, SecurityType.Option }.Contains(security.Type))
+
+            if (!_supportSecurityTypes.Contains(security.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     StringExtensions.Invariant($"The {nameof(TDAmeritradeBrokerageModel)} does not support {security.Type} security type.")
@@ -70,7 +76,7 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (!new[] { OrderType.Market, OrderType.Limit, OrderType.StopMarket, OrderType.StopLimit }.Contains(order.Type))
+            if (!_supportOrderTypes.Contains(order.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     StringExtensions.Invariant($"{order.Type} order is not supported by TDAmeritrade. Currently, only Market Order is supported.")
@@ -83,17 +89,32 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// TDAmeritrade does not support update of orders
+        /// TDAmeritrade support Update Order
         /// </summary>
         /// <param name="security">Security</param>
         /// <param name="order">Order that should be updated</param>
         /// <param name="request">Update request</param>
         /// <param name="message">Outgoing message</param>
-        /// <returns>Always false as TDAmeritrade does not support update of orders</returns>
+        /// <returns>True if the brokerage would allow updating the order, false otherwise</returns>
         public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
-            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, "Brokerage does not support update. You must cancel and re-create instead."); ;
-            return false;
+            message = null;
+
+            // validate order quantity
+            if (request.Quantity != null)
+            {
+                return false;
+            }
+
+            // determine direction via the new, updated quantity
+            var newQuantity = request.Quantity ?? order.Quantity;
+            var direction = newQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
+
+            // use security.Price if null, allows to pass checks
+            var stopPrice = request.StopPrice ?? security.Price;
+            var limitPrice = request.LimitPrice ?? security.Price;
+
+            return IsValidOrderPrices(security, order.Type, direction, stopPrice, limitPrice, ref message);
         }
 
         /// <summary>
@@ -107,14 +128,26 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Get default markets and specify TDAmeritrade as crypto market
+        /// Validates limit/stopmarket order prices, pass security.Price for limit/stop if n/a
         /// </summary>
-        /// <returns>default markets</returns>
-        private static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets()
+        private static bool IsValidOrderPrices(Security security, OrderType orderType, OrderDirection orderDirection, decimal stopPrice, decimal limitPrice, ref BrokerageMessageEvent message)
         {
-            var map = DefaultMarketMap.ToDictionary();
-            map[SecurityType.Equity] = Market.USA;
-            return map.ToReadOnlyDictionary();
+            // validate order price
+            var invalidPrice = orderType == OrderType.Limit && orderDirection == OrderDirection.Buy && limitPrice > security.Price ||
+                orderType == OrderType.Limit && orderDirection == OrderDirection.Sell && limitPrice < security.Price ||
+                orderType == OrderType.StopMarket && orderDirection == OrderDirection.Buy && stopPrice < security.Price ||
+                orderType == OrderType.StopMarket && orderDirection == OrderDirection.Sell && stopPrice > security.Price;
+
+            if (invalidPrice)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    "Limit Buy orders and Stop Sell orders must be below market, Limit Sell orders and Stop Buy orders must be above market."
+                );
+
+                return false;
+            }
+
+            return true;
         }
     }
 }
