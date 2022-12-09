@@ -25,25 +25,25 @@ using QuantConnect.Securities;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This regression algorithm tests Out of The Money (OTM) future option expiry for puts.
+    /// This regression algorithm tests Out of The Money (OTM) future option expiry for calls.
     /// We expect 2 orders from the algorithm, which are:
     ///
-    ///   * Initial entry, buy ES Put Option (expiring OTM)
+    ///   * Initial entry, buy ES Call Option (expiring OTM)
     ///     - contract expires worthless, not exercised, so never opened a position in the underlying
     ///
-    ///   * Liquidation of worthless ES Put OTM contract
-    ///
-    /// Additionally, we test delistings for future options and assert that our
-    /// portfolio holdings reflect the orders the algorithm has submitted.
+    ///   * Liquidation of worthless ES call option (expiring OTM). The option exercise order fill price must be zero.
     /// </summary>
     /// <remarks>
     /// Total Trades in regression algorithm should be 1, but expiration is counted as a trade.
+    /// See related issue: https://github.com/QuantConnect/Lean/issues/4854
     /// </remarks>
-    public class FutureOptionPutOTMExpiryRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class OptionOTMExpiryOrderHasZeroPriceRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _es19m20;
         private Symbol _esOption;
         private Symbol _expectedContract;
+
+        private decimal _cashAfterMarketOrder;
 
         public override void Initialize()
         {
@@ -57,45 +57,26 @@ namespace QuantConnect.Algorithm.CSharp
                     new DateTime(2020, 6, 19)),
                 Resolution.Minute).Symbol;
 
-            // Select a future option expiring ITM, and adds it to the algorithm.
+            // Select a future option call expiring OTM, and adds it to the algorithm.
             _esOption = AddFutureOptionContract(OptionChainProvider.GetOptionContractList(_es19m20, Time)
-                .Where(x => x.ID.StrikePrice <= 3150m && x.ID.OptionRight == OptionRight.Put)
-                .OrderByDescending(x => x.ID.StrikePrice)
+                .Where(x => x.ID.StrikePrice >= 3300m && x.ID.OptionRight == OptionRight.Call)
+                .OrderBy(x => x.ID.StrikePrice)
                 .Take(1)
                 .Single(), Resolution.Minute).Symbol;
 
-            _expectedContract = QuantConnect.Symbol.CreateOption(_es19m20, Market.CME, OptionStyle.American, OptionRight.Put, 3150m, new DateTime(2020, 6, 19));
+            _expectedContract = QuantConnect.Symbol.CreateOption(_es19m20, Market.CME, OptionStyle.American, OptionRight.Call, 3300m, new DateTime(2020, 6, 19));
             if (_esOption != _expectedContract)
             {
                 throw new Exception($"Contract {_expectedContract} was not found in the chain");
             }
-
-            Schedule.On(DateRules.Tomorrow, TimeRules.AfterMarketOpen(_es19m20, 1), () =>
-            {
-                MarketOrder(_esOption, 1);
-            });
         }
 
         public override void OnData(Slice data)
         {
-            // Assert delistings, so that we can make sure that we receive the delisting warnings at
-            // the expected time. These assertions detect bug #4872
-            foreach (var delisting in data.Delistings.Values)
+            if (!Portfolio.Invested)
             {
-                if (delisting.Type == DelistingType.Warning)
-                {
-                    if (delisting.Time != new DateTime(2020, 6, 19))
-                    {
-                        throw new Exception($"Delisting warning issued at unexpected date: {delisting.Time}");
-                    }
-                }
-                if (delisting.Type == DelistingType.Delisted)
-                {
-                    if (delisting.Time != new DateTime(2020, 6, 20))
-                    {
-                        throw new Exception($"Delisting happened at unexpected date: {delisting.Time}");
-                    }
-                }
+                MarketOrder(_esOption, 1);
+                _cashAfterMarketOrder = Portfolio.Cash;
             }
         }
 
@@ -117,35 +98,15 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception("Invalid state: did not expect a position for the underlying to be opened, since this contract expires OTM");
             }
-            if (security.Symbol == _expectedContract)
-            {
-                AssertFutureOptionContractOrder(orderEvent, security);
-            }
-            else
-            {
-                throw new Exception($"Received order event for unknown Symbol: {orderEvent.Symbol}");
-            }
 
-            Log($"{orderEvent}");
-        }
-
-        private void AssertFutureOptionContractOrder(OrderEvent orderEvent, Security option)
-        {
-            if (orderEvent.Direction == OrderDirection.Buy && option.Holdings.Quantity != 1)
+            if (_cashAfterMarketOrder > 0)
             {
-                throw new Exception($"No holdings were created for option contract {option.Symbol}");
-            }
-            if (orderEvent.Direction == OrderDirection.Sell && option.Holdings.Quantity != 0)
-            {
-                throw new Exception("Holdings were found after a filled option exercise");
-            }
-            if (orderEvent.Direction == OrderDirection.Sell && !orderEvent.Message.Contains("OTM"))
-            {
-                throw new Exception("Contract did not expire OTM");
-            }
-            if (orderEvent.Message.Contains("Exercise"))
-            {
-                throw new Exception("Exercised option, even though it expires OTM");
+                // This is the exercise order fill event
+                if (orderEvent.IsInTheMoney || orderEvent.FillPrice != 0)
+                {
+                    throw new Exception($"Expected exercise order event fill price to be zero and to be marked as OTM, " +
+                        $"but was the fill price was {orderEvent.FillPrice} and IsInTheMoney = {orderEvent.IsInTheMoney}");
+                }
             }
         }
 
@@ -159,6 +120,24 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception($"Expected no holdings at end of algorithm, but are invested in: {string.Join(", ", Portfolio.Keys)}");
             }
+
+            // No change in cash is expected, only the market order fill price
+            if (Portfolio.Cash != _cashAfterMarketOrder)
+            {
+                throw new Exception($"Expected no change in cash after the market order. Cash in portfolio: {Portfolio.Cash}. Cash in portfolio after the market order: {_cashAfterMarketOrder}");
+            }
+
+            var orders = Transactions.GetOrders().ToList();
+            if (orders.Count != 2)
+            {
+                throw new Exception($"Expected 2 orders (market order and OTM option exercise), but found: {orders.Count}");
+            }
+
+            var exerciseOrder = orders.Find(x => x.Type == OrderType.OptionExercise);
+            if (!exerciseOrder.Tag.Contains("OTM", StringComparison.InvariantCulture) || exerciseOrder.Price != 0)
+            {
+                throw new Exception($"Expected the OTM exercise order to have price = 0, but was: {exerciseOrder.Price}");
+            }
         }
 
         /// <summary>
@@ -169,7 +148,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+        public Language[] Languages { get; } = { Language.CSharp };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
@@ -188,31 +167,31 @@ namespace QuantConnect.Algorithm.CSharp
         {
             {"Total Trades", "2"},
             {"Average Win", "0%"},
-            {"Average Loss", "-5.25%"},
-            {"Compounding Annual Return", "-10.492%"},
-            {"Drawdown", "5.300%"},
+            {"Average Loss", "-3.85%"},
+            {"Compounding Annual Return", "-7.754%"},
+            {"Drawdown", "4.300%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "-5.251%"},
-            {"Sharpe Ratio", "-1.289"},
-            {"Probabilistic Sharpe Ratio", "0.001%"},
+            {"Net Profit", "-3.851%"},
+            {"Sharpe Ratio", "-1.023"},
+            {"Probabilistic Sharpe Ratio", "0.131%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.072"},
+            {"Alpha", "-0.053"},
             {"Beta", "0.003"},
-            {"Annual Standard Deviation", "0.056"},
+            {"Annual Standard Deviation", "0.052"},
             {"Annual Variance", "0.003"},
-            {"Information Ratio", "-0.249"},
+            {"Information Ratio", "-0.198"},
             {"Tracking Error", "0.377"},
-            {"Treynor Ratio", "-28.519"},
+            {"Treynor Ratio", "-19.331"},
             {"Total Fees", "$1.42"},
-            {"Estimated Strategy Capacity", "$290000000.00"},
-            {"Lowest Capacity Asset", "ES 31EL5FBZBMXES|ES XFH59UK0MYO1"},
+            {"Estimated Strategy Capacity", "$180000000.00"},
+            {"Lowest Capacity Asset", "ES XFH59UPHGV9G|ES XFH59UK0MYO1"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-0.23"},
-            {"Return Over Maximum Drawdown", "-2"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "-1.798"},
             {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -227,7 +206,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "bea65dc6fb976b0fac2a239310734d91"}
+            {"OrderListHash", "61fc923519bea2059d8094378386ea42"}
         };
     }
 }

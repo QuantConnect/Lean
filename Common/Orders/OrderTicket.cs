@@ -257,7 +257,7 @@ namespace QuantConnect.Orders
                         return AccessOrder<StopMarketOrder>(this, field, o => o.StopPrice, r => r.StopPrice);
                     }
                     break;
-                
+
                 case OrderField.TriggerPrice:
                     return AccessOrder<LimitIfTouchedOrder>(this, field, o => o.TriggerPrice, r => r.TriggerPrice);
 
@@ -435,18 +435,34 @@ namespace QuantConnect.Orders
             {
                 _orderEvents.Add(orderEvent);
 
-                //Update the ticket and order, if it is a OptionExercise order we must only update it if the fill price is not zero
-                //this fixes issue #2846 where average price is skewed by the removal of the option.
-                if (orderEvent.FillQuantity != 0 && (_order.Type != OrderType.OptionExercise || orderEvent.FillPrice != 0))
+                // Update the ticket and order
+                if (orderEvent.FillQuantity != 0)
                 {
-                    // keep running totals of quantity filled and the average fill price so we
-                    // don't need to compute these on demand
-                    _quantityFilled += orderEvent.FillQuantity;
-                    var quantityWeightedFillPrice = _orderEvents.Where(x => x.Status.IsFill())
-                        .Aggregate(0m, (d, x) => d + x.AbsoluteFillQuantity*x.FillPrice);
-                    _averageFillPrice = quantityWeightedFillPrice/Math.Abs(_quantityFilled);
+                    if (_order.Type != OrderType.OptionExercise)
+                    {
+                        // keep running totals of quantity filled and the average fill price so we
+                        // don't need to compute these on demand
+                        _quantityFilled += orderEvent.FillQuantity;
+                        var quantityWeightedFillPrice = _orderEvents.Where(x => x.Status.IsFill())
+                            .Aggregate(0m, (d, x) => d + x.AbsoluteFillQuantity * x.FillPrice);
+                        _averageFillPrice = quantityWeightedFillPrice / Math.Abs(_quantityFilled);
 
-                    _order.Price = _averageFillPrice;
+                        _order.Price = _averageFillPrice;
+                    }
+                    // For ITM option exercise orders we set the order price to the strike price.
+                    // For OTM the fill price should be zero, which is the default for OptionExerciseOrders
+                    else if (orderEvent.IsInTheMoney)
+                    {
+                        _order.Price = Symbol.ID.StrikePrice;
+
+                        // We update the ticket only if the fill price is not zero (this fixes issue #2846 where average price
+                        // is skewed by the removal of the option).
+                        if (orderEvent.FillPrice != 0)
+                        {
+                            _quantityFilled += orderEvent.FillQuantity;
+                            _averageFillPrice = _order.Price;
+                        }
+                    }
                 }
             }
 

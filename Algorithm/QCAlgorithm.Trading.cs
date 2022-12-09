@@ -804,14 +804,6 @@ namespace QuantConnect.Algorithm
 
             var price = security.Price;
 
-            //Check the exchange is open before sending a market on close orders
-            if (request.OrderType == OrderType.MarketOnClose && !security.Exchange.ExchangeOpen)
-            {
-                return OrderResponse.Error(request, OrderResponseErrorCode.ExchangeNotOpen,
-                    $"{request.OrderType} order and exchange not open."
-                );
-            }
-
             //Check the exchange is open before sending a exercise orders
             if (request.OrderType == OrderType.OptionExercise && !security.Exchange.ExchangeOpen)
             {
@@ -840,9 +832,8 @@ namespace QuantConnect.Algorithm
             }
 
             // check quote currency existence/conversion rate on all orders
-            Cash quoteCash;
             var quoteCurrency = security.QuoteCurrency.Symbol;
-            if (!Portfolio.CashBook.TryGetValue(quoteCurrency, out quoteCash))
+            if (!Portfolio.CashBook.TryGetValue(quoteCurrency, out var quoteCash))
             {
                 return OrderResponse.Error(request, OrderResponseErrorCode.QuoteCurrencyRequired,
                     $"{request.Symbol.Value}: requires {quoteCurrency} in the cashbook to trade."
@@ -858,9 +849,8 @@ namespace QuantConnect.Algorithm
             // need to also check base currency existence/conversion rate on forex orders
             if (security.Type == SecurityType.Forex || security.Type == SecurityType.Crypto)
             {
-                Cash baseCash;
                 var baseCurrency = ((IBaseCurrencySymbol)security).BaseCurrencySymbol;
-                if (!Portfolio.CashBook.TryGetValue(baseCurrency, out baseCash))
+                if (!Portfolio.CashBook.TryGetValue(baseCurrency, out var baseCash))
                 {
                     return OrderResponse.Error(request, OrderResponseErrorCode.ForexBaseAndQuoteCurrenciesRequired,
                         $"{request.Symbol.Value}: requires {baseCurrency} and {quoteCurrency} in the cashbook to trade."
@@ -940,7 +930,7 @@ namespace QuantConnect.Algorithm
 
                 // Enforce MarketOnClose submission buffer
                 var latestSubmissionTime = nextMarketClose.Subtract(Orders.MarketOnCloseOrder.SubmissionTimeBuffer);
-                if (!security.Exchange.ExchangeOpen || Time > latestSubmissionTime)
+                if (Time > latestSubmissionTime)
                 {
                     // Tell user the required buffer on these orders, also inform them it can be changed for special cases.
                     // Default buffer is 15.5 minutes because with minute data a user will receive the 3:44->3:45 bar at 3:45,

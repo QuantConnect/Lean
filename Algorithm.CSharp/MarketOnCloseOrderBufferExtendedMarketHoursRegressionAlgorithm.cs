@@ -22,10 +22,15 @@ using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
-    public class MarketOnCloseOrderBufferRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    /// <summary>
+    /// This regression test is a version of <see cref="MarketOnCloseOrderBufferRegressionAlgorithm"/>
+    /// where we test market-on-close modeling with data from the post market.
+    /// </summary>
+    public class MarketOnCloseOrderBufferExtendedMarketHoursRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private OrderTicket _validOrderTicket;
         private OrderTicket _invalidOrderTicket;
+        private OrderTicket _validOrderTicketAtMidnight;
         private OrderTicket _validOrderTicketExtendedMarketHours;
 
         public override void Initialize()
@@ -34,11 +39,11 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 8); //Set End Date
 
             var ticker = "SPY";
-            AddEquity(ticker, Resolution.Minute);
+            AddEquity(ticker, Resolution.Minute, extendedMarketHours: true);
 
-            Schedule.On(DateRules.Today, TimeRules.At(17,00), () =>
+            Schedule.On(DateRules.Tomorrow, TimeRules.Midnight, () =>
             {
-                _validOrderTicketExtendedMarketHours = MarketOnCloseOrder("SPY", 2);
+                _validOrderTicketAtMidnight = MarketOnCloseOrder("SPY", 2);
             });
 
             // Modify our submission buffer time to 10 minutes
@@ -60,6 +65,12 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 // Will throw an order error and be marked invalid
                 _invalidOrderTicket = MarketOnCloseOrder("SPY", 2);
+            }
+
+            if (Time.Hour == 16 && Time.Minute == 48 && _validOrderTicketExtendedMarketHours == null)
+            {
+                // Will not throw an order error and execute
+                _validOrderTicketExtendedMarketHours = MarketOnCloseOrder("SPY", 2);
             }
         }
 
@@ -85,6 +96,12 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception("Valid order during extended market hours failed to fill");
             }
+
+            // Verify that our third good order filled
+            if (_validOrderTicketAtMidnight.Status != OrderStatus.Filled)
+            {
+                throw new Exception("Valid order at midnight failed to fill");
+            }
         }
 
         /// <summary>
@@ -100,7 +117,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1582;
+        public long DataPoints => 3862;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -112,7 +129,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new()
         {
-            {"Total Trades", "2"},
+            {"Total Trades", "3"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
@@ -131,15 +148,15 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$18000000000.00"},
+            {"Total Fees", "$3.00"},
+            {"Estimated Strategy Capacity", "$910000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Fitness Score", "0.001"},
+            {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-261.069"},
-            {"Portfolio Turnover", "0.002"},
+            {"Sortino Ratio", "-46.084"},
+            {"Return Over Maximum Drawdown", "-198.32"},
+            {"Portfolio Turnover", "0.004"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -153,7 +170,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "1a356e0edb136b31a7f12c661cf5de74"}
+            {"OrderListHash", "21a9fc316b33b82d2d99c508040649cd"}
         };
     }
 }
