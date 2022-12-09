@@ -13,21 +13,24 @@
 
 from AlgorithmImports import *
 
-class MarketOnCloseOrderBufferRegressionAlgorithm(QCAlgorithm):
+class MarketOnCloseOrderBufferExtendedMarketHoursRegressionAlgorithm(QCAlgorithm):
+    '''This regression test is a version of "MarketOnCloseOrderBufferRegressionAlgorithm"
+     where we test market-on-close modeling with data from the post market.'''
     validOrderTicket = None
     invalidOrderTicket = None
+    validOrderTicketExtendedMarketHours = None
 
     def Initialize(self):
         self.SetStartDate(2013,10,7)   #Set Start Date
         self.SetEndDate(2013,10,8)    #Set End Date
 
-        self.AddEquity("SPY", Resolution.Minute)
+        self.AddEquity("SPY", Resolution.Minute, extendedMarketHours = True)
 
-        def mocAtPostMarket():
-            self.validOrderTicketExtendedMarketHours = self.MarketOnCloseOrder("SPY", 2)
+        def mocAtMidNight():
+            self.validOrderTicketAtMidnight = self.MarketOnCloseOrder("SPY", 2)
 
-        self.Schedule.On(self.DateRules.Today, self.TimeRules.At(17,0), mocAtPostMarket)
-                
+        self.Schedule.On(self.DateRules.Tomorrow, self.TimeRules.Midnight, mocAtMidNight)
+
         # Modify our submission buffer time to 10 minutes
         MarketOnCloseOrder.SubmissionTimeBuffer = timedelta(minutes=10)
 
@@ -43,6 +46,10 @@ class MarketOnCloseOrderBufferRegressionAlgorithm(QCAlgorithm):
         # Will throw an order error and be marked invalid
         if self.Time.hour == 15 and self.Time.minute == 51 and not self.invalidOrderTicket:
             self.invalidOrderTicket = self.MarketOnCloseOrder("SPY", 2)
+
+        # Will not throw an order error and execute
+        if self.Time.hour == 16 and self.Time.minute == 48 and not self.validOrderTicketExtendedMarketHours:
+            self.validOrderTicketExtendedMarketHours = self.MarketOnCloseOrder("SPY", 2)
 
     def OnEndOfAlgorithm(self):
         # Set it back to default for other regressions
