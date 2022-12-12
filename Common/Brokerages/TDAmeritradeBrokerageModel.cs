@@ -100,12 +100,6 @@ namespace QuantConnect.Brokerages
         {
             message = null;
 
-            // validate order quantity
-            if (request.Quantity != null)
-            {
-                return false;
-            }
-
             // determine direction via the new, updated quantity
             var newQuantity = request.Quantity ?? order.Quantity;
             var direction = newQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
