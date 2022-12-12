@@ -15,11 +15,9 @@
 */
 
 using QuantConnect.Orders;
-using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
-using QuantConnect.Util;
+using QuantConnect.Orders.Fees;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Brokerages
 {
@@ -31,12 +29,12 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Array's TD Ameritrade supports security types 
         /// </summary>
-        private readonly SecurityType[] _supportSecurityTypes = new[] { SecurityType.Equity, SecurityType.Option, SecurityType.Future };
+        private readonly HashSet<SecurityType> _supportSecurityTypes = new (new [] { SecurityType.Equity, SecurityType.Option, SecurityType.Future });
 
         /// <summary>
         /// Array's TD Ameritrade supports order types 
         /// </summary>
-        private readonly OrderType[] _supportOrderTypes = new[] { OrderType.Market, OrderType.Limit, OrderType.StopMarket, OrderType.StopLimit };
+        private readonly HashSet<OrderType> _supportOrderTypes = new(new [] { OrderType.Market, OrderType.Limit, OrderType.StopMarket, OrderType.StopLimit });
 
         /// <summary>
         /// Constructor for TDAmeritrade brokerage model
@@ -99,16 +97,7 @@ namespace QuantConnect.Brokerages
         public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
             message = null;
-
-            // determine direction via the new, updated quantity
-            var newQuantity = request.Quantity ?? order.Quantity;
-            var direction = newQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
-
-            // use security.Price if null, allows to pass checks
-            var stopPrice = request.StopPrice ?? security.Price;
-            var limitPrice = request.LimitPrice ?? security.Price;
-
-            return IsValidOrderPrices(security, order.Type, direction, stopPrice, limitPrice, ref message);
+            return true;
         }
 
         /// <summary>
@@ -119,29 +108,6 @@ namespace QuantConnect.Brokerages
         public override IFeeModel GetFeeModel(Security security)
         {
             return new TDAmeritradeFeeModel();
-        }
-
-        /// <summary>
-        /// Validates limit/stopmarket order prices, pass security.Price for limit/stop if n/a
-        /// </summary>
-        private static bool IsValidOrderPrices(Security security, OrderType orderType, OrderDirection orderDirection, decimal stopPrice, decimal limitPrice, ref BrokerageMessageEvent message)
-        {
-            // validate order price
-            var invalidPrice = orderType == OrderType.Limit && orderDirection == OrderDirection.Buy && limitPrice > security.Price ||
-                orderType == OrderType.Limit && orderDirection == OrderDirection.Sell && limitPrice < security.Price ||
-                orderType == OrderType.StopMarket && orderDirection == OrderDirection.Buy && stopPrice < security.Price ||
-                orderType == OrderType.StopMarket && orderDirection == OrderDirection.Sell && stopPrice > security.Price;
-
-            if (invalidPrice)
-            {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    "Limit Buy orders and Stop Sell orders must be below market, Limit Sell orders and Stop Buy orders must be above market."
-                );
-
-                return false;
-            }
-
-            return true;
         }
     }
 }
