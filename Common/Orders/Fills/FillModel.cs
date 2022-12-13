@@ -29,6 +29,9 @@ namespace QuantConnect.Orders.Fills
     /// </summary>
     public class FillModel : IFillModel
     {
+        private static readonly Dictionary<GroupOrderManager, List<FillModelParameters>> _pendingGroupedOrdersByManager = new();
+        private static readonly List<Order> _pendingGroupedOrders = new();
+
         /// <summary>
         /// The parameters instance to be used by the different XxxxFill() implementations
         /// </summary>
@@ -150,8 +153,45 @@ namespace QuantConnect.Orders.Fills
 
             if (order.Status == OrderStatus.Canceled) return fill;
 
+            List<FillModelParameters> pendingFillsParameters = null;
+            var groupedOrder = order as IGroupOrder;
+            var isGroupedOrder = groupedOrder != null && groupedOrder.GroupOrderManager != null;
+            if (isGroupedOrder)
+            {
+                if (!_pendingGroupedOrdersByManager.TryGetValue(groupedOrder.GroupOrderManager, out pendingFillsParameters))
+                {
+                    pendingFillsParameters = _pendingGroupedOrdersByManager[groupedOrder.GroupOrderManager] = new List<FillModelParameters>();
+                }
+
+                if (pendingFillsParameters.Count < groupedOrder.GroupOrderManager.Count)
+                {
+                    // we haven't received fill requests for all the orders in the group
+
+                    if (!pendingFillsParameters.Any(x => x.Order.Id == order.Id))
+                    {
+                        pendingFillsParameters.Add(Parameters);
+                        _pendingGroupedOrders.Add(order);
+                    }
+
+                    return fill;
+                }
+
+                // all orders in the group have been receive, let's fill
+            }
+
             // make sure the exchange is open/normal market hours before filling
             if (!IsExchangeOpen(asset, false)) return fill;
+
+            if (isGroupedOrder)
+            {
+                // filling current order, let's remove it from pending orders
+                _pendingGroupedOrders.Remove(order);
+                if (!_pendingGroupedOrders.Any(x => pendingFillsParameters.Any(y => y.Order.Id == x.Id)))
+                {
+                    // all pending orders in the group are filled now, let's remove the entry from the dictionary
+                    _pendingGroupedOrdersByManager.Remove(groupedOrder.GroupOrderManager);
+                }
+            }
 
             var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
             var pricesEndTimeUtc = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
