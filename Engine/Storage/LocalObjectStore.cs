@@ -132,8 +132,11 @@ namespace QuantConnect.Lean.Engine.Storage
                         {
                             if (!_storage.TryGetValue(path, out objectStoreEntry) || objectStoreEntry.Data == null)
                             {
-                                // load file if content is null or not present, we prioritize the version we have in memory
-                                yield return _storage[path] = new ObjectStoreEntry(path, File.ReadAllBytes(file.FullName));
+                                if(TryCreateObjectStoreEntry(file.FullName, path, out objectStoreEntry))
+                                {
+                                    // load file if content is null or not present, we prioritize the version we have in memory
+                                    yield return _storage[path] = objectStoreEntry;
+                                }
                             }
                         }
                         else
@@ -222,10 +225,10 @@ namespace QuantConnect.Lean.Engine.Storage
             if(!_storage.TryGetValue(path, out var objectStoreEntry) || objectStoreEntry.Data == null)
             {
                 var filePath = PathForKey(path);
-                if (File.Exists(filePath))
+                if (TryCreateObjectStoreEntry(filePath, path, out objectStoreEntry))
                 {
                     // if there is no data in the cache and the file exists on disk let's load it
-                    objectStoreEntry = _storage[path] = new ObjectStoreEntry(path, File.ReadAllBytes(filePath));
+                    _storage[path] = objectStoreEntry;
                 }
             }
             return objectStoreEntry?.Data;
@@ -557,6 +560,37 @@ namespace QuantConnect.Lean.Engine.Storage
                 return path;
             }
             return path.TrimStart('.').TrimStart('/', '\\').Replace('\\', '/');
+        }
+
+        private static bool TryCreateObjectStoreEntry(string filePath, string path, out ObjectStoreEntry objectStoreEntry)
+        {
+            var count = 0;
+            do
+            {
+                count++;
+                try
+                {
+                    if (File.Exists(filePath))
+                    {
+                        objectStoreEntry = new ObjectStoreEntry(path, File.ReadAllBytes(filePath));
+                        return true;
+                    }
+                    objectStoreEntry = null;
+                    return false;
+                }
+                catch (Exception)
+                {
+                    if (count > 3)
+                    {
+                        throw;
+                    }
+                    else
+                    {
+                        // let's be resilient and retry, avoid race conditions, someone updating it or just random io failure
+                        Thread.Sleep(250);
+                    }
+                }
+            } while (true);
         }
 
         /// <summary>
