@@ -164,7 +164,8 @@ namespace QuantConnect.ToolBox
                             GetParameterOrExit(optionsObject, "date"),
                             GetParameterOrExit(optionsObject, "source-dir"),
                             GetParameterOrExit(optionsObject, "destination-dir"),
-                            GetParameterOrDefault(optionsObject, "market", null));
+                            GetParameterOrDefault(optionsObject, "market", null),
+                            GetParameterOrDefault(optionsObject, "security-type", null));
                         break;
                     case "nmdc":
                     case "nsemarketdataconverter":

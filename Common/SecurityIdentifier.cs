@@ -177,6 +177,7 @@ namespace QuantConnect
                     case SecurityType.Index:
                     case SecurityType.FutureOption:
                     case SecurityType.IndexOption:
+                    case SecurityType.CryptoFuture:
                         var oadate = ExtractFromProperties(DaysOffset, DaysWidth);
                         _date = DateTime.FromOADate(oadate);
                         return _date.Value;
@@ -519,6 +520,18 @@ namespace QuantConnect
         public static SecurityIdentifier GenerateCrypto(string symbol, string market)
         {
             return Generate(DefaultDate, symbol, SecurityType.Crypto, market);
+        }
+
+        /// <summary>
+        /// Generates a new <see cref="SecurityIdentifier"/> for a CryptoFuture pair
+        /// </summary>
+        /// <param name="expiry">The date the future expires</param>
+        /// <param name="symbol">The currency pair in the format similar to: 'EURUSD'</param>
+        /// <param name="market">The security's market</param>
+        /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified CryptoFuture pair</returns>
+        public static SecurityIdentifier GenerateCryptoFuture(DateTime expiry, string symbol, string market)
+        {
+            return Generate(expiry, symbol, SecurityType.CryptoFuture, market);
         }
 
         /// <summary>
