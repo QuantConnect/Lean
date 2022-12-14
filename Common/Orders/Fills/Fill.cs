@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -12,6 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
+using System.Collections.Generic;
 
 namespace QuantConnect.Orders.Fills
 {
@@ -32,6 +34,27 @@ namespace QuantConnect.Orders.Fills
         public Fill(OrderEvent orderEvent)
         {
             OrderEvent = orderEvent;
+        }
+    }
+
+    /// <summary>
+    /// Defines the result for <see cref="IFillModel.Fill"/> for combo orders
+    /// </summary>
+    public class ComboFill : Fill
+    {
+        /// <summary>
+        /// The order events for the orders in the combo associated to this <see cref="ComboFill"/> instance
+        /// </summary>
+        public IEnumerable<OrderEvent> OrderEvents { get; }
+
+        /// <summary>
+        /// Creates a new <see cref="ComboFill"/> instance
+        /// </summary>
+        /// <param name="orderEvents"></param>
+        public ComboFill(IEnumerable<OrderEvent> orderEvents)
+            : base(null)
+        {
+            OrderEvents = orderEvents;
         }
     }
 }

@@ -361,10 +361,15 @@ namespace QuantConnect.Brokerages.Backtesting
                                         Algorithm.Settings.StalePriceTimeSpan);
 
                                     // check if the fill should be emitted
-                                    var fill = model.Fill(context).OrderEvent;
-                                    if (targetOrder.TimeInForce.IsFillValid(security, targetOrder, fill))
+                                    var fill = model.Fill(context);
+                                    var comboFill = fill as ComboFill;
+                                    if (comboFill == null && targetOrder.TimeInForce.IsFillValid(security, targetOrder, fill.OrderEvent))
                                     {
-                                        fills.Add(fill);
+                                        fills.Add(fill.OrderEvent);
+                                    }
+                                    else if (comboFill != null && comboFill.OrderEvents.All(x => targetOrder.TimeInForce.IsFillValid(security, targetOrder, x)))
+                                    {
+                                        fills.AddRange(comboFill.OrderEvents);
                                     }
                                 }
 

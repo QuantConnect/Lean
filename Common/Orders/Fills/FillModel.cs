@@ -30,7 +30,6 @@ namespace QuantConnect.Orders.Fills
     public class FillModel : IFillModel
     {
         private static readonly Dictionary<GroupOrderManager, List<FillModelParameters>> _pendingGroupedOrdersByManager = new();
-        private static readonly List<Order> _pendingGroupedOrders = new();
 
         /// <summary>
         /// The parameters instance to be used by the different XxxxFill() implementations
@@ -64,19 +63,16 @@ namespace QuantConnect.Orders.Fills
             Parameters = parameters;
 
             var order = parameters.Order;
+            var groupedOrder = order as IGroupOrder;
+
+            if (groupedOrder != null)
+            {
+                return FillComboOrder(parameters);
+            }
+
             OrderEvent orderEvent;
             switch (order.Type)
             {
-                case OrderType.ComboLimit:
-                    orderEvent = ComboLimitFill(parameters.Security, parameters.Order as ComboLimitOrder);
-                    break;
-                case OrderType.ComboMarket:
-                    orderEvent = ComboMarketFill(parameters.Security, parameters.Order as ComboMarketOrder);
-                    break;
-                case OrderType.ComboLegLimit:
-                    // TODO
-                    orderEvent = null;
-                    break;
                 case OrderType.Market:
                     orderEvent = PythonWrapper != null
                         ? PythonWrapper.MarketFill(parameters.Security, parameters.Order as MarketOrder)
@@ -118,15 +114,92 @@ namespace QuantConnect.Orders.Fills
             return new Fill(orderEvent);
         }
 
+        private bool CheckIfComboOrderIsReadyToFill(Order order)
+        {
+            var groupedOrder = order as IGroupOrder;
+
+            if (!_pendingGroupedOrdersByManager.TryGetValue(groupedOrder.GroupOrderManager, out var pendingFillsParameters))
+            {
+                pendingFillsParameters = _pendingGroupedOrdersByManager[groupedOrder.GroupOrderManager] = new List<FillModelParameters>();
+            }
+
+            if (pendingFillsParameters.Count < groupedOrder.GroupOrderManager.Count)
+            {
+                // we haven't received fill requests for all the orders in the group
+
+                if (!pendingFillsParameters.Any(x => x.Order.Id == order.Id))
+                {
+                    pendingFillsParameters.Add(Parameters);
+
+                    if (pendingFillsParameters.Count < groupedOrder.GroupOrderManager.Count)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        private ComboFill FillComboOrder(FillModelParameters parameters)
+        {
+            var order = parameters.Order;
+            var groupedOrder = order as IGroupOrder;
+            if (groupedOrder == null)
+            {
+                // This should never happen
+                throw new ArgumentException("FillModel.FillComboOrder(): The order is not a grouped order");
+            }
+
+            IEnumerable<OrderEvent> orderEvents = Enumerable.Empty<OrderEvent>();
+
+            if (!CheckIfComboOrderIsReadyToFill(order))
+            {
+                return new ComboFill(orderEvents);
+            }
+
+            switch (order.Type)
+            {
+                case OrderType.ComboLimit:
+                    //orderEvents = ComboLimitFill(groupedOrder as ComboLimitOrder);
+                    break;
+                case OrderType.ComboMarket:
+                    orderEvents = ComboMarketFill(order as ComboMarketOrder);
+                    break;
+                case OrderType.ComboLegLimit:
+                    // TODO:
+                    orderEvents = Enumerable.Empty<OrderEvent>();
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            if (orderEvents.Any())
+            {
+                // orders are filled, we can clear the pending orders table
+                _pendingGroupedOrdersByManager.Remove(groupedOrder.GroupOrderManager);
+            }
+
+            return new ComboFill(orderEvents);
+        }
+
         /// <summary>
         /// Default market fill model for the base security class. Fills at the last traded price.
         /// </summary>
-        /// <param name="asset">Security asset we're filling</param>
         /// <param name="order">Order packet to model</param>
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
-        public virtual OrderEvent ComboMarketFill(Security asset, ComboMarketOrder order)
+        public virtual IEnumerable<OrderEvent> ComboMarketFill(ComboMarketOrder order)
         {
-            return InternalMarketFill(asset, order, order.Quantity * order.GroupOrderManager.Quantity);
+            // if this was called, we are ready to fill the combo order and event the current one should be in the pending orders table
+            var fills = _pendingGroupedOrdersByManager[order.GroupOrderManager]
+                .Select(x => InternalMarketFill(x.Security, x.Order, x.Order.Quantity * order.GroupOrderManager.Quantity));
+
+            if (fills.Any(x => x.Status != OrderStatus.Filled))
+            {
+                return Enumerable.Empty<OrderEvent>();
+            }
+
+            return fills;
         }
 
 
@@ -153,45 +226,8 @@ namespace QuantConnect.Orders.Fills
 
             if (order.Status == OrderStatus.Canceled) return fill;
 
-            List<FillModelParameters> pendingFillsParameters = null;
-            var groupedOrder = order as IGroupOrder;
-            var isGroupedOrder = groupedOrder != null && groupedOrder.GroupOrderManager != null;
-            if (isGroupedOrder)
-            {
-                if (!_pendingGroupedOrdersByManager.TryGetValue(groupedOrder.GroupOrderManager, out pendingFillsParameters))
-                {
-                    pendingFillsParameters = _pendingGroupedOrdersByManager[groupedOrder.GroupOrderManager] = new List<FillModelParameters>();
-                }
-
-                if (pendingFillsParameters.Count < groupedOrder.GroupOrderManager.Count)
-                {
-                    // we haven't received fill requests for all the orders in the group
-
-                    if (!pendingFillsParameters.Any(x => x.Order.Id == order.Id))
-                    {
-                        pendingFillsParameters.Add(Parameters);
-                        _pendingGroupedOrders.Add(order);
-                    }
-
-                    return fill;
-                }
-
-                // all orders in the group have been receive, let's fill
-            }
-
             // make sure the exchange is open/normal market hours before filling
             if (!IsExchangeOpen(asset, false)) return fill;
-
-            if (isGroupedOrder)
-            {
-                // filling current order, let's remove it from pending orders
-                _pendingGroupedOrders.Remove(order);
-                if (!_pendingGroupedOrders.Any(x => pendingFillsParameters.Any(y => y.Order.Id == x.Id)))
-                {
-                    // all pending orders in the group are filled now, let's remove the entry from the dictionary
-                    _pendingGroupedOrdersByManager.Remove(groupedOrder.GroupOrderManager);
-                }
-            }
 
             var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
             var pricesEndTimeUtc = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
@@ -476,9 +512,10 @@ namespace QuantConnect.Orders.Fills
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
         /// <seealso cref="StopMarketFill(Security, StopMarketOrder)"/>
         /// <seealso cref="MarketFill(Security, MarketOrder)"/>
-        public virtual OrderEvent ComboLimitFill(Security asset, ComboLimitOrder order)
+        public virtual IEnumerable<OrderEvent> ComboLimitFill(Security asset, ComboLimitOrder order)
         {
-            return InternalLimitFill(asset, order, order.GroupOrderManager.LimitPrice, order.Quantity * order.GroupOrderManager.Quantity);
+            return Enumerable.Empty<OrderEvent>();
+            //return InternalLimitFill(asset, groupedOrder, groupedOrder.GroupOrderManager.LimitPrice, groupedOrder.Quantity * groupedOrder.GroupOrderManager.Quantity);
         }
 
         /// <summary>
