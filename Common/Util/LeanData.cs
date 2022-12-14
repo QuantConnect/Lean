@@ -133,13 +133,14 @@ namespace QuantConnect.Util
                     break;
 
                 case SecurityType.Crypto:
+                case SecurityType.CryptoFuture:
                     switch (resolution)
                     {
                         case Resolution.Tick:
                             var tick = data as Tick;
                             if (tick == null)
                             {
-                                throw new ArgumentException("Crypto tick could not be created", nameof(data));
+                                throw new ArgumentException($"{securityType} tick could not be created", nameof(data));
                             }
                             if (tick.TickType == TickType.Trade)
                             {
@@ -149,7 +150,7 @@ namespace QuantConnect.Util
                             {
                                 return ToCsv(milliseconds, tick.BidPrice, tick.BidSize, tick.AskPrice, tick.AskSize, tick.Suspicious ? "1" : "0");
                             }
-                            throw new ArgumentException("Cryto tick could not be created");
+                            throw new ArgumentException($"{securityType} tick could not be created");
                         case Resolution.Second:
                         case Resolution.Minute:
                             var quoteBar = data as QuoteBar;
@@ -164,7 +165,7 @@ namespace QuantConnect.Util
                             {
                                 return ToCsv(milliseconds, tradeBar.Open, tradeBar.High, tradeBar.Low, tradeBar.Close, tradeBar.Volume);
                             }
-                            throw new ArgumentException("Cryto minute/second bar could not be created", nameof(data));
+                            throw new ArgumentException($"{securityType} minute/second bar could not be created", nameof(data));
 
                         case Resolution.Hour:
                         case Resolution.Daily:
@@ -185,7 +186,7 @@ namespace QuantConnect.Util
                                              bigTradeBar.Close,
                                              bigTradeBar.Volume);
                             }
-                            throw new ArgumentException("Cryto hour/daily bar could not be created", nameof(data));
+                            throw new ArgumentException($"{securityType} hour/daily bar could not be created", nameof(data));
                     }
                     break;
                 case SecurityType.Forex:
@@ -568,6 +569,7 @@ namespace QuantConnect.Util
                     return Path.Combine(directory, futureOptionPath);
 
                 case SecurityType.Future:
+                case SecurityType.CryptoFuture:
                     return !isHourOrDaily ? Path.Combine(directory, symbol.ID.Symbol.ToLowerInvariant()) : directory;
 
                 case SecurityType.Commodity:
@@ -693,6 +695,7 @@ namespace QuantConnect.Util
                         ) + ".csv";
 
                 case SecurityType.Future:
+                case SecurityType.CryptoFuture:
                     if (symbol.HasUnderlying)
                     {
                         symbol = symbol.Underlying;
@@ -777,6 +780,7 @@ namespace QuantConnect.Util
                     return $"{formattedDate}_{tickTypeString}_{symbol.ID.OptionStyle.OptionStyleToLower()}.zip";
 
                 case SecurityType.Future:
+                case SecurityType.CryptoFuture:
                     if (isHourOrDaily)
                     {
                         return $"{symbol.ID.Symbol.ToLowerInvariant()}_{tickTypeString}.zip";
@@ -967,12 +971,7 @@ namespace QuantConnect.Util
             }
             if (type == typeof(Tick))
             {
-                if (securityType == SecurityType.Forex ||
-                    securityType == SecurityType.Cfd ||
-                    securityType == SecurityType.Crypto)
-                {
-                    return TickType.Quote;
-                }
+                return GetCommonTickType(securityType);
             }
 
             return TickType.Trade;

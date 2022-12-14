@@ -13,21 +13,27 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Securities.Future
+using QuantConnect.Data;
+
+namespace QuantConnect.Securities.CryptoFuture
 {
     /// <summary>
-    /// Future holdings implementation of the base securities class
+    /// 
     /// </summary>
-    /// <seealso cref="SecurityHolding"/>
-    public class FutureHolding : SecurityHolding
+    public class CryptoFuture : Future.Future
     {
         /// <summary>
-        /// Future Holding Class constructor
+        /// 
         /// </summary>
-        /// <param name="security">The future security being held</param>
-        /// <param name="currencyConverter">A currency converter instance</param>
-        public FutureHolding(Security security, ICurrencyConverter currencyConverter)
-            : base(security, currencyConverter)
+        /// <param name="exchangeHours"></param>
+        /// <param name="config"></param>
+        /// <param name="quoteCurrency"></param>
+        /// <param name="symbolProperties"></param>
+        /// <param name="currencyConverter"></param>
+        /// <param name="registeredTypes"></param>
+        public CryptoFuture(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, Cash quoteCurrency, SymbolProperties symbolProperties,
+            ICurrencyConverter currencyConverter, IRegisteredSecurityDataTypesProvider registeredTypes)
+            : base(exchangeHours, config, quoteCurrency, symbolProperties, currencyConverter, registeredTypes)
         {
         }
     }
