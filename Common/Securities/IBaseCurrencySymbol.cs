@@ -27,6 +27,6 @@ namespace QuantConnect.Securities
         /// For example, the EUR/USD has a base currency of the euro, and as a result
         /// of going long the EUR/USD a trader is acquiring euros in exchange for US dollars
         /// </remarks>
-        string BaseCurrencySymbol { get; }
+        public Cash BaseCurrency { get; }
     }
 }

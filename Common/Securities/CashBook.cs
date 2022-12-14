@@ -92,10 +92,11 @@ namespace QuantConnect.Securities
         /// <param name="quantity">The amount of new cash to start</param>
         /// <param name="conversionRate">The conversion rate used to determine the initial
         /// portfolio value/starting capital impact caused by this currency position.</param>
-        public void Add(string symbol, decimal quantity, decimal conversionRate)
+        public Cash Add(string symbol, decimal quantity, decimal conversionRate)
         {
             var cash = new Cash(symbol, quantity, conversionRate);
             Add(symbol, cash);
+            return cash;
         }
 
         /// <summary>

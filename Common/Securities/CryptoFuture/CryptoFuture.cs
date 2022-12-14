@@ -13,28 +13,65 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Orders.Slippage;
 
 namespace QuantConnect.Securities.CryptoFuture
 {
     /// <summary>
     /// 
     /// </summary>
-    public class CryptoFuture : Future.Future
+    public class CryptoFuture : Security, IBaseCurrencySymbol
     {
+        /// <summary>
+        /// Gets the currency acquired by going long this currency pair
+        /// </summary>
+        /// <remarks>
+        /// For example, the EUR/USD has a base currency of the euro, and as a result
+        /// of going long the EUR/USD a trader is acquiring euros in exchange for US dollars
+        /// </remarks>
+        public Cash BaseCurrency { get; protected set; }
+
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="symbol"></param>
         /// <param name="exchangeHours"></param>
-        /// <param name="config"></param>
         /// <param name="quoteCurrency"></param>
+        /// <param name="baseCurrency"></param>
         /// <param name="symbolProperties"></param>
         /// <param name="currencyConverter"></param>
         /// <param name="registeredTypes"></param>
-        public CryptoFuture(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, Cash quoteCurrency, SymbolProperties symbolProperties,
-            ICurrencyConverter currencyConverter, IRegisteredSecurityDataTypesProvider registeredTypes)
-            : base(exchangeHours, config, quoteCurrency, symbolProperties, currencyConverter, registeredTypes)
+        /// <param name="cache"></param>
+        public CryptoFuture(Symbol symbol,
+            SecurityExchangeHours exchangeHours,
+            Cash quoteCurrency,
+            Cash baseCurrency,
+            SymbolProperties symbolProperties,
+            ICurrencyConverter currencyConverter,
+            IRegisteredSecurityDataTypesProvider registeredTypes,
+            SecurityCache cache)
+            : base(symbol,
+                quoteCurrency,
+                symbolProperties,
+                new CryptoFutureExchange(exchangeHours),
+                cache,
+                new SecurityPortfolioModel(),
+                new ImmediateFillModel(),
+                new BinanceFeeModel(),
+                new ConstantSlippageModel(0),
+                new ImmediateSettlementModel(),
+                Securities.VolatilityModel.Null,
+                new CryptoFutureMarginModel(10, 0.02m, 2),
+                new SecurityDataFilter(),
+                new SecurityPriceVariationModel(),
+                currencyConverter,
+                registeredTypes
+                )
         {
+            BaseCurrency = baseCurrency;
+            Holdings = new CryptoFutureHolding(this, currencyConverter);
         }
     }
 }

@@ -849,7 +849,7 @@ namespace QuantConnect.Algorithm
             // need to also check base currency existence/conversion rate on forex orders
             if (security.Type == SecurityType.Forex || security.Type == SecurityType.Crypto)
             {
-                var baseCurrency = ((IBaseCurrencySymbol)security).BaseCurrencySymbol;
+                var baseCurrency = ((IBaseCurrencySymbol)security).BaseCurrency.Symbol;
                 if (!Portfolio.CashBook.TryGetValue(baseCurrency, out var baseCash))
                 {
                     return OrderResponse.Error(request, OrderResponseErrorCode.ForexBaseAndQuoteCurrenciesRequired,

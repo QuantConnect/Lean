@@ -175,6 +175,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             Security usdcusd = new Crypto(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new Cash("USD", 0, 10),
+                new Cash("USDC", 0, 0),
                 new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create("USDCUSD", SecurityType.Crypto, Market.Binance), Resolution.Minute, tz, tz, true, false, false),
                 new SymbolProperties("USDCUSD", "USD", 1, 0.01m, 0.00000001m, string.Empty),
                 ErrorCurrencyConverter.Instance,

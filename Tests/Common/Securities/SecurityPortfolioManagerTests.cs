@@ -190,6 +190,7 @@ namespace QuantConnect.Tests.Common.Securities
             var mchJwbSecurity = new QuantConnect.Securities.Forex.Forex(
                 SecurityExchangeHours,
                 jwbCash,
+                mchCash,
                 subscriptions.Add(MCHJWB, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork),
                 SymbolProperties.GetDefault(jwbCash.Symbol),
                 ErrorCurrencyConverter.Instance,
@@ -199,6 +200,7 @@ namespace QuantConnect.Tests.Common.Securities
             var mchUsdSecurity = new QuantConnect.Securities.Forex.Forex(
                 SecurityExchangeHours,
                 usdCash,
+                mchCash,
                 subscriptions.Add(MCHUSD, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork),
                 SymbolProperties.GetDefault(usdCash.Symbol),
                 ErrorCurrencyConverter.Instance,
@@ -208,6 +210,7 @@ namespace QuantConnect.Tests.Common.Securities
             var usdJwbSecurity = new QuantConnect.Securities.Forex.Forex(
                 SecurityExchangeHours,
                 mchCash,
+                usdCash,
                 subscriptions.Add(USDJWB, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork),
                 SymbolProperties.GetDefault(mchCash.Symbol),
                 ErrorCurrencyConverter.Instance,
@@ -601,6 +604,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new QuantConnect.Securities.Forex.Forex(
                     SecurityExchangeHours,
                     usdCash,
+                    eurCash,
                     config2,
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
@@ -616,6 +620,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new QuantConnect.Securities.Forex.Forex(
                     SecurityExchangeHours,
                     gbpCash,
+                    eurCash,
                     config3,
                     SymbolProperties.GetDefault(gbpCash.Symbol),
                     ErrorCurrencyConverter.Instance,
@@ -946,13 +951,14 @@ namespace QuantConnect.Tests.Common.Securities
             var transactions = new SecurityTransactionManager(null, securities);
             var portfolio = new SecurityPortfolioManager(securities, transactions);
             portfolio.SetCash(1000);
-            portfolio.CashBook.Add("EUR", 0, 1.1000m);
+            var eurCash = portfolio.CashBook.Add("EUR", 0, 1.1000m);
 
             securities.Add(
                 Symbols.EURUSD,
                 new QuantConnect.Securities.Forex.Forex(
                     SecurityExchangeHours,
                     portfolio.CashBook[Currencies.USD],
+                    eurCash,
                     CreateTradeBarDataConfig(SecurityType.Forex, Symbols.EURUSD),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
@@ -980,13 +986,14 @@ namespace QuantConnect.Tests.Common.Securities
             var transactions = new SecurityTransactionManager(null, securities);
             var portfolio = new SecurityPortfolioManager(securities, transactions);
             portfolio.SetCash(10000);
-            portfolio.CashBook.Add("BTC", 0, 4000.01m);
+            var btcCash = portfolio.CashBook.Add("BTC", 0, 4000.01m);
 
             securities.Add(
                 Symbols.BTCUSD,
                 new QuantConnect.Securities.Crypto.Crypto(
                     SecurityExchangeHours,
                     portfolio.CashBook[Currencies.USD],
+                    btcCash,
                     CreateTradeBarDataConfig(
                         SecurityType.Crypto,
                         Symbols.BTCUSD

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -78,7 +78,7 @@ namespace QuantConnect.Securities
                 {
                     // model forex fills as currency swaps
                     var forex = (IBaseCurrencySymbol) security;
-                    security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, forex.BaseCurrencySymbol, fill.FillQuantity);
+                    security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, forex.BaseCurrency.Symbol, fill.FillQuantity);
                 }
 
                 // did we close or open a position further?

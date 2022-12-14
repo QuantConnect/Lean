@@ -41,12 +41,6 @@ namespace QuantConnect.Securities.CryptoFuture
         /// </summary>
         /// <param name="parameters">An object containing the security</param>
         /// <returns>The maintenance margin required for the option</returns>
-        /// <remarks>
-        /// We fix the option to 1.5x the maintenance because of its close coupling with the underlying.
-        /// The option's contract multiplier is 1x, but might be more sensitive to volatility shocks in the long
-        /// run when it comes to calculating the different market scenarios attempting to simulate VaR, resulting
-        /// in a margin greater than the underlying's margin.
-        /// </remarks>
         public override MaintenanceMargin GetMaintenanceMargin(MaintenanceMarginParameters parameters)
         {
             var security = parameters.Security;
@@ -64,12 +58,6 @@ namespace QuantConnect.Securities.CryptoFuture
         /// </summary>
         /// <param name="parameters">An object containing the security and quantity of shares</param>
         /// <returns>The initial margin required for the option (i.e. the equity required to enter a position for this option)</returns>
-        /// <remarks>
-        /// We fix the option to 1.5x the initial because of its close coupling with the underlying.
-        /// The option's contract multiplier is 1x, but might be more sensitive to volatility shocks in the long
-        /// run when it comes to calculating the different market scenarios attempting to simulate VaR, resulting
-        /// in a margin greater than the underlying's margin.
-        /// </remarks>
         public override InitialMargin GetInitialMarginRequirement(InitialMarginParameters parameters)
         {
             var security = parameters.Security;
@@ -84,7 +72,27 @@ namespace QuantConnect.Securities.CryptoFuture
 
         private static decimal GetNotionalPositionValue(Security security, decimal quantity)
         {
-            return quantity * security.SymbolProperties.ContractMultiplier / security.Price;
+            var cryptoFuture = (CryptoFuture)security;
+
+            // We could check base currency or the contract multiplier being 1
+            if(cryptoFuture.QuoteCurrency.Symbol == "USDT" || cryptoFuture.QuoteCurrency.Symbol == "BUSD")
+            {
+                // https://www.binance.com/en/support/faq/how-to-calculate-cost-required-to-open-a-position-in-perpetual-futures-contracts-87fa7ee33b574f7084d42bd2ce2e463b
+                // example BTCUSDT: (9,253.30 * 1 BTC) = 9,253.3 USDT
+                var notionalPositionValue = quantity * security.SymbolProperties.ContractMultiplier * security.Price;
+
+                // USDT is the QUOTE currency we need to convert it into account currency
+                return notionalPositionValue * security.QuoteCurrency.ConversionRate;
+            }
+            else
+            {
+                // https://www.binance.com/en/support/faq/leverage-and-margin-in-coin-margined-futures-contracts-be2c7d9d95b04a7e8044ed02dd7dfe5c
+                // example BTCUSD: [ (10*100 USD) / 9,800 USD ] = 0.10204 BTC
+                var notionalPositionValue = quantity * security.SymbolProperties.ContractMultiplier / security.Price;
+
+                // BTC is the BASE currency we need to convert it into account currency
+                return notionalPositionValue * cryptoFuture.BaseCurrency.ConversionRate;
+            }
         }
     }
 }
