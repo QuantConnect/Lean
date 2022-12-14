@@ -3619,7 +3619,7 @@ namespace QuantConnect
         public static bool ShouldEmitData(this SubscriptionDataConfig config, BaseData data, bool isUniverse = false)
         {
             // For now we are only filtering Auxiliary data; so if its another type just return true
-            if (data.DataType != MarketDataType.Auxiliary)
+            if (data.DataType != MarketDataType.Auxiliary || config.Type == typeof(MarginInterestRate))
             {
                 return true;
             }

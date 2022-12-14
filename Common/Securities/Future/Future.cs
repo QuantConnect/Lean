@@ -90,7 +90,8 @@ namespace QuantConnect.Securities.Future
                 new SecurityDataFilter(),
                 new SecurityPriceVariationModel(),
                 currencyConverter,
-                registeredTypes
+                registeredTypes,
+                Securities.MarginInterestRateModel.Null
                 )
         {
             BuyingPowerModel = new FutureMarginModel(0, this);
@@ -137,7 +138,8 @@ namespace QuantConnect.Securities.Future
                 new SecurityDataFilter(),
                 new SecurityPriceVariationModel(),
                 currencyConverter,
-                registeredTypes
+                registeredTypes,
+                Securities.MarginInterestRateModel.Null
                 )
         {
             BuyingPowerModel = new FutureMarginModel(0, this);

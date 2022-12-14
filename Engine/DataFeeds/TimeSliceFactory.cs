@@ -350,6 +350,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             // symbol changes is keyed by the requested symbol
                             symbolChanges[packet.Configuration.Symbol] = symbolChange;
                         }
+                        else
+                        {
+                            // let's make it available to the user through the cache
+                            securityUpdate.Add(baseData);
+                        }
                     }
                 }
 

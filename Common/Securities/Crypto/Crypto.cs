@@ -71,7 +71,8 @@ namespace QuantConnect.Securities.Crypto
                 new ForexDataFilter(),
                 new SecurityPriceVariationModel(),
                 currencyConverter,
-                registeredTypes
+                registeredTypes,
+                Securities.MarginInterestRateModel.Null
                 )
         {
             BaseCurrency = baseCurrency;
@@ -113,7 +114,8 @@ namespace QuantConnect.Securities.Crypto
                 new ForexDataFilter(),
                 new SecurityPriceVariationModel(),
                 currencyConverter,
-                registeredTypes
+                registeredTypes,
+                Securities.MarginInterestRateModel.Null
                 )
         {
             BaseCurrency = baseCurrency;

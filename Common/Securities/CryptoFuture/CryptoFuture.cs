@@ -20,7 +20,7 @@ using QuantConnect.Orders.Slippage;
 namespace QuantConnect.Securities.CryptoFuture
 {
     /// <summary>
-    /// 
+    /// Crypto Future Security Object Implementation for Crypto Future Assets
     /// </summary>
     public class CryptoFuture : Security, IBaseCurrencySymbol
     {
@@ -34,16 +34,17 @@ namespace QuantConnect.Securities.CryptoFuture
         public Cash BaseCurrency { get; protected set; }
 
         /// <summary>
-        /// 
+        /// Constructor for the Crypto Future security
         /// </summary>
-        /// <param name="symbol"></param>
-        /// <param name="exchangeHours"></param>
-        /// <param name="quoteCurrency"></param>
-        /// <param name="baseCurrency"></param>
-        /// <param name="symbolProperties"></param>
-        /// <param name="currencyConverter"></param>
-        /// <param name="registeredTypes"></param>
-        /// <param name="cache"></param>
+        /// <param name="symbol">The symbol</param>
+        /// <param name="exchangeHours">Defines the hours this exchange is open</param>
+        /// <param name="quoteCurrency">The cash object that represent the quote currency</param>
+        /// <param name="baseCurrency">The cash object that represent the base currency</param>
+        /// <param name="symbolProperties">The symbol properties for this security</param>
+        /// <param name="currencyConverter">Currency converter used to convert <see cref="CashAmount"/>
+        /// instances into units of the account currency</param>
+        /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
+        /// <param name="cache">The security cache</param>
         public CryptoFuture(Symbol symbol,
             SecurityExchangeHours exchangeHours,
             Cash quoteCurrency,
@@ -63,11 +64,14 @@ namespace QuantConnect.Securities.CryptoFuture
                 new ConstantSlippageModel(0),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
-                new CryptoFutureMarginModel(10, 0.02m, 2),
+
+                new CryptoFutureMarginModel(3),
                 new SecurityDataFilter(),
                 new SecurityPriceVariationModel(),
                 currencyConverter,
-                registeredTypes
+                registeredTypes,
+
+                new CryptoFutureMarginInterestRateModel()
                 )
         {
             BaseCurrency = baseCurrency;

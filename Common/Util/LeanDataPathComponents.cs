@@ -147,7 +147,7 @@ namespace QuantConnect.Util
                     // ticker_year_trade_american
                     ticker = ticker.Substring(0, ticker.IndexOf("_", StringComparison.InvariantCulture));
                 }
-                if (securityType == SecurityType.Future)
+                if (securityType == SecurityType.Future || securityType == SecurityType.CryptoFuture)
                 {
                     // ticker_trade
                     ticker = ticker.Substring(0, ticker.LastIndexOfInvariant("_"));

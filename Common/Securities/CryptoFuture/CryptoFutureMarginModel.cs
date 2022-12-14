@@ -16,7 +16,7 @@
 namespace QuantConnect.Securities.CryptoFuture
 {
     /// <summary>
-    /// 
+    /// The crypto future margin model which supports both Coin and USDT futures
     /// </summary>
     public class CryptoFutureMarginModel : SecurityMarginModel
     {
@@ -24,13 +24,13 @@ namespace QuantConnect.Securities.CryptoFuture
         private readonly decimal _maintenanceAmount;
 
         /// <summary>
-        /// 
+        /// Creates a new instance
         /// </summary>
-        /// <param name="leverage"></param>
-        /// <param name="maintenanceMarginRate"></param>
-        /// <param name="maintenanceAmount"></param>
-        public CryptoFutureMarginModel(decimal leverage, decimal maintenanceMarginRate, decimal maintenanceAmount) :
-            base(leverage, 0)
+        /// <param name="leverage">The leverage to use, used on initial margin requirements</param>
+        /// <param name="maintenanceMarginRate">The maintenance margin rate</param>
+        /// <param name="maintenanceAmount">The maintenance amount which will reduce maintenance margin requirements</param>
+        public CryptoFutureMarginModel(decimal leverage, decimal maintenanceMarginRate = 0.1m, decimal maintenanceAmount = 0)
+             : base(leverage, 0)
         {
             _maintenanceAmount = maintenanceAmount;
             _maintenanceMarginRate = maintenanceMarginRate;
@@ -50,7 +50,7 @@ namespace QuantConnect.Securities.CryptoFuture
                 return MaintenanceMargin.Zero;
             }
 
-            return new MaintenanceMargin(GetNotionalPositionValue(security, quantity) * _maintenanceMarginRate - _maintenanceAmount);
+            return new MaintenanceMargin(security.Holdings.GetQuantityValue(quantity, security.Price).InAccountCurrency * _maintenanceMarginRate - _maintenanceAmount);
         }
 
         /// <summary>
@@ -67,32 +67,7 @@ namespace QuantConnect.Securities.CryptoFuture
                 return InitialMargin.Zero;
             }
 
-            return new InitialMargin(GetNotionalPositionValue(security, quantity) / GetLeverage(security));
-        }
-
-        private static decimal GetNotionalPositionValue(Security security, decimal quantity)
-        {
-            var cryptoFuture = (CryptoFuture)security;
-
-            // We could check base currency or the contract multiplier being 1
-            if(cryptoFuture.QuoteCurrency.Symbol == "USDT" || cryptoFuture.QuoteCurrency.Symbol == "BUSD")
-            {
-                // https://www.binance.com/en/support/faq/how-to-calculate-cost-required-to-open-a-position-in-perpetual-futures-contracts-87fa7ee33b574f7084d42bd2ce2e463b
-                // example BTCUSDT: (9,253.30 * 1 BTC) = 9,253.3 USDT
-                var notionalPositionValue = quantity * security.SymbolProperties.ContractMultiplier * security.Price;
-
-                // USDT is the QUOTE currency we need to convert it into account currency
-                return notionalPositionValue * security.QuoteCurrency.ConversionRate;
-            }
-            else
-            {
-                // https://www.binance.com/en/support/faq/leverage-and-margin-in-coin-margined-futures-contracts-be2c7d9d95b04a7e8044ed02dd7dfe5c
-                // example BTCUSD: [ (10*100 USD) / 9,800 USD ] = 0.10204 BTC
-                var notionalPositionValue = quantity * security.SymbolProperties.ContractMultiplier / security.Price;
-
-                // BTC is the BASE currency we need to convert it into account currency
-                return notionalPositionValue * cryptoFuture.BaseCurrency.ConversionRate;
-            }
+            return new InitialMargin(security.Holdings.GetQuantityValue(quantity, security.Price).InAccountCurrency / GetLeverage(security));
         }
     }
 }

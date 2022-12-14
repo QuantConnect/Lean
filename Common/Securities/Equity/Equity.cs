@@ -91,7 +91,8 @@ namespace QuantConnect.Securities.Equity
                 new EquityDataFilter(),
                 new AdjustedPriceVariationModel(),
                 currencyConverter,
-                registeredTypes
+                registeredTypes,
+                Securities.MarginInterestRateModel.Null
                 )
         {
             Holdings = new EquityHolding(this, currencyConverter);
@@ -124,7 +125,8 @@ namespace QuantConnect.Securities.Equity
                 new EquityDataFilter(),
                 new AdjustedPriceVariationModel(),
                 currencyConverter,
-                registeredTypes
+                registeredTypes,
+                Securities.MarginInterestRateModel.Null
                 )
         {
             Holdings = new EquityHolding(this, currencyConverter);

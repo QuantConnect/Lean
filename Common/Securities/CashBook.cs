@@ -26,6 +26,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 using static QuantConnect.StringExtensions;
+using static QuantConnect.Securities.Futures;
 
 namespace QuantConnect.Securities
 {
@@ -96,7 +97,8 @@ namespace QuantConnect.Securities
         {
             var cash = new Cash(symbol, quantity, conversionRate);
             Add(symbol, cash);
-            return cash;
+            // let's return the cash instance we are using
+            return _currencies[symbol];
         }
 
         /// <summary>
@@ -247,15 +249,23 @@ namespace QuantConnect.Securities
             {
                 return;
             }
-            // we link our Updated event with underlying cash instances
-            // so interested listeners just subscribe to our event
-            value.Updated += OnCashUpdate;
 
-            var alreadyExisted = Remove(symbol, calledInternally: true);
+            if (!_currencies.TryGetValue(symbol, out var cash))
+            {
+                // we link our Updated event with underlying cash instances
+                // so interested listeners just subscribe to our event
+                value.Updated += OnCashUpdate;
+                _currencies.AddOrUpdate(symbol, value);
 
-            _currencies.AddOrUpdate(symbol, value);
-
-            OnUpdate(alreadyExisted ? UpdateType.Updated : UpdateType.Added);
+                OnUpdate(UpdateType.Added);
+            }
+            else
+            {
+                // override the values, it will trigger an update event already
+                // we keep the instance because it might be used by securities already
+                cash.ConversionRate = value.ConversionRate;
+                cash.SetAmount(value.Amount);
+            }
         }
 
         /// <summary>

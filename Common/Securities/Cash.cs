@@ -93,8 +93,12 @@ namespace QuantConnect.Securities
             }
             internal set
             {
-                _conversionRate = value;
-                OnUpdate();
+                if(_conversionRate != value)
+                {
+                    // only update if there was actually one
+                    _conversionRate = value;
+                    OnUpdate();
+                }
             }
         }
 
@@ -159,12 +163,22 @@ namespace QuantConnect.Securities
         /// <param name="amount">The amount to set the quantity to</param>
         public void SetAmount(decimal amount)
         {
+            var updated = false;
             // lock can be null when proto deserializing this instance
             lock (_locker ?? new object())
             {
-                Amount = amount;
+                if (Amount != amount)
+                {
+                    Amount = amount;
+                    // only update if there was actually one
+                    updated = true;
+                }
             }
-            OnUpdate();
+
+            if (updated)
+            {
+                OnUpdate();
+            }
         }
 
         /// <summary>

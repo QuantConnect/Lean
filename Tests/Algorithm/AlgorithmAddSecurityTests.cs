@@ -21,6 +21,7 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Cfd;
 using QuantConnect.Securities.Crypto;
+using QuantConnect.Securities.CryptoFuture;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Future;
@@ -90,6 +91,9 @@ namespace QuantConnect.Tests.Algorithm
                         break;
                     case SecurityType.Crypto:
                         var crypto = (Crypto)security;
+                        break;
+                    case SecurityType.CryptoFuture:
+                        var cryptoFuture = (CryptoFuture)security;
                         break;
                     case SecurityType.Base:
                         break;

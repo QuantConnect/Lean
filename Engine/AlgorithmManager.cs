@@ -125,6 +125,7 @@ namespace QuantConnect.Lean.Engine
             var methodInvokers = new Dictionary<Type, MethodInvoker>();
             var marginCallFrequency = TimeSpan.FromMinutes(5);
             var nextMarginCallTime = DateTime.MinValue;
+            var nextInterestRateTime = DateTime.MinValue;
             var settlementScanFrequency = TimeSpan.FromMinutes(30);
             var nextSettlementScanTime = DateTime.MinValue;
             var time = algorithm.StartDate.Date;
@@ -261,6 +262,15 @@ namespace QuantConnect.Lean.Engine
 
                     // Send market price updates to the TradeBuilder
                     algorithm.TradeBuilder.SetMarketPrice(security.Symbol, security.Price);
+                }
+
+                if (time >= nextInterestRateTime)
+                {
+                    foreach (var security in algorithm.Securities.Values)
+                    {
+                        security.MarginInterestRateModel.ApplyMarginInterestRate(new MarginInterestRateParameters(security, time));
+                    }
+                    nextInterestRateTime = time + Time.OneHour;
                 }
 
                 //Update the securities properties with any universe data

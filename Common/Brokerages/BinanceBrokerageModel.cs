@@ -13,13 +13,14 @@
  * limitations under the License.
 */
 
-using QuantConnect.Benchmarks;
-using QuantConnect.Orders;
-using QuantConnect.Orders.Fees;
-using QuantConnect.Securities;
-using QuantConnect.Util;
-using System.Collections.Generic;
+using System;
 using System.Linq;
+using QuantConnect.Util;
+using QuantConnect.Orders;
+using QuantConnect.Benchmarks;
+using QuantConnect.Securities;
+using QuantConnect.Orders.Fees;
+using System.Collections.Generic;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Brokerages
@@ -56,6 +57,11 @@ namespace QuantConnect.Brokerages
         /// <returns></returns>
         public override decimal GetLeverage(Security security)
         {
+            if(security.Symbol.SecurityType == SecurityType.CryptoFuture && AccountType == AccountType.Cash)
+            {
+                throw new InvalidOperationException($"{SecurityType.CryptoFuture} can only be traded using a {AccountType.Margin} account type");
+            }
+
             if (AccountType == AccountType.Cash || security.IsInternalFeed() || security.Type == SecurityType.Base)
             {
                 return 1m;
@@ -167,10 +173,10 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (security.Type != SecurityType.Crypto)
+            if (security.Type != SecurityType.Crypto && security.Type != SecurityType.CryptoFuture)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    StringExtensions.Invariant($"The {nameof(BinanceBrokerageModel)} does not support {security.Type} security type.")
+                    Invariant($"The {nameof(BinanceBrokerageModel)} does not support {security.Type} security type.")
                 );
 
                 return false;
@@ -178,7 +184,7 @@ namespace QuantConnect.Brokerages
             return base.CanSubmitOrder(security, order, out message);
 
             bool IsOrderSizeLargeEnough(decimal price) =>
-                order.AbsoluteQuantity * price > security.SymbolProperties.MinimumOrderSize;
+                !security.SymbolProperties.MinimumOrderSize.HasValue || order.AbsoluteQuantity * price > security.SymbolProperties.MinimumOrderSize;
         }
 
         protected static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets(string marketName)
