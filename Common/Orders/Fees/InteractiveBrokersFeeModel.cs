@@ -84,9 +84,9 @@ namespace QuantConnect.Orders.Fees
             }
 
             var quantity = order.AbsoluteQuantity;
-            if (order is IGroupOrder groupedOrder && groupedOrder.GroupOrderManager != null)
+            if (order.GroupOrderManager != null)
             {
-                quantity *= groupedOrder.GroupOrderManager.Quantity;
+                quantity *= order.GroupOrderManager.Quantity;
             }
 
             decimal feeResult;

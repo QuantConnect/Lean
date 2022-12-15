@@ -22,17 +22,12 @@ namespace QuantConnect.Orders
     /// <summary>
     /// Combo market order type
     /// </summary>
-    public class ComboMarketOrder : MarketOrder, IGroupOrder
+    public class ComboMarketOrder : MarketOrder
     {
         /// <summary>
         /// Combo Market Order Type
         /// </summary>
         public override OrderType Type => OrderType.ComboMarket;
-
-        /// <summary>
-        /// The manager of this group of orders
-        /// </summary>
-        public GroupOrderManager GroupOrderManager { get; set; }
 
         /// <summary>
         /// Added a default constructor for JSON Deserialization:
@@ -47,10 +42,11 @@ namespace QuantConnect.Orders
         /// <param name="symbol">Symbol asset we're seeking to trade</param>
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
         /// <param name="time">Time the order was placed</param>
-        /// <param name="groupOrderManager"></param>
+        /// <param name="groupOrderManager">Manager for the orders in the group</param>
         /// <param name="tag">User defined data tag for this order</param>
         /// <param name="properties">The order properties for this order</param>
-        public ComboMarketOrder(Symbol symbol, decimal quantity, DateTime time, GroupOrderManager groupOrderManager, string tag = "", IOrderProperties properties = null)
+        public ComboMarketOrder(Symbol symbol, decimal quantity, DateTime time, GroupOrderManager groupOrderManager, string tag = "",
+            IOrderProperties properties = null)
             : base(symbol, quantity, time, tag, properties)
         {
             GroupOrderManager = groupOrderManager;
@@ -71,7 +67,7 @@ namespace QuantConnect.Orders
         /// <returns>A copy of this order</returns>
         public override Order Clone()
         {
-            var order = new ComboMarketOrder { GroupOrderManager = GroupOrderManager };
+            var order = new ComboMarketOrder();
             CopyTo(order);
             return order;
         }

@@ -31,6 +31,9 @@ namespace QuantConnect.Algorithm.CSharp
     {
         protected Symbol _optionSymbol;
         protected Symbol _equitySymbol;
+
+        private List<OrderEvent> _fillOrderEvents = new();
+
         private bool _orderPlaced;
 
         public override void Initialize()
@@ -62,16 +65,19 @@ namespace QuantConnect.Algorithm.CSharp
                         .OrderBy(x => x.Strike)
                         .ToList();
 
-                    ComboOrder(
-                        OrderType.ComboLimit,
-                        new List<Leg>()
-                        {
-                            new Leg() { Symbol = callContracts[0].Symbol, Quantity = 1, },
-                            new Leg() { Symbol = callContracts[1].Symbol, Quantity = -2, },
-                            new Leg() { Symbol = callContracts[2].Symbol, Quantity = 1, },
-                        },
-                        2,
-                        45m);
+                    // Let's wait until we have at least three contracts
+                    if (callContracts.Count < 3)
+                    {
+                        return;
+                    }
+
+                    var legs = new List<Leg>()
+                    {
+                        new Leg() { Symbol = callContracts[0].Symbol, Quantity = 1, },
+                        new Leg() { Symbol = callContracts[1].Symbol, Quantity = -2, },
+                        new Leg() { Symbol = callContracts[2].Symbol, Quantity = 1, },
+                    };
+                    PlaceComboOrder(legs, 10, 45m);
 
                     _orderPlaced = true;
                 }
@@ -80,7 +86,26 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            Log($"ORDER EVENT: {orderEvent}");
+            Log($" Order Event: {orderEvent}");
+
+            if (orderEvent.Status == OrderStatus.Filled)
+            {
+                _fillOrderEvents.Add(orderEvent);
+            }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            if (_fillOrderEvents.Count != 3)
+            {
+                throw new Exception($"Expected 3 fill order events, found {_fillOrderEvents.Count}");
+            }
+
+            var fillTimes = _fillOrderEvents.Select(x => x.UtcTime).ToHashSet();
+            if (fillTimes.Count != 1)
+            {
+                throw new Exception($"Expected all fill order events to have the same time, found {string.Join(", ", fillTimes)}");
+            }
         }
 
         protected abstract IEnumerable<OrderTicket> PlaceComboOrder(List<Leg> legs, int quantity, decimal? limitPrice = null);

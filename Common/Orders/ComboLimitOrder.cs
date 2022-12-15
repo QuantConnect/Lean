@@ -23,17 +23,12 @@ namespace QuantConnect.Orders
     /// Combo limit order type
     /// </summary>
     /// <remarks>Single limit price for the whole combo order</remarks>
-    public class ComboLimitOrder : Order, IGroupOrder
+    public class ComboLimitOrder : Order
     {
         /// <summary>
         /// Combo Limit Order Type
         /// </summary>
         public override OrderType Type => OrderType.ComboLimit;
-
-        /// <summary>
-        /// The manager of this group of orders
-        /// </summary>
-        public GroupOrderManager GroupOrderManager { get; set; }
 
         /// <summary>
         /// Added a default constructor for JSON Deserialization:
@@ -48,11 +43,12 @@ namespace QuantConnect.Orders
         /// <param name="symbol">Symbol asset we're seeking to trade</param>
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
         /// <param name="time">Time the order was placed</param>
-        /// <param name="groupOrderManager"></param>
+        /// <param name="groupOrderManager">Manager for the orders in the group</param>
         /// <param name="limitPrice">Price the order should be filled at if a limit order</param>
         /// <param name="tag">User defined data tag for this order</param>
         /// <param name="properties">The order properties for this order</param>
-        public ComboLimitOrder(Symbol symbol, decimal quantity, decimal limitPrice, DateTime time, GroupOrderManager groupOrderManager, string tag = "", IOrderProperties properties = null)
+        public ComboLimitOrder(Symbol symbol, decimal quantity, decimal limitPrice, DateTime time, GroupOrderManager groupOrderManager,
+            string tag = "", IOrderProperties properties = null)
             : base(symbol, quantity, time, tag, properties)
         {
             GroupOrderManager = groupOrderManager;
@@ -86,7 +82,7 @@ namespace QuantConnect.Orders
         /// <returns>A copy of this order</returns>
         public override Order Clone()
         {
-            var order = new ComboLimitOrder { GroupOrderManager = GroupOrderManager };
+            var order = new ComboLimitOrder();
             CopyTo(order);
             return order;
         }

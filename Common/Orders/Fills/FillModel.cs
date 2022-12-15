@@ -63,9 +63,8 @@ namespace QuantConnect.Orders.Fills
             Parameters = parameters;
 
             var order = parameters.Order;
-            var groupedOrder = order as IGroupOrder;
 
-            if (groupedOrder != null)
+            if (order.GroupOrderManager != null)
             {
                 return FillComboOrder(parameters);
             }
@@ -116,14 +115,13 @@ namespace QuantConnect.Orders.Fills
 
         private bool CheckIfComboOrderIsReadyToFill(Order order)
         {
-            var groupedOrder = order as IGroupOrder;
-
-            if (!_pendingGroupedOrdersByManager.TryGetValue(groupedOrder.GroupOrderManager, out var pendingFillsParameters))
+            var groupOrderManager = order.GroupOrderManager;
+            if (!_pendingGroupedOrdersByManager.TryGetValue(groupOrderManager, out var pendingFillsParameters))
             {
-                pendingFillsParameters = _pendingGroupedOrdersByManager[groupedOrder.GroupOrderManager] = new List<FillModelParameters>();
+                pendingFillsParameters = _pendingGroupedOrdersByManager[groupOrderManager] = new List<FillModelParameters>();
             }
 
-            if (pendingFillsParameters.Count < groupedOrder.GroupOrderManager.Count)
+            if (pendingFillsParameters.Count < groupOrderManager.Count)
             {
                 // we haven't received fill requests for all the orders in the group
 
@@ -131,7 +129,7 @@ namespace QuantConnect.Orders.Fills
                 {
                     pendingFillsParameters.Add(Parameters);
 
-                    if (pendingFillsParameters.Count < groupedOrder.GroupOrderManager.Count)
+                    if (pendingFillsParameters.Count < groupOrderManager.Count)
                     {
                         return false;
                     }
@@ -144,8 +142,7 @@ namespace QuantConnect.Orders.Fills
         private ComboFill FillComboOrder(FillModelParameters parameters)
         {
             var order = parameters.Order;
-            var groupedOrder = order as IGroupOrder;
-            if (groupedOrder == null)
+            if (order.GroupOrderManager == null)
             {
                 // This should never happen
                 throw new ArgumentException("FillModel.FillComboOrder(): The order is not a grouped order");
@@ -176,7 +173,7 @@ namespace QuantConnect.Orders.Fills
             if (orderEvents.Any())
             {
                 // orders are filled, we can clear the pending orders table
-                _pendingGroupedOrdersByManager.Remove(groupedOrder.GroupOrderManager);
+                _pendingGroupedOrdersByManager.Remove(order.GroupOrderManager);
             }
 
             return new ComboFill(orderEvents);

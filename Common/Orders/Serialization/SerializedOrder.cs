@@ -157,13 +157,13 @@ namespace QuantConnect.Orders.Serialization
         /// </summary>
         [JsonProperty("stop-triggered", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public bool? StopTriggered { get; set; }
-        
+
         /// <summary>
         /// Signal showing the "LimitIfTouchedOrder" has been converted into a Limit Order
         /// </summary>
         [JsonProperty("trigger-touched", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public bool? TriggerTouched { get; set; }
-        
+
         /// <summary>
         /// The price which must first be reached before submitting a limit order.
         /// </summary>
@@ -274,11 +274,7 @@ namespace QuantConnect.Orders.Serialization
                 TriggerTouched = limitIfTouched.TriggerTouched;
             }
 
-            var groupedOrder = order as IGroupOrder;
-            if(groupedOrder != null)
-            {
-                GroupOrderManager = groupedOrder.GroupOrderManager;
-            }
+            GroupOrderManager = order.GroupOrderManager;
         }
     }
 }

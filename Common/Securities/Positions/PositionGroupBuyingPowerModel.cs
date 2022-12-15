@@ -155,9 +155,9 @@ namespace QuantConnect.Securities.Positions
             // 1. Confirm we meet initial margin requirements, accounting for buffer
             var direction = parameters.Orders.Select(o =>
             {
-                if (o is IGroupOrder groupOrder)
+                if (o.GroupOrderManager != null)
                 {
-                    return groupOrder.GroupOrderManager.Direction;
+                    return o.GroupOrderManager.Direction;
                 }
                 return o.Direction;
             }).First();

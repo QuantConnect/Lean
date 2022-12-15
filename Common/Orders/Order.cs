@@ -197,6 +197,11 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Manager for the orders in the group if this is a combo order
+        /// </summary>
+        public GroupOrderManager GroupOrderManager { get; set; }
+
+        /// <summary>
         /// Added a default constructor for JSON Deserialization:
         /// </summary>
         protected Order()
@@ -208,6 +213,30 @@ namespace QuantConnect.Orders
             Tag = string.Empty;
             BrokerId = new List<string>();
             Properties = new OrderProperties();
+            GroupOrderManager = null;
+        }
+
+        /// <summary>
+        /// New order constructor
+        /// </summary>
+        /// <param name="symbol">Symbol asset we're seeking to trade</param>
+        /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
+        /// <param name="time">Time the order was placed</param>
+        /// <param name="groupOrderManager">Manager for the orders in the group if this is a combo order</param>
+        /// <param name="tag">User defined data tag for this order</param>
+        /// <param name="properties">The order properties for this order</param>
+        protected Order(Symbol symbol, decimal quantity, DateTime time, GroupOrderManager groupOrderManager, string tag = "",
+            IOrderProperties properties = null)
+        {
+            Time = time;
+            PriceCurrency = string.Empty;
+            Quantity = quantity;
+            Symbol = symbol;
+            Status = OrderStatus.None;
+            Tag = tag;
+            BrokerId = new List<string>();
+            Properties = properties ?? new OrderProperties();
+            GroupOrderManager = groupOrderManager;
         }
 
         /// <summary>
@@ -219,15 +248,8 @@ namespace QuantConnect.Orders
         /// <param name="tag">User defined data tag for this order</param>
         /// <param name="properties">The order properties for this order</param>
         protected Order(Symbol symbol, decimal quantity, DateTime time, string tag = "", IOrderProperties properties = null)
+            : this(symbol, quantity, time, null, tag, properties)
         {
-            Time = time;
-            PriceCurrency = string.Empty;
-            Quantity = quantity;
-            Symbol = symbol;
-            Status = OrderStatus.None;
-            Tag = tag;
-            BrokerId = new List<string>();
-            Properties = properties ?? new OrderProperties();
         }
 
         /// <summary>
@@ -334,6 +356,7 @@ namespace QuantConnect.Orders
             order.Tag = Tag;
             order.Properties = Properties.Clone();
             order.OrderSubmissionData = OrderSubmissionData?.Clone();
+            order.GroupOrderManager = GroupOrderManager;
         }
 
         /// <summary>
@@ -429,7 +452,7 @@ namespace QuantConnect.Orders
                 case OrderType.StopLimit:
                     order = new StopLimitOrder(symbol, quantity, stopPrice, limitPrice, time, tag, properties);
                     break;
-                
+
                 case OrderType.LimitIfTouched:
                     order = new LimitIfTouchedOrder(symbol, quantity, triggerPrice, limitPrice, time, tag, properties);
                     break;

@@ -22,12 +22,12 @@ using System.Collections.Generic;
 namespace QuantConnect.Orders
 {
     /// <summary>
-    /// 
+    ///
     /// </summary>
     public static class GroupOrderExtensions
     {
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="order"></param>
         /// <param name="orderProvider"></param>
@@ -36,10 +36,9 @@ namespace QuantConnect.Orders
         public static bool TryGetGroupOrders(this Order order, Func<int, Order> orderProvider, out List<Order> orders)
         {
             orders = new List<Order> { order };
-            var groupedOrder = order as IGroupOrder;
-            if (groupedOrder != null && groupedOrder.GroupOrderManager != null)
+            if (order.GroupOrderManager != null)
             {
-                foreach (var otherOrdersId in groupedOrder.GroupOrderManager.OrderIds.Where(id => id != order.Id))
+                foreach (var otherOrdersId in order.GroupOrderManager.OrderIds.Where(id => id != order.Id))
                 {
                     var otherOrder = orderProvider(otherOrdersId);
                     if (otherOrder != null)
@@ -49,15 +48,15 @@ namespace QuantConnect.Orders
                     else
                     {
                         // this shouldn't happen
-                        Log.Error($"BacktestingBrokerage.Scan(): missing order {otherOrdersId} of group: {groupedOrder.GroupOrderManager.Id}");
+                        Log.Error($"BacktestingBrokerage.Scan(): missing order {otherOrdersId} of group: {order.GroupOrderManager.Id}");
                         return false;
                     }
                 }
 
-                if (groupedOrder.GroupOrderManager.Count != orders.Count)
+                if (order.GroupOrderManager.Count != orders.Count)
                 {
-                    Log.Debug($"TryGetGroupOrders(): missing orders of group {groupedOrder.GroupOrderManager.Id}." +
-                        $" We have {orders.Count}/{groupedOrder.GroupOrderManager.Count} orders will skip");
+                    Log.Debug($"TryGetGroupOrders(): missing orders of group {order.GroupOrderManager.Id}." +
+                        $" We have {orders.Count}/{order.GroupOrderManager.Count} orders will skip");
                     return false;
                 }
             }
