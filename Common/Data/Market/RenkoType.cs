@@ -17,7 +17,7 @@ namespace QuantConnect.Data.Market
 {
     /// <summary>
     /// The type of the RenkoBar being created.
-    /// Used by RenkoConsolidator and ClassicRenkoConsolidator
+    /// Used by RenkoConsolidator, ClassicRenkoConsolidator and VolumeRenkoConsolidator
     /// </summary>
     /// <remarks>Classic implementation was not entirely accurate for Renko consolidator
     /// so we have replaced it with a new implementation and maintain the classic
