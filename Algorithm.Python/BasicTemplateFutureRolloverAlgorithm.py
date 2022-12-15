@@ -20,11 +20,12 @@ class BasicTemplateFutureRolloverAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         self.SetCash(1000000)
-        self.SetStartDate(2019, 2, 1)
-        self.SetEndDate(2021, 6, 1)
+        self.SetStartDate(2013, 10, 8)
+        self.SetEndDate(2014, 10, 10)
 
         # Requesting data
         self.continuous_contract = self.AddFuture(Futures.Indices.SP500EMini,
+            resolution = Resolution.Daily,
             dataNormalizationMode = DataNormalizationMode.BackwardsRatio,
             dataMappingMode = DataMappingMode.OpenInterest,
             contractDepthOffset = 0

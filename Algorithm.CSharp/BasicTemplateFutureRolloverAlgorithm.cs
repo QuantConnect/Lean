@@ -36,11 +36,12 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             SetCash(1000000);
-            SetStartDate(2019, 2, 1);
-            SetEndDate(2021, 6, 1);
+            SetStartDate(2013, 10, 8);
+            SetEndDate(2014, 10, 10);
 
             // Requesting data
             _continuousContract = AddFuture(Futures.Indices.SP500EMini,
+                resolution: Resolution.Daily,
                 dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
                 dataMappingMode: DataMappingMode.OpenInterest,
                 contractDepthOffset: 0
@@ -93,46 +94,46 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 68645;
+        public long DataPoints => 4542;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 340;
+        public int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "17"},
-            {"Average Win", "1.41%"},
-            {"Average Loss", "-4.03%"},
-            {"Compounding Annual Return", "3.001%"},
-            {"Drawdown", "5.600%"},
-            {"Expectancy", "0.182"},
-            {"Net Profit", "7.144%"},
-            {"Sharpe Ratio", "0.737"},
-            {"Probabilistic Sharpe Ratio", "31.420%"},
-            {"Loss Rate", "12%"},
-            {"Win Rate", "88%"},
-            {"Profit-Loss Ratio", "0.35"},
-            {"Alpha", "-0.003"},
-            {"Beta", "0.138"},
-            {"Annual Standard Deviation", "0.029"},
-            {"Annual Variance", "0.001"},
-            {"Information Ratio", "-0.907"},
-            {"Tracking Error", "0.171"},
-            {"Treynor Ratio", "0.152"},
-            {"Total Fees", "$36.55"},
-            {"Estimated Strategy Capacity", "$58000000000.00"},
-            {"Lowest Capacity Asset", "ES XPFJZVPGHL35"},
-            {"Fitness Score", "0.002"},
+            {"Total Trades", "2"},
+            {"Average Win", "0.06%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "0.057%"},
+            {"Drawdown", "0.000%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "0.057%"},
+            {"Sharpe Ratio", "0.665"},
+            {"Probabilistic Sharpe Ratio", "25.882%"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "100%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0.001"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "-1.357"},
+            {"Tracking Error", "0.089"},
+            {"Treynor Ratio", "1.135"},
+            {"Total Fees", "$4.30"},
+            {"Estimated Strategy Capacity", "$600000000000.00"},
+            {"Lowest Capacity Asset", "ES VP274HSU1AF5"},
+            {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "0.962"},
-            {"Return Over Maximum Drawdown", "0.53"},
-            {"Portfolio Turnover", "0.003"},
+            {"Sortino Ratio", "0.417"},
+            {"Return Over Maximum Drawdown", "4.379"},
+            {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -146,7 +147,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "8f92e1528c6477a156449fd1e86527e7"}
+            {"OrderListHash", "960f2a002af87a34d20257aeb36ffbb5"}
         };
     }
 }
