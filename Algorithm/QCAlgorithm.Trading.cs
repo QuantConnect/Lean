@@ -653,6 +653,16 @@ namespace QuantConnect.Algorithm
             return GenerateOptionStrategyOrders(strategy, quantity, asynchronous, tag, orderProperties);
         }
 
+        public IEnumerable<OrderTicket> ComboOrder(OrderType type, List<Leg> legs, int quantity, decimal? limitPrice, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
+        {
+            if (type != OrderType.ComboMarket && type != OrderType.ComboLimit && type != OrderType.ComboLegLimit)
+            {
+                throw new ArgumentException("ComboOrder only supports OrderType.ComboMarket, OrderType.ComboLimit and OrderType.ComboLegLimit");
+            }
+
+            return SubmitComboOrder(legs, quantity, limitPrice ?? 0, asynchronous, tag, orderProperties);
+        }
+
         private IEnumerable<OrderTicket> GenerateOptionStrategyOrders(OptionStrategy strategy, int strategyQuantity, bool asynchronous, string tag, IOrderProperties orderProperties)
         {
             // setting up the tag text for all orders of one strategy
