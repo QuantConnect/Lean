@@ -160,15 +160,14 @@ namespace QuantConnect.Orders.Fills
 
             switch (order.Type)
             {
-                case OrderType.ComboLimit:
-                    orderEvents = ComboLimitFill(order as ComboLimitOrder);
-                    break;
                 case OrderType.ComboMarket:
                     orderEvents = ComboMarketFill(order as ComboMarketOrder);
                     break;
+                case OrderType.ComboLimit:
+                    orderEvents = ComboLimitFill(order as ComboLimitOrder);
+                    break;
                 case OrderType.ComboLegLimit:
-                    // TODO:
-                    orderEvents = Enumerable.Empty<OrderEvent>();
+                    orderEvents = ComboLegLimitFill(order as ComboLegLimitOrder);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -184,15 +183,106 @@ namespace QuantConnect.Orders.Fills
         }
 
         /// <summary>
-        /// Default market fill model for the base security class. Fills at the last traded price.
+        /// TODO:
         /// </summary>
-        /// <param name="order">Order packet to model</param>
-        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        /// <param name="order">TODO:</param>
+        /// <returns>TODO:</returns>
         public virtual IEnumerable<OrderEvent> ComboMarketFill(ComboMarketOrder order)
         {
             // if this was called, we are ready to fill the combo order and event the current one should be in the pending orders table
             var fills = _pendingGroupedOrdersByManager[order.GroupOrderManager]
                 .Select(x => InternalMarketFill(x.Security, x.Order, x.Order.Quantity * order.GroupOrderManager.Quantity));
+
+            if (fills.Any(x => x.Status != OrderStatus.Filled))
+            {
+                return Enumerable.Empty<OrderEvent>();
+            }
+
+            return fills;
+        }
+
+        /// <summary>
+        /// TODO:
+        /// </summary>
+        /// <param name="order">TODO:</param>
+        /// <returns>TODO:</returns>
+        public virtual IEnumerable<OrderEvent> ComboLimitFill(ComboLimitOrder order)
+        {
+            // aggregate the prices from all the securities
+            var pendingOrdersParameters = _pendingGroupedOrdersByManager[order.GroupOrderManager];
+            var pricesBySecurity = pendingOrdersParameters.ToDictionary(x => x.Security, x => GetPricesCheckingPythonWrapper(x.Security, x.Order.Direction));
+
+            IEnumerable<OrderEvent> fills = Enumerable.Empty<OrderEvent>();
+
+            if (pricesBySecurity.Any(x => x.Value.EndTime.ConvertToUtc(x.Key.Exchange.TimeZone) < order.Time))
+            {
+                // do not fill on stale data
+                return fills;
+            }
+
+            var low = pricesBySecurity.Aggregate(0m, (accumulatedPrice, currentPrices) => accumulatedPrice + currentPrices.Value.Low);
+            var high = pricesBySecurity.Aggregate(0m, (accumulatedPrice, currentPrices) => accumulatedPrice + currentPrices.Value.High);
+            var limitPrice = order.GroupOrderManager.LimitPrice;
+
+            //-> Valid Live/Model Order:
+            switch (order.GroupOrderManager.Direction)
+            {
+                case OrderDirection.Buy:
+                    //Buy limit seeks lowest price
+                    if (low < limitPrice)
+                    {
+                        fills = pendingOrdersParameters.Select(x =>
+                        {
+                            var utcTime = x.Security.LocalTime.ConvertToUtc(x.Security.Exchange.TimeZone);
+                            var fill = new OrderEvent(x.Order, utcTime, OrderFee.Zero);
+
+                            //Set order fill:
+                            fill.Status = OrderStatus.Filled;
+                            // fill at the worse price this bar or the limit price, this allows far out of the money limits
+                            // to be executed properly
+                            fill.FillPrice = Math.Min(pricesBySecurity[x.Security].High, limitPrice);
+                            // assume the order completely filled
+                            fill.FillQuantity = x.Order.Quantity;
+
+                            return fill;
+                        });
+                    }
+                    break;
+                case OrderDirection.Sell:
+                    //Sell limit seeks highest price possible
+                    if (high > limitPrice)
+                    {
+                        fills = pendingOrdersParameters.Select(x =>
+                        {
+                            var utcTime = x.Security.LocalTime.ConvertToUtc(x.Security.Exchange.TimeZone);
+                            var fill = new OrderEvent(x.Order, utcTime, OrderFee.Zero);
+
+                            //Set order fill:
+                            fill.Status = OrderStatus.Filled;
+                            // fill at the worse price this bar or the limit price, this allows far out of the money limits
+                            // to be executed properly
+                            fill.FillPrice = Math.Min(pricesBySecurity[x.Security].Low, limitPrice);
+                            // assume the order completely filled
+                            fill.FillQuantity = x.Order.Quantity;
+
+                            return fill;
+                        });
+                    }
+                    break;
+            }
+
+            return fills;
+        }
+
+        /// <summary>
+        /// TODO:
+        /// </summary>
+        /// <param name="order">TODO:</param>
+        /// <returns>TODO:</returns>
+        public virtual IEnumerable<OrderEvent> ComboLegLimitFill(ComboLegLimitOrder order)
+        {
+            var fills = _pendingGroupedOrdersByManager[order.GroupOrderManager].Select(x =>
+                InternalLimitFill(x.Security, x.Order, (x.Order as ComboLegLimitOrder).LimitPrice, x.Order.Quantity * order.GroupOrderManager.Quantity));
 
             if (fills.Any(x => x.Status != OrderStatus.Filled))
             {
@@ -502,82 +592,6 @@ namespace QuantConnect.Orders.Fills
             }
 
             return fill;
-        }
-
-        /// <summary>
-        /// Default limit order fill model in the base security class.
-        /// </summary>
-        /// <param name="asset">Security asset we're filling</param>
-        /// <param name="order">Order packet to model</param>
-        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
-        /// <seealso cref="StopMarketFill(Security, StopMarketOrder)"/>
-        /// <seealso cref="MarketFill(Security, MarketOrder)"/>
-        public virtual IEnumerable<OrderEvent> ComboLimitFill(ComboLimitOrder order)
-        {
-            // aggregate the prices from all the securities
-            var pendingOrdersParameters = _pendingGroupedOrdersByManager[order.GroupOrderManager];
-            var pricesBySecurity = pendingOrdersParameters.ToDictionary(x => x.Security, x => GetPricesCheckingPythonWrapper(x.Security, x.Order.Direction));
-
-            IEnumerable<OrderEvent> fills = Enumerable.Empty<OrderEvent>();
-
-            if (pricesBySecurity.Any(x => x.Value.EndTime.ConvertToUtc(x.Key.Exchange.TimeZone) < order.Time))
-            {
-                // do not fill on stale data
-                return fills;
-            }
-
-            var low = pricesBySecurity.Aggregate(0m, (accumulatedPrice, currentPrices) => accumulatedPrice + currentPrices.Value.Low);
-            var high = pricesBySecurity.Aggregate(0m, (accumulatedPrice, currentPrices) => accumulatedPrice + currentPrices.Value.High);
-            var limitPrice = order.GroupOrderManager.LimitPrice;
-
-            //-> Valid Live/Model Order:
-            switch (order.GroupOrderManager.Direction)
-            {
-                case OrderDirection.Buy:
-                    //Buy limit seeks lowest price
-                    if (low < limitPrice)
-                    {
-                        fills = pendingOrdersParameters.Select(x =>
-                        {
-                            var utcTime = x.Security.LocalTime.ConvertToUtc(x.Security.Exchange.TimeZone);
-                            var fill = new OrderEvent(x.Order, utcTime, OrderFee.Zero);
-
-                            //Set order fill:
-                            fill.Status = OrderStatus.Filled;
-                            // fill at the worse price this bar or the limit price, this allows far out of the money limits
-                            // to be executed properly
-                            fill.FillPrice = Math.Min(pricesBySecurity[x.Security].High, limitPrice);
-                            // assume the order completely filled
-                            fill.FillQuantity = x.Order.Quantity;
-
-                            return fill;
-                        });
-                    }
-                    break;
-                case OrderDirection.Sell:
-                    //Sell limit seeks highest price possible
-                    if (high > limitPrice)
-                    {
-                        fills = pendingOrdersParameters.Select(x =>
-                        {
-                            var utcTime = x.Security.LocalTime.ConvertToUtc(x.Security.Exchange.TimeZone);
-                            var fill = new OrderEvent(x.Order, utcTime, OrderFee.Zero);
-
-                            //Set order fill:
-                            fill.Status = OrderStatus.Filled;
-                            // fill at the worse price this bar or the limit price, this allows far out of the money limits
-                            // to be executed properly
-                            fill.FillPrice = Math.Min(pricesBySecurity[x.Security].Low, limitPrice);
-                            // assume the order completely filled
-                            fill.FillQuantity = x.Order.Quantity;
-
-                            return fill;
-                        });
-                    }
-                    break;
-            }
-
-            return fills;
         }
 
         /// <summary>
