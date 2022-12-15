@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System.Collections;
 using System.Collections.Generic;
 
 namespace QuantConnect.Orders.Fills
@@ -20,7 +21,12 @@ namespace QuantConnect.Orders.Fills
     /// <summary>
     /// Defines the result for <see cref="IFillModel.Fill"/>
     /// </summary>
-    public class Fill
+    public interface IFill { }
+
+    /// <summary>
+    /// Defines a possible result for <see cref="IFillModel.Fill"/> for a single order
+    /// </summary>
+    public class Fill : IFill
     {
         /// <summary>
         /// The order event associated to this <see cref="Fill"/> instance
@@ -38,23 +44,31 @@ namespace QuantConnect.Orders.Fills
     }
 
     /// <summary>
-    /// Defines the result for <see cref="IFillModel.Fill"/> for combo orders
+    /// Defines a possible result for <see cref="IFillModel.Fill"/> for combo orders
     /// </summary>
-    public class ComboFill : Fill
+    public class ComboFill : IFill, IEnumerable<OrderEvent>
     {
-        /// <summary>
-        /// The order events for the orders in the combo associated to this <see cref="ComboFill"/> instance
-        /// </summary>
-        public IEnumerable<OrderEvent> OrderEvents { get; }
+        private readonly List<OrderEvent> _orderEvents = new();
 
         /// <summary>
         /// Creates a new <see cref="ComboFill"/> instance
         /// </summary>
-        /// <param name="orderEvents"></param>
+        /// <param name="orderEvents">The fill order events for each order in the combo</param>
         public ComboFill(IEnumerable<OrderEvent> orderEvents)
-            : base(null)
         {
-            OrderEvents = orderEvents;
+            _orderEvents.AddRange(orderEvents);
+        }
+
+        /// <summary>
+        /// </summary>
+        public IEnumerator<OrderEvent> GetEnumerator()
+        {
+            return _orderEvents.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

@@ -56,7 +56,7 @@ namespace QuantConnect.Orders.Fills
         /// </summary>
         /// <param name="parameters">A <see cref="FillModelParameters"/> object containing the security and order</param>
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
-        public virtual Fill Fill(FillModelParameters parameters)
+        public virtual IFill Fill(FillModelParameters parameters)
         {
             // Important: setting the parameters is required because it is
             // consumed by the different XxxxFill() implementations

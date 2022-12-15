@@ -362,14 +362,21 @@ namespace QuantConnect.Brokerages.Backtesting
 
                                     // check if the fill should be emitted
                                     var fill = model.Fill(context);
-                                    var comboFill = fill as ComboFill;
-                                    if (comboFill == null && targetOrder.TimeInForce.IsFillValid(security, targetOrder, fill.OrderEvent))
+                                    switch (fill)
                                     {
-                                        fills.Add(fill.OrderEvent);
-                                    }
-                                    else if (comboFill != null && comboFill.OrderEvents.All(x => targetOrder.TimeInForce.IsFillValid(security, targetOrder, x)))
-                                    {
-                                        fills.AddRange(comboFill.OrderEvents);
+                                        case Fill singleFill:
+                                            if (targetOrder.TimeInForce.IsFillValid(security, targetOrder, singleFill.OrderEvent))
+                                            {
+                                                fills.Add(singleFill.OrderEvent);
+                                            }
+                                            break;
+
+                                        case ComboFill comboFill:
+                                            if (comboFill.All(x => targetOrder.TimeInForce.IsFillValid(security, targetOrder, x)))
+                                            {
+                                                fills.AddRange(comboFill);
+                                            }
+                                            break;
                                     }
                                 }
 

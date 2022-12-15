@@ -68,7 +68,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new FillModelParameters(_security,
                     new MarketOrder(_security.Symbol, 1, orderDateTime),
                     new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour));
+                    Time.OneHour)) as Fill;
 
             Assert.True(model.MarketFillWasCalled);
             Assert.AreEqual(OrderStatus.Filled, result.OrderEvent.Status);
@@ -86,7 +86,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new FillModelParameters(_security,
                     new MarketOrder(_security.Symbol, 1, orderDateTime),
                     new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour));
+                    Time.OneHour)) as Fill;
 
             Assert.True(model.MarketFillWasCalled);
             Assert.AreEqual(orderEvent, result.OrderEvent);
@@ -100,7 +100,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new FillModelParameters(_security,
                     new StopMarketOrder(_security.Symbol, 1, 1, orderDateTime),
                     new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour));
+                    Time.OneHour)) as Fill;
 
             Assert.True(model.StopMarketFillWasCalled);
             Assert.AreEqual(orderEvent, result.OrderEvent);
@@ -114,7 +114,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new FillModelParameters(_security,
                     new StopLimitOrder(_security.Symbol, 1, 1, 1, orderDateTime),
                     new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour));
+                    Time.OneHour)) as Fill;
 
             Assert.True(model.StopLimitFillWasCalled);
             Assert.AreEqual(orderEvent, result.OrderEvent);
@@ -128,7 +128,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new FillModelParameters(_security,
                     new LimitOrder(_security.Symbol, 1, 1, orderDateTime),
                     new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour));
+                    Time.OneHour)) as Fill;
 
             Assert.True(model.LimitFillWasCalled);
             Assert.AreEqual(orderEvent, result.OrderEvent);
@@ -142,7 +142,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new FillModelParameters(_security,
                     new MarketOnOpenOrder(_security.Symbol, 1, orderDateTime),
                     new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour));
+                    Time.OneHour)) as Fill;
 
             Assert.True(model.MarketOnOpenFillWasCalled);
             Assert.AreEqual(orderEvent, result.OrderEvent);
@@ -156,7 +156,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new FillModelParameters(_security,
                     new MarketOnCloseOrder(_security.Symbol, 1, orderDateTime),
                     new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour));
+                    Time.OneHour)) as Fill;
 
             Assert.True(model.MarketOnCloseFillWasCalled);
             Assert.AreEqual(orderEvent, result.OrderEvent);
@@ -174,7 +174,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new FillModelParameters(_security,
                     new MarketOrder(_security.Symbol, 1, orderDateTime),
                     new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour));
+                    Time.OneHour)) as Fill;
 
             Assert.IsNotNull(result);
             Assert.True(model.GetPricesWasCalled);
@@ -189,7 +189,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new FillModelParameters(_security,
                     new MarketOrder(_security.Symbol, 1, orderDateTime),
                     new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour));
+                    Time.OneHour)) as Fill;
 
             Assert.True(model.MarketFillWasCalled);
             Assert.IsNotNull(result);
@@ -205,7 +205,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new FillModelParameters(_security,
                     new StopMarketOrder(_security.Symbol, 1, 1, orderDateTime),
                     new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour));
+                    Time.OneHour)) as Fill;
 
             Assert.True(model.StopMarketFillWasCalled);
             Assert.IsNotNull(result);
@@ -221,7 +221,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new FillModelParameters(_security,
                     new StopLimitOrder(_security.Symbol, 1, 12344, 12346, orderDateTime),
                     new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour));
+                    Time.OneHour)) as Fill;
 
             Assert.True(model.StopLimitFillWasCalled);
             Assert.IsNotNull(result);
@@ -237,7 +237,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new FillModelParameters(_security,
                     new LimitOrder(_security.Symbol, 1, 12346, orderDateTime),
                     new MockSubscriptionDataConfigProvider(_config),
-                    Time.OneHour));
+                    Time.OneHour)) as Fill;
 
             Assert.True(model.LimitFillWasCalled);
             Assert.IsNotNull(result);
@@ -265,7 +265,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             }
             else
             {
-                var result = model.Fill(args);
+                var result = model.Fill(args) as Fill;
 
                 Assert.True(model.MarketOnOpenFillWasCalled);
                 Assert.IsNotNull(result);
@@ -293,7 +293,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             }
             else
             {
-                var result = model.Fill(args);
+                var result = model.Fill(args) as Fill;
 
                 Assert.True(model.MarketOnCloseFillWasCalled);
                 Assert.IsNotNull(result);
@@ -328,7 +328,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                         new MarketOrder(_security.Symbol, 1, orderDateTime),
                         new MockSubscriptionDataConfigProvider(_config),
                         Time.OneHour
-                    ));
+                    )) as Fill;
 
                 bool called;
                 customFillModel.GetAttr("MarketFillWasCalled").TryConvert(out called);
@@ -360,7 +360,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                     new MarketOrder(_security.Symbol, 1, orderDateTime),
                     new MockSubscriptionDataConfigProvider(_config),
                     Time.OneHour
-                ));
+                )) as Fill;
 
                 bool called;
                 customFillModel.GetAttr("MarketFillWasCalled").TryConvert(out called);
@@ -392,7 +392,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                     new MarketOrder(_security.Symbol, 1, orderDateTime),
                     new MockSubscriptionDataConfigProvider(_config),
                     Time.OneHour
-                ));
+                )) as Fill;
 
                 bool called;
                 customFillModel.GetAttr("FillWasCalled").TryConvert(out called);
@@ -429,7 +429,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                     new MarketOrder(_security.Symbol, 1, orderDateTime),
                     new MockSubscriptionDataConfigProvider(_config),
                     Time.OneHour
-                ));
+                )) as Fill;
 
                 bool called;
                 customFillModel.GetAttr("FillWasCalled").TryConvert(out called);
@@ -468,7 +468,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                     new MarketOrder(_security.Symbol, 1, orderDateTime),
                     new MockSubscriptionDataConfigProvider(_config),
                     Time.OneHour
-                ));
+                )) as Fill;
 
                 bool called;
                 customFillModel.GetAttr("FillWasCalled").TryConvert(out called);
@@ -502,7 +502,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                     new MarketOrder(_security.Symbol, 1, orderDateTime),
                     new MockSubscriptionDataConfigProvider(_config),
                     Time.OneHour
-                ));
+                )) as Fill;
 
                 bool called;
                 customFillModel.GetAttr("MarketFillWasCalled").TryConvert(out called);
@@ -559,7 +559,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 return orderEvent;
             }
 
-            public Fill Fill(FillModelParameters parameters)
+            public IFill Fill(FillModelParameters parameters)
             {
                 var order = parameters.Order;
                 OrderEvent orderEvent;
