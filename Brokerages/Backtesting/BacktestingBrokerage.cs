@@ -325,7 +325,7 @@ namespace QuantConnect.Brokerages.Backtesting
                         continue;
                     }
 
-                    var fillsPerOrder = new Dictionary<Order, List<OrderEvent>>();
+                    var fills = new List<OrderEvent>();
                     //Before we check this queued order make sure we have buying power:
                     if (hasSufficientBuyingPowerResult.IsSufficient)
                     {
@@ -339,7 +339,6 @@ namespace QuantConnect.Brokerages.Backtesting
                         {
                             var security = orderSecurity.Value;
                             var targetOrder = orderSecurity.Key;
-                            var fills = fillsPerOrder[targetOrder] = new();
 
                             //Model:
                             var model = security.FillModel;
@@ -419,13 +418,35 @@ namespace QuantConnect.Brokerages.Backtesting
                         continue;
                     }
 
-                    foreach (var fillOfOrder in fillsPerOrder)
+                    if (order.GroupOrderManager == null)
                     {
-                        var targetOrder = fillOfOrder.Key;
-                        var fills = fillOfOrder.Value;
-
                         foreach (var fill in fills)
                         {
+                            // change in status or a new fill
+                            if (order.Status != fill.Status || fill.FillQuantity != 0)
+                            {
+                                // we update the order status so we do not re process it if we re enter
+                                // because of the call to OnOrderEvent.
+                                // Note: this is done by the transaction handler but we have a clone of the order
+                                order.Status = fill.Status;
+
+                                //If the fill models come back suggesting filled, process the affects on portfolio
+                                OnOrderEvent(fill);
+                            }
+
+                            if (fill.IsAssignment)
+                            {
+                                fill.Message = order.Tag;
+                                OnOptionPositionAssigned(fill);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        var filled = false;
+                        foreach (var targetOrder in orders)
+                        {
+                            var fill = fills.Where(f => f.OrderId == targetOrder.Id).Single();
                             // change in status or a new fill
                             if (targetOrder.Status != fill.Status || fill.FillQuantity != 0)
                             {
@@ -434,8 +455,7 @@ namespace QuantConnect.Brokerages.Backtesting
                                 // Note: this is done by the transaction handler but we have a clone of the order
                                 targetOrder.Status = fill.Status;
 
-                                //If the fill models come back suggesting filled, process the affects on portfolio
-                                OnOrderEvent(fill);
+                                filled = true;
                             }
 
                             if (fill.IsAssignment)
@@ -445,14 +465,22 @@ namespace QuantConnect.Brokerages.Backtesting
                             }
                         }
 
-                        if (fills.All(x => x.Status.IsClosed()))
+                        if (filled)
                         {
-                            _pending.TryRemove(targetOrder.Id, out var _);
+                            OnComboOrderEvents(fills);
                         }
-                        else
+                    }
+
+                    if (fills.All(x => x.Status.IsClosed()))
+                    {
+                        foreach (var o in orders)
                         {
-                            stillNeedsScan = true;
+                            _pending.TryRemove(o.Id, out var _);
                         }
+                    }
+                    else
+                    {
+                        stillNeedsScan = true;
                     }
                 }
 
@@ -490,18 +518,38 @@ namespace QuantConnect.Brokerages.Backtesting
             Log.Trace($"BacktestingBrokerage.ActivateOptionAssignment(): OrderId: {ticket.OrderId}");
         }
 
+        private void RemovePendingOptionAssignments(OrderEvent orderEvent)
+        {
+            if (orderEvent.Status.IsClosed() && _pendingOptionAssignments.Contains(orderEvent.Symbol))
+            {
+                _pendingOptionAssignments.Remove(orderEvent.Symbol);
+            }
+        }
+
         /// <summary>
         /// Event invocator for the OrderFilled event
         /// </summary>
         /// <param name="e">The OrderEvent</param>
         protected override void OnOrderEvent(OrderEvent e)
         {
-            if (e.Status.IsClosed() && _pendingOptionAssignments.Contains(e.Symbol))
-            {
-                _pendingOptionAssignments.Remove(e.Symbol);
-            }
+            RemovePendingOptionAssignments(e);
 
             base.OnOrderEvent(e);
+        }
+
+
+        /// <summary>
+        /// Event invocator for the OrderFilled event for combo orders
+        /// </summary>
+        /// <param name="orderEvents">The OrderEvent list</param>
+        protected override void OnComboOrderEvents(IEnumerable<OrderEvent> orderEvents)
+        {
+            foreach (var e in orderEvents)
+            {
+                RemovePendingOptionAssignments(e);
+            }
+
+            base.OnComboOrderEvents(orderEvents);
         }
 
         /// <summary>

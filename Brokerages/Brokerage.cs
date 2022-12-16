@@ -50,6 +50,11 @@ namespace QuantConnect.Brokerages
         public event EventHandler<OrderEvent> OrderStatusChanged;
 
         /// <summary>
+        /// Event that fires each time a combo order is filled
+        /// </summary>
+        public event EventHandler<IEnumerable<OrderEvent>> OrdersStatusChanged;
+
+        /// <summary>
         /// Event that fires each time a short option position is assigned
         /// </summary>
         public event EventHandler<OrderEvent> OptionPositionAssigned;
@@ -141,6 +146,22 @@ namespace QuantConnect.Brokerages
             try
             {
                 OrderStatusChanged?.Invoke(this, e);
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+        }
+
+        /// <summary>
+        /// Event invocator for the OrderFilled event for combo orders
+        /// </summary>
+        /// <param name="orderEvents">The list of order events</param>
+        protected virtual void OnComboOrderEvents(IEnumerable<OrderEvent> orderEvents)
+        {
+            try
+            {
+                OrdersStatusChanged?.Invoke(this, orderEvents);
             }
             catch (Exception err)
             {

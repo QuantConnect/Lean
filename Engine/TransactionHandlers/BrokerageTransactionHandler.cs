@@ -18,6 +18,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using QuantConnect.AlgorithmFactory;
 using QuantConnect.Brokerages;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
@@ -156,6 +157,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _brokerage.OrderStatusChanged += (sender, orderEvent) =>
             {
                 HandleOrderEvent(orderEvent);
+            };
+
+
+            _brokerage.OrdersStatusChanged += (sender, orderEvents) =>
+            {
+                HandleOrderEvents(orderEvents);
             };
 
             _brokerage.AccountChanged += (sender, account) =>
@@ -967,153 +974,159 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             return OrderResponse.Success(request);
         }
 
-        private void HandleOrderEvent(OrderEvent orderEvent)
+        private bool TryGetOrder(OrderEvent orderEvent, out Order order)
         {
-            lock (_lockHandleOrderEvent)
+            if (orderEvent.Status.IsClosed() && _openOrders.TryRemove(orderEvent.OrderId, out order))
             {
-                Order order;
-                OrderTicket ticket;
-                if (orderEvent.Status.IsClosed() && _openOrders.TryRemove(orderEvent.OrderId, out order))
-                {
-                    _completeOrders[orderEvent.OrderId] = order;
-                }
-                else if (!_completeOrders.TryGetValue(orderEvent.OrderId, out order))
-                {
-                    Log.Error("BrokerageTransactionHandler.HandleOrderEvent(): Unable to locate open Order with id " + orderEvent.OrderId);
-                    LogOrderEvent(orderEvent);
-                    return;
-                }
-
-                if (orderEvent.Status.IsClosed() && _openOrderTickets.TryRemove(orderEvent.OrderId, out ticket))
-                {
-                    _completeOrderTickets[orderEvent.OrderId] = ticket;
-                }
-                else if (!_completeOrderTickets.TryGetValue(orderEvent.OrderId, out ticket))
-                {
-                    Log.Error("BrokerageTransactionHandler.HandleOrderEvent(): Unable to resolve open ticket: " + orderEvent.OrderId);
-                    LogOrderEvent(orderEvent);
-                    return;
-                }
-                _cancelPendingOrders.UpdateOrRemove(order.Id, orderEvent.Status);
-                // set the status of our order object based on the fill event
-                order.Status = orderEvent.Status;
-
-                orderEvent.Id = order.GetNewId();
-
-                // set the modified time of the order to the fill's timestamp
-                switch (orderEvent.Status)
-                {
-                    case OrderStatus.Canceled:
-                        order.CanceledTime = orderEvent.UtcTime;
-                        break;
-
-                    case OrderStatus.PartiallyFilled:
-                    case OrderStatus.Filled:
-                        order.LastFillTime = orderEvent.UtcTime;
-
-                        // append fill message to order tag, for additional information
-                        if (orderEvent.Status == OrderStatus.Filled && !string.IsNullOrWhiteSpace(orderEvent.Message))
-                        {
-                            if (string.IsNullOrWhiteSpace(order.Tag))
-                            {
-                                order.Tag = orderEvent.Message;
-                            }
-                            else
-                            {
-                                order.Tag += " - " + orderEvent.Message;
-                            }
-                        }
-                        break;
-
-                    case OrderStatus.UpdateSubmitted:
-                    case OrderStatus.Submitted:
-                        // submit events after the initial submission are all order updates
-                        if (ticket.UpdateRequests.Count > 0)
-                        {
-                            order.LastUpdateTime = orderEvent.UtcTime;
-                        }
-                        break;
-                }
-
-                // lets always set current Quantity, Limit and Stop prices in the order event so that it's easier for consumers
-                // to know the current state and detect any update
-                orderEvent.Quantity = order.Quantity;
-                switch (order.Type)
-                {
-                    case OrderType.Limit:
-                        var limit = order as LimitOrder;
-                        orderEvent.LimitPrice = limit.LimitPrice;
-                        break;
-                    case OrderType.StopMarket:
-                        var marketOrder = order as StopMarketOrder;
-                        orderEvent.StopPrice = marketOrder.StopPrice;
-                        break;
-                    case OrderType.StopLimit:
-                        var stopLimitOrder = order as StopLimitOrder;
-                        orderEvent.LimitPrice = stopLimitOrder.LimitPrice;
-                        orderEvent.StopPrice = stopLimitOrder.StopPrice;
-                        break;
-                    case OrderType.LimitIfTouched:
-                        var limitIfTouchedOrder = order as LimitIfTouchedOrder;
-                        orderEvent.LimitPrice = limitIfTouchedOrder.LimitPrice;
-                        orderEvent.TriggerPrice = limitIfTouchedOrder.TriggerPrice;
-                        break;
-                }
-
-                //Apply the filled order to our portfolio:
-                if (orderEvent.Status == OrderStatus.Filled || orderEvent.Status == OrderStatus.PartiallyFilled)
-                {
-                    Interlocked.Exchange(ref _lastFillTimeTicks, CurrentTimeUtc.Ticks);
-
-                    // check if the fill currency and the order currency match the symbol currency
-                    var security = _algorithm.Securities[orderEvent.Symbol];
-
-                    if (orderEvent.Symbol.SecurityType == SecurityType.Crypto 
-                        && order.Direction == OrderDirection.Buy
-                        && CurrencyPairUtil.TryDecomposeCurrencyPair(orderEvent.Symbol, out var baseCurrency, out var quoteCurrency)
-                        && orderEvent.OrderFee.Value.Currency == baseCurrency)
-                    {
-                        // fees are in the base currency, so we have to subtract them from the filled quantity
-                        // else the virtual position will bigger than the real size and we might no be able to liquidate
-                        orderEvent.FillQuantity -= orderEvent.OrderFee.Value.Amount;
-                        orderEvent.OrderFee = new ModifiedFillQuantityOrderFee(orderEvent.OrderFee.Value, quoteCurrency, security.SymbolProperties.ContractMultiplier);
-
-                        if (!_loggedFeeAdjustmentWarning)
-                        {
-                            _loggedFeeAdjustmentWarning = true;
-                            const string message = "When buying currency pairs, using Cash account types, fees in base currency" +
-                                " will be deducted from the filled quantity so virtual positions reflect actual holdings.";
-                            Log.Trace($"BrokerageTransactionHandler.HandleOrderEvent(): {message}");
-                            _algorithm.Debug(message);
-                        }
-                    }
-
-                    var multiplier = security.SymbolProperties.ContractMultiplier;
-                    var securityConversionRate = security.QuoteCurrency.ConversionRate;
-                    var feeInAccountCurrency = _algorithm.Portfolio.CashBook
-                        .ConvertToAccountCurrency(orderEvent.OrderFee.Value).Amount;
-
-                    try
-                    {
-                        _algorithm.Portfolio.ProcessFill(orderEvent);
-                        _algorithm.TradeBuilder.ProcessFill(
-                            orderEvent,
-                            securityConversionRate,
-                            feeInAccountCurrency,
-                            multiplier);
-                    }
-                    catch (Exception err)
-                    {
-                        Log.Error(err);
-                        _algorithm.Error($"Order Error: id: {order.Id.ToStringInvariant()}, Error in Portfolio.ProcessFill: {err.Message}");
-                    }
-                }
-
-                // update the ticket after we've processed the fill, but before the event, this way everything is ready for user code
-                ticket.AddOrderEvent(orderEvent);
+                _completeOrders[orderEvent.OrderId] = order;
+            }
+            else if (!_completeOrders.TryGetValue(orderEvent.OrderId, out order))
+            {
+                LogOrderEvent(orderEvent);
+                return false;
             }
 
-            //We have an event! :) Order filled, send it in to be handled by algorithm portfolio.
+            return true;
+        }
+
+        private bool TryGetOrderTicket(OrderEvent orderEvent, out OrderTicket ticket)
+        {
+            if (orderEvent.Status.IsClosed() && _openOrderTickets.TryRemove(orderEvent.OrderId, out ticket))
+            {
+                _completeOrderTickets[orderEvent.OrderId] = ticket;
+            }
+            else if (!_completeOrderTickets.TryGetValue(orderEvent.OrderId, out ticket))
+            {
+                LogOrderEvent(orderEvent);
+                return false;
+            }
+
+            return true;
+        }
+
+        private void UpdateOrderAndApplyFills(OrderEvent orderEvent, Order order, OrderTicket ticket)
+        {
+            _cancelPendingOrders.UpdateOrRemove(order.Id, orderEvent.Status);
+            // set the status of our order object based on the fill event
+            order.Status = orderEvent.Status;
+
+            orderEvent.Id = order.GetNewId();
+
+            // set the modified time of the order to the fill's timestamp
+            switch (orderEvent.Status)
+            {
+                case OrderStatus.Canceled:
+                    order.CanceledTime = orderEvent.UtcTime;
+                    break;
+
+                case OrderStatus.PartiallyFilled:
+                case OrderStatus.Filled:
+                    order.LastFillTime = orderEvent.UtcTime;
+
+                    // append fill message to order tag, for additional information
+                    if (orderEvent.Status == OrderStatus.Filled && !string.IsNullOrWhiteSpace(orderEvent.Message))
+                    {
+                        if (string.IsNullOrWhiteSpace(order.Tag))
+                        {
+                            order.Tag = orderEvent.Message;
+                        }
+                        else
+                        {
+                            order.Tag += " - " + orderEvent.Message;
+                        }
+                    }
+                    break;
+
+                case OrderStatus.UpdateSubmitted:
+                case OrderStatus.Submitted:
+                    // submit events after the initial submission are all order updates
+                    if (ticket.UpdateRequests.Count > 0)
+                    {
+                        order.LastUpdateTime = orderEvent.UtcTime;
+                    }
+                    break;
+            }
+
+            // lets always set current Quantity, Limit and Stop prices in the order event so that it's easier for consumers
+            // to know the current state and detect any update
+            orderEvent.Quantity = order.Quantity;
+            switch (order.Type)
+            {
+                case OrderType.Limit:
+                    var limit = order as LimitOrder;
+                    orderEvent.LimitPrice = limit.LimitPrice;
+                    break;
+                case OrderType.StopMarket:
+                    var marketOrder = order as StopMarketOrder;
+                    orderEvent.StopPrice = marketOrder.StopPrice;
+                    break;
+                case OrderType.StopLimit:
+                    var stopLimitOrder = order as StopLimitOrder;
+                    orderEvent.LimitPrice = stopLimitOrder.LimitPrice;
+                    orderEvent.StopPrice = stopLimitOrder.StopPrice;
+                    break;
+                case OrderType.LimitIfTouched:
+                    var limitIfTouchedOrder = order as LimitIfTouchedOrder;
+                    orderEvent.LimitPrice = limitIfTouchedOrder.LimitPrice;
+                    orderEvent.TriggerPrice = limitIfTouchedOrder.TriggerPrice;
+                    break;
+            }
+
+            //Apply the filled order to our portfolio:
+            if (orderEvent.Status == OrderStatus.Filled || orderEvent.Status == OrderStatus.PartiallyFilled)
+            {
+                Interlocked.Exchange(ref _lastFillTimeTicks, CurrentTimeUtc.Ticks);
+
+                // check if the fill currency and the order currency match the symbol currency
+                var security = _algorithm.Securities[orderEvent.Symbol];
+
+                if (orderEvent.Symbol.SecurityType == SecurityType.Crypto
+                    && order.Direction == OrderDirection.Buy
+                    && CurrencyPairUtil.TryDecomposeCurrencyPair(orderEvent.Symbol, out var baseCurrency, out var quoteCurrency)
+                    && orderEvent.OrderFee.Value.Currency == baseCurrency)
+                {
+                    // fees are in the base currency, so we have to subtract them from the filled quantity
+                    // else the virtual position will bigger than the real size and we might no be able to liquidate
+                    orderEvent.FillQuantity -= orderEvent.OrderFee.Value.Amount;
+                    orderEvent.OrderFee = new ModifiedFillQuantityOrderFee(orderEvent.OrderFee.Value, quoteCurrency, security.SymbolProperties.ContractMultiplier);
+
+                    if (!_loggedFeeAdjustmentWarning)
+                    {
+                        _loggedFeeAdjustmentWarning = true;
+                        const string message = "When buying currency pairs, using Cash account types, fees in base currency" +
+                            " will be deducted from the filled quantity so virtual positions reflect actual holdings.";
+                        Log.Trace($"BrokerageTransactionHandler.HandleOrderEvent(): {message}");
+                        _algorithm.Debug(message);
+                    }
+                }
+
+                var multiplier = security.SymbolProperties.ContractMultiplier;
+                var securityConversionRate = security.QuoteCurrency.ConversionRate;
+                var feeInAccountCurrency = _algorithm.Portfolio.CashBook
+                    .ConvertToAccountCurrency(orderEvent.OrderFee.Value).Amount;
+
+                try
+                {
+                    _algorithm.Portfolio.ProcessFill(orderEvent);
+                    _algorithm.TradeBuilder.ProcessFill(
+                        orderEvent,
+                        securityConversionRate,
+                        feeInAccountCurrency,
+                        multiplier);
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err);
+                    _algorithm.Error($"Order Error: id: {order.Id.ToStringInvariant()}, Error in Portfolio.ProcessFill: {err.Message}");
+                }
+            }
+
+            // update the ticket after we've processed the fill, but before the event, this way everything is ready for user code
+            ticket.AddOrderEvent(orderEvent);
+        }
+
+        private void SendOrderEventToAlgorithm(OrderEvent orderEvent)
+        {
             if (orderEvent.Status != OrderStatus.None) //order.Status != OrderStatus.Submitted
             {
                 _orderEvents.Enqueue(orderEvent);
@@ -1136,6 +1149,73 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
 
             LogOrderEvent(orderEvent);
+        }
+
+        private void HandleOrderEvents(IEnumerable<OrderEvent> orderEvents)
+        {
+            lock (_lockHandleOrderEvent)
+            {
+                // Get orders and tickets
+                var orders = new Order[orderEvents.Count()];
+                var tickets = new OrderTicket[orderEvents.Count()];
+
+                var i = 0;
+                foreach (var orderEvent in orderEvents)
+                {
+                    if (!TryGetOrder(orderEvent, out orders[i]))
+                    {
+                        Log.Error("BrokerageTransactionHandler.HandleOrderEvents(): Unable to locate open Combo Order with id " + orderEvent.OrderId);
+                        return;
+                    }
+
+                    if (!TryGetOrderTicket(orderEvent, out tickets[i]))
+                    {
+                        Log.Error("BrokerageTransactionHandler.HandleOrderEvents(): Unable to resolve open ticket: " + orderEvent.OrderId);
+                        return;
+                    }
+
+                    i++;
+                }
+
+                // now lets update the orders and apply the fills to the portfolio
+                i = 0;
+                foreach (var orderEvent in orderEvents)
+                {
+                    UpdateOrderAndApplyFills(orderEvent, orders[i], tickets[i]);
+
+                    i++;
+                }
+            }
+
+            //We have the events! :) Orders filled, send them in to be handled by algorithm portfolio.
+            foreach (var orderEvent in orderEvents)
+            {
+                SendOrderEventToAlgorithm(orderEvent);
+            }
+        }
+
+        private void HandleOrderEvent(OrderEvent orderEvent)
+        {
+            lock (_lockHandleOrderEvent)
+            {
+                Order order;
+                OrderTicket ticket;
+                if (!TryGetOrder(orderEvent, out order))
+                {
+                    Log.Error("BrokerageTransactionHandler.HandleOrderEvent(): Unable to locate open Order with id " + orderEvent.OrderId);
+                    return;
+                }
+                if (!TryGetOrderTicket(orderEvent, out ticket))
+                {
+                    Log.Error("BrokerageTransactionHandler.HandleOrderEvent(): Unable to resolve open ticket: " + orderEvent.OrderId);
+                    return;
+                }
+
+                UpdateOrderAndApplyFills(orderEvent, order, ticket);
+            }
+
+            //We have an event! :) Order filled, send it in to be handled by algorithm portfolio.
+            SendOrderEventToAlgorithm(orderEvent);
         }
 
         /// <summary>
@@ -1434,13 +1514,13 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 case OrderType.Limit:
                     {
-                        var limitPrice = ((LimitOrder) order).LimitPrice;
+                        var limitPrice = ((LimitOrder)order).LimitPrice;
                         var increment = security.PriceVariationModel.GetMinimumPriceVariation(
                             new GetMinimumPriceVariationParameters(security, limitPrice));
                         if (increment > 0)
                         {
                             var limitRound = Math.Round(limitPrice / increment) * increment;
-                            ((LimitOrder) order).LimitPrice = limitRound;
+                            ((LimitOrder)order).LimitPrice = limitRound;
                             SendWarningOnPriceChange("Limit", limitRound, limitPrice);
                         }
                     }
@@ -1448,13 +1528,13 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                 case OrderType.StopMarket:
                     {
-                        var stopPrice = ((StopMarketOrder) order).StopPrice;
+                        var stopPrice = ((StopMarketOrder)order).StopPrice;
                         var increment = security.PriceVariationModel.GetMinimumPriceVariation(
                             new GetMinimumPriceVariationParameters(security, stopPrice));
                         if (increment > 0)
                         {
                             var stopRound = Math.Round(stopPrice / increment) * increment;
-                            ((StopMarketOrder) order).StopPrice = stopRound;
+                            ((StopMarketOrder)order).StopPrice = stopRound;
                             SendWarningOnPriceChange("Stop", stopRound, stopPrice);
                         }
                     }
@@ -1462,50 +1542,50 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                 case OrderType.StopLimit:
                     {
-                        var limitPrice = ((StopLimitOrder) order).LimitPrice;
+                        var limitPrice = ((StopLimitOrder)order).LimitPrice;
                         var increment = security.PriceVariationModel.GetMinimumPriceVariation(
                             new GetMinimumPriceVariationParameters(security, limitPrice));
                         if (increment > 0)
                         {
                             var limitRound = Math.Round(limitPrice / increment) * increment;
-                            ((StopLimitOrder) order).LimitPrice = limitRound;
+                            ((StopLimitOrder)order).LimitPrice = limitRound;
                             SendWarningOnPriceChange("Limit", limitRound, limitPrice);
                         }
 
-                        var stopPrice = ((StopLimitOrder) order).StopPrice;
+                        var stopPrice = ((StopLimitOrder)order).StopPrice;
                         increment = security.PriceVariationModel.GetMinimumPriceVariation(
                             new GetMinimumPriceVariationParameters(security, stopPrice));
                         if (increment > 0)
                         {
                             var stopRound = Math.Round(stopPrice / increment) * increment;
-                            ((StopLimitOrder) order).StopPrice = stopRound;
+                            ((StopLimitOrder)order).StopPrice = stopRound;
                             SendWarningOnPriceChange("Stop", stopRound, stopPrice);
                         }
                     }
                     break;
 
                 case OrderType.LimitIfTouched:
-                {
-                    var limitPrice = ((LimitIfTouchedOrder) order).LimitPrice;
-                    var increment = security.PriceVariationModel.GetMinimumPriceVariation(
-                        new GetMinimumPriceVariationParameters(security, limitPrice));
-                    if (increment > 0)
                     {
-                        var limitRound = Math.Round(limitPrice / increment) * increment;
-                        ((LimitIfTouchedOrder) order).LimitPrice = limitRound;
-                        SendWarningOnPriceChange("Limit", limitRound, limitPrice);
-                    }
+                        var limitPrice = ((LimitIfTouchedOrder)order).LimitPrice;
+                        var increment = security.PriceVariationModel.GetMinimumPriceVariation(
+                            new GetMinimumPriceVariationParameters(security, limitPrice));
+                        if (increment > 0)
+                        {
+                            var limitRound = Math.Round(limitPrice / increment) * increment;
+                            ((LimitIfTouchedOrder)order).LimitPrice = limitRound;
+                            SendWarningOnPriceChange("Limit", limitRound, limitPrice);
+                        }
 
-                    var triggerPrice = ((LimitIfTouchedOrder) order).TriggerPrice;
-                    increment = security.PriceVariationModel.GetMinimumPriceVariation(
-                        new GetMinimumPriceVariationParameters(security, triggerPrice));
-                    if (increment > 0)
-                    {
-                        var triggerRound = Math.Round(triggerPrice / increment) * increment;
-                        ((LimitIfTouchedOrder) order).TriggerPrice = triggerRound;
-                        SendWarningOnPriceChange("Trigger", triggerRound, triggerPrice);
+                        var triggerPrice = ((LimitIfTouchedOrder)order).TriggerPrice;
+                        increment = security.PriceVariationModel.GetMinimumPriceVariation(
+                            new GetMinimumPriceVariationParameters(security, triggerPrice));
+                        if (increment > 0)
+                        {
+                            var triggerRound = Math.Round(triggerPrice / increment) * increment;
+                            ((LimitIfTouchedOrder)order).TriggerPrice = triggerRound;
+                            SendWarningOnPriceChange("Trigger", triggerRound, triggerPrice);
+                        }
                     }
-                }
                     break;
             }
         }
