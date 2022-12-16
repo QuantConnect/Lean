@@ -75,6 +75,8 @@ class SymbolData:
         self._algorithm = algorithm
         self._symbol = future.Symbol
         self.EMA = algorithm.EMA(future.Symbol, 20, Resolution.Daily)
+
+        self.Reset()
         
     def Reset(self):
         self.EMA.Reset()

@@ -108,7 +108,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+        public Language[] Languages { get; } = { Language.CSharp };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
@@ -118,7 +118,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 35;
+        public int AlgorithmHistoryDataPoints => 39;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -143,9 +143,9 @@ namespace QuantConnect.Algorithm.CSharp
             {"Annual Variance", "0"},
             {"Information Ratio", "-1.307"},
             {"Tracking Error", "0.089"},
-            {"Treynor Ratio", "7.068"},
+            {"Treynor Ratio", "7.175"},
             {"Total Fees", "$12.90"},
-            {"Estimated Strategy Capacity", "$580000000000.00"},
+            {"Estimated Strategy Capacity", "$590000000000.00"},
             {"Lowest Capacity Asset", "ES VP274HSU1AF5"},
             {"Fitness Score", "0.001"},
             {"Kelly Criterion Estimate", "0"},
@@ -166,7 +166,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "c77e88c0f30ae1b07fd635292b4de1c9"}
+            {"OrderListHash", "e7d37c37a83b8a40a325d9f0f6c5b81d"}
         };
 
         public class SymbolData
@@ -180,6 +180,8 @@ namespace QuantConnect.Algorithm.CSharp
                 _algorithm = algorithm;
                 _symbol = future.Symbol;
                 EMA = algorithm.EMA(future.Symbol, 20, Resolution.Daily);
+
+                Reset();
             }
 
             public void Reset()
