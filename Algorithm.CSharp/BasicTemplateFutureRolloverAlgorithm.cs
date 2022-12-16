@@ -28,7 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class BasicTemplateFutureRolloverAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Dictionary<Future, SymbolData> _symbolData = new();
+        private Dictionary<Future, SymbolData> _symbolDataByFuture = new();
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -55,7 +55,7 @@ namespace QuantConnect.Algorithm.CSharp
                 );
 
                 var symbolData = new SymbolData(this, continuousContract);
-                _symbolData.Add(continuousContract, symbolData);
+                _symbolDataByFuture.Add(continuousContract, symbolData);
             }
         }
 
@@ -65,9 +65,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice slice)
         {
-            foreach (var kvp in _symbolData)
+            foreach (var kvp in _symbolDataByFuture)
             {
-                var symbol = kvp.Key.Symbol;
+                var future = kvp.Key;
+                var symbolData = kvp.Value;
+
+                var symbol = future.Symbol;
                 
                 if (slice.SymbolChangedEvents.TryGetValue(symbol, out var changedEvent))
                 {
@@ -80,11 +83,11 @@ namespace QuantConnect.Algorithm.CSharp
                     Liquidate(oldSymbol, tag: tag);
                     MarketOrder(newSymbol, quantity, tag: tag);
 
-                    kvp.Value.Reset();
+                    symbolData.Reset();
                 }
 
-                var mappedSymbol = kvp.Key.Mapped;
-                var ema = kvp.Value.EMA;
+                var mappedSymbol = future.Mapped;
+                var ema = symbolData.EMA;
 
                 if (mappedSymbol != null && slice.Bars.ContainsKey(symbol) && ema.IsReady)
                 {

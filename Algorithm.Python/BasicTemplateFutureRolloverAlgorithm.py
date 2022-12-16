@@ -23,7 +23,7 @@ class BasicTemplateFutureRolloverAlgorithm(QCAlgorithm):
         self.SetEndDate(2014, 10, 10)
         self.SetCash(1000000)
         
-        self.symbolData = {}
+        self.symbol_data_by_future = {}
         
         futures = [
             Futures.Indices.SP500EMini
@@ -39,11 +39,11 @@ class BasicTemplateFutureRolloverAlgorithm(QCAlgorithm):
                 contractDepthOffset = 0
             )
             
-            symbolData = SymbolData(self, continuous_contract)
-            self.symbolData[continuous_contract] = symbolData
+            symbol_data = SymbolData(self, continuous_contract)
+            self.symbol_data_by_future[continuous_contract] = symbol_data
 
     def OnData(self, slice):
-        for future, symbolData in self.symbolData.items():
+        for future, symbol_data in self.symbol_data_by_future.items():
             symbol = future.Symbol
             
             # Accessing data
@@ -58,10 +58,10 @@ class BasicTemplateFutureRolloverAlgorithm(QCAlgorithm):
                 self.Liquidate(old_symbol, tag=tag)
                 self.MarketOrder(new_symbol, quantity, tag=tag)
 
-                symbolData.Reset()
+                symbol_data.Reset()
                 
             mapped_symbol = future.Mapped
-            ema = symbolData.EMA
+            ema = symbol_data.EMA
 
             if mapped_symbol is not None and slice.Bars.ContainsKey(symbol) and ema.IsReady:
                 if ema.Current.Value < slice.Bars[symbol].Price and not self.Portfolio[mapped_symbol].IsLong:
