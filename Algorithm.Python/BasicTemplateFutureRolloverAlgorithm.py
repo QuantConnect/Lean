@@ -20,33 +20,56 @@ class BasicTemplateFutureRolloverAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         self.SetCash(1000000)
-        self.SetStartDate(2013, 10, 8)
-        self.SetEndDate(2014, 10, 10)
+        self.SetStartDate(2020, 2, 1)
+        self.SetEndDate(2020, 4, 1)
+        
+        self.ema = {}
+        
+        futures = [
+            Futures.Indices.SP500EMini,
+            Futures.Metals.Gold
+        ]
 
-        # Requesting data
-        self.continuous_contract = self.AddFuture(Futures.Indices.SP500EMini,
-            resolution = Resolution.Daily,
-            dataNormalizationMode = DataNormalizationMode.BackwardsRatio,
-            dataMappingMode = DataMappingMode.OpenInterest,
-            contractDepthOffset = 0
-        )
-        self.symbol = self.continuous_contract.Symbol
-        self.old_symbol = None
+        for future in futures:
+            # Requesting data
+            continuous_contract = self.AddFuture(future,
+                resolution = Resolution.Daily,
+                extendedMarketHours = True,
+                dataNormalizationMode = DataNormalizationMode.BackwardsRatio,
+                dataMappingMode = DataMappingMode.OpenInterest,
+                contractDepthOffset = 0
+            )
+            
+            ema = self.EMA(continuous_contract.Symbol, 20, Resolution.Daily)
+            self.ema[continuous_contract] = ema
+            self.Reset(continuous_contract)
 
     def OnData(self, slice):
-        # Accessing data
-        for changedEvent in slice.SymbolChangedEvents.Values:
-            if changedEvent.Symbol == self.symbol:
-                self.old_symbol = changedEvent.OldSymbol
-                self.Log(f"Symbol changed at {self.Time}: {self.old_symbol} -> {changedEvent.NewSymbol}")
+        for future, ema in self.ema.items():
+            symbol = future.Symbol
+            
+            # Accessing data
+            if slice.SymbolChangedEvents.ContainsKey(symbol):
+                changedEvent = slice.SymbolChangedEvents[symbol]
+                old_symbol = changedEvent.OldSymbol
+                new_symbol = changedEvent.NewSymbol
+                tag = f"Rollover - Symbol changed at {self.Time}: {old_symbol} -> {new_symbol}"
+                quantity = self.Portfolio[old_symbol].Quantity
+                
+                # Rolling over: to liquidate any position of the old mapped contract and switch to the newly mapped contract
+                self.Liquidate(old_symbol, tag=tag)
+                self.MarketOrder(new_symbol, quantity, tag=tag)
 
-        mapped_symbol = self.continuous_contract.Mapped
+                self.Reset(future)
+                
+            mapped_symbol = future.Mapped
 
-        if not slice.Bars.ContainsKey(self.symbol) or not mapped_symbol:
-            return
-
-        # Rolling over: to liquidate any position of the old mapped contract and switch to the newly mapped contract
-        if self.old_symbol:
-            self.Liquidate(self.old_symbol)
-            self.MarketOrder(mapped_symbol, 1)
-            self.old_symbol = None
+            if mapped_symbol is not None and slice.Bars.ContainsKey(symbol) and ema.IsReady:
+                if ema.Current.Value < slice.Bars[symbol].Price and not self.Portfolio[mapped_symbol].IsLong:
+                    self.MarketOrder(mapped_symbol, 1)
+                elif ema.Current.Value > slice.Bars[symbol].Price and not self.Portfolio[mapped_symbol].IsShort:
+                    self.MarketOrder(mapped_symbol, -1)
+    
+    def Reset(self, future):
+        self.ema[future].Reset()
+        self.WarmUpIndicator(future.Symbol, self.ema[future], Resolution.Daily)

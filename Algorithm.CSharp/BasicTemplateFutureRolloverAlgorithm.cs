@@ -17,6 +17,7 @@
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Indicators;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
 
@@ -27,8 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class BasicTemplateFutureRolloverAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Future _continuousContract;
-        private Symbol _symbol, _oldSymbol;
+        private Dictionary<Future, ExponentialMovingAverage> _ema = new();
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -36,17 +36,29 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             SetCash(1000000);
-            SetStartDate(2013, 10, 8);
-            SetEndDate(2014, 10, 10);
+            SetStartDate(2020, 2, 1);
+            SetEndDate(2020, 4, 1);
 
-            // Requesting data
-            _continuousContract = AddFuture(Futures.Indices.SP500EMini,
-                resolution: Resolution.Daily,
-                dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
-                dataMappingMode: DataMappingMode.OpenInterest,
-                contractDepthOffset: 0
-            );
-            _symbol = _continuousContract.Symbol;
+            var futures = new List<string> {
+                Futures.Indices.SP500EMini,
+                Futures.Metals.Gold
+            };
+
+            foreach (var future in futures)
+            {
+                // Requesting data
+                var continuousContract = AddFuture(future,
+                    resolution: Resolution.Daily,
+                    extendedMarketHours: true,
+                    dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
+                    dataMappingMode: DataMappingMode.OpenInterest,
+                    contractDepthOffset: 0
+                );
+
+                var ema = EMA(continuousContract.Symbol, 20, Resolution.Daily);
+                _ema.Add(continuousContract, ema);
+                Reset(continuousContract);
+            }
         }
 
         /// <summary>
@@ -55,30 +67,45 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice slice)
         {
-            // Accessing data
-            foreach (var changedEvent in slice.SymbolChangedEvents.Values)
+            foreach (var kvp in _ema)
             {
-                if (changedEvent.Symbol == _symbol)
+                var symbol = kvp.Key.Symbol;
+                
+                if (slice.SymbolChangedEvents.TryGetValue(symbol, out var changedEvent))
                 {
-                    _oldSymbol = changedEvent.OldSymbol;
-                    Log($"Symbol changed at {Time}: {_oldSymbol} -> {changedEvent.NewSymbol}");
+                    var oldSymbol = changedEvent.OldSymbol;
+                    var newSymbol = changedEvent.NewSymbol;
+                    var tag = $"Rollover - Symbol changed at {Time}: {oldSymbol} -> {newSymbol}";
+                    var quantity = Portfolio[oldSymbol].Quantity;
+
+                    // Rolling over: to liquidate any position of the old mapped contract and switch to the newly mapped contract
+                    Liquidate(oldSymbol, tag: tag);
+                    MarketOrder(newSymbol, quantity, tag: tag);
+
+                    Reset(kvp.Key);
+                }
+
+                var mappedSymbol = kvp.Key.Mapped;
+                var ema = kvp.Value;
+
+                if (mappedSymbol != null && slice.Bars.ContainsKey(symbol) && ema.IsReady)
+                {
+                    if (ema.Current.Value < slice.Bars[symbol].Price && !Portfolio[mappedSymbol].IsLong)
+                    {
+                        MarketOrder(mappedSymbol, 1);
+                    }
+                    else if (ema.Current.Value > slice.Bars[symbol].Price && !Portfolio[mappedSymbol].IsShort)
+                    {
+                        MarketOrder(mappedSymbol, -1);
+                    }
                 }
             }
+        }
 
-            var mappedSymbol = _continuousContract.Mapped;
-
-            if (!(slice.Bars.ContainsKey(_symbol) && mappedSymbol != null))
-            {
-                return;
-            }
-
-            // Rolling over: to liquidate any position of the old mapped contract and switch to the newly mapped contract
-            if (_oldSymbol != null)
-            {
-                Liquidate(_oldSymbol);
-                MarketOrder(mappedSymbol, 1);
-                _oldSymbol = null;
-            }
+        public void Reset(Future future)
+        {
+            _ema[future].Reset();
+            WarmUpIndicator(future.Symbol, _ema[future], Resolution.Daily);
         }
 
         /// <summary>
@@ -94,7 +121,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 4542;
+        public long DataPoints => 2857;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -106,34 +133,34 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "2"},
-            {"Average Win", "0.06%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0.057%"},
-            {"Drawdown", "0.000%"},
-            {"Expectancy", "0"},
-            {"Net Profit", "0.057%"},
-            {"Sharpe Ratio", "0.665"},
-            {"Probabilistic Sharpe Ratio", "25.882%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0.001"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-1.357"},
-            {"Tracking Error", "0.089"},
-            {"Treynor Ratio", "1.135"},
-            {"Total Fees", "$4.30"},
-            {"Estimated Strategy Capacity", "$600000000000.00"},
-            {"Lowest Capacity Asset", "ES VP274HSU1AF5"},
-            {"Fitness Score", "0"},
+            {"Total Trades", "33"},
+            {"Average Win", "2.33%"},
+            {"Average Loss", "-0.35%"},
+            {"Compounding Annual Return", "-0.644%"},
+            {"Drawdown", "4.400%"},
+            {"Expectancy", "-0.039"},
+            {"Net Profit", "-0.109%"},
+            {"Sharpe Ratio", "-0.011"},
+            {"Probabilistic Sharpe Ratio", "31.092%"},
+            {"Loss Rate", "88%"},
+            {"Win Rate", "12%"},
+            {"Profit-Loss Ratio", "6.69"},
+            {"Alpha", "-0.081"},
+            {"Beta", "-0.133"},
+            {"Annual Standard Deviation", "0.086"},
+            {"Annual Variance", "0.007"},
+            {"Information Ratio", "0.958"},
+            {"Tracking Error", "0.63"},
+            {"Treynor Ratio", "0.007"},
+            {"Total Fees", "$77.99"},
+            {"Estimated Strategy Capacity", "$190000000.00"},
+            {"Lowest Capacity Asset", "GC XE1Y0ZJ8NQ8T"},
+            {"Fitness Score", "0.039"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "0.417"},
-            {"Return Over Maximum Drawdown", "4.379"},
-            {"Portfolio Turnover", "0"},
+            {"Sortino Ratio", "-0.087"},
+            {"Return Over Maximum Drawdown", "-0.144"},
+            {"Portfolio Turnover", "0.081"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
