@@ -674,6 +674,9 @@ namespace QuantConnect.Data
             }
         }
 
+        /// <summary>
+        /// Determines if the given data point is of a specific type
+        /// </summary>
         private static bool IsDataPointOfType(BaseData o, Type type, bool isPythonData)
         {
             if (o == null)

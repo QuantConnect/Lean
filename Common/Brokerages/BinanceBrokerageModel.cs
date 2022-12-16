@@ -184,6 +184,7 @@ namespace QuantConnect.Brokerages
             return base.CanSubmitOrder(security, order, out message);
 
             bool IsOrderSizeLargeEnough(decimal price) =>
+                // if we have a minimum order size we enforce it
                 !security.SymbolProperties.MinimumOrderSize.HasValue || order.AbsoluteQuantity * price > security.SymbolProperties.MinimumOrderSize;
         }
 

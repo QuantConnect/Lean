@@ -3618,7 +3618,7 @@ namespace QuantConnect
         /// Reference PR #5485 and related issues for more.</remarks>
         public static bool ShouldEmitData(this SubscriptionDataConfig config, BaseData data, bool isUniverse = false)
         {
-            // For now we are only filtering Auxiliary data; so if its another type just return true
+            // For now we are only filtering Auxiliary data; so if its another type just return true or if it's a margin interest rate which we want to emit always
             if (data.DataType != MarketDataType.Auxiliary || config.Type == typeof(MarginInterestRate))
             {
                 return true;

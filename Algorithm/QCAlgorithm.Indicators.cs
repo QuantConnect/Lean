@@ -2071,6 +2071,7 @@ namespace QuantConnect.Algorithm
                 // deterministic ordering is required here
                 var subscriptions = SubscriptionManager.SubscriptionDataConfigService
                     .GetSubscriptionDataConfigs(symbol)
+                    // make sure common lean data types are at the bottom
                     .OrderByDescending(x => LeanData.IsCommonLeanDataType(x.Type))
                     .ThenBy(x => x.TickType)
                     .ToList();
@@ -2383,7 +2384,9 @@ namespace QuantConnect.Algorithm
                         Resolution.Daily,
                         // order by tick type so that behavior is consistent with 'GetSubscription()'
                         symbol.IsCanonical())
-                        .OrderByDescending(tuple => LeanData.IsCommonLeanDataType(tuple.Item1)).ThenBy(tuple => tuple.Item2).First();
+                        // make sure common lean data types are at the bottom
+                        .OrderByDescending(tuple => LeanData.IsCommonLeanDataType(tuple.Item1))
+                        .ThenBy(tuple => tuple.Item2).First();
 
                     consolidator = CreateConsolidator(period, dataType.Item1, dataType.Item2);
                 }

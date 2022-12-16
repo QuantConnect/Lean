@@ -67,7 +67,7 @@ namespace QuantConnect.Data.Market
                 identifier.SecurityType.SecurityTypeToLower(),
                 identifier.Market.ToLowerInvariant(),
                 "margin_interest",
-                $"{identifier.Symbol}.csv"
+                $"{identifier.Symbol.ToLowerInvariant()}.csv"
             );
 
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);

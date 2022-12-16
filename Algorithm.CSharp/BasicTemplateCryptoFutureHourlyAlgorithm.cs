@@ -16,10 +16,10 @@
 using System;
 using QuantConnect.Data;
 using QuantConnect.Orders;
-using QuantConnect.Brokerages;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using QuantConnect.Brokerages;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Securities.CryptoFuture;
@@ -27,12 +27,11 @@ using QuantConnect.Securities.CryptoFuture;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Minute resolution regression algorithm trading Coin and USDT binance futures long and short asserting the behavior
+    /// Hourly regression algorithm trading BTCUSD binance futures long and short asserting the behavior
     /// </summary>
-    public class BasicTemplateCryptoFutureAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class BasicTemplateCryptoFutureHourlyAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Dictionary<Symbol, int> _interestPerSymbol = new();
-        private CryptoFuture _btcUsd;
         private CryptoFuture _adaUsdt;
         private ExponentialMovingAverage _fast;
         private ExponentialMovingAverage _slow;
@@ -42,20 +41,17 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2022, 12, 13); // Set Start Date
-            SetEndDate(2022, 12, 13); // Set End Date
+            SetStartDate(2022, 12, 13);
+            SetEndDate(2022, 12, 13);
 
             SetTimeZone(NodaTime.DateTimeZone.Utc);
-
             SetBrokerageModel(BrokerageName.Binance, AccountType.Margin);
 
-            _btcUsd = AddCryptoFuture("BTCUSD");
-            _adaUsdt = AddCryptoFuture("ADAUSDT");
+            _adaUsdt = AddCryptoFuture("ADAUSDT", Resolution.Hour);
 
-            _fast = EMA(_btcUsd.Symbol, 30, Resolution.Minute);
-            _slow = EMA(_btcUsd.Symbol, 60, Resolution.Minute);
+            _fast = EMA(_adaUsdt.Symbol, 3, Resolution.Hour);
+            _slow = EMA(_adaUsdt.Symbol, 6, Resolution.Hour);
 
-            _interestPerSymbol[_btcUsd.Symbol] = 0;
             _interestPerSymbol[_adaUsdt.Symbol] = 0;
         }
 
@@ -75,32 +71,9 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (!Portfolio.Invested && Transactions.OrdersCount == 0)
                 {
-                    Buy("BTCUSD", 1);
-
-                    var marginUsed = Portfolio.TotalMarginUsed;
-                    var btcUsdHoldings = _btcUsd.Holdings;
-
-                    // Coin futures value is 100 USD
-                    var holdingsValueBtcUsd = 100;
-
-                    if (Math.Abs(btcUsdHoldings.TotalSaleVolume - holdingsValueBtcUsd) > 1)
-                    {
-                        throw new Exception($"Unexpected TotalSaleVolume {btcUsdHoldings.TotalSaleVolume}");
-                    }
-                    if (Math.Abs(btcUsdHoldings.AbsoluteHoldingsCost - holdingsValueBtcUsd) > 1)
-                    {
-                        throw new Exception($"Unexpected holdings cost {btcUsdHoldings.HoldingsCost}");
-                    }
-                    // margin used is based on the maintenance rate
-                    if (Math.Abs(btcUsdHoldings.AbsoluteHoldingsCost * 0.1m - marginUsed) > 1
-                        || _btcUsd.BuyingPowerModel.GetMaintenanceMargin(_btcUsd) != marginUsed)
-                    {
-                        throw new Exception($"Unexpected margin used {marginUsed}");
-                    }
-
                     Buy("ADAUSDT", 1000);
 
-                    marginUsed = Portfolio.TotalMarginUsed - marginUsed;
+                    var marginUsed = Portfolio.TotalMarginUsed;
                     var adaUsdtHoldings = _adaUsdt.Holdings;
 
                     // USDT/BUSD futures value is based on it's price
@@ -136,17 +109,8 @@ namespace QuantConnect.Algorithm.CSharp
             else
             {
                 // let's revert our position and double
-                if (Time.Hour > 10 && Transactions.OrdersCount == 2)
+                if (Time.Hour > 10 && Transactions.OrdersCount == 1)
                 {
-                    Sell("BTCUSD", 3);
-
-                    var btcUsdHoldings = _btcUsd.Holdings;
-
-                    if (Math.Abs(btcUsdHoldings.AbsoluteHoldingsCost - 100 * 2) > 1)
-                    {
-                        throw new Exception($"Unexpected holdings cost {btcUsdHoldings.HoldingsCost}");
-                    }
-
                     Sell("ADAUSDT", 3000);
 
                     var adaUsdtHoldings = _adaUsdt.Holdings;
@@ -185,11 +149,6 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception($"Unexpected interest rate count {_interestPerSymbol[_adaUsdt.Symbol]}");
             }
-
-            if (_interestPerSymbol[_btcUsd.Symbol] != 3)
-            {
-                throw new Exception($"Unexpected interest rate count {_interestPerSymbol[_btcUsd.Symbol]}");
-            }
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
@@ -210,7 +169,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 7205;
+        public long DataPoints => 50;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -222,7 +181,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "6"},
+            {"Total Trades", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
@@ -241,15 +200,15 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$2.45"},
-            {"Estimated Strategy Capacity", "$2600000000.00"},
+            {"Total Fees", "$1.23"},
+            {"Estimated Strategy Capacity", "$730000.00"},
             {"Lowest Capacity Asset", "ADAUSDT 18R"},
-            {"Fitness Score", "0.012"},
+            {"Fitness Score", "0.006"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-360.379"},
-            {"Portfolio Turnover", "0.024"},
+            {"Return Over Maximum Drawdown", "-356.739"},
+            {"Portfolio Turnover", "0.012"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -263,7 +222,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "cdaf510eb6833668de468682403b3948"}
+            {"OrderListHash", "b2f3f14da82c0c8cef92fcf83ef960fb"}
         };
     }
 }

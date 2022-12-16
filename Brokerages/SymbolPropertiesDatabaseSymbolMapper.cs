@@ -30,7 +30,7 @@ namespace QuantConnect.Brokerages
         // map Lean symbols to symbol properties
         private readonly Dictionary<Symbol, SymbolProperties> _symbolPropertiesMap;
 
-        // map brokerage symbols to Lean symbols
+        // map brokerage symbols to Lean symbols we do it per security type because they could overlap, for example binance futures and spot
         private readonly Dictionary<SecurityType, Dictionary<string, Symbol>> _symbolMap;
 
         /// <summary>
