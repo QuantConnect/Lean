@@ -29,7 +29,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Array's TD Ameritrade supports security types 
         /// </summary>
-        private readonly HashSet<SecurityType> _supportSecurityTypes = new (new [] { SecurityType.Equity, SecurityType.Option, SecurityType.Index, SecurityType.IndexOption });
+        private readonly HashSet<SecurityType> _supportSecurityTypes = new (new [] { SecurityType.Equity });
 
         /// <summary>
         /// Array's TD Ameritrade supports order types 
