@@ -29,7 +29,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Array's TD Ameritrade supports security types 
         /// </summary>
-        private readonly HashSet<SecurityType> _supportSecurityTypes = new (new [] { SecurityType.Equity, SecurityType.Option, SecurityType.Future });
+        private readonly HashSet<SecurityType> _supportSecurityTypes = new (new [] { SecurityType.Equity });
 
         /// <summary>
         /// Array's TD Ameritrade supports order types 
@@ -77,7 +77,7 @@ namespace QuantConnect.Brokerages
             if (!_supportOrderTypes.Contains(order.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    StringExtensions.Invariant($"{order.Type} order is not supported by TDAmeritrade. Currently, only Market Order is supported.")
+                    StringExtensions.Invariant($"The {nameof(TDAmeritradeBrokerageModel)} does not support {order.Type} order.")
                 );
 
                 return false;
