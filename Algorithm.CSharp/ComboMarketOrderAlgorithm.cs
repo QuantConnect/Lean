@@ -13,14 +13,8 @@
  * limitations under the License.
 */
 
-using System.Linq;
-using QuantConnect.Data;
 using QuantConnect.Orders;
-using QuantConnect.Interfaces;
-using QuantConnect.Data.Market;
 using System.Collections.Generic;
-using QuantConnect.Securities.Option;
-using System;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -31,33 +25,33 @@ namespace QuantConnect.Algorithm.CSharp
     {
         protected override IEnumerable<OrderTicket> PlaceComboOrder(List<Leg> legs, int quantity, decimal? limitPrice = null)
         {
-            return ComboOrder(OrderType.ComboMarket, legs, quantity, limitPrice: null);
+            return ComboOrder(OrderType.ComboMarket, legs, quantity, limitPrice: null, asynchronous: true);
         }
 
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
-        public bool CanRunLocally => true;
+        public override bool CanRunLocally => true;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+        public override Language[] Languages { get; } = { Language.CSharp };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 884208;
+        public override long DataPoints => 884208;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public override int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "3"},
             {"Average Win", "0%"},
@@ -78,8 +72,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$10.00"},
-            {"Estimated Strategy Capacity", "$84000.00"},
+            {"Total Fees", "$7.50"},
+            {"Estimated Strategy Capacity", "$9000.00"},
             {"Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
@@ -100,7 +94,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "0673d23c27fa8dd01da0aace0e866cc3"}
+            {"OrderListHash", "47f02f5139c4c4def9b26e8f5433fdcc"}
         };
     }
 }
