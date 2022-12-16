@@ -28,20 +28,19 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class BasicTemplateFutureRolloverAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Dictionary<Future, ExponentialMovingAverage> _ema = new();
+        private Dictionary<Future, SymbolData> _symbolData = new();
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
+            SetStartDate(2013, 10, 8);
+            SetEndDate(2014, 10, 10);
             SetCash(1000000);
-            SetStartDate(2020, 2, 1);
-            SetEndDate(2020, 4, 1);
 
             var futures = new List<string> {
-                Futures.Indices.SP500EMini,
-                Futures.Metals.Gold
+                Futures.Indices.SP500EMini
             };
 
             foreach (var future in futures)
@@ -55,9 +54,8 @@ namespace QuantConnect.Algorithm.CSharp
                     contractDepthOffset: 0
                 );
 
-                var ema = EMA(continuousContract.Symbol, 20, Resolution.Daily);
-                _ema.Add(continuousContract, ema);
-                Reset(continuousContract);
+                var symbolData = new SymbolData(this, continuousContract);
+                _symbolData.Add(continuousContract, symbolData);
             }
         }
 
@@ -67,7 +65,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice slice)
         {
-            foreach (var kvp in _ema)
+            foreach (var kvp in _symbolData)
             {
                 var symbol = kvp.Key.Symbol;
                 
@@ -82,11 +80,11 @@ namespace QuantConnect.Algorithm.CSharp
                     Liquidate(oldSymbol, tag: tag);
                     MarketOrder(newSymbol, quantity, tag: tag);
 
-                    Reset(kvp.Key);
+                    kvp.Value.Reset();
                 }
 
                 var mappedSymbol = kvp.Key.Mapped;
-                var ema = kvp.Value;
+                var ema = kvp.Value.EMA;
 
                 if (mappedSymbol != null && slice.Bars.ContainsKey(symbol) && ema.IsReady)
                 {
@@ -102,12 +100,6 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public void Reset(Future future)
-        {
-            _ema[future].Reset();
-            WarmUpIndicator(future.Symbol, _ema[future], Resolution.Daily);
-        }
-
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
@@ -121,46 +113,46 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 2857;
+        public long DataPoints => 5044;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public int AlgorithmHistoryDataPoints => 35;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "33"},
-            {"Average Win", "2.33%"},
-            {"Average Loss", "-0.35%"},
-            {"Compounding Annual Return", "-0.644%"},
-            {"Drawdown", "4.400%"},
-            {"Expectancy", "-0.039"},
-            {"Net Profit", "-0.109%"},
-            {"Sharpe Ratio", "-0.011"},
-            {"Probabilistic Sharpe Ratio", "31.092%"},
-            {"Loss Rate", "88%"},
-            {"Win Rate", "12%"},
-            {"Profit-Loss Ratio", "6.69"},
-            {"Alpha", "-0.081"},
-            {"Beta", "-0.133"},
-            {"Annual Standard Deviation", "0.086"},
-            {"Annual Variance", "0.007"},
-            {"Information Ratio", "0.958"},
-            {"Tracking Error", "0.63"},
-            {"Treynor Ratio", "0.007"},
-            {"Total Fees", "$77.99"},
-            {"Estimated Strategy Capacity", "$190000000.00"},
-            {"Lowest Capacity Asset", "GC XE1Y0ZJ8NQ8T"},
-            {"Fitness Score", "0.039"},
+            {"Total Trades", "6"},
+            {"Average Win", "0.23%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "0.682%"},
+            {"Drawdown", "0.000%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "0.687%"},
+            {"Sharpe Ratio", "1.048"},
+            {"Probabilistic Sharpe Ratio", "55.116%"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "100%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0.005"},
+            {"Beta", "0.001"},
+            {"Annual Standard Deviation", "0.005"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "-1.307"},
+            {"Tracking Error", "0.089"},
+            {"Treynor Ratio", "7.068"},
+            {"Total Fees", "$12.90"},
+            {"Estimated Strategy Capacity", "$580000000000.00"},
+            {"Lowest Capacity Asset", "ES VP274HSU1AF5"},
+            {"Fitness Score", "0.001"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-0.087"},
-            {"Return Over Maximum Drawdown", "-0.144"},
-            {"Portfolio Turnover", "0.081"},
+            {"Sortino Ratio", "7.656"},
+            {"Return Over Maximum Drawdown", "53.089"},
+            {"Portfolio Turnover", "0.001"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -174,7 +166,27 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "960f2a002af87a34d20257aeb36ffbb5"}
+            {"OrderListHash", "c77e88c0f30ae1b07fd635292b4de1c9"}
         };
-    }
+
+        public class SymbolData
+        {
+            private QCAlgorithm _algorithm;
+            private Symbol _symbol;
+            public ExponentialMovingAverage EMA;
+
+            public SymbolData(QCAlgorithm algorithm, Future future)
+            {
+                _algorithm = algorithm;
+                _symbol = future.Symbol;
+                EMA = algorithm.EMA(future.Symbol, 20, Resolution.Daily);
+            }
+
+            public void Reset()
+            {
+                EMA.Reset();
+                _algorithm.WarmUpIndicator(_symbol, EMA, Resolution.Daily);
+            }
+        }
+    }  
 }
