@@ -29,7 +29,7 @@ namespace QuantConnect.Orders.Fills
     /// </summary>
     public class FillModel : IFillModel
     {
-        private static readonly Dictionary<GroupOrderManager, List<FillModelParameters>> _pendingGroupedOrdersByManager = new();
+        private static readonly Dictionary<long, List<FillModelParameters>> _pendingGroupedOrdersByManagerId = new();
 
         /// <summary>
         /// The parameters instance to be used by the different XxxxFill() implementations
@@ -116,9 +116,9 @@ namespace QuantConnect.Orders.Fills
         private bool CheckIfComboOrderIsReadyToFill(Order order)
         {
             var groupOrderManager = order.GroupOrderManager;
-            if (!_pendingGroupedOrdersByManager.TryGetValue(groupOrderManager, out var pendingFillsParameters))
+            if (!_pendingGroupedOrdersByManagerId.TryGetValue(groupOrderManager.Id, out var pendingFillsParameters))
             {
-                pendingFillsParameters = _pendingGroupedOrdersByManager[groupOrderManager] = new List<FillModelParameters>();
+                pendingFillsParameters = _pendingGroupedOrdersByManagerId[groupOrderManager.Id] = new List<FillModelParameters>();
             }
 
             if (pendingFillsParameters.Count < groupOrderManager.Count)
@@ -148,12 +148,12 @@ namespace QuantConnect.Orders.Fills
                 throw new ArgumentException("FillModel.FillComboOrder(): The order is not a grouped order");
             }
 
-            IEnumerable<OrderEvent> orderEvents = Enumerable.Empty<OrderEvent>();
-
             if (!CheckIfComboOrderIsReadyToFill(order))
             {
-                return new ComboFill(orderEvents);
+                return ComboFill.Empty;
             }
+
+            List<OrderEvent> orderEvents;
 
             switch (order.Type)
             {
@@ -170,10 +170,10 @@ namespace QuantConnect.Orders.Fills
                     throw new ArgumentOutOfRangeException();
             }
 
-            if (orderEvents.Any())
+            if (orderEvents.Count > 0)
             {
                 // orders are filled, we can clear the pending orders table
-                _pendingGroupedOrdersByManager.Remove(order.GroupOrderManager);
+                _pendingGroupedOrdersByManagerId.Remove(order.GroupOrderManager.Id);
             }
 
             return new ComboFill(orderEvents);
@@ -184,18 +184,18 @@ namespace QuantConnect.Orders.Fills
         /// </summary>
         /// <param name="order">TODO:</param>
         /// <returns>TODO:</returns>
-        public virtual IEnumerable<OrderEvent> ComboMarketFill(ComboMarketOrder order)
+        public virtual List<OrderEvent> ComboMarketFill(ComboMarketOrder order)
         {
             // if this was called, we are ready to fill the combo order and event the current one should be in the pending orders table
-            var fills = _pendingGroupedOrdersByManager[order.GroupOrderManager]
+            var fills = _pendingGroupedOrdersByManagerId[order.GroupOrderManager.Id]
                 .Select(x => InternalMarketFill(x.Security, x.Order, x.Order.Quantity * order.GroupOrderManager.Quantity));
 
             if (fills.Any(x => x.Status != OrderStatus.Filled))
             {
-                return Enumerable.Empty<OrderEvent>();
+                return new List<OrderEvent>();
             }
 
-            return fills;
+            return fills.ToList() ;
         }
 
         /// <summary>
@@ -203,23 +203,28 @@ namespace QuantConnect.Orders.Fills
         /// </summary>
         /// <param name="order">TODO:</param>
         /// <returns>TODO:</returns>
-        public virtual IEnumerable<OrderEvent> ComboLimitFill(ComboLimitOrder order)
+        public virtual List<OrderEvent> ComboLimitFill(ComboLimitOrder order)
         {
             // aggregate the prices from all the securities
-            var pendingOrdersParameters = _pendingGroupedOrdersByManager[order.GroupOrderManager];
-            var pricesBySecurity = pendingOrdersParameters.ToDictionary(x => x.Security, x => GetPricesCheckingPythonWrapper(x.Security, x.Order.Direction));
+            var pendingOrdersParameters = _pendingGroupedOrdersByManagerId[order.GroupOrderManager.Id];
+            var prices = pendingOrdersParameters
+                .Select(x => GetPricesCheckingPythonWrapper(x.Security, x.Order.Direction))
+                .ToList();
 
-            IEnumerable<OrderEvent> fills = Enumerable.Empty<OrderEvent>();
-
-            if (pricesBySecurity.Any(x => x.Value.EndTime.ConvertToUtc(x.Key.Exchange.TimeZone) < order.Time))
+            for (int i = 0; i < prices.Count; i++)
             {
-                // do not fill on stale data
-                return fills;
+                if (prices[i].EndTime.ConvertToUtc(pendingOrdersParameters[i].Security.Exchange.TimeZone) < order.Time)
+                {
+                    // do not fill on stale data
+                    return new List<OrderEvent>();
+                }
             }
 
-            var low = pricesBySecurity.Aggregate(0m, (accumulatedPrice, currentPrices) => accumulatedPrice + currentPrices.Value.Low);
-            var high = pricesBySecurity.Aggregate(0m, (accumulatedPrice, currentPrices) => accumulatedPrice + currentPrices.Value.High);
+            var low = prices.Aggregate(0m, (accumulatedPrice, currentPrices) => accumulatedPrice + currentPrices.Low);
+            var high = prices.Aggregate(0m, (accumulatedPrice, currentPrices) => accumulatedPrice + currentPrices.High);
             var limitPrice = order.GroupOrderManager.LimitPrice;
+
+            var fills = new List<OrderEvent>();
 
             //-> Valid Live/Model Order:
             switch (order.GroupOrderManager.Direction)
@@ -228,42 +233,45 @@ namespace QuantConnect.Orders.Fills
                     //Buy limit seeks lowest price
                     if (low < limitPrice)
                     {
-                        fills = pendingOrdersParameters.Select(x =>
+                        for (var i = 0; i < pendingOrdersParameters.Count; i++)
                         {
-                            var utcTime = x.Security.LocalTime.ConvertToUtc(x.Security.Exchange.TimeZone);
-                            var fill = new OrderEvent(x.Order, utcTime, OrderFee.Zero);
+                            var parameters = pendingOrdersParameters[i];
+
+                            // TODO: Shouldn't this time be the same for all events?
+                            var utcTime = parameters.Security.LocalTime.ConvertToUtc(parameters.Security.Exchange.TimeZone);
+                            var fill = new OrderEvent(parameters.Order, utcTime, OrderFee.Zero);
 
                             //Set order fill:
                             fill.Status = OrderStatus.Filled;
-                            // fill at the worse price this bar or the limit price, this allows far out of the money limits
-                            // to be executed properly
-                            fill.FillPrice = Math.Min(pricesBySecurity[x.Security].High, limitPrice);
+                            fill.FillPrice = prices[i].Low;
                             // assume the order completely filled
-                            fill.FillQuantity = x.Order.Quantity;
+                            fill.FillQuantity = parameters.Order.Quantity;
 
-                            return fill;
-                        });
+                            fills.Add(fill);
+                        }
                     }
                     break;
+
                 case OrderDirection.Sell:
                     //Sell limit seeks highest price possible
                     if (high > limitPrice)
                     {
-                        fills = pendingOrdersParameters.Select(x =>
+                        for (var i = 0; i < pendingOrdersParameters.Count; i++)
                         {
-                            var utcTime = x.Security.LocalTime.ConvertToUtc(x.Security.Exchange.TimeZone);
-                            var fill = new OrderEvent(x.Order, utcTime, OrderFee.Zero);
+                            var parameters = pendingOrdersParameters[i];
+
+                            // TODO: Shouldn't this time be the same for all events?
+                            var utcTime = parameters.Security.LocalTime.ConvertToUtc(parameters.Security.Exchange.TimeZone);
+                            var fill = new OrderEvent(parameters.Order, utcTime, OrderFee.Zero);
 
                             //Set order fill:
                             fill.Status = OrderStatus.Filled;
-                            // fill at the worse price this bar or the limit price, this allows far out of the money limits
-                            // to be executed properly
-                            fill.FillPrice = Math.Min(pricesBySecurity[x.Security].Low, limitPrice);
+                            fill.FillPrice = prices[i].High;
                             // assume the order completely filled
-                            fill.FillQuantity = x.Order.Quantity;
+                            fill.FillQuantity = parameters.Order.Quantity;
 
-                            return fill;
-                        });
+                            fills.Add(fill);
+                        }
                     }
                     break;
             }
@@ -276,17 +284,17 @@ namespace QuantConnect.Orders.Fills
         /// </summary>
         /// <param name="order">TODO:</param>
         /// <returns>TODO:</returns>
-        public virtual IEnumerable<OrderEvent> ComboLegLimitFill(ComboLegLimitOrder order)
+        public virtual List<OrderEvent> ComboLegLimitFill(ComboLegLimitOrder order)
         {
-            var fills = _pendingGroupedOrdersByManager[order.GroupOrderManager].Select(x =>
+            var fills = _pendingGroupedOrdersByManagerId[order.GroupOrderManager.Id].Select(x =>
                 InternalLimitFill(x.Security, x.Order, (x.Order as ComboLegLimitOrder).LimitPrice, x.Order.Quantity * order.GroupOrderManager.Quantity));
 
             if (fills.Any(x => x.Status != OrderStatus.Filled))
             {
-                return Enumerable.Empty<OrderEvent>();
+                return new List<OrderEvent>();
             }
 
-            return fills;
+            return fills.ToList();
         }
 
 

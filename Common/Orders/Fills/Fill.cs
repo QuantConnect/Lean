@@ -15,6 +15,7 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Orders.Fills
 {
@@ -70,5 +71,7 @@ namespace QuantConnect.Orders.Fills
         {
             return GetEnumerator();
         }
+
+        public static readonly ComboFill Empty = new(Enumerable.Empty<OrderEvent>());
     }
 }
