@@ -467,7 +467,7 @@ namespace QuantConnect.Brokerages.Backtesting
 
                         if (filled)
                         {
-                            OnComboOrderEvents(fills);
+                            OnOrderEvents(fills);
                         }
                     }
 
@@ -529,27 +529,24 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <summary>
         /// Event invocator for the OrderFilled event
         /// </summary>
-        /// <param name="e">The OrderEvent</param>
-        protected override void OnOrderEvent(OrderEvent e)
-        {
-            RemovePendingOptionAssignments(e);
-
-            base.OnOrderEvent(e);
-        }
-
-
-        /// <summary>
-        /// Event invocator for the OrderFilled event for combo orders
-        /// </summary>
         /// <param name="orderEvents">The OrderEvent list</param>
-        protected override void OnComboOrderEvents(IEnumerable<OrderEvent> orderEvents)
+        protected override void OnOrderEvents(List<OrderEvent> orderEvents)
         {
             foreach (var e in orderEvents)
             {
                 RemovePendingOptionAssignments(e);
             }
 
-            base.OnComboOrderEvents(orderEvents);
+            base.OnOrderEvents(orderEvents);
+        }
+
+        /// <summary>
+        /// Event invocator for the OrderFilled event
+        /// </summary>
+        /// <param name="e">The OrderEvent</param>
+        protected void OnOrderEvent(OrderEvent e)
+        {
+            OnOrderEvents(new List<OrderEvent>() { e });
         }
 
         /// <summary>

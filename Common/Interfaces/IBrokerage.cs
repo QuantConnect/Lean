@@ -34,13 +34,9 @@ namespace QuantConnect.Interfaces
         event EventHandler<BrokerageOrderIdChangedEvent> OrderIdChanged;
 
         /// <summary>
-        /// Event that fires each time an order is filled
-        /// </summary>
-        event EventHandler<OrderEvent> OrderStatusChanged;
-        /// <summary>
         /// Event that fires each time a combo order is filled
         /// </summary>
-        event EventHandler<IEnumerable<OrderEvent>> OrdersStatusChanged;
+        event EventHandler<List<OrderEvent>> OrdersStatusChanged;
 
         /// <summary>
         /// Event that fires each time a short option position is assigned
