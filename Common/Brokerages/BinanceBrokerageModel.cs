@@ -142,6 +142,11 @@ namespace QuantConnect.Brokerages
                     quantityIsValid &= IsOrderSizeLargeEnough(price);
                     break;
                 case StopLimitOrder stopLimitOrder:
+                    if (security.Symbol.SecurityType == SecurityType.CryptoFuture)
+                    {
+                        message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", Invariant($"{order.Type} orders are not supported for this symbol ${security.Symbol}"));
+                        return false;
+                    }
                     quantityIsValid &= IsOrderSizeLargeEnough(stopLimitOrder.LimitPrice);
                     // Binance Trading UI requires this check too...
                     quantityIsValid &= IsOrderSizeLargeEnough(stopLimitOrder.StopPrice);

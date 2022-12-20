@@ -13,6 +13,10 @@
  * limitations under the License.
 */
 
+using System;
+using System.Linq;
+using QuantConnect.Orders;
+
 namespace QuantConnect.Securities.CryptoFuture
 {
     /// <summary>
@@ -50,7 +54,10 @@ namespace QuantConnect.Securities.CryptoFuture
                 return MaintenanceMargin.Zero;
             }
 
-            return new MaintenanceMargin(security.Holdings.GetQuantityValue(quantity, security.Price).InAccountCurrency * _maintenanceMarginRate - _maintenanceAmount);
+            var positionValue = security.Holdings.GetQuantityValue(quantity, security.Price);
+            var marginRequirementInCollateral = Math.Abs(positionValue.Amount) * _maintenanceMarginRate - _maintenanceAmount;
+
+            return new MaintenanceMargin(marginRequirementInCollateral * positionValue.Cash.ConversionRate);
         }
 
         /// <summary>
@@ -67,7 +74,99 @@ namespace QuantConnect.Securities.CryptoFuture
                 return InitialMargin.Zero;
             }
 
-            return new InitialMargin(security.Holdings.GetQuantityValue(quantity, security.Price).InAccountCurrency / GetLeverage(security));
+            var positionValue = security.Holdings.GetQuantityValue(quantity, security.Price);
+            var marginRequirementInCollateral = Math.Abs(positionValue.Amount) / GetLeverage(security);
+
+            return new InitialMargin(marginRequirementInCollateral * positionValue.Cash.ConversionRate);
+        }
+
+        /// <summary>
+        /// Returns the total margin pool in account currency
+        /// </summary>
+        protected override decimal GetTotalMarginPool(SecurityPortfolioManager portfolio, Security security)
+        {
+            var collateralCurrency = GetCollateralCash(security);
+            return collateralCurrency.ValueInAccountCurrency;
+        }
+
+        /// <summary>
+        /// Gets the margin cash available for a trade
+        /// </summary>
+        /// <param name="portfolio">The algorithm's portfolio</param>
+        /// <param name="security">The security to be traded</param>
+        /// <param name="direction">The direction of the trade</param>
+        /// <returns>The margin available for the trade</returns>
+        /// <remarks>What we do specially here is that instead of using the total portfolio value as potential margin remaining we only consider the collateral currency</remarks>
+        protected override decimal GetMarginRemaining(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
+        {
+            var collateralCurrency = GetCollateralCash(security);
+            var totalCollateralCurrency = collateralCurrency.Amount;
+            var result = totalCollateralCurrency;
+
+            foreach (var kvp in portfolio.Where(holdings => holdings.Value.Invested && holdings.Value.Type == SecurityType.CryptoFuture && holdings.Value.Symbol != security.Symbol))
+            {
+                var otherCryptoFuture = portfolio.Securities[kvp.Key];
+                // check if we share the collateral
+                if (collateralCurrency == GetCollateralCash(otherCryptoFuture))
+                {
+                    // we reduce the available collateral based on total usage of all other positions too
+                    result -= otherCryptoFuture.BuyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForCurrentHoldings(otherCryptoFuture));
+                }
+            }
+
+            if (direction != OrderDirection.Hold)
+            {
+                var holdings = security.Holdings;
+                //If the order is in the same direction as holdings, our remaining cash is our cash
+                //In the opposite direction, our remaining cash is 2 x current value of assets + our cash
+                if (holdings.IsLong)
+                {
+                    switch (direction)
+                    {
+                        case OrderDirection.Sell:
+                            result +=
+                                // portion of margin to close the existing position
+                                this.GetMaintenanceMargin(security) +
+                                // portion of margin to open the new position
+                                this.GetInitialMarginRequirement(security, security.Holdings.AbsoluteQuantity);
+                            break;
+                    }
+                }
+                else if (holdings.IsShort)
+                {
+                    switch (direction)
+                    {
+                        case OrderDirection.Buy:
+                            result +=
+                                // portion of margin to close the existing position
+                                this.GetMaintenanceMargin(security) +
+                                // portion of margin to open the new position
+                                this.GetInitialMarginRequirement(security, security.Holdings.AbsoluteQuantity);
+                            break;
+                    }
+                }
+            }
+
+            result -= totalCollateralCurrency * RequiredFreeBuyingPowerPercent;
+            // convert into account currency
+            result *= collateralCurrency.ConversionRate;
+            return result < 0 ? 0 : result;
+        }
+
+        /// <summary>
+        /// Helper method to determine what's the collateral currency for the given crypto future
+        /// </summary>
+        private static Cash GetCollateralCash(Security security)
+        {
+            var cryptoFuture = (CryptoFuture)security;
+
+            var collateralCurrency = cryptoFuture.BaseCurrency;
+            if (security.QuoteCurrency.Symbol == "USDT" || security.QuoteCurrency.Symbol == "BUSD")
+            {
+                collateralCurrency = cryptoFuture.QuoteCurrency;
+            }
+
+            return collateralCurrency;
         }
     }
 }

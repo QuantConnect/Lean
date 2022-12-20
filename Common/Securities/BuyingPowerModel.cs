@@ -164,6 +164,14 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Returns the total margin pool in account currency
+        /// </summary>
+        protected virtual decimal GetTotalMarginPool(SecurityPortfolioManager portfolio, Security security)
+        {
+            return portfolio.TotalPortfolioValue;
+        }
+
+        /// <summary>
         /// Gets the margin cash available for a trade
         /// </summary>
         /// <param name="portfolio">The algorithm's portfolio</param>
@@ -176,7 +184,7 @@ namespace QuantConnect.Securities
             OrderDirection direction
             )
         {
-            var totalPortfolioValue = portfolio.TotalPortfolioValue;
+            var totalPortfolioValue = GetTotalMarginPool(portfolio, security);
             var result = portfolio.GetMarginRemaining(totalPortfolioValue);
 
             if (direction != OrderDirection.Hold)
@@ -339,9 +347,10 @@ namespace QuantConnect.Securities
             var targetBuyingPower = signedUsedBuyingPower + parameters.DeltaBuyingPower;
 
             var target = 0m;
-            if (parameters.Portfolio.TotalPortfolioValue != 0)
+            var totalPortfolioValue = GetTotalMarginPool(parameters.Portfolio, parameters.Security);
+            if (totalPortfolioValue != 0)
             {
-                target = targetBuyingPower / parameters.Portfolio.TotalPortfolioValue;
+                target = targetBuyingPower / totalPortfolioValue;
             }
 
             return GetMaximumOrderQuantityForTargetBuyingPower(
@@ -364,7 +373,7 @@ namespace QuantConnect.Securities
         public virtual GetMaximumOrderQuantityResult GetMaximumOrderQuantityForTargetBuyingPower(GetMaximumOrderQuantityForTargetBuyingPowerParameters parameters)
         {
             // this is expensive so lets fetch it once
-            var totalPortfolioValue = parameters.Portfolio.TotalPortfolioValue;
+            var totalPortfolioValue = GetTotalMarginPool(parameters.Portfolio, parameters.Security);
 
             // adjust target buying power to comply with required Free Buying Power Percent
             var signedTargetFinalMarginValue =

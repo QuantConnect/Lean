@@ -53,6 +53,12 @@ namespace QuantConnect.Algorithm.CSharp
             _slow = EMA(_adaUsdt.Symbol, 6, Resolution.Hour);
 
             _interestPerSymbol[_adaUsdt.Symbol] = 0;
+
+            // Default USD cash, set 1M but it wont be used
+            SetCash(1000000);
+
+            // the amount of USDT we need to hold to trade 'ADAUSDT'
+            _adaUsdt.QuoteCurrency.SetAmount(200);
         }
 
         /// <summary>
@@ -71,6 +77,12 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (!Portfolio.Invested && Transactions.OrdersCount == 0)
                 {
+                    var ticket = Buy("ADAUSDT", 10000);
+                    if(ticket.Status != OrderStatus.Invalid)
+                    {
+                        throw new Exception($"Unexpected valid order {ticket}, should fail due to margin not sufficient");
+                    }
+
                     Buy("ADAUSDT", 1000);
 
                     var marginUsed = Portfolio.TotalMarginUsed;
@@ -109,7 +121,7 @@ namespace QuantConnect.Algorithm.CSharp
             else
             {
                 // let's revert our position and double
-                if (Time.Hour > 10 && Transactions.OrdersCount == 1)
+                if (Time.Hour > 10 && Transactions.OrdersCount == 2)
                 {
                     Sell("ADAUSDT", 3000);
 
@@ -136,7 +148,7 @@ namespace QuantConnect.Algorithm.CSharp
                     }
                 }
 
-                if (Time.Hour >= 22)
+                if (Time.Hour >= 22 && Transactions.OrdersCount == 3)
                 {
                     Liquidate();
                 }
@@ -201,14 +213,14 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$1.23"},
-            {"Estimated Strategy Capacity", "$730000.00"},
+            {"Estimated Strategy Capacity", "$2200000000.00"},
             {"Lowest Capacity Asset", "ADAUSDT 18R"},
-            {"Fitness Score", "0.006"},
+            {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-356.739"},
-            {"Portfolio Turnover", "0.012"},
+            {"Return Over Maximum Drawdown", "-364.162"},
+            {"Portfolio Turnover", "0.001"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -222,7 +234,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "b2f3f14da82c0c8cef92fcf83ef960fb"}
+            {"OrderListHash", "dd9f0aa90f5fe9a5f49842fb87651830"}
         };
     }
 }

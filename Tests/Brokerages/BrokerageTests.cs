@@ -624,7 +624,7 @@ namespace QuantConnect.Tests.Brokerages
             return order;
         }
 
-        protected SubscriptionDataConfig GetSubscriptionDataConfig<T>(Symbol symbol, Resolution resolution)
+        protected static SubscriptionDataConfig GetSubscriptionDataConfig<T>(Symbol symbol, Resolution resolution)
         {
             return new SubscriptionDataConfig(
                 typeof(T),
@@ -637,7 +637,7 @@ namespace QuantConnect.Tests.Brokerages
                 false);
         }
 
-        protected void ProcessFeed(IEnumerator<BaseData> enumerator, CancellationTokenSource cancellationToken, Action<BaseData> callback = null)
+        protected static void ProcessFeed(IEnumerator<BaseData> enumerator, CancellationTokenSource cancellationToken, Action<BaseData> callback = null)
         {
             Task.Factory.StartNew(() =>
             {

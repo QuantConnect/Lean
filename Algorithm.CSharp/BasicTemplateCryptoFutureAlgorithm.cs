@@ -57,6 +57,14 @@ namespace QuantConnect.Algorithm.CSharp
 
             _interestPerSymbol[_btcUsd.Symbol] = 0;
             _interestPerSymbol[_adaUsdt.Symbol] = 0;
+
+            // Default USD cash, set 1M but it wont be used
+            SetCash(1000000);
+
+            // the amount of BTC we need to hold to trade 'BTCUSD'
+            _btcUsd.BaseCurrency.SetAmount(0.005m);
+            // the amount of USDT we need to hold to trade 'ADAUSDT'
+            _adaUsdt.QuoteCurrency.SetAmount(200);
         }
 
         /// <summary>
@@ -75,6 +83,12 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (!Portfolio.Invested && Transactions.OrdersCount == 0)
                 {
+                    var ticket = Buy("BTCUSD", 5);
+                    if (ticket.Status != OrderStatus.Invalid)
+                    {
+                        throw new Exception($"Unexpected valid order {ticket}, should fail due to margin not sufficient");
+                    }
+
                     Buy("BTCUSD", 1);
 
                     var marginUsed = Portfolio.TotalMarginUsed;
@@ -136,7 +150,7 @@ namespace QuantConnect.Algorithm.CSharp
             else
             {
                 // let's revert our position and double
-                if (Time.Hour > 10 && Transactions.OrdersCount == 2)
+                if (Time.Hour > 10 && Transactions.OrdersCount == 3)
                 {
                     Sell("BTCUSD", 3);
 
@@ -172,9 +186,21 @@ namespace QuantConnect.Algorithm.CSharp
                     }
                 }
 
-                if (Time.Hour >= 22)
+                if (Time.Hour == 22 && Transactions.OrdersCount == 5)
                 {
                     Liquidate();
+
+                    // Even though we hold 1M USD we expect it no to be taken into account
+                    SetHoldings("BTCUSD", 2);
+                    if(_btcUsd.Holdings.AbsoluteHoldingsCost > 1000)
+                    {
+                        throw new Exception($"Unexpect position {_btcUsd.Holdings}");
+                    }
+                    SetHoldings("ADAUSDT", 2);
+                    if (_adaUsdt.Holdings.AbsoluteHoldingsCost > 1000)
+                    {
+                        throw new Exception($"Unexpect position {_btcUsd.Holdings}");
+                    }
                 }
             }
         }
@@ -222,7 +248,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "6"},
+            {"Total Trades", "8"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
@@ -241,15 +267,15 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$2.45"},
-            {"Estimated Strategy Capacity", "$2600000000.00"},
+            {"Total Fees", "$2.93"},
+            {"Estimated Strategy Capacity", "$1900000000.00"},
             {"Lowest Capacity Asset", "ADAUSDT 18R"},
-            {"Fitness Score", "0.012"},
+            {"Fitness Score", "0.002"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-360.379"},
-            {"Portfolio Turnover", "0.024"},
+            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
+            {"Portfolio Turnover", "0.002"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -263,7 +289,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "cdaf510eb6833668de468682403b3948"}
+            {"OrderListHash", "5f0a1228458a93782bfc48da884be124"}
         };
     }
 }
