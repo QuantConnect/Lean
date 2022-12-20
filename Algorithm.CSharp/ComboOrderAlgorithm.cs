@@ -70,9 +70,9 @@ namespace QuantConnect.Algorithm.CSharp
 
                     var legs = new List<Leg>()
                     {
-                        new Leg() { Symbol = callContracts[0].Symbol, Quantity = 1, },
-                        new Leg() { Symbol = callContracts[1].Symbol, Quantity = -2, },
-                        new Leg() { Symbol = callContracts[2].Symbol, Quantity = 1, },
+                        new Leg() { Symbol = callContracts[0].Symbol, Quantity = 1, OrderPrice = 16.7m },
+                        new Leg() { Symbol = callContracts[1].Symbol, Quantity = -2, OrderPrice  = 14.6m },
+                        new Leg() { Symbol = callContracts[2].Symbol, Quantity = 1, OrderPrice = 14.0m},
                     };
                     PlaceComboOrder(legs, 10, 45m);
 

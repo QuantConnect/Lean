@@ -14,20 +14,25 @@
 */
 
 using QuantConnect.Orders;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// TODO:
     /// </summary>
-    public class ComboLimitOrderAlgorithm : ComboOrderAlgorithm
+    public class ComboLegLimitOrderAlgorithm : ComboOrderAlgorithm
     {
         protected override IEnumerable<OrderTicket> PlaceComboOrder(List<Leg> legs, int quantity, decimal? limitPrice = null)
         {
-            legs.ForEach(x => { x.OrderPrice = null; });
+            if (legs.Any(x => x.OrderPrice == null))
+            {
+                throw new Exception("ComboLegLimitOrderAlgorithm requires all legs to have a limit price");
+            }
 
-            return ComboOrder(OrderType.ComboLimit, legs, quantity, limitPrice, asynchronous: true);
+            return ComboOrder(OrderType.ComboLegLimit, legs, quantity, limitPrice: null, asynchronous: true);
         }
 
         /// <summary>

@@ -236,8 +236,6 @@ namespace QuantConnect.Orders.Fills
                         for (var i = 0; i < pendingOrdersParameters.Count; i++)
                         {
                             var parameters = pendingOrdersParameters[i];
-
-                            // TODO: Shouldn't this time be the same for all events?
                             var utcTime = parameters.Security.LocalTime.ConvertToUtc(parameters.Security.Exchange.TimeZone);
                             var fill = new OrderEvent(parameters.Order, utcTime, OrderFee.Zero);
 
@@ -259,8 +257,6 @@ namespace QuantConnect.Orders.Fills
                         for (var i = 0; i < pendingOrdersParameters.Count; i++)
                         {
                             var parameters = pendingOrdersParameters[i];
-
-                            // TODO: Shouldn't this time be the same for all events?
                             var utcTime = parameters.Security.LocalTime.ConvertToUtc(parameters.Security.Exchange.TimeZone);
                             var fill = new OrderEvent(parameters.Order, utcTime, OrderFee.Zero);
 
