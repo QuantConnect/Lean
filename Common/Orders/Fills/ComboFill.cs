@@ -13,25 +13,40 @@
  * limitations under the License.
 */
 
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+
 namespace QuantConnect.Orders.Fills
 {
     /// <summary>
-    /// Defines a possible result for <see cref="IFillModel.Fill"/> for a single order
+    /// Defines a possible result for <see cref="IFillModel.Fill"/> for combo orders
     /// </summary>
-    public class Fill : IFill
+    public class ComboFill : IFill, IEnumerable<OrderEvent>
     {
-        /// <summary>
-        /// The order event associated to this <see cref="Fill"/> instance
-        /// </summary>
-        public OrderEvent OrderEvent { get; }
+        private readonly List<OrderEvent> _orderEvents = new();
 
         /// <summary>
-        /// Creates a new <see cref="Fill"/> instance
+        /// Creates a new <see cref="ComboFill"/> instance
         /// </summary>
-        /// <param name="orderEvent"></param>
-        public Fill(OrderEvent orderEvent)
+        /// <param name="orderEvents">The fill order events for each order in the combo</param>
+        public ComboFill(IEnumerable<OrderEvent> orderEvents)
         {
-            OrderEvent = orderEvent;
+            _orderEvents.AddRange(orderEvents);
         }
+
+        /// <summary>
+        /// </summary>
+        public IEnumerator<OrderEvent> GetEnumerator()
+        {
+            return _orderEvents.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public static readonly ComboFill Empty = new(Enumerable.Empty<OrderEvent>());
     }
 }
