@@ -245,7 +245,7 @@ namespace QuantConnect.Orders.Fills
                             fill.Status = OrderStatus.Filled;
                             fill.FillPrice = prices[i].Low;
                             // assume the order completely filled
-                            fill.FillQuantity = parameters.Order.Quantity;
+                            fill.FillQuantity = parameters.Order.Quantity * parameters.Order.GroupOrderManager.Quantity;
 
                             fills.Add(fill);
                         }
@@ -268,7 +268,7 @@ namespace QuantConnect.Orders.Fills
                             fill.Status = OrderStatus.Filled;
                             fill.FillPrice = prices[i].High;
                             // assume the order completely filled
-                            fill.FillQuantity = parameters.Order.Quantity;
+                            fill.FillQuantity = parameters.Order.Quantity * parameters.Order.GroupOrderManager.Quantity;
 
                             fills.Add(fill);
                         }

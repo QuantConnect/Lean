@@ -22,7 +22,6 @@ using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
-using QuantConnect.Orders.Fills;
 using QuantConnect.Python;
 using QuantConnect.Securities.Positions;
 using static QuantConnect.StringExtensions;
