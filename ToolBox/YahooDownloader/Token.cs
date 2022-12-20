@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -116,7 +116,7 @@ namespace QuantConnect.ToolBox.YahooDownloader
                 //initialize on first time use
                 if (_regexCrumb == null)
                 {
-                    _regexCrumb = new Regex("CrumbStore\":{\"crumb\":\"(?<crumb>.+?)\"}",
+                    _regexCrumb = new Regex("\"crumb\":\"(?<crumb>.+?)\"",
                         RegexOptions.CultureInvariant | RegexOptions.Compiled);
                 }
 
