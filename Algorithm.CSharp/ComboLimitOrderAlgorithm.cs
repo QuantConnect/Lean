@@ -14,20 +14,41 @@
 */
 
 using QuantConnect.Orders;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// TODO:
+    /// Regression algorithm to test combo limit orders
     /// </summary>
     public class ComboLimitOrderAlgorithm : ComboOrderAlgorithm
     {
+        private decimal? _limitPrice;
+
         protected override IEnumerable<OrderTicket> PlaceComboOrder(List<Leg> legs, int quantity, decimal? limitPrice = null)
         {
+            _limitPrice = limitPrice;
             legs.ForEach(x => { x.OrderPrice = null; });
 
             return ComboOrder(OrderType.ComboLimit, legs, quantity, limitPrice, asynchronous: true);
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            base.OnEndOfAlgorithm();
+
+            if (_limitPrice == null)
+            {
+                throw new Exception("Limit price was not set");
+            }
+
+            var fillPricesSum = FillOrderEvents.Select(x => x.FillPrice).Sum();
+            if (_limitPrice <= fillPricesSum)
+            {
+                throw new Exception($"Limit price expected to be greater that the sum of the fill prices ({fillPricesSum}), but was {_limitPrice}");
+            }
         }
 
         /// <summary>
@@ -75,7 +96,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$7.50"},
-            {"Estimated Strategy Capacity", "$70000.00"},
+            {"Estimated Strategy Capacity", "$8000.00"},
             {"Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
@@ -96,7 +117,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "8196db13eaf227b679ef5b4d52320b2f"}
+            {"OrderListHash", "8b0637a295d4720d3f5344c79f10ffd3"}
         };
     }
 }

@@ -13,26 +13,29 @@
  * limitations under the License.
 */
 
+using System;
 using System.Linq;
+using System.Collections.Generic;
+
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Interfaces;
-using QuantConnect.Data.Market;
-using System.Collections.Generic;
-using System;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// TODO:
+    /// Regression algorithm asserting that combo orders are filled correctly and at the same time
     /// </summary>
     public abstract class ComboOrderAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        protected Symbol _optionSymbol;
+        private Symbol _optionSymbol;
 
-        private List<OrderEvent> _fillOrderEvents = new();
+        protected List<OrderEvent> FillOrderEvents { get; private set; } = new();
 
-        private bool _orderPlaced;
+        protected List<Leg> OrderLegs { get; private set; }
+
+        protected int ComboOrderQuantity { get; } = 10;
 
         public override void Initialize()
         {
@@ -50,7 +53,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
-            if (!_orderPlaced)
+            if (OrderLegs == null)
             {
                 OptionChain chain;
                 if (IsMarketOpen(_optionSymbol) && slice.OptionChains.TryGetValue(_optionSymbol, out chain))
@@ -68,40 +71,48 @@ namespace QuantConnect.Algorithm.CSharp
                         return;
                     }
 
-                    var legs = new List<Leg>()
+                    OrderLegs = new List<Leg>()
                     {
                         new Leg() { Symbol = callContracts[0].Symbol, Quantity = 1, OrderPrice = 16.7m },
                         new Leg() { Symbol = callContracts[1].Symbol, Quantity = -2, OrderPrice  = 14.6m },
                         new Leg() { Symbol = callContracts[2].Symbol, Quantity = 1, OrderPrice = 14.0m},
                     };
-                    PlaceComboOrder(legs, 10, 45m);
-
-                    _orderPlaced = true;
+                    PlaceComboOrder(OrderLegs, ComboOrderQuantity, 45m);
                 }
             }
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            Log($" Order Event: {orderEvent}");
+            Debug($" Order Event: {orderEvent}");
 
             if (orderEvent.Status == OrderStatus.Filled)
             {
-                _fillOrderEvents.Add(orderEvent);
+                FillOrderEvents.Add(orderEvent);
             }
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (_fillOrderEvents.Count != 3)
+            if (OrderLegs == null)
             {
-                throw new Exception($"Expected 3 fill order events, found {_fillOrderEvents.Count}");
+                throw new Exception("Combo order legs were not initialized");
             }
 
-            var fillTimes = _fillOrderEvents.Select(x => x.UtcTime).ToHashSet();
+            if (FillOrderEvents.Count != OrderLegs.Count)
+            {
+                throw new Exception($"Expected {OrderLegs.Count} fill order events, found {FillOrderEvents.Count}");
+            }
+
+            var fillTimes = FillOrderEvents.Select(x => x.UtcTime).ToHashSet();
             if (fillTimes.Count != 1)
             {
                 throw new Exception($"Expected all fill order events to have the same time, found {string.Join(", ", fillTimes)}");
+            }
+
+            if (FillOrderEvents.Zip(OrderLegs).Any(x => x.First.FillQuantity != x.Second.Quantity * ComboOrderQuantity))
+            {
+                throw new Exception("Fill quantity does not match expected quantity for at least one order leg");
             }
         }
 

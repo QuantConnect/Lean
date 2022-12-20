@@ -14,12 +14,14 @@
 */
 
 using QuantConnect.Orders;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// TODO:
+    /// Regression algorithm to test combo market orders
     /// </summary>
     public class ComboMarketOrderAlgorithm : ComboOrderAlgorithm
     {
@@ -73,7 +75,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$7.50"},
-            {"Estimated Strategy Capacity", "$9000.00"},
+            {"Estimated Strategy Capacity", "$8000.00"},
             {"Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
@@ -94,7 +96,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "47f02f5139c4c4def9b26e8f5433fdcc"}
+            {"OrderListHash", "637587658515c0a49dd969252d18b9e2"}
         };
     }
 }
