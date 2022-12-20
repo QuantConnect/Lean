@@ -18,7 +18,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using QuantConnect.AlgorithmFactory;
 using QuantConnect.Brokerages;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
@@ -1183,7 +1182,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     tickets.Add(ticket);
                 }
 
-                // now lets update the orders and apply the fills to the portfolio
+                // now lets update the orders
                 for (var i = 0; i < orderEvents.Count; i++)
                 {
                     var orderEvent = orderEvents[i];
@@ -1257,12 +1256,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                             break;
                     }
 
-                    //Apply the filled order to our portfolio:
+                    // check if the fill currency and the order currency match the symbol currency
                     if (orderEvent.Status == OrderStatus.Filled || orderEvent.Status == OrderStatus.PartiallyFilled)
                     {
                         Interlocked.Exchange(ref _lastFillTimeTicks, CurrentTimeUtc.Ticks);
 
-                        // check if the fill currency and the order currency match the symbol currency
                         var security = _algorithm.Securities[orderEvent.Symbol];
 
                         if (order.Direction == OrderDirection.Buy
@@ -1283,6 +1281,30 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                                 _algorithm.Debug(message);
                             }
                         }
+                    }
+                }
+
+                //Apply the filled orders to our portfolio:
+                try
+                {
+                    _algorithm.Portfolio.ProcessFills(
+                        orderEvents.Where(x => x.Status == OrderStatus.Filled || x.Status == OrderStatus.PartiallyFilled).ToList());
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err);
+                    _algorithm.Error($"Fill error: error in TradeBuilder.ProcessFill: {err.Message}");
+                }
+
+                // Apply the filled orders to the trade builder
+                for (var i = 0; i < orderEvents.Count; i++)
+                {
+                    var orderEvent = orderEvents[i];
+
+
+                    if (orderEvent.Status == OrderStatus.Filled || orderEvent.Status == OrderStatus.PartiallyFilled)
+                    {
+                        var security = _algorithm.Securities[orderEvent.Symbol];
 
                         var multiplier = security.SymbolProperties.ContractMultiplier;
                         var securityConversionRate = security.QuoteCurrency.ConversionRate;
@@ -1291,7 +1313,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                         try
                         {
-                            _algorithm.Portfolio.ProcessFill(orderEvent);
                             _algorithm.TradeBuilder.ProcessFill(
                                 orderEvent,
                                 securityConversionRate,
@@ -1301,12 +1322,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                         catch (Exception err)
                         {
                             Log.Error(err);
-                            _algorithm.Error($"Order Error: id: {order.Id.ToStringInvariant()}, Error in Portfolio.ProcessFill: {err.Message}");
                         }
                     }
 
                     // update the ticket after we've processed the fill, but before the event, this way everything is ready for user code
-                    ticket.AddOrderEvent(orderEvent);
+                    tickets[i].AddOrderEvent(orderEvent);
                 }
             }
 

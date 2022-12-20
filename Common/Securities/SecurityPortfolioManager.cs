@@ -22,6 +22,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fills;
 using QuantConnect.Python;
 using QuantConnect.Securities.Positions;
 using static QuantConnect.StringExtensions;
@@ -38,6 +39,7 @@ namespace QuantConnect.Securities
         private bool _setCashWasCalled;
         private decimal _totalPortfolioValue;
         private bool _isTotalPortfolioValueValid;
+        private object _totalPorftfolioValueLock = new();
         private bool _setAccountCurrencyWasCalled;
         private readonly object _unsettledCashAmountsLocker = new object();
 
@@ -402,39 +404,42 @@ namespace QuantConnect.Securities
         {
             get
             {
-                if (!_isTotalPortfolioValueValid)
+                lock (_totalPorftfolioValueLock)
                 {
-                    decimal totalHoldingsValueWithoutForexCryptoFutureCfd = 0;
-                    decimal totalFuturesAndCfdHoldingsValue = 0;
-                    foreach (var kvp in Securities.Where((pair, i) => pair.Value.Holdings.Quantity != 0))
+                    if (!_isTotalPortfolioValueValid)
                     {
-                        var position = kvp.Value;
-                        var securityType = position.Type;
-                        // We can't include forex in this calculation since we would be double accounting with respect to the cash book
-                        // We also exclude futures and CFD as they are calculated separately because they do not impact the account's cash.
-                        // We include futures options as part of this calculation because IB chooses to change our account's cash balance
-                        // when we buy or sell a futures options contract.
-                        if (securityType != SecurityType.Forex && securityType != SecurityType.Crypto
-                            && securityType != SecurityType.Future && securityType != SecurityType.Cfd
-                            && securityType != SecurityType.CryptoFuture)
+                        decimal totalHoldingsValueWithoutForexCryptoFutureCfd = 0;
+                        decimal totalFuturesAndCfdHoldingsValue = 0;
+                        foreach (var kvp in Securities.Where((pair, i) => pair.Value.Holdings.Quantity != 0))
                         {
-                            totalHoldingsValueWithoutForexCryptoFutureCfd += position.Holdings.HoldingsValue;
+                            var position = kvp.Value;
+                            var securityType = position.Type;
+                            // We can't include forex in this calculation since we would be double accounting with respect to the cash book
+                            // We also exclude futures and CFD as they are calculated separately because they do not impact the account's cash.
+                            // We include futures options as part of this calculation because IB chooses to change our account's cash balance
+                            // when we buy or sell a futures options contract.
+                            if (securityType != SecurityType.Forex && securityType != SecurityType.Crypto &&
+                                securityType != SecurityType.Future && securityType != SecurityType.Cfd &&
+                                securityType == SecurityType.CryptoFuture)
+                            {
+                                totalHoldingsValueWithoutForexCryptoFutureCfd += position.Holdings.HoldingsValue;
+                            }
+
+                            // Futures and CFDs don't impact account cash, so they must be calculated
+                            // by applying the unrealized P&L to the cash balance.
+                            if (securityType == SecurityType.Future || securityType == SecurityType.Cfd || securityType == SecurityType.CryptoFuture)
+                            {
+                                totalFuturesAndCfdHoldingsValue += position.Holdings.UnrealizedProfit;
+                            }
                         }
 
-                        // Futures and CFDs don't impact account cash, so they must be calculated
-                        // by applying the unrealized P&L to the cash balance.
-                        if (securityType == SecurityType.Future || securityType == SecurityType.Cfd || securityType == SecurityType.CryptoFuture)
-                        {
-                            totalFuturesAndCfdHoldingsValue += position.Holdings.UnrealizedProfit;
-                        }
+                        _totalPortfolioValue = CashBook.TotalValueInAccountCurrency +
+                           UnsettledCashBook.TotalValueInAccountCurrency +
+                           totalHoldingsValueWithoutForexCryptoFutureCfd +
+                           totalFuturesAndCfdHoldingsValue;
+
+                        _isTotalPortfolioValueValid = true;
                     }
-
-                    _totalPortfolioValue = CashBook.TotalValueInAccountCurrency +
-                       UnsettledCashBook.TotalValueInAccountCurrency +
-                       totalHoldingsValueWithoutForexCryptoFutureCfd +
-                       totalFuturesAndCfdHoldingsValue;
-
-                    _isTotalPortfolioValueValid = true;
                 }
 
                 return _totalPortfolioValue;
@@ -447,7 +452,10 @@ namespace QuantConnect.Securities
         /// </summary>
         public void InvalidateTotalPortfolioValue()
         {
-            _isTotalPortfolioValueValid = false;
+            lock (_totalPorftfolioValueLock)
+            {
+                _isTotalPortfolioValueValid = false;
+            }
         }
 
         /// <summary>
@@ -646,6 +654,35 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Calculate the new average price after processing a list of partial/complete order fill events.
+        /// </summary>
+        /// <remarks>
+        ///     For purchasing stocks from zero holdings, the new average price is the sale price.
+        ///     When simply partially reducing holdings the average price remains the same.
+        ///     When crossing zero holdings the average price becomes the trade price in the new side of zero.
+        /// </remarks>
+        public virtual void ProcessFills(List<OrderEvent> fills)
+        {
+            if (fills.Count == 0)
+            {
+                return;
+            }
+
+            lock (_totalPorftfolioValueLock)
+            {
+                for (var i = 0; i < fills.Count; i++)
+                {
+                    var fill = fills[i];
+                    var security = Securities[fill.Symbol];
+                    security.PortfolioModel.ProcessFill(this, security, fill);
+                }
+
+                InvalidateTotalPortfolioValue();
+            }
+
+        }
+
+        /// <summary>
         /// Calculate the new average price after processing a partial/complete order fill event.
         /// </summary>
         /// <remarks>
@@ -655,9 +692,7 @@ namespace QuantConnect.Securities
         /// </remarks>
         public virtual void ProcessFill(OrderEvent fill)
         {
-            var security = Securities[fill.Symbol];
-            security.PortfolioModel.ProcessFill(this, security, fill);
-            InvalidateTotalPortfolioValue();
+            ProcessFills(new List<OrderEvent>() { fill });
         }
 
         /// <summary>
