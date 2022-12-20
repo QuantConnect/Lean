@@ -189,9 +189,9 @@ namespace QuantConnect.Orders.Serialization
         public double? TimeInForceExpiry { get; set; }
 
         /// <summary>
-        ///
+        /// The group order manager for combo orders
         /// </summary>
-        [JsonProperty("group-order-manager", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty("group-order-manager", DefaultValueHandling = DefaultValueHandling.Ignore, NullValueHandling = NullValueHandling.Ignore)]
         public GroupOrderManager GroupOrderManager { get; set; }
 
         /// <summary>

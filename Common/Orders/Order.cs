@@ -199,6 +199,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Manager for the orders in the group if this is a combo order
         /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public GroupOrderManager GroupOrderManager { get; set; }
 
         /// <summary>

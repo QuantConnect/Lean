@@ -180,10 +180,10 @@ namespace QuantConnect.Orders.Fills
         }
 
         /// <summary>
-        /// TODO:
+        /// Default combo market fill model for the base security class. Fills at the last traded price for each leg.
         /// </summary>
-        /// <param name="order">TODO:</param>
-        /// <returns>TODO:</returns>
+        /// <param name="order">Order to fill</param>
+        /// <returns>Order fill information detailing the average price and quantity filled for each leg. If any of the fills fails, none of the orders will be filled and the returned list will be empty</returns>
         public virtual List<OrderEvent> ComboMarketFill(ComboMarketOrder order)
         {
             // if this was called, we are ready to fill the combo order and event the current one should be in the pending orders table
@@ -199,10 +199,10 @@ namespace QuantConnect.Orders.Fills
         }
 
         /// <summary>
-        /// TODO:
+        /// Default combo limit fill model for the base security class. Fills at the sum of prices for the assets of every leg.
         /// </summary>
-        /// <param name="order">TODO:</param>
-        /// <returns>TODO:</returns>
+        /// <param name="order">Order to fill</param>
+        /// <returns>Order fill information detailing the average price and quantity filled for each leg. If any of the fills fails, none of the orders will be filled and the returned list will be empty</returns>
         public virtual List<OrderEvent> ComboLimitFill(ComboLimitOrder order)
         {
             // aggregate the prices from all the securities
@@ -276,10 +276,10 @@ namespace QuantConnect.Orders.Fills
         }
 
         /// <summary>
-        /// TODO:
+        /// Default combo limit fill model for the base security class. Fills at the limit price for each leg
         /// </summary>
-        /// <param name="order">TODO:</param>
-        /// <returns>TODO:</returns>
+        /// <param name="order">Order to fill</param>
+        /// <returns>Order fill information detailing the average price and quantity filled for each leg. If any of the fills fails, none of the orders will be filled and the returned list will be empty</returns>
         public virtual List<OrderEvent> ComboLegLimitFill(ComboLegLimitOrder order)
         {
             var fills = _pendingGroupedOrdersByManagerId[order.GroupOrderManager.Id].Select(x =>
@@ -292,7 +292,6 @@ namespace QuantConnect.Orders.Fills
 
             return fills.ToList();
         }
-
 
         /// <summary>
         /// Default market fill model for the base security class. Fills at the last traded price.

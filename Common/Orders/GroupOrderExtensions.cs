@@ -22,17 +22,18 @@ using System.Collections.Generic;
 namespace QuantConnect.Orders
 {
     /// <summary>
-    ///
+    /// Group (combo) orders extension methods for easiest combo order manipulation
     /// </summary>
     public static class GroupOrderExtensions
     {
         /// <summary>
-        ///
+        /// Gets the grouped orders (legs) of a group order
         /// </summary>
-        /// <param name="order"></param>
-        /// <param name="orderProvider"></param>
-        /// <param name="orders"></param>
-        /// <returns></returns>
+        /// <param name="order">Target order, which can be any of the legs of the combo</param>
+        /// <param name="orderProvider">Order provider to use to access the existing orders</param>
+        /// <param name="orders">List of orders in the combo</param>
+        /// <returns>False if any of the orders in the combo is not yet found in the order provider. True otherwise</returns>
+        /// <remarks>If the target order is not a combo order, the resulting list will contain that single order alone</remarks>
         public static bool TryGetGroupOrders(this Order order, Func<int, Order> orderProvider, out List<Order> orders)
         {
             orders = new List<Order> { order };
@@ -66,6 +67,13 @@ namespace QuantConnect.Orders
             return true;
         }
 
+        /// <summary>
+        /// Gets the securities corresponding to each order in the group
+        /// </summary>
+        /// <param name="orders">List of orders to map</param>
+        /// <param name="securityProvider">The security provider to use</param>
+        /// <param name="securities">The resulting map of order to security</param>
+        /// <returns>True if the mapping is successful, false otherwise.</returns>
         public static bool TryGetGroupOrdersSecurities(this List<Order> orders, ISecurityProvider securityProvider, out Dictionary<Order, Security> securities)
         {
             securities = new(orders.Count);
