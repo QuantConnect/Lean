@@ -25,7 +25,6 @@ namespace QuantConnect.Data.Consolidators
     public class VolumeRenkoConsolidator : IDataConsolidator
     {
         private bool _firstTick = true;
-        private VolumeRenkoBar _lastWicko;
         private DataConsolidatedHandler _dataConsolidatedHandler;
         private VolumeRenkoBar _currentBar;
         private IBaseData _consolidated;
@@ -89,9 +88,9 @@ namespace QuantConnect.Data.Consolidators
         public Type InputType => typeof(IBaseData);
 
         /// <summary>
-        /// Gets <see cref="RenkoBar"/> which is the type emitted in the <see cref="IDataConsolidator.DataConsolidated"/> event.
+        /// Gets <see cref="VolumeRenkoBar"/> which is the type emitted in the <see cref="IDataConsolidator.DataConsolidated"/> event.
         /// </summary>
-        public Type OutputType => typeof(RenkoBar);
+        public Type OutputType => typeof(VolumeRenkoBar);
 
         /// <summary>
         /// Gets the most recently consolidated piece of data. This will be null if this consolidator
@@ -137,7 +136,7 @@ namespace QuantConnect.Data.Consolidators
 
             if (data.GetType() == typeof(QuoteBar))
             {
-                throw new TypeLoadException("VolumeRenkoConsolidator() must be used with TradeBar or Tick data.");
+                throw new ArgumentException("VolumeRenkoConsolidator() must be used with TradeBar or Tick data.");
             }
             else if (data.GetType() == typeof(Tick))
             {
@@ -169,8 +168,6 @@ namespace QuantConnect.Data.Consolidators
                     }
 
                     CloseRate = rate;
-
-                    _volumeLeftOver = Next(data, volume);
                 }
             }
             else if (data.GetType() == typeof(TradeBar))
@@ -207,10 +204,10 @@ namespace QuantConnect.Data.Consolidators
                     }
 
                     CloseRate = close;
-
-                    _volumeLeftOver = Next(data, volume);
                 }
             }
+
+            _volumeLeftOver = Next(data, volume);
         }
 
         /// <summary>
@@ -244,11 +241,9 @@ namespace QuantConnect.Data.Consolidators
 
         private decimal Next(IBaseData data, decimal volume)
         {
-            while (volume > BarSize)
+            while (volume >= BarSize)
             {
                 var wicko = new VolumeRenkoBar(data.Symbol, OpenOn, CloseOn, BarSize, OpenRate, HighRate, LowRate, CloseRate, BarSize);
-                
-                _lastWicko = wicko;
                 volume -= BarSize;
 
                 OnDataConsolidated(wicko);

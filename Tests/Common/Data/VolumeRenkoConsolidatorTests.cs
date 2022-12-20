@@ -19,7 +19,6 @@ using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
-using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Common.Data
 {
@@ -30,11 +29,11 @@ namespace QuantConnect.Tests.Common.Data
         public void OutputTypeIsVolumeRenkoBar()
         {
             var consolidator = new VolumeRenkoConsolidator(10);
-            Assert.AreEqual(typeof(RenkoBar), consolidator.OutputType);
+            Assert.AreEqual(typeof(VolumeRenkoBar), consolidator.OutputType);
         }
 
         [Test]
-        public void ConsolidatesOnVolumeReached()
+        public void ConsolidatesOnTickVolumeReached()
         {
             VolumeRenkoBar bar = null;
             var consolidator = new VolumeRenkoConsolidator(10);
@@ -53,8 +52,8 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.Update(new Tick(reference.AddHours(2), Symbol.Empty, String.Empty, String.Empty, 3m, 3m));
             Assert.IsNull(bar);
 
-            consolidator.Update(new Tick(reference.AddHours(3), Symbol.Empty, String.Empty, String.Empty, 4m, 2m));
-            Assert.IsNull(bar);
+            consolidator.Update(new Tick(reference.AddHours(3), Symbol.Empty, String.Empty, String.Empty, 2m, 2m));
+            Assert.IsNotNull(bar);
 
             Assert.AreEqual(1m, bar.Open);
             Assert.AreEqual(3m, bar.High);
@@ -62,6 +61,48 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(2m, bar.Close);
             Assert.AreEqual(reference.AddHours(3), bar.EndTime);
             Assert.IsTrue(bar.IsClosed);
+        }
+
+        [Test]
+        public void ConsolidatesOnTraderBarVolumeReached()
+        {
+            VolumeRenkoBar bar = null;
+            var consolidator = new VolumeRenkoConsolidator(10);
+            consolidator.DataConsolidated += (sender, consolidated) => 
+            {
+                bar = consolidated;
+            };
+
+            var reference = DateTime.Today;
+            consolidator.Update(new TradeBar(reference, Symbol.Empty, 1m, 2m, 0.5m, 1.5m, 2m, new TimeSpan(1, 0, 0)));
+            Assert.IsNull(bar);
+
+            consolidator.Update(new TradeBar(reference.AddHours(1), Symbol.Empty, 1.5m, 3m, 1m, 3m, 3m, new TimeSpan(1, 0, 0)));
+            Assert.IsNull(bar);
+
+            consolidator.Update(new TradeBar(reference.AddHours(2), Symbol.Empty, 3m, 3m, 1m, 2m, 3m, new TimeSpan(1, 0, 0)));
+            Assert.IsNull(bar);
+
+            consolidator.Update(new TradeBar(reference.AddHours(3), Symbol.Empty, 2m, 4m, 1.5m, 2.5m, 2m, new TimeSpan(1, 0, 0)));
+            Assert.IsNotNull(bar);
+
+            Assert.AreEqual(1m, bar.Open);
+            Assert.AreEqual(4m, bar.High);
+            Assert.AreEqual(0.5m, bar.Low);
+            Assert.AreEqual(2.5m, bar.Close);
+            Assert.AreEqual(reference.AddHours(4), bar.EndTime);
+            Assert.IsTrue(bar.IsClosed);
+        }
+
+        [Test]
+        public void ConsolidatesOnQuoteBar()
+        {
+            VolumeRenkoBar bar = null;
+            var consolidator = new VolumeRenkoConsolidator(10);
+
+            var reference = DateTime.Today;
+            Assert.Throws<ArgumentException>(() => 
+                consolidator.Update(new QuoteBar(reference, Symbol.Empty, new Bar(1m, 1m, 1m, 1m), 1m, new Bar(1m, 1m, 1m, 1m), 1m, TimeSpan.MinValue)));
         }
 
         [Test]
@@ -74,13 +115,13 @@ namespace QuantConnect.Tests.Common.Data
             {
                 new decimal[]{5m, 5m}, new decimal[]{5m, 3m}, new decimal[]{5m, 7m}, new decimal[]{5m, 6m},
                 new decimal[]{5m, 5m}, new decimal[]{5m, 3m}, new decimal[]{5m, 7m}, new decimal[]{5m, 6m},
+                new decimal[]{5m, 5m}, new decimal[]{5m, 3m}, new decimal[]{5m, 7m}, new decimal[]{5m, 6m},
                 new decimal[]{5m, 5m}, new decimal[]{5m, 3m}, new decimal[]{5m, 7m}, new decimal[]{5m, 6m}
             };
 
-
-            var consolidator1 = new ClassicRenkoConsolidator(20m);
-            var consolidator2 = new ClassicRenkoConsolidator(20m);
-            var consolidator3 = new ClassicRenkoConsolidator(20m);
+            var consolidator1 = new VolumeRenkoConsolidator(20m);
+            var consolidator2 = new VolumeRenkoConsolidator(20m);
+            var consolidator3 = new VolumeRenkoConsolidator(20m);
 
             // Update each of our consolidators starting at different indexes of test values
             for (int i = 0; i < testValues.Count; i++)
@@ -88,12 +129,12 @@ namespace QuantConnect.Tests.Common.Data
                 var data = new Tick(time.AddSeconds(i), Symbol.Empty, String.Empty, String.Empty, testValues[i][0], testValues[i][1]);
                 consolidator1.Update(data);
 
-                if (i > 4)
+                if (i > 3)
                 {
                     consolidator2.Update(data);
                 }
 
-                if (i > 8)
+                if (i > 7)
                 {
                     consolidator3.Update(data);
                 }
@@ -114,10 +155,10 @@ namespace QuantConnect.Tests.Common.Data
         }
 
         [Test]
-        public void ClassicCyclesUpAndDown()
+        public void MultipleConsoldation()
         {
             VolumeRenkoBar bar = null;
-            var consolidator = new VolumeRenkoConsolidator(10);
+            var consolidator = new VolumeRenkoConsolidator(10m);
             consolidator.DataConsolidated += (sender, consolidated) =>
             {
                 bar = consolidated;
@@ -133,8 +174,8 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.Update(new Tick(reference.AddHours(2), Symbol.Empty, String.Empty, String.Empty, 3m, 3m));
             Assert.IsNull(bar);
 
-            consolidator.Update(new Tick(reference.AddHours(3), Symbol.Empty, String.Empty, String.Empty, 4m, 2m));
-            Assert.IsNull(bar);
+            consolidator.Update(new Tick(reference.AddHours(3), Symbol.Empty, String.Empty, String.Empty, 2m, 2m));
+            Assert.IsNotNull(bar);
 
             Assert.AreEqual(1m, bar.Open);
             Assert.AreEqual(3m, bar.High);
@@ -143,30 +184,28 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(reference.AddHours(3), bar.EndTime);
             Assert.IsTrue(bar.IsClosed);
             
-            consolidator.Update(new Tick(reference.AddHours(4), Symbol.Empty, String.Empty, String.Empty, 2m, 1m));
-            Assert.IsNull(bar);
+            consolidator.Update(new Tick(reference.AddHours(4), Symbol.Empty, String.Empty, String.Empty, 4m, 1m));
 
             consolidator.Update(new Tick(reference.AddHours(5), Symbol.Empty, String.Empty, String.Empty, 3m, 2m));
-            Assert.IsNull(bar);
 
-            consolidator.Update(new Tick(reference.AddHours(6), Symbol.Empty, String.Empty, String.Empty, 3m, 3m));
-            Assert.IsNull(bar);
+            consolidator.Update(new Tick(reference.AddHours(6), Symbol.Empty, String.Empty, String.Empty, 4m, 3m));
 
             Assert.AreEqual(2m, bar.Open);
             Assert.AreEqual(3m, bar.High);
             Assert.AreEqual(1m, bar.Low);
             Assert.AreEqual(3m, bar.Close);
             Assert.AreEqual(reference.AddHours(6), bar.EndTime);
+            Assert.IsTrue(bar.IsClosed);    // bar is always closed since it is the consolidated bar instance
+
+            consolidator.Update(new Tick(reference.AddHours(7), Symbol.Empty, String.Empty, String.Empty, 5m, 10m));
+
+            // Not yet consolidated, so bar is not updated yet
+            Assert.AreEqual(2m, bar.Open);
+            Assert.AreEqual(3m, bar.High);
+            Assert.AreEqual(1m, bar.Low);
+            Assert.AreEqual(3m, bar.Close);
+            Assert.AreEqual(reference.AddHours(6), bar.EndTime);
             Assert.IsTrue(bar.IsClosed);
-
-            consolidator.Update(new Tick(reference.AddHours(7), Symbol.Empty, String.Empty, String.Empty, 7m, 10m));
-            Assert.IsNull(bar);
-
-            Assert.AreEqual(10m, bar.Open);
-            Assert.AreEqual(10m, bar.High);
-            Assert.AreEqual(10m, bar.Low);
-            Assert.AreEqual(10m, bar.Close);
-            Assert.IsFalse(bar.IsClosed);
         }
 
         [TestCase(Language.CSharp)]

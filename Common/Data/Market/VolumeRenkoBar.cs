@@ -73,7 +73,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Gets whether or not this bar is considered closed.
         /// </summary>
-        public bool IsClosed { get; private set; }
+        public bool IsClosed => Volume >= BrickSize;
 
         /// <summary>
         /// Gets the kind of the bar
@@ -114,12 +114,6 @@ namespace QuantConnect.Data.Market
 
             Close = currentValue;
             Volume += volumeSinceLastUpdate;
-
-            // determine if this data caused the bar to close
-            if (Volume >= BrickSize)
-            {
-                IsClosed = true;
-            }
 
             if (Close > High) High = Close;
             if (Close < Low) Low = Close;
