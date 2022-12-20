@@ -19,7 +19,7 @@ jobs:
         run: dotnet build /p:Configuration=Release /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
 
       - name: Run Tests
-        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "TestCategory!=TravisExclude&TestCategory!=ResearchRegressionTests" -- TestRunParameters.Parameter\(name=\"log-handler\", value=\"ConsoleErrorLogHandler\"\)
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --blame-hang-timeout 300seconds --blame-crash --filter "TestCategory!=TravisExclude&TestCategory!=ResearchRegressionTests" -- TestRunParameters.Parameter\(name=\"log-handler\", value=\"ConsoleErrorLogHandler\"\)
 
       - name: Generate & Publish python stubs
         if: startsWith(github.ref, 'refs/tags/')
