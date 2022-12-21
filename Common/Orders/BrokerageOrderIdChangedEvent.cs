@@ -25,11 +25,11 @@ namespace QuantConnect.Orders
         /// <summary>
         /// The order ID.
         /// </summary>
-        public int OrderId { get; internal set; }
+        public int OrderId { get; set; }
 
         /// <summary>
         /// Brokerage Id for this order
         /// </summary>
-        public List<string> BrokerId { get; internal set; }
+        public List<string> BrokerId { get; set; }
     }
 }
