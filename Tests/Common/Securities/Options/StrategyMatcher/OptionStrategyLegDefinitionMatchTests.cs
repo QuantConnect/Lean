@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             var leg = match.CreateOptionStrategyLeg(3);
             Assert.IsInstanceOf<OptionStrategy.OptionLegData>(leg);
             Assert.AreEqual(3, leg.Quantity);
-            Assert.AreEqual(0, leg.OrderPrice);
+            Assert.IsNull(leg.OrderPrice);
         }
 
         [Test]
@@ -39,7 +39,7 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             var leg = match.CreateOptionStrategyLeg(3);
             Assert.IsInstanceOf<OptionStrategy.UnderlyingLegData>(leg);
             Assert.AreEqual(3, leg.Quantity);
-            Assert.AreEqual(0, leg.OrderPrice);
+            Assert.IsNull(leg.OrderPrice);
         }
 
         [Test]
@@ -51,7 +51,7 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             var leg = match.CreateOptionStrategyLeg(1);
             Assert.IsInstanceOf<OptionStrategy.UnderlyingLegData>(leg);
             Assert.AreEqual(2, leg.Quantity);
-            Assert.AreEqual(0, leg.OrderPrice);
+            Assert.IsNull(leg.OrderPrice);
         }
     }
 }

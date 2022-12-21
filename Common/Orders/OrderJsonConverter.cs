@@ -274,6 +274,18 @@ namespace QuantConnect.Orders
                     order = new OptionExerciseOrder();
                     break;
 
+                case OrderType.ComboMarket:
+                    order = new MarketOrder();
+                    break;
+
+                case OrderType.ComboLimit:
+                    order = new ComboLimitOrder();
+                    break;
+
+                case OrderType.ComboLegLimit:
+                    order = new ComboLegLimitOrder { LimitPrice = jObject["LimitPrice"] == null ? default(decimal) : jObject["LimitPrice"].Value<decimal>() };
+                    break;
+
                 default:
                     throw new ArgumentOutOfRangeException();
             }

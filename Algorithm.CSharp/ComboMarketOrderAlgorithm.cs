@@ -14,9 +14,7 @@
 */
 
 using QuantConnect.Orders;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -96,7 +94,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "637587658515c0a49dd969252d18b9e2"}
+            {"OrderListHash", "c0f4b5d5c796e17949f7ec42c6569ce4"}
         };
     }
 }

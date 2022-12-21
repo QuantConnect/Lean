@@ -875,7 +875,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             [Values(OrderDirection.Buy, OrderDirection.Sell)] OrderDirection orderDirection)
         {
             var model = new ImmediateFillModel();
-            var groupOrderManager = new GroupOrderManager(2, orderDirection == OrderDirection.Buy ? 10 : -10);
+            var groupOrderManager = new GroupOrderManager(0, 2, orderDirection == OrderDirection.Buy ? 10 : -10);
             var spyOrder = new ComboMarketOrder(Symbols.SPY, 10, Noon, groupOrderManager) { Id = 1 };
             var aaplOrder = new ComboMarketOrder(Symbols.AAPL, 5, Noon, groupOrderManager) { Id = 2 };
             var spyConfig = CreateTradeBarConfig(Symbols.SPY, isInternal);
@@ -926,7 +926,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             var limitPrice = orderDirection == OrderDirection.Buy ? 353 : 355;
             var model = new ImmediateFillModel();
-            var groupOrderManager = new GroupOrderManager(2, orderDirection == OrderDirection.Buy ? 10 : -10, 1m);
+            var groupOrderManager = new GroupOrderManager(0, 2, orderDirection == OrderDirection.Buy ? 10 : -10, 1m);
             var spyOrder = new ComboLimitOrder(Symbols.SPY, 10, limitPrice, Noon, groupOrderManager) { Id = 1 };
             var aaplOrder = new ComboLimitOrder(Symbols.AAPL, 5, limitPrice, Noon, groupOrderManager) { Id = 2 };
 
@@ -992,7 +992,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             var model = new ImmediateFillModel();
             var multiplier = orderDirection == OrderDirection.Buy ? 1 : -1;
-            var groupOrderManager = new GroupOrderManager(2, multiplier * 10, 1m);
+            var groupOrderManager = new GroupOrderManager(0, 2, multiplier * 10, 1m);
 
             var spyLimitPrice = orderDirection == OrderDirection.Buy ? 101.1m : 102m;
             var spyOrder = new ComboLegLimitOrder(Symbols.SPY, multiplier * 10, spyLimitPrice, Noon, groupOrderManager) { Id = 1 };

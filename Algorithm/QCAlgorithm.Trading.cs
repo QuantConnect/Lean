@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using QuantConnect.Securities.Option;
 using static QuantConnect.StringExtensions;
 using QuantConnect.Algorithm.Framework.Portfolio;
+using System.Threading;
 
 namespace QuantConnect.Algorithm
 {
@@ -30,6 +31,8 @@ namespace QuantConnect.Algorithm
         private int _maxOrders = 10000;
         private bool _isMarketOnOpenOrderWarningSent;
         private bool _isMarketOnOpenOrderRestrictedForFuturesWarningSent;
+
+        private int _groupOrderManagerId;
 
         /// <summary>
         /// Transaction Manager - Process transaction fills and order management.
@@ -699,6 +702,15 @@ namespace QuantConnect.Algorithm
             return SubmitComboOrder(legs, strategyQuantity, 0, asynchronous, tag, orderProperties);
         }
 
+        /// <summary>
+        /// Get a new group order manager id, and increment the internal counter.
+        /// </summary>
+        /// <returns>New unique int group order manager id.</returns>
+        private int GetIncrementGroupOrderManagerId()
+        {
+            return Interlocked.Increment(ref _groupOrderManagerId);
+        }
+
         private List<OrderTicket> SubmitComboOrder(List<Leg> legs, decimal quantity, decimal limitPrice, bool asynchronous, string tag, IOrderProperties orderProperties)
         {
             var orderType = OrderType.ComboMarket;
@@ -708,7 +720,7 @@ namespace QuantConnect.Algorithm
             }
 
             // we create a unique Id so the algorithm and the brokerage can relate the combo orders with each other
-            var groupOrderManager = new GroupOrderManager(legs.Count, quantity, limitPrice);
+            var groupOrderManager = new GroupOrderManager(GetIncrementGroupOrderManagerId(), legs.Count, quantity, limitPrice);
 
             List<OrderTicket> orderTickets = new(capacity: legs.Count);
             foreach (var leg in legs)

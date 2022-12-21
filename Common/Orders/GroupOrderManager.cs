@@ -23,12 +23,10 @@ namespace QuantConnect.Orders
     /// </summary>
     public class GroupOrderManager
     {
-        private static long _comboOrderIds;
-
         /// <summary>
         /// The unique order group Id
         /// </summary>
-        public long Id { get; set; }
+        public long Id { get; }
 
         /// <summary>
         /// The group order quantity
@@ -82,13 +80,13 @@ namespace QuantConnect.Orders
         /// <param name="legCount">The order leg count</param>
         /// <param name="quantity">The group order quantity</param>
         /// <param name="limitPrice">The limit price associated with this order group if any</param>
-        public GroupOrderManager(int legCount, decimal quantity, decimal limitPrice = 0)
+        public GroupOrderManager(int id, int legCount, decimal quantity, decimal limitPrice = 0)
         {
+            Id = id;
             Count = legCount;
             Quantity = quantity;
             LimitPrice = limitPrice;
             OrderIds = new (capacity: legCount);
-            Id = Interlocked.Increment(ref _comboOrderIds);
-        }   
+        }
     }
 }

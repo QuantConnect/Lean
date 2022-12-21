@@ -899,7 +899,7 @@ namespace QuantConnect.Orders.Fills
         /// Get data types the Security is subscribed to
         /// </summary>
         /// <param name="asset">Security which has subscribed data types</param>
-        private HashSet<Type> GetSubscribedTypes(Security asset)
+        protected virtual HashSet<Type> GetSubscribedTypes(Security asset)
         {
             var subscribedTypes = Parameters
                 .ConfigProvider
@@ -960,7 +960,7 @@ namespace QuantConnect.Orders.Fills
         /// This is required due to a limitation in PythonNet to resolved
         /// overriden methods. <see cref="GetPrices"/>
         /// </summary>
-        protected Prices GetPricesCheckingPythonWrapper(Security asset, OrderDirection direction)
+        protected virtual Prices GetPricesCheckingPythonWrapper(Security asset, OrderDirection direction)
         {
             if (PythonWrapper != null)
             {

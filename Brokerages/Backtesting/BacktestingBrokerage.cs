@@ -331,9 +331,7 @@ namespace QuantConnect.Brokerages.Backtesting
                     {
                         // TODO: guaranteed combo orders (probably by default?):
                         //      We should only allow fills that respect the ratio, we could fill one at the time and only when all fill let it through
-                        // TODO: combo limit orders price: the price of the combo is the sum of it's assets, to fill we need to look at all of them
-                        //      'FillModelParameters' could just hold all the orders in the group or give access to the order provider & security provider
-                        //      SUB-TODO: where would the users get the limit price of the whole combo order (easily)?
+                        // TODO: combo limit orders price: where would the users get the limit price of the whole combo order (easily)?
 
                         foreach (var orderSecurity in securities)
                         {
