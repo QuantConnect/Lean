@@ -29,6 +29,11 @@ namespace QuantConnect.Interfaces
     public interface IBrokerage : IBrokerageCashSynchronizer, IDisposable
     {
         /// <summary>
+        /// Event that fires each time the brokerage order id changes
+        /// </summary>
+        event EventHandler<BrokerageOrderIdChangedEvent> OrderIdChanged;
+
+        /// <summary>
         /// Event that fires each time an order is filled
         /// </summary>
         event EventHandler<OrderEvent> OrderStatusChanged;
