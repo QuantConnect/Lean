@@ -178,6 +178,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 HandleDelistingNotification(e);
             };
 
+            _brokerage.OrderIdChanged += (sender, e) =>
+            {
+                HandlerBrokerageOrderIdChangedEvent(e);
+            };
+
             IsActive = true;
 
             _algorithm = algorithm;
@@ -1159,6 +1164,24 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 // override the current cash value so we're always guaranteed to be in sync with the brokerage's push updates
                 _algorithm.Portfolio.CashBook[account.CurrencySymbol].SetAmount(account.CashBalance);
             }
+        }
+
+        /// <summary>
+        /// Brokerage order id change is applied to the target order
+        /// </summary>
+        private void HandlerBrokerageOrderIdChangedEvent(BrokerageOrderIdChangedEvent brokerageOrderIdChangedEvent)
+        {
+            var originalOrder = GetOrderByIdInternal(brokerageOrderIdChangedEvent.OrderId);
+
+            if(originalOrder == null)
+            {
+                // shouldn't happen but let's be careful
+                Log.Error($"BrokerageTransactionHandler.HandlerBrokerageOrderIdChangedEvent(): Lean order id {brokerageOrderIdChangedEvent.OrderId} not found");
+                return;
+            }
+
+            // we replace the whole collection
+            originalOrder.BrokerId = brokerageOrderIdChangedEvent.BrokerId;
         }
 
         /// <summary>

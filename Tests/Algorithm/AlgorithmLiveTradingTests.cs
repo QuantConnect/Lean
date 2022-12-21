@@ -81,6 +81,7 @@ namespace QuantConnect.Tests.Algorithm
         public event EventHandler<AccountEvent> AccountChanged;
         public event EventHandler<BrokerageMessageEvent> Message;
         public event EventHandler<DelistingNotificationEventArgs> DelistingNotification;
+        public event EventHandler<BrokerageOrderIdChangedEvent> OrderIdChanged;
 #pragma warning restore 0067
 
         public string Name => "NullBrokerage";

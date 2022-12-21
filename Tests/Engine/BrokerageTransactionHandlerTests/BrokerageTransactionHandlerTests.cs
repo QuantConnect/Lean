@@ -38,7 +38,6 @@ using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Tests.Engine.Setup;
 using QuantConnect.Util;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
-using QuantConnect.AlgorithmFactory;
 
 namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 {
@@ -91,6 +90,37 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.IsTrue(orderTicket.Status == OrderStatus.Submitted);
             // 1600 after round off becomes 1000
             Assert.AreEqual(1000, orderTicket.Quantity);
+        }
+
+        [Test]
+        public void BrokerageOrderIdChanged()
+        {
+            //Initializes the transaction handler
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            using var testBrokerage = new TestBroker(_algorithm, true);
+            transactionHandler.Initialize(_algorithm, testBrokerage, new BacktestingResultHandler());
+
+            // Creates the order
+            var security = _algorithm.Securities[_symbol];
+            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 1600, 0, 0, DateTime.Now, "");
+
+            // Mock the the order processor
+            var orderProcessorMock = new Mock<IOrderProcessor>();
+            orderProcessorMock.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns(new OrderTicket(_algorithm.Transactions, orderRequest));
+            _algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
+
+            // Act
+            var orderTicket = transactionHandler.Process(orderRequest);
+            transactionHandler.HandleOrderRequest(orderRequest);
+
+            var originalBrokerageOrderId = transactionHandler.GetOrderById(orderTicket.OrderId).BrokerId;
+            var orderIdChanged = new BrokerageOrderIdChangedEvent { OrderId = orderTicket.OrderId, BrokerId = new List<string> { "asd" } };
+            testBrokerage.OnOrderIdChangedEventPublic(orderIdChanged);
+
+            var newBrokerageOrderId = transactionHandler.GetOrderById(orderTicket.OrderId).BrokerId;
+            Assert.AreNotEqual(originalBrokerageOrderId, newBrokerageOrderId);
+            Assert.AreEqual(1, newBrokerageOrderId.Count);
+            Assert.AreEqual("asd", newBrokerageOrderId[0]);
         }
 
         [Test]
@@ -1781,6 +1811,10 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             public override bool CancelOrder(Order order)
             {
                 return _cancelOrderResult;
+            }
+            public void OnOrderIdChangedEventPublic(BrokerageOrderIdChangedEvent e)
+            {
+                base.OnOrderIdChangedEvent(e);
             }
         }
 
