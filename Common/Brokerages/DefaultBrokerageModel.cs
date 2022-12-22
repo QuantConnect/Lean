@@ -192,7 +192,7 @@ namespace QuantConnect.Brokerages
             switch (security.Type)
             {
                 case SecurityType.CryptoFuture:
-                    return 3m;
+                    return 25m;
 
                 case SecurityType.Equity:
                     return 2m;
@@ -382,6 +382,16 @@ namespace QuantConnect.Brokerages
         public virtual IShortableProvider GetShortableProvider()
         {
             return ShortableProvider;
+        }
+
+        /// <summary>
+        /// Gets a new margin interest rate model for the security
+        /// </summary>
+        /// <param name="security">The security to get a margin interest rate model for</param>
+        /// <returns>The margin interest rate model for this brokerage</returns>
+        public virtual IMarginInterestRateModel GetMarginInterestRateModel(Security security)
+        {
+            return MarginInterestRateModel.Null;
         }
 
         /// <summary>

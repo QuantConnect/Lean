@@ -47,7 +47,15 @@ namespace QuantConnect.Algorithm.CSharp
 
             SetTimeZone(NodaTime.DateTimeZone.Utc);
 
-            SetBrokerageModel(BrokerageName.Binance, AccountType.Margin);
+            try
+            {
+                SetBrokerageModel(BrokerageName.BinanceFutures, AccountType.Cash);
+            }
+            catch (InvalidOperationException)
+            {
+                // expected, we don't allow cash account type
+            }
+            SetBrokerageModel(BrokerageName.BinanceFutures, AccountType.Margin);
 
             _btcUsd = AddCryptoFuture("BTCUSD");
             _adaUsdt = AddCryptoFuture("ADAUSDT");
@@ -83,13 +91,13 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (!Portfolio.Invested && Transactions.OrdersCount == 0)
                 {
-                    var ticket = Buy("BTCUSD", 5);
+                    var ticket = Buy(_btcUsd.Symbol, 50);
                     if (ticket.Status != OrderStatus.Invalid)
                     {
                         throw new Exception($"Unexpected valid order {ticket}, should fail due to margin not sufficient");
                     }
 
-                    Buy("BTCUSD", 1);
+                    Buy(_btcUsd.Symbol, 1);
 
                     var marginUsed = Portfolio.TotalMarginUsed;
                     var btcUsdHoldings = _btcUsd.Holdings;
@@ -112,7 +120,7 @@ namespace QuantConnect.Algorithm.CSharp
                         throw new Exception($"Unexpected margin used {marginUsed}");
                     }
 
-                    Buy("ADAUSDT", 1000);
+                    Buy(_adaUsdt.Symbol, 1000);
 
                     marginUsed = Portfolio.TotalMarginUsed - marginUsed;
                     var adaUsdtHoldings = _adaUsdt.Holdings;
@@ -152,7 +160,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // let's revert our position and double
                 if (Time.Hour > 10 && Transactions.OrdersCount == 3)
                 {
-                    Sell("BTCUSD", 3);
+                    Sell(_btcUsd.Symbol, 3);
 
                     var btcUsdHoldings = _btcUsd.Holdings;
 
@@ -161,7 +169,7 @@ namespace QuantConnect.Algorithm.CSharp
                         throw new Exception($"Unexpected holdings cost {btcUsdHoldings.HoldingsCost}");
                     }
 
-                    Sell("ADAUSDT", 3000);
+                    Sell(_adaUsdt.Symbol, 3000);
 
                     var adaUsdtHoldings = _adaUsdt.Holdings;
 
@@ -191,12 +199,12 @@ namespace QuantConnect.Algorithm.CSharp
                     Liquidate();
 
                     // Even though we hold 1M USD we expect it no to be taken into account
-                    SetHoldings("BTCUSD", 2);
+                    SetHoldings(_btcUsd.Symbol, 2);
                     if(_btcUsd.Holdings.AbsoluteHoldingsCost > 1000)
                     {
                         throw new Exception($"Unexpect position {_btcUsd.Holdings}");
                     }
-                    SetHoldings("ADAUSDT", 2);
+                    SetHoldings(_adaUsdt.Symbol, 2);
                     if (_adaUsdt.Holdings.AbsoluteHoldingsCost > 1000)
                     {
                         throw new Exception($"Unexpect position {_btcUsd.Holdings}");
@@ -268,7 +276,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$2.93"},
-            {"Estimated Strategy Capacity", "$1900000000.00"},
+            {"Estimated Strategy Capacity", "$280000000.00"},
             {"Lowest Capacity Asset", "ADAUSDT 18R"},
             {"Fitness Score", "0.002"},
             {"Kelly Criterion Estimate", "0"},
@@ -289,7 +297,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "5f0a1228458a93782bfc48da884be124"}
+            {"OrderListHash", "a6c69a5b40db611fc3e398967948f2ea"}
         };
     }
 }

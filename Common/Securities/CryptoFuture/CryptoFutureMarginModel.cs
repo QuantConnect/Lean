@@ -30,10 +30,10 @@ namespace QuantConnect.Securities.CryptoFuture
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        /// <param name="leverage">The leverage to use, used on initial margin requirements</param>
-        /// <param name="maintenanceMarginRate">The maintenance margin rate</param>
-        /// <param name="maintenanceAmount">The maintenance amount which will reduce maintenance margin requirements</param>
-        public CryptoFutureMarginModel(decimal leverage, decimal maintenanceMarginRate = 0.1m, decimal maintenanceAmount = 0)
+        /// <param name="leverage">The leverage to use, used on initial margin requirements, default 25x</param>
+        /// <param name="maintenanceMarginRate">The maintenance margin rate, default 5%</param>
+        /// <param name="maintenanceAmount">The maintenance amount which will reduce maintenance margin requirements, default 0</param>
+        public CryptoFutureMarginModel(decimal leverage = 25, decimal maintenanceMarginRate = 0.05m, decimal maintenanceAmount = 0)
              : base(leverage, 0)
         {
             _maintenanceAmount = maintenanceAmount;
@@ -114,38 +114,7 @@ namespace QuantConnect.Securities.CryptoFuture
                 }
             }
 
-            if (direction != OrderDirection.Hold)
-            {
-                var holdings = security.Holdings;
-                //If the order is in the same direction as holdings, our remaining cash is our cash
-                //In the opposite direction, our remaining cash is 2 x current value of assets + our cash
-                if (holdings.IsLong)
-                {
-                    switch (direction)
-                    {
-                        case OrderDirection.Sell:
-                            result +=
-                                // portion of margin to close the existing position
-                                this.GetMaintenanceMargin(security) +
-                                // portion of margin to open the new position
-                                this.GetInitialMarginRequirement(security, security.Holdings.AbsoluteQuantity);
-                            break;
-                    }
-                }
-                else if (holdings.IsShort)
-                {
-                    switch (direction)
-                    {
-                        case OrderDirection.Buy:
-                            result +=
-                                // portion of margin to close the existing position
-                                this.GetMaintenanceMargin(security) +
-                                // portion of margin to open the new position
-                                this.GetInitialMarginRequirement(security, security.Holdings.AbsoluteQuantity);
-                            break;
-                    }
-                }
-            }
+            result += GetDirectionChangeMargin(security, direction);
 
             result -= totalCollateralCurrency * RequiredFreeBuyingPowerPercent;
             // convert into account currency

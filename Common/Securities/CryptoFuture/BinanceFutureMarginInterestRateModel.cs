@@ -22,7 +22,7 @@ namespace QuantConnect.Securities.CryptoFuture
     /// <summary>
     /// The responsability of this model is to apply future funding rate cash flows to the portfolio based on open positions
     /// </summary>
-    public class CryptoFutureMarginInterestRateModel : IMarginInterestRateModel
+    public class BinanceFutureMarginInterestRateModel : IMarginInterestRateModel
     {
         private DateTime _nextFundingRateApplication = DateTime.MaxValue;
 

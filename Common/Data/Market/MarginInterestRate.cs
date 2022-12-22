@@ -33,6 +33,14 @@ namespace QuantConnect.Data.Market
         public decimal InterestRate { get; set; }
 
         /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        public MarginInterestRate()
+        {
+            DataType = MarketDataType.Auxiliary;
+        }
+
+        /// <summary>
         /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object
         /// each time it is called. The returned object is assumed to be time stamped in the config.ExchangeTimeZone.
         /// </summary>
@@ -48,8 +56,7 @@ namespace QuantConnect.Data.Market
             return new MarginInterestRate {
                 Time = dateTime,
                 InterestRate = Value = interestRate,
-                Symbol = config.Symbol,
-                DataType = MarketDataType.Auxiliary
+                Symbol = config.Symbol
             };
         }
 

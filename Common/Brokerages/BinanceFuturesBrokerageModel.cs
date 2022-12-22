@@ -13,8 +13,10 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Benchmarks;
 using QuantConnect.Securities;
+using QuantConnect.Securities.CryptoFuture;
 
 namespace QuantConnect.Brokerages
 {
@@ -26,8 +28,12 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        public BinanceFuturesBrokerageModel() : base(AccountType.Margin)
+        public BinanceFuturesBrokerageModel(AccountType accountType) : base(accountType)
         {
+            if (accountType == AccountType.Cash)
+            {
+                throw new InvalidOperationException($"{SecurityType.CryptoFuture} can only be traded using a {AccountType.Margin} account type");
+            }
         }
 
         /// <summary>
@@ -39,6 +45,21 @@ namespace QuantConnect.Brokerages
         {
             var symbol = Symbol.Create("BTCUSDT", SecurityType.CryptoFuture, MarketName);
             return SecurityBenchmark.CreateInstance(securities, symbol);
+        }
+
+        /// <summary>
+        /// Gets a new margin interest rate model for the security
+        /// </summary>
+        /// <param name="security">The security to get a margin interest rate model for</param>
+        /// <returns>The margin interest rate model for this brokerage</returns>
+        public override IMarginInterestRateModel GetMarginInterestRateModel(Security security)
+        {
+            // only applies for perpetual futures
+            if (security.Symbol.SecurityType == SecurityType.CryptoFuture && security.Symbol.ID.Date == SecurityIdentifier.DefaultDate)
+            {
+                return new BinanceFutureMarginInterestRateModel();
+            }
+            return base.GetMarginInterestRateModel(security);
         }
     }
 }

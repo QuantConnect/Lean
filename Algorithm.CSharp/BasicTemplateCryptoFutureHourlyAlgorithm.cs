@@ -45,7 +45,16 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2022, 12, 13);
 
             SetTimeZone(NodaTime.DateTimeZone.Utc);
-            SetBrokerageModel(BrokerageName.Binance, AccountType.Margin);
+
+            try
+            {
+                SetBrokerageModel(BrokerageName.BinanceCoinFutures, AccountType.Cash);
+            }
+            catch (InvalidOperationException)
+            {
+                // expected, we don't allow cash account type
+            }
+            SetBrokerageModel(BrokerageName.BinanceCoinFutures, AccountType.Margin);
 
             _adaUsdt = AddCryptoFuture("ADAUSDT", Resolution.Hour);
 
@@ -77,13 +86,13 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (!Portfolio.Invested && Transactions.OrdersCount == 0)
                 {
-                    var ticket = Buy("ADAUSDT", 10000);
+                    var ticket = Buy(_adaUsdt.Symbol, 100000);
                     if(ticket.Status != OrderStatus.Invalid)
                     {
                         throw new Exception($"Unexpected valid order {ticket}, should fail due to margin not sufficient");
                     }
 
-                    Buy("ADAUSDT", 1000);
+                    Buy(_adaUsdt.Symbol, 1000);
 
                     var marginUsed = Portfolio.TotalMarginUsed;
                     var adaUsdtHoldings = _adaUsdt.Holdings;
@@ -123,7 +132,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // let's revert our position and double
                 if (Time.Hour > 10 && Transactions.OrdersCount == 2)
                 {
-                    Sell("ADAUSDT", 3000);
+                    Sell(_adaUsdt.Symbol, 3000);
 
                     var adaUsdtHoldings = _adaUsdt.Holdings;
 
@@ -213,7 +222,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$1.23"},
-            {"Estimated Strategy Capacity", "$2200000000.00"},
+            {"Estimated Strategy Capacity", "$260000000.00"},
             {"Lowest Capacity Asset", "ADAUSDT 18R"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
@@ -234,7 +243,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "dd9f0aa90f5fe9a5f49842fb87651830"}
+            {"OrderListHash", "17f99ecc3f35f94fff1ea5694c40d32c"}
         };
     }
 }

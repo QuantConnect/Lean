@@ -187,6 +187,17 @@ namespace QuantConnect.Securities
             var totalPortfolioValue = GetTotalMarginPool(portfolio, security);
             var result = portfolio.GetMarginRemaining(totalPortfolioValue);
 
+            result += GetDirectionChangeMargin(security, direction);
+
+            result -= totalPortfolioValue * RequiredFreeBuyingPowerPercent;
+            return result < 0 ? 0 : result;
+        }
+
+        /// <summary>
+        /// If appropiate will return the available margin associated with a security changing it's holdings direction
+        /// </summary>
+        protected decimal GetDirectionChangeMargin(Security security, OrderDirection direction)
+        {
             if (direction != OrderDirection.Hold)
             {
                 var holdings = security.Holdings;
@@ -197,12 +208,11 @@ namespace QuantConnect.Securities
                     switch (direction)
                     {
                         case OrderDirection.Sell:
-                            result +=
+                            return
                                 // portion of margin to close the existing position
                                 this.GetMaintenanceMargin(security) +
                                 // portion of margin to open the new position
                                 this.GetInitialMarginRequirement(security, security.Holdings.AbsoluteQuantity);
-                            break;
                     }
                 }
                 else if (holdings.IsShort)
@@ -210,18 +220,16 @@ namespace QuantConnect.Securities
                     switch (direction)
                     {
                         case OrderDirection.Buy:
-                            result +=
+                            return
                                 // portion of margin to close the existing position
                                 this.GetMaintenanceMargin(security) +
                                 // portion of margin to open the new position
                                 this.GetInitialMarginRequirement(security, security.Holdings.AbsoluteQuantity);
-                            break;
                     }
                 }
             }
 
-            result -= totalPortfolioValue * RequiredFreeBuyingPowerPercent;
-            return result < 0 ? 0 : result;
+            return decimal.Zero;
         }
 
         /// <summary>

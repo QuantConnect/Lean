@@ -64,14 +64,13 @@ namespace QuantConnect.Securities.CryptoFuture
                 new ConstantSlippageModel(0),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
-
-                new CryptoFutureMarginModel(3),
+                new CryptoFutureMarginModel(),
                 new SecurityDataFilter(),
                 new SecurityPriceVariationModel(),
                 currencyConverter,
                 registeredTypes,
-
-                new CryptoFutureMarginInterestRateModel()
+                // only applies for perpetual futures
+                symbol.ID.Date == SecurityIdentifier.DefaultDate ? new BinanceFutureMarginInterestRateModel() : Securities.MarginInterestRateModel.Null
                 )
         {
             BaseCurrency = baseCurrency;

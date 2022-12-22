@@ -31,6 +31,7 @@ namespace QuantConnect.Brokerages
     public class BinanceBrokerageModel : DefaultBrokerageModel
     {
         private const decimal _defaultLeverage = 3;
+        private const decimal _defaultFutureLeverage = 25;
 
         /// <summary>
         /// Market name
@@ -57,17 +58,12 @@ namespace QuantConnect.Brokerages
         /// <returns></returns>
         public override decimal GetLeverage(Security security)
         {
-            if(security.Symbol.SecurityType == SecurityType.CryptoFuture && AccountType == AccountType.Cash)
-            {
-                throw new InvalidOperationException($"{SecurityType.CryptoFuture} can only be traded using a {AccountType.Margin} account type");
-            }
-
             if (AccountType == AccountType.Cash || security.IsInternalFeed() || security.Type == SecurityType.Base)
             {
                 return 1m;
             }
 
-            return _defaultLeverage;
+            return security.Symbol.SecurityType == SecurityType.CryptoFuture ? _defaultFutureLeverage : _defaultLeverage;
         }
 
         /// <summary>

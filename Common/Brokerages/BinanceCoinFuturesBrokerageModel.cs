@@ -21,12 +21,12 @@ namespace QuantConnect.Brokerages
     /// <summary>
     /// Provides Binance Coin Futures specific properties
     /// </summary>
-    public class BinanceCoinFuturesBrokerageModel : BinanceBrokerageModel
+    public class BinanceCoinFuturesBrokerageModel : BinanceFuturesBrokerageModel
     {
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        public BinanceCoinFuturesBrokerageModel() : base(AccountType.Margin)
+        public BinanceCoinFuturesBrokerageModel(AccountType accountType) : base(accountType)
         {
         }
 
