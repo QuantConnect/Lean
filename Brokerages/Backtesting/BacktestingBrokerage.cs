@@ -329,10 +329,7 @@ namespace QuantConnect.Brokerages.Backtesting
                     //Before we check this queued order make sure we have buying power:
                     if (hasSufficientBuyingPowerResult.IsSufficient)
                     {
-                        // TODO: guaranteed combo orders (probably by default?):
-                        //      We should only allow fills that respect the ratio, we could fill one at the time and only when all fill let it through
-                        // TODO: combo limit orders price: where would the users get the limit price of the whole combo order (easily)?
-
+                        // TODO: guaranteed combo orders by default. Non-guaranteed case still to do.
                         foreach (var orderSecurity in securities)
                         {
                             var security = orderSecurity.Value;

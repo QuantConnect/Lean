@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Brokerages;
@@ -523,9 +524,22 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
         public List<Order> GetOrdersByBrokerageId(string brokerageId)
         {
-            var openOrders = _openOrders.Where(x => x.Value.BrokerId.Contains(brokerageId)).Select(kvp => kvp.Value.Clone());
-            var completeOrders = _completeOrders.Where(x => x.Value.BrokerId.Contains(brokerageId)).Select(kvp => kvp.Value.Clone());
-            return openOrders.UnionBy(completeOrders, o => o.Id).ToList();
+            var openOrders = GetOrdersByBrokerageId(brokerageId, _openOrders);
+
+            if (openOrders.Count > 0)
+            {
+                return openOrders;
+            }
+
+            return GetOrdersByBrokerageId(brokerageId, _completeOrders);
+        }
+
+        private static List<Order> GetOrdersByBrokerageId(string brokerageId, ConcurrentDictionary<int, Order> orders)
+        {
+            return orders
+                .Where(x => x.Value.BrokerId.Contains(brokerageId))
+                .Select(kvp => kvp.Value.Clone())
+                .ToList();
         }
 
         /// <summary>
@@ -1005,6 +1019,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     tickets.Add(ticket);
                 }
 
+                var fillsToProcess = new List<OrderEvent>(orderEvents.Count);
+
                 // now lets update the orders
                 for (var i = 0; i < orderEvents.Count; i++)
                 {
@@ -1082,6 +1098,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     // check if the fill currency and the order currency match the symbol currency
                     if (orderEvent.Status == OrderStatus.Filled || orderEvent.Status == OrderStatus.PartiallyFilled)
                     {
+                        fillsToProcess.Add(orderEvent);
                         Interlocked.Exchange(ref _lastFillTimeTicks, CurrentTimeUtc.Ticks);
 
                         var security = _algorithm.Securities[orderEvent.Symbol];
@@ -1111,8 +1128,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 //Apply the filled orders to our portfolio:
                 try
                 {
-                    _algorithm.Portfolio.ProcessFills(
-                        orderEvents.Where(x => x.Status == OrderStatus.Filled || x.Status == OrderStatus.PartiallyFilled).ToList());
+                    _algorithm.Portfolio.ProcessFills(fillsToProcess);
                 }
                 catch (Exception err)
                 {
@@ -1124,7 +1140,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 for (var i = 0; i < orderEvents.Count; i++)
                 {
                     var orderEvent = orderEvents[i];
-
 
                     if (orderEvent.Status == OrderStatus.Filled || orderEvent.Status == OrderStatus.PartiallyFilled)
                     {

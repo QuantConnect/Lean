@@ -659,11 +659,6 @@ namespace QuantConnect.Securities
         /// </remarks>
         public virtual void ProcessFills(List<OrderEvent> fills)
         {
-            if (fills.Count == 0)
-            {
-                return;
-            }
-
             lock (_totalPortfolioValueLock)
             {
                 for (var i = 0; i < fills.Count; i++)

@@ -275,15 +275,21 @@ namespace QuantConnect.Orders
                     break;
 
                 case OrderType.ComboMarket:
-                    order = new MarketOrder();
+
+
+                    order = new ComboMarketOrder() { GroupOrderManager = DeserializeGroupOrderManager(jObject) };
                     break;
 
                 case OrderType.ComboLimit:
-                    order = new ComboLimitOrder();
+                    order = new ComboLimitOrder() { GroupOrderManager = DeserializeGroupOrderManager(jObject) };
                     break;
 
                 case OrderType.ComboLegLimit:
-                    order = new ComboLegLimitOrder { LimitPrice = jObject["LimitPrice"] == null ? default(decimal) : jObject["LimitPrice"].Value<decimal>() };
+                    order = new ComboLegLimitOrder
+                    {
+                        GroupOrderManager = DeserializeGroupOrderManager(jObject),
+                        LimitPrice = jObject["LimitPrice"] == null ? default(decimal) : jObject["LimitPrice"].Value<decimal>()
+                    };
                     break;
 
                 default:
@@ -321,6 +327,24 @@ namespace QuantConnect.Orders
 
             // convert with TimeInForceJsonConverter
             return timeInForce.ToObject<TimeInForce>();
+        }
+
+        /// <summary>
+        /// Deserializes the GroupOrderManager from the JSON object
+        /// </summary>
+        private static GroupOrderManager DeserializeGroupOrderManager(JObject jObject)
+        {
+            var groupOrderManagerJObject = jObject["GroupOrderManager"];
+
+            return new GroupOrderManager(
+                groupOrderManagerJObject["Id"].Value<int>(),
+                groupOrderManagerJObject["Count"].Value<int>(),
+                groupOrderManagerJObject["Quantity"].Value<decimal>(),
+                groupOrderManagerJObject["LimitPrice"].Value<decimal>()
+            )
+            {
+                OrderIds = groupOrderManagerJObject["OrderIds"].Values<int>().ToHashSet()
+            };
         }
     }
 }
