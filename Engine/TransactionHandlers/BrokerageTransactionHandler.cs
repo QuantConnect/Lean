@@ -1299,14 +1299,21 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                             {
                                 var nowUtc = CurrentTimeUtc;
                                 // for some brokerages (like IB) there might be a race condition between getting an option
-                                // notification event and lean processing an order event.
-                                // For example: if IB sent the OptionNotificationEventArgs after lean processed an order there
-                                // wouldn't be any Buy order open but yes recently filled or partially filled, so we get all orders for this symbol
-                                // that were placed or got an update in the last 'orderWindowSeconds'
+                                // notification event and lean processing an order event. So if we are here, there are these options:
+                                // A) holdings -10 position 5
+                                //  1) WE just BOUGHT 15 and Lean doesn't know yet
+                                //  2) WE just SOLD 15 and this notification is old
+                                // B) holdings -10 position -5
+                                //  1) WE just BOUGHT 5 and Lean doesn't know yet
+                                //  2) WE just SOLD 5 more and this notification is old
+                                //          - Seen this in production already
+                                //  3) Brokerage triggered an early assignment
+
+                                // so we get ALL orders for this symbol that were placed or got an update in the last 'orderWindowSeconds'
+
                                 const int orderWindowSeconds = 10;
                                 if (!GetOrders(x =>
                                         x.Symbol == e.Symbol
-                                        && x.Direction == OrderDirection.Buy
                                         && (x.Status.IsOpen() || x.Status.IsFill() &&
                                             (Math.Abs((x.Time - nowUtc).TotalSeconds) < orderWindowSeconds
                                                 || (x.LastUpdateTime.HasValue && Math.Abs((x.LastUpdateTime.Value - nowUtc).TotalSeconds) < orderWindowSeconds)
