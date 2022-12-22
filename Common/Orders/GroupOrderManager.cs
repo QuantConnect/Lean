@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -66,6 +68,12 @@ namespace QuantConnect.Orders
                 return OrderDirection.Hold;
             }
         }
+
+        /// <summary>
+        /// Get the absolute quantity for this combo order
+        /// </summary>
+        [JsonIgnore]
+        public decimal AbsoluteQuantity => Math.Abs(Quantity);
 
         /// <summary>
         /// Creates a new empty instance

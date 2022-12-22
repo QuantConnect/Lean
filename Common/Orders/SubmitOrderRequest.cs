@@ -97,7 +97,7 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
-        /// 
+        /// Gets the manager for the combo order. If null, the order is not a combo order.
         /// </summary>
         public GroupOrderManager GroupOrderManager
         {
@@ -179,7 +179,7 @@ namespace QuantConnect.Orders
         /// Sets the <see cref="OrderRequest.OrderId"/>
         /// </summary>
         /// <param name="orderId">The order id of the generated order</param>
-        public void SetOrderId(int orderId)
+        internal void SetOrderId(int orderId)
         {
             OrderId = orderId;
         }

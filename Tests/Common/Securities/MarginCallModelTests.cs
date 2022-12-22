@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -179,7 +180,7 @@ namespace QuantConnect.Tests.Common.Securities
             orderProcessor.AddTicket(new OrderTicket(null, request));
             Assert.AreEqual(portfolio.Cash, fill.FillPrice*fill.FillQuantity);
 
-            portfolio.ProcessFill(fill);
+            portfolio.ProcessFills(new List<OrderEvent> { fill });
 
             Assert.AreEqual(0, portfolio.MarginRemaining);
             Assert.AreEqual(quantity, portfolio.TotalMarginUsed);
@@ -244,7 +245,7 @@ namespace QuantConnect.Tests.Common.Securities
             order = new MarketOrder(Symbols.AAPL, quantity, time) { Price = buyPrice };
             fill = new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero)
                 { FillPrice = buyPrice, FillQuantity = quantity };
-            portfolio.ProcessFill(fill);
+            portfolio.ProcessFills(new List<OrderEvent> { fill });
 
             Assert.AreEqual(-250, portfolio.TotalPortfolioValue);
 

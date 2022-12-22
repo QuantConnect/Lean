@@ -56,7 +56,7 @@ namespace QuantConnect.Orders.Fills
         /// </summary>
         /// <param name="parameters">A <see cref="FillModelParameters"/> object containing the security and order</param>
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
-        public virtual IFill Fill(FillModelParameters parameters)
+        public virtual Fill Fill(FillModelParameters parameters)
         {
             // Important: setting the parameters is required because it is
             // consumed by the different XxxxFill() implementations
@@ -139,7 +139,12 @@ namespace QuantConnect.Orders.Fills
             return true;
         }
 
-        private ComboFill FillComboOrder(FillModelParameters parameters)
+        private static Func<int, Order> GetGroupOrderProvider(List<FillModelParameters> parameters)
+        {
+            return orderId => parameters.Where(x => x.Order.Id == orderId).SingleOrDefault()?.Order;
+        }
+
+        private Fill FillComboOrder(FillModelParameters parameters)
         {
             var order = parameters.Order;
             if (order.GroupOrderManager == null)
@@ -148,9 +153,20 @@ namespace QuantConnect.Orders.Fills
                 throw new ArgumentException("FillModel.FillComboOrder(): The order is not a grouped order");
             }
 
-            if (!CheckIfComboOrderIsReadyToFill(order))
+            var groupOrderManager = order.GroupOrderManager;
+            if (!_pendingGroupedOrdersByManagerId.TryGetValue(groupOrderManager.Id, out var pendingFillsParameters))
             {
-                return ComboFill.Empty;
+                pendingFillsParameters = _pendingGroupedOrdersByManagerId[groupOrderManager.Id] = new List<FillModelParameters>();
+            }
+
+            if (!pendingFillsParameters.Any(x => x.Order.Id == order.Id))
+            {
+                pendingFillsParameters.Add(Parameters);
+            }
+
+            if (!order.TryGetGroupOrders(GetGroupOrderProvider(pendingFillsParameters), out _))
+            {
+                return Fills.Fill.Empty;
             }
 
             List<OrderEvent> orderEvents;
@@ -176,7 +192,7 @@ namespace QuantConnect.Orders.Fills
                 _pendingGroupedOrdersByManagerId.Remove(order.GroupOrderManager.Id);
             }
 
-            return new ComboFill(orderEvents);
+            return new Fill(orderEvents);
         }
 
         /// <summary>
@@ -188,14 +204,18 @@ namespace QuantConnect.Orders.Fills
         {
             // if this was called, we are ready to fill the combo order and event the current one should be in the pending orders table
             var fills = _pendingGroupedOrdersByManagerId[order.GroupOrderManager.Id]
-                .Select(x => InternalMarketFill(x.Security, x.Order, x.Order.Quantity * order.GroupOrderManager.Quantity));
+                .Select(x => InternalMarketFill(x.Security, x.Order, x.Order.Quantity * order.GroupOrderManager.Quantity))
+                .ToList();
 
-            if (fills.Any(x => x.Status != OrderStatus.Filled))
+            for (var i = 0; i < fills.Count; i++)
             {
-                return new List<OrderEvent>();
+                if (fills[i].Status != OrderStatus.Filled)
+                {
+                    return new List<OrderEvent>();
+                }
             }
 
-            return fills.ToList() ;
+            return fills;
         }
 
         /// <summary>
@@ -224,7 +244,7 @@ namespace QuantConnect.Orders.Fills
             var high = prices.Aggregate(0m, (accumulatedPrice, currentPrices) => accumulatedPrice + currentPrices.High);
             var limitPrice = order.GroupOrderManager.LimitPrice;
 
-            var fills = new List<OrderEvent>();
+            var fills = new List<OrderEvent>(pendingOrdersParameters.Count);
 
             //-> Valid Live/Model Order:
             switch (order.GroupOrderManager.Direction)

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -406,7 +406,7 @@ namespace QuantConnect.Report
                 var orderEvent = new OrderEvent(order, order.Time, Orders.Fees.OrderFee.Zero) { FillPrice = order.Price, FillQuantity = order.Quantity };
 
                 // Process the order
-                Algorithm.Portfolio.ProcessFill(orderEvent);
+                Algorithm.Portfolio.ProcessFills(new List<OrderEvent> { orderEvent });
 
                 // Create portfolio statistics and return back to the user
                 yield return new PointInTimePortfolio(order, Algorithm.Portfolio);

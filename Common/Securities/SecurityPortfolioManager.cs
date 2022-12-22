@@ -38,7 +38,7 @@ namespace QuantConnect.Securities
         private bool _setCashWasCalled;
         private decimal _totalPortfolioValue;
         private bool _isTotalPortfolioValueValid;
-        private object _totalPorftfolioValueLock = new();
+        private object _totalPortfolioValueLock = new();
         private bool _setAccountCurrencyWasCalled;
         private readonly object _unsettledCashAmountsLocker = new object();
 
@@ -403,7 +403,7 @@ namespace QuantConnect.Securities
         {
             get
             {
-                lock (_totalPorftfolioValueLock)
+                lock (_totalPortfolioValueLock)
                 {
                     if (!_isTotalPortfolioValueValid)
                     {
@@ -451,10 +451,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public void InvalidateTotalPortfolioValue()
         {
-            lock (_totalPorftfolioValueLock)
-            {
-                _isTotalPortfolioValueValid = false;
-            }
+            _isTotalPortfolioValueValid = false;
         }
 
         /// <summary>
@@ -667,7 +664,7 @@ namespace QuantConnect.Securities
                 return;
             }
 
-            lock (_totalPorftfolioValueLock)
+            lock (_totalPortfolioValueLock)
             {
                 for (var i = 0; i < fills.Count; i++)
                 {
@@ -679,19 +676,6 @@ namespace QuantConnect.Securities
                 InvalidateTotalPortfolioValue();
             }
 
-        }
-
-        /// <summary>
-        /// Calculate the new average price after processing a partial/complete order fill event.
-        /// </summary>
-        /// <remarks>
-        ///     For purchasing stocks from zero holdings, the new average price is the sale price.
-        ///     When simply partially reducing holdings the average price remains the same.
-        ///     When crossing zero holdings the average price becomes the trade price in the new side of zero.
-        /// </remarks>
-        public virtual void ProcessFill(OrderEvent fill)
-        {
-            ProcessFills(new List<OrderEvent>() { fill });
         }
 
         /// <summary>

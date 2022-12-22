@@ -188,7 +188,7 @@ namespace QuantConnect.Tests.Algorithm
                 orderFee = security.FeeModel.GetOrderFee(
                     new OrderFeeParameters(security, order));
                 fill = new OrderEvent(order, DateTime.UtcNow, orderFee) { FillPrice = security.Price, FillQuantity = orderQuantity };
-                algorithm.Portfolio.ProcessFill(fill);
+                algorithm.Portfolio.ProcessFills(new List<OrderEvent> { fill });
 
                 //Console.WriteLine("Portfolio.Cash: " + algorithm.Portfolio.Cash);
                 //Console.WriteLine("Portfolio.TotalPortfolioValue: " + algorithm.Portfolio.TotalPortfolioValue);
@@ -234,7 +234,7 @@ namespace QuantConnect.Tests.Algorithm
             orderFee = security.FeeModel.GetOrderFee(
                 new OrderFeeParameters(security, order));
             fill = new OrderEvent(order, DateTime.UtcNow, orderFee) { FillPrice = security.Price, FillQuantity = orderQuantity };
-            algorithm.Portfolio.ProcessFill(fill);
+            algorithm.Portfolio.ProcessFills(new List<OrderEvent> { fill });
 
             //Console.WriteLine("Portfolio.Cash: " + algorithm.Portfolio.Cash);
             //Console.WriteLine("Portfolio.TotalPortfolioValue: " + algorithm.Portfolio.TotalPortfolioValue);

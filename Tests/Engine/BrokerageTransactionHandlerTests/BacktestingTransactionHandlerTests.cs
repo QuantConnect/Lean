@@ -235,7 +235,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         {
             public static Dictionary<int, Order> FilledOrders;
 
-            public IFill Fill(FillModelParameters parameters)
+            public Fill Fill(FillModelParameters parameters)
             {
                 var order = parameters.Order;
                 var status = OrderStatus.PartiallyFilled;

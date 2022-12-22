@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NodaTime;
 using NUnit.Framework;
@@ -105,7 +106,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
             foreach (var fill in fills)
             {
-                portfolio.ProcessFill(fill);
+                portfolio.ProcessFills(new List<OrderEvent> { fill });
             }
 
             // now we have long position in SPY with average price equal to strike

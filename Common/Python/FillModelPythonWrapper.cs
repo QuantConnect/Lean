@@ -45,7 +45,7 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="parameters">A parameters object containing the security and order</param>
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
-        public override IFill Fill(FillModelParameters parameters)
+        public override Fill Fill(FillModelParameters parameters)
         {
             Parameters = parameters;
             using (Py.GIL())

@@ -359,21 +359,9 @@ namespace QuantConnect.Brokerages.Backtesting
 
                                     // check if the fill should be emitted
                                     var fill = model.Fill(context);
-                                    switch (fill)
+                                    if (fill.All(x => targetOrder.TimeInForce.IsFillValid(security, targetOrder, x)))
                                     {
-                                        case Fill singleFill:
-                                            if (targetOrder.TimeInForce.IsFillValid(security, targetOrder, singleFill.OrderEvent))
-                                            {
-                                                fills.Add(singleFill.OrderEvent);
-                                            }
-                                            break;
-
-                                        case ComboFill comboFill:
-                                            if (comboFill.All(x => targetOrder.TimeInForce.IsFillValid(security, targetOrder, x)))
-                                            {
-                                                fills.AddRange(comboFill);
-                                            }
-                                            break;
+                                        fills.AddRange(fill);
                                     }
                                 }
 
@@ -416,57 +404,32 @@ namespace QuantConnect.Brokerages.Backtesting
                         continue;
                     }
 
-                    if (order.GroupOrderManager == null)
+                    List<OrderEvent> fillEvents = new(orders.Count);
+                    List<OrderEvent> positionAssignments = new(orders.Count);
+                    foreach (var targetOrder in orders)
                     {
-                        foreach (var fill in fills)
+                        var fill = fills.Where(f => f.OrderId == targetOrder.Id).Single();
+                        // change in status or a new fill
+                        if (targetOrder.Status != fill.Status || fill.FillQuantity != 0)
                         {
-                            // change in status or a new fill
-                            if (order.Status != fill.Status || fill.FillQuantity != 0)
-                            {
-                                // we update the order status so we do not re process it if we re enter
-                                // because of the call to OnOrderEvent.
-                                // Note: this is done by the transaction handler but we have a clone of the order
-                                order.Status = fill.Status;
+                            // we update the order status so we do not re process it if we re enter
+                            // because of the call to OnOrderEvent.
+                            // Note: this is done by the transaction handler but we have a clone of the order
+                            targetOrder.Status = fill.Status;
+                            fillEvents.Add(fill);
+                        }
 
-                                //If the fill models come back suggesting filled, process the affects on portfolio
-                                OnOrderEvent(fill);
-                            }
-
-                            if (fill.IsAssignment)
-                            {
-                                fill.Message = order.Tag;
-                                OnOptionPositionAssigned(fill);
-                            }
+                        if (fill.IsAssignment)
+                        {
+                            fill.Message = targetOrder.Tag;
+                            positionAssignments.Add(fill);
                         }
                     }
-                    else
+
+                    OnOrderEvents(fills);
+                    foreach (var assignment in positionAssignments)
                     {
-                        var filled = false;
-                        foreach (var targetOrder in orders)
-                        {
-                            var fill = fills.Where(f => f.OrderId == targetOrder.Id).Single();
-                            // change in status or a new fill
-                            if (targetOrder.Status != fill.Status || fill.FillQuantity != 0)
-                            {
-                                // we update the order status so we do not re process it if we re enter
-                                // because of the call to OnOrderEvent.
-                                // Note: this is done by the transaction handler but we have a clone of the order
-                                targetOrder.Status = fill.Status;
-
-                                filled = true;
-                            }
-
-                            if (fill.IsAssignment)
-                            {
-                                fill.Message = targetOrder.Tag;
-                                OnOptionPositionAssigned(fill);
-                            }
-                        }
-
-                        if (filled)
-                        {
-                            OnOrderEvents(fills);
-                        }
+                        OnOptionPositionAssigned(assignment);
                     }
 
                     if (fills.All(x => x.Status.IsClosed()))
@@ -536,15 +499,6 @@ namespace QuantConnect.Brokerages.Backtesting
             }
 
             base.OnOrderEvents(orderEvents);
-        }
-
-        /// <summary>
-        /// Event invocator for the OrderFilled event
-        /// </summary>
-        /// <param name="e">The OrderEvent</param>
-        protected void OnOrderEvent(OrderEvent e)
-        {
-            OnOrderEvents(new List<OrderEvent>() { e });
         }
 
         /// <summary>

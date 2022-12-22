@@ -18,6 +18,7 @@ using System.Linq;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 using System.Collections.Generic;
+using QuantConnect.Orders.Fills;
 
 namespace QuantConnect.Orders
 {

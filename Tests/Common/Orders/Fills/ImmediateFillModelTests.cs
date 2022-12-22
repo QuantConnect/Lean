@@ -52,11 +52,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101.123m));
 
-            var fill = (model.Fill(new FillModelParameters(
+            var fill = model.Fill(new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour)) as Fill).OrderEvent;
+                Time.OneHour)).Single();
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
             Assert.AreEqual(security.Price, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
@@ -73,11 +73,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101.123m));
 
-            var fill = (model.Fill(new FillModelParameters(
+            var fill = model.Fill(new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour)) as Fill).OrderEvent;
+                Time.OneHour)).Single();
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
             Assert.AreEqual(security.Price, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
@@ -99,11 +99,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, currentTimeNY, 102m));
 
-            var fill = (model.Fill(new FillModelParameters(
+            var fill = model.Fill(new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour)) as Fill).OrderEvent;
+                Time.OneHour)).Single();
 
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
@@ -138,11 +138,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 102m));
 
-            var fill = (model.Fill(new FillModelParameters(
+            var fill = model.Fill(new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour)) as Fill).OrderEvent;
+                Time.OneHour)).Single();
 
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
@@ -169,11 +169,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101m));
 
-            var fill = (model.Fill(new FillModelParameters(
+            var fill = model.Fill(new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour)) as Fill).OrderEvent;
+                Time.OneHour)).Single();
 
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
@@ -200,11 +200,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 100m));
 
-            var fill = (model.Fill(new FillModelParameters(
+            var fill = model.Fill(new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour)) as Fill).OrderEvent;
+                Time.OneHour)).Single();
 
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
@@ -212,11 +212,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 102m));
 
-            fill = (model.Fill(new FillModelParameters(
+            fill = model.Fill(new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour)) as Fill).OrderEvent;
+                Time.OneHour)).Single();
 
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
@@ -243,11 +243,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 102m));
 
-            var fill = (model.Fill(new FillModelParameters(
+            var fill = model.Fill(new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour)) as Fill).OrderEvent;
+                Time.OneHour)).Single();
 
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
@@ -255,11 +255,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101m));
 
-            fill = (model.Fill(new FillModelParameters(
+            fill = model.Fill(new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour)) as Fill).OrderEvent;
+                Time.OneHour)).Single();
 
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
@@ -286,11 +286,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101m));
 
-            var fill = (model.Fill(new FillModelParameters(
+            var fill = model.Fill(new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour)) as Fill).OrderEvent;
+                Time.OneHour)).Single();
 
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
@@ -298,11 +298,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 102.5m));
 
-            fill = (model.Fill(new FillModelParameters(
+            fill = model.Fill(new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour)) as Fill).OrderEvent;
+                Time.OneHour)).Single();
 
             // this fills worst case scenario, so it's min of asset/stop price
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
@@ -321,11 +321,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 102m));
 
-            var fill = (model.Fill(new FillModelParameters(
+            var fill = model.Fill(new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour)) as Fill).OrderEvent;
+                Time.OneHour)).Single();
 
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
@@ -333,11 +333,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101m));
 
-            fill = (model.Fill(new FillModelParameters(
+            fill = model.Fill(new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour)) as Fill).OrderEvent;
+                Time.OneHour)).Single();
 
             // this fills worst case scenario, so it's min of asset/stop price
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
@@ -360,11 +360,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 102m, 102m, 102m, 102m, 100));
             configProvider.SubscriptionDataConfigs.Add(configTradeBar);
 
-            var fill = (model.Fill(new FillModelParameters(
+            var fill = model.Fill(new FillModelParameters(
                 security,
                 order,
                 configProvider,
-                Time.OneHour)) as Fill).OrderEvent;
+                Time.OneHour)).Single();
 
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
@@ -381,11 +381,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
 
-            fill = (model.Fill(new FillModelParameters(
+            fill = model.Fill(new FillModelParameters(
                 security,
                 order,
                 configProvider,
-                Time.OneHour)) as Fill).OrderEvent;
+                Time.OneHour)).Single();
 
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
@@ -423,11 +423,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 100m, 100m, 90m, 90m, 100));
             configProvider.SubscriptionDataConfigs.Add(configTradeBar);
 
-            var fill = (model.Fill(new FillModelParameters(
+            var fill = model.Fill(new FillModelParameters(
                 security,
                 order,
                 configProvider,
-                Time.OneHour)) as Fill).OrderEvent;
+                Time.OneHour)).Single();
 
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
@@ -444,11 +444,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
 
-            fill = (model.Fill(new FillModelParameters(
+            fill = model.Fill(new FillModelParameters(
                 security,
                 order,
                 configProvider,
-                Time.OneHour)) as Fill).OrderEvent;
+                Time.OneHour)).Single();
 
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
@@ -484,11 +484,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
             security.SetMarketPrice(new TradeBar(time, Symbols.SPY, 1m, 2m, 0.5m, 1.33m, 100));
 
-            var fill = (model.Fill(new FillModelParameters(
+            var fill = model.Fill(new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour)) as Fill).OrderEvent;
+                Time.OneHour)).Single();
             Assert.AreEqual(0, fill.FillQuantity);
 
             // market opens after 30min, so this is just before market open
@@ -496,11 +496,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
             security.SetMarketPrice(new TradeBar(time, Symbols.SPY, 1.33m, 2.75m, 1.15m, 1.45m, 100));
 
-            fill = (model.Fill(new FillModelParameters(
+            fill = model.Fill(new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour)) as Fill).OrderEvent;
+                Time.OneHour)).Single();
             Assert.AreEqual(0, fill.FillQuantity);
 
             // market opens after 30min
@@ -527,11 +527,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
             security.SetMarketPrice(new TradeBar(time - config.Increment, Symbols.SPY, 1m, 2m, 0.5m, 1.33m, 100, config.Increment));
 
-            var fill = (model.Fill(new FillModelParameters(
+            var fill = model.Fill(new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour)) as Fill).OrderEvent;
+                Time.OneHour)).Single();
             Assert.AreEqual(0, fill.FillQuantity);
 
             // market closes after 60min, so this is just before market Close
@@ -539,11 +539,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
             security.SetMarketPrice(new TradeBar(time - config.Increment, Symbols.SPY, 1.33m, 2.75m, 1.15m, 1.45m, 100, config.Increment));
 
-            fill = (model.Fill(new FillModelParameters(
+            fill = model.Fill(new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour)) as Fill).OrderEvent;
+                Time.OneHour)).Single();
             Assert.AreEqual(0, fill.FillQuantity);
 
             // market closes
@@ -584,11 +584,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             var quantity = direction == OrderDirection.Buy ? 1 : -1;
             var order = new MarketOrder(symbol, quantity, DateTime.Now);
-            var fill = (fillModel.Fill(new FillModelParameters(
+            var fill = fillModel.Fill(new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour)) as Fill).OrderEvent;
+                Time.OneHour)).Single();
 
             var expected = direction == OrderDirection.Buy ? askPrice : bidPrice;
             Assert.AreEqual(expected, fill.FillPrice);
@@ -614,11 +614,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             var fillModel = new ImmediateFillModel();
             var order = new MarketOrder(symbol, 1000, DateTime.Now);
-            var fill = (fillModel.Fill(new FillModelParameters(
+            var fill = fillModel.Fill(new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour)) as Fill).OrderEvent;
+                Time.OneHour)).Single();
 
             // The fill model should use the tick.Price
             Assert.AreEqual(fill.FillPrice, 100m);
@@ -645,11 +645,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             var fillModel = new ImmediateFillModel();
             var order = new MarketOrder(symbol, 1000, DateTime.Now);
-            var fill = (fillModel.Fill(new FillModelParameters(
+            var fill = fillModel.Fill(new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour)) as Fill).OrderEvent;
+                Time.OneHour)).Single();
 
             // The fill model should use the tick.Price
             Assert.AreEqual(fill.FillPrice, 1.0m);
@@ -682,11 +682,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var fillModel = new ImmediateFillModel();
             var order = new LimitOrder(symbol, orderQuantity, limitPrice, time.ConvertToUtc(TimeZones.NewYork));
 
-            var fill = (fillModel.Fill(new FillModelParameters(
+            var fill = fillModel.Fill(new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour)) as Fill).OrderEvent;
+                Time.OneHour)).Single();
 
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
@@ -732,11 +732,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var fillModel = new ImmediateFillModel();
             var order = new StopMarketOrder(symbol, orderQuantity, stopPrice, time.ConvertToUtc(TimeZones.NewYork));
 
-            var fill = (fillModel.Fill(new FillModelParameters(
+            var fill = fillModel.Fill(new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour)) as Fill).OrderEvent;
+                Time.OneHour)).Single();
 
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
@@ -782,11 +782,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var fillModel = new ImmediateFillModel();
             var order = new StopLimitOrder(symbol, orderQuantity, stopPrice, limitPrice, time.ConvertToUtc(TimeZones.NewYork));
 
-            var fill = (fillModel.Fill(new FillModelParameters(
+            var fill = fillModel.Fill(new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour)) as Fill).OrderEvent;
+                Time.OneHour)).Single();
 
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
@@ -817,11 +817,11 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101.123m));
 
-            var fill = (model.Fill(new FillModelParameters(
+            var fill = model.Fill(new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour)) as Fill).OrderEvent;
+                Time.OneHour)).Single();
 
             Assert.IsTrue(fill.Message.Contains("Warning: fill at stale price"));
         }
@@ -878,6 +878,10 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var groupOrderManager = new GroupOrderManager(0, 2, orderDirection == OrderDirection.Buy ? 10 : -10);
             var spyOrder = new ComboMarketOrder(Symbols.SPY, 10, Noon, groupOrderManager) { Id = 1 };
             var aaplOrder = new ComboMarketOrder(Symbols.AAPL, 5, Noon, groupOrderManager) { Id = 2 };
+
+            groupOrderManager.OrderIds.Add(spyOrder.Id);
+            groupOrderManager.OrderIds.Add(aaplOrder.Id);
+
             var spyConfig = CreateTradeBarConfig(Symbols.SPY, isInternal);
             var aaplConfig = CreateTradeBarConfig(Symbols.AAPL, isInternal);
             var spy = GetSecurity(spyConfig);
@@ -893,7 +897,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 spy,
                 spyOrder,
                 new MockSubscriptionDataConfigProvider(spyConfig),
-                Time.OneHour)) as ComboFill;
+                Time.OneHour)) as Fill;
 
             // It won't fill until every order in the group is passed to model.Fill
             Assert.IsEmpty(spyFill);
@@ -902,7 +906,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 aapl,
                 aaplOrder,
                 new MockSubscriptionDataConfigProvider(aaplConfig),
-                Time.OneHour)) as ComboFill;
+                Time.OneHour)) as Fill;
 
             Assert.AreEqual(2, aaplFill.Count());
 
@@ -930,6 +934,9 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var spyOrder = new ComboLimitOrder(Symbols.SPY, 10, limitPrice, Noon, groupOrderManager) { Id = 1 };
             var aaplOrder = new ComboLimitOrder(Symbols.AAPL, 5, limitPrice, Noon, groupOrderManager) { Id = 2 };
 
+            groupOrderManager.OrderIds.Add(spyOrder.Id);
+            groupOrderManager.OrderIds.Add(aaplOrder.Id);
+
             Assert.AreEqual(orderDirection, groupOrderManager.Direction);
 
             var spyConfig = CreateTradeBarConfig(Symbols.SPY, isInternal);
@@ -945,7 +952,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 spy,
                 spyOrder,
                 new MockSubscriptionDataConfigProvider(spyConfig),
-                Time.OneHour)) as ComboFill;
+                Time.OneHour)) as Fill;
 
             // It won't fill until every order in the group is passed to model.Fill
             Assert.IsEmpty(spyFill);
@@ -954,7 +961,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 aapl,
                 aaplOrder,
                 new MockSubscriptionDataConfigProvider(aaplConfig),
-                Time.OneHour)) as ComboFill;
+                Time.OneHour)) as Fill;
 
             // Won't fill either, the limit price condition is not met
             Assert.IsEmpty(aaplFill);
@@ -966,7 +973,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 spy,
                 spyOrder,
                 new MockSubscriptionDataConfigProvider(spyConfig),
-                Time.OneHour)) as ComboFill;
+                Time.OneHour)) as Fill;
 
             Assert.AreEqual(2, fill.Count());
 
@@ -999,6 +1006,9 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var aaplLimitPrice = orderDirection == OrderDirection.Buy ? 251.1m : 252.5m;
             var aaplOrder = new ComboLegLimitOrder(Symbols.AAPL, multiplier * 5, aaplLimitPrice, Noon, groupOrderManager) { Id = 2 };
 
+            groupOrderManager.OrderIds.Add(spyOrder.Id);
+            groupOrderManager.OrderIds.Add(aaplOrder.Id);
+
             Assert.AreEqual(orderDirection, groupOrderManager.Direction);
 
             var spyConfig = CreateTradeBarConfig(Symbols.SPY, isInternal);
@@ -1014,7 +1024,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 spy,
                 spyOrder,
                 new MockSubscriptionDataConfigProvider(spyConfig),
-                Time.OneHour)) as ComboFill;
+                Time.OneHour)) as Fill;
 
             // It won't fill until every order in the group is passed to model.Fill
             Assert.IsEmpty(spyFill);
@@ -1023,7 +1033,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 aapl,
                 aaplOrder,
                 new MockSubscriptionDataConfigProvider(aaplConfig),
-                Time.OneHour)) as ComboFill;
+                Time.OneHour)) as Fill;
 
             // Won't fill either, the limit price condition is not met
             Assert.IsEmpty(aaplFill);
@@ -1035,7 +1045,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 spy,
                 spyOrder,
                 new MockSubscriptionDataConfigProvider(spyConfig),
-                Time.OneHour)) as ComboFill;
+                Time.OneHour)) as Fill;
 
             Assert.AreEqual(2, fill.Count());
 

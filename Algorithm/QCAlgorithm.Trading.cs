@@ -656,7 +656,19 @@ namespace QuantConnect.Algorithm
             return GenerateOptionStrategyOrders(strategy, quantity, asynchronous, tag, orderProperties);
         }
 
-        public IEnumerable<OrderTicket> ComboOrder(OrderType type, List<Leg> legs, int quantity, decimal? limitPrice, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
+        /// <summary>
+        /// Issue a combo order/trade for multiple assets
+        /// </summary>
+        /// <param name="type">The type of order, either ComboMarket, ComboLimit or ComboLegLimit</param>
+        /// <param name="legs">The list of legs the order consists of</param>
+        /// <param name="quantity">The total quantity for the order</param>
+        /// <param name="limitPrice">The compound limit price to use for a ComboLimit order. This limit price will compared to the sum of the assets price in order to fill the order.</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it fills</param>
+        /// <param name="tag">String tag for the order (optional)</param>
+        /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
+        /// <returns>Sequence of order tickets, one for each leg</returns>
+        /// <exception cref="ArgumentException">If the order type is neither ComboMarket, ComboLimit nor ComboLegLimit</exception>
+        public List<OrderTicket> ComboOrder(OrderType type, List<Leg> legs, int quantity, decimal? limitPrice, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
             if (type != OrderType.ComboMarket && type != OrderType.ComboLimit && type != OrderType.ComboLegLimit)
             {
@@ -744,7 +756,10 @@ namespace QuantConnect.Algorithm
                     foreach (var ticket in orderTickets)
                     {
                         // we should cancel all of them if any failed
-                        ticket.Cancel();
+                        if (ticket.Status.IsOpen())
+                        {
+                            ticket.Cancel();
+                        }
                     }
 
                     // break out

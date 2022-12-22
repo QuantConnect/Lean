@@ -147,6 +147,14 @@ namespace QuantConnect.Brokerages
             }
         }
 
+        /// Event invocator for the OrderFilled event
+        /// </summary>
+        /// <param name="e">The order event</param>
+        protected virtual void OnOrderEvent(OrderEvent e)
+        {
+            OnOrderEvents(new List<OrderEvent> { e });
+        }
+
         /// <summary>
         /// Event invocator for the OrderIdChanged event
         /// </summary>
