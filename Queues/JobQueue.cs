@@ -44,6 +44,7 @@ namespace QuantConnect.Queues
         private const string DefaultDataChannelProvider = "DataChannelProvider";
         private bool _liveMode = Config.GetBool("live-mode");
         private static readonly string AccessToken = Config.Get("api-access-token");
+        private static readonly string Channel = Config.Get("data-channel");
         private static readonly string OrganizationId = Config.Get("job-organization-id");
         private static readonly int UserId = Config.GetInt("job-user-id", 0);
         private static readonly int ProjectId = Config.GetInt("job-project-id", 0);
@@ -137,7 +138,7 @@ namespace QuantConnect.Queues
                     HistoryProvider = Config.Get("history-provider", DefaultHistoryProvider),
                     DataQueueHandler = dataHandlers,
                     DataChannelProvider = Config.Get("data-channel-provider", DefaultDataChannelProvider),
-                    Channel = AccessToken,
+                    Channel = Channel,
                     UserToken = AccessToken,
                     UserId = UserId,
                     ProjectId = ProjectId,
@@ -202,7 +203,7 @@ namespace QuantConnect.Queues
                 Type = PacketType.BacktestNode,
                 Algorithm = File.ReadAllBytes(AlgorithmLocation),
                 HistoryProvider = Config.Get("history-provider", DefaultHistoryProvider),
-                Channel = AccessToken,
+                Channel = Channel,
                 UserToken = AccessToken,
                 UserId = UserId,
                 ProjectId = ProjectId,
