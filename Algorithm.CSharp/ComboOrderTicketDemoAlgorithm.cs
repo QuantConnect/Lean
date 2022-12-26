@@ -257,6 +257,7 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception("OrderEvent.LimitPrice is not expected to be 0 for ComboLegLimitOrder");
             }
         }
+
         private bool CheckGroupOrdersForFills(List<OrderTicket> combo1, List<OrderTicket> combo2)
         {
             if (combo1.All(x => x.Status == OrderStatus.Filled))
