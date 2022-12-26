@@ -1656,20 +1656,30 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         }
 
         // Short Call --> ITM (assigned early - full)
-        [TestCase(-1, OptionRight.Call, 450, 100, 455, 0)]
+        [TestCase(-2, OptionRight.Call, 450, 100, 455, 0, OrderDirection.Buy)]
         // Short Put --> ITM (assigned early - full)
-        [TestCase(-1, OptionRight.Put, 455, 100, 450, 0)]
+        [TestCase(-2, OptionRight.Put, 455, 100, 450, 0, OrderDirection.Buy)]
         // Short Call --> ITM (assigned early - partial)
-        [TestCase(-3, OptionRight.Call, 450, 300, 455, -1)]
+        [TestCase(-3, OptionRight.Call, 450, 300, 455, -1, OrderDirection.Buy)]
         // Short Put --> ITM (assigned early - partial)
-        [TestCase(-3, OptionRight.Put, 455, 100, 450, -1)]
+        [TestCase(-3, OptionRight.Put, 455, 100, 450, -1, OrderDirection.Buy)]
+
+        // Short Call --> ITM (assigned early - full)
+        [TestCase(-2, OptionRight.Call, 450, 100, 455, 0, OrderDirection.Sell)]
+        // Short Put --> ITM (assigned early - full)
+        [TestCase(-2, OptionRight.Put, 455, 100, 450, 0, OrderDirection.Sell)]
+        // Short Call --> ITM (assigned early - partial)
+        [TestCase(-3, OptionRight.Call, 450, 300, 455, -1, OrderDirection.Sell)]
+        // Short Put --> ITM (assigned early - partial)
+        [TestCase(-3, OptionRight.Put, 455, 100, 450, -1, OrderDirection.Sell)]
         public void EarlyAssignmentDoesNotEmitsOrderEvents(
             int initialOptionPosition,
             OptionRight optionRight,
             decimal strikePrice,
             int initialUnderlyingPosition,
             decimal underlyingPrice,
-            int expectedOptionPosition
+            int expectedOptionPosition,
+            OrderDirection orderDirection
             )
         {
             var algorithm = new TestAlgorithm();
@@ -1692,7 +1702,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             transactionHandler.TestCurrentTimeUtc = new DateTime(2021, 9, 8, 14, 0, 0);
 
             // Creates a market order
-            var orderRequest = new SubmitOrderRequest(OrderType.Market, option.Type, option.Symbol, 1, 0, 0, transactionHandler.TestCurrentTimeUtc, "");
+            var orderRequest = new SubmitOrderRequest(OrderType.Market, option.Type, option.Symbol, orderDirection == OrderDirection.Buy ? 1 : -1, 0, 0, transactionHandler.TestCurrentTimeUtc, "");
             var orderTicket = transactionHandler.Process(orderRequest);
             transactionHandler.HandleOrderRequest(orderRequest);
 
@@ -1700,18 +1710,26 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             _handleOptionNotification.Invoke(transactionHandler, new object[] { new OptionNotificationEventArgs(optionSymbol, expectedOptionPosition) });
 
-            // we expect no difference because there is an open buy market order!
+            // we expect no difference because there is an open market order!
             Assert.AreEqual(1, algorithm.Transactions.GetOrderTickets().Count());
 
             // Fill the order
             brokerage.PublishOrderEvent(new OrderEvent(orderTicket.OrderId, option.Symbol, transactionHandler.TestCurrentTimeUtc,
-                OrderStatus.Filled, OrderDirection.Buy, 10, orderRequest.Quantity, OrderFee.Zero));
+                OrderStatus.Filled, orderDirection, 10, orderRequest.Quantity, OrderFee.Zero));
             Assert.IsTrue(orderTicket.Status.IsClosed());
 
             _handleOptionNotification.Invoke(transactionHandler, new object[] { new OptionNotificationEventArgs(optionSymbol, expectedOptionPosition) });
 
-            // we expect no difference because there is a closed buy market order!
+            // we expect no difference because there is a closed market order!
             Assert.AreEqual(1, algorithm.Transactions.GetOrderTickets().Count());
+
+            // Timeout the order effect
+            transactionHandler.TestCurrentTimeUtc = transactionHandler.TestCurrentTimeUtc.AddMinutes(1);
+
+            _handleOptionNotification.Invoke(transactionHandler, new object[] { new OptionNotificationEventArgs(optionSymbol, expectedOptionPosition) });
+
+            // we expect difference because market order is old!
+            Assert.AreEqual(2, algorithm.Transactions.GetOrderTickets().Count());
         }
 
         internal class TestIncrementalOrderIdAlgorithm : OrderTicketDemoAlgorithm
