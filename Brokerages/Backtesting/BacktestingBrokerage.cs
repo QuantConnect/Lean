@@ -401,29 +401,37 @@ namespace QuantConnect.Brokerages.Backtesting
                         continue;
                     }
 
+                    if (fills.Count == 0)
+                    {
+                        continue;
+                    }
+
                     List<OrderEvent> fillEvents = new(orders.Count);
                     List<OrderEvent> positionAssignments = new(orders.Count);
                     foreach (var targetOrder in orders)
                     {
-                        var fill = fills.Where(f => f.OrderId == targetOrder.Id).Single();
-                        // change in status or a new fill
-                        if (targetOrder.Status != fill.Status || fill.FillQuantity != 0)
+                        var orderFills = fills.Where(f => f.OrderId == targetOrder.Id);
+                        foreach (var fill in orderFills)
                         {
-                            // we update the order status so we do not re process it if we re enter
-                            // because of the call to OnOrderEvent.
-                            // Note: this is done by the transaction handler but we have a clone of the order
-                            targetOrder.Status = fill.Status;
-                            fillEvents.Add(fill);
-                        }
+                            // change in status or a new fill
+                            if (targetOrder.Status != fill.Status || fill.FillQuantity != 0)
+                            {
+                                // we update the order status so we do not re process it if we re enter
+                                // because of the call to OnOrderEvent.
+                                // Note: this is done by the transaction handler but we have a clone of the order
+                                targetOrder.Status = fill.Status;
+                                fillEvents.Add(fill);
+                            }
 
-                        if (fill.IsAssignment)
-                        {
-                            fill.Message = targetOrder.Tag;
-                            positionAssignments.Add(fill);
+                            if (fill.IsAssignment)
+                            {
+                                fill.Message = targetOrder.Tag;
+                                positionAssignments.Add(fill);
+                            }
                         }
                     }
 
-                    OnOrderEvents(fills);
+                    OnOrderEvents(fillEvents);
                     foreach (var assignment in positionAssignments)
                     {
                         OnOptionPositionAssigned(assignment);

@@ -113,32 +113,6 @@ namespace QuantConnect.Orders.Fills
             return new Fill(orderEvent);
         }
 
-        private bool CheckIfComboOrderIsReadyToFill(Order order)
-        {
-            var groupOrderManager = order.GroupOrderManager;
-            if (!_pendingGroupedOrdersByManagerId.TryGetValue(groupOrderManager.Id, out var pendingFillsParameters))
-            {
-                pendingFillsParameters = _pendingGroupedOrdersByManagerId[groupOrderManager.Id] = new List<FillModelParameters>();
-            }
-
-            if (pendingFillsParameters.Count < groupOrderManager.Count)
-            {
-                // we haven't received fill requests for all the orders in the group
-
-                if (!pendingFillsParameters.Any(x => x.Order.Id == order.Id))
-                {
-                    pendingFillsParameters.Add(Parameters);
-
-                    if (pendingFillsParameters.Count < groupOrderManager.Count)
-                    {
-                        return false;
-                    }
-                }
-            }
-
-            return true;
-        }
-
         private static Func<int, Order> GetGroupOrderProvider(List<FillModelParameters> parameters)
         {
             return orderId => parameters.Where(x => x.Order.Id == orderId).SingleOrDefault()?.Order;

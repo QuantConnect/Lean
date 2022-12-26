@@ -77,6 +77,19 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Modifies the state of this order to match the update request
+        /// </summary>
+        /// <param name="request">The request to update this order object</param>
+        public override void ApplyUpdateOrderRequest(UpdateOrderRequest request)
+        {
+            base.ApplyUpdateOrderRequest(request);
+            if (request.LimitPrice.HasValue)
+            {
+                GroupOrderManager.LimitPrice = request.LimitPrice.Value;
+            }
+        }
+
+        /// <summary>
         /// Creates a deep-copy clone of this order
         /// </summary>
         /// <returns>A copy of this order</returns>
