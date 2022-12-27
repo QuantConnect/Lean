@@ -617,6 +617,8 @@ namespace QuantConnect.Brokerages.Backtesting
             var result = true;
             stillNeedsScan = false;
 
+            var removedOrdersIds = new HashSet<int>();
+
             foreach (var kvp in ordersSecurities)
             {
                 var order = kvp.Key;
@@ -641,7 +643,8 @@ namespace QuantConnect.Brokerages.Backtesting
                 // check if the time in force handler allows fills
                 if (order.TimeInForce.IsOrderExpired(security, order))
                 {
-                    RemoveOrder(order, OrderStatus.Canceled, "The order has expired.");
+                    // We remove all orders in the combo
+                    RemoveOrders(ordersSecurities.Select(kvp => kvp.Key).ToList(), OrderStatus.Canceled, "The order has expired.");
                     result = false;
                     break;
                 }

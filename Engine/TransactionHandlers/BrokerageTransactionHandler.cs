@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Brokerages;
@@ -988,7 +987,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 // Get orders and tickets
                 var orders = new List<Order>(orderEvents.Count);
-                List<OrderTicket> tickets = new List<OrderTicket>(orderEvents.Count);
+                var tickets = new List<OrderTicket>(orderEvents.Count);
 
                 for (var i = 0; i < orderEvents.Count; i++)
                 {
@@ -1591,7 +1590,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 {
                     orderInGroup.Status = OrderStatus.Invalid;
                 }
-                HandleOrderEvent(new OrderEvent(orderInGroup, _algorithm.UtcTime, OrderFee.Zero, message));
+                HandleOrderEvents(new List<OrderEvent> { new OrderEvent(orderInGroup, _algorithm.UtcTime, OrderFee.Zero, message) });
             }
         }
 

@@ -26,13 +26,61 @@ namespace QuantConnect.Algorithm.CSharp
     public class ComboLimitOrderAlgorithm : ComboOrderAlgorithm
     {
         private decimal? _limitPrice;
+        private int _comboQuantity;
+
+        private int _fillCount;
+
+        private decimal _liquidatedQuantity;
+
+        private bool _liquidated;
+
+        protected override int ExpectedFillCount
+        {
+            get
+            {
+                return OrderLegs.Count * 2;
+            }
+        }
 
         protected override IEnumerable<OrderTicket> PlaceComboOrder(List<Leg> legs, int quantity, decimal? limitPrice = null)
         {
             _limitPrice = limitPrice;
+            _comboQuantity = quantity;
             legs.ForEach(x => { x.OrderPrice = null; });
 
             return ComboOrder(OrderType.ComboLimit, legs, quantity, limitPrice, asynchronous: true);
+        }
+        public override void OnOrderEvent(OrderEvent orderEvent)
+        {
+            base.OnOrderEvent(orderEvent);
+
+            if (orderEvent.Status == OrderStatus.Filled)
+            {
+                _fillCount++;
+                if (_fillCount == OrderLegs.Count)
+                {
+                    Liquidate();
+                }
+                else if (_fillCount < 2 * OrderLegs.Count)
+                {
+                    _liquidatedQuantity += orderEvent.FillQuantity;
+                }
+                else if (_fillCount == 2 * OrderLegs.Count)
+                {
+                    _liquidated = true;
+                    var totalComboQuantity = _comboQuantity * OrderLegs.Select(x => x.Quantity).Sum();
+
+                    if (_liquidatedQuantity != totalComboQuantity)
+                    {
+                        throw new Exception($"Liquidated quantity {_liquidatedQuantity} does not match combo quantity {totalComboQuantity}");
+                    }
+
+                    if (Portfolio.TotalHoldingsValue != 0)
+                    {
+                        throw new Exception($"Portfolio value {Portfolio.TotalPortfolioValue} is not zero");
+                    }
+                }
+            }
         }
 
         public override void OnEndOfAlgorithm()
@@ -44,10 +92,15 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception("Limit price was not set");
             }
 
-            var fillPricesSum = FillOrderEvents.Select(x => x.FillPrice).Sum();
-            if (_limitPrice <= fillPricesSum)
+            var fillPricesSum = FillOrderEvents.Take(OrderLegs.Count).Select(x => x.FillPrice).Sum();
+            if (_limitPrice < fillPricesSum)
             {
                 throw new Exception($"Limit price expected to be greater that the sum of the fill prices ({fillPricesSum}), but was {_limitPrice}");
+            }
+
+            if (!_liquidated)
+            {
+                throw new Exception("Combo order was not liquidated");
             }
         }
 
@@ -76,7 +129,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "3"},
+            {"Total Trades", "6"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
@@ -95,8 +148,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$7.50"},
-            {"Estimated Strategy Capacity", "$8000.00"},
+            {"Total Fees", "$17.50"},
+            {"Estimated Strategy Capacity", "$6000.00"},
             {"Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
@@ -117,7 +170,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "66fb961268f673cdbe6267408d7119c5"}
+            {"OrderListHash", "5203bc8a2ebb58a2293aa1855211b878"}
         };
     }
 }

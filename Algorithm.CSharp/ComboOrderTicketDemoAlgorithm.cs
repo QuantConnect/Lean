@@ -31,7 +31,7 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private readonly List<OrderTicket> _openMarketOrders = new();
         private readonly List<OrderTicket> _openLegLimitOrders = new();
-        private readonly Dictionary<long, List<OrderTicket>> _openLimitOrders = new();
+        private readonly List<OrderTicket> _openLimitOrders = new();
 
         private Symbol _optionSymbol;
         private List<Leg> _orderLegs;
@@ -107,16 +107,13 @@ namespace QuantConnect.Algorithm.CSharp
 
             tickets = ComboOrder(OrderType.ComboMarket, _orderLegs, 2, null, asynchronous: true);
             _openMarketOrders.AddRange(tickets);
+
             foreach (var ticket in tickets)
             {
-                var response = ticket.Cancel("Attempt to cancel async order");
+                var response = ticket.Cancel("Attempt to cancel combo market order");
                 if (response.IsSuccess)
                 {
-                    Log("Successfully canceled async market order: " + response.OrderId);
-                }
-                else
-                {
-                    Log("Unable to cancel async market order: " + response.ErrorCode);
+                    throw new Exception("Combo market orders should fill instantly, they should not be cancelable in backtest mode: " + response.OrderId);
                 }
             }
         }
@@ -134,18 +131,16 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 var tickets = ComboOrder(OrderType.ComboLegLimit, _orderLegs, quantity: 2, closeSum * 0.94m);
-                var groupOrderManagerId = Transactions.GetOrders(x => x.Id == tickets[0].OrderId).Single().GroupOrderManager.Id;
-                _openLimitOrders[groupOrderManagerId] = tickets;
+                _openLimitOrders.AddRange(tickets);
 
                 // These won't fill, we will test cancel with this
                 tickets = ComboOrder(OrderType.ComboLegLimit, _orderLegs, -2, closeSum * 1.1m);
-                groupOrderManagerId = Transactions.GetOrders(x => x.Id == tickets[0].OrderId).Single().GroupOrderManager.Id;
-                _openLimitOrders[groupOrderManagerId] = tickets;
+                _openLimitOrders.AddRange(tickets);
             }
             else
             {
-                var combo1 = _openLimitOrders.First().Value;
-                var combo2 = _openLimitOrders.Last().Value;
+                var combo1 = _openLimitOrders.Take(_orderLegs.Count).ToList();
+                var combo2 = _openLimitOrders.Skip(_orderLegs.Count).Take(_orderLegs.Count).ToList();
 
                 // check if either is filled and cancel the other
                 if (CheckGroupOrdersForFills(combo1, combo2))
@@ -165,7 +160,7 @@ namespace QuantConnect.Algorithm.CSharp
                 });
 
                 ticket = combo2[0];
-                newLimit = ticket.Get(OrderField.LimitPrice) + 0.01m;
+                newLimit = ticket.Get(OrderField.LimitPrice) - 0.01m;
                 Log($"Updating limits - Combo 2 {ticket.OrderId}: {newLimit.ToStringInvariant("0.00")}");
                 ticket.Update(new UpdateOrderFields
                 {
@@ -368,7 +363,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "33f3c90a3796151281a3950b7570d22d"}
+            {"OrderListHash", "8b077188ccff3c64d4e2c702cfe16b03"}
         };
     }
 }

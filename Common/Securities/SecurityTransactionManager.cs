@@ -33,6 +33,7 @@ namespace QuantConnect.Securities
         private readonly Dictionary<DateTime, decimal> _transactionRecord;
         private readonly IAlgorithm _algorithm;
         private int _orderId;
+        private int _groupOrderManagerId;
         private readonly SecurityManager _securities;
         private TimeSpan _marketOrderFillTimeout = TimeSpan.FromSeconds(5);
 
@@ -261,8 +262,8 @@ namespace QuantConnect.Securities
 
         /// <summary>
         /// Gets an enumerable of opened <see cref="OrderTicket"/> matching the specified <paramref name="filter"/>
-        /// However, this method can be confused with the override that takes a Symbol as parameter. For this reason 
-        /// it first checks if it can convert the parameter into a symbol. If that conversion cannot be aplied it 
+        /// However, this method can be confused with the override that takes a Symbol as parameter. For this reason
+        /// it first checks if it can convert the parameter into a symbol. If that conversion cannot be aplied it
         /// assumes the parameter is a Python function object and not a Python representation of a Symbol.
         /// </summary>
         /// <param name="filter">The Python function filter used to find the required order tickets</param>
@@ -290,8 +291,8 @@ namespace QuantConnect.Securities
 
         /// <summary>
         /// Gets the remaining quantity to be filled from open orders, i.e. order size minus quantity filled
-        /// However, this method can be confused with the override that takes a Symbol as parameter. For this reason 
-        /// it first checks if it can convert the parameter into a symbol. If that conversion cannot be aplied it 
+        /// However, this method can be confused with the override that takes a Symbol as parameter. For this reason
+        /// it first checks if it can convert the parameter into a symbol. If that conversion cannot be aplied it
         /// assumes the parameter is a Python function object and not a Python representation of a Symbol.
         /// </summary>
         /// <param name="filter">Filters the order tickets to be included in the aggregate quantity remaining to be filled</param>
@@ -456,6 +457,15 @@ namespace QuantConnect.Securities
         public int GetIncrementOrderId()
         {
             return Interlocked.Increment(ref _orderId);
+        }
+
+        /// <summary>
+        /// Get a new group order manager id, and increment the internal counter.
+        /// </summary>
+        /// <returns>New unique int group order manager id.</returns>
+        public int GetIncrementGroupOrderManagerId()
+        {
+            return Interlocked.Increment(ref _groupOrderManagerId);
         }
 
         /// <summary>

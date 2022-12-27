@@ -275,8 +275,6 @@ namespace QuantConnect.Orders
                     break;
 
                 case OrderType.ComboMarket:
-
-
                     order = new ComboMarketOrder() { GroupOrderManager = DeserializeGroupOrderManager(jObject) };
                     break;
 
@@ -336,9 +334,10 @@ namespace QuantConnect.Orders
         {
             var groupOrderManagerJObject = jObject["GroupOrderManager"];
 
+            // this should never happen
             if (groupOrderManagerJObject == null)
             {
-                return null;
+                throw new ArgumentException("OrderJsonConverter.DeserializeGroupOrderManager(): JObject does not have a GroupOrderManager");
             }
 
             return new GroupOrderManager(

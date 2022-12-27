@@ -176,17 +176,18 @@ namespace QuantConnect.Orders.Fills
         /// <returns>Order fill information detailing the average price and quantity filled for each leg. If any of the fills fails, none of the orders will be filled and the returned list will be empty</returns>
         public virtual List<OrderEvent> ComboMarketFill(ComboMarketOrder order)
         {
-            // if this was called, we are ready to fill the combo order and event the current one should be in the pending orders table
-            var fills = _pendingGroupedOrdersByManagerId[order.GroupOrderManager.Id]
-                .Select(x => InternalMarketFill(x.Security, x.Order, x.Order.Quantity * order.GroupOrderManager.Quantity))
-                .ToList();
+            var pendingOrdersParameters = _pendingGroupedOrdersByManagerId[order.GroupOrderManager.Id];
+            var fills = new List<OrderEvent>(pendingOrdersParameters.Count);
 
-            for (var i = 0; i < fills.Count; i++)
+            foreach (var parameters in pendingOrdersParameters)
             {
-                if (fills[i].Status != OrderStatus.Filled)
+                var fill = InternalMarketFill(parameters.Security, parameters.Order, parameters.Order.Quantity * order.GroupOrderManager.Quantity);
+                if (fill.Status != OrderStatus.Filled)
                 {
                     return new List<OrderEvent>();
                 }
+
+                fills.Add(fill);
             }
 
             return fills;
@@ -276,15 +277,22 @@ namespace QuantConnect.Orders.Fills
         /// <returns>Order fill information detailing the average price and quantity filled for each leg. If any of the fills fails, none of the orders will be filled and the returned list will be empty</returns>
         public virtual List<OrderEvent> ComboLegLimitFill(ComboLegLimitOrder order)
         {
-            var fills = _pendingGroupedOrdersByManagerId[order.GroupOrderManager.Id].Select(x =>
-                InternalLimitFill(x.Security, x.Order, (x.Order as ComboLegLimitOrder).LimitPrice, x.Order.Quantity * order.GroupOrderManager.Quantity));
+            var pendingOrdersParameters = _pendingGroupedOrdersByManagerId[order.GroupOrderManager.Id];
+            var fills = new List<OrderEvent>(pendingOrdersParameters.Count);
 
-            if (fills.Any(x => x.Status != OrderStatus.Filled))
+            foreach (var parameters in pendingOrdersParameters)
             {
-                return new List<OrderEvent>();
+                var fill = InternalLimitFill(parameters.Security, parameters.Order, (parameters.Order as ComboLegLimitOrder).LimitPrice,
+                    parameters.Order.Quantity * order.GroupOrderManager.Quantity);
+                if (fill.Status != OrderStatus.Filled)
+                {
+                    return new List<OrderEvent>();
+                }
+
+                fills.Add(fill);
             }
 
-            return fills.ToList();
+            return fills;
         }
 
         /// <summary>

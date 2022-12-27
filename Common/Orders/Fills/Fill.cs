@@ -22,8 +22,13 @@ namespace QuantConnect.Orders.Fills
     /// <summary>
     /// Defines a possible result for <see cref="IFillModel.Fill"/> for a single order
     /// </summary>
-    public partial class Fill : IEnumerable<OrderEvent>
+    public class Fill : IEnumerable<OrderEvent>
     {
+        /// <summary>
+        /// Empty fill instance to represent a failed or invalid fill
+        /// </summary>
+        public static readonly Fill Empty = new(Enumerable.Empty<OrderEvent>());
+
         private readonly List<OrderEvent> _orderEvents = new();
 
         /// <summary>
@@ -55,7 +60,5 @@ namespace QuantConnect.Orders.Fills
         {
             return GetEnumerator();
         }
-
-        public static readonly Fill Empty = new(Enumerable.Empty<OrderEvent>());
     }
 }

@@ -118,7 +118,7 @@ namespace QuantConnect.Orders
         /// <param name="time">The time this request was created</param>
         /// <param name="tag">A custom tag for this request</param>
         /// <param name="properties">The order properties for this request</param>
-        /// <param name="groupOrderManager"></param>
+        /// <param name="groupOrderManager">The manager for this combo order</param>
         public SubmitOrderRequest(
             OrderType orderType,
             SecurityType securityType,
@@ -158,7 +158,7 @@ namespace QuantConnect.Orders
         /// <param name="time">The time this request was created</param>
         /// <param name="tag">A custom tag for this request</param>
         /// <param name="properties">The order properties for this request</param>
-        /// <param name="groupOrderManager"></param>
+        /// <param name="groupOrderManager">The manager for this combo order</param>
         public SubmitOrderRequest(
             OrderType orderType,
             SecurityType securityType,

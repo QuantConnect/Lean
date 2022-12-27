@@ -37,6 +37,14 @@ namespace QuantConnect.Algorithm.CSharp
 
         protected int ComboOrderQuantity { get; } = 10;
 
+        protected virtual int ExpectedFillCount
+        {
+            get
+            {
+                return OrderLegs.Count;
+            }
+        }
+
         public override void Initialize()
         {
             SetStartDate(2015, 12, 24);
@@ -99,9 +107,9 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception("Combo order legs were not initialized");
             }
 
-            if (FillOrderEvents.Count != OrderLegs.Count)
+            if (FillOrderEvents.Count != ExpectedFillCount)
             {
-                throw new Exception($"Expected {OrderLegs.Count} fill order events, found {FillOrderEvents.Count}");
+                throw new Exception($"Expected {ExpectedFillCount} fill order events, found {FillOrderEvents.Count}");
             }
 
             var fillTimes = FillOrderEvents.Select(x => x.UtcTime).ToHashSet();
