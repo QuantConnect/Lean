@@ -502,7 +502,7 @@ namespace QuantConnect.Tests.Brokerages
                 return;
             }
 
-            var filledResetEvent = new ManualResetEvent(false);
+            using var filledResetEvent = new ManualResetEvent(false);
             EventHandler<OrderEvent> brokerageOnOrderStatusChanged = (sender, args) =>
             {
                 order.Status = args.Status;
@@ -516,7 +516,11 @@ namespace QuantConnect.Tests.Brokerages
                     Assert.Fail("Unexpected order status: " + args.Status);
                 }
             };
+            EventHandler<BrokerageOrderIdChangedEvent> brokerageOrderIdChanged = (sender, args) => {
+                order.BrokerId = args.BrokerId;
+            };
 
+            Brokerage.OrderIdChanged += brokerageOrderIdChanged;
             Brokerage.OrderStatusChanged += brokerageOnOrderStatusChanged;
 
             Log.Trace("");
@@ -550,6 +554,7 @@ namespace QuantConnect.Tests.Brokerages
                 }
             }
 
+            Brokerage.OrderIdChanged -= brokerageOrderIdChanged;
             Brokerage.OrderStatusChanged -= brokerageOnOrderStatusChanged;
         }
 
@@ -586,7 +591,11 @@ namespace QuantConnect.Tests.Brokerages
                     desiredStatusEvent.Set();
                 }
             };
+            EventHandler<BrokerageOrderIdChangedEvent> brokerageOrderIdChanged = (sender, args) => {
+                order.BrokerId = args.BrokerId;
+            };
 
+            Brokerage.OrderIdChanged += brokerageOrderIdChanged;
             Brokerage.OrderStatusChanged += brokerageOnOrderStatusChanged;
 
             OrderProvider.Add(order);
@@ -609,6 +618,7 @@ namespace QuantConnect.Tests.Brokerages
                 requiredStatusEvent.WaitOne((int)(1000 * secondsTimeout));
             }
 
+            Brokerage.OrderIdChanged -= brokerageOrderIdChanged;
             Brokerage.OrderStatusChanged -= brokerageOnOrderStatusChanged;
 
             return order;

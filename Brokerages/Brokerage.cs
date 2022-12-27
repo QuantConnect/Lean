@@ -40,6 +40,11 @@ namespace QuantConnect.Brokerages
         private long _lastSyncTimeTicks = DateTime.UtcNow.Ticks;
 
         /// <summary>
+        /// Event that fires each time the brokerage order id changes
+        /// </summary>
+        public event EventHandler<BrokerageOrderIdChangedEvent> OrderIdChanged;
+
+        /// <summary>
         /// Event that fires each time an order is filled
         /// </summary>
         public event EventHandler<OrderEvent> OrderStatusChanged;
@@ -136,6 +141,22 @@ namespace QuantConnect.Brokerages
             try
             {
                 OrderStatusChanged?.Invoke(this, e);
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+        }
+
+        /// <summary>
+        /// Event invocator for the OrderIdChanged event
+        /// </summary>
+        /// <param name="e">The BrokerageOrderIdChangedEvent</param>
+        protected virtual void OnOrderIdChangedEvent(BrokerageOrderIdChangedEvent e)
+        {
+            try
+            {
+                OrderIdChanged?.Invoke(this, e);
             }
             catch (Exception err)
             {
