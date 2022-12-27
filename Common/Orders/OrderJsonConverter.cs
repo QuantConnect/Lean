@@ -336,6 +336,11 @@ namespace QuantConnect.Orders
         {
             var groupOrderManagerJObject = jObject["GroupOrderManager"];
 
+            if (groupOrderManagerJObject == null)
+            {
+                return null;
+            }
+
             return new GroupOrderManager(
                 groupOrderManagerJObject["Id"].Value<int>(),
                 groupOrderManagerJObject["Count"].Value<int>(),
