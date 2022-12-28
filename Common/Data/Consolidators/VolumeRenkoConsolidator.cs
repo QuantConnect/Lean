@@ -33,49 +33,37 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Time of consolidated close.
         /// </summary>
-        /// <remarks>Protected for testing</remarks>
-        protected DateTime CloseOn;
+        private DateTime CloseOn;
 
         /// <summary>
         /// Value of consolidated close.
         /// </summary>
-        /// <remarks>Protected for testing</remarks>
-        protected decimal CloseRate;
+        private decimal CloseRate;
 
         /// <summary>
         /// Value of consolidated high.
         /// </summary>
-        /// <remarks>Protected for testing</remarks>
-        protected decimal HighRate;
+        private decimal HighRate;
 
         /// <summary>
         /// Value of consolidated low.
         /// </summary>
-        /// <remarks>Protected for testing</remarks>
-        protected decimal LowRate;
+        private decimal LowRate;
 
         /// <summary>
         /// Time of consolidated open.
         /// </summary>
-        /// <remarks>Protected for testing</remarks>
-        protected DateTime OpenOn;
+        private DateTime OpenOn;
 
         /// <summary>
         /// Value of consolidate open.
         /// </summary>
-        /// <remarks>Protected for testing</remarks>
-        protected decimal OpenRate;
+        private decimal OpenRate;
 
         /// <summary>
         /// Size of the consolidated bar.
         /// </summary>
-        /// <remarks>Protected for testing</remarks>
-        protected decimal BarSize;
-
-        /// <summary>
-        /// Gets the kind of the bar
-        /// </summary>
-        public RenkoType Type => RenkoType.Wicked;
+        private decimal BarSize;
 
         /// <summary>
         /// Gets a clone of the data being currently consolidated
@@ -133,44 +121,9 @@ namespace QuantConnect.Data.Consolidators
         {
             var rate = data.Price;
             var volume = _volumeLeftOver;
+            var dataType = data.GetType();
 
-            if (data.GetType() == typeof(QuoteBar))
-            {
-                throw new ArgumentException("VolumeRenkoConsolidator() must be used with TradeBar or Tick data.");
-            }
-            else if (data.GetType() == typeof(Tick))
-            {
-                volume += ((Tick)data).Quantity;
-
-                if (_firstTick)
-                {
-                    _firstTick = false;
-
-                    OpenOn = data.Time;
-                    CloseOn = data.Time;
-                    OpenRate = rate;
-                    HighRate = rate;
-                    LowRate = rate;
-                    CloseRate = rate;
-                }
-                else
-                {
-                    CloseOn = data.Time;
-
-                    if (rate > HighRate)
-                    {
-                        HighRate = rate;
-                    }
-
-                    if (rate < LowRate)
-                    {
-                        LowRate = rate;
-                    }
-
-                    CloseRate = rate;
-                }
-            }
-            else if (data.GetType() == typeof(TradeBar))
+            if (dataType == typeof(TradeBar))
             {
                 volume += ((TradeBar)data).Volume;
                 var open = ((TradeBar)data).Open;
@@ -205,6 +158,48 @@ namespace QuantConnect.Data.Consolidators
 
                     CloseRate = close;
                 }
+            }
+            else if (dataType == typeof(Tick))
+            {
+                // Only include actual trade information
+                if (((Tick)data).TickType != TickType.Trade)
+                {
+                    return;
+                }
+
+                volume += ((Tick)data).Quantity;
+
+                if (_firstTick)
+                {
+                    _firstTick = false;
+
+                    OpenOn = data.Time;
+                    CloseOn = data.Time;
+                    OpenRate = rate;
+                    HighRate = rate;
+                    LowRate = rate;
+                    CloseRate = rate;
+                }
+                else
+                {
+                    CloseOn = data.Time;
+
+                    if (rate > HighRate)
+                    {
+                        HighRate = rate;
+                    }
+
+                    if (rate < LowRate)
+                    {
+                        LowRate = rate;
+                    }
+
+                    CloseRate = rate;
+                }
+            }
+            else
+            {
+                throw new ArgumentException("VolumeRenkoConsolidator() must be used with TradeBar or Tick data.");
             }
 
             _volumeLeftOver = Next(data, volume);
@@ -255,35 +250,6 @@ namespace QuantConnect.Data.Consolidators
             }
 
             return volume;
-        }
-    }
-
-    /// <summary>
-    /// Provides a type safe wrapper on the RenkoConsolidator class. This just allows us to define our selector functions with the real type they'll be receiving
-    /// </summary>
-    /// <typeparam name="TInput"></typeparam>
-    public class VolumeRenkoConsolidator<TInput> : VolumeRenkoConsolidator
-        where TInput : IBaseData
-    {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="VolumeRenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
-        /// </summary>
-        /// <param name="barSize">The constant volume size of each bar</param>
-        public VolumeRenkoConsolidator(decimal barSize)
-            : base(barSize)
-        {
-        }
-
-        /// <summary>
-        /// Updates this consolidator with the specified data.
-        /// </summary>
-        /// <remarks>
-        /// Type safe shim method.
-        /// </remarks>
-        /// <param name="data">The new data for the consolidator</param>
-        public void Update(TInput data)
-        {
-            base.Update(data);
         }
     }
 }

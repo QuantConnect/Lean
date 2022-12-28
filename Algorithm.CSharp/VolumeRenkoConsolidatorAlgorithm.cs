@@ -14,7 +14,10 @@
 */
 
 using System.Collections.Generic;
+using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
+using QuantConnect.Data.Market;
+using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -27,22 +30,61 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="consolidating data" />
     public class VolumeRenkoConsolidatorAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _spy;
-        private VolumeRenkoConsolidator _consolidator;
+        private Symbol _spy, _ibm;
+        private VolumeRenkoConsolidator _tradebarVolumeConsolidator, _tickVolumeConsolidator;
+        private SimpleMovingAverage _sma = new SimpleMovingAverage(10);
         
         public override void Initialize()
         {
-            SetStartDate(2020, 6, 1);
-            SetEndDate(2020, 8, 1);
+            SetStartDate(2013, 10, 7);
+            SetEndDate(2014, 10, 11);
             SetCash(100000);
             
-            // Requesting data
             _spy = AddEquity("SPY", Resolution.Minute).Symbol;
-            _consolidator = new VolumeRenkoConsolidator(1000000);
-            _consolidator.DataConsolidated += (sender, bar) => {
-                Log($"{bar.Time} to {bar.EndTime} :: O:{bar.Open} H:{bar.High} L:{bar.Low} C:{bar.Close} V:{bar.Volume}");
+            _tradebarVolumeConsolidator = new VolumeRenkoConsolidator(1000000);
+            _tradebarVolumeConsolidator.DataConsolidated += (sender, bar) => {
+                _sma.Update(bar.EndTime, bar.Value);
+                Log($"SPY {bar.Time} to {bar.EndTime} :: O:{bar.Open} H:{bar.High} L:{bar.Low} C:{bar.Close} V:{bar.Volume}");
             };
-            SubscriptionManager.AddConsolidator("SPY", _consolidator);
+            
+            _ibm = AddEquity("IBM", Resolution.Tick).Symbol;
+            _tickVolumeConsolidator = new VolumeRenkoConsolidator(1000000);
+            _tickVolumeConsolidator.DataConsolidated += (sender, bar) => {
+                Log($"IBM {bar.Time} to {bar.EndTime} :: O:{bar.Open} H:{bar.High} L:{bar.Low} C:{bar.Close} V:{bar.Volume}");
+            };
+
+            var history = History<TradeBar>(new[] {_spy}, 1000, Resolution.Minute);
+            foreach (var slice in history)
+            {
+                _tradebarVolumeConsolidator.Update(slice[_spy]);
+            }
+        }
+
+        public override void OnData(Slice slice)
+        {
+            // Update by TradeBar
+            if (slice.Bars.ContainsKey(_spy))
+            {
+                _tradebarVolumeConsolidator.Update(slice.Bars[_spy]);
+            }
+
+            // Update by Tick
+            if (slice.Ticks.ContainsKey(_ibm))
+            {
+                foreach (var tick in slice.Ticks[_ibm])
+                {
+                    _tickVolumeConsolidator.Update(tick);
+                }
+            }
+
+            if (_sma.IsReady && _sma.Current.Value < Securities[_spy].Price)
+            {
+                SetHoldings(_spy, 1m);
+            }
+            else
+            {
+                SetHoldings(_spy, 0m);
+            }
         }
 
         /// <summary>
@@ -58,46 +100,46 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 317;
+        public long DataPoints => 895162;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public int AlgorithmHistoryDataPoints => 390;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "0"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
+            {"Total Trades", "227"},
+            {"Average Win", "0.25%"},
+            {"Average Loss", "-0.05%"},
+            {"Compounding Annual Return", "-0.833%"},
+            {"Drawdown", "2.800%"},
+            {"Expectancy", "-0.191"},
+            {"Net Profit", "-0.841%"},
+            {"Sharpe Ratio", "-0.129"},
+            {"Probabilistic Sharpe Ratio", "9.022%"},
+            {"Loss Rate", "87%"},
+            {"Win Rate", "13%"},
+            {"Profit-Loss Ratio", "5.15"},
+            {"Alpha", "-0.008"},
+            {"Beta", "0.05"},
+            {"Annual Standard Deviation", "0.021"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-1.959"},
-            {"Tracking Error", "0.189"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Fitness Score", "0"},
+            {"Information Ratio", "-1.311"},
+            {"Tracking Error", "0.087"},
+            {"Treynor Ratio", "-0.055"},
+            {"Total Fees", "$767.26"},
+            {"Estimated Strategy Capacity", "$4300000.00"},
+            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
+            {"Fitness Score", "0.412"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
-            {"Portfolio Turnover", "0"},
+            {"Sortino Ratio", "-0.111"},
+            {"Return Over Maximum Drawdown", "-0.3"},
+            {"Portfolio Turnover", "0.881"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -111,7 +153,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
+            {"OrderListHash", "df05ecec41d8973c2ad3d85e015e652a"}
         };
     }
 }

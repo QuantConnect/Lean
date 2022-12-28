@@ -22,13 +22,40 @@ from AlgorithmImports import *
 class VolumeRenkoConsolidatorAlgorithm(QCAlgorithm):
     
     def Initialize(self):
-        self.SetStartDate(2020, 6, 1)
-        self.SetEndDate(2020, 8, 1)
+        self.SetStartDate(2013, 10, 7)
+        self.SetEndDate(2014, 10, 11)
         self.SetCash(100000)
         
-        # Requesting data
+        self.sma = SimpleMovingAverage(10)
+        
         self.spy = self.AddEquity("SPY", Resolution.Minute).Symbol
-        self.consolidator = VolumeRenkoConsolidator(1000000)
-        self.consolidator.DataConsolidated += \
-            lambda sender, bar: self.Log(f"{bar.Time} to {bar.EndTime} :: O:{bar.Open} H:{bar.High} L:{bar.Low} C:{bar.Close} V:{bar.Volume}")
-        self.SubscriptionManager.AddConsolidator("SPY", self.consolidator)
+        self.tradebar_volume_consolidator = VolumeRenkoConsolidator(1000000)
+        self.tradebar_volume_consolidator.DataConsolidated += self.OnDataConsolidated
+        
+        self.ibm = self.AddEquity("IBM", Resolution.Tick).Symbol
+        self.tick_volume_consolidator = VolumeRenkoConsolidator(1000000)
+        self.tick_volume_consolidator.DataConsolidated += \
+            lambda sender, bar: self.Log(f"IBM {bar.Time} to {bar.EndTime} :: O:{bar.Open} H:{bar.High} L:{bar.Low} C:{bar.Close} V:{bar.Volume}")
+        
+        history = self.History[TradeBar](self.spy, 1000, Resolution.Minute);
+        for bar in history:
+            self.tradebar_volume_consolidator.Update(bar)
+        
+    def OnDataConsolidated(self, sender, bar):
+        self.sma.Update(bar.EndTime, bar.Value)
+        self.Log(f"SPY {bar.Time} to {bar.EndTime} :: O:{bar.Open} H:{bar.High} L:{bar.Low} C:{bar.Close} V:{bar.Volume}")
+        
+    def OnData(self, slice):
+        # Update by TradeBar
+        if slice.Bars.ContainsKey(self.spy):
+            self.tradebar_volume_consolidator.Update(slice.Bars[self.spy])
+
+        # Update by Tick
+        if slice.Ticks.ContainsKey(self.ibm):
+            for tick in slice.Ticks[self.ibm]:
+                self.tick_volume_consolidator.Update(tick)
+            
+        if self.sma.IsReady and self.sma.Current.Value < self.Securities[self.spy].Price:
+            self.SetHoldings(self.spy, 1)
+        else:
+            self.SetHoldings(self.spy, 0)
