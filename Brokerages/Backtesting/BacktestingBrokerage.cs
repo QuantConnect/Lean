@@ -599,17 +599,15 @@ namespace QuantConnect.Brokerages.Backtesting
 
         private void RemoveOrders(List<Order> orders, OrderStatus orderStatus, string message = "")
         {
+            var orderEvents = new List<OrderEvent>(orders.Count);
             for (var i = 0; i < orders.Count; i++)
             {
-                RemoveOrder(orders[i], orderStatus, message);
+                var order = orders[i];
+                orderEvents.Add(new OrderEvent(order, Algorithm.UtcTime, OrderFee.Zero, message) { Status = orderStatus });
+                _pending.TryRemove(order.Id, out var _);
             }
-        }
 
-        private void RemoveOrder(Order order, OrderStatus orderStatus, string message = "")
-        {
-            OnOrderEvent(new OrderEvent(order, Algorithm.UtcTime, OrderFee.Zero, message) { Status = orderStatus });
-
-            _pending.TryRemove(order.Id, out var _);
+            OnOrderEvents(orderEvents);
         }
 
         private bool TryOrderPreChecks(Dictionary<Order, Security> ordersSecurities, out bool stillNeedsScan)
