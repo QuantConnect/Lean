@@ -419,7 +419,7 @@ namespace QuantConnect.Securities
                             // when we buy or sell a futures options contract.
                             if (securityType != SecurityType.Forex && securityType != SecurityType.Crypto &&
                                 securityType != SecurityType.Future && securityType != SecurityType.Cfd &&
-                                securityType == SecurityType.CryptoFuture)
+                                securityType != SecurityType.CryptoFuture)
                             {
                                 totalHoldingsValueWithoutForexCryptoFutureCfd += position.Holdings.HoldingsValue;
                             }

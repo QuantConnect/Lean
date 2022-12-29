@@ -133,9 +133,23 @@ namespace QuantConnect.Securities
             var submit = request as SubmitOrderRequest;
             if (submit != null)
             {
-                submit.SetOrderId(GetIncrementOrderId());
+                SetOrderId(submit);
             }
             return _orderProcessor.Process(request);
+        }
+
+        /// <summary>
+        /// Sets the order id for the specified submit request
+        /// </summary>
+        /// <param name="request">Request to set the order id for</param>
+        /// <remarks>This method is public so we can request an order id from outside the assembly, for testing for example</remarks>
+        public void SetOrderId(SubmitOrderRequest request)
+        {
+            // avoid setting the order id if it's already been set
+            if (request.OrderId < 1)
+            {
+                request.SetOrderId(GetIncrementOrderId());
+            }
         }
 
         /// <summary>
