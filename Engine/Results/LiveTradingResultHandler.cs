@@ -276,7 +276,7 @@ namespace QuantConnect.Lean.Engine.Results
                                 _job.AlgorithmId,
                                 Algorithm.Portfolio.TotalUnrealizedProfit,
                                 Algorithm.Portfolio.TotalFees,
-                                Algorithm.Portfolio.TotalProfit,
+                                Algorithm.Portfolio.TotalNetProfit,
                                 Algorithm.Portfolio.TotalHoldingsValue,
                                 Algorithm.Portfolio.TotalPortfolioValue,
                                 GetNetReturn(),
