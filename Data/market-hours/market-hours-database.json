@@ -1125,12 +1125,22 @@
       "exchangeTimeZone": "America/Chicago",
       "monday": [
         {
+          "start": "06:00:00",
+          "end": "09:00:00",
+          "state": "premarket"
+        },
+        {
           "start": "09:00:00",
           "end": "15:05:00",
           "state": "market"
         }
       ],
       "tuesday": [
+        {
+          "start": "06:00:00",
+          "end": "09:00:00",
+          "state": "premarket"
+        },
         {
           "start": "09:00:00",
           "end": "15:05:00",
@@ -1139,6 +1149,11 @@
       ],
       "wednesday": [
         {
+          "start": "06:00:00",
+          "end": "09:00:00",
+          "state": "premarket"
+        },
+        {
           "start": "09:00:00",
           "end": "15:05:00",
           "state": "market"
@@ -1146,12 +1161,22 @@
       ],
       "thursday": [
         {
+          "start": "06:00:00",
+          "end": "09:00:00",
+          "state": "premarket"
+        },
+        {
           "start": "09:00:00",
           "end": "15:05:00",
           "state": "market"
         }
       ],
       "friday": [
+        {
+          "start": "06:00:00",
+          "end": "09:00:00",
+          "state": "premarket"
+        },
         {
           "start": "09:00:00",
           "end": "15:05:00",
