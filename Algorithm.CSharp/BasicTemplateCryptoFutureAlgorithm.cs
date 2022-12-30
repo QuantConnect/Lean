@@ -114,7 +114,7 @@ namespace QuantConnect.Algorithm.CSharp
                         throw new Exception($"Unexpected holdings cost {btcUsdHoldings.HoldingsCost}");
                     }
                     // margin used is based on the maintenance rate
-                    if (Math.Abs(btcUsdHoldings.AbsoluteHoldingsCost * 0.1m - marginUsed) > 1
+                    if (Math.Abs(btcUsdHoldings.AbsoluteHoldingsCost * 0.05m - marginUsed) > 1
                         || _btcUsd.BuyingPowerModel.GetMaintenanceMargin(_btcUsd) != marginUsed)
                     {
                         throw new Exception($"Unexpected margin used {marginUsed}");
@@ -136,7 +136,7 @@ namespace QuantConnect.Algorithm.CSharp
                     {
                         throw new Exception($"Unexpected holdings cost {adaUsdtHoldings.HoldingsCost}");
                     }
-                    if (Math.Abs(adaUsdtHoldings.AbsoluteHoldingsCost * 0.1m - marginUsed) > 1
+                    if (Math.Abs(adaUsdtHoldings.AbsoluteHoldingsCost * 0.05m - marginUsed) > 1
                         || _adaUsdt.BuyingPowerModel.GetMaintenanceMargin(_adaUsdt) != marginUsed)
                     {
                         throw new Exception($"Unexpected margin used {marginUsed}");
@@ -276,7 +276,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$2.93"},
-            {"Estimated Strategy Capacity", "$280000000.00"},
+            {"Estimated Strategy Capacity", "$550000000.00"},
             {"Lowest Capacity Asset", "ADAUSDT 18R"},
             {"Fitness Score", "0.002"},
             {"Kelly Criterion Estimate", "0"},
