@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,9 +14,9 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Securities;
+using System.Collections.Generic;
 
 namespace QuantConnect.Brokerages
 {
@@ -30,8 +30,8 @@ namespace QuantConnect.Brokerages
         // map Lean symbols to symbol properties
         private readonly Dictionary<Symbol, SymbolProperties> _symbolPropertiesMap;
 
-        // map brokerage symbols to Lean symbols
-        private readonly Dictionary<string, Symbol> _symbolMap;
+        // map brokerage symbols to Lean symbols we do it per security type because they could overlap, for example binance futures and spot
+        private readonly Dictionary<SecurityType, Dictionary<string, Symbol>> _symbolMap;
 
         /// <summary>
         /// Creates a new instance of the <see cref="SymbolPropertiesDatabaseSymbolMapper"/> class.
@@ -54,11 +54,13 @@ namespace QuantConnect.Brokerages
                         x => Symbol.Create(x.Key.Symbol, x.Key.SecurityType, x.Key.Market),
                         x => x.Value);
 
-            _symbolMap =
-                _symbolPropertiesMap
-                    .ToDictionary(
-                        x => x.Value.MarketTicker,
-                        x => x.Key);
+            _symbolMap = new();
+            foreach (var group in _symbolPropertiesMap.GroupBy(x => x.Key.SecurityType))
+            {
+                _symbolMap[group.Key] = group.ToDictionary(
+                            x => x.Value.MarketTicker,
+                            x => x.Key);
+            }
         }
 
         /// <summary>
@@ -114,15 +116,14 @@ namespace QuantConnect.Brokerages
                 throw new ArgumentException($"Invalid market: {market}");
             }
 
-            Symbol symbol;
-            if (!_symbolMap.TryGetValue(brokerageSymbol, out symbol))
+            if (!_symbolMap.TryGetValue(securityType, out var symbols))
             {
-                throw new ArgumentException($"Unknown brokerage symbol: {brokerageSymbol}");
+                throw new ArgumentException($"Unknown brokerage security type: {securityType}");
             }
 
-            if (symbol.SecurityType != securityType)
+            if (!symbols.TryGetValue(brokerageSymbol, out var symbol))
             {
-                throw new ArgumentException($"Invalid security type: {symbol.SecurityType}");
+                throw new ArgumentException($"Unknown brokerage symbol: {brokerageSymbol}");
             }
 
             return symbol;
@@ -150,13 +151,22 @@ namespace QuantConnect.Brokerages
                 throw new ArgumentException($"Invalid brokerage symbol: {brokerageSymbol}");
             }
 
-            Symbol symbol;
-            if (!_symbolMap.TryGetValue(brokerageSymbol, out symbol))
+            var result = _symbolMap.Select(kvp =>
+            {
+                kvp.Value.TryGetValue(brokerageSymbol, out var symbol);
+                return symbol;
+            }).Where(symbol => symbol != null).ToList();
+
+            if (result.Count == 0)
             {
                 throw new ArgumentException($"Unknown brokerage symbol: {brokerageSymbol}");
             }
+            if (result.Count > 1)
+            {
+                throw new ArgumentException($"Found multiple brokerage symbols: {string.Join(",", result)}");
+            }
 
-            return symbol.SecurityType;
+            return result[0].SecurityType;
         }
 
         /// <summary>
@@ -171,7 +181,7 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            return _symbolMap.ContainsKey(brokerageSymbol);
+            return _symbolMap.Any(kvp => kvp.Value.ContainsKey(brokerageSymbol));
         }
     }
 }

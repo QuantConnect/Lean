@@ -251,6 +251,15 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets or sets the margin interest rate model
+        /// </summary>
+        public IMarginInterestRateModel MarginInterestRateModel
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets the settlement model used for this security
         /// </summary>
         public ISettlementModel SettlementModel
@@ -328,7 +337,8 @@ namespace QuantConnect.Securities
                 new SecurityDataFilter(),
                 new SecurityPriceVariationModel(),
                 currencyConverter,
-                registeredTypesProvider
+                registeredTypesProvider,
+                Securities.MarginInterestRateModel.Null
                 )
         {
         }
@@ -359,7 +369,8 @@ namespace QuantConnect.Securities
                 new SecurityDataFilter(),
                 new SecurityPriceVariationModel(),
                 currencyConverter,
-                registeredTypesProvider
+                registeredTypesProvider,
+                Securities.MarginInterestRateModel.Null
                 )
         {
         }
@@ -382,7 +393,8 @@ namespace QuantConnect.Securities
             ISecurityDataFilter dataFilter,
             IPriceVariationModel priceVariationModel,
             ICurrencyConverter currencyConverter,
-            IRegisteredSecurityDataTypesProvider registeredTypesProvider
+            IRegisteredSecurityDataTypesProvider registeredTypesProvider,
+            IMarginInterestRateModel marginInterestRateModel
             )
         {
             if (symbolProperties == null)
@@ -411,6 +423,7 @@ namespace QuantConnect.Securities
             SlippageModel = slippageModel;
             SettlementModel = settlementModel;
             VolatilityModel = volatilityModel;
+            MarginInterestRateModel = marginInterestRateModel;
             Holdings = new SecurityHolding(this, currencyConverter);
             Data = new DynamicSecurityData(registeredTypesProvider, Cache);
 
@@ -436,7 +449,8 @@ namespace QuantConnect.Securities
             ISecurityDataFilter dataFilter,
             IPriceVariationModel priceVariationModel,
             ICurrencyConverter currencyConverter,
-            IRegisteredSecurityDataTypesProvider registeredTypesProvider
+            IRegisteredSecurityDataTypesProvider registeredTypesProvider,
+            IMarginInterestRateModel marginInterestRateModel
             )
             : this(config.Symbol,
                 quoteCurrency,
@@ -453,7 +467,8 @@ namespace QuantConnect.Securities
                 dataFilter,
                 priceVariationModel,
                 currencyConverter,
-                registeredTypesProvider
+                registeredTypesProvider,
+                marginInterestRateModel
                 )
         {
             _subscriptionsBag.Add(config);

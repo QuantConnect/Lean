@@ -107,6 +107,7 @@ namespace QuantConnect.Tests.Common.Orders
             var forex = new Forex(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 gbpCash,
+                new Cash("EUR", 0, 0),
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.EURGBP, Resolution.Minute, tz, tz, true, false, false),
                 properties,
                 ErrorCurrencyConverter.Instance,

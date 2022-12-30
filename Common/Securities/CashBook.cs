@@ -92,10 +92,12 @@ namespace QuantConnect.Securities
         /// <param name="quantity">The amount of new cash to start</param>
         /// <param name="conversionRate">The conversion rate used to determine the initial
         /// portfolio value/starting capital impact caused by this currency position.</param>
-        public void Add(string symbol, decimal quantity, decimal conversionRate)
+        /// <returns>The added cash instance</returns>
+        public Cash Add(string symbol, decimal quantity, decimal conversionRate)
         {
             var cash = new Cash(symbol, quantity, conversionRate);
-            Add(symbol, cash);
+            // let's return the cash instance we are using
+            return AddIternal(symbol, cash);
         }
 
         /// <summary>
@@ -242,19 +244,7 @@ namespace QuantConnect.Securities
         /// <param name="value">Value.</param>
         public void Add(string symbol, Cash value)
         {
-            if (symbol == Currencies.NullCurrency)
-            {
-                return;
-            }
-            // we link our Updated event with underlying cash instances
-            // so interested listeners just subscribe to our event
-            value.Updated += OnCashUpdate;
-
-            var alreadyExisted = Remove(symbol, calledInternally: true);
-
-            _currencies.AddOrUpdate(symbol, value);
-
-            OnUpdate(alreadyExisted ? UpdateType.Updated : UpdateType.Added);
+            AddIternal(symbol, value);
         }
 
         /// <summary>
@@ -398,6 +388,35 @@ namespace QuantConnect.Securities
         }
 
         #endregion
+
+        private Cash AddIternal(string symbol, Cash value)
+        {
+            if (symbol == Currencies.NullCurrency)
+            {
+                return null;
+            }
+
+            if (!_currencies.TryGetValue(symbol, out var cash))
+            {
+                // we link our Updated event with underlying cash instances
+                // so interested listeners just subscribe to our event
+                value.Updated += OnCashUpdate;
+                _currencies.AddOrUpdate(symbol, value);
+
+                OnUpdate(UpdateType.Added);
+
+                return value;
+            }
+            else
+            {
+                // override the values, it will trigger an update event already
+                // we keep the instance because it might be used by securities already
+                cash.ConversionRate = value.ConversionRate;
+                cash.SetAmount(value.Amount);
+
+                return cash;
+            }
+        }
 
         private bool Remove(string symbol, bool calledInternally)
         {

@@ -14,10 +14,10 @@
 */
 
 using System;
-using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using static QuantConnect.StringExtensions;
+using QuantConnect.Algorithm.Framework.Portfolio;
 
 namespace QuantConnect.Securities
 {
@@ -168,7 +168,7 @@ namespace QuantConnect.Securities
                 {
                     return 0;
                 }
-                return AveragePrice * Quantity * _security.QuoteCurrency.ConversionRate * _security.SymbolProperties.ContractMultiplier;
+                return GetQuantityValue(Quantity, AveragePrice).InAccountCurrency;
             }
         }
 
@@ -230,7 +230,7 @@ namespace QuantConnect.Securities
                     return 0;
                 }
 
-                return GetQuantityValue(Quantity);
+                return GetQuantityValue(Quantity).InAccountCurrency;
             }
         }
 
@@ -445,7 +445,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="quantity">The quantity of shares</param>
         /// <returns>The value of the quantity of shares in the account currency</returns>
-        public virtual decimal GetQuantityValue(decimal quantity)
+        public virtual ConvertibleCashAmount GetQuantityValue(decimal quantity)
         {
             return GetQuantityValue(quantity, _price);
         }
@@ -457,9 +457,10 @@ namespace QuantConnect.Securities
         /// <param name="quantity">The quantity of shares</param>
         /// <param name="price">The current price</param>
         /// <returns>The value of the quantity of shares in the account currency</returns>
-        public virtual decimal GetQuantityValue(decimal quantity, decimal price)
+        public virtual ConvertibleCashAmount GetQuantityValue(decimal quantity, decimal price)
         {
-            return price * quantity * _security.QuoteCurrency.ConversionRate * _security.SymbolProperties.ContractMultiplier;
+            var amount = price * quantity * _security.SymbolProperties.ContractMultiplier;
+            return new ConvertibleCashAmount(amount, _security.QuoteCurrency);
         }
 
         /// <summary>
@@ -489,8 +490,9 @@ namespace QuantConnect.Securities
                 price = _security.Price;
             }
 
-            return (price - AveragePrice) * Quantity * _security.QuoteCurrency.ConversionRate
-                * _security.SymbolProperties.ContractMultiplier - feesInAccountCurrency;
+            var entryValue = GetQuantityValue(Quantity, AveragePrice).InAccountCurrency;
+            var potentialExitValue = GetQuantityValue(Quantity, price).InAccountCurrency;
+            return potentialExitValue - entryValue - feesInAccountCurrency;
         }
 
         /// <summary>

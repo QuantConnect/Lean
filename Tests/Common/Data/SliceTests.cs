@@ -44,8 +44,9 @@ namespace QuantConnect.Tests.Common.Data
             var openInterest = new OpenInterest(now, Symbols.SPY, 1);
             var split = new Split(Symbols.SPY, now, 1, 1, SplitType.SplitOccurred);
             var delisting = new Delisting(Symbols.SPY, now, 1, DelistingType.Delisted);
+            var marginInterest = new MarginInterestRate { Symbol = Symbols.SPY, Time = now, InterestRate = 0.08m };
 
-            var slice = new Slice(now, new BaseData[] { quoteBar, tradeBar, unlinkedData, tick, split, delisting, openInterest }, now);
+            var slice = new Slice(now, new BaseData[] { quoteBar, tradeBar, unlinkedData, tick, split, delisting, openInterest, marginInterest }, now);
 
             Assert.AreEqual(slice.Get(typeof(TradeBar))[Symbols.SPY], tradeBar);
             Assert.AreEqual(slice.Get(typeof(UnlinkedData))[Symbols.SPY], unlinkedData);
@@ -54,6 +55,7 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(slice.Get(typeof(Split))[Symbols.SPY], split);
             Assert.AreEqual(slice.Get(typeof(Delisting))[Symbols.SPY], delisting);
             Assert.AreEqual(slice.Get(typeof(OpenInterest))[Symbols.SPY], openInterest);
+            Assert.AreEqual(slice.Get(typeof(MarginInterestRate))[Symbols.SPY], marginInterest);
         }
 
         [Test]

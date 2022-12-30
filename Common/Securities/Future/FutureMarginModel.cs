@@ -213,6 +213,7 @@ namespace QuantConnect.Securities.Future
                 _marginCurrentIndex++;
             }
 
+            // TODO this isn't in account currency!
             return _marginRequirementsHistory[_marginCurrentIndex];
         }
 

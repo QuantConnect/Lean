@@ -410,20 +410,20 @@ namespace QuantConnect.Data
                     var dataDictionaryCache = GenericDataDictionary.Get(type, isPythonData);
                     dictionary = Activator.CreateInstance(dataDictionaryCache.GenericType);
 
-                    foreach (var data in instance._data.Value.Values.Select(x => x.Custom).Where(o =>
-                             {
-                                 if (o == null)
-                                 {
-                                     return false;
-                                 }
-                                 if (isPythonData && o is PythonData data)
-                                 {
-                                     return data.IsOfType(type);
-                                 }
-                                 return o.GetType() == type;
-                             }))
+                    foreach (var data in instance._data.Value.Values)
                     {
-                        dataDictionaryCache.MethodInfo.Invoke(dictionary, new object[] { data.Symbol, data });
+                        // let's first check custom data, else double check the user isn't requesting auxiliary data we have
+                        if (IsDataPointOfType(data.Custom, type, isPythonData))
+                        {
+                            dataDictionaryCache.MethodInfo.Invoke(dictionary, new object[] { data.Symbol, data.Custom });
+                        }
+                        else
+                        {
+                            foreach (var auxiliaryData in data.AuxilliaryData.Where(x => IsDataPointOfType(x, type, isPythonData)))
+                            {
+                                dataDictionaryCache.MethodInfo.Invoke(dictionary, new object[] { data.Symbol, auxiliaryData });
+                            }
+                        }
                     }
                 }
 
@@ -672,6 +672,22 @@ namespace QuantConnect.Data
                     yield return new KeyValuePair<Symbol, BaseData>(kvp.Key, data);
                 }
             }
+        }
+
+        /// <summary>
+        /// Determines if the given data point is of a specific type
+        /// </summary>
+        private static bool IsDataPointOfType(BaseData o, Type type, bool isPythonData)
+        {
+            if (o == null)
+            {
+                return false;
+            }
+            if (isPythonData && o is PythonData data)
+            {
+                return data.IsOfType(type);
+            }
+            return o.GetType() == type;
         }
 
         private enum SubscriptionType { TradeBar, QuoteBar, Tick, Custom };

@@ -72,6 +72,7 @@ from QuantConnect.Securities.Volatility import *
 from QuantConnect.Securities.Interfaces import *
 from QuantConnect.Data.UniverseSelection import *
 from QuantConnect.Data.Custom.IconicTypes import *
+from QuantConnect.Securities.CryptoFuture import *
 from QuantConnect.Data.Custom.AlphaStreams import *
 from QuantConnect.Algorithm.Framework.Risk import *
 from QuantConnect.Algorithm.Framework.Alphas import *

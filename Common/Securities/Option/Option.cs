@@ -75,7 +75,8 @@ namespace QuantConnect.Securities.Option
                 new OptionDataFilter(),
                 new SecurityPriceVariationModel(),
                 currencyConverter,
-                registeredTypes
+                registeredTypes,
+                Securities.MarginInterestRateModel.Null
                 )
         {
             ExerciseSettlement = SettlementType.PhysicalDelivery;
@@ -172,7 +173,8 @@ namespace QuantConnect.Securities.Option
             dataFilter,
             priceVariationModel,
             currencyConverter,
-            registeredTypesProvider
+            registeredTypesProvider,
+            Securities.MarginInterestRateModel.Null
         )
         {
             ExerciseSettlement = SettlementType.PhysicalDelivery;

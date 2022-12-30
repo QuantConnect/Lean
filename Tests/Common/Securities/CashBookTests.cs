@@ -183,6 +183,7 @@ namespace QuantConnect.Tests.Common.Securities
                     called = true;
                 }
             };
+            cash = cashBook[Currencies.USD];
             cash.Update();
             var conversionRate = cash.ConversionRate;
 
@@ -268,7 +269,7 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
-        public void UpdateEventNotCalledForCashUpdatesAfterSteppedOn()
+        public void UpdateEventNotCalledForCashUpdates()
         {
             var cashBook = new CashBook();
             var called = false;
@@ -287,8 +288,9 @@ namespace QuantConnect.Tests.Common.Securities
             var conversionRate = cash.ConversionRate;
             Assert.IsFalse(called);
 
-            cash2.Update();
-            var conversionRate2 = cash2.ConversionRate;
+            cash = cashBook[Currencies.USD];
+            cash.Update();
+            var conversionRate2 = cash.ConversionRate;
             Assert.IsTrue(updatedCalled);
         }
 
@@ -306,7 +308,7 @@ namespace QuantConnect.Tests.Common.Securities
                 calledUpdated = updateType == CashBook.UpdateType.Updated;
             };
 
-            cashBook.Add(cash.Symbol, cash);
+            cashBook.Add(cash.Symbol, new Cash(Currencies.USD, 1, 2));
 
             Assert.AreEqual(1, called);
             Assert.IsTrue(calledUpdated);

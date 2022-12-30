@@ -24,6 +24,7 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
+using QuantConnect.Securities.CryptoFuture;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
@@ -51,6 +52,7 @@ namespace QuantConnect.Brokerages
             {SecurityType.Forex, Market.Oanda},
             {SecurityType.Cfd, Market.Oanda},
             {SecurityType.Crypto, Market.GDAX},
+            {SecurityType.CryptoFuture, Market.Binance},
             {SecurityType.Index, Market.USA},
             {SecurityType.IndexOption, Market.USA}
         }.ToReadOnlyDictionary();
@@ -189,6 +191,9 @@ namespace QuantConnect.Brokerages
 
             switch (security.Type)
             {
+                case SecurityType.CryptoFuture:
+                    return 25m;
+
                 case SecurityType.Equity:
                     return 2m;
 
@@ -231,33 +236,25 @@ namespace QuantConnect.Brokerages
         {
             switch (security.Type)
             {
-                case SecurityType.Base:
-                    break;
                 case SecurityType.Equity:
                     return new EquityFillModel();
-                case SecurityType.Option:
-                    break;
                 case SecurityType.FutureOption:
                     return new FutureOptionFillModel();
-                case SecurityType.Commodity:
-                    break;
-                case SecurityType.Forex:
-                    break;
                 case SecurityType.Future:
                     return new FutureFillModel();
+                case SecurityType.Base:
+                case SecurityType.Option:
+                case SecurityType.Commodity:
+                case SecurityType.Forex:
                 case SecurityType.Cfd:
-                    break;
                 case SecurityType.Crypto:
-                    break;
+                case SecurityType.CryptoFuture:
                 case SecurityType.Index:
-                    break;
                 case SecurityType.IndexOption:
-                    break;
+                    return new ImmediateFillModel();
                 default:
                     throw new ArgumentOutOfRangeException($"{GetType().Name}.GetFillModel: Invalid security type {security.Type}");
             }
-
-            return new ImmediateFillModel();
         }
 
         /// <summary>
@@ -273,6 +270,7 @@ namespace QuantConnect.Brokerages
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
                 case SecurityType.Crypto:
+                case SecurityType.CryptoFuture:
                 case SecurityType.Index:
                     return new ConstantFeeModel(0m);
 
@@ -305,6 +303,7 @@ namespace QuantConnect.Brokerages
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
                 case SecurityType.Crypto:
+                case SecurityType.CryptoFuture:
                     return new ConstantSlippageModel(0);
 
                 case SecurityType.Commodity:
@@ -367,6 +366,7 @@ namespace QuantConnect.Brokerages
             {
                 SecurityType.Crypto => getCurrencyBuyingPowerModel(),
                 SecurityType.Forex => getCurrencyBuyingPowerModel(),
+                SecurityType.CryptoFuture => new CryptoFutureMarginModel(GetLeverage(security)),
                 SecurityType.Future => new FutureMarginModel(RequiredFreeBuyingPowerPercent, security),
                 SecurityType.FutureOption => new FuturesOptionsMarginModel(RequiredFreeBuyingPowerPercent, (Option)security),
                 SecurityType.IndexOption => new OptionMarginModel(RequiredFreeBuyingPowerPercent),
@@ -382,6 +382,16 @@ namespace QuantConnect.Brokerages
         public virtual IShortableProvider GetShortableProvider()
         {
             return ShortableProvider;
+        }
+
+        /// <summary>
+        /// Gets a new margin interest rate model for the security
+        /// </summary>
+        /// <param name="security">The security to get a margin interest rate model for</param>
+        /// <returns>The margin interest rate model for this brokerage</returns>
+        public virtual IMarginInterestRateModel GetMarginInterestRateModel(Security security)
+        {
+            return MarginInterestRateModel.Null;
         }
 
         /// <summary>

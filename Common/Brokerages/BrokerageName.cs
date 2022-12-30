@@ -130,5 +130,15 @@ namespace QuantConnect.Brokerages
         /// Transaction and submit/execution rules will use TDameritrade models
         /// </summary>
         TDAmeritrade,
+
+        /// <summary>
+        /// Binance Futures USDⓈ-Margined contracts are settled and collateralized in their quote cryptocurrency, USDT or BUSD
+        /// </summary>
+        BinanceFutures,
+
+        /// <summary>
+        /// Binance Futures COIN-Margined contracts are settled and collateralized in their based cryptocurrency.
+        /// </summary>
+        BinanceCoinFutures
     }
 }

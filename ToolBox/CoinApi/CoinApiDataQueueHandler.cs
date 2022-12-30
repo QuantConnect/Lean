@@ -248,8 +248,10 @@ namespace QuantConnect.ToolBox.CoinApi
         private static bool CanSubscribe(Symbol symbol)
         {
             // ignore unsupported security types
-            if (symbol.ID.SecurityType != SecurityType.Crypto)
+            if (symbol.ID.SecurityType != SecurityType.Crypto && symbol.ID.SecurityType != SecurityType.CryptoFuture)
+            {
                 return false;
+            }
 
             // ignore universe symbols
             return !symbol.Value.Contains("-UNIVERSE-");
@@ -362,7 +364,8 @@ namespace QuantConnect.ToolBox.CoinApi
             {
                 try
                 {
-                    result = _symbolMapper.GetLeanSymbol(ticker, SecurityType.Crypto, string.Empty);
+                    var securityType = ticker.IndexOf("_PERP_") > 0 ? SecurityType.CryptoFuture : SecurityType.Crypto;
+                    result = _symbolMapper.GetLeanSymbol(ticker, securityType, string.Empty);
                 }
                 catch (Exception e)
                 {
@@ -401,7 +404,7 @@ namespace QuantConnect.ToolBox.CoinApi
 
         public IEnumerable<BaseData> GetHistory(HistoryRequest historyRequest)
         {
-            if (historyRequest.Symbol.SecurityType != SecurityType.Crypto)
+            if (historyRequest.Symbol.SecurityType != SecurityType.Crypto && historyRequest.Symbol.SecurityType != SecurityType.CryptoFuture)
             {
                 Log.Error($"CoinApiDataQueueHandler.GetHistory(): Invalid security type {historyRequest.Symbol.SecurityType}");
                 yield break;

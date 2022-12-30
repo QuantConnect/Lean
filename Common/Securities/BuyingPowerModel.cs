@@ -164,6 +164,14 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Returns the total margin pool in account currency
+        /// </summary>
+        protected virtual decimal GetTotalMarginPool(SecurityPortfolioManager portfolio, Security security)
+        {
+            return portfolio.TotalPortfolioValue;
+        }
+
+        /// <summary>
         /// Gets the margin cash available for a trade
         /// </summary>
         /// <param name="portfolio">The algorithm's portfolio</param>
@@ -176,9 +184,20 @@ namespace QuantConnect.Securities
             OrderDirection direction
             )
         {
-            var totalPortfolioValue = portfolio.TotalPortfolioValue;
+            var totalPortfolioValue = GetTotalMarginPool(portfolio, security);
             var result = portfolio.GetMarginRemaining(totalPortfolioValue);
 
+            result += GetDirectionChangeMargin(security, direction);
+
+            result -= totalPortfolioValue * RequiredFreeBuyingPowerPercent;
+            return result < 0 ? 0 : result;
+        }
+
+        /// <summary>
+        /// If appropiate will return the available margin associated with a security changing it's holdings direction
+        /// </summary>
+        protected decimal GetDirectionChangeMargin(Security security, OrderDirection direction)
+        {
             if (direction != OrderDirection.Hold)
             {
                 var holdings = security.Holdings;
@@ -189,12 +208,11 @@ namespace QuantConnect.Securities
                     switch (direction)
                     {
                         case OrderDirection.Sell:
-                            result +=
+                            return
                                 // portion of margin to close the existing position
                                 this.GetMaintenanceMargin(security) +
                                 // portion of margin to open the new position
                                 this.GetInitialMarginRequirement(security, security.Holdings.AbsoluteQuantity);
-                            break;
                     }
                 }
                 else if (holdings.IsShort)
@@ -202,18 +220,16 @@ namespace QuantConnect.Securities
                     switch (direction)
                     {
                         case OrderDirection.Buy:
-                            result +=
+                            return
                                 // portion of margin to close the existing position
                                 this.GetMaintenanceMargin(security) +
                                 // portion of margin to open the new position
                                 this.GetInitialMarginRequirement(security, security.Holdings.AbsoluteQuantity);
-                            break;
                     }
                 }
             }
 
-            result -= totalPortfolioValue * RequiredFreeBuyingPowerPercent;
-            return result < 0 ? 0 : result;
+            return decimal.Zero;
         }
 
         /// <summary>
@@ -339,9 +355,10 @@ namespace QuantConnect.Securities
             var targetBuyingPower = signedUsedBuyingPower + parameters.DeltaBuyingPower;
 
             var target = 0m;
-            if (parameters.Portfolio.TotalPortfolioValue != 0)
+            var totalPortfolioValue = GetTotalMarginPool(parameters.Portfolio, parameters.Security);
+            if (totalPortfolioValue != 0)
             {
-                target = targetBuyingPower / parameters.Portfolio.TotalPortfolioValue;
+                target = targetBuyingPower / totalPortfolioValue;
             }
 
             return GetMaximumOrderQuantityForTargetBuyingPower(
@@ -364,7 +381,7 @@ namespace QuantConnect.Securities
         public virtual GetMaximumOrderQuantityResult GetMaximumOrderQuantityForTargetBuyingPower(GetMaximumOrderQuantityForTargetBuyingPowerParameters parameters)
         {
             // this is expensive so lets fetch it once
-            var totalPortfolioValue = parameters.Portfolio.TotalPortfolioValue;
+            var totalPortfolioValue = GetTotalMarginPool(parameters.Portfolio, parameters.Security);
 
             // adjust target buying power to comply with required Free Buying Power Percent
             var signedTargetFinalMarginValue =

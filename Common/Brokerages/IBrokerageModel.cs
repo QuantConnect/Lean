@@ -140,6 +140,13 @@ namespace QuantConnect.Brokerages
         ISettlementModel GetSettlementModel(Security security);
 
         /// <summary>
+        /// Gets a new margin interest rate model for the security
+        /// </summary>
+        /// <param name="security">The security to get a margin interest rate model for</param>
+        /// <returns>The margin interest rate model for this brokerage</returns>
+        IMarginInterestRateModel GetMarginInterestRateModel(Security security);
+
+        /// <summary>
         /// Gets a new settlement model for the security
         /// </summary>
         /// <param name="security">The security to get a settlement model for</param>
@@ -204,6 +211,12 @@ namespace QuantConnect.Brokerages
 
                 case BrokerageName.Bitfinex:
                     return new BitfinexBrokerageModel(accountType);
+
+                case BrokerageName.BinanceFutures:
+                    return new BinanceFuturesBrokerageModel(accountType);
+
+                case BrokerageName.BinanceCoinFutures:
+                    return new BinanceCoinFuturesBrokerageModel(accountType);
 
                 case BrokerageName.Binance:
                     return new BinanceBrokerageModel(accountType);

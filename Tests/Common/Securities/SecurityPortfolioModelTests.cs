@@ -558,13 +558,13 @@ namespace QuantConnect.Tests.Common.Securities
             SecurityPortfolioManager portfolio;
             InitializeTest(reference, out portfolio, accountCurrency);
 
-            var cash = new Cash("EUR", 0, 10);
-            portfolio.CashBook.Add("EUR", cash);
-            portfolio.CashBook.Add("BTC", 0, 1000);
+            var cash = portfolio.CashBook.Add("EUR", 0, 10);
+            var btcCash = portfolio.CashBook.Add("BTC", 0, 1000);
             var crypto = new Crypto(
                 Symbols.BTCEUR,
                 SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
                 cash,
+                btcCash,
                 SymbolProperties.GetDefault("EUR"),
                 portfolio.CashBook,
                 RegisteredSecurityDataTypesProvider.Null,
@@ -598,13 +598,13 @@ namespace QuantConnect.Tests.Common.Securities
             SecurityPortfolioManager portfolio;
             InitializeTest(reference, out portfolio, accountCurrency);
 
-            var cash = new Cash("EUR", 0, 10);
-            portfolio.CashBook.Add("EUR", cash);
-            portfolio.CashBook.Add("BTC", 0, 1000);
+            var cash = portfolio.CashBook.Add("EUR", 0, 10);
+            var btcCash = portfolio.CashBook.Add("BTC", 0, 1000);
             var crypto = new Crypto(
                 Symbols.BTCEUR,
                 SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
                 cash,
+                btcCash,
                 SymbolProperties.GetDefault("EUR"),
                 portfolio.CashBook,
                 RegisteredSecurityDataTypesProvider.Null,

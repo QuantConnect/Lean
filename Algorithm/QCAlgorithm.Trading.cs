@@ -272,8 +272,8 @@ namespace QuantConnect.Algorithm
             //Add the order and create a new order Id.
             var ticket = SubmitOrderRequest(request);
 
-            // Wait for the order event to process, only if the exchange is open
-            if (!asynchronous)
+            // Wait for the order event to process, only if the exchange is open and the order is valid
+            if (ticket.Status != OrderStatus.Invalid && !asynchronous)
             {
                 Transactions.WaitForOrder(ticket.OrderId);
             }
@@ -849,7 +849,7 @@ namespace QuantConnect.Algorithm
             // need to also check base currency existence/conversion rate on forex orders
             if (security.Type == SecurityType.Forex || security.Type == SecurityType.Crypto)
             {
-                var baseCurrency = ((IBaseCurrencySymbol)security).BaseCurrencySymbol;
+                var baseCurrency = ((IBaseCurrencySymbol)security).BaseCurrency.Symbol;
                 if (!Portfolio.CashBook.TryGetValue(baseCurrency, out var baseCash))
                 {
                     return OrderResponse.Error(request, OrderResponseErrorCode.ForexBaseAndQuoteCurrenciesRequired,
