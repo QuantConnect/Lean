@@ -29,6 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="dividend event" />
     public class DividendRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private decimal _sumOfDividends;
         private Symbol _symbol;
 
         /// <summary>
@@ -61,19 +62,31 @@ namespace QuantConnect.Algorithm.CSharp
         public void OnData(Dividends data) // update this to Dividends dictionary
         {
             var dividend = data[_symbol];
+            var holdings = Portfolio[_symbol];
             Debug($"{dividend.Time.ToStringInvariant("o")} >> DIVIDEND >> {dividend.Symbol} - " +
                 $"{dividend.Distribution.ToStringInvariant("C")} - {Portfolio.Cash} - " +
-                $"{Portfolio[_symbol].Price.ToStringInvariant("C")}"
+                $"{holdings.Price.ToStringInvariant("C")}"
             );
+            _sumOfDividends += dividend.Distribution * holdings.Quantity;
         }
         
         public override void OnEndOfAlgorithm()
         {
-            // The expected value refers to dividend payments
-            const decimal expected = 6789.12m;
-            if (Portfolio.TotalProfit != expected)
+            // The expected value refers to sum of dividend payments
+            if (Portfolio.TotalProfit != _sumOfDividends)
             {
-                throw new Exception($"Total Profit: Expected {expected}. Actual {Portfolio.TotalProfit}");
+                throw new Exception($"Total Profit: Expected {_sumOfDividends}. Actual {Portfolio.TotalProfit}");
+            }
+
+            var expectNetProfit = _sumOfDividends - Portfolio.TotalFees;
+            if (Portfolio.TotalNetProfit != expectNetProfit)
+            {
+                throw new Exception($"Total Net Profit: Expected {expectNetProfit}. Actual {Portfolio.TotalNetProfit}");
+            }
+
+            if (Portfolio[_symbol].TotalDividends != _sumOfDividends)
+            {
+                throw new Exception($"{_symbol} Total Dividends: Expected {_sumOfDividends}. Actual {Portfolio[_symbol].TotalDividends}");
             }
         }
 
