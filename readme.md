@@ -62,7 +62,7 @@ A full explanation of developing Lean with Visual Studio Code Dev Containers can
 
 QuantConnect recommends using [Lean CLI](https://github.com/QuantConnect/lean-cli) for local algorithm development. This is because it is a great tool for working with your algorithms locally while still being able to deploy to the cloud and have access to Lean data. It is also able to run algorithms on your local machine with your data through our official docker images.
 
-Reference QuantConnects documentation on Lean CLI [here](https://www.quantconnect.com/docs/v2/lean-cli/getting-started/lean-cli)
+Reference QuantConnects documentation on Lean CLI [here](https://www.quantconnect.com/docs/v2/lean-cli/key-concepts/getting-started)
 
 ## Installation Instructions ##
 
