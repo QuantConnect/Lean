@@ -463,7 +463,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Sum of all gross profit across all securities in portfolio.
+        /// Sum of all gross profit across all securities in portfolio and dividend payments.
         /// </summary>
         public decimal TotalProfit
         {
@@ -471,6 +471,18 @@ namespace QuantConnect.Securities
             {
                 return (from kvp in Securities
                         select kvp.Value.Holdings.Profit).Sum();
+            }
+        }
+
+        /// <summary>
+        /// Sum of all net profit across all securities in portfolio and dividend payments.
+        /// </summary>
+        public decimal TotalNetProfit
+        {
+            get
+            {
+                return (from kvp in Securities
+                    select kvp.Value.Holdings.NetProfit).Sum();
             }
         }
 
@@ -675,16 +687,17 @@ namespace QuantConnect.Securities
                 return;
             }
 
-            var security = Securities[dividend.Symbol];
-
             // only apply dividends when we're in raw mode or split adjusted mode
             if (mode == DataNormalizationMode.Raw || mode == DataNormalizationMode.SplitAdjusted)
             {
+                var security = Securities[dividend.Symbol];
+
                 // longs get benefits, shorts get clubbed on dividends
-                var total = security.Holdings.Quantity*dividend.Distribution;
+                var total = security.Holdings.Quantity * dividend.Distribution * security.QuoteCurrency.ConversionRate;
 
                 // assuming USD, we still need to add Currency to the security object
                 _baseCurrencyCash.AddAmount(total);
+                security.Holdings.AddNewDividend(total);
             }
         }
 

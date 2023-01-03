@@ -2577,6 +2577,39 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(initialCash, algorithm.Portfolio.CashBook.TotalValueInAccountCurrency);
         }
 
+        [TestCase(DataNormalizationMode.Adjusted, 200, 0)]
+        [TestCase(DataNormalizationMode.Raw, 100, 100)]
+        [TestCase(DataNormalizationMode.SplitAdjusted, 100, 100)]
+        [TestCase(DataNormalizationMode.TotalReturn, 200, 0)]
+        public void NormalizationModeDoesNotChangeNetProfit(DataNormalizationMode mode, decimal profitLoss, decimal dividendPayment)
+        {
+            const decimal fee = 1;
+            const decimal quantity = 100;
+            var algorithm = new QCAlgorithm();
+            algorithm.UniverseSettings.DataNormalizationMode = mode;
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+
+            var spy = algorithm.AddEquity("SPY");
+            spy.SetMarketPrice(new Tick(new DateTime(2000, 01, 01), Symbols.SPY, 100m, 99m, 101m));
+            spy.Holdings.SetHoldings(100m, quantity); 
+            spy.Holdings.AddNewFee(fee);
+            spy.Holdings.AddNewProfit(profitLoss);
+
+            var distribution = dividendPayment / quantity;
+
+            var dividend = new Dividend(Symbols.SPY, new DateTime(2000, 01, 01), distribution, 0.5m);
+            algorithm.Portfolio.ApplyDividend(dividend,
+                algorithm.LiveMode,
+                algorithm.SubscriptionManager.SubscriptionDataConfigService
+                    .GetSubscriptionDataConfigs(spy.Symbol)
+                    .DataNormalizationMode());
+
+            // TotalProfit is the sum of profit loss and dividend
+            Assert.AreEqual(profitLoss + dividendPayment, algorithm.Portfolio.TotalProfit);
+            // TotalNetProfit is the sum of profit loss and dividend minus fees
+            Assert.AreEqual(profitLoss + dividendPayment - fee, algorithm.Portfolio.TotalNetProfit);
+        }
+
         [Test]
         public void SetAccountCurrency()
         {

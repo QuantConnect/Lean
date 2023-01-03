@@ -39,6 +39,7 @@ namespace QuantConnect.Securities
         private decimal _profit;
         private decimal _lastTradeProfit;
         private decimal _totalFees;
+        private decimal _totalDividends;
         private readonly Security _security;
         private readonly ICurrencyConverter _currencyConverter;
 
@@ -284,6 +285,14 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Total dividends for this company since the algorithm started in units of the account's currency.
+        /// </summary>
+        public virtual decimal TotalDividends
+        {
+            get { return _totalDividends; }
+        }
+
+        /// <summary>
         /// Boolean flag indicating we have a net positive holding of the security.
         /// </summary>
         /// <seealso cref="IsShort"/>
@@ -336,7 +345,7 @@ namespace QuantConnect.Securities
         /// <seealso cref="NetProfit"/>
         public virtual decimal Profit
         {
-            get { return _profit; }
+            get { return _profit + _totalDividends; }
         }
 
         /// <summary>
@@ -353,7 +362,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets the unrealized profit as a percenage of holdings cost
+        /// Gets the unrealized profit as a percentage of holdings cost
         /// </summary>
         public virtual decimal UnrealizedProfitPercent
         {
@@ -397,6 +406,15 @@ namespace QuantConnect.Securities
         public void AddNewSale(decimal saleValue)
         {
             _totalSaleVolume += saleValue;
+        }
+
+        /// <summary>
+        /// Adds a new dividend payment to the running total dividend in units of the account's currency.
+        /// </summary>
+        /// <param name="dividend"></param>
+        public void AddNewDividend(decimal dividend)
+        {
+            _totalDividends += dividend;
         }
 
         /// <summary>
