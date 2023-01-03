@@ -126,7 +126,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         countLive++;
                         // we got what we wanted shortcut unit test
-                        _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                        _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                     }
                 }
             },
@@ -189,7 +189,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Assert.AreEqual(0, result.Count);
 
                     // we got what we wanted shortcut unit test
-                    _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                     assertedHoldings = true;
                 }
             },
@@ -231,7 +231,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Assert.AreEqual(0, LiveTradingResultHandler.GetHoldings(_algorithm.Securities.Values, _algorithm.SubscriptionManager.SubscriptionDataConfigService, onlyInvested: true).Count);
 
                     // we got what we wanted shortcut unit test
-                    _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                     assertedHoldings = true;
                 }
             },
@@ -281,7 +281,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         countLive++;
                         // we got what we wanted shortcut unit test
-                        _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                        _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                     }
                 }
             },
@@ -328,7 +328,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         emittedData = true;
                         // we got what we wanted shortcut unit test
-                        _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                        _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                     }
                 }
             },
@@ -371,7 +371,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         emittedData = true;
                         // we got what we wanted shortcut unit test
-                        _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                        _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                     }
                 }
             }, endDate: endDate);
@@ -397,7 +397,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     ConsoleWriteLine();
 
                     // we got what we wanted shortcut unit test
-                    _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                 }
             }, endDate: endDate);
 
@@ -424,7 +424,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 emittedData = true;
 
                 // we got what we wanted shortcut unit test
-                _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
             }, endDate: endDate);
             Assert.IsTrue(emittedData);
         }
@@ -487,7 +487,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 emittedData = true;
 
                 // we got what we wanted shortcut unit test
-                _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
             }, endDate: endDate);
 
             Assert.IsTrue(emittedData);
@@ -545,7 +545,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                             if (newDataCount >= 5)
                             {
                                 // we got what we wanted shortcut unit test
-                                _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                                _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                             }
                         }
                     }
@@ -605,7 +605,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                             if (newDataCount >= 5)
                             {
                                 // we got what we wanted shortcut unit test
-                                _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                                _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                             }
                         }
                     }
@@ -674,7 +674,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                             if (newDataCount >= 5)
                             {
                                 // we got what we wanted shortcut unit test
-                                _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                                _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                             }
                         }
                     }
@@ -731,7 +731,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
 
                     // we got what we wanted shortcut unit test
-                    _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                 }
             }, endDate: endDate);
 
@@ -778,7 +778,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Assert.AreEqual(4, _dataQueueHandler.SubscriptionDataConfigs.Count(config => config.Symbol == Symbols.SPY));
                     Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
                     // we got what we wanted shortcut unit test
-                    _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                 }
             }, endDate: endDate);
 
@@ -1063,7 +1063,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         receivedSecurityChanges = true;
                         // we got what we wanted, end unit test
-                        _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                        _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                     }
                 }
             },
@@ -1113,7 +1113,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         Interlocked.Increment(ref receivedDelisted);
                         // we got what we wanted, end unit test
-                        _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                        _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                     }
                 }
             },
@@ -1157,7 +1157,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         {
                             Interlocked.Increment(ref receivedDelisted);
                             // we got what we wanted, end unit test
-                            _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                            _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                         }
                     }
                 },
@@ -1206,7 +1206,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     receivedUniverseData = true;
 
                     // we got what we wanted, end unit test
-                    _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                 }
             }, sendUniverseData: true,
                 alwaysInvoke: true,
@@ -1259,7 +1259,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     securityChanges = ts.SecurityChanges;
                     receivedFundamentalsData = true;
                     // short cut unit test
-                    _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                 }
             }, secondsTimeStep: 60 * 60 * 6, // 6 hour time step
                 alwaysInvoke: true,
@@ -1328,7 +1328,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         receivedFundamentalsData = true;
                         // we got what we wanted shortcut unit test
-                        _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                        _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                     }
                 }
             }, sendUniverseData: true, alwaysInvoke: true, secondsTimeStep: 3600, endDate: _startDate.AddDays(10));
@@ -1337,6 +1337,35 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsTrue(fineWasCalled);
             Assert.IsTrue(receivedFundamentalsData);
             Assert.IsTrue(receivedFundamentalsDataDuringWarmup);
+        }
+
+        [TestCase("BTCUSD")]
+        [TestCase("ADAUSDT")]
+        public void MarginInterestDataGetsPipedCorrectly(string cryptoFuture)
+        {
+            _startDate = new DateTime(2022, 12, 12);
+            CustomMockedFileBaseData.StartDate = _startDate;
+            _manualTimeProvider.SetCurrentTimeUtc(_startDate);
+
+            var feed = RunDataFeed(getNextTicksFunction: fdqh => Enumerable.Empty<BaseData>());
+
+            var asset = _algorithm.AddCryptoFuture(cryptoFuture);
+
+            var receivedData = false;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
+            {
+                var interestRates = ts.Slice.Get<MarginInterestRate>();
+                foreach (var interestRate in interestRates)
+                {
+                    receivedData = true;
+                    // we got what we wanted shortcut unit test
+                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
+
+                    Assert.AreEqual(asset.Symbol, interestRate.Key);
+                }
+            }, secondsTimeStep: 60 * 60 * 3, endDate: _startDate.AddDays(2));
+
+            Assert.IsTrue(receivedData);
         }
 
         [TestCase(1)]
@@ -1374,7 +1403,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     receivedFundamentalsData = true;
                     // we got what we wanted shortcut unit test
-                    _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                 }
             }, sendUniverseData: true, alwaysInvoke: true, secondsTimeStep: 3600, endDate: _startDate.AddDays(10));
 
@@ -1462,7 +1491,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     if (yieldedSymbols && yieldedNoneSymbol)
                     {
                         // we got what we wanted, end unit test
-                        _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                        _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                     }
                 }
             }, secondsTimeStep: 60 * 60 * 3, // 3 hour time step
@@ -1609,7 +1638,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                             {
                                 suspiciousTicksReceived = true;
                                 // we got what we wanted shortcut unit test
-                                _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                                _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                             }
                         }
                     }
@@ -1695,7 +1724,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                     emittedDividend = true;
                     // we got what we wanted shortcut unit test
-                    _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                 }
             }, secondsTimeStep: warmup ? 60 * 60 : 60 * 60 * 5,
             endDate: _startDate.AddDays(30));
@@ -1746,7 +1775,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                     emittedSplit = true;
                     // we got what we wanted shortcut unit test
-                    _manualTimeProvider.SetCurrentTimeUtc(DateTime.UtcNow);
+                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                 }
             }, secondsTimeStep: warmup ? 60 * 60 : 60 * 60 * 5,
             endDate: _startDate.AddDays(30));
