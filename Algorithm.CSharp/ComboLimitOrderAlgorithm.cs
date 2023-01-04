@@ -42,13 +42,13 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        protected override IEnumerable<OrderTicket> PlaceComboOrder(List<Leg> legs, int quantity, decimal? limitPrice = null)
+        protected override IEnumerable<OrderTicket> PlaceComboOrder(List<Leg> legs, int quantity, decimal? limitPrice)
         {
             _limitPrice = limitPrice;
             _comboQuantity = quantity;
             legs.ForEach(x => { x.OrderPrice = null; });
 
-            return ComboOrder(OrderType.ComboLimit, legs, quantity, limitPrice, asynchronous: true);
+            return ComboLimitOrder(legs, quantity, limitPrice.Value, asynchronous: true);
         }
         public override void OnOrderEvent(OrderEvent orderEvent)
         {

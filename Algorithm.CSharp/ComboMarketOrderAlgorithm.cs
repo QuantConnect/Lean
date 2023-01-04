@@ -25,7 +25,8 @@ namespace QuantConnect.Algorithm.CSharp
     {
         protected override IEnumerable<OrderTicket> PlaceComboOrder(List<Leg> legs, int quantity, decimal? limitPrice = null)
         {
-            return ComboOrder(OrderType.ComboMarket, legs, quantity, limitPrice: null, asynchronous: true);
+            legs.ForEach(x => { x.OrderPrice = null; });
+            return ComboMarketOrder(legs, quantity, asynchronous: true);
         }
 
         /// <summary>
@@ -73,7 +74,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$7.50"},
-            {"Estimated Strategy Capacity", "$8000.00"},
+            {"Estimated Strategy Capacity", "$9000.00"},
             {"Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
@@ -94,7 +95,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "c0f4b5d5c796e17949f7ec42c6569ce4"}
+            {"OrderListHash", "47f02f5139c4c4def9b26e8f5433fdcc"}
         };
     }
 }

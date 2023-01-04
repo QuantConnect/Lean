@@ -654,9 +654,43 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Issue a combo order/trade for multiple assets
+        /// Issue a combo market order/trade for multiple assets
         /// </summary>
-        /// <param name="type">The type of order, either ComboMarket, ComboLimit or ComboLegLimit</param>
+        /// <param name="legs">The list of legs the order consists of</param>
+        /// <param name="quantity">The total quantity for the order</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it fills</param>
+        /// <param name="tag">String tag for the order (optional)</param>
+        /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
+        /// <returns>Sequence of order tickets, one for each leg</returns>
+        public List<OrderTicket> ComboMarketOrder(List<Leg> legs, int quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
+        {
+            return SubmitComboOrder(legs, quantity, 0, asynchronous, tag, orderProperties);
+        }
+
+        /// <summary>
+        /// Issue a combo leg limit order/trade for multiple assets, each having its own limit price.
+        /// </summary>
+        /// <param name="legs">The list of legs the order consists of</param>
+        /// <param name="quantity">The total quantity for the order</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it fills</param>
+        /// <param name="tag">String tag for the order (optional)</param>
+        /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
+        /// <returns>Sequence of order tickets, one for each leg</returns>
+        /// <exception cref="ArgumentException">If not every leg has a defined limit price</exception>
+        public List<OrderTicket> ComboLegLimitOrder(List<Leg> legs, int quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
+        {
+            if (legs.Any(x => x.OrderPrice == null || x.OrderPrice == 0))
+            {
+                throw new ArgumentException("ComboLegLimitOrder requires a limit price for each leg");
+            }
+
+            return SubmitComboOrder(legs, quantity, 0, asynchronous, tag, orderProperties);
+        }
+
+        /// <summary>
+        /// Issue a combo limit order/trade for multiple assets.
+        /// A single limit price is defined for the combo order and will fill only if the sum of the assets price compares properly to the limit price, depending on the direction.
+        /// </summary>
         /// <param name="legs">The list of legs the order consists of</param>
         /// <param name="quantity">The total quantity for the order</param>
         /// <param name="limitPrice">The compound limit price to use for a ComboLimit order. This limit price will compared to the sum of the assets price in order to fill the order.</param>
@@ -665,14 +699,19 @@ namespace QuantConnect.Algorithm
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>Sequence of order tickets, one for each leg</returns>
         /// <exception cref="ArgumentException">If the order type is neither ComboMarket, ComboLimit nor ComboLegLimit</exception>
-        public List<OrderTicket> ComboOrder(OrderType type, List<Leg> legs, int quantity, decimal? limitPrice, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
+        public List<OrderTicket> ComboLimitOrder(List<Leg> legs, int quantity, decimal limitPrice, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            if (type != OrderType.ComboMarket && type != OrderType.ComboLimit && type != OrderType.ComboLegLimit)
+            if (limitPrice == 0)
             {
-                throw new ArgumentException("ComboOrder only supports OrderType.ComboMarket, OrderType.ComboLimit and OrderType.ComboLegLimit");
+                throw new ArgumentException("ComboLimitOrder requires a limit price");
             }
 
-            return SubmitComboOrder(legs, quantity, limitPrice ?? 0, asynchronous, tag, orderProperties);
+            if (legs.Any(x => x.OrderPrice != null && x.OrderPrice != 0))
+            {
+                throw new ArgumentException("ComboLimitOrder does not support limit prices for individual legs");
+            }
+
+            return SubmitComboOrder(legs, quantity, limitPrice, asynchronous, tag, orderProperties);
         }
 
         private IEnumerable<OrderTicket> GenerateOptionStrategyOrders(OptionStrategy strategy, int strategyQuantity, bool asynchronous, string tag, IOrderProperties orderProperties)

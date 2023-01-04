@@ -102,10 +102,10 @@ namespace QuantConnect.Algorithm.CSharp
 
             Log("Submitting combo market orders");
 
-            var tickets = ComboOrder(OrderType.ComboMarket, _orderLegs, 2, null, asynchronous: false);
+            var tickets = ComboMarketOrder(_orderLegs, 2, asynchronous: false);
             _openMarketOrders.AddRange(tickets);
 
-            tickets = ComboOrder(OrderType.ComboMarket, _orderLegs, 2, null, asynchronous: true);
+            tickets = ComboMarketOrder(_orderLegs, 2, asynchronous: true);
             _openMarketOrders.AddRange(tickets);
 
             foreach (var ticket in tickets)
@@ -130,11 +130,11 @@ namespace QuantConnect.Algorithm.CSharp
                     closeSum += Securities[leg.Symbol].Close;
                 }
 
-                var tickets = ComboOrder(OrderType.ComboLegLimit, _orderLegs, quantity: 2, closeSum * 0.94m);
+                var tickets = ComboLimitOrder(_orderLegs, 2, closeSum * 0.94m);
                 _openLimitOrders.AddRange(tickets);
 
                 // These won't fill, we will test cancel with this
-                tickets = ComboOrder(OrderType.ComboLegLimit, _orderLegs, -2, closeSum * 1.1m);
+                tickets = ComboLimitOrder(_orderLegs, -2, closeSum * 1.1m);
                 _openLimitOrders.AddRange(tickets);
             }
             else
@@ -183,7 +183,7 @@ namespace QuantConnect.Algorithm.CSharp
                     leg.OrderPrice = close * .999m;
                 }
 
-                var tickets = ComboOrder(OrderType.ComboLegLimit, _orderLegs, quantity: 2, null);
+                var tickets = ComboLegLimitOrder(_orderLegs, quantity: 2);
                 _openLegLimitOrders.AddRange(tickets);
 
                 // submit another limit order to sell 2 shares at .1% above the bar's close
@@ -193,7 +193,7 @@ namespace QuantConnect.Algorithm.CSharp
                     leg.OrderPrice = close * 1.001m;
                 }
 
-                tickets = ComboOrder(OrderType.ComboLegLimit, _orderLegs, -2, null);
+                tickets = ComboLegLimitOrder(_orderLegs, -2);
                 _openLegLimitOrders.AddRange(tickets);
             }
             else
@@ -305,7 +305,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp };
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm

@@ -27,12 +27,7 @@ namespace QuantConnect.Algorithm.CSharp
     {
         protected override IEnumerable<OrderTicket> PlaceComboOrder(List<Leg> legs, int quantity, decimal? limitPrice = null)
         {
-            if (legs.Any(x => x.OrderPrice == null))
-            {
-                throw new Exception("ComboLegLimitOrderAlgorithm requires all legs to have a limit price");
-            }
-
-            return ComboOrder(OrderType.ComboLegLimit, legs, quantity, limitPrice: null, asynchronous: true);
+            return ComboLegLimitOrder(legs, quantity, asynchronous: true);
         }
 
         public override void OnEndOfAlgorithm()
