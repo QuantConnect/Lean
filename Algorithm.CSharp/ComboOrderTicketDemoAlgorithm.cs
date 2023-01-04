@@ -21,6 +21,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using System.Linq;
 using QuantConnect.Data.Market;
+using System.Diagnostics.Contracts;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -79,18 +80,20 @@ namespace QuantConnect.Algorithm.CSharp
                     };
                 }
             }
+            else
+            {
+                // COMBO MARKET ORDERS
 
-            // COMBO MARKET ORDERS
+                ComboMarketOrders();
 
-            ComboMarketOrders();
+                // COMBO LIMIT ORDERS
 
-            // COMBO LIMIT ORDERS
+                ComboLimitOrders();
 
-            ComboLimitOrders();
+                // COMBO LEG LIMIT ORDERS
 
-            // COMBO LEG LIMIT ORDERS
-
-            ComboLegLimitOrders();
+                ComboLegLimitOrders();
+            }
         }
 
         private void ComboMarketOrders()
@@ -130,7 +133,7 @@ namespace QuantConnect.Algorithm.CSharp
                     closeSum += Securities[leg.Symbol].Close;
                 }
 
-                var tickets = ComboLimitOrder(_orderLegs, 2, closeSum * 0.94m);
+                var tickets = ComboLimitOrder(_orderLegs, 2, closeSum * 0.95m);
                 _openLimitOrders.AddRange(tickets);
 
                 // These won't fill, we will test cancel with this
@@ -151,7 +154,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // if neither order has filled, bring in the limits by a penny
 
                 var ticket = combo1[0];
-                var newLimit = ticket.Get(OrderField.LimitPrice) + 0.05m;
+                var newLimit = Math.Round(ticket.Get(OrderField.LimitPrice) + 0.05m, 2);
                 Log($"Updating limits - Combo 1 {ticket.OrderId}: {newLimit.ToStringInvariant("0.00")}");
                 ticket.Update(new UpdateOrderFields
                 {
@@ -160,7 +163,7 @@ namespace QuantConnect.Algorithm.CSharp
                 });
 
                 ticket = combo2[0];
-                newLimit = ticket.Get(OrderField.LimitPrice) - 0.01m;
+                newLimit = Math.Round(ticket.Get(OrderField.LimitPrice) - 0.01m, 2);
                 Log($"Updating limits - Combo 2 {ticket.OrderId}: {newLimit.ToStringInvariant("0.00")}");
                 ticket.Update(new UpdateOrderFields
                 {
@@ -363,7 +366,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "aef9fd6c39ce2511827defbdb21d9e3f"}
+            {"OrderListHash", "cf6c985f0e65aaae8d7754a282e84177"}
         };
     }
 }
