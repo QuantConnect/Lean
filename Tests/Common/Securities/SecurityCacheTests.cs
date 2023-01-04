@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -206,6 +206,12 @@ namespace QuantConnect.Tests.Common.Securities
                     cache.Reset();
                     Assert.IsFalse(cache.HasData(typeof(Tick)));
                     Assert.AreEqual(cache.GetAll<Tick>().Count(x => x.TickType == TickType.Trade), 0);
+                    break;
+                case SecuritySeedData.Fundamentals:
+                    Assert.IsNull(cache.GetData());
+                    Assert.IsNotNull(cache.GetData<Fundamentals>());
+                    cache.Reset();
+                    Assert.IsFalse(cache.HasData(typeof(Fundamentals)));
                     break;
                 default:
                     Assert.IsNotNull(cache.GetData());

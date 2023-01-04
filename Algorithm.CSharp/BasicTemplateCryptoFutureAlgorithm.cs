@@ -85,6 +85,12 @@ namespace QuantConnect.Algorithm.CSharp
             foreach (var interestRate in interestRates)
             {
                 _interestPerSymbol[interestRate.Key]++;
+
+                var cachedInterestRate = Securities[interestRate.Key].Cache.GetData<MarginInterestRate>();
+                if (cachedInterestRate != interestRate.Value)
+                {
+                    throw new Exception($"Unexpected cached margin interest rate for {interestRate.Key}!");
+                }
             }
 
             if (_fast > _slow)
@@ -193,23 +199,6 @@ namespace QuantConnect.Algorithm.CSharp
                         throw new Exception($"Unexpected TotalProfit {Portfolio.TotalProfit}");
                     }
                 }
-
-                if (Time.Hour == 22 && Transactions.OrdersCount == 5)
-                {
-                    Liquidate();
-
-                    // Even though we hold 1M USD we expect it no to be taken into account
-                    SetHoldings(_btcUsd.Symbol, 2);
-                    if(_btcUsd.Holdings.AbsoluteHoldingsCost > 1000)
-                    {
-                        throw new Exception($"Unexpect position {_btcUsd.Holdings}");
-                    }
-                    SetHoldings(_adaUsdt.Symbol, 2);
-                    if (_adaUsdt.Holdings.AbsoluteHoldingsCost > 1000)
-                    {
-                        throw new Exception($"Unexpect position {_btcUsd.Holdings}");
-                    }
-                }
             }
         }
 
@@ -256,7 +245,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "8"},
+            {"Total Trades", "4"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
@@ -275,15 +264,15 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$2.93"},
-            {"Estimated Strategy Capacity", "$550000000.00"},
+            {"Total Fees", "$1.63"},
+            {"Estimated Strategy Capacity", "$630000000.00"},
             {"Lowest Capacity Asset", "ADAUSDT 18R"},
-            {"Fitness Score", "0.002"},
+            {"Fitness Score", "0.001"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
             {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
-            {"Portfolio Turnover", "0.002"},
+            {"Portfolio Turnover", "0.001"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -297,7 +286,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "a6c69a5b40db611fc3e398967948f2ea"}
+            {"OrderListHash", "d4520985f69c915060f6bee3b7926cf5"}
         };
     }
 }

@@ -40,6 +40,7 @@ namespace QuantConnect.Data
         private Dividends _dividends;
         private Delistings _delistings;
         private SymbolChangedEvents _symbolChangedEvents;
+        private MarginInterestRates _marginInterestRates;
 
         // string -> data   for non-tick data
         // string -> list{data} for tick data
@@ -145,11 +146,19 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Gets the <see cref="QuantConnect.Data.Market.SymbolChangedEvents"/> for this slice of data
+        /// Gets the <see cref="Market.SymbolChangedEvents"/> for this slice of data
         /// </summary>
         public SymbolChangedEvents SymbolChangedEvents
         {
             get { return _symbolChangedEvents; }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Market.MarginInterestRates"/> for this slice of data
+        /// </summary>
+        public MarginInterestRates MarginInterestRates
+        {
+            get { return _marginInterestRates; }
         }
 
         /// <summary>
@@ -223,6 +232,7 @@ namespace QuantConnect.Data
                 CreateCollection<Dividends, Dividend>(time, data),
                 CreateCollection<Delistings, Delisting>(time, data),
                 CreateCollection<SymbolChangedEvents, SymbolChangedEvent>(time, data),
+                CreateCollection<MarginInterestRates, MarginInterestRate> (time, data),
                 utcTime: utcTime)
         {
         }
@@ -254,6 +264,7 @@ namespace QuantConnect.Data
             _dividends = slice._dividends;
             _delistings = slice._delistings;
             _symbolChangedEvents = slice._symbolChangedEvents;
+            _marginInterestRates = slice._marginInterestRates;
         }
 
         /// <summary>
@@ -270,9 +281,10 @@ namespace QuantConnect.Data
         /// <param name="dividends">The dividends for this slice</param>
         /// <param name="delistings">The delistings for this slice</param>
         /// <param name="symbolChanges">The symbol changed events for this slice</param>
+        /// <param name="marginInterestRates">The margin interest rates for this slice</param>
         /// <param name="utcTime">The timestamp for this slice of data in UTC</param>
         /// <param name="hasData">true if this slice contains data</param>
-        public Slice(DateTime time, List<BaseData> data, TradeBars tradeBars, QuoteBars quoteBars, Ticks ticks, OptionChains optionChains, FuturesChains futuresChains, Splits splits, Dividends dividends, Delistings delistings, SymbolChangedEvents symbolChanges, DateTime utcTime, bool? hasData = null)
+        public Slice(DateTime time, List<BaseData> data, TradeBars tradeBars, QuoteBars quoteBars, Ticks ticks, OptionChains optionChains, FuturesChains futuresChains, Splits splits, Dividends dividends, Delistings delistings, SymbolChangedEvents symbolChanges, MarginInterestRates marginInterestRates, DateTime utcTime, bool? hasData = null)
         {
             Time = time;
             UtcTime = utcTime;
@@ -293,6 +305,7 @@ namespace QuantConnect.Data
             _dividends = dividends;
             _delistings = delistings;
             _symbolChangedEvents = symbolChanges;
+            _marginInterestRates = marginInterestRates;
         }
 
         /// <summary>
@@ -403,6 +416,10 @@ namespace QuantConnect.Data
                 {
                     dictionary = instance.SymbolChangedEvents;
                 }
+                else if (type == typeof(MarginInterestRate))
+                {
+                    dictionary = instance.MarginInterestRates;
+                }
                 else
                 {
                     var isPythonData = type.IsAssignableTo(typeof(PythonData));
@@ -493,6 +510,7 @@ namespace QuantConnect.Data
             _dividends = (Dividends)UpdateCollection(_dividends, inputSlice.Dividends);
             _delistings = (Delistings)UpdateCollection(_delistings, inputSlice.Delistings);
             _symbolChangedEvents = (SymbolChangedEvents)UpdateCollection(_symbolChangedEvents, inputSlice.SymbolChangedEvents);
+            _marginInterestRates = (MarginInterestRates)UpdateCollection(_marginInterestRates, inputSlice.MarginInterestRates);
 
             if (inputSlice._rawDataList.Count != 0)
             {

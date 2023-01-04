@@ -160,13 +160,16 @@ namespace QuantConnect.Securities
                 return;
             }
 
-            // Only cache non fill-forward data.
+            // Only cache non fill-forward data and non auxiliary
             if (data.IsFillForward) return;
 
             if (cacheByType)
             {
                 StoreDataPoint(data);
             }
+
+            // we store auxiliary data by type but we don't use it to set 'lastData' nor price information
+            if (data.DataType == MarketDataType.Auxiliary) return;
 
             var isDefaultDataType = SubscriptionManager.IsDefaultDataType(data);
 

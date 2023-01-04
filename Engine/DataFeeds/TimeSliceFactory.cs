@@ -15,13 +15,13 @@
 */
 
 using System;
-using System.Collections.Generic;
 using NodaTime;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Interfaces;
+using QuantConnect.Data.Market;
+using System.Collections.Generic;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -44,6 +44,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly OptionChains _emptyOptionChains = new OptionChains();
         private readonly FuturesChains _emptyFuturesChains = new FuturesChains();
         private readonly SymbolChangedEvents _emptySymbolChangedEvents = new SymbolChangedEvents();
+        private readonly MarginInterestRates _emptyMarginInterestRates = new MarginInterestRates();
 
         /// <summary>
         /// Creates a new instance
@@ -100,6 +101,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Dividend dividend;
             Delisting delisting;
             SymbolChangedEvent symbolChange;
+            MarginInterestRate marginInterestRate;
 
             // we need to be able to reference the slice being created in order to define the
             // evaluation of option price models, so we define a 'future' that can be referenced
@@ -117,6 +119,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             OptionChains optionChains = null;
             FuturesChains futuresChains = null;
             SymbolChangedEvents symbolChanges = null;
+            MarginInterestRates marginInterestRates = null;
 
             UpdateEmptyCollections(algorithmTime);
 
@@ -350,11 +353,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             // symbol changes is keyed by the requested symbol
                             symbolChanges[packet.Configuration.Symbol] = symbolChange;
                         }
-                        else
+                        else if ((marginInterestRate = baseData as MarginInterestRate) != null)
                         {
-                            // let's make it available to the user through the cache
-                            securityUpdate.Add(baseData);
+                            if (marginInterestRates == null)
+                            {
+                                marginInterestRates = new MarginInterestRates(algorithmTime);
+                            }
+                            marginInterestRates[packet.Configuration.Symbol] = marginInterestRate;
                         }
+
+                        // let's make it available to the user through the cache
+                        security.Add(new UpdateData<ISecurityPrice>(packet.Security, baseData.GetType(), new List<BaseData> { baseData }, packet.Configuration.IsInternalFeed, baseData.IsFillForward));
                     }
                 }
 
@@ -368,7 +377,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
-            slice = new Slice(algorithmTime, allDataForAlgorithm, tradeBars ?? _emptyTradeBars, quoteBars ?? _emptyQuoteBars, ticks ?? _emptyTicks, optionChains ?? _emptyOptionChains, futuresChains ?? _emptyFuturesChains, splits ?? _emptySplits, dividends ?? _emptyDividends, delistings ?? _emptyDelistings, symbolChanges ?? _emptySymbolChangedEvents, utcDateTime, allDataForAlgorithm.Count > 0);
+            slice = new Slice(algorithmTime, allDataForAlgorithm, tradeBars ?? _emptyTradeBars, quoteBars ?? _emptyQuoteBars, ticks ?? _emptyTicks, optionChains ?? _emptyOptionChains, futuresChains ?? _emptyFuturesChains, splits ?? _emptySplits, dividends ?? _emptyDividends, delistings ?? _emptyDelistings, symbolChanges ?? _emptySymbolChangedEvents, marginInterestRates ?? _emptyMarginInterestRates, utcDateTime, allDataForAlgorithm.Count > 0);
 
             return new TimeSlice(utcDateTime, count, slice, data, security, consolidator, custom ?? _emptyCustom, changes, universeData);
         }
@@ -385,6 +394,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _emptyOptionChains.Clear();
             _emptyFuturesChains.Clear();
             _emptySymbolChangedEvents.Clear();
+            _emptyMarginInterestRates.Clear();
 
 #pragma warning disable 0618 // DataDictionary.Time is deprecated, ignore until removed entirely
             _emptyTradeBars.Time
@@ -395,7 +405,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 = _emptyDelistings.Time
                 = _emptyOptionChains.Time
                 = _emptyFuturesChains.Time
-                = _emptySymbolChangedEvents.Time = algorithmTime;
+                = _emptySymbolChangedEvents.Time
+                = _emptyMarginInterestRates.Time = algorithmTime;
 #pragma warning restore 0618
         }
 

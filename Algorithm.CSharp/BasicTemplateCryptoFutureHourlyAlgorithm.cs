@@ -27,7 +27,7 @@ using QuantConnect.Securities.CryptoFuture;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Hourly regression algorithm trading BTCUSD binance futures long and short asserting the behavior
+    /// Hourly regression algorithm trading ADAUSDT binance futures long and short asserting the behavior
     /// </summary>
     public class BasicTemplateCryptoFutureHourlyAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
@@ -80,6 +80,12 @@ namespace QuantConnect.Algorithm.CSharp
             foreach (var interestRate in interestRates)
             {
                 _interestPerSymbol[interestRate.Key]++;
+
+                var cachedInterestRate = Securities[interestRate.Key].Cache.GetData<MarginInterestRate>();
+                if (cachedInterestRate != interestRate.Value)
+                {
+                    throw new Exception($"Unexpected cached margin interest rate for {interestRate.Key}!");
+                }
             }
 
             if (_fast > _slow)
