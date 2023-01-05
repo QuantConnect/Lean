@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -138,7 +138,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             public TestableLatestFillModel()
             {
                 // NOTE. GetPrices will no be called before SubscriptionDataConfigProvider is set by the system
-                Parameters = new FillModelParameters(null, null, new MockSubscriptionDataConfigProvider(), Time.OneHour);
+                Parameters = new FillModelParameters(null, null, new MockSubscriptionDataConfigProvider(), Time.OneHour, null);
             }
             public new Prices GetPrices(Security asset, OrderDirection direction)
             {

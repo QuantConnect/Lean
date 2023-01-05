@@ -15,7 +15,6 @@
 
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Orders.Fills
 {
@@ -24,20 +23,15 @@ namespace QuantConnect.Orders.Fills
     /// </summary>
     public class Fill : IEnumerable<OrderEvent>
     {
-        /// <summary>
-        /// Empty fill instance to represent a failed or invalid fill
-        /// </summary>
-        public static readonly Fill Empty = new(Enumerable.Empty<OrderEvent>());
-
-        private readonly List<OrderEvent> _orderEvents = new();
+        private readonly List<OrderEvent> _orderEvents;
 
         /// <summary>
         /// Creates a new <see cref="Fill"/> instance
         /// </summary>
         /// <param name="orderEvents">The fill order events</param>
-        public Fill(IEnumerable<OrderEvent> orderEvents)
+        public Fill(List<OrderEvent> orderEvents)
         {
-            _orderEvents.AddRange(orderEvents);
+            _orderEvents = orderEvents;
         }
 
         /// <summary>
@@ -46,10 +40,11 @@ namespace QuantConnect.Orders.Fills
         /// <param name="orderEvent">The fill order event</param>
         public Fill(OrderEvent orderEvent)
         {
-            _orderEvents.Add(orderEvent);
+            _orderEvents = new() { orderEvent };
         }
 
         /// <summary>
+        /// Returns the order events enumerator
         /// </summary>
         public IEnumerator<OrderEvent> GetEnumerator()
         {

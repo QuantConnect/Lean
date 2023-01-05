@@ -329,61 +329,54 @@ namespace QuantConnect.Brokerages.Backtesting
                     //Before we check this queued order make sure we have buying power:
                     if (hasSufficientBuyingPowerResult.IsSufficient)
                     {
-                        // TODO: guaranteed combo orders by default. Non-guaranteed case still to do.
-                        foreach (var orderSecurity in securities)
+                        //Model:
+                        var security = securities[order];
+                        var model = security.FillModel;
+
+                        //Based on the order type: refresh its model to get fill price and quantity
+                        try
                         {
-                            var security = orderSecurity.Value;
-                            var targetOrder = orderSecurity.Key;
-
-                            //Model:
-                            var model = security.FillModel;
-
-                            //Based on the order type: refresh its model to get fill price and quantity
-                            try
+                            if (order.Type == OrderType.OptionExercise)
                             {
-                                if (targetOrder.Type == OrderType.OptionExercise)
-                                {
-                                    var option = (Option)security;
-                                    fills.AddRange(option.OptionExerciseModel.OptionExercise(option, targetOrder as OptionExerciseOrder));
-                                }
-                                else
-                                {
-                                    var context = new FillModelParameters(
-                                        security,
-                                        targetOrder,
-                                        Algorithm.SubscriptionManager.SubscriptionDataConfigService,
-                                        Algorithm.Settings.StalePriceTimeSpan);
+                                var option = (Option)security;
+                                fills.AddRange(option.OptionExerciseModel.OptionExercise(option, order as OptionExerciseOrder));
+                            }
+                            else
+                            {
+                                var context = new FillModelParameters(
+                                    security,
+                                    order,
+                                    Algorithm.SubscriptionManager.SubscriptionDataConfigService,
+                                    Algorithm.Settings.StalePriceTimeSpan,
+                                    securities);
 
-                                    // check if the fill should be emitted
-                                    var fill = model.Fill(context);
-                                    if (fill.All(x => targetOrder.TimeInForce.IsFillValid(security, targetOrder, x)))
-                                    {
-                                        fills.AddRange(fill);
-                                    }
-                                }
-
-                                // invoke fee models for completely filled order events
-                                foreach (var fill in fills)
+                                // check if the fill should be emitted
+                                var fill = model.Fill(context);
+                                if (fill.All(x => order.TimeInForce.IsFillValid(security, order, x)))
                                 {
-                                    if (fill.Status == OrderStatus.Filled)
+                                    fills.AddRange(fill);
+                                }
+                            }
+
+                            // invoke fee models for completely filled order events
+                            foreach (var fill in fills)
+                            {
+                                if (fill.Status == OrderStatus.Filled)
+                                {
+                                    // this check is provided for backwards compatibility of older user-defined fill models
+                                    // that may be performing fee computation inside the fill model w/out invoking the fee model
+                                    // TODO : This check can be removed in April, 2019 -- a 6-month window to upgrade (also, suspect small % of users, if any are impacted)
+                                    if (fill.OrderFee.Value.Amount == 0m)
                                     {
-                                        // this check is provided for backwards compatibility of older user-defined fill models
-                                        // that may be performing fee computation inside the fill model w/out invoking the fee model
-                                        // TODO : This check can be removed in April, 2019 -- a 6-month window to upgrade (also, suspect small % of users, if any are impacted)
-                                        if (fill.OrderFee.Value.Amount == 0m)
-                                        {
-                                            fill.OrderFee = security.FeeModel.GetOrderFee(
-                                                new OrderFeeParameters(security,
-                                                    targetOrder));
-                                        }
+                                        fill.OrderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(security, order));
                                     }
                                 }
                             }
-                            catch (Exception err)
-                            {
-                                Log.Error(err);
-                                Algorithm.Error($"Order Error: id: {order.Id}, Transaction model failed to fill for order type: {order.Type} with error: {err.Message}");
-                            }
+                        }
+                        catch (Exception err)
+                        {
+                            Log.Error(err);
+                            Algorithm.Error($"Order Error: id: {order.Id}, Transaction model failed to fill for order type: {order.Type} with error: {err.Message}");
                         }
                     }
                     else if (order.Status == OrderStatus.CancelPending)

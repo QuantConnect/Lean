@@ -21,7 +21,6 @@ using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using System.Linq;
 using QuantConnect.Data.Market;
-using System.Diagnostics.Contracts;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -260,15 +259,23 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (combo1.All(x => x.Status == OrderStatus.Filled))
             {
-                Log(combo1[0].OrderType + ": Canceling combo #2, combo #1 is filled.");
-                combo2.ForEach(x => x.Cancel("Combo #1 filled."));
+                if (combo2.Any(x => x.Status.IsOpen()))
+                {
+                    Log(combo1[0].OrderType + ": Canceling combo #2, combo #1 is filled.");
+                    combo2.ForEach(x => x.Cancel("Combo #1 filled."));
+                }
+
                 return true;
             }
 
             if (combo2.All(x => x.Status == OrderStatus.Filled))
             {
-                Log(combo1[0].OrderType + ": Canceling combo #1, combo #2 is filled.");
-                combo1.ForEach(x => x.Cancel("Combo #2 filled."));
+                if (combo1.Any(x => x.Status.IsOpen()))
+                {
+                    Log(combo1[0].OrderType + ": Canceling combo #1, combo #2 is filled.");
+                    combo1.ForEach(x => x.Cancel("Combo #2 filled."));
+                }
+
                 return true;
             }
 

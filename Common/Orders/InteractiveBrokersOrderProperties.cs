@@ -54,11 +54,6 @@ namespace QuantConnect.Orders
         public bool OutsideRegularTradingHours { get; set; }
 
         /// <summary>
-        /// Guaranteed combo orders routing value
-        /// </summary>
-        public bool? GuaranteedComboRouting { get; set; }
-
-        /// <summary>
         /// Returns a new instance clone of this object
         /// </summary>
         public override IOrderProperties Clone()

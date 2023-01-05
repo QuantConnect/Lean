@@ -57,7 +57,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour)).Single();
+                Time.OneHour,
+                null)).Single();
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
             Assert.AreEqual(security.Price, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
