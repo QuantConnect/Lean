@@ -111,7 +111,7 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
 
             ticket = combo1[0]
             newLimit = round(ticket.Get(OrderField.LimitPrice) + 0.05, 2)
-            self.Log(f"Updating limits - Combo 1 {ticket.OrderId}: {newLimit:.2f}")
+            self.Debug(f"Updating limits - Combo 1 {ticket.OrderId}: {newLimit:.2f}")
             fields = UpdateOrderFields()
             fields.LimitPrice = newLimit
             fields.Tag = f"Update #{len(ticket.UpdateRequests) + 1}"
@@ -119,6 +119,7 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
 
             ticket = combo2[0]
             newLimit = round(ticket.Get(OrderField.LimitPrice) - 0.01, 2)
+            self.Debug(f"Updating limits - Combo 2 {ticket.OrderId}: {newLimit:.2f}")
             fields.LimitPrice = newLimit
             fields.Tag = f"Update #{len(ticket.UpdateRequests) + 1}"
             ticket.Update(fields)
@@ -154,7 +155,7 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
 
             for ticket in combo1:
                 newLimit = ticket.Get(OrderField.LimitPrice) + (1 if ticket.Quantity > 0 else -1) * 0.01
-                self.Log(f"Updating limits - Combo #1: {newLimit:.2f}")
+                self.Debug(f"Updating limits - Combo #1: {newLimit:.2f}")
                 fields = UpdateOrderFields()
                 fields.LimitPrice = newLimit
                 fields.Tag = f"Update #{len(ticket.UpdateRequests) + 1}"
@@ -162,7 +163,7 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
 
             for ticket in combo2:
                 newLimit = ticket.Get(OrderField.LimitPrice) + (1 if ticket.Quantity > 0 else -1) * 0.01
-                self.Log(f"Updating limits - Combo #2: {newLimit:.2f}")
+                self.Debug(f"Updating limits - Combo #2: {newLimit:.2f}")
                 fields.LimitPrice = newLimit
                 fields.Tag = f"Update #{len(ticket.UpdateRequests) + 1}"
                 ticket.Update(fields)
@@ -182,14 +183,16 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
     def CheckGroupOrdersForFills(self, combo1, combo2):
         if all(x.Status == OrderStatus.Filled for x in combo1):
             self.Log(f"{combo1[0].OrderType}: Canceling combo #2, combo #1 is filled.")
-            for ticket in combo2:
-                ticket.Cancel("Combo #1 filled.")
+            if any(OrderExtensions.IsOpen(x.Status) for x in combo2):
+                for ticket in combo2:
+                    ticket.Cancel("Combo #1 filled.")
             return True
 
         if all(x.Status == OrderStatus.Filled for x in combo2):
             self.Log(f"{combo2[0].OrderType}: Canceling combo #1, combo #2 is filled.")
-            for ticket in combo1:
-                ticket.Cancel("Combo #2 filled.")
+            if any(OrderExtensions.IsOpen(x.Status) for x in combo1):
+                for ticket in combo1:
+                    ticket.Cancel("Combo #2 filled.")
             return True
 
         return False
