@@ -685,14 +685,14 @@ namespace QuantConnect.Tests.Algorithm
                                     new Ticks(), new OptionChains(),
                                     new FuturesChains(), new Splits(),
                                     new Dividends(now), new Delistings(),
-                                    new SymbolChangedEvents(), now);
+                                    new SymbolChangedEvents(), new MarginInterestRates(), now);
                 var tradeBar1_2 = new TradeBar(now, underlyingSymbol, 2, 2, 2, 2, 2, TimeSpan.FromDays(1));
                 var slice2 = new Slice(now, new List<BaseData> { tradeBar1_2 },
                     new TradeBars(now), new QuoteBars(),
                     new Ticks(), new OptionChains(),
                     new FuturesChains(), new Splits(),
                     new Dividends(now), new Delistings(),
-                    new SymbolChangedEvents(), now);
+                    new SymbolChangedEvents(), new MarginInterestRates(), now);
                 return new[] { slice1, slice2 };
             }
         }

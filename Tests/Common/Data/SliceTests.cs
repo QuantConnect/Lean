@@ -223,8 +223,9 @@ namespace QuantConnect.Tests.Common.Data
             var dividend1 = new Dividend(Symbols.SPY, _dataTime, 1, 1);
             var delisting1 = new Delisting(Symbols.SPY, _dataTime, 1, DelistingType.Delisted);
             var symbolChangedEvent1 = new SymbolChangedEvent(Symbols.SPY, _dataTime, "SPY", "SP");
+            var marginInterestRate1 = new MarginInterestRate { Time = _dataTime, Symbol = Symbols.SPY, InterestRate = 8 };
             var slice1 = new Slice(_dataTime, new BaseData[] { tradeBar1, tradeBar2,
-                quoteBar1, tick1, split1, dividend1, delisting1, symbolChangedEvent1
+                quoteBar1, tick1, split1, dividend1, delisting1, symbolChangedEvent1, marginInterestRate1
             }, _dataTime);
 
             var tradeBar3 = new TradeBar { Symbol = Symbols.AAPL, Time = _dataTime, Open = 24 };
@@ -236,8 +237,9 @@ namespace QuantConnect.Tests.Common.Data
             var dividend2 = new Dividend(Symbols.SBIN, _dataTime, 1, 1);
             var delisting2 = new Delisting(Symbols.SBIN, _dataTime, 1, DelistingType.Delisted);
             var symbolChangedEvent2 = new SymbolChangedEvent(Symbols.SBIN, _dataTime, "SBIN", "BIN");
+            var marginInterestRate2 = new MarginInterestRate { Time = _dataTime, Symbol = Symbols.SBIN, InterestRate = 18 };
             var slice2 = new Slice(_dataTime, new BaseData[] { tradeBar3, tradeBar4, tradeBar3_4,
-                quoteBar2, tick2, split2, dividend2, delisting2, symbolChangedEvent2
+                quoteBar2, tick2, split2, dividend2, delisting2, symbolChangedEvent2, marginInterestRate2
             }, _dataTime);
 
             slice1.MergeSlice(slice2);
@@ -248,6 +250,7 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(2, slice1.Dividends.Count);
             Assert.AreEqual(2, slice1.Delistings.Count);
             Assert.AreEqual(2, slice1.SymbolChangedEvents.Count);
+            Assert.AreEqual(2, slice1.MarginInterestRates.Count);
         }
 
         [Test]
@@ -286,7 +289,7 @@ namespace QuantConnect.Tests.Common.Data
             var slice1 = new Slice(_dataTime, new BaseData[] { tradeBar1, tick1 }, _dataTime);
             //var Use List<tick>
             var ticks = new Ticks { { Symbols.MSFT, new List<Tick> { tick1 } } };
-            var slice2 = new Slice(_dataTime, new List<BaseData>(), null, null, ticks, null, null, null, null, null, null, _dataTime);
+            var slice2 = new Slice(_dataTime, new List<BaseData>(), null, null, ticks, null, null, null, null, null, null, null, _dataTime);
             slice1.MergeSlice(slice2);
             Assert.AreEqual(2, slice1.Ticks.Count);
 
@@ -314,13 +317,13 @@ namespace QuantConnect.Tests.Common.Data
                                 new Ticks(), optionChain1,
                                 futuresChain1, new Splits(),
                                 new Dividends(_dataTime), new Delistings(),
-                                new SymbolChangedEvents(), _dataTime);
+                                new SymbolChangedEvents(), new MarginInterestRates(), _dataTime);
             var slice5 = new Slice(_dataTime, new List<BaseData>(),
                 new TradeBars(_dataTime), new QuoteBars(),
                 new Ticks(), optionChain2,
                 futuresChain2, new Splits(),
                 new Dividends(_dataTime), new Delistings(),
-                new SymbolChangedEvents(), _dataTime);
+                new SymbolChangedEvents(), new MarginInterestRates(), _dataTime);
             slice4.MergeSlice(slice5);
             Assert.AreEqual(2, slice4.OptionChains.Count);
             Assert.AreEqual(2, slice4.FutureChains.Count);
@@ -730,7 +733,7 @@ def Test(slice):
             var tradeBars = new TradeBars { { Symbols.BTCUSD, tradeBar } };
             var quoteBars = new QuoteBars { { Symbols.BTCUSD, quoteBar } };
 
-            var slice = new Slice(DateTime.Now, new List<BaseData>() { tradeBar, quoteBar }, tradeBars, quoteBars, null, null, null, null, null, null, null, DateTime.Now);
+            var slice = new Slice(DateTime.Now, new List<BaseData>() { tradeBar, quoteBar }, tradeBars, quoteBars, null, null, null, null, null, null, null, null, DateTime.Now);
 
             var tradeBarData = slice.Get<TradeBar>();
             Assert.AreEqual(1, tradeBarData.Count);

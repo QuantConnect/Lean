@@ -125,7 +125,7 @@ namespace QuantConnect.Lean.Engine
             var methodInvokers = new Dictionary<Type, MethodInvoker>();
             var marginCallFrequency = TimeSpan.FromMinutes(5);
             var nextMarginCallTime = DateTime.MinValue;
-            var nextInterestRateTime = DateTime.MinValue;
+            var nextInterestRateTime = algorithm.UtcTime.RoundDown(Time.OneHour) + Time.OneHour;
             var settlementScanFrequency = TimeSpan.FromMinutes(30);
             var nextSettlementScanTime = DateTime.MinValue;
             var time = algorithm.StartDate.Date;
@@ -270,7 +270,7 @@ namespace QuantConnect.Lean.Engine
                     {
                         security.MarginInterestRateModel.ApplyMarginInterestRate(new MarginInterestRateParameters(security, time));
                     }
-                    nextInterestRateTime = time + Time.OneHour;
+                    nextInterestRateTime = time.RoundDown(Time.OneHour) + Time.OneHour;
                 }
 
                 //Update the securities properties with any universe data
