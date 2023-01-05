@@ -48,7 +48,7 @@ namespace QuantConnect.Algorithm.CSharp
             _comboQuantity = quantity;
             legs.ForEach(x => { x.OrderPrice = null; });
 
-            return ComboLimitOrder(legs, quantity, limitPrice.Value, asynchronous: true);
+            return ComboLimitOrder(legs, quantity, limitPrice.Value);
         }
         public override void OnOrderEvent(OrderEvent orderEvent)
         {

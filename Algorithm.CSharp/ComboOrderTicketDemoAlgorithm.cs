@@ -154,7 +154,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 var ticket = combo1[0];
                 var newLimit = Math.Round(ticket.Get(OrderField.LimitPrice) + 0.05m, 2);
-                Log($"Updating limits - Combo 1 {ticket.OrderId}: {newLimit.ToStringInvariant("0.00")}");
+                Debug($"Updating limits - Combo 1 {ticket.OrderId}: {newLimit.ToStringInvariant("0.00")}");
                 ticket.Update(new UpdateOrderFields
                 {
                     LimitPrice = newLimit,
@@ -163,7 +163,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 ticket = combo2[0];
                 newLimit = Math.Round(ticket.Get(OrderField.LimitPrice) - 0.01m, 2);
-                Log($"Updating limits - Combo 2 {ticket.OrderId}: {newLimit.ToStringInvariant("0.00")}");
+                Debug($"Updating limits - Combo 2 {ticket.OrderId}: {newLimit.ToStringInvariant("0.00")}");
                 ticket.Update(new UpdateOrderFields
                 {
                     LimitPrice = newLimit,
@@ -214,7 +214,7 @@ namespace QuantConnect.Algorithm.CSharp
                 foreach (var ticket in combo1)
                 {
                     var newLimit = ticket.Get(OrderField.LimitPrice) + (ticket.Quantity > 0 ? 1m : -1m) * 0.01m;
-                    Log($"Updating limits - Combo #1: {newLimit.ToStringInvariant("0.00")}");
+                    Debug($"Updating limits - Combo #1: {newLimit.ToStringInvariant("0.00")}");
 
                     ticket.Update(new UpdateOrderFields
                     {
@@ -226,7 +226,7 @@ namespace QuantConnect.Algorithm.CSharp
                 foreach (var ticket in combo2)
                 {
                     var newLimit = ticket.Get(OrderField.LimitPrice) + (ticket.Quantity > 0 ? 1m : -1m) * 0.01m;
-                    Log($"Updating limits - Combo #2: {newLimit.ToStringInvariant("0.00")}");
+                    Debug($"Updating limits - Combo #2: {newLimit.ToStringInvariant("0.00")}");
 
                     ticket.Update(new UpdateOrderFields
                     {

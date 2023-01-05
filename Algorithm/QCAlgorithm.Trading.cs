@@ -672,19 +672,18 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="legs">The list of legs the order consists of</param>
         /// <param name="quantity">The total quantity for the order</param>
-        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it fills</param>
         /// <param name="tag">String tag for the order (optional)</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>Sequence of order tickets, one for each leg</returns>
         /// <exception cref="ArgumentException">If not every leg has a defined limit price</exception>
-        public List<OrderTicket> ComboLegLimitOrder(List<Leg> legs, int quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
+        public List<OrderTicket> ComboLegLimitOrder(List<Leg> legs, int quantity, string tag = "", IOrderProperties orderProperties = null)
         {
             if (legs.Any(x => x.OrderPrice == null || x.OrderPrice == 0))
             {
                 throw new ArgumentException("ComboLegLimitOrder requires a limit price for each leg");
             }
 
-            return SubmitComboOrder(legs, quantity, 0, asynchronous, tag, orderProperties);
+            return SubmitComboOrder(legs, quantity, 0, asynchronous: true, tag, orderProperties);
         }
 
         /// <summary>
@@ -694,12 +693,11 @@ namespace QuantConnect.Algorithm
         /// <param name="legs">The list of legs the order consists of</param>
         /// <param name="quantity">The total quantity for the order</param>
         /// <param name="limitPrice">The compound limit price to use for a ComboLimit order. This limit price will compared to the sum of the assets price in order to fill the order.</param>
-        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it fills</param>
         /// <param name="tag">String tag for the order (optional)</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>Sequence of order tickets, one for each leg</returns>
         /// <exception cref="ArgumentException">If the order type is neither ComboMarket, ComboLimit nor ComboLegLimit</exception>
-        public List<OrderTicket> ComboLimitOrder(List<Leg> legs, int quantity, decimal limitPrice, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
+        public List<OrderTicket> ComboLimitOrder(List<Leg> legs, int quantity, decimal limitPrice, string tag = "", IOrderProperties orderProperties = null)
         {
             if (limitPrice == 0)
             {
@@ -711,7 +709,7 @@ namespace QuantConnect.Algorithm
                 throw new ArgumentException("ComboLimitOrder does not support limit prices for individual legs");
             }
 
-            return SubmitComboOrder(legs, quantity, limitPrice, asynchronous, tag, orderProperties);
+            return SubmitComboOrder(legs, quantity, limitPrice, asynchronous: true, tag, orderProperties);
         }
 
         private IEnumerable<OrderTicket> GenerateOptionStrategyOrders(OptionStrategy strategy, int strategyQuantity, bool asynchronous, string tag, IOrderProperties orderProperties)
