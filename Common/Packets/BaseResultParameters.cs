@@ -61,6 +61,11 @@ namespace QuantConnect.Packets
         public IDictionary<string, string> RuntimeStatistics { get; set; }
 
         /// <summary>
+        /// State information regarding the data packet and algorithm.
+        /// </summary>
+        public IDictionary<string, string> State { get; set; }
+
+        /// <summary>
         /// The algorithm's configuration required for report generation
         /// </summary>
         public AlgorithmConfiguration AlgorithmConfiguration { get; set; }

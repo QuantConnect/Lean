@@ -143,6 +143,11 @@ namespace QuantConnect.Lean.Engine.Results
         protected Dictionary<string, string> RuntimeStatistics { get; }
 
         /// <summary>
+        /// State of the result packet
+        /// </summary>
+        protected Dictionary<string, string> State { get; }
+
+        /// <summary>
         /// The handler responsible for communicating messages to listeners
         /// </summary>
         protected IMessagingHandler MessagingHandler;
@@ -665,6 +670,28 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             return runtimeStatistics;
+        }
+
+        /// <summary>
+        /// Gets the algorithm state data
+        /// </summary>
+        protected Dictionary<string, string> GetAlgorithmState(string endTime = "")
+        {
+            var state = new Dictionary<string, string>
+            {
+                ["Status"] = Algorithm.Status.ToStringInvariant(),
+                ["StartTime"] = StartTime.ToString(),
+                ["Hostname"] = _hostName,
+                ["EndTime"] = endTime,
+                ["RuntimeError"] = "",
+                ["StackTrace"] = "",
+            };
+            if (Algorithm?.RunTimeError != null)
+            {
+                state["RuntimeError"] = Algorithm.RunTimeError.ToString();
+                state["StackTrace"] = Algorithm.RunTimeError.StackTrace;
+            }
+            return state;
         }
 
         /// <summary>

@@ -217,7 +217,11 @@ namespace QuantConnect.Lean.Engine.Results
                         runtimeStatistics,
                         new Dictionary<string, AlgorithmPerformance>(),
                         // we store the last 100 order events, the final packet will contain the full list
-                        TransactionHandler.OrderEvents.Reverse().Take(100).ToList()));
+                        TransactionHandler.OrderEvents.Reverse().Take(100).ToList(),
+                        null,
+                        null,
+                        null,
+                        GetAlgorithmState()));
 
                     StoreResult(new BacktestResultPacket(_job, completeResult, Algorithm.EndDate, Algorithm.StartDate, progress));
 
@@ -308,7 +312,8 @@ namespace QuantConnect.Lean.Engine.Results
                             null, // null order events, we store them separately
                             result.Results.TotalPerformance,
                             result.Results.AlphaRuntimeStatistics,
-                            result.Results.AlgorithmConfiguration));
+                            result.Results.AlgorithmConfiguration,
+                            result.Results.State));
                     }
                     // Save results
                     SaveResults(key, results);
@@ -357,7 +362,7 @@ namespace QuantConnect.Lean.Engine.Results
                     result = new BacktestResultPacket(_job,
                         new BacktestResult(new BacktestResultParameters(charts, orders, profitLoss, statisticsResults.Summary, runtime,
                             statisticsResults.RollingPerformances, orderEvents, statisticsResults.TotalPerformance, AlphaRuntimeStatistics,
-                            AlgorithmConfiguration.Create(Algorithm))),
+                            AlgorithmConfiguration.Create(Algorithm), GetAlgorithmState(DateTime.UtcNow.ToStringInvariant()))),
                         Algorithm.EndDate, Algorithm.StartDate);
                 }
                 else
