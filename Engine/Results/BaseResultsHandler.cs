@@ -680,7 +680,7 @@ namespace QuantConnect.Lean.Engine.Results
             var state = new Dictionary<string, string>
             {
                 ["Status"] = Algorithm.Status.ToStringInvariant(),
-                ["StartTime"] = StartTime.ToString(),
+                ["StartTime"] = StartTime.ToStringInvariant(),
                 ["Hostname"] = _hostName,
                 ["EndTime"] = endTime,
                 ["RuntimeError"] = "",
