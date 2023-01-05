@@ -688,8 +688,8 @@ namespace QuantConnect.Lean.Engine.Results
             };
             if (Algorithm?.RunTimeError != null)
             {
-                state["RuntimeError"] = Algorithm.RunTimeError.ToString();
-                state["StackTrace"] = Algorithm.RunTimeError.StackTrace;
+                state["RuntimeError"] = Algorithm.RunTimeError.Message;
+                state["StackTrace"] = Algorithm.RunTimeError.InnerException.StackTrace;
             }
             return state;
         }
