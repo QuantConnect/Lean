@@ -147,6 +147,7 @@ namespace QuantConnect.Brokerages
             }
         }
 
+        /// <summary>
         /// Event invocator for the OrderFilled event
         /// </summary>
         /// <param name="e">The order event</param>

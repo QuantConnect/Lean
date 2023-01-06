@@ -13,10 +13,9 @@
  * limitations under the License.
 */
 
-using Newtonsoft.Json;
 using System;
+using Newtonsoft.Json;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace QuantConnect.Orders
 {
@@ -33,12 +32,12 @@ namespace QuantConnect.Orders
         /// <summary>
         /// The group order quantity
         /// </summary>
-        public decimal Quantity { get; set; }
+        public decimal Quantity { get; }
 
         /// <summary>
         /// The total order count associated with this order group
         /// </summary>
-        public int Count { get; set; }
+        public int Count { get; }
 
         /// <summary>
         /// The limit price associated with this order group if any
@@ -48,7 +47,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// The order Ids in this group
         /// </summary>
-        public HashSet<int> OrderIds { get; set; }
+        public HashSet<int> OrderIds { get; }
 
         /// <summary>
         /// Order Direction Property based off Quantity.
@@ -85,6 +84,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Creates a new instance
         /// </summary>
+        /// <param name="id">This order group unique Id</param>
         /// <param name="legCount">The order leg count</param>
         /// <param name="quantity">The group order quantity</param>
         /// <param name="limitPrice">The limit price associated with this order group if any</param>

@@ -166,6 +166,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
 
             foreach (var symbol in symbols)
             {
+                if (symbol.IsCanonical() || symbol.Contains("UNIVERSE"))
+                {
+                    continue;
+                }
                 var offsetProvider = GetTimeZoneOffsetProvider(symbol);
                 var trades = SubscriptionManager.DefaultDataTypes()[symbol.SecurityType].Contains(TickType.Trade);
                 var quotes = SubscriptionManager.DefaultDataTypes()[symbol.SecurityType].Contains(TickType.Quote);

@@ -26,7 +26,7 @@ namespace QuantConnect.Algorithm.CSharp
         protected override IEnumerable<OrderTicket> PlaceComboOrder(List<Leg> legs, int quantity, decimal? limitPrice = null)
         {
             legs.ForEach(x => { x.OrderPrice = null; });
-            return ComboMarketOrder(legs, quantity, asynchronous: true);
+            return ComboMarketOrder(legs, quantity);
         }
 
         /// <summary>

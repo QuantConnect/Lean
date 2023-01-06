@@ -340,15 +340,19 @@ namespace QuantConnect.Orders
                 throw new ArgumentException("OrderJsonConverter.DeserializeGroupOrderManager(): JObject does not have a GroupOrderManager");
             }
 
-            return new GroupOrderManager(
+            var result = new GroupOrderManager(
                 groupOrderManagerJObject["Id"].Value<int>(),
                 groupOrderManagerJObject["Count"].Value<int>(),
                 groupOrderManagerJObject["Quantity"].Value<decimal>(),
                 groupOrderManagerJObject["LimitPrice"].Value<decimal>()
-            )
+            );
+
+            foreach (var orderId in groupOrderManagerJObject["OrderIds"].Values<int>())
             {
-                OrderIds = groupOrderManagerJObject["OrderIds"].Values<int>().ToHashSet()
-            };
+                result.OrderIds.Add(orderId);
+            }
+
+            return result;
         }
     }
 }
