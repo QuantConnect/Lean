@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,25 +13,47 @@
  * limitations under the License.
 */
 
+using System.Collections;
+using System.Collections.Generic;
+
 namespace QuantConnect.Orders.Fills
 {
     /// <summary>
-    /// Defines the result for <see cref="IFillModel.Fill"/>
+    /// Defines a possible result for <see cref="IFillModel.Fill"/> for a single order
     /// </summary>
-    public class Fill
+    public class Fill : IEnumerable<OrderEvent>
     {
-        /// <summary>
-        /// The order event associated to this <see cref="Fill"/> instance
-        /// </summary>
-        public OrderEvent OrderEvent { get; }
+        private readonly List<OrderEvent> _orderEvents;
 
         /// <summary>
         /// Creates a new <see cref="Fill"/> instance
         /// </summary>
-        /// <param name="orderEvent"></param>
+        /// <param name="orderEvents">The fill order events</param>
+        public Fill(List<OrderEvent> orderEvents)
+        {
+            _orderEvents = orderEvents;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Fill"/> instance
+        /// </summary>
+        /// <param name="orderEvent">The fill order event</param>
         public Fill(OrderEvent orderEvent)
         {
-            OrderEvent = orderEvent;
+            _orderEvents = new() { orderEvent };
+        }
+
+        /// <summary>
+        /// Returns the order events enumerator
+        /// </summary>
+        public IEnumerator<OrderEvent> GetEnumerator()
+        {
+            return _orderEvents.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

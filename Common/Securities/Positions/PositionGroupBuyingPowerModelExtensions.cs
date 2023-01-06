@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Orders;
+using System.Collections.Generic;
 
 namespace QuantConnect.Securities.Positions
 {
@@ -87,11 +88,11 @@ namespace QuantConnect.Securities.Positions
             this IPositionGroupBuyingPowerModel model,
             SecurityPortfolioManager portfolio,
             IPositionGroup positionGroup,
-            Order order
+            List<Order> orders
             )
         {
             return model.HasSufficientBuyingPowerForOrder(new HasSufficientPositionGroupBuyingPowerForOrderParameters(
-                portfolio, positionGroup, order
+                portfolio, positionGroup, orders
             ));
         }
 

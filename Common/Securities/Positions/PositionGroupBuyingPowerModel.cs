@@ -91,7 +91,7 @@ namespace QuantConnect.Securities.Positions
             var impactedGroups = new List<IPositionGroup>();
 
             // 3. Determine set of impacted positions to be grouped
-            var positions = parameters.Order.CreatePositions(parameters.Portfolio.Securities).ToList();
+            var positions = parameters.Orders.Select(o => o.CreatePositions(parameters.Portfolio.Securities)).SelectMany(p => p).ToList();
 
             var impactedPositions = positions.ToDictionary(p => p.Symbol);
 
@@ -153,9 +153,16 @@ namespace QuantConnect.Securities.Positions
             //   3. Confirm we haven't exceeded maintenance margin limits via GetReservedBuyingPowerImpact's delta
 
             // 1. Confirm we meet initial margin requirements, accounting for buffer
-            var availableBuyingPower = this.GetPositionGroupBuyingPower(
-                parameters.Portfolio, parameters.PositionGroup, parameters.Order.Direction
-            );
+            var direction = parameters.Orders.Select(o =>
+            {
+                if (o.GroupOrderManager != null)
+                {
+                    return o.GroupOrderManager.Direction;
+                }
+                return o.Direction;
+            }).First();
+
+            var availableBuyingPower = this.GetPositionGroupBuyingPower(parameters.Portfolio, parameters.PositionGroup, direction);
 
             // 2. Confirm we pass position group specific checks
             var result = PassesPositionGroupSpecificBuyingPowerForOrderChecks(parameters, availableBuyingPower);
@@ -165,7 +172,7 @@ namespace QuantConnect.Securities.Positions
             }
 
             // 3. Confirm that the new groupings arising from the change doesn't make maintenance margin exceed TPV
-            var args = new ReservedBuyingPowerImpactParameters(parameters.Portfolio, parameters.PositionGroup, parameters.Order);
+            var args = new ReservedBuyingPowerImpactParameters(parameters.Portfolio, parameters.PositionGroup, parameters.Orders);
             var deltaBuyingPower = GetReservedBuyingPowerImpact(args).Delta;
             if (deltaBuyingPower <= availableBuyingPower)
             {
@@ -173,7 +180,7 @@ namespace QuantConnect.Securities.Positions
             }
 
             return parameters.Insufficient(Invariant(
-                $"Id: {parameters.Order.Id}, Maintenance Margin Delta: {deltaBuyingPower.Normalize()}, Free Margin: {availableBuyingPower.Value.Normalize()}"
+                $"Id: {string.Join(",", parameters.Orders.Select(o => o.Id))}, Maintenance Margin Delta: {deltaBuyingPower.Normalize()}, Free Margin: {availableBuyingPower.Value.Normalize()}"
             ));
         }
 

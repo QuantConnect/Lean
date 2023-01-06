@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Orders;
 
@@ -24,9 +25,9 @@ namespace QuantConnect.Securities.Positions
     public class HasSufficientPositionGroupBuyingPowerForOrderParameters
     {
         /// <summary>
-        /// Gets the order
+        /// The orders associated with this request
         /// </summary>
-        public Order Order { get; }
+        public List<Order> Orders { get; }
 
         /// <summary>
         /// Gets the position group representing the holdings changes contemplated by the order
@@ -43,14 +44,14 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         /// <param name="portfolio">The algorithm's portfolio manager</param>
         /// <param name="positionGroup">The position group</param>
-        /// <param name="order">The order</param>
+        /// <param name="orders">The orders</param>
         public HasSufficientPositionGroupBuyingPowerForOrderParameters(
             SecurityPortfolioManager portfolio,
             IPositionGroup positionGroup,
-            Order order
+            List<Order> orders
             )
         {
-            Order = order;
+            Orders = orders;
             Portfolio = portfolio;
             PositionGroup = positionGroup;
         }
@@ -64,7 +65,7 @@ namespace QuantConnect.Securities.Positions
         {
             var position = parameters.PositionGroup.Single();
             var security = parameters.Portfolio.Securities[position.Symbol];
-            return new HasSufficientBuyingPowerForOrderParameters(parameters.Portfolio, security, parameters.Order);
+            return new HasSufficientBuyingPowerForOrderParameters(parameters.Portfolio, security, parameters.Orders.Single());
         }
 
         /// <summary>

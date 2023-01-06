@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using NUnit.Framework;
 using QuantConnect.Interfaces;
@@ -151,7 +152,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new HasSufficientPositionGroupBuyingPowerForOrderParameters(
                     Portfolio,
                     new PositionGroup(PositionGroupModel, new Position(parameters.Security, parameters.Order.Quantity)),
-                    parameters.Order
+                    new List<Order> { parameters.Order }
                 )
             );
 

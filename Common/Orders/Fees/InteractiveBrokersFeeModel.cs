@@ -14,10 +14,9 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using QuantConnect.Orders.Fills;
 using QuantConnect.Securities;
+using QuantConnect.Orders.Fills;
+using System.Collections.Generic;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Orders.Fees
@@ -84,6 +83,12 @@ namespace QuantConnect.Orders.Fees
                 }
             }
 
+            var quantity = order.AbsoluteQuantity;
+            if (order.GroupOrderManager != null)
+            {
+                quantity *= order.GroupOrderManager.AbsoluteQuantity;
+            }
+
             decimal feeResult;
             string feeCurrency;
             var market = security.Symbol.ID.Market;
@@ -106,7 +111,7 @@ namespace QuantConnect.Orders.Fees
                         throw new KeyNotFoundException($"InteractiveBrokersFeeModel(): unexpected option Market {market}");
                     }
                     // applying commission function to the order
-                    var optionFee = optionsCommissionFunc(order.AbsoluteQuantity, order.Price);
+                    var optionFee = optionsCommissionFunc(quantity, order.Price);
                     feeResult = optionFee.Amount;
                     feeCurrency = optionFee.Currency;
                     break;
@@ -129,7 +134,7 @@ namespace QuantConnect.Orders.Fees
                     }
 
                     var feeRatePerContract = feeRatePerContractFunc(security);
-                    feeResult = order.AbsoluteQuantity * feeRatePerContract.Amount;
+                    feeResult = quantity * feeRatePerContract.Amount;
                     feeCurrency = feeRatePerContract.Currency;
                     break;
 
@@ -149,7 +154,7 @@ namespace QuantConnect.Orders.Fees
                     var tradeValue = Math.Abs(order.GetValue(security));
 
                     //Per share fees
-                    var tradeFee = equityFee.FeePerShare * order.AbsoluteQuantity;
+                    var tradeFee = equityFee.FeePerShare * quantity;
 
                     //Maximum Per Order: equityFee.MaximumFeeRate
                     //Minimum per order. $equityFee.MinimumFee

@@ -192,9 +192,15 @@ namespace QuantConnect.Orders
                             Direction == OrderDirection.Sell && limitOrder.LimitPrice <= OrderSubmissionData.BidPrice);
                 }
 
-                return Type == OrderType.Market;
+                return Type == OrderType.Market || Type == OrderType.ComboMarket;
             }
         }
+
+        /// <summary>
+        /// Manager for the orders in the group if this is a combo order
+        /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public GroupOrderManager GroupOrderManager { get; set; }
 
         /// <summary>
         /// Added a default constructor for JSON Deserialization:
@@ -208,6 +214,30 @@ namespace QuantConnect.Orders
             Tag = string.Empty;
             BrokerId = new List<string>();
             Properties = new OrderProperties();
+            GroupOrderManager = null;
+        }
+
+        /// <summary>
+        /// New order constructor
+        /// </summary>
+        /// <param name="symbol">Symbol asset we're seeking to trade</param>
+        /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
+        /// <param name="time">Time the order was placed</param>
+        /// <param name="groupOrderManager">Manager for the orders in the group if this is a combo order</param>
+        /// <param name="tag">User defined data tag for this order</param>
+        /// <param name="properties">The order properties for this order</param>
+        protected Order(Symbol symbol, decimal quantity, DateTime time, GroupOrderManager groupOrderManager, string tag = "",
+            IOrderProperties properties = null)
+        {
+            Time = time;
+            PriceCurrency = string.Empty;
+            Quantity = quantity;
+            Symbol = symbol;
+            Status = OrderStatus.None;
+            Tag = tag;
+            BrokerId = new List<string>();
+            Properties = properties ?? new OrderProperties();
+            GroupOrderManager = groupOrderManager;
         }
 
         /// <summary>
@@ -219,15 +249,8 @@ namespace QuantConnect.Orders
         /// <param name="tag">User defined data tag for this order</param>
         /// <param name="properties">The order properties for this order</param>
         protected Order(Symbol symbol, decimal quantity, DateTime time, string tag = "", IOrderProperties properties = null)
+            : this(symbol, quantity, time, null, tag, properties)
         {
-            Time = time;
-            PriceCurrency = string.Empty;
-            Quantity = quantity;
-            Symbol = symbol;
-            Status = OrderStatus.None;
-            Tag = tag;
-            BrokerId = new List<string>();
-            Properties = properties ?? new OrderProperties();
         }
 
         /// <summary>
@@ -250,6 +273,7 @@ namespace QuantConnect.Orders
         /// </summary>
         /// <param name="security">The security matching this order's symbol</param>
         /// <returns>The value of this order given the current market price</returns>
+        /// <remarks>TODO: we should remove this. Only used in tests</remarks>
         public decimal GetValue(Security security)
         {
             var value = GetValueImpl(security);
@@ -333,6 +357,7 @@ namespace QuantConnect.Orders
             order.Tag = Tag;
             order.Properties = Properties.Clone();
             order.OrderSubmissionData = OrderSubmissionData?.Clone();
+            order.GroupOrderManager = GroupOrderManager;
         }
 
         /// <summary>
@@ -364,7 +389,8 @@ namespace QuantConnect.Orders
                 new OrderProperties { TimeInForce = timeInForce },
                 serializedOrder.LimitPrice ?? 0,
                 serializedOrder.StopPrice ?? 0,
-                serializedOrder.TriggerPrice ?? 0);
+                serializedOrder.TriggerPrice ?? 0,
+                serializedOrder.GroupOrderManager);
 
             order.OrderSubmissionData = new OrderSubmissionData(serializedOrder.SubmissionBidPrice,
                 serializedOrder.SubmissionAskPrice,
@@ -403,11 +429,11 @@ namespace QuantConnect.Orders
         public static Order CreateOrder(SubmitOrderRequest request)
         {
             return CreateOrder(request.OrderId, request.OrderType, request.Symbol, request.Quantity, request.Time,
-                request.Tag, request.OrderProperties, request.LimitPrice, request.StopPrice, request.TriggerPrice);
+                request.Tag, request.OrderProperties, request.LimitPrice, request.StopPrice, request.TriggerPrice, request.GroupOrderManager);
         }
 
         private static Order CreateOrder(int orderId, OrderType type, Symbol symbol, decimal quantity, DateTime time,
-            string tag, IOrderProperties properties, decimal limitPrice, decimal stopPrice, decimal triggerPrice)
+            string tag, IOrderProperties properties, decimal limitPrice, decimal stopPrice, decimal triggerPrice, GroupOrderManager groupOrderManager)
         {
             Order order;
             switch (type)
@@ -427,7 +453,7 @@ namespace QuantConnect.Orders
                 case OrderType.StopLimit:
                     order = new StopLimitOrder(symbol, quantity, stopPrice, limitPrice, time, tag, properties);
                     break;
-                
+
                 case OrderType.LimitIfTouched:
                     order = new LimitIfTouchedOrder(symbol, quantity, triggerPrice, limitPrice, time, tag, properties);
                     break;
@@ -444,11 +470,27 @@ namespace QuantConnect.Orders
                     order = new OptionExerciseOrder(symbol, quantity, time, tag, properties);
                     break;
 
+                case OrderType.ComboLimit:
+                    order = new ComboLimitOrder(symbol, quantity, limitPrice, time, groupOrderManager, tag, properties);
+                    break;
+
+                case OrderType.ComboLegLimit:
+                    order = new ComboLegLimitOrder(symbol, quantity, limitPrice, time, groupOrderManager, tag, properties);
+                    break;
+
+                case OrderType.ComboMarket:
+                    order = new ComboMarketOrder(symbol, quantity, time, groupOrderManager, tag, properties);
+                    break;
+
                 default:
                     throw new ArgumentOutOfRangeException();
             }
             order.Status = OrderStatus.New;
             order.Id = orderId;
+            if (groupOrderManager != null)
+            {
+                groupOrderManager.OrderIds.Add(orderId);
+            }
             return order;
         }
     }

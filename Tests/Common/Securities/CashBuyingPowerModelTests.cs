@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
@@ -867,9 +868,9 @@ namespace QuantConnect.Tests.Common.Securities
         {
             using (var resetEvent = new ManualResetEvent(false))
             {
-                EventHandler<OrderEvent> handler = (s, e) => { resetEvent.Set(); };
+                EventHandler<List<OrderEvent>> handler = (s, e) => { resetEvent.Set(); };
 
-                _brokerage.OrderStatusChanged += handler;
+                _brokerage.OrdersStatusChanged += handler;
 
                 _algorithm.LimitOrder(symbol, quantity, limitPrice);
 
@@ -878,7 +879,7 @@ namespace QuantConnect.Tests.Common.Securities
                     throw new TimeoutException("SubmitLimitOrder");
                 }
 
-                _brokerage.OrderStatusChanged -= handler;
+                _brokerage.OrdersStatusChanged -= handler;
             }
         }
 
@@ -886,9 +887,9 @@ namespace QuantConnect.Tests.Common.Securities
         {
             using (var resetEvent = new ManualResetEvent(false))
             {
-                EventHandler<OrderEvent> handler = (s, e) => { resetEvent.Set(); };
+                EventHandler<List<OrderEvent>> handler = (s, e) => { resetEvent.Set(); };
 
-                _brokerage.OrderStatusChanged += handler;
+                _brokerage.OrdersStatusChanged += handler;
 
                 _algorithm.StopMarketOrder(symbol, quantity, stopPrice);
 
@@ -897,7 +898,7 @@ namespace QuantConnect.Tests.Common.Securities
                     throw new TimeoutException("SubmitStopMarketOrder");
                 }
 
-                _brokerage.OrderStatusChanged -= handler;
+                _brokerage.OrdersStatusChanged -= handler;
             }
         }
 

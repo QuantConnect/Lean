@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Orders;
+using System.Collections.Generic;
 
 namespace QuantConnect.Securities.Positions
 {
@@ -33,23 +34,23 @@ namespace QuantConnect.Securities.Positions
         public SecurityPortfolioManager Portfolio { get; }
 
         /// <summary>
-        /// The order associated with this request
+        /// The orders associated with this request
         /// </summary>
-        public Order Order { get; }
+        public List<Order> Orders { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReservedBuyingPowerImpactParameters"/> class
         /// </summary>
         /// <param name="portfolio">The algorithm's portfolio manager</param>
         /// <param name="contemplatedChanges">The position changes being contemplated</param>
-        /// <param name="order">The order associated with this request</param>
+        /// <param name="orders">The orders associated with this request</param>
         public ReservedBuyingPowerImpactParameters(
             SecurityPortfolioManager portfolio,
             IPositionGroup contemplatedChanges,
-            Order order
+            List<Order> orders
             )
         {
-            Order = order;
+            Orders = orders;
             Portfolio = portfolio;
             ContemplatedChanges = contemplatedChanges;
         }

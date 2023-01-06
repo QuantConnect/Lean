@@ -13,20 +13,26 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Orders.Fills
+namespace QuantConnect.Orders
 {
     /// <summary>
-    /// Represents a model that simulates order fill events
+    /// Basic order leg
     /// </summary>
-    /// <remarks>Please use<see cref="FillModel"/> as the base class for
-    /// any implementations of<see cref="IFillModel"/></remarks>
-    public interface IFillModel
+    public class Leg
     {
         /// <summary>
-        /// Return an order event with the fill details
+        /// The legs symbol
         /// </summary>
-        /// <param name="parameters">A <see cref="FillModelParameters"/> object containing the security and order</param>
-        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
-        Fill Fill(FillModelParameters parameters);
+        public Symbol Symbol { get; set; }
+
+        /// <summary>
+        /// Quantity multiplier used to specify proper scale (and direction) of the leg within the strategy
+        /// </summary>
+        public int Quantity { get; set; }
+
+        /// <summary>
+        /// Order limit price of the leg in case limit order is sent to the market on strategy execution
+        /// </summary>
+        public decimal? OrderPrice { get; set; }
     }
 }

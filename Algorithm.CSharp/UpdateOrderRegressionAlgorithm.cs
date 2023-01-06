@@ -47,7 +47,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         private readonly CircularQueue<OrderType> _orderTypesQueue = new CircularQueue<OrderType>(Enum.GetValues(typeof(OrderType))
                                                                         .OfType<OrderType>()
-                                                                        .Where (x => x != OrderType.OptionExercise && x != OrderType.LimitIfTouched));
+                                                                        .Where (x => x != OrderType.OptionExercise && x != OrderType.LimitIfTouched
+                                                                            && x != OrderType.ComboMarket && x != OrderType.ComboLimit && x != OrderType.ComboLegLimit));
         private readonly List<OrderTicket> _tickets = new List<OrderTicket>();
 
         /// <summary>

@@ -33,6 +33,7 @@ namespace QuantConnect.Securities
         private readonly Dictionary<DateTime, decimal> _transactionRecord;
         private readonly IAlgorithm _algorithm;
         private int _orderId;
+        private int _groupOrderManagerId;
         private readonly SecurityManager _securities;
         private TimeSpan _marketOrderFillTimeout = TimeSpan.FromSeconds(5);
 
@@ -132,9 +133,23 @@ namespace QuantConnect.Securities
             var submit = request as SubmitOrderRequest;
             if (submit != null)
             {
-                submit.SetOrderId(GetIncrementOrderId());
+                SetOrderId(submit);
             }
             return _orderProcessor.Process(request);
+        }
+
+        /// <summary>
+        /// Sets the order id for the specified submit request
+        /// </summary>
+        /// <param name="request">Request to set the order id for</param>
+        /// <remarks>This method is public so we can request an order id from outside the assembly, for testing for example</remarks>
+        public void SetOrderId(SubmitOrderRequest request)
+        {
+            // avoid setting the order id if it's already been set
+            if (request.OrderId < 1)
+            {
+                request.SetOrderId(GetIncrementOrderId());
+            }
         }
 
         /// <summary>
@@ -261,8 +276,8 @@ namespace QuantConnect.Securities
 
         /// <summary>
         /// Gets an enumerable of opened <see cref="OrderTicket"/> matching the specified <paramref name="filter"/>
-        /// However, this method can be confused with the override that takes a Symbol as parameter. For this reason 
-        /// it first checks if it can convert the parameter into a symbol. If that conversion cannot be aplied it 
+        /// However, this method can be confused with the override that takes a Symbol as parameter. For this reason
+        /// it first checks if it can convert the parameter into a symbol. If that conversion cannot be aplied it
         /// assumes the parameter is a Python function object and not a Python representation of a Symbol.
         /// </summary>
         /// <param name="filter">The Python function filter used to find the required order tickets</param>
@@ -290,8 +305,8 @@ namespace QuantConnect.Securities
 
         /// <summary>
         /// Gets the remaining quantity to be filled from open orders, i.e. order size minus quantity filled
-        /// However, this method can be confused with the override that takes a Symbol as parameter. For this reason 
-        /// it first checks if it can convert the parameter into a symbol. If that conversion cannot be aplied it 
+        /// However, this method can be confused with the override that takes a Symbol as parameter. For this reason
+        /// it first checks if it can convert the parameter into a symbol. If that conversion cannot be aplied it
         /// assumes the parameter is a Python function object and not a Python representation of a Symbol.
         /// </summary>
         /// <param name="filter">Filters the order tickets to be included in the aggregate quantity remaining to be filled</param>
@@ -423,9 +438,9 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="brokerageId">The brokerage id to fetch</param>
         /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
-        public Order GetOrderByBrokerageId(string brokerageId)
+        public List<Order> GetOrdersByBrokerageId(string brokerageId)
         {
-            return _orderProcessor.GetOrderByBrokerageId(brokerageId);
+            return _orderProcessor.GetOrdersByBrokerageId(brokerageId);
         }
 
         /// <summary>
@@ -459,6 +474,15 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Get a new group order manager id, and increment the internal counter.
+        /// </summary>
+        /// <returns>New unique int group order manager id.</returns>
+        public int GetIncrementGroupOrderManagerId()
+        {
+            return Interlocked.Increment(ref _groupOrderManagerId);
+        }
+
+        /// <summary>
         /// Sets the <see cref="IOrderProvider"/> used for fetching orders for the algorithm
         /// </summary>
         /// <param name="orderProvider">The <see cref="IOrderProvider"/> to be used to manage fetching orders</param>
@@ -487,14 +511,6 @@ namespace QuantConnect.Securities
                 }
                 _transactionRecord.Add(clone, transactionProfitLoss);
             }
-        }
-
-        /// <summary>
-        /// Returns true when the specified order is in a completed state
-        /// </summary>
-        private static bool Completed(Order order)
-        {
-            return order.Status == OrderStatus.Filled || order.Status == OrderStatus.PartiallyFilled || order.Status == OrderStatus.Invalid || order.Status == OrderStatus.Canceled;
         }
     }
 }
