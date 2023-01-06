@@ -683,14 +683,9 @@ namespace QuantConnect.Lean.Engine.Results
                 ["StartTime"] = StartTime.ToStringInvariant(),
                 ["Hostname"] = _hostName,
                 ["EndTime"] = endTime,
-                ["RuntimeError"] = "",
-                ["StackTrace"] = "",
+                ["RuntimeError"] = Algorithm?.RunTimeError?.Message ?? "",
+                ["StackTrace"] = Algorithm.RunTimeError?.InnerException?.StackTrace ?? "",
             };
-            if (Algorithm?.RunTimeError != null)
-            {
-                state["RuntimeError"] = Algorithm.RunTimeError.Message;
-                state["StackTrace"] = Algorithm.RunTimeError.InnerException.StackTrace;
-            }
             return state;
         }
 

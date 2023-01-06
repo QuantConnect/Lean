@@ -236,6 +236,7 @@ namespace QuantConnect.Lean.Engine
                         initializeComplete = false;
                         //Get all the error messages: internal in algorithm and external in setup handler.
                         var errorMessage = string.Join(",", algorithm.ErrorMessages);
+                        string stackTrace = "";
                         errorMessage += string.Join(",", AlgorithmHandlers.Setup.Errors.Select(e =>
                         {
                             var message = e.Message;
@@ -243,11 +244,14 @@ namespace QuantConnect.Lean.Engine
                             {
                                 var interpreter = StackExceptionInterpreter.Instance.Value;
                                 var err = interpreter.Interpret(e.InnerException);
-                                message += interpreter.GetExceptionMessageHeader(err);
+                                var stackMessage = interpreter.GetExceptionMessageHeader(err);
+                                message += stackMessage;
+                                stackTrace += stackMessage;
                             }
                             return message;
                         }));
                         Log.Error("Engine.Run(): " + errorMessage);
+                        algorithm.SetRuntimeError(new InitializeException(errorMessage, stackTrace), "Result Handler");
                         AlgorithmHandlers.Results.RuntimeError(errorMessage);
                         SystemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, errorMessage);
                     }
@@ -541,4 +545,23 @@ namespace QuantConnect.Lean.Engine
         }
 
     } // End Algorithm Node Core Thread
+
+    public class InitializeException : Exception
+    {
+        private readonly string stackTrace;
+
+        public InitializeException(string message, string stackTrace) : base(message)
+        {
+            this.stackTrace = stackTrace;
+        }
+
+        public override string StackTrace
+        {
+            get
+            {
+                return this.stackTrace;
+            }
+        }
+
+    }
 } // End Namespace
