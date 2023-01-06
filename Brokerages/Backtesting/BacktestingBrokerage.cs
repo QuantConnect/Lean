@@ -400,7 +400,7 @@ namespace QuantConnect.Brokerages.Backtesting
                     }
 
                     List<OrderEvent> fillEvents = new(orders.Count);
-                    List<OrderEvent> positionAssignments = new(orders.Count);
+                    List<Tuple<Order, OrderEvent>> positionAssignments = new(orders.Count);
                     foreach (var targetOrder in orders)
                     {
                         var orderFills = fills.Where(f => f.OrderId == targetOrder.Id);
@@ -418,8 +418,7 @@ namespace QuantConnect.Brokerages.Backtesting
 
                             if (fill.IsAssignment)
                             {
-                                fill.Message = targetOrder.Tag;
-                                positionAssignments.Add(fill);
+                                positionAssignments.Add(Tuple.Create(targetOrder, fill));
                             }
                         }
                     }
@@ -427,7 +426,8 @@ namespace QuantConnect.Brokerages.Backtesting
                     OnOrderEvents(fillEvents);
                     foreach (var assignment in positionAssignments)
                     {
-                        OnOptionPositionAssigned(assignment);
+                        assignment.Item2.Message = assignment.Item1.Tag;
+                        OnOptionPositionAssigned(assignment.Item2);
                     }
 
                     if (fills.All(x => x.Status.IsClosed()))
