@@ -53,9 +53,7 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
                     quantities = [1, -2, 1]
                     self._orderLegs = []
                     for i, contract in enumerate(callContracts[:3]):
-                        leg = Leg();
-                        leg.Symbol = contract.Symbol
-                        leg.Quantity = quantities[i]
+                        leg = Leg.Create(contract.Symbol, quantities[i]);
                         self._orderLegs.append(leg)
         else:
             # COMBO MARKET ORDERS
