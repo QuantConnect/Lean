@@ -73,9 +73,9 @@ namespace QuantConnect.Algorithm.CSharp
 
                     _orderLegs = new List<Leg>()
                     {
-                        new Leg() { Symbol = callContracts[0].Symbol, Quantity = 1 },
-                        new Leg() { Symbol = callContracts[1].Symbol, Quantity = -2 },
-                        new Leg() { Symbol = callContracts[2].Symbol, Quantity = 1 },
+                        Leg.Create(callContracts[0].Symbol, 1),
+                        Leg.Create(callContracts[1].Symbol, -2),
+                        Leg.Create(callContracts[2].Symbol, 1),
                     };
                 }
             }

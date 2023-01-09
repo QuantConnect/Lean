@@ -34,5 +34,16 @@ namespace QuantConnect.Orders
         /// Order limit price of the leg in case limit order is sent to the market on strategy execution
         /// </summary>
         public decimal? OrderPrice { get; set; }
+
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        /// <param name="symbol">The symbol</param>
+        /// <param name="quantity">The quantity</param>
+        /// <param name="limitPrice">Associated limit price if any</param>
+        public static Leg Create(Symbol symbol, int quantity, decimal? limitPrice = null)
+        {
+            return new Leg { Symbol = symbol, Quantity = quantity, OrderPrice= limitPrice};
+        }
     }
 }
