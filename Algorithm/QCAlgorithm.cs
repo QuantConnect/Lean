@@ -1695,11 +1695,25 @@ namespace QuantConnect.Algorithm
                 return AddOptionContract(symbol, resolution, fillDataForward, leverage, extendedMarketHours);
             }
 
-            var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol,
-                resolution,
-                fillDataForward,
-                extendedMarketHours,
-                isFilteredSubscription: !isCanonical);
+            var isFilteredSubscription = !isCanonical;
+            List<SubscriptionDataConfig> configs;
+            if (dataNormalizationMode.HasValue)
+            {
+                configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol,
+                    resolution,
+                    fillDataForward,
+                    extendedMarketHours,
+                    isFilteredSubscription,
+                    dataNormalizationMode: dataNormalizationMode.Value);
+            }
+            else
+            {
+                configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol,
+                   resolution,
+                   fillDataForward,
+                   extendedMarketHours,
+                   isFilteredSubscription);
+            }
 
             var security = Securities.CreateSecurity(symbol, configs, leverage);
 
