@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Threading;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.Results
@@ -24,13 +25,15 @@ namespace QuantConnect.Lean.Engine.Results
     /// </summary>
     public class BacktestProgressMonitor
     {
+        private const int ProcessedDaysCountInvalid = 0;
+        private const int ProcessedDaysCountValid = 1;
+
         private readonly ITimeKeeper _timeKeeper;
 
         private readonly DateTime _startUtcTime;
 
         private int _processedDays;
-        private bool _isProcessedDaysCountValid;
-        private readonly object _processedDaysLock = new();
+        private int _isProcessedDaysCountValid;
 
         /// <summary>
         /// Gets the total days the algorithm will run
@@ -43,18 +46,15 @@ namespace QuantConnect.Lean.Engine.Results
         public int ProcessedDays {
             get
             {
-                lock (_processedDaysLock)
+                if (Interlocked.CompareExchange(ref _isProcessedDaysCountValid, ProcessedDaysCountValid, ProcessedDaysCountInvalid) == ProcessedDaysCountInvalid)
                 {
-                    if (!_isProcessedDaysCountValid)
+                    try
                     {
-                        try
-                        {
-                            // We use 'int' so it's thread safe
-                            _processedDays = (int)(_timeKeeper.UtcTime - _startUtcTime).TotalDays;
-                        }
-                        catch (OverflowException)
-                        {
-                        }
+                        // We use 'int' so it's thread safe
+                        _processedDays = (int)(_timeKeeper.UtcTime - _startUtcTime).TotalDays;
+                    }
+                    catch (OverflowException)
+                    {
                     }
                 }
 
@@ -88,10 +88,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         public void InvalidateProcessedDays()
         {
-            lock (_processedDaysLock)
-            {
-                _isProcessedDaysCountValid = false;
-            }
+            Interlocked.Exchange(ref _isProcessedDaysCountValid, ProcessedDaysCountInvalid);
         }
     }
 }
