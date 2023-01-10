@@ -397,7 +397,7 @@ namespace QuantConnect.Lean.Engine.Results
             CumulativeMaxPortfolioValue = StartingPortfolioValue;
             AlgorithmCurrencySymbol = Currencies.GetCurrencySymbol(Algorithm.AccountCurrency);
             _capacityEstimate = new CapacityEstimate(Algorithm);
-            _progressMonitor = new BacktestProgressMonitor(Algorithm.TimeKeeper, Algorithm.StartDate, Algorithm.EndDate);
+            _progressMonitor = new BacktestProgressMonitor(Algorithm.TimeKeeper, Algorithm.EndDate);
 
             //Get the resample period:
             var totalMinutes = (algorithm.EndDate - algorithm.StartDate).TotalMinutes;

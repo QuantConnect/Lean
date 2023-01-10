@@ -74,13 +74,12 @@ namespace QuantConnect.Lean.Engine.Results
         /// Creates a new instance
         /// </summary>
         /// <param name="timeKeeper">The time keeper to use</param>
-        /// <param name="startUtcTime">The start UTC time</param>
         /// <param name="endUtcTime">The end UTC time</param>
-        public BacktestProgressMonitor(ITimeKeeper timeKeeper, DateTime startUtcTime, DateTime endUtcTime)
+        public BacktestProgressMonitor(ITimeKeeper timeKeeper, DateTime endUtcTime)
         {
             _timeKeeper = timeKeeper;
-            _startUtcTime = startUtcTime;
-            TotalDays = Convert.ToInt32((endUtcTime.Date - _timeKeeper.UtcTime.Date).TotalDays) + 1;
+            _startUtcTime = _timeKeeper.UtcTime;
+            TotalDays = Convert.ToInt32((endUtcTime.Date - _startUtcTime.Date).TotalDays) + 1;
         }
 
         /// <summary>

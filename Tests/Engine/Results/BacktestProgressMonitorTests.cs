@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Engine.Results
         {
             var timeKeeper = new TimeKeeper(start);
 
-            var progressMonitor = new BacktestProgressMonitor(timeKeeper, start, end);
+            var progressMonitor = new BacktestProgressMonitor(timeKeeper, end);
 
             Assert.AreEqual((end - start).TotalDays + 1, progressMonitor.TotalDays);
         }
@@ -40,7 +40,7 @@ namespace QuantConnect.Tests.Engine.Results
             var end = start.AddMonths(10);
             var timeKeeper = new TimeKeeper(start);
 
-            var progressMonitor = new BacktestProgressMonitor(timeKeeper, start, end);
+            var progressMonitor = new BacktestProgressMonitor(timeKeeper, end);
 
             Assert.AreEqual(0, progressMonitor.ProcessedDays);
             Assert.AreEqual(0m, progressMonitor.Progress);
