@@ -40,7 +40,7 @@ namespace QuantConnect.Lean.Engine.Results
         private const double MinimumSamplePeriod = 4;
 
         private BacktestNodePacket _job;
-        private int _jobDays;
+        private int _algorithmDays;
         private DateTime _nextUpdate;
         private DateTime _nextS3Update;
         private string _errorMessage;
@@ -198,8 +198,7 @@ namespace QuantConnect.Lean.Engine.Results
                 var summary = GenerateStatisticsResults(performanceCharts, estimatedStrategyCapacity: _capacityEstimate).Summary;
                 var runtimeStatistics = GetAlgorithmRuntimeStatistics(summary, _capacityEstimate);
 
-                var progress = (decimal)_daysProcessed / _jobDays;
-                if (progress > 0.999m) progress = 0.999m;
+                var progress = (decimal)_daysProcessed / _algorithmDays;
 
                 //1. Cloud Upload -> Upload the whole packet to S3  Immediately:
                 if (utcNow > _nextS3Update)
@@ -408,9 +407,7 @@ namespace QuantConnect.Lean.Engine.Results
             Log.Trace("BacktestingResultHandler(): Sample Period Set: " + resampleMinutes.ToStringInvariant("00.00"));
 
             //Setup the sampling periods:
-            _jobDays = Algorithm.Securities.Count > 0
-                ? Time.TradeableDates(Algorithm.Securities.Values, _initialTime, algorithm.EndDate)
-                : Convert.ToInt32((algorithm.EndDate.Date - _initialTime.Date).TotalDays) + 1;
+            _algorithmDays = Convert.ToInt32((algorithm.EndDate.Date - _initialTime.Date).TotalDays) + 1;
 
             //Set the security / market types.
             var types = new List<SecurityType>();
