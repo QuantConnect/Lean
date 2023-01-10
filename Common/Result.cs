@@ -72,7 +72,7 @@ namespace QuantConnect
         public IDictionary<string, string> RuntimeStatistics;
 
         /// <summary>
-        /// State of the reuslt packet.
+        /// State of the result packet.
         /// </summary>
         [JsonProperty(PropertyName = "State", NullValueHandling = NullValueHandling.Ignore)]
         public IDictionary<string, string> State;

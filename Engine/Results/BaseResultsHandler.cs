@@ -143,9 +143,9 @@ namespace QuantConnect.Lean.Engine.Results
         protected Dictionary<string, string> RuntimeStatistics { get; }
 
         /// <summary>
-        /// State of the result packet
+        /// State of the algorithm
         /// </summary>
-        protected Dictionary<string, string> State { get; }
+        protected Dictionary<string, string> State { get; set; }
 
         /// <summary>
         /// The handler responsible for communicating messages to listeners
@@ -225,6 +225,10 @@ namespace QuantConnect.Lean.Engine.Results
             ChartLock = new object();
             LogStore = new List<LogEntry>();
             ResultsDestinationFolder = Config.Get("results-destination-folder", Directory.GetCurrentDirectory());
+            State = new Dictionary<string, string>
+            {
+                ["StartTime"] = StartTime.ToStringInvariant()
+            };
         }
 
         /// <summary>
@@ -335,6 +339,7 @@ namespace QuantConnect.Lean.Engine.Results
             OrderEventJsonConverter = new OrderEventJsonConverter(AlgorithmId);
             _updateRunner = new Thread(Run, 0) { IsBackground = true, Name = "Result Thread" };
             _updateRunner.Start();
+            State["Hostname"] = _hostName;
         }
 
         /// <summary>
@@ -673,20 +678,24 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
+        /// Sets the algorithm state data
+        /// </summary>
+        protected void SetAlgorithmState(string error, string stack)
+        {
+            State["RuntimeError"] = error;
+            State["StackTrace"] = stack;
+        }
+
+        /// <summary>
         /// Gets the algorithm state data
         /// </summary>
         protected Dictionary<string, string> GetAlgorithmState(string endTime = "")
         {
-            var state = new Dictionary<string, string>
-            {
-                ["Status"] = Algorithm.Status.ToStringInvariant(),
-                ["StartTime"] = StartTime.ToStringInvariant(),
-                ["Hostname"] = _hostName,
-                ["EndTime"] = endTime,
-                ["RuntimeError"] = Algorithm?.RunTimeError?.Message ?? "",
-                ["StackTrace"] = Algorithm.RunTimeError?.InnerException?.StackTrace ?? "",
-            };
-            return state;
+            State["Status"] = Algorithm != null ? Algorithm.Status.ToStringInvariant() : "";
+            State["EndTime"] = endTime;
+            State["RuntimeError"] = State.ContainsKey("RuntimeError") ? State["RuntimeError"] : "";
+            State["StackTrace"] = State.ContainsKey("StackTrace") ? State["StackTrace"] : "";
+            return State;
         }
 
         /// <summary>

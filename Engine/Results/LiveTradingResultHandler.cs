@@ -587,6 +587,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             Messages.Enqueue(new RuntimeErrorPacket(_job.UserId, AlgorithmId, message, stacktrace));
             AddToLogStore(message + (!string.IsNullOrEmpty(stacktrace) ? ": StackTrace: " + stacktrace : string.Empty));
+            SetAlgorithmState(message, stacktrace);
         }
 
         /// <summary>
@@ -808,6 +809,7 @@ namespace QuantConnect.Lean.Engine.Results
                 else
                 {
                     result = LiveResultPacket.CreateEmpty(_job);
+                    result.Results.State = GetAlgorithmState();
                 }
                 result.ProcessingTime = (DateTime.UtcNow - StartTime).TotalSeconds;
 

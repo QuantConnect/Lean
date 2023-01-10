@@ -251,8 +251,7 @@ namespace QuantConnect.Lean.Engine
                             return message;
                         }));
                         Log.Error("Engine.Run(): " + errorMessage);
-                        algorithm.SetRuntimeError(new InitializeException(errorMessage, stackTrace), "Result Handler");
-                        AlgorithmHandlers.Results.RuntimeError(errorMessage);
+                        AlgorithmHandlers.Results.RuntimeError(errorMessage, stackTrace);
                         SystemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, errorMessage);
                     }
                 }
@@ -545,23 +544,4 @@ namespace QuantConnect.Lean.Engine
         }
 
     } // End Algorithm Node Core Thread
-
-    public class InitializeException : Exception
-    {
-        private readonly string stackTrace;
-
-        public InitializeException(string message, string stackTrace) : base(message)
-        {
-            this.stackTrace = stackTrace;
-        }
-
-        public override string StackTrace
-        {
-            get
-            {
-                return this.stackTrace;
-            }
-        }
-
-    }
 } // End Namespace

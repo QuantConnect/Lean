@@ -364,6 +364,7 @@ namespace QuantConnect.Lean.Engine.Results
                 else
                 {
                     result = BacktestResultPacket.CreateEmpty(_job);
+                    result.Results.State = GetAlgorithmState();
                 }
 
                 var utcNow = DateTime.UtcNow;
@@ -507,6 +508,7 @@ namespace QuantConnect.Lean.Engine.Results
             PurgeQueue();
             Messages.Enqueue(new RuntimeErrorPacket(_job.UserId, AlgorithmId, message, stacktrace));
             _errorMessage = message;
+            SetAlgorithmState(message, stacktrace);
         }
 
         /// <summary>

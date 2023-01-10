@@ -148,8 +148,7 @@ namespace QuantConnect.Queues
                     Parameters = parameters,
                     Language = Language,
                     Controls = controls,
-                    PythonVirtualEnvironment = Config.Get("python-venv"),
-                    HostName = Environment.MachineName
+                    PythonVirtualEnvironment = Config.Get("python-venv")
                 };
 
                 Type brokerageName = null;
@@ -214,8 +213,7 @@ namespace QuantConnect.Queues
                 Language = Language,
                 Parameters = parameters,
                 Controls = controls,
-                PythonVirtualEnvironment = Config.Get("python-venv"),
-                HostName = Environment.MachineName
+                PythonVirtualEnvironment = Config.Get("python-venv")
             };
 
             return backtestJob;
