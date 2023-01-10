@@ -1697,6 +1697,8 @@ namespace QuantConnect.Algorithm
 
             var isFilteredSubscription = !isCanonical;
             List<SubscriptionDataConfig> configs;
+            // we pass dataNormalizationMode to SubscriptionManager.SubscriptionDataConfigService.Add conditionally,
+            // so the default value for its argument is used when the it is null here.
             if (dataNormalizationMode.HasValue)
             {
                 configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol,
