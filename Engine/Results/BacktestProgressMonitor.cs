@@ -24,55 +24,74 @@ namespace QuantConnect.Lean.Engine.Results
     /// </summary>
     public class BacktestProgressMonitor
     {
-        private ITimeKeeper _timeKeeper;
+        private readonly ITimeKeeper _timeKeeper;
 
         private readonly DateTime _startUtcTime;
 
+        private int _processedDays;
+        private bool _isProcessedDaysCountValid;
+        private readonly object _processedDaysLock = new();
+
         /// <summary>
-        /// The total days the algorithm will run
+        /// Gets the total days the algorithm will run
         /// </summary>
         public int TotalDays { get; private set; }
 
         /// <summary>
-        /// The current days the algorithm has been running for
+        /// Gets the current days the algorithm has been running for
         /// </summary>
-        public int ProcessedDays { get; private set; }
+        public int ProcessedDays {
+            get
+            {
+                lock (_processedDaysLock)
+                {
+                    if (!_isProcessedDaysCountValid)
+                    {
+                        try
+                        {
+                            // We use 'int' so it's thread safe
+                            _processedDays = (int)(_timeKeeper.UtcTime - _startUtcTime).TotalDays;
+                        }
+                        catch (OverflowException)
+                        {
+                        }
+                    }
+                }
+
+                return _processedDays;
+            }
+        }
 
         /// <summary>
         /// Gets the current progress of the backtest
         /// </summary>
         public decimal Progress
         {
-            get { return (decimal)ProcessedDays / TotalDays; }
+            get { return Math.Min((decimal)ProcessedDays / TotalDays, 0.999m); }
         }
 
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        /// <param name="algorithm">The algorithm the backtest is running for</param>
+        /// <param name="timeKeeper">The time keeper to use</param>
+        /// <param name="startUtcTime">The start UTC time</param>
+        /// <param name="endUtcTime">The end UTC time</param>
         public BacktestProgressMonitor(ITimeKeeper timeKeeper, DateTime startUtcTime, DateTime endUtcTime)
         {
             _timeKeeper = timeKeeper;
             _startUtcTime = startUtcTime;
-            TotalDays = Convert.ToInt32((endUtcTime.Date - _startUtcTime.Date).TotalDays) + 1;
+            TotalDays = Convert.ToInt32((endUtcTime.Date - _timeKeeper.UtcTime.Date).TotalDays) + 1;
         }
 
         /// <summary>
-        /// Recalculates backtest passed/processed days
+        /// Invalidates the processed days count value so it gets recalculated next time it is needed
         /// </summary>
-        /// <returns>The processed days count after recalculation</returns>
-        public int RecalculateProcessedDays()
+        public void InvalidateProcessedDays()
         {
-            try
+            lock (_processedDaysLock)
             {
-                // We use 'int' so it's thread safe
-                ProcessedDays = (int)(_timeKeeper.UtcTime - _startUtcTime).TotalDays;
+                _isProcessedDaysCountValid = false;
             }
-            catch (OverflowException)
-            {
-            }
-
-            return ProcessedDays;
         }
     }
 }

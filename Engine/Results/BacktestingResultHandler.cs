@@ -700,7 +700,8 @@ namespace QuantConnect.Lean.Engine.Results
 
             _capacityEstimate.UpdateMarketCapacity(forceProcess);
 
-            _progressMonitor.RecalculateProcessedDays();
+            // Invalidate the processed days count so it gets recalculated
+            _progressMonitor.InvalidateProcessedDays();
 
             var time = Algorithm.UtcTime;
             if (time > _nextSample || forceProcess)

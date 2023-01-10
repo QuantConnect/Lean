@@ -49,7 +49,7 @@ namespace QuantConnect.Tests.Engine.Results
             for (var i = 0; i < steps; i++)
             {
                 timeKeeper.SetUtcDateTime(start.Add((end - start) * i / steps));
-                progressMonitor.RecalculateProcessedDays();
+                progressMonitor.InvalidateProcessedDays();
 
                 var expectedProcessedDays = (int)(timeKeeper.UtcTime- start).TotalDays;
                 Assert.AreEqual(expectedProcessedDays, progressMonitor.ProcessedDays);
