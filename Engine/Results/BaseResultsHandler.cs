@@ -227,7 +227,9 @@ namespace QuantConnect.Lean.Engine.Results
             ResultsDestinationFolder = Config.Get("results-destination-folder", Directory.GetCurrentDirectory());
             State = new Dictionary<string, string>
             {
-                ["StartTime"] = StartTime.ToStringInvariant()
+                ["StartTime"] = StartTime.ToStringInvariant(),
+                ["RuntimeError"] = "",
+                ["StackTrace"] = ""
             };
         }
 
@@ -693,8 +695,6 @@ namespace QuantConnect.Lean.Engine.Results
         {
             State["Status"] = Algorithm != null ? Algorithm.Status.ToStringInvariant() : "";
             State["EndTime"] = endTime;
-            State["RuntimeError"] = State.ContainsKey("RuntimeError") ? State["RuntimeError"] : "";
-            State["StackTrace"] = State.ContainsKey("StackTrace") ? State["StackTrace"] : "";
             return State;
         }
 
