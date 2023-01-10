@@ -693,7 +693,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         protected Dictionary<string, string> GetAlgorithmState(string endTime = "")
         {
-            State["Status"] = Algorithm != null ? Algorithm.Status.ToStringInvariant() : String.Empty;
+            State["Status"] = Algorithm != null ? Algorithm.Status.ToStringInvariant() : AlgorithmStatus.RuntimeError.ToStringInvariant();
             State["EndTime"] = endTime;
             return State;
         }
