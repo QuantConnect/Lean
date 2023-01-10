@@ -40,13 +40,13 @@ namespace QuantConnect.Lean.Engine.Results
         private const double MinimumSamplePeriod = 4;
 
         private BacktestNodePacket _job;
-        private int _algorithmDays;
         private DateTime _nextUpdate;
         private DateTime _nextS3Update;
         private string _errorMessage;
-        private int _daysProcessed;
         private int _daysProcessedFrontier;
         private readonly HashSet<string> _chartSeriesExceededDataPoints;
+
+        private BacktestProgressMonitor _progressMonitor;
 
         /// <summary>
         /// Calculates the capacity of a strategy per Symbol in real-time
@@ -151,7 +151,7 @@ namespace QuantConnect.Lean.Engine.Results
                 }
 
                 var utcNow = DateTime.UtcNow;
-                if (utcNow <= _nextUpdate || _daysProcessed < _daysProcessedFrontier) return;
+                if (utcNow <= _nextUpdate || _progressMonitor.ProcessedDays < _daysProcessedFrontier) return;
 
                 var deltaOrders = GetDeltaOrders(LastDeltaOrderPosition, shouldStop: orderCount => orderCount >= 50);
                 // Deliberately skip to the end of order event collection to prevent overloading backtesting UX
@@ -160,7 +160,7 @@ namespace QuantConnect.Lean.Engine.Results
                 //Reset loop variables:
                 try
                 {
-                    _daysProcessedFrontier = _daysProcessed + 1;
+                    _daysProcessedFrontier = _progressMonitor.ProcessedDays + 1;
                     _nextUpdate = utcNow.AddSeconds(3);
                 }
                 catch (Exception err)
@@ -198,7 +198,7 @@ namespace QuantConnect.Lean.Engine.Results
                 var summary = GenerateStatisticsResults(performanceCharts, estimatedStrategyCapacity: _capacityEstimate).Summary;
                 var runtimeStatistics = GetAlgorithmRuntimeStatistics(summary, _capacityEstimate);
 
-                var progress = (decimal)_daysProcessed / _algorithmDays;
+                var progress = _progressMonitor.Progress;
 
                 //1. Cloud Upload -> Upload the whole packet to S3  Immediately:
                 if (utcNow > _nextS3Update)
@@ -399,15 +399,13 @@ namespace QuantConnect.Lean.Engine.Results
             CumulativeMaxPortfolioValue = StartingPortfolioValue;
             AlgorithmCurrencySymbol = Currencies.GetCurrencySymbol(Algorithm.AccountCurrency);
             _capacityEstimate = new CapacityEstimate(Algorithm);
+            _progressMonitor = new BacktestProgressMonitor(Algorithm);
 
             //Get the resample period:
             var totalMinutes = (algorithm.EndDate - algorithm.StartDate).TotalMinutes;
             var resampleMinutes = totalMinutes < MinimumSamplePeriod * Samples ? MinimumSamplePeriod : totalMinutes / Samples; // Space out the sampling every
             ResamplePeriod = TimeSpan.FromMinutes(resampleMinutes);
             Log.Trace("BacktestingResultHandler(): Sample Period Set: " + resampleMinutes.ToStringInvariant("00.00"));
-
-            //Setup the sampling periods:
-            _algorithmDays = Convert.ToInt32((algorithm.EndDate.Date - _initialTime.Date).TotalDays) + 1;
 
             //Set the security / market types.
             var types = new List<SecurityType>();
@@ -708,7 +706,7 @@ namespace QuantConnect.Lean.Engine.Results
             try
             {
                 //Recalculate the days processed. We use 'int' so it's thread safe
-                _daysProcessed = (int)(Algorithm.Time - _initialTime).TotalDays;
+                _progressMonitor.RecalculateProcessedDays();
             }
             catch (OverflowException)
             {
