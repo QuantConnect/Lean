@@ -364,7 +364,7 @@ namespace QuantConnect.Lean.Engine.Results
                 else
                 {
                     result = BacktestResultPacket.CreateEmpty(_job);
-                    result.Results.State = GetAlgorithmState();
+                    result.Results.State = GetAlgorithmState(DateTime.UtcNow.ToStringInvariant());
                 }
 
                 var utcNow = DateTime.UtcNow;

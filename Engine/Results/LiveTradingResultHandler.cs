@@ -809,7 +809,7 @@ namespace QuantConnect.Lean.Engine.Results
                 else
                 {
                     result = LiveResultPacket.CreateEmpty(_job);
-                    result.Results.State = GetAlgorithmState();
+                    result.Results.State = GetAlgorithmState(DateTime.UtcNow.ToStringInvariant());
                 }
                 result.ProcessingTime = (DateTime.UtcNow - StartTime).TotalSeconds;
 

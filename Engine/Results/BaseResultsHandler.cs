@@ -228,8 +228,8 @@ namespace QuantConnect.Lean.Engine.Results
             State = new Dictionary<string, string>
             {
                 ["StartTime"] = StartTime.ToStringInvariant(),
-                ["RuntimeError"] = "",
-                ["StackTrace"] = ""
+                ["RuntimeError"] = String.Empty,
+                ["StackTrace"] = String.Empty
             };
         }
 
@@ -693,7 +693,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         protected Dictionary<string, string> GetAlgorithmState(string endTime = "")
         {
-            State["Status"] = Algorithm != null ? Algorithm.Status.ToStringInvariant() : "";
+            State["Status"] = Algorithm != null ? Algorithm.Status.ToStringInvariant() : String.Empty;
             State["EndTime"] = endTime;
             return State;
         }
