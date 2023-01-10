@@ -54,7 +54,6 @@ namespace QuantConnect.Lean.Engine.Results
         private CapacityEstimate _capacityEstimate;
 
         //Processing Time:
-        private DateTime _initialTime;
         private DateTime _nextSample;
         private string _algorithmId;
         private int _projectId;
@@ -393,13 +392,12 @@ namespace QuantConnect.Lean.Engine.Results
         public virtual void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue)
         {
             Algorithm = algorithm;
-            _initialTime = Algorithm.Time;
             StartingPortfolioValue = startingPortfolioValue;
             DailyPortfolioValue = StartingPortfolioValue;
             CumulativeMaxPortfolioValue = StartingPortfolioValue;
             AlgorithmCurrencySymbol = Currencies.GetCurrencySymbol(Algorithm.AccountCurrency);
             _capacityEstimate = new CapacityEstimate(Algorithm);
-            _progressMonitor = new BacktestProgressMonitor(Algorithm);
+            _progressMonitor = new BacktestProgressMonitor(Algorithm.TimeKeeper, Algorithm.StartDate, Algorithm.EndDate);
 
             //Get the resample period:
             var totalMinutes = (algorithm.EndDate - algorithm.StartDate).TotalMinutes;
@@ -702,16 +700,9 @@ namespace QuantConnect.Lean.Engine.Results
 
             _capacityEstimate.UpdateMarketCapacity(forceProcess);
 
-            var time = Algorithm.UtcTime;
-            try
-            {
-                //Recalculate the days processed. We use 'int' so it's thread safe
-                _progressMonitor.RecalculateProcessedDays();
-            }
-            catch (OverflowException)
-            {
-            }
+            _progressMonitor.RecalculateProcessedDays();
 
+            var time = Algorithm.UtcTime;
             if (time > _nextSample || forceProcess)
             {
                 //Set next sample time: 4000 samples per backtest

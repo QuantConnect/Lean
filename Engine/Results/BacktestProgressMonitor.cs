@@ -24,9 +24,9 @@ namespace QuantConnect.Lean.Engine.Results
     /// </summary>
     public class BacktestProgressMonitor
     {
-        private IAlgorithm _algorithm;
+        private ITimeKeeper _timeKeeper;
 
-        private readonly DateTime _initialTime;
+        private readonly DateTime _startUtcTime;
 
         /// <summary>
         /// The total days the algorithm will run
@@ -50,11 +50,11 @@ namespace QuantConnect.Lean.Engine.Results
         /// Creates a new instance
         /// </summary>
         /// <param name="algorithm">The algorithm the backtest is running for</param>
-        public BacktestProgressMonitor(IAlgorithm algorithm)
+        public BacktestProgressMonitor(ITimeKeeper timeKeeper, DateTime startUtcTime, DateTime endUtcTime)
         {
-            _algorithm = algorithm;
-            _initialTime = _algorithm.Time;
-            TotalDays = Convert.ToInt32((_algorithm.EndDate.Date - _initialTime.Date).TotalDays) + 1;
+            _timeKeeper = timeKeeper;
+            _startUtcTime = startUtcTime;
+            TotalDays = Convert.ToInt32((endUtcTime.Date - _startUtcTime.Date).TotalDays) + 1;
         }
 
         /// <summary>
@@ -63,8 +63,15 @@ namespace QuantConnect.Lean.Engine.Results
         /// <returns>The processed days count after recalculation</returns>
         public int RecalculateProcessedDays()
         {
-            // We use 'int' so it's thread safe
-            ProcessedDays = (int)(_algorithm.Time - _initialTime).TotalDays;
+            try
+            {
+                // We use 'int' so it's thread safe
+                ProcessedDays = (int)(_timeKeeper.UtcTime - _startUtcTime).TotalDays;
+            }
+            catch (OverflowException)
+            {
+            }
+
             return ProcessedDays;
         }
     }

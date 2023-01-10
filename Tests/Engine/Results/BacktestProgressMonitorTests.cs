@@ -14,10 +14,8 @@
 */
 
 using System;
-using NodaTime;
 using NUnit.Framework;
 
-using QuantConnect.Algorithm;
 using QuantConnect.Lean.Engine.Results;
 
 namespace QuantConnect.Tests.Engine.Results
@@ -28,13 +26,9 @@ namespace QuantConnect.Tests.Engine.Results
         [TestCaseSource(nameof(TotalDaysCalculationTestCases))]
         public void CalculatesTotalDays(DateTime start, DateTime end)
         {
-            var algorithm = new QCAlgorithm();
-            algorithm.SetTimeZone(DateTimeZone.Utc);
-            algorithm.SetStartDate(start);
-            algorithm.SetEndDate(end);
-            algorithm.SetDateTime(start);
+            var timeKeeper = new TimeKeeper(start);
 
-            var progressMonitor = new BacktestProgressMonitor(algorithm);
+            var progressMonitor = new BacktestProgressMonitor(timeKeeper, start, end);
 
             Assert.AreEqual((end - start).TotalDays + 1, progressMonitor.TotalDays);
         }
@@ -44,16 +38,9 @@ namespace QuantConnect.Tests.Engine.Results
         {
             var start = new DateTime(2020, 1, 2);
             var end = start.AddMonths(10);
+            var timeKeeper = new TimeKeeper(start);
 
-            var algorithm = new QCAlgorithm();
-            algorithm.SetTimeZone(DateTimeZone.Utc);
-            algorithm.SetStartDate(start);
-            algorithm.SetEndDate(end);
-            algorithm.SetDateTime(start);
-
-            var intialTime = algorithm.Time;
-
-            var progressMonitor = new BacktestProgressMonitor(algorithm);
+            var progressMonitor = new BacktestProgressMonitor(timeKeeper, start, end);
 
             Assert.AreEqual(0, progressMonitor.ProcessedDays);
             Assert.AreEqual(0m, progressMonitor.Progress);
@@ -61,10 +48,10 @@ namespace QuantConnect.Tests.Engine.Results
             var steps = 15;
             for (var i = 0; i < steps; i++)
             {
-                algorithm.SetDateTime(start.Add((end - start) * i / steps));
+                timeKeeper.SetUtcDateTime(start.Add((end - start) * i / steps));
                 progressMonitor.RecalculateProcessedDays();
 
-                var expectedProcessedDays = (int)(algorithm.Time - intialTime).TotalDays;
+                var expectedProcessedDays = (int)(timeKeeper.UtcTime- start).TotalDays;
                 Assert.AreEqual(expectedProcessedDays, progressMonitor.ProcessedDays);
                 Assert.AreEqual((decimal) expectedProcessedDays / progressMonitor.TotalDays, progressMonitor.Progress);
             }
