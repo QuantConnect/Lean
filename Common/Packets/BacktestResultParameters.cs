@@ -48,7 +48,8 @@ namespace QuantConnect.Packets
             List<OrderEvent> orderEvents,
             AlgorithmPerformance totalPerformance = null,
             AlphaRuntimeStatistics alphaRuntimeStatistics = null,
-            AlgorithmConfiguration algorithmConfiguration = null)
+            AlgorithmConfiguration algorithmConfiguration = null,
+            IDictionary<string, string> state = null)
         {
             Charts = charts;
             Orders = orders;
@@ -60,6 +61,7 @@ namespace QuantConnect.Packets
             TotalPerformance = totalPerformance;
             AlphaRuntimeStatistics = alphaRuntimeStatistics;
             AlgorithmConfiguration = algorithmConfiguration;
+            State = state;
         }
     }
 }

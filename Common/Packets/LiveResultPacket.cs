@@ -138,7 +138,7 @@ namespace QuantConnect.Packets
                 new Dictionary<string, Chart>(), new Dictionary<int, Order>(), new Dictionary<DateTime, decimal>(),
                 new Dictionary<string, Holding>(), new CashBook(), new Dictionary<string, string>(),
                 new SortedDictionary<string, string>(), new List<OrderEvent>(), new Dictionary<string, string>(),
-                new AlphaRuntimeStatistics(), new AlgorithmConfiguration())));
+                new AlphaRuntimeStatistics(), new AlgorithmConfiguration(), new Dictionary<string, string>())));
         }
     } // End Queue Packet:
 
@@ -216,6 +216,7 @@ namespace QuantConnect.Packets
             ServerStatistics = parameters.ServerStatistics;
             AlphaRuntimeStatistics = parameters.AlphaRuntimeStatistics;
             AlgorithmConfiguration = parameters.AlgorithmConfiguration;
+            State = parameters.State;
         }
     }
 } // End of Namespace:

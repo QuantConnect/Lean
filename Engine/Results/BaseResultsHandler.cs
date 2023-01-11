@@ -143,6 +143,11 @@ namespace QuantConnect.Lean.Engine.Results
         protected Dictionary<string, string> RuntimeStatistics { get; }
 
         /// <summary>
+        /// State of the algorithm
+        /// </summary>
+        protected Dictionary<string, string> State { get; set; }
+
+        /// <summary>
         /// The handler responsible for communicating messages to listeners
         /// </summary>
         protected IMessagingHandler MessagingHandler;
@@ -220,6 +225,12 @@ namespace QuantConnect.Lean.Engine.Results
             ChartLock = new object();
             LogStore = new List<LogEntry>();
             ResultsDestinationFolder = Config.Get("results-destination-folder", Directory.GetCurrentDirectory());
+            State = new Dictionary<string, string>
+            {
+                ["StartTime"] = StartTime.ToStringInvariant(),
+                ["RuntimeError"] = String.Empty,
+                ["StackTrace"] = String.Empty
+            };
         }
 
         /// <summary>
@@ -330,6 +341,7 @@ namespace QuantConnect.Lean.Engine.Results
             OrderEventJsonConverter = new OrderEventJsonConverter(AlgorithmId);
             _updateRunner = new Thread(Run, 0) { IsBackground = true, Name = "Result Thread" };
             _updateRunner.Start();
+            State["Hostname"] = _hostName;
         }
 
         /// <summary>
@@ -665,6 +677,25 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             return runtimeStatistics;
+        }
+
+        /// <summary>
+        /// Sets the algorithm state data
+        /// </summary>
+        protected void SetAlgorithmState(string error, string stack)
+        {
+            State["RuntimeError"] = error;
+            State["StackTrace"] = stack;
+        }
+
+        /// <summary>
+        /// Gets the algorithm state data
+        /// </summary>
+        protected Dictionary<string, string> GetAlgorithmState(string endTime = "")
+        {
+            State["Status"] = Algorithm != null ? Algorithm.Status.ToStringInvariant() : AlgorithmStatus.RuntimeError.ToStringInvariant();
+            State["EndTime"] = endTime;
+            return State;
         }
 
         /// <summary>
