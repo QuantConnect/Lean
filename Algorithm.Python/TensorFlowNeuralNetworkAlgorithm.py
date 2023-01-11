@@ -12,7 +12,7 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 class TensorFlowNeuralNetworkAlgorithm(QCAlgorithm):
 
@@ -65,6 +65,7 @@ class TensorFlowNeuralNetworkAlgorithm(QCAlgorithm):
                 y_data = np.array(self.prices_y[symbol]).astype(np.float32).reshape((-1,1))
                 
                 # define placeholder for inputs to network
+                tf.disable_v2_behavior()
                 xs = tf.placeholder(tf.float32, [None, 1])
                 ys = tf.placeholder(tf.float32, [None, 1])
                 
