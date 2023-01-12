@@ -954,76 +954,101 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         [Test]
         public void PerformsComboLimitFill(
             [Values] bool isInternal,
-            [Values(OrderDirection.Buy, OrderDirection.Sell)] OrderDirection orderDirection)
+            [Values(OrderDirection.Buy, OrderDirection.Sell)] OrderDirection orderDirection,
+            [Values] bool debit)
         {
-            var limitPrice = orderDirection == OrderDirection.Buy ? 353 : 355;
-            var model = new ImmediateFillModel();
-            var groupOrderManager = new GroupOrderManager(0, 2, orderDirection == OrderDirection.Buy ? 10 : -10, 1m);
-            var spyOrder = new ComboLimitOrder(Symbols.SPY, 10, limitPrice, Noon, groupOrderManager) { Id = 1 };
-            var aaplOrder = new ComboLimitOrder(Symbols.AAPL, 5, limitPrice, Noon, groupOrderManager) { Id = 2 };
-
-            groupOrderManager.OrderIds.Add(spyOrder.Id);
-            groupOrderManager.OrderIds.Add(aaplOrder.Id);
-
-            Assert.AreEqual(orderDirection, groupOrderManager.Direction);
-
             var spyConfig = CreateTradeBarConfig(Symbols.SPY, isInternal);
             var aaplConfig = CreateTradeBarConfig(Symbols.AAPL, isInternal);
             var spy = GetSecurity(spyConfig);
             var aapl = GetSecurity(aaplConfig);
             spy.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
-            spy.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101.123m));
+            spy.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 301m, 302m, 299m, 300m, 10));
             aapl.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
-            aapl.SetMarketPrice(new IndicatorDataPoint(Symbols.AAPL, Noon, 252.456m));
+            aapl.SetMarketPrice(new TradeBar(Noon, Symbols.AAPL, 101m, 102m, 99m, 100m, 25));
+
+            var groupOrderManager = new GroupOrderManager(0, 2, orderDirection == OrderDirection.Buy ? 10 : -10, 0m);
+            Assert.AreEqual(orderDirection, groupOrderManager.Direction);
+
+            var spyLegOrder = new ComboLimitOrder(Symbols.SPY, -1, 0m, Noon, groupOrderManager);
+            var aaplLegOrder = new ComboLimitOrder(Symbols.AAPL, 1, 0m, Noon, groupOrderManager);
+            var legsOrders = new List<ComboLimitOrder>() { spyLegOrder, aaplLegOrder };
+            for (var i = 0; i < legsOrders.Count; i++)
+            {
+                legsOrders[i].Id = i + 1;
+                if (debit)
+                {
+                    legsOrders[i].Quantity *= -1;
+                }
+
+                groupOrderManager.OrderIds.Add(legsOrders[i].Id);
+            }
 
             var securitiesForOrders = new Dictionary<Order, Security>
             {
-                { spyOrder, spy },
-                { aaplOrder, aapl }
+                { spyLegOrder, spy },
+                { aaplLegOrder, aapl }
             };
 
-            var spyFill = model.Fill(new FillModelParameters(
-                spy,
-                spyOrder,
+            var getLegsPrice = (Func<Security, decimal> priceSelector) => priceSelector(spy) * spyLegOrder.Quantity + priceSelector(aapl) * aaplLegOrder.Quantity;
+
+            // set limit prices that won't fill.
+            // combo limit orders fill based on the total price that will be paid/received for the legs
+            if (orderDirection == OrderDirection.Buy)
+            {
+                // limit price lower than legs price
+                var price = getLegsPrice((security) => security.Low);
+                var multiplier = price > 0 ? 0.999m : 1.001m;
+                groupOrderManager.LimitPrice = price * multiplier;
+            }
+            else
+            {
+                // limit price higher than legs price
+                var price = getLegsPrice((security) => security.High);
+                var multiplier = price > 0 ? 1.001m : 0.999m;
+                groupOrderManager.LimitPrice = price * multiplier;
+            }
+
+            var model = new ImmediateFillModel();
+
+            var fill = model.Fill(new FillModelParameters(spy,
+                spyLegOrder,
                 new MockSubscriptionDataConfigProvider(spyConfig),
                 Time.OneHour,
                 securitiesForOrders));
+            // won't fill with the given limit price
+            Assert.IsEmpty(fill);
 
-            // It won't fill until every order in the group is passed to model.Fill
-            Assert.IsEmpty(spyFill);
+            // set limit prices that will fill
+            if (orderDirection == OrderDirection.Buy)
+            {
+                var price = getLegsPrice((security) => security.Low);
+                var multiplier = price > 0 ? 1.001m : 0.999m;
+                groupOrderManager.LimitPrice = price * multiplier;
+            }
+            else
+            {
+                var price = getLegsPrice((security) => security.High);
+                var multiplier = price > 0 ? 0.999m : 1.001m;
+                groupOrderManager.LimitPrice = price * multiplier;
+            }
 
-            var aaplFill = model.Fill(new FillModelParameters(
-                aapl,
-                aaplOrder,
-                new MockSubscriptionDataConfigProvider(aaplConfig),
-                Time.OneHour,
-                securitiesForOrders));
-
-            // Won't fill either, the limit price condition is not met
-            Assert.IsEmpty(aaplFill);
-
-            spy.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 102m, 103m, 101m, 102.3m, 100));
-            aapl.SetMarketPrice(new TradeBar(Noon, Symbols.AAPL, 252m, 253m, 251m, 252.3m, 250));
-
-            var fill = model.Fill(new FillModelParameters(
-                spy,
-                spyOrder,
+            fill = model.Fill(new FillModelParameters(spy,
+                spyLegOrder,
                 new MockSubscriptionDataConfigProvider(spyConfig),
                 Time.OneHour,
                 securitiesForOrders));
-
-            Assert.AreEqual(2, fill.Count());
+            Assert.AreEqual(legsOrders.Count, fill.Count());
 
             var spyFillEvent = fill.First();
 
-            Assert.AreEqual(spyOrder.Quantity * groupOrderManager.Quantity, spyFillEvent.FillQuantity);
+            Assert.AreEqual(spyLegOrder.Quantity * groupOrderManager.Quantity, spyFillEvent.FillQuantity);
             var expectedSpyFillPrice = orderDirection == OrderDirection.Buy ? spy.Low : spy.High;
             Assert.AreEqual(expectedSpyFillPrice, spyFillEvent.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, spyFillEvent.Status);
 
             var aaplFillEvent = fill.Last();
 
-            Assert.AreEqual(aaplOrder.Quantity * groupOrderManager.Quantity, aaplFillEvent.FillQuantity);
+            Assert.AreEqual(aaplLegOrder.Quantity * groupOrderManager.Quantity, aaplFillEvent.FillQuantity);
             var expectedAaplFillPrice = orderDirection == OrderDirection.Buy ? aapl.Low : aapl.High;
             Assert.AreEqual(expectedAaplFillPrice, aaplFillEvent.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, aaplFillEvent.Status);
