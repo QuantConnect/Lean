@@ -79,6 +79,7 @@ namespace QuantConnect.ToolBox
                 var toDate = optionsObject.ContainsKey("to-date")
                     ? Parse.DateTimeExact(optionsObject["to-date"].ToString(), "yyyyMMdd-HH:mm:ss")
                     : DateTime.UtcNow;
+                var apiKey = optionsObject.ContainsKey("api-key") ? optionsObject["api-key"].ToString() : "";
                 switch (targetApp)
                 {
                     case "cdl":
@@ -114,7 +115,8 @@ namespace QuantConnect.ToolBox
                             GetParameterOrExit(optionsObject, "market"),
                             resolution,
                             fromDate,
-                            toDate);
+                            toDate,
+                            apiKey);
                         break;
 
                     case "avdl":
