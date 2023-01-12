@@ -50,7 +50,8 @@ namespace QuantConnect.Tests.ToolBox
         [TestCaseSource(nameof(HistoryTestCases))]
         public void GetsHistory(Symbol symbol, Resolution resolution, TickType tickType, TimeSpan period, bool shouldBeEmpty)
         {
-            var now = new DateTime(2020, 5, 20, 15, 0, 0).RoundDown(resolution.ToTimeSpan());
+            // 3 pm of the previous day
+            var now = DateTime.UtcNow.Date.AddHours(-9).RoundDown(resolution.ToTimeSpan());
 
             var dataType = LeanData.GetDataType(resolution, tickType);
 
@@ -141,7 +142,12 @@ namespace QuantConnect.Tests.ToolBox
             new TestCaseData(Symbols.BTCUSD, Resolution.Minute, TickType.Trade, Time.OneHour, false),
             new TestCaseData(Symbols.BTCUSD, Resolution.Hour, TickType.Trade, TimeSpan.FromHours(6), false),
             new TestCaseData(Symbols.BTCUSD, Resolution.Daily, TickType.Trade, TimeSpan.FromDays(5), false),
-
+            new TestCaseData(Symbols.BTCUSD, Resolution.Daily, TickType.Trade, TimeSpan.FromDays(5), false),
+            new TestCaseData(Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Bitfinex), Resolution.Daily, TickType.Trade, TimeSpan.FromDays(5), false),
+            new TestCaseData(Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Kraken), Resolution.Daily, TickType.Trade, TimeSpan.FromDays(5), false),
+            new TestCaseData(Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Bitstamp), Resolution.Daily, TickType.Trade, TimeSpan.FromDays(5), false),
+            new TestCaseData(Symbol.Create("BTCUSD", SecurityType.Crypto, Market.HitBTC), Resolution.Daily, TickType.Trade, TimeSpan.FromDays(5), false),
+    
             // invalid security type/tick type combination, no error, empty result
             new TestCaseData(Symbols.EURUSD, Resolution.Tick, TickType.Trade, TimeSpan.FromSeconds(15), true),
             new TestCaseData(Symbols.BTCUSD, Resolution.Second, TickType.Quote, Time.OneMinute, true),
