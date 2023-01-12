@@ -33,7 +33,7 @@ namespace QuantConnect.ToolBox.Polygon
         {
             if (tickers.IsNullOrEmpty() || securityTypeString.IsNullOrEmpty() || market.IsNullOrEmpty() || resolutionString.IsNullOrEmpty() || apiKey.IsNullOrEmpty())
             {
-                Console.WriteLine("PolygonDownloader ERROR: '--tickers=' or '--security-type=' or '--market=' or '--resolution=' parameter is missing");
+                Console.WriteLine("PolygonDownloader ERROR: '--tickers=' or '--security-type=' or '--market=' or '--resolution=' or '--api-key=' parameter is missing");
                 Console.WriteLine("--tickers=eg SPY,AAPL");
                 Console.WriteLine("--security-type=Equity");
                 Console.WriteLine("--market=usa");
