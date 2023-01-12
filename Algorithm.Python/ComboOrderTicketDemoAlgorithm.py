@@ -89,13 +89,13 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
         if len(self._openLimitOrders) == 0:
             self.Log("Submitting ComboLimitOrder")
 
-            closeSum = sum([self.Securities[leg.Symbol].Close for leg in self._orderLegs])
+            currentPrice = sum([leg.Quantity * self.Securities[leg.Symbol].Close for leg in self._orderLegs])
 
-            tickets = self.ComboLimitOrder(self._orderLegs, 2, closeSum * 0.95)
+            tickets = self.ComboLimitOrder(self._orderLegs, 2, currentPrice - 2)
             self._openLimitOrders.extend(tickets)
 
             # These won't fill, we will test cancel with this
-            tickets = self.ComboLimitOrder(self._orderLegs, -2, closeSum * 1.1)
+            tickets = self.ComboLimitOrder(self._orderLegs, -2, currentPrice + 3)
             self._openLimitOrders.extend(tickets)
         else:
             combo1 = self._openLimitOrders[:len(self._orderLegs)]
@@ -108,7 +108,7 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
             # if neither order has filled, bring in the limits by a penny
 
             ticket = combo1[0]
-            newLimit = round(ticket.Get(OrderField.LimitPrice) + 0.05, 2)
+            newLimit = round(ticket.Get(OrderField.LimitPrice) + 0.01, 2)
             self.Debug(f"Updating limits - Combo 1 {ticket.OrderId}: {newLimit:.2f}")
             fields = UpdateOrderFields()
             fields.LimitPrice = newLimit

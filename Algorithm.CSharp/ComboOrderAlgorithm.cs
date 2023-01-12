@@ -85,7 +85,7 @@ namespace QuantConnect.Algorithm.CSharp
                         Leg.Create(callContracts[1].Symbol, -2, 14.6m),
                         Leg.Create(callContracts[2].Symbol, 1, 14.0m)
                     };
-                    PlaceComboOrder(OrderLegs, ComboOrderQuantity, 45m);
+                    PlaceComboOrder(OrderLegs, ComboOrderQuantity, 1.9m);
                 }
             }
         }
