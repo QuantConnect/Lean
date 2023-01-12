@@ -72,8 +72,7 @@ namespace QuantConnect.Securities
                 case SecurityType.FutureOption:
                     return FutureOptionSymbol.IsStandard(symbol);
                 case SecurityType.IndexOption:
-                    // standard/weekly filter does not apply, because index option weeklies have different tickers
-                    return true;
+                    return IndexOptionSymbol.IsStandard(symbol);
                 default:
                     return OptionSymbol.IsStandard(symbol);
             }

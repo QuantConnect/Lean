@@ -54,7 +54,8 @@ namespace QuantConnect.Algorithm.CSharp
             var spxw = AddIndexOption(spx, "SPXW");
             spxw.SetFilter(u => u.Strikes(0, 1)
                  // single week ahead since there are many SPXW contracts and we want to preserve performance
-                 .Expiration(0, 7));
+                 .Expiration(0, 7)
+                 .IncludeWeeklys());
 
             _spxOption = spxw.Symbol;
         }

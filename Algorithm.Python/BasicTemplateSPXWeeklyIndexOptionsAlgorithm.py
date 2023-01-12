@@ -36,7 +36,8 @@ class BasicTemplateSPXWeeklyIndexOptionsAlgorithm(QCAlgorithm):
         # set our strike/expiry filter for this option chain
         spxw.SetFilter(lambda u: (u.Strikes(0, 1)
                                      # single week ahead since there are many SPXW contracts and we want to preserve performance
-                                     .Expiration(0, 7)))
+                                     .Expiration(0, 7)
+                                     .IncludeWeeklys()))
 
         self.spxw_option = spxw.Symbol
 

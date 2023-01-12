@@ -16,6 +16,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Securities.IndexOption
 {
@@ -65,7 +66,18 @@ namespace QuantConnect.Securities.IndexOption
                 return true;
             }
 
-            return !_nonStandardIndexOptionTickers.Contains(symbol.ID.Symbol.LazyToUpper());
+            switch (symbol.ID.Symbol)
+            {
+                case "NQX":
+                case "SPXW":
+                    // they have weeklies and monthly contracts
+                    // NQX https://www.nasdaq.com/docs/NQXFactSheet.pdf
+                    // SPXW https://www.cboe.com/tradable_products/sp_500/spx_weekly_options/specifications/
+                    return FuturesExpiryUtilityFunctions.ThirdFriday(symbol.ID.Date) == symbol.ID.Date;
+                default:
+                    // NDX/SPX/NQX/VIX/VIXW/NDXP are all normal contracts
+                    return true;
+            }
         }
 
         /// <summary>
