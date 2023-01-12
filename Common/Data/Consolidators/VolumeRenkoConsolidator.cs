@@ -27,11 +27,7 @@ namespace QuantConnect.Data.Consolidators
         private bool _firstTick = true;
         private VolumeRenkoBar _currentBar;
         private decimal _volumeLeftOver = 0m;
-
-        /// <summary>
-        /// Size of the consolidated bar.
-        /// </summary>
-        private decimal BarSize;
+        private decimal _barSize;
 
         /// <summary>
         /// Gets a clone of the data being currently consolidated
@@ -63,7 +59,7 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="barSize">The constant volume size of each bar</param>
         public VolumeRenkoConsolidator(decimal barSize)
         {
-            BarSize = barSize;
+            _barSize = barSize;
         }
 
         /// <summary>
@@ -111,7 +107,7 @@ namespace QuantConnect.Data.Consolidators
             if (_firstTick)
             {
                 _firstTick = false;
-                _currentBar = new VolumeRenkoBar(data.Symbol, data.Time, data.EndTime, BarSize, open, high, low, close, volume);
+                _currentBar = new VolumeRenkoBar(data.Symbol, data.Time, data.EndTime, _barSize, open, high, low, close, volume);
             }
             else
             {
@@ -119,7 +115,7 @@ namespace QuantConnect.Data.Consolidators
                 while (_volumeLeftOver >= 0)
                 {
                     OnDataConsolidated(_currentBar);
-                    _currentBar = new VolumeRenkoBar(data.Symbol, data.EndTime, data.EndTime, BarSize, close, high, low, close, 0);
+                    _currentBar = new VolumeRenkoBar(data.Symbol, data.EndTime, data.EndTime, _barSize, close, high, low, close, 0);
                     _volumeLeftOver = _currentBar.Update(data.EndTime, high, low, close, _volumeLeftOver);
                 }
             }

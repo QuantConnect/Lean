@@ -22,6 +22,8 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public class VolumeRenkoBar : BaseData, IBaseDataBar
     {
+        private readonly decimal _brickSize;
+
         /// <summary>
         /// Gets the opening value that started this bar.
         /// </summary>
@@ -52,11 +54,6 @@ namespace QuantConnect.Data.Market
         public decimal Volume { get; private set; }
 
         /// <summary>
-        /// Gets the volume capacity of the bar
-        /// </summary>
-        public decimal BrickSize { get; private set; }
-
-        /// <summary>
         /// Gets the end time of this renko bar or the most recent update time if it <see cref="IsClosed"/>
         /// </summary>
         public override DateTime EndTime { get; set; }
@@ -73,7 +70,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Gets whether or not this bar is considered closed.
         /// </summary>
-        public bool IsClosed => Volume >= BrickSize;
+        public bool IsClosed => Volume >= _brickSize;
 
         /// <summary>
         /// Gets the kind of the bar
@@ -95,9 +92,9 @@ namespace QuantConnect.Data.Market
         public VolumeRenkoBar(Symbol symbol, DateTime start, DateTime endTime, decimal brickSize, decimal open, decimal high, decimal low, decimal close, decimal volume)
         {
             Type = RenkoType.Classic;
+            _brickSize = brickSize;
 
             Symbol = symbol;
-            BrickSize = brickSize;
             Start = start;
             EndTime = endTime;
             Open = open;
@@ -126,10 +123,10 @@ namespace QuantConnect.Data.Market
             if (Start == DateTime.MinValue) Start = time;
             EndTime = time;
 
-            var excessVolume = Volume + volume - BrickSize;
+            var excessVolume = Volume + volume - _brickSize;
             if (excessVolume > 0)
             {
-                Volume = BrickSize;
+                Volume = _brickSize;
             }
             else
             {
