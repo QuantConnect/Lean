@@ -15,6 +15,8 @@
 
 using System;
 using System.Collections.Generic;
+using QuantConnect.Securities.Future;
+using QuantConnect.Securities.IndexOption;
 
 namespace QuantConnect.Securities.Option
 {
@@ -63,6 +65,26 @@ namespace QuantConnect.Securities.Option
         public static bool IsWeekly(Symbol symbol)
         {
             return !IsStandard(symbol) && symbol.ID.Date.DayOfWeek == DayOfWeek.Friday;
+        }
+
+        /// <summary>
+        /// Maps the option ticker to it's underlying
+        /// </summary>
+        /// <param name="optionTicker">The option ticker to map</param>
+        /// <param name="securityType">The security type of the option</param>
+        /// <returns>The underlying ticker</returns>
+        public static string MapToUnderlying(string optionTicker, SecurityType securityType)
+        {
+            if(securityType == SecurityType.FutureOption)
+            {
+                return FuturesOptionsSymbolMappings.MapFromOption(optionTicker);
+            }
+            else if (securityType == SecurityType.IndexOption)
+            {
+                return IndexOptionSymbol.MapToUnderlying(optionTicker);
+            }
+
+            return optionTicker;
         }
 
         /// <summary>

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -68,7 +68,7 @@ namespace QuantConnect.Tests.Common.Util
                 where TryInvoke(() => Symbol.Create(name, securityType, market))
                 let symbol = securityType != SecurityType.Option
                     ? Symbol.Create(name, securityType, market)
-                    : Symbol.CreateOption(name, market, OptionStyle.American, OptionRight.Put, 0, SecurityIdentifier.DefaultDate)
+                    : Symbol.CreateOption(name, market, OptionStyle.American, default, 0, SecurityIdentifier.DefaultDate)
                 select new TestCaseData(new Arguments(symbol, date, resolution, market, tickType))
                                 .SetName(name)
                 ).ToArray();

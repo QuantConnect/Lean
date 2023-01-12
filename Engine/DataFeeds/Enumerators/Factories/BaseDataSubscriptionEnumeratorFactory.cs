@@ -63,7 +63,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 IEnumerable<Symbol> symbols;
                 if (request.Configuration.SecurityType.IsOption())
                 {
-                    symbols = _optionChainProvider.GetOptionContractList(request.Configuration.Symbol.Underlying, date);
+                    symbols = _optionChainProvider.GetOptionContractList(request.Configuration.Symbol, date);
                 }
                 else if (request.Configuration.SecurityType == SecurityType.Future)
                 {

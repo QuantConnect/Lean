@@ -230,7 +230,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
                 case SecurityType.Option:
                 case SecurityType.IndexOption:
                 case SecurityType.FutureOption:
-                    foreach (var result in _optionChainProvider.GetOptionContractList(symbol.Underlying, DateTime.UtcNow.Date))
+                    foreach (var result in _optionChainProvider.GetOptionContractList(symbol, DateTime.UtcNow.Date))
                     {
                         yield return result;
                     }
