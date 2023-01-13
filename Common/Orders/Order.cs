@@ -489,7 +489,10 @@ namespace QuantConnect.Orders
             order.Id = orderId;
             if (groupOrderManager != null)
             {
-                groupOrderManager.OrderIds.Add(orderId);
+                lock (groupOrderManager.OrderIds)
+                {
+                    groupOrderManager.OrderIds.Add(orderId);
+                }
             }
             return order;
         }

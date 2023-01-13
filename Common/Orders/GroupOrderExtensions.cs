@@ -40,17 +40,20 @@ namespace QuantConnect.Orders
             orders = new List<Order> { order };
             if (order.GroupOrderManager != null)
             {
-                foreach (var otherOrdersId in order.GroupOrderManager.OrderIds.Where(id => id != order.Id))
+                lock (order.GroupOrderManager.OrderIds)
                 {
-                    var otherOrder = orderProvider(otherOrdersId);
-                    if (otherOrder != null)
+                    foreach (var otherOrdersId in order.GroupOrderManager.OrderIds.Where(id => id != order.Id))
                     {
-                        orders.Add(otherOrder);
-                    }
-                    else
-                    {
-                        // this will happen while all the orders haven't arrived yet, we will retry
-                        return false;
+                        var otherOrder = orderProvider(otherOrdersId);
+                        if (otherOrder != null)
+                        {
+                            orders.Add(otherOrder);
+                        }
+                        else
+                        {
+                            // this will happen while all the orders haven't arrived yet, we will retry
+                            return false;
+                        }
                     }
                 }
 
