@@ -23,7 +23,7 @@ class VolumeRenkoConsolidatorAlgorithm(QCAlgorithm):
     
     def Initialize(self):
         self.SetStartDate(2013, 10, 7)
-        self.SetEndDate(2014, 10, 11)
+        self.SetEndDate(2013, 10, 11)
         self.SetCash(100000)
         
         self.sma = SimpleMovingAverage(10)

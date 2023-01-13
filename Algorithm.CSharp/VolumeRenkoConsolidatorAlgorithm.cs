@@ -38,7 +38,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             SetStartDate(2013, 10, 7);
-            SetEndDate(2014, 10, 11);
+            SetEndDate(2013, 10, 11);
             SetCash(100000);
             
             _spy = AddEquity("SPY", Resolution.Minute).Symbol;
@@ -109,7 +109,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 895162;
+        public long DataPoints => 698706;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -124,31 +124,31 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "227"},
             {"Average Win", "0.25%"},
             {"Average Loss", "-0.05%"},
-            {"Compounding Annual Return", "-0.833%"},
-            {"Drawdown", "2.800%"},
+            {"Compounding Annual Return", "-48.349%"},
+            {"Drawdown", "3.000%"},
             {"Expectancy", "-0.191"},
             {"Net Profit", "-0.841%"},
-            {"Sharpe Ratio", "-0.129"},
-            {"Probabilistic Sharpe Ratio", "9.022%"},
+            {"Sharpe Ratio", "-0.956"},
+            {"Probabilistic Sharpe Ratio", "41.341%"},
             {"Loss Rate", "87%"},
             {"Win Rate", "13%"},
             {"Profit-Loss Ratio", "5.15"},
-            {"Alpha", "-0.008"},
-            {"Beta", "0.05"},
-            {"Annual Standard Deviation", "0.021"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-1.311"},
-            {"Tracking Error", "0.087"},
-            {"Treynor Ratio", "-0.055"},
+            {"Alpha", "-2.225"},
+            {"Beta", "1.009"},
+            {"Annual Standard Deviation", "0.234"},
+            {"Annual Variance", "0.055"},
+            {"Information Ratio", "-33.229"},
+            {"Tracking Error", "0.066"},
+            {"Treynor Ratio", "-0.222"},
             {"Total Fees", "$767.26"},
-            {"Estimated Strategy Capacity", "$4300000.00"},
+            {"Estimated Strategy Capacity", "$4000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Fitness Score", "0.412"},
+            {"Fitness Score", "0.025"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-0.111"},
-            {"Return Over Maximum Drawdown", "-0.3"},
-            {"Portfolio Turnover", "0.881"},
+            {"Sortino Ratio", "-7.077"},
+            {"Return Over Maximum Drawdown", "-19.135"},
+            {"Portfolio Turnover", "47.249"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
