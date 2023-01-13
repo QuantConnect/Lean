@@ -24,9 +24,7 @@ namespace QuantConnect.Data.Consolidators
     /// </summary>
     public class VolumeRenkoConsolidator : DataConsolidator<BaseData>
     {
-        private bool _firstTick = true;
         private VolumeRenkoBar _currentBar;
-        private decimal _volumeLeftOver = 0m;
         private decimal _barSize;
 
         /// <summary>
@@ -38,15 +36,6 @@ namespace QuantConnect.Data.Consolidators
         /// Gets <see cref="VolumeRenkoBar"/> which is the type emitted in the <see cref="IDataConsolidator.DataConsolidated"/> event.
         /// </summary>
         public override Type OutputType => typeof(VolumeRenkoBar);
-
-        /// <summary>
-        /// Gets the most recently consolidated piece of data. This will be null if this consolidator
-        /// has not produced any data yet.
-        /// </summary>
-        public IBaseData Consolidated
-        {
-            get; private set;
-        }
 
         /// <summary>
         /// Event handler that fires when a new piece of data is produced
@@ -68,14 +57,13 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="data">The new data for the consolidator</param>
         public override void Update(BaseData data)
         {
-            var rate = data.Price;
+            var close = data.Price;
             var dataType = data.GetType();
 
             decimal volume;
             decimal open;
             decimal high;
             decimal low;
-            decimal close;
 
             if (dataType == typeof(TradeBar))
             {
@@ -83,7 +71,6 @@ namespace QuantConnect.Data.Consolidators
                 open = ((TradeBar)data).Open;
                 high = ((TradeBar)data).High;
                 low = ((TradeBar)data).Low;
-                close = rate;
             }
             else if (dataType == typeof(Tick))
             {
@@ -94,30 +81,25 @@ namespace QuantConnect.Data.Consolidators
                 }
 
                 volume = ((Tick)data).Quantity;
-                open = rate;
-                high = rate;
-                low = rate;
-                close = rate;
+                open = close;
+                high = close;
+                low = close;
             }
             else
             {
                 throw new ArgumentException("VolumeRenkoConsolidator() must be used with TradeBar or Tick data.");
             }
 
-            if (_firstTick)
+            if (_currentBar == null)
             {
-                _firstTick = false;
-                _currentBar = new VolumeRenkoBar(data.Symbol, data.Time, data.EndTime, _barSize, open, high, low, close, volume);
+                _currentBar = new VolumeRenkoBar(data.Symbol, data.Time, data.EndTime, _barSize, open, high, low, close, 0);
             }
-            else
+            var volumeLeftOver = _currentBar.Update(data.EndTime, high, low, close, volume);
+            while (volumeLeftOver >= 0)
             {
-                _volumeLeftOver = _currentBar.Update(data.EndTime, high, low, close, volume);
-                while (_volumeLeftOver >= 0)
-                {
-                    OnDataConsolidated(_currentBar);
-                    _currentBar = new VolumeRenkoBar(data.Symbol, data.EndTime, data.EndTime, _barSize, close, high, low, close, 0);
-                    _volumeLeftOver = _currentBar.Update(data.EndTime, high, low, close, _volumeLeftOver);
-                }
+                OnDataConsolidated(_currentBar);
+                _currentBar = _currentBar.Rollover();
+                volumeLeftOver = _currentBar.Update(data.EndTime, high, low, close, volumeLeftOver);
             }
         }
 

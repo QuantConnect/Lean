@@ -20,65 +20,22 @@ namespace QuantConnect.Data.Market
     /// <summary>
     /// Represents a bar sectioned not by time, but by some amount of movement in volume
     /// </summary>
-    public class VolumeRenkoBar : BaseData, IBaseDataBar
+    public class VolumeRenkoBar : BaseRenkoBar
     {
-        private readonly decimal _brickSize;
-
-        /// <summary>
-        /// Gets the opening value that started this bar.
-        /// </summary>
-        public decimal Open { get; private set; }
-
-        /// <summary>
-        /// Gets the closing value or the current value if the bar has not yet closed.
-        /// </summary>
-        public decimal Close
-        {
-            get { return Value; }
-            private set { Value = value; }
-        }
-        
-        /// <summary>
-        /// Gets the highest value encountered during this bar
-        /// </summary>
-        public decimal High { get; private set; }
-
-        /// <summary>
-        /// Gets the lowest value encountered during this bar
-        /// </summary>
-        public decimal Low { get; private set; }
-
-        /// <summary>
-        /// Gets the volume of trades during the bar.
-        /// </summary>
-        public decimal Volume { get; private set; }
-
-        /// <summary>
-        /// Gets the end time of this renko bar or the most recent update time if it <see cref="IsClosed"/>
-        /// </summary>
-        public override DateTime EndTime { get; set; }
-        
-        /// <summary>
-        /// Gets the time this bar started
-        /// </summary>
-        public DateTime Start
-        {
-            get { return Time; }
-            private set { Time = value; }
-        }
-
         /// <summary>
         /// Gets whether or not this bar is considered closed.
         /// </summary>
-        public bool IsClosed => Volume >= _brickSize;
+        public override bool IsClosed => Volume >= BrickSize;
 
         /// <summary>
-        /// Gets the kind of the bar
+        /// Initializes a new default instance of the <see cref="RenkoBar"/> class.
         /// </summary>
-        public RenkoType Type { get; private set; }
+        public VolumeRenkoBar()
+        {
+        }
 
         /// <summary>
-        /// Updates this <see cref="VolumeRenkoBar"/> with the specified values and returns whether or not this bar is closed
+        /// Initializes a new instance of the <see cref="VolumeRenkoBar"/> class with the specified values
         /// </summary>
         /// <param name="symbol">symbol of the data</param>
         /// <param name="start">The current data start time</param>
@@ -92,7 +49,7 @@ namespace QuantConnect.Data.Market
         public VolumeRenkoBar(Symbol symbol, DateTime start, DateTime endTime, decimal brickSize, decimal open, decimal high, decimal low, decimal close, decimal volume)
         {
             Type = RenkoType.Classic;
-            _brickSize = brickSize;
+            BrickSize = brickSize;
 
             Symbol = symbol;
             Start = start;
@@ -115,18 +72,14 @@ namespace QuantConnect.Data.Market
         /// <returns>The excess volume that the current bar cannot absorb</returns>
         public decimal Update(DateTime time, decimal high, decimal low, decimal close, decimal volume)
         {
-            if (Type == RenkoType.Wicked)
-                throw new InvalidOperationException("A \"Wicked\" RenkoBar cannot be updated!");
-
             // can't update a closed renko bar
             if (IsClosed) return 0m;
-            if (Start == DateTime.MinValue) Start = time;
             EndTime = time;
 
-            var excessVolume = Volume + volume - _brickSize;
+            var excessVolume = Volume + volume - BrickSize;
             if (excessVolume > 0)
             {
-                Volume = _brickSize;
+                Volume = BrickSize;
             }
             else
             {
@@ -138,6 +91,26 @@ namespace QuantConnect.Data.Market
             if (low < Low) Low = low;
 
             return excessVolume;
+        }
+
+        /// <summary>
+        /// Create a new <see cref="VolumeRenkoBar"/> with previous information rollover
+        /// </summary>
+        public VolumeRenkoBar Rollover()
+        {
+            return new VolumeRenkoBar
+            {
+                Type = Type,
+                BrickSize = BrickSize,
+                Symbol = Symbol,
+                Open = Close,           // rollover open is the previous close
+                High = High,
+                Low = Low,
+                Close = Close,
+                Start = EndTime,        // rollover start time is the previous end time
+                EndTime = EndTime,
+                Volume = 0m
+            };
         }
     }
 }

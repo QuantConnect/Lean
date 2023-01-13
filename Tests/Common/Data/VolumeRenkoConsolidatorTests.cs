@@ -59,6 +59,10 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(3m, bar.High);
             Assert.AreEqual(1m, bar.Low);
             Assert.AreEqual(2m, bar.Close);
+            Assert.AreEqual(10m, bar.Volume);
+            Assert.AreEqual(10m, bar.BrickSize);
+            Assert.AreEqual(Symbol.Empty, bar.Symbol);
+            Assert.AreEqual(reference, bar.Start);
             Assert.AreEqual(reference.AddHours(3), bar.EndTime);
             Assert.IsTrue(bar.IsClosed);
         }
@@ -90,6 +94,10 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(4m, bar.High);
             Assert.AreEqual(0.5m, bar.Low);
             Assert.AreEqual(2.5m, bar.Close);
+            Assert.AreEqual(10m, bar.Volume);
+            Assert.AreEqual(10m, bar.BrickSize);
+            Assert.AreEqual(Symbol.Empty, bar.Symbol);
+            Assert.AreEqual(reference, bar.Start);
             Assert.AreEqual(reference.AddHours(4), bar.EndTime);
             Assert.IsTrue(bar.IsClosed);
         }
@@ -97,7 +105,6 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void ConsolidatesOnQuoteBar()
         {
-            VolumeRenkoBar bar = null;
             var consolidator = new VolumeRenkoConsolidator(10);
 
             var reference = DateTime.Today;
@@ -181,6 +188,10 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(3m, bar.High);
             Assert.AreEqual(1m, bar.Low);
             Assert.AreEqual(2m, bar.Close);
+            Assert.AreEqual(10m, bar.Volume);
+            Assert.AreEqual(10m, bar.BrickSize);
+            Assert.AreEqual(Symbol.Empty, bar.Symbol);
+            Assert.AreEqual(reference, bar.Start);
             Assert.AreEqual(reference.AddHours(3), bar.EndTime);
             Assert.IsTrue(bar.IsClosed);
             
@@ -194,6 +205,10 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(3m, bar.High);
             Assert.AreEqual(1m, bar.Low);
             Assert.AreEqual(3m, bar.Close);
+            Assert.AreEqual(10m, bar.Volume);
+            Assert.AreEqual(10m, bar.BrickSize);
+            Assert.AreEqual(Symbol.Empty, bar.Symbol);
+            Assert.AreEqual(reference.AddHours(3), bar.Start);
             Assert.AreEqual(reference.AddHours(6), bar.EndTime);
             Assert.IsTrue(bar.IsClosed);    // bar is always closed since it is the consolidated bar instance
 
@@ -204,6 +219,10 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(3m, bar.High);
             Assert.AreEqual(1m, bar.Low);
             Assert.AreEqual(3m, bar.Close);
+            Assert.AreEqual(10m, bar.Volume);
+            Assert.AreEqual(10m, bar.BrickSize);
+            Assert.AreEqual(Symbol.Empty, bar.Symbol);
+            Assert.AreEqual(reference.AddHours(3), bar.Start);
             Assert.AreEqual(reference.AddHours(6), bar.EndTime);
             Assert.IsTrue(bar.IsClosed);
         }

@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
@@ -44,13 +45,21 @@ namespace QuantConnect.Algorithm.CSharp
             _tradebarVolumeConsolidator = new VolumeRenkoConsolidator(1000000);
             _tradebarVolumeConsolidator.DataConsolidated += (sender, bar) => {
                 _sma.Update(bar.EndTime, bar.Value);
-                Log($"SPY {bar.Time} to {bar.EndTime} :: O:{bar.Open} H:{bar.High} L:{bar.Low} C:{bar.Close} V:{bar.Volume}");
+                Debug($"SPY {bar.Time} to {bar.EndTime} :: O:{bar.Open} H:{bar.High} L:{bar.Low} C:{bar.Close} V:{bar.Volume}");
+                if (bar.Volume != 1000000)
+                {
+                    throw new Exception("Volume of consolidated bar does not match set value!");
+                }
             };
             
             _ibm = AddEquity("IBM", Resolution.Tick).Symbol;
             _tickVolumeConsolidator = new VolumeRenkoConsolidator(1000000);
             _tickVolumeConsolidator.DataConsolidated += (sender, bar) => {
-                Log($"IBM {bar.Time} to {bar.EndTime} :: O:{bar.Open} H:{bar.High} L:{bar.Low} C:{bar.Close} V:{bar.Volume}");
+                Debug($"IBM {bar.Time} to {bar.EndTime} :: O:{bar.Open} H:{bar.High} L:{bar.Low} C:{bar.Close} V:{bar.Volume}");
+                if (bar.Volume != 1000000)
+                {
+                    throw new Exception("Volume of consolidated bar does not match set value!");
+                }
             };
 
             var history = History<TradeBar>(new[] {_spy}, 1000, Resolution.Minute);

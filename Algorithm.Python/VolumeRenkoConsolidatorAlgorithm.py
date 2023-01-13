@@ -30,20 +30,26 @@ class VolumeRenkoConsolidatorAlgorithm(QCAlgorithm):
         
         self.spy = self.AddEquity("SPY", Resolution.Minute).Symbol
         self.tradebar_volume_consolidator = VolumeRenkoConsolidator(1000000)
-        self.tradebar_volume_consolidator.DataConsolidated += self.OnDataConsolidated
+        self.tradebar_volume_consolidator.DataConsolidated += self.OnSPYDataConsolidated
         
         self.ibm = self.AddEquity("IBM", Resolution.Tick).Symbol
         self.tick_volume_consolidator = VolumeRenkoConsolidator(1000000)
-        self.tick_volume_consolidator.DataConsolidated += \
-            lambda sender, bar: self.Log(f"IBM {bar.Time} to {bar.EndTime} :: O:{bar.Open} H:{bar.High} L:{bar.Low} C:{bar.Close} V:{bar.Volume}")
+        self.tick_volume_consolidator.DataConsolidated += self.OnIBMDataConsolidated
         
         history = self.History[TradeBar](self.spy, 1000, Resolution.Minute);
         for bar in history:
             self.tradebar_volume_consolidator.Update(bar)
         
-    def OnDataConsolidated(self, sender, bar):
+    def OnSPYDataConsolidated(self, sender, bar):
         self.sma.Update(bar.EndTime, bar.Value)
-        self.Log(f"SPY {bar.Time} to {bar.EndTime} :: O:{bar.Open} H:{bar.High} L:{bar.Low} C:{bar.Close} V:{bar.Volume}")
+        self.Debug(f"SPY {bar.Time} to {bar.EndTime} :: O:{bar.Open} H:{bar.High} L:{bar.Low} C:{bar.Close} V:{bar.Volume}")
+        if bar.Volume != 1000000:
+            raise Exception("Volume of consolidated bar does not match set value!")
+        
+    def OnIBMDataConsolidated(self, sender, bar):
+        self.Debug(f"IBM {bar.Time} to {bar.EndTime} :: O:{bar.Open} H:{bar.High} L:{bar.Low} C:{bar.Close} V:{bar.Volume}")
+        if bar.Volume != 1000000:
+            raise Exception("Volume of consolidated bar does not match set value!")
         
     def OnData(self, slice):
         # Update by TradeBar
