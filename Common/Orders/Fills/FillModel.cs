@@ -21,7 +21,6 @@ using QuantConnect.Python;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Util;
-using static QLNet.SobolBrownianGenerator;
 
 namespace QuantConnect.Orders.Fills
 {
@@ -149,7 +148,7 @@ namespace QuantConnect.Orders.Fills
         public virtual List<OrderEvent> ComboLimitFill(Order order, FillModelParameters parameters)
         {
             // aggregate the prices from all the securities
-            var fillParameters = new List<ComboLimitOrderParameters>(parameters.SecuritiesForOrders.Count);
+            var fillParameters = new List<ComboLimitOrderLegParameters>(parameters.SecuritiesForOrders.Count);
             foreach (var kvp in parameters.SecuritiesForOrders.OrderBy(x => x.Key.Id))
             {
                 var targetOrder = kvp.Key;
@@ -162,7 +161,7 @@ namespace QuantConnect.Orders.Fills
                     return new List<OrderEvent>();
                 }
 
-                fillParameters.Add(new ComboLimitOrderParameters
+                fillParameters.Add(new ComboLimitOrderLegParameters
                 {
                     Security = security,
                     Order = targetOrder,
@@ -170,18 +169,16 @@ namespace QuantConnect.Orders.Fills
                 });
             }
 
-            var low = fillParameters.Aggregate(0m, (accumulatedPrice, p) => accumulatedPrice + p.Prices.Low);
-            var high = fillParameters.Aggregate(0m, (accumulatedPrice, p) => accumulatedPrice + p.Prices.High);
+            var currentPrice = fillParameters.Aggregate(0m, (accumulatedPrice, p) => accumulatedPrice + p.Price);
             var limitPrice = order.GroupOrderManager.LimitPrice;
 
             var fills = new List<OrderEvent>(fillParameters.Count);
 
-            //-> Valid Live/Model Order:
             switch (order.GroupOrderManager.Direction)
             {
                 case OrderDirection.Buy:
                     //Buy limit seeks lowest price
-                    if (low < limitPrice)
+                    if (currentPrice < limitPrice)
                     {
                         for (var i = 0; i < fillParameters.Count; i++)
                         {
@@ -202,7 +199,7 @@ namespace QuantConnect.Orders.Fills
 
                 case OrderDirection.Sell:
                     //Sell limit seeks highest price possible
-                    if (high > limitPrice)
+                    if (currentPrice > limitPrice)
                     {
                         for (var i = 0; i < fillParameters.Count; i++)
                         {
@@ -998,11 +995,31 @@ namespace QuantConnect.Orders.Fills
             return asset.IsMarketOpen(isExtendedMarketHours);
         }
 
-        private class ComboLimitOrderParameters
+        private class ComboLimitOrderLegParameters
         {
             public Security Security { get; set; }
             public Order Order { get; set; }
             public Prices Prices { get; set; }
+
+            /// <summary>
+            /// Gets the current price that would be paid/received for this leg based on the security price and the leg quantity
+            /// </summary>
+            public decimal Price
+            {
+                get
+                {
+                    // we use the same, either low or high, for every leg depending on the combo direction
+                    var price = Order.GroupOrderManager.Direction == OrderDirection.Buy ? Prices.Low : Prices.High;
+
+                    var quantity = Order.Quantity;
+                    if (Security.Symbol.SecurityType == SecurityType.Equity)
+                    {
+                        quantity /= 100;
+                    }
+
+                    return price * quantity;
+                }
+            }
         }
     }
 }

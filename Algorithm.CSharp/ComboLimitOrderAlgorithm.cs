@@ -25,7 +25,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class ComboLimitOrderAlgorithm : ComboOrderAlgorithm
     {
-        private decimal? _limitPrice;
+        private decimal _limitPrice;
         private int _comboQuantity;
 
         private int _fillCount;
@@ -38,18 +38,21 @@ namespace QuantConnect.Algorithm.CSharp
         {
             get
             {
+                // times 2 because of liquidation
                 return OrderLegs.Count * 2;
             }
         }
 
         protected override IEnumerable<OrderTicket> PlaceComboOrder(List<Leg> legs, int quantity, decimal? limitPrice)
         {
-            _limitPrice = limitPrice;
+            _limitPrice = limitPrice.Value;
             _comboQuantity = quantity;
+
             legs.ForEach(x => { x.OrderPrice = null; });
 
-            return ComboLimitOrder(legs, quantity, limitPrice.Value);
+            return ComboLimitOrder(legs, quantity, _limitPrice);
         }
+
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
             base.OnOrderEvent(orderEvent);
@@ -92,7 +95,7 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception("Limit price was not set");
             }
 
-            var fillPricesSum = FillOrderEvents.Take(OrderLegs.Count).Select(x => x.FillPrice).Sum();
+            var fillPricesSum = FillOrderEvents.Take(OrderLegs.Count).Select(x => x.FillPrice * x.FillQuantity / _comboQuantity).Sum();
             if (_limitPrice < fillPricesSum)
             {
                 throw new Exception($"Limit price expected to be greater that the sum of the fill prices ({fillPricesSum}), but was {_limitPrice}");
@@ -149,7 +152,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$17.50"},
-            {"Estimated Strategy Capacity", "$6000.00"},
+            {"Estimated Strategy Capacity", "$5000.00"},
             {"Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
@@ -170,7 +173,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "5203bc8a2ebb58a2293aa1855211b878"}
+            {"OrderListHash", "17a5427a539f2b02a626fda15d6eb13f"}
         };
     }
 }

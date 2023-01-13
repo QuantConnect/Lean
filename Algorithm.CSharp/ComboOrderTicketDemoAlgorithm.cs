@@ -126,17 +126,13 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 Log("Submitting ComboLimitOrder");
 
-                var closeSum = 0m;
-                foreach (var leg in _orderLegs)
-                {
-                    closeSum += Securities[leg.Symbol].Close;
-                }
+                var currentPrice = _orderLegs.Sum(leg => leg.Quantity * Securities[leg.Symbol].Close);
 
-                var tickets = ComboLimitOrder(_orderLegs, 2, closeSum * 0.95m);
+                var tickets = ComboLimitOrder(_orderLegs, 2, currentPrice - 2m);
                 _openLimitOrders.AddRange(tickets);
 
                 // These won't fill, we will test cancel with this
-                tickets = ComboLimitOrder(_orderLegs, -2, closeSum * 1.1m);
+                tickets = ComboLimitOrder(_orderLegs, -2, currentPrice + 3m);
                 _openLimitOrders.AddRange(tickets);
             }
             else
@@ -153,7 +149,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // if neither order has filled, bring in the limits by a penny
 
                 var ticket = combo1[0];
-                var newLimit = Math.Round(ticket.Get(OrderField.LimitPrice) + 0.05m, 2);
+                var newLimit = Math.Round(ticket.Get(OrderField.LimitPrice) + 0.01m, 2);
                 Debug($"Updating limits - Combo 1 {ticket.OrderId}: {newLimit.ToStringInvariant("0.00")}");
                 ticket.Update(new UpdateOrderFields
                 {
@@ -352,7 +348,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$15.00"},
-            {"Estimated Strategy Capacity", "$4000.00"},
+            {"Estimated Strategy Capacity", "$8000.00"},
             {"Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
@@ -373,7 +369,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "cc3f54877875310985d6131c1cf7be53"}
+            {"OrderListHash", "06328fbd9bbb25d9ec80b9151a7ceb7b"}
         };
     }
 }
