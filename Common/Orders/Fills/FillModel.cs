@@ -1001,27 +1001,6 @@ namespace QuantConnect.Orders.Fills
             public Order Order { get; set; }
             public Prices Prices { get; set; }
 
-            public decimal Quantity
-            {
-                get { return Order.Quantity * Order.GroupOrderManager.Quantity; }
-            }
-
-            public OrderDirection Direction
-            {
-                get
-                {
-                    if (Quantity > 0)
-                    {
-                        return OrderDirection.Buy;
-                    }
-                    if (Quantity < 0)
-                    {
-                        return OrderDirection.Sell;
-                    }
-                    return OrderDirection.Hold;
-                }
-            }
-
             /// <summary>
             /// Gets the current price that would be paid/received for this leg based on the security price and the leg quantity
             /// </summary>
@@ -1031,7 +1010,14 @@ namespace QuantConnect.Orders.Fills
                 {
                     // we use the same, either low or high, for every leg depending on the combo direction
                     var price = Order.GroupOrderManager.Direction == OrderDirection.Buy ? Prices.Low : Prices.High;
-                    return price * Order.Quantity;
+
+                    var quantity = Order.Quantity;
+                    if (Security.Symbol.SecurityType == SecurityType.Equity)
+                    {
+                        quantity /= 100;
+                    }
+
+                    return price * quantity;
                 }
             }
         }

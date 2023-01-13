@@ -969,8 +969,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var groupOrderManager = new GroupOrderManager(0, 2, orderDirection == OrderDirection.Buy ? 10 : -10, 0m);
             Assert.AreEqual(orderDirection, groupOrderManager.Direction);
 
-            var spyLegOrder = new ComboLimitOrder(Symbols.SPY, -1, 0m, Noon, groupOrderManager);
-            var aaplLegOrder = new ComboLimitOrder(Symbols.AAPL, 1, 0m, Noon, groupOrderManager);
+            var spyLegOrder = new ComboLimitOrder(Symbols.SPY, -100, 0m, Noon, groupOrderManager);
+            var aaplLegOrder = new ComboLimitOrder(Symbols.AAPL, 100, 0m, Noon, groupOrderManager);
             var legsOrders = new List<ComboLimitOrder>() { spyLegOrder, aaplLegOrder };
             for (var i = 0; i < legsOrders.Count; i++)
             {
@@ -989,7 +989,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 { aaplLegOrder, aapl }
             };
 
-            var getLegsPrice = (Func<Security, decimal> priceSelector) => priceSelector(spy) * spyLegOrder.Quantity + priceSelector(aapl) * aaplLegOrder.Quantity;
+            var getLegsPrice = (Func<Security, decimal> priceSelector) => priceSelector(spy) * spyLegOrder.Quantity / 100 + priceSelector(aapl) * aaplLegOrder.Quantity / 100;
 
             // set limit prices that won't fill.
             // combo limit orders fill based on the total price that will be paid/received for the legs

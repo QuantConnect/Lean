@@ -49,16 +49,18 @@ namespace QuantConnect.Orders
                     }
                     else
                     {
-                        // this shouldn't happen
-                        Log.Error($"BacktestingBrokerage.Scan(): missing order {otherOrdersId} of group: {order.GroupOrderManager.Id}");
+                        // this will happen while all the orders haven't arrived yet, we will retry
                         return false;
                     }
                 }
 
                 if (order.GroupOrderManager.Count != orders.Count)
                 {
-                    Log.Debug($"TryGetGroupOrders(): missing orders of group {order.GroupOrderManager.Id}." +
-                        $" We have {orders.Count}/{order.GroupOrderManager.Count} orders will skip");
+                    if (Log.DebuggingEnabled)
+                    {
+                        Log.Debug($"GroupOrderExtensions.TryGetGroupOrders(): missing orders of group {order.GroupOrderManager.Id}." +
+                            $" We have {orders.Count}/{order.GroupOrderManager.Count} orders will skip");
+                    }
                     return false;
                 }
             }
