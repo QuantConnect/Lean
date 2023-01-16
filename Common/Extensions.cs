@@ -3791,14 +3791,10 @@ namespace QuantConnect
         /// </summary>
         /// <param name="values">List of numbers which greatest common divisor is requested</param>
         /// <returns>The greatest common divisor for the given list of numbers</returns>
-        public static int GreatestCommonDivisor(this List<int> values)
+        public static int GreatestCommonDivisor(this IEnumerable<int> values)
         {
-            var result = values[0];
-            for (var i = 1; i < values.Count; i++)
-            {
-                result = GreatestCommonDivisor(result, values[i]);
-            }
-            return result;
+            var firstValue = values.FirstOrDefault(1);
+            return values.Skip(1).Aggregate(firstValue, (result, value) => GreatestCommonDivisor(result, value));
         }
 
         /// <summary>

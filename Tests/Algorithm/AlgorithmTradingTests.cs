@@ -1491,7 +1491,7 @@ namespace QuantConnect.Tests.Algorithm
         public void ComboOrderLegsRatiosAreValidated(int[] quantities, bool shouldThrow)
         {
             var algo = GetAlgorithm(out _, 1, 0);
-            var legs = quantities.ToList().Select(q => Leg.Create(Symbols.MSFT, q)).ToList();
+            var legs = quantities.Select(q => Leg.Create(Symbols.MSFT, q)).ToList();
 
             if (shouldThrow)
             {

@@ -1643,7 +1643,7 @@ actualDictionary.update({'IBM': 5})
         [TestCase(new int[] { 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97 }, 1)]
         public void GreatestCommonDivisorTests(int[] values, int expectedResult)
         {
-            Assert.AreEqual(expectedResult, values.ToList().GreatestCommonDivisor());
+            Assert.AreEqual(expectedResult, values.GreatestCommonDivisor());
         }
 
         private PyObject ConvertToPyObject(object value)
