@@ -1629,6 +1629,23 @@ actualDictionary.update({'IBM': 5})
             Assert.AreEqual(expected, actual);
         }
 
+        [TestCase(new int[] { 1, 2 }, 1)]
+        [TestCase(new int[] { -1, 10 }, 1)]
+        [TestCase(new int[] { 2, -5 }, 1)]
+        [TestCase(new int[] { 1, 2, 3 }, 1)]
+        [TestCase(new int[] { 200, -11, 7 }, 1)]
+        [TestCase(new int[] { 10, 20 }, 10)]
+        [TestCase(new int[] { -10, 100 }, 10)]
+        [TestCase(new int[] { 20, -50 }, 10)]
+        [TestCase(new int[] { 10, 20, 30 }, 10)]
+        [TestCase(new int[] { 1000, -55, 35 }, 5)]
+        [TestCase(new int[] { 24, 148, 36, 48, 52, 364 }, 4)]
+        [TestCase(new int[] { 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97 }, 1)]
+        public void GreatestCommonDivisorTests(int[] values, int expectedResult)
+        {
+            Assert.AreEqual(expectedResult, values.ToList().GreatestCommonDivisor());
+        }
+
         private PyObject ConvertToPyObject(object value)
         {
             using (Py.GIL())

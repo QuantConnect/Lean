@@ -748,23 +748,6 @@ namespace QuantConnect.Algorithm
             return SubmitComboOrder(legs, strategyQuantity, 0, asynchronous, tag, orderProperties);
         }
 
-        private void CheckComboOrderSizing(List<Leg> legs, decimal quantity)
-        {
-            // check that the order quantity is a multiple of the GCD of the leg quantities
-            var legQuantities = legs.Select(leg => Math.Abs(leg.Quantity)).ToArray();
-            var gcd = GreatestCommonDivisor(legQuantities);
-
-            if (gcd != 1)
-            {
-                throw new ArgumentException(
-                    "The global combo quantity should be used to increase or reduce the size of the order, " +
-                    "while the leg quantities should be used to specify the ratio of the order. " +
-                    "The combo order legs ratios should be reduced " +
-                    $"from {quantity}x({string.Join(", ", legs.Select(leg => $"{leg.Quantity} {leg.Symbol}"))}) " +
-                    $"to {quantity * gcd}x({string.Join(", ", legs.Select(leg => $"{leg.Quantity / gcd} {leg.Symbol}"))}).");
-            }
-        }
-
         private List<OrderTicket> SubmitComboOrder(List<Leg> legs, decimal quantity, decimal limitPrice, bool asynchronous, string tag, IOrderProperties orderProperties)
         {
             CheckComboOrderSizing(legs, quantity);
@@ -1376,26 +1359,19 @@ namespace QuantConnect.Algorithm
             return new SubmitOrderRequest(orderType, security.Type, security.Symbol, quantity, stopPrice, limitPrice, triggerPrice, UtcTime, tag, properties, groupOrderManager);
         }
 
-        private static int GreatestCommonDivisor(int a, int b)
+        private static void CheckComboOrderSizing(List<Leg> legs, decimal quantity)
         {
-            int remainder;
-            while (b != 0)
-            {
-                remainder = a % b;
-                a = b;
-                b = remainder;
-            }
-            return a;
-        }
+            var greatestsCommonDivisor = legs.Select(leg => leg.Quantity).ToList().GreatestCommonDivisor();
 
-        private static int GreatestCommonDivisor(int[] numbers)
-        {
-            var result = numbers[0];
-            for (var i = 1; i < numbers.Length; i++)
+            if (greatestsCommonDivisor != 1)
             {
-                result = GreatestCommonDivisor(result, numbers[i]);
+                throw new ArgumentException(
+                    "The global combo quantity should be used to increase or reduce the size of the order, " +
+                    "while the leg quantities should be used to specify the ratio of the order. " +
+                    "The combo order quantities should be reduced " +
+                    $"from {quantity}x({string.Join(", ", legs.Select(leg => $"{leg.Quantity} {leg.Symbol}"))}) " +
+                    $"to {quantity * greatestsCommonDivisor}x({string.Join(", ", legs.Select(leg => $"{leg.Quantity / greatestsCommonDivisor} {leg.Symbol}"))}).");
             }
-            return result;
         }
     }
 }

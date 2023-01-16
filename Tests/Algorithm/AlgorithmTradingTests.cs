@@ -1479,15 +1479,15 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [TestCase(new int[] { 1, 2 }, false)]
-        [TestCase(new int[] { 1, 10 }, false)]
-        [TestCase(new int[] { 2, 5 }, false)]
+        [TestCase(new int[] { -1, 10 }, false)]
+        [TestCase(new int[] { 2, -5 }, false)]
         [TestCase(new int[] { 1, 2, 3 }, false)]
-        [TestCase(new int[] { 200, 11, 7 }, false)]
+        [TestCase(new int[] { 200, -11, 7 }, false)]
         [TestCase(new int[] { 10, 20 }, true)]
-        [TestCase(new int[] { 10, 100 }, true)]
-        [TestCase(new int[] { 20, 50 }, true)]
+        [TestCase(new int[] { -10, 100 }, true)]
+        [TestCase(new int[] { 20, -50 }, true)]
         [TestCase(new int[] { 10, 20, 30 }, true)]
-        [TestCase(new int[] { 1000, 55, 35 }, true)]
+        [TestCase(new int[] { 1000, -55, 35 }, true)]
         public void ComboOrderLegsRatiosAreValidated(int[] quantities, bool shouldThrow)
         {
             var algo = GetAlgorithm(out _, 1, 0);

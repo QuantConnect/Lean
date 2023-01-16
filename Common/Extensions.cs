@@ -2680,7 +2680,7 @@ namespace QuantConnect
                 return pyObject.AsManagedObject(typeToConvertTo);
             }
         }
-        
+
         /// <summary>
         /// Converts a Python function to a managed function returning a Symbol
         /// </summary>
@@ -3609,7 +3609,7 @@ namespace QuantConnect
         /// <summary>
         /// Centralized logic used at the top of the subscription enumerator stacks to determine if we should emit base data points
         /// based on the configuration for this subscription and the type of data we are handling.
-        /// 
+        ///
         /// Currently we only want to emit split/dividends/delisting events for non internal <see cref="TradeBar"/> configurations
         /// this last part is because equities also have <see cref="QuoteBar"/> subscriptions which will also subscribe to the
         /// same aux events and we don't want duplicate emits of these events in the TimeSliceFactory
@@ -3652,7 +3652,7 @@ namespace QuantConnect
             {
                 return (data as Delisting)?.Type == DelistingType.Delisted;
             }
-            
+
             if (!(type == typeof(Delisting) || type == typeof(Split) || type == typeof(Dividend)))
             {
                 return true;
@@ -3784,6 +3784,36 @@ namespace QuantConnect
                 default:
                     return false;
             }
+        }
+
+        /// <summary>
+        /// Gets the greatest common divisor of a list of numbers
+        /// </summary>
+        /// <param name="values">List of numbers which greatest common divisor is requested</param>
+        /// <returns>The greatest common divisor for the given list of numbers</returns>
+        public static int GreatestCommonDivisor(this List<int> values)
+        {
+            var result = values[0];
+            for (var i = 1; i < values.Count; i++)
+            {
+                result = GreatestCommonDivisor(result, values[i]);
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Gets the greatest common divisor of two numbers
+        /// </summary>
+        private static int GreatestCommonDivisor(int a, int b)
+        {
+            int remainder;
+            while (b != 0)
+            {
+                remainder = a % b;
+                a = b;
+                b = remainder;
+            }
+            return Math.Abs(a);
         }
     }
 }
