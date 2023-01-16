@@ -3793,8 +3793,19 @@ namespace QuantConnect
         /// <returns>The greatest common divisor for the given list of numbers</returns>
         public static int GreatestCommonDivisor(this IEnumerable<int> values)
         {
-            var firstValue = values.FirstOrDefault(1);
-            return values.Skip(1).Aggregate(firstValue, (result, value) => GreatestCommonDivisor(result, value));
+            var enumerator = values.GetEnumerator();
+            if (!enumerator.MoveNext())
+            {
+                throw new ArgumentException("The list of values must contain at least one element");
+            }
+
+            var result = enumerator.Current;
+            while (enumerator.MoveNext())
+            {
+                result = GreatestCommonDivisor(result, enumerator.Current);
+            }
+
+            return result;
         }
 
         /// <summary>
