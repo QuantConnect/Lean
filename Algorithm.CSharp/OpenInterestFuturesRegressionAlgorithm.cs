@@ -97,7 +97,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 232;
+        public int AlgorithmHistoryDataPoints => 252;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -130,7 +130,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-121.652"},
+            {"Return Over Maximum Drawdown", "-128.807"},
             {"Portfolio Turnover", "0.017"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
