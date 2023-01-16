@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 73252;
+        public override long DataPoints => 96027;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -73,8 +73,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Fitness Score", "0.045"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-4.326"},
-            {"Return Over Maximum Drawdown", "-0.994"},
+            {"Sortino Ratio", "-4.328"},
+            {"Return Over Maximum Drawdown", "-0.995"},
             {"Portfolio Turnover", "0.205"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},

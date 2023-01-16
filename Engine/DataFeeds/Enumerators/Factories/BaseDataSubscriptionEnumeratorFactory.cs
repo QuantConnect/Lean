@@ -74,9 +74,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                     throw new NotImplementedException($"{request.Configuration.SecurityType} is not supported");
                 }
 
+                // we are going to use these symbols to create a collection that for options will also have the underlying that will be emitted in exchange time zone
+                // note the merging of the data will happen based on their end time so time zones are important to respect
+                var exchangeTimeZoneDate = date.ConvertTo(request.Configuration.DataTimeZone, request.ExchangeHours.TimeZone);
                 foreach (var symbol in symbols)
                 {
-                    yield return new ZipEntryName { Symbol = symbol, Time = date };
+                    yield return new ZipEntryName { Symbol = symbol, Time = exchangeTimeZoneDate };
                 }
             }
         }
