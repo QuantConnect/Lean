@@ -67,17 +67,16 @@ namespace QuantConnect.Algorithm.CSharp
                     var underlyingPrice = Securities["GOOG"].AskPrice;
 
                     // covered call
-                    var legsQuantity = 3;
-                    var legs = new List<Leg> { Leg.Create(atmContract.Symbol, -1 * legsQuantity), Leg.Create(atmContract.Symbol.Underlying, 100 * legsQuantity) };
+                    var legs = new List<Leg> { Leg.Create(atmContract.Symbol, -1), Leg.Create(atmContract.Symbol.Underlying, 100) };
 
-                    var comboPrice = (underlyingPrice * legsQuantity) - optionPrice * legsQuantity;
-                    if(comboPrice < 2200)
+                    var comboPrice = underlyingPrice - optionPrice;
+                    if(comboPrice < 734m)
                     {
                         // just to make sure the price makes sense
                         throw new Exception($"Unexpected combo price {comboPrice}");
                     }
                     // place order slightly bellow price
-                    ComboLimitOrder(legs, 2, comboPrice - 1m);
+                    ComboLimitOrder(legs, 6, comboPrice - 0.5m);
 
                     _submittionTime = Time;
                 }
@@ -160,7 +159,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "d6bdd5fa4d5aa2465f18218abfff3810"}
+            {"OrderListHash", "addfbee330e5b80a186acf3c2d776982"}
         };
     }
 }

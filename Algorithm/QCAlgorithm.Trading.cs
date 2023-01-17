@@ -750,6 +750,8 @@ namespace QuantConnect.Algorithm
 
         private List<OrderTicket> SubmitComboOrder(List<Leg> legs, decimal quantity, decimal limitPrice, bool asynchronous, string tag, IOrderProperties orderProperties)
         {
+            CheckComboOrderSizing(legs, quantity);
+
             var orderType = OrderType.ComboMarket;
             if(limitPrice != 0)
             {
@@ -1355,6 +1357,21 @@ namespace QuantConnect.Algorithm
             decimal stopPrice = 0m, decimal limitPrice = 0m,  decimal triggerPrice = 0m, GroupOrderManager groupOrderManager = null)
         {
             return new SubmitOrderRequest(orderType, security.Type, security.Symbol, quantity, stopPrice, limitPrice, triggerPrice, UtcTime, tag, properties, groupOrderManager);
+        }
+
+        private static void CheckComboOrderSizing(List<Leg> legs, decimal quantity)
+        {
+            var greatestsCommonDivisor = legs.Select(leg => leg.Quantity).GreatestCommonDivisor();
+
+            if (greatestsCommonDivisor != 1)
+            {
+                throw new ArgumentException(
+                    "The global combo quantity should be used to increase or reduce the size of the order, " +
+                    "while the leg quantities should be used to specify the ratio of the order. " +
+                    "The combo order quantities should be reduced " +
+                    $"from {quantity}x({string.Join(", ", legs.Select(leg => $"{leg.Quantity} {leg.Symbol}"))}) " +
+                    $"to {quantity * greatestsCommonDivisor}x({string.Join(", ", legs.Select(leg => $"{leg.Quantity / greatestsCommonDivisor} {leg.Symbol}"))}).");
+            }
         }
     }
 }

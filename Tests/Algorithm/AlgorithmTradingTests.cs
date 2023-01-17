@@ -29,6 +29,7 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Orders.Fills;
+using System.Linq;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -1475,6 +1476,43 @@ namespace QuantConnect.Tests.Algorithm
             algo.SetDateTime(optionExpiry.AddHours(15));
             ticket = algo.ExerciseOption(europeanOptionContract.Symbol, 1);
             Assert.AreEqual(OrderStatus.New, ticket.Status);
+        }
+
+        [TestCase(new int[] { 1, 2 }, false)]
+        [TestCase(new int[] { -1, 10 }, false)]
+        [TestCase(new int[] { 2, -5 }, false)]
+        [TestCase(new int[] { 1, 2, 3 }, false)]
+        [TestCase(new int[] { 200, -11, 7 }, false)]
+        [TestCase(new int[] { 10, 20 }, true)]
+        [TestCase(new int[] { -10, 100 }, true)]
+        [TestCase(new int[] { 20, -50 }, true)]
+        [TestCase(new int[] { 10, 20, 30 }, true)]
+        [TestCase(new int[] { 1000, -55, 35 }, true)]
+        public void ComboOrderLegsRatiosAreValidated(int[] quantities, bool shouldThrow)
+        {
+            var algo = GetAlgorithm(out _, 1, 0);
+            var legs = quantities.Select(q => Leg.Create(Symbols.MSFT, q)).ToList();
+
+            if (shouldThrow)
+            {
+                Assert.Throws<ArgumentException>(() => algo.ComboMarketOrder(legs, 1));
+                Assert.Throws<ArgumentException>(() => algo.ComboLimitOrder(legs, 1, 100));
+                Assert.Throws<ArgumentException>(() => algo.ComboLegLimitOrder(legs.Select(leg =>
+                {
+                    leg.OrderPrice = 10;
+                    return leg;
+                }).ToList(), 1));
+            }
+            else
+            {
+                Assert.DoesNotThrow(() => algo.ComboMarketOrder(legs, 1));
+                Assert.DoesNotThrow(() => algo.ComboLimitOrder(legs, 1, 100));
+                Assert.DoesNotThrow(() => algo.ComboLegLimitOrder(legs.Select(leg =>
+                {
+                    leg.OrderPrice = 10;
+                    return leg;
+                }).ToList(), 1));
+            }
         }
 
         private class TestShortableProvider : IShortableProvider
