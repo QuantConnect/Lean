@@ -40,7 +40,7 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Event handler that fires when a new piece of data is produced
         /// </summary>
-        public event EventHandler<VolumeRenkoBar> DataConsolidated;
+        public new event EventHandler<VolumeRenkoBar> DataConsolidated;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="VolumeRenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
@@ -118,8 +118,8 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="consolidated">The newly consolidated data</param>
         protected void OnDataConsolidated(VolumeRenkoBar consolidated)
         {
+            base.OnDataConsolidated(consolidated);
             DataConsolidated?.Invoke(this, consolidated);
-            Consolidated = consolidated;
         }
     }
 }

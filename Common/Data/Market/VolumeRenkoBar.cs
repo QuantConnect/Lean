@@ -104,8 +104,8 @@ namespace QuantConnect.Data.Market
                 BrickSize = BrickSize,
                 Symbol = Symbol,
                 Open = Close,           // rollover open is the previous close
-                High = High,
-                Low = Low,
+                High = Close,
+                Low = Close,
                 Close = Close,
                 Start = EndTime,        // rollover start time is the previous end time
                 EndTime = EndTime,

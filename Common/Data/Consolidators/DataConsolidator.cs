@@ -58,7 +58,7 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         public IBaseData Consolidated
         {
-            get; protected set;
+            get; private set;
         }
 
         /// <summary>
