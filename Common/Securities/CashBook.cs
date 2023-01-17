@@ -40,7 +40,7 @@ namespace QuantConnect.Securities
         /// Event fired when a <see cref="Cash"/> instance is added or removed, and when
         /// the <see cref="Cash.Updated"/> is triggered for the currently hold instances
         /// </summary>
-        public event EventHandler<UpdateType> Updated;
+        public event EventHandler<CashBookUpdatedEventArgs> Updated;
 
         /// <summary>
         /// Gets the base currency used
@@ -253,7 +253,7 @@ namespace QuantConnect.Securities
         public void Clear()
         {
             _currencies.Clear();
-            OnUpdate(UpdateType.Removed);
+            OnUpdate(UpdateType.Removed, null);
         }
 
         /// <summary>
@@ -403,7 +403,7 @@ namespace QuantConnect.Securities
                 value.Updated += OnCashUpdate;
                 _currencies.AddOrUpdate(symbol, value);
 
-                OnUpdate(UpdateType.Added);
+                OnUpdate(UpdateType.Added, value);
 
                 return value;
             }
@@ -434,7 +434,7 @@ namespace QuantConnect.Securities
                 cash.Updated -= OnCashUpdate;
                 if (!calledInternally)
                 {
-                    OnUpdate(UpdateType.Removed);
+                    OnUpdate(UpdateType.Removed, cash);
                 }
             }
             return removed;
@@ -442,12 +442,12 @@ namespace QuantConnect.Securities
 
         private void OnCashUpdate(object sender, EventArgs eventArgs)
         {
-            OnUpdate(UpdateType.Updated);
+            OnUpdate(UpdateType.Updated, sender as Cash);
         }
 
-        private void OnUpdate(UpdateType updateType)
+        private void OnUpdate(UpdateType updateType, Cash cash)
         {
-            Updated?.Invoke(this, updateType);
+            Updated?.Invoke(this, new CashBookUpdatedEventArgs(updateType, cash));
         }
 
         /// <summary>

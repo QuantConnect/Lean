@@ -96,7 +96,23 @@ namespace QuantConnect.Securities
             // default to $100,000.00
             _baseCurrencyCash.SetAmount(100000);
 
-            CashBook.Updated += (sender, args) => InvalidateTotalPortfolioValue();
+            CashBook.Updated += (sender, args) =>
+            {
+                if (args.UpdateType == CashBook.UpdateType.Added)
+                {
+                    // add the same currency entry to the unsettled cashbook as well
+                    UnsettledCashBook.Add(args.Cash.Symbol, new Cash(args.Cash.Symbol, 0, args.Cash.ConversionRate));
+                }
+                // if updated, let's keep track of conversion rate changes
+                else if (args.UpdateType == CashBook.UpdateType.Updated &&
+                         UnsettledCashBook.TryGetValue(args.Cash.Symbol, out var cash) &&
+                         args.Cash.ConversionRate != cash.ConversionRate)
+                {
+                    cash.ConversionRate = args.Cash.ConversionRate;
+                }
+
+                InvalidateTotalPortfolioValue();
+            };
             UnsettledCashBook.Updated += (sender, args) => InvalidateTotalPortfolioValue();
         }
 
