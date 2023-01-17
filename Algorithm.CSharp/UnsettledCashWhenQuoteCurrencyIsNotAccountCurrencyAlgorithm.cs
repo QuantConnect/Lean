@@ -23,10 +23,10 @@ using QuantConnect.Orders;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Algorithm asserting that the unsettled cash book is updated correctly when the account currency is not USD.
-    /// It reproduces GH issue #6859.
+    /// Algorithm asserting that the unsettled cash book is updated correctly when the quote currency is not the account currency.
+    /// Reproduces GH issue #6859.
     /// </summary>
-    public class UnsettledCashWithNonUSDAccountCurrencyAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class UnsettledCashWhenQuoteCurrencyIsNotAccountCurrencyAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _spy;
 

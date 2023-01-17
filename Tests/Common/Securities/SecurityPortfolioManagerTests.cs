@@ -35,6 +35,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Tests.Engine.DataFeeds;
+using static QuantConnect.Securities.CashBook;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -2591,7 +2592,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var spy = algorithm.AddEquity("SPY");
             spy.SetMarketPrice(new Tick(new DateTime(2000, 01, 01), Symbols.SPY, 100m, 99m, 101m));
-            spy.Holdings.SetHoldings(100m, quantity); 
+            spy.Holdings.SetHoldings(100m, quantity);
             spy.Holdings.AddNewFee(fee);
             spy.Holdings.AddNewProfit(profitLoss);
 
@@ -2670,6 +2671,91 @@ namespace QuantConnect.Tests.Common.Securities
                 portfolio.SetCash(Currencies.USD, 1, 1);
             }
             Assert.Throws<InvalidOperationException>(() => portfolio.SetAccountCurrency(Currencies.USD));
+        }
+
+        [Test]
+        public void AddsEmptyUnsettledCashInstancesAsNewCashInstancesAreAddedToTheCashBook()
+        {
+            var algorithm = new QCAlgorithm();
+            var securities = new SecurityManager(TimeKeeper);
+            var transactions = new SecurityTransactionManager(null, securities);
+            var portfolio = new SecurityPortfolioManager(securities, transactions);
+
+            algorithm.Securities = securities;
+            algorithm.Transactions = transactions;
+            algorithm.Portfolio = portfolio;
+
+            var additions = 0;
+            portfolio.UnsettledCashBook.Updated += (sender, args) =>
+            {
+                if (args.UpdateType == UpdateType.Added)
+                {
+                    additions++;
+                }
+            };
+
+            algorithm.SetCash(Currencies.EUR, 1000, 1.08m);
+            algorithm.SetCash("AUD", 1000, 0.7m);
+
+            // expected only 2 additions, USD is the account currency so it its supposed to already be there
+            Assert.AreEqual(2, additions);
+            Assert.AreEqual(3, algorithm.Portfolio.UnsettledCashBook.Count);
+
+            Assert.IsTrue(algorithm.Portfolio.UnsettledCashBook.ContainsKey(Currencies.USD));
+            Assert.IsTrue(algorithm.Portfolio.UnsettledCashBook.ContainsKey(Currencies.EUR));
+            Assert.IsTrue(algorithm.Portfolio.UnsettledCashBook.ContainsKey("AUD"));
+
+            // When added, the amount should be 0
+            Assert.IsTrue(algorithm.Portfolio.UnsettledCashBook
+                .Where(kvp => kvp.Key != Currencies.USD)
+                .All(kvp => kvp.Value.Amount == 0));
+        }
+
+        [Test]
+        public void UpdatesUnsettledCashConversionRateAsSettledCashConversionRateIsUpdated()
+        {
+            var algorithm = new QCAlgorithm();
+            var securities = new SecurityManager(TimeKeeper);
+            var transactions = new SecurityTransactionManager(null, securities);
+            var portfolio = new SecurityPortfolioManager(securities, transactions);
+
+            algorithm.Securities = securities;
+            algorithm.Transactions = transactions;
+            algorithm.Portfolio = portfolio;
+
+            var updates = new List<Tuple<string, decimal>>();
+            portfolio.UnsettledCashBook.Updated += (sender, args) =>
+            {
+                if (args.UpdateType == UpdateType.Updated)
+                {
+                    updates.Add(Tuple.Create(args.Cash.Symbol, args.Cash.ConversionRate));
+                }
+            };
+
+            algorithm.SetCash("EUR", 1000, 1.08m);
+            algorithm.SetCash("AUD", 1000, 0.7m);
+
+            var expectedUpdates = new List<Tuple<string, decimal>>()
+            {
+                Tuple.Create("EUR", 1.07m),
+                Tuple.Create("AUD", 0.71m),
+                Tuple.Create("AUD", 0.72m),
+                Tuple.Create("EUR", 1.09m),
+                Tuple.Create("AUD", 0.69m)
+            };
+            for (var i = 0; i < expectedUpdates.Count; i++)
+            {
+                var update = expectedUpdates[i];
+                algorithm.Portfolio.CashBook[update.Item1].ConversionRate = update.Item2;
+            }
+
+            CollectionAssert.AreEqual(expectedUpdates, updates);
+
+            var lastEurConversionRate = expectedUpdates.Last(x => x.Item1 == "EUR").Item2;
+            Assert.AreEqual(lastEurConversionRate, portfolio.UnsettledCashBook["EUR"].ConversionRate);
+
+            var lastAudConversionRate = expectedUpdates.Last(x => x.Item1 == "AUD").Item2;
+            Assert.AreEqual(lastAudConversionRate, portfolio.UnsettledCashBook["AUD"].ConversionRate);
         }
 
         private SubscriptionDataConfig CreateTradeBarDataConfig(SecurityType type, Symbol symbol)

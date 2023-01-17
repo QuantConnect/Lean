@@ -17,7 +17,6 @@ using System;
 using System.Linq;
 using Newtonsoft.Json;
 using NUnit.Framework;
-using QuantConnect.Data.Market;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 

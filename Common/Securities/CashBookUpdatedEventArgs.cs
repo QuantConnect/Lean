@@ -31,7 +31,7 @@ namespace QuantConnect.Securities
         public UpdateType UpdateType { get; }
 
         /// <summary>
-        /// The added cash instance.
+        /// The updated cash instance.
         /// </summary>
         /// <remarks>This will be null for <see cref="UpdateType.Removed"/> events that clear the whole cash book</remarks>
         public Cash Cash { get; }
