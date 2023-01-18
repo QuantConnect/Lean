@@ -15,13 +15,13 @@
 
 using NUnit.Framework;
 using QuantConnect.Brokerages;
-using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using System;
 using QuantConnect.Tests.Brokerages;
+using QuantConnect.Securities.CryptoFuture;
 
 namespace QuantConnect.Tests.Common.Orders.Fees
 {
@@ -40,8 +40,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             var order = shortOrder ? parameters.CreateShortOrder(Quantity) : parameters.CreateLongOrder(Quantity);
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
-            Assert.AreEqual(expectedFeeFactor * Security.Price * Math.Abs(Quantity) * Security.SymbolProperties.ContractMultiplier, fee.Value.Amount);
-            Assert.AreEqual(Security.QuoteCurrency.Symbol, fee.Value.Currency);
+            Assert.AreEqual(expectedFeeFactor * Math.Abs(Quantity) * Security.SymbolProperties.ContractMultiplier / Security.Price, fee.Value.Amount);
+            Assert.AreEqual(Security.BaseCurrency.Symbol, fee.Value.Currency);
         }
 
         [TestCaseSource(nameof(MakerOrders))]
@@ -73,54 +73,44 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         }
 
         [TestCaseSource(nameof(CustomMakerOrders))]
-        public void ReturnShortOrderCustomMakerFees(decimal mFee, decimal tFee, OrderTestParameters parameters)
+        public void ReturnShortOrderCustomMakerFees(decimal makerFee, decimal takerFee, OrderTestParameters parameters)
         {
-            var feeModel = new BinanceCoinFuturesFeeModel(mFee, tFee);
-            TestFeeModel(feeModel, parameters, true, mFee);
+            var feeModel = new BinanceCoinFuturesFeeModel(makerFee, takerFee);
+            TestFeeModel(feeModel, parameters, true, makerFee);
         }
 
         [TestCaseSource(nameof(CustomTakerOrders))]
-        public void ReturnShortOrderCustomTakerFees(decimal mFee, decimal tFee, OrderTestParameters parameters)
+        public void ReturnShortOrderCustomTakerFees(decimal makerFee, decimal takerFee, OrderTestParameters parameters)
         {
-            var feeModel = new BinanceCoinFuturesFeeModel(mFee, tFee);
-            TestFeeModel(feeModel, parameters, true, tFee);
+            var feeModel = new BinanceCoinFuturesFeeModel(makerFee, takerFee);
+            TestFeeModel(feeModel, parameters, true, takerFee);
         }
 
-        [Test]
         [TestCaseSource(nameof(CustomMakerOrders))]
-        public void ReturnLongOrderCustomMakerFees(decimal mFee, decimal tFee, OrderTestParameters parameters)
+        public void ReturnLongOrderCustomMakerFees(decimal makerFee, decimal takerFee, OrderTestParameters parameters)
         {
-            var feeModel = new BinanceCoinFuturesFeeModel(mFee, tFee);
-            TestFeeModel(feeModel, parameters, false, mFee);
+            var feeModel = new BinanceCoinFuturesFeeModel(makerFee, takerFee);
+            TestFeeModel(feeModel, parameters, false, makerFee);
         }
 
-        [Test]
         [TestCaseSource(nameof(CustomTakerOrders))]
-        public void ReturnLongOrderCustomTakerFees(decimal mFee, decimal tFee, OrderTestParameters parameters)
+        public void ReturnLongOrderCustomTakerFees(decimal makerFee, decimal takerFee, OrderTestParameters parameters)
         {
-            var feeModel = new BinanceCoinFuturesFeeModel(mFee, tFee);
-            TestFeeModel(feeModel, parameters, false, tFee);
+            var feeModel = new BinanceCoinFuturesFeeModel(makerFee, takerFee);
+            TestFeeModel(feeModel, parameters, false, takerFee);
         }
 
         private static Symbol Symbol => Symbol.Create("ETHUSD", SecurityType.CryptoFuture, Market.Binance);
 
-        private static Security Security
+        private static CryptoFuture Security
         {
             get
             {
-                var security = new Security(
+                var security = new CryptoFuture(
+                    Symbol,
                     SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                    new SubscriptionDataConfig(
-                        typeof(TradeBar),
-                        Symbol,
-                        Resolution.Minute,
-                        TimeZones.NewYork,
-                        TimeZones.NewYork,
-                        false,
-                        false,
-                        false
-                    ),
                     new Cash("USD", 0, 1m),
+                    new Cash("ETH", 0, 1m),
                     SymbolProperties.GetDefault("USD"),
                     ErrorCurrencyConverter.Instance,
                     RegisteredSecurityDataTypesProvider.Null,
@@ -158,17 +148,17 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         private static TestCaseData[] CustomMakerOrders => new[]
         {
             new TestCaseData(0.001m, 0.001m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)),
-            new TestCaseData(0.0009m, 0.001m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, null, OrderSubmissionData)),
-            new TestCaseData(0.0008m, 0.001m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new BinanceOrderProperties())),
-            new TestCaseData(0.0007m, 0.0009m, new LimitOrderTestParameters(Symbol, LowPrice, HighPrice, new BinanceOrderProperties() { PostOnly = true }, OrderSubmissionData)),
-            new TestCaseData(0.0006m, 0.0008m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new BinanceOrderProperties() { PostOnly = true }))
+            new TestCaseData(0.00008m, 0.00045m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, null, OrderSubmissionData)),
+            new TestCaseData(0.00005m, 0.0004m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new BinanceOrderProperties())),
+            new TestCaseData(0.00003m, 0.0003m, new LimitOrderTestParameters(Symbol, LowPrice, HighPrice, new BinanceOrderProperties() { PostOnly = true }, OrderSubmissionData)),
+            new TestCaseData(0.0m, 0.00025m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new BinanceOrderProperties() { PostOnly = true }))
         };
 
         private static TestCaseData[] CustomTakerOrders => new[]
         {
-            new TestCaseData(0.0007m, 0.0009m, new MarketOrderTestParameters(Symbol)),
-            new TestCaseData(0.0006m, 0.0008m, new MarketOrderTestParameters(Symbol, new BinanceOrderProperties { PostOnly = true })),
-            new TestCaseData(0.0005m, 0.0006m, new LimitOrderTestParameters(Symbol, LowPrice, HighPrice, null, OrderSubmissionData))
+            new TestCaseData(0.00008m, 0.00045m, new MarketOrderTestParameters(Symbol)),
+            new TestCaseData(0.00005m, 0.0004m, new MarketOrderTestParameters(Symbol, new BinanceOrderProperties { PostOnly = true })),
+            new TestCaseData(0.0m, 0.00025m, new LimitOrderTestParameters(Symbol, LowPrice, HighPrice, null, OrderSubmissionData))
         };
     }
 }
