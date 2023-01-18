@@ -13,18 +13,20 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 using NUnit.Framework;
+
 using QuantConnect.Brokerages;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
-using System;
 using QuantConnect.Tests.Brokerages;
 using QuantConnect.Securities.CryptoFuture;
 using QuantConnect.Util;
-using System.Linq;
-using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Common.Orders.Fees
 {
@@ -35,29 +37,32 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         public void GetFeeModelTest()
         {
             var model = new BinanceFuturesBrokerageModel(AccountType.Margin);
-            Assert.IsInstanceOf<BinanceFuturesFeeModel>(model.GetFeeModel(USDTQuotedCryptoFuture));
+            Assert.IsInstanceOf<BinanceFuturesFeeModel>(model.GetFeeModel(Securities[0]));
         }
 
         private static void TestFeeModel(BinanceFuturesFeeModel feeModel, OrderTestParameters parameters, bool shortOrder, decimal expectedFeeFactor)
         {
             var order = shortOrder ? parameters.CreateShortOrder(Quantity) : parameters.CreateLongOrder(Quantity);
-            var fee = feeModel.GetOrderFee(new OrderFeeParameters(USDTQuotedCryptoFuture, order));
+            var security = Securities.First(x => x.Symbol == order.Symbol);
+            var fee = feeModel.GetOrderFee(new OrderFeeParameters(security, order));
 
-            Assert.AreEqual(expectedFeeFactor * Math.Abs(Quantity) * USDTQuotedCryptoFuture.SymbolProperties.ContractMultiplier * USDTQuotedCryptoFuture.Price, fee.Value.Amount);
-            Assert.AreEqual(USDTQuotedCryptoFuture.QuoteCurrency.Symbol, fee.Value.Currency);
+            var expectedFee = expectedFeeFactor * Math.Abs(Quantity) * security.SymbolProperties.ContractMultiplier * security.Price;
+            Assert.AreEqual(expectedFee, fee.Value.Amount);
+            Assert.AreEqual(security.QuoteCurrency.Symbol, fee.Value.Currency);
         }
 
         private static decimal GetExpectedFee(Symbol symbol, decimal usdtFee, decimal busdFee)
         {
-            CurrencyPairUtil.DecomposeCurrencyPair(symbol, out var _, out var quoteCurrency);
-            return quoteCurrency == "USDT" ? usdtFee : busdFee;
+            var security = Securities.First(x => x.Symbol == symbol);
+            return security.QuoteCurrency.Symbol == "USDT" ? usdtFee : busdFee;
         }
 
         [TestCaseSource(nameof(MakerOrders))]
         public void ReturnShortOrderMakerFees(OrderTestParameters parameters)
         {
             var feeModel = new BinanceFuturesFeeModel();
-            var expectedMakerFee = GetExpectedFee(parameters.Symbol, BinanceFuturesFeeModel.MakerTier1USDTFee, BinanceFuturesFeeModel.MakerTier1BUSDFee);
+            var expectedMakerFee = GetExpectedFee(parameters.Symbol,
+                BinanceFuturesFeeModel.MakerTier1USDTFee, BinanceFuturesFeeModel.MakerTier1BUSDFee);
 
             TestFeeModel(feeModel, parameters, true, expectedMakerFee);
         }
@@ -66,7 +71,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         public void ReturnShortOrderTakerFees(OrderTestParameters parameters)
         {
             var feeModel = new BinanceFuturesFeeModel();
-            var expectedTakerFee = GetExpectedFee(parameters.Symbol, BinanceFuturesFeeModel.TakerTier1USDTFee, BinanceFuturesFeeModel.TakerTier1BUSDFee);
+            var expectedTakerFee = GetExpectedFee(parameters.Symbol,
+                BinanceFuturesFeeModel.TakerTier1USDTFee, BinanceFuturesFeeModel.TakerTier1BUSDFee);
 
             TestFeeModel(feeModel, parameters, true, expectedTakerFee);
         }
@@ -75,7 +81,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         public void ReturnLongOrderMakerFees(OrderTestParameters parameters)
         {
             var feeModel = new BinanceFuturesFeeModel();
-            var expectedMakerFee = GetExpectedFee(parameters.Symbol, BinanceFuturesFeeModel.MakerTier1USDTFee, BinanceFuturesFeeModel.MakerTier1BUSDFee);
+            var expectedMakerFee = GetExpectedFee(parameters.Symbol,
+                BinanceFuturesFeeModel.MakerTier1USDTFee, BinanceFuturesFeeModel.MakerTier1BUSDFee);
 
             TestFeeModel(feeModel, parameters, false, expectedMakerFee);
         }
@@ -84,7 +91,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         public void ReturnLongOrderTakerFees(OrderTestParameters parameters)
         {
             var feeModel = new BinanceFuturesFeeModel();
-            var expectedTakerFee = GetExpectedFee(parameters.Symbol, BinanceFuturesFeeModel.TakerTier1USDTFee, BinanceFuturesFeeModel.TakerTier1BUSDFee);
+            var expectedTakerFee = GetExpectedFee(parameters.Symbol,
+                BinanceFuturesFeeModel.TakerTier1USDTFee, BinanceFuturesFeeModel.TakerTier1BUSDFee);
 
             TestFeeModel(feeModel, parameters, false, expectedTakerFee);
         }
@@ -129,86 +137,54 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             TestFeeModel(feeModel, parameters, false, expectedTakerFee);
         }
 
-        private static Symbol USDTQuotedCryptoFutureSymbol => Symbol.Create("ETHUSDT", SecurityType.CryptoFuture, Market.Binance);
-
-        private static CryptoFuture USDTQuotedCryptoFuture
+        private static readonly List<Symbol> Symbols = new List<Symbol>
         {
-            get
-            {
-                var security = new CryptoFuture(
-                    USDTQuotedCryptoFutureSymbol,
-                    SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                    new Cash("USDT", 0, 1m),
-                    new Cash("ETH", 0, 1m),
-                    SymbolProperties.GetDefault("USDT"),
-                    ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null,
-                    new SecurityCache()
-                );
-                security.SetMarketPrice(new Tick(DateTime.UtcNow, USDTQuotedCryptoFutureSymbol, LowPrice, HighPrice));
-
-                return security;
-            }
-        }
-
-        private static Symbol BUSDQuotedCryptoFutureSymbol => Symbol.Create("ETHBUSD", SecurityType.CryptoFuture, Market.Binance);
-
-        private static CryptoFuture BUSDQuotedCryptoFuture
-        {
-            get
-            {
-                var security = new CryptoFuture(
-                    BUSDQuotedCryptoFutureSymbol,
-                    SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                    new Cash("BUSD", 0, 1m),
-                    new Cash("ETH", 0, 1m),
-                    SymbolProperties.GetDefault("BUSD"),
-                    ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null,
-                    new SecurityCache()
-                );
-                security.SetMarketPrice(new Tick(DateTime.UtcNow, BUSDQuotedCryptoFutureSymbol, LowPrice, HighPrice));
-
-                return security;
-            }
-        }
-
-        private static Dictionary<Symbol, OrderSubmissionData> OrderSubmissionData = new Dictionary<Symbol, OrderSubmissionData>()
-        {
-            {
-                USDTQuotedCryptoFutureSymbol,
-                new OrderSubmissionData(USDTQuotedCryptoFuture.BidPrice,
-                    USDTQuotedCryptoFuture.AskPrice,
-                    (USDTQuotedCryptoFuture.BidPrice + USDTQuotedCryptoFuture.AskPrice) / 2
-                )
-            },
-            {
-                BUSDQuotedCryptoFutureSymbol,
-                new OrderSubmissionData(BUSDQuotedCryptoFuture.BidPrice,
-                    BUSDQuotedCryptoFuture.AskPrice,
-                    (BUSDQuotedCryptoFuture.BidPrice + BUSDQuotedCryptoFuture.AskPrice) / 2
-                )
-            }
+            Symbol.Create("ETHUSDT", SecurityType.CryptoFuture, Market.Binance),
+            Symbol.Create("ETHBUSD", SecurityType.CryptoFuture, Market.Binance)
         };
+
+        private static readonly List<CryptoFuture> Securities = Symbols.Select(symbol =>
+        {
+            CurrencyPairUtil.DecomposeCurrencyPair(symbol, out var baseCurrency, out var quoteCurrency);
+            var security = new CryptoFuture(
+                symbol,
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                new Cash(quoteCurrency, 0, 1m),
+                new Cash(baseCurrency, 0, 1m),
+                SymbolProperties.GetDefault(quoteCurrency),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
+            security.SetMarketPrice(new Tick(DateTime.UtcNow, symbol, LowPrice, HighPrice));
+
+            return security;
+        }).ToList();
+
+        private static readonly Dictionary<Symbol, OrderSubmissionData> OrderSubmissionData = Securities.ToDictionary(
+            security => security.Symbol,
+            security => new OrderSubmissionData(security.BidPrice, security.AskPrice, (security.BidPrice + security.AskPrice) / 2)
+        );
 
         private static decimal HighPrice => 1000m;
         private static decimal LowPrice => 100m;
-
         private static decimal Quantity => 1m;
 
-        private static TestCaseData[] MakerOrders => new[] { USDTQuotedCryptoFutureSymbol, BUSDQuotedCryptoFutureSymbol }
+        private static TestCaseData[] MakerOrders => Symbols
             .Select(symbol => new[]
             {
                 new TestCaseData(new LimitOrderTestParameters(symbol, HighPrice, LowPrice)),
                 new TestCaseData(new LimitOrderTestParameters(symbol, HighPrice, LowPrice, null, OrderSubmissionData[symbol])),
                 new TestCaseData(new LimitOrderTestParameters(symbol, HighPrice, LowPrice, new BinanceOrderProperties())),
-                new TestCaseData(new LimitOrderTestParameters(symbol, LowPrice, HighPrice, new BinanceOrderProperties() { PostOnly = true }, OrderSubmissionData[symbol])),
-                new TestCaseData(new LimitOrderTestParameters(symbol, HighPrice, LowPrice, new BinanceOrderProperties() { PostOnly = true }))
+                new TestCaseData(new LimitOrderTestParameters(symbol, LowPrice, HighPrice,
+                    new BinanceOrderProperties() { PostOnly = true }, OrderSubmissionData[symbol])),
+                new TestCaseData(new LimitOrderTestParameters(symbol, HighPrice, LowPrice,
+                    new BinanceOrderProperties() { PostOnly = true }))
             })
             .SelectMany(x => x)
             .ToArray();
 
-        private static TestCaseData[] TakerOrders => new[] { USDTQuotedCryptoFutureSymbol, BUSDQuotedCryptoFutureSymbol }
+        private static TestCaseData[] TakerOrders => Symbols
             .Select(symbol => new[]
             {
                 new TestCaseData(new MarketOrderTestParameters(symbol)),
@@ -218,7 +194,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             .SelectMany(x => x)
             .ToArray();
 
-        private static TestCaseData[] CustomMakerOrders => new[] { USDTQuotedCryptoFutureSymbol, BUSDQuotedCryptoFutureSymbol }
+        private static TestCaseData[] CustomMakerOrders => Symbols
             .Select(symbol => new[]
             {
                 new TestCaseData(0.0002m, 0.0004m, 0.00012m, 0.0003m,
@@ -228,14 +204,15 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 new TestCaseData(0.00014m, 0.00035m, 0.00012m, 0.0003m,
                     new LimitOrderTestParameters(symbol, HighPrice, LowPrice, new BinanceOrderProperties())),
                 new TestCaseData(0.00012m, 0.00032m, 0.00012m, 0.0003m,
-                    new LimitOrderTestParameters(symbol, LowPrice, HighPrice, new BinanceOrderProperties() { PostOnly = true }, OrderSubmissionData[symbol])),
+                    new LimitOrderTestParameters(symbol, LowPrice, HighPrice, new BinanceOrderProperties() { PostOnly = true },
+                        OrderSubmissionData[symbol])),
                 new TestCaseData(0.0001m, 0.0003m, 0.0001m, 0.0003m,
                     new LimitOrderTestParameters(symbol, HighPrice, LowPrice, new BinanceOrderProperties() { PostOnly = true }))
             })
             .SelectMany(x => x)
             .ToArray();
 
-        private static TestCaseData[] CustomTakerOrders => new[] { USDTQuotedCryptoFutureSymbol, BUSDQuotedCryptoFutureSymbol }
+        private static TestCaseData[] CustomTakerOrders => Symbols
             .Select(symbol => new[]
             {
                 new TestCaseData(0.00016m, 0.0004m, 0.00012m, 0.0003m,

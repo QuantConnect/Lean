@@ -97,8 +97,7 @@ namespace QuantConnect.Orders.Fees
             var fee = takerFee;
             var props = order.Properties as BinanceOrderProperties;
 
-            if (order.Type == OrderType.Limit &&
-                ((props != null && props.PostOnly) || !order.IsMarketable))
+            if (order.Type == OrderType.Limit && ((props != null && props.PostOnly) || !order.IsMarketable))
             {
                 // limit order posted to the order book
                 fee = makerFee;

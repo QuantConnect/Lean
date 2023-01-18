@@ -13,13 +13,15 @@
  * limitations under the License.
 */
 
+using System;
+
 using NUnit.Framework;
+
 using QuantConnect.Brokerages;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
-using System;
 using QuantConnect.Tests.Brokerages;
 using QuantConnect.Securities.CryptoFuture;
 
