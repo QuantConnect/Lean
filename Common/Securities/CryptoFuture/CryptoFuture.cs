@@ -60,7 +60,7 @@ namespace QuantConnect.Securities.CryptoFuture
                 cache,
                 new SecurityPortfolioModel(),
                 new ImmediateFillModel(),
-                new BinanceFeeModel(),
+                quoteCurrency.Symbol == "USDT" || quoteCurrency.Symbol == "BUSD" ? new BinanceFuturesFeeModel() : new BinanceCoinFuturesFeeModel(),
                 new ConstantSlippageModel(0),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,

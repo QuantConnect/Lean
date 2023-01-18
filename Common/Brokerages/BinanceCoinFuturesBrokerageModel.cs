@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Benchmarks;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Brokerages
@@ -39,6 +40,16 @@ namespace QuantConnect.Brokerages
         {
             var symbol = Symbol.Create("BTCUSD", SecurityType.CryptoFuture, MarketName);
             return SecurityBenchmark.CreateInstance(securities, symbol);
+        }
+
+        /// <summary>
+        /// Provides Binance Coin Futures fee model
+        /// </summary>
+        /// <param name="security"></param>
+        /// <returns></returns>
+        public override IFeeModel GetFeeModel(Security security)
+        {
+            return new BinanceCoinFuturesFeeModel();
         }
     }
 }
