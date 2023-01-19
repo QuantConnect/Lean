@@ -45,6 +45,7 @@
     <Content Include="AddFutureOptionSingleOptionChainSelectedInUniverseFilterRegressionAlgorithm.py" />
     <Content Include="AddOptionContractExpiresRegressionAlgorithm.py" />
     <Content Include="AddOptionContractFromUniverseRegressionAlgorithm.py" />
+    <Content Include="CustomMarginInterestRateModelAlgorithm.py" />
     <Content Include="AddRiskManagementAlgorithm.py" />
     <Content Include="AddUniverseSelectionModelAlgorithm.py" />
     <Content Include="Alphas\ContingentClaimsAnalysisDefaultPredictionAlpha.py" />

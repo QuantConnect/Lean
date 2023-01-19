@@ -796,6 +796,24 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Sets the margin interests rate model
+        /// </summary>
+        /// <param name="marginInterestRateModel">Model that represents a security's model of margin interest rate</param>
+        public void SetMarginInterestRateModel(IMarginInterestRateModel marginInterestRateModel)
+        {
+            MarginInterestRateModel = marginInterestRateModel;
+        }
+
+        /// <summary>
+        /// Sets the margin interests rate model
+        /// </summary>
+        /// <param name="pyObject">Model that represents a security's model of margin interest rate</param>
+        public void SetMarginInterestRateModel(PyObject pyObject)
+        {
+            SetMarginInterestRateModel(new MarginInterestRateModelPythonWrapper(pyObject));
+        }
+
+        /// <summary>
         /// Sets the margin model
         /// </summary>
         /// <param name="marginModel">Model that represents a security's model of buying power</param>
