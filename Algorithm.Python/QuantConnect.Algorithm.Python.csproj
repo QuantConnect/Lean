@@ -40,6 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="AccumulativeInsightPortfolioRegressionAlgorithm.py" />
+    <Content Include="CorrectConsolidatedBarTypeForTickTypesAlgorithm.py" />
     <Content Include="AddAlphaModelAlgorithm.py" />
     <Content Include="AddFutureOptionContractDataStreamingRegressionAlgorithm.py" />
     <Content Include="AddFutureOptionSingleOptionChainSelectedInUniverseFilterRegressionAlgorithm.py" />
