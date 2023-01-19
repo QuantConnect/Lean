@@ -16,6 +16,7 @@
 using Newtonsoft.Json;
 using QuantConnect.Interfaces;
 using QuantConnect.Brokerages;
+using System.Collections.Generic;
 
 namespace QuantConnect
 {
@@ -46,13 +47,21 @@ namespace QuantConnect
         public AccountType AccountType;
 
         /// <summary>
+        /// The parameters used by the algorithm
+        /// </summary>
+        [JsonProperty(PropertyName = "Parameters")]
+        public IReadOnlyDictionary<string, string> Parameters;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="AlgorithmConfiguration"/> class
         /// </summary>
-        public AlgorithmConfiguration(string accountCurrency, BrokerageName brokerageName, AccountType accountType)
+        public AlgorithmConfiguration(string accountCurrency, BrokerageName brokerageName, AccountType accountType,
+            IReadOnlyDictionary<string, string> parameters)
         {
             AccountCurrency = accountCurrency;
             BrokerageName = brokerageName;
             AccountType = accountType;
+            Parameters = parameters;
         }
 
         /// <summary>
@@ -72,7 +81,8 @@ namespace QuantConnect
             return new AlgorithmConfiguration(
                 algorithm.AccountCurrency,
                 BrokerageModel.GetBrokerageName(algorithm.BrokerageModel),
-                algorithm.BrokerageModel.AccountType);
+                algorithm.BrokerageModel.AccountType,
+                algorithm.GetParameters());
         }
     }
 }

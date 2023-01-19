@@ -526,6 +526,11 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public bool GetLocked() => _baseAlgorithm.GetLocked();
 
         /// <summary>
+        /// Gets a read-only dictionary with all current parameters
+        /// </summary>
+        public IReadOnlyDictionary<string, string> GetParameters() => _baseAlgorithm.GetParameters();
+
+        /// <summary>
         /// Gets the parameter with the specified name. If a parameter with the specified name does not exist,
         /// the given default value is returned if any, else null
         /// </summary>

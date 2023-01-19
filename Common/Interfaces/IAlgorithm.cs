@@ -357,6 +357,11 @@ namespace QuantConnect.Interfaces
         void OnWarmupFinished();
 
         /// <summary>
+        /// Gets a read-only dictionary with all current parameters
+        /// </summary>
+        public IReadOnlyDictionary<string, string> GetParameters();
+
+        /// <summary>
         /// Gets the parameter with the specified name. If a parameter with the specified name does not exist,
         /// the given default value is returned if any, else null
         /// </summary>
