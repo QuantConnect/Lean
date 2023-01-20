@@ -75,7 +75,7 @@ function generate_stubs {
     fi
 }
 
-function publish_stubs {
+function publish_stubs_to_pypi {
     # Requires the PYPI_API_TOKEN environment variable to be set
     # This API token should be valid for the current $PYPI_REPO and should include the "pypi-" prefix
 
@@ -93,6 +93,27 @@ function publish_stubs {
     fi
 }
 
+function publish_stubs_to_aws {
+    # Requires the AWS_BUCKET environment variable to be set
+
+    cd $STUBS_DIR
+    python setup.py --quiet sdist bdist_wheel
+
+    # Convert to TAR.GZ to ZIP
+    STUBS_FILENAME="quantconnect-stubs-$STUBS_VERSION"
+    tar -xvf dist/$STUBS_FILENAME.tar.gz
+    cd $STUBS_FILENAME
+    zip $STUBS_FILENAME.zip *
+    cp $STUBS_FILENAME.zip quantconnect-stubs-latest.zip
+
+    aws s3 sync ./ s3://$AWS_BUCKET --exclude "*" --include "*.zip" --acl public-read --content-type "application/zip"
+
+    if [ $? -ne 0 ]; then
+        echo "AWS publishing failed"
+        exit 1
+    fi
+}
+
 if [[ " ${CLI_ARGS[@]} " =~ " -h " ]]; then
     echo "STUBS GENERATOR (Debian distros only)"
     echo "  -t: Install Twine"
@@ -102,7 +123,7 @@ if [[ " ${CLI_ARGS[@]} " =~ " -h " ]]; then
 fi
 
 if [[ ! "$GITHUB_REF" =~ "refs/tags/" ]]; then
-    exit 0
+    #exit 0
 fi
 
 if [[ " ${CLI_ARGS[@]} " =~ " -t " ]]; then
@@ -114,5 +135,9 @@ if [[ " ${CLI_ARGS[@]} " =~ " -g " ]]; then
 fi
 
 if [[ " ${CLI_ARGS[@]} " =~ " -p " ]]; then
-    publish_stubs
+    #publish_stubs_to_pypi
+fi
+
+if [[ " ${CLI_ARGS[@]} " =~ " -p " ]]; then
+    publish_stubs_to_aws
 fi
