@@ -75,7 +75,7 @@ function generate_stubs {
     fi
 }
 
-function publish_stubs_to_pypi {
+function publish_stubs {
     # Requires the PYPI_API_TOKEN environment variable to be set
     # This API token should be valid for the current $PYPI_REPO and should include the "pypi-" prefix
 
@@ -85,37 +85,22 @@ function publish_stubs_to_pypi {
     TWINE_USERNAME="__token__" \
     TWINE_PASSWORD="$PYPI_API_TOKEN" \
     TWINE_REPOSITORY="$PYPI_REPO" \
-    twine upload "$STUBS_DIR/dist/*" > /dev/null
+    #twine upload "$STUBS_DIR/dist/*" > /dev/null
 
     if [ $? -ne 0 ]; then
         echo "PyPI publishing failed"
         exit 1
     fi
-}
-
-function publish_stubs_to_aws {
-    # Requires the AWS_BUCKET environment variable to be set
-
-    cd $STUBS_DIR
-    python setup.py --quiet sdist bdist_wheel
 
     # Convert to TAR.GZ to ZIP
+    STUBS_VERSION="15050"
     STUBS_FILENAME="quantconnect-stubs-$STUBS_VERSION"
     tar -xvf dist/$STUBS_FILENAME.tar.gz
     cd $STUBS_FILENAME
     zip $STUBS_FILENAME.zip *
-    cp $STUBS_FILENAME.zip quantconnect-stubs-latest.zip
-    cp dist/$STUBS_FILENAME.tar.gz dist/quantconnect-stubs-latest.tar.gz
-    cp dist/$STUBS_FILENAME.py3-none-any.whl dist/quantconnect-stubs-latest.py3-none-any.whl
-
-    aws s3 sync ./dist s3://$AWS_BUCKET --exclude "*" --include "*.whl" --acl public-read --content-type "application/x-gzip"
-    aws s3 sync ./dist s3://$AWS_BUCKET --exclude "*" --include "*.tar.gz" --acl public-read --content-type "application/x-gzip"
-    aws s3 sync ./ s3://$AWS_BUCKET --exclude "*" --include "*.zip" --acl public-read --content-type "application/zip"
-
-    if [ $? -ne 0 ]; then
-        echo "AWS publishing failed"
-        exit 1
-    fi
+    cp $STUBS_FILENAME.zip $LEAN_DIR/quantconnect-stubs-latest.zip
+    cp dist/$STUBS_FILENAME.tar.gz $LEAN_DIR/quantconnect-stubs-latest.tar.gz
+    cp dist/$STUBS_FILENAME.py3-none-any.whl $LEAN_DIR/quantconnect-stubs-latest.py3-none-any.whl
 }
 
 if [[ " ${CLI_ARGS[@]} " =~ " -h " ]]; then
@@ -141,9 +126,5 @@ fi
 
 if [[ " ${CLI_ARGS[@]} " =~ " -p " ]]; then
     echo "${CLI_ARGS[@]}"
-    #publish_stubs_to_pypi
-fi
-
-if [[ " ${CLI_ARGS[@]} " =~ " -p " ]]; then
-    publish_stubs_to_aws
+    publish_stubs
 fi

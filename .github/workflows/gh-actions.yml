@@ -33,8 +33,11 @@ jobs:
         run: |
           chmod +x ci_build_stubs.sh
           ./ci_build_stubs.sh -t -g -p
+
+          aws s3 sync ./ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "*.whl" --acl public-read --content-type "application/x-gzip"
+          aws s3 sync ./ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "*.tar.gz" --acl public-read --content-type "application/x-gzip"
+          aws s3 sync ./ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "*.zip" --acl public-read --content-type "application/zip"
         env:
           PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
           ADDITIONAL_STUBS_REPOS: ${{ secrets.ADDITIONAL_STUBS_REPOS }}
           QC_GIT_TOKEN: ${{ secrets.QC_GIT_TOKEN }}
-          AWS_BUCKET: ${{ secrets.AWS_BUCKET }}
