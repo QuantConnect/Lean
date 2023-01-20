@@ -66,7 +66,7 @@ function generate_stubs {
 
     cd "$GENERATOR_DIR/QuantConnectStubsGenerator"
 
-    STUBS_VERSION="${GITHUB_REF#refs/tags/}" \
+    STUBS_VERSION="15050" \
     dotnet run -v q $LEAN_DIR $RUNTIME_DIR $STUBS_DIR
 
     if [ $? -ne 0 ]; then
@@ -105,7 +105,11 @@ function publish_stubs_to_aws {
     cd $STUBS_FILENAME
     zip $STUBS_FILENAME.zip *
     cp $STUBS_FILENAME.zip quantconnect-stubs-latest.zip
+    cp dist/$STUBS_FILENAME.tar.gz dist/quantconnect-stubs-latest.tar.gz
+    cp dist/$STUBS_FILENAME.py3-none-any.whl dist/quantconnect-stubs-latest.py3-none-any.whl
 
+    aws s3 sync ./dist s3://$AWS_BUCKET --exclude "*" --include "*.whl" --acl public-read --content-type "application/x-gzip"
+    aws s3 sync ./dist s3://$AWS_BUCKET --exclude "*" --include "*.tar.gz" --acl public-read --content-type "application/x-gzip"
     aws s3 sync ./ s3://$AWS_BUCKET --exclude "*" --include "*.zip" --acl public-read --content-type "application/zip"
 
     if [ $? -ne 0 ]; then
@@ -123,6 +127,7 @@ if [[ " ${CLI_ARGS[@]} " =~ " -h " ]]; then
 fi
 
 if [[ ! "$GITHUB_REF" =~ "refs/tags/" ]]; then
+    echo "$GITHUB_REF"
     #exit 0
 fi
 
@@ -135,6 +140,7 @@ if [[ " ${CLI_ARGS[@]} " =~ " -g " ]]; then
 fi
 
 if [[ " ${CLI_ARGS[@]} " =~ " -p " ]]; then
+    echo "${CLI_ARGS[@]}"
     #publish_stubs_to_pypi
 fi
 
