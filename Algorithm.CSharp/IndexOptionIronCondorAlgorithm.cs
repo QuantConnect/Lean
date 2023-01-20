@@ -70,10 +70,10 @@ namespace QuantConnect.Algorithm.CSharp
             
             var legs = new List<Leg>
             {
-                Leg.Create(calls.First().Symbol, quantity),
-                Leg.Create(puts.First().Symbol, quantity),
-                Leg.Create(calls.Skip(2).First().Symbol, -quantity),
-                Leg.Create(puts.Skip(2).First().Symbol, -quantity),
+                Leg.Create(calls[0].Symbol, quantity),
+                Leg.Create(puts[0].Symbol, quantity),
+                Leg.Create(calls[2].Symbol, -quantity),
+                Leg.Create(puts[2].Symbol, -quantity),
             };
 
             ComboMarketOrder(legs, 10, asynchronous: true);
