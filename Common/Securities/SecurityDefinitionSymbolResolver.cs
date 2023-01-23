@@ -78,6 +78,16 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Converts a Lean <see cref="Symbol"/> to its CUSIP number
+        /// </summary>
+        /// <param name="symbol">The Lean <see cref="Symbol"/></param>
+        /// <returns>The Committee on Uniform Securities Identification Procedures (CUSIP) number corresponding to the given Lean <see cref="Symbol"/></returns>
+        public string CUSIP(Symbol symbol)
+        {
+            return SymbolToSecurityDefinition(symbol)?.CUSIP;
+        }
+
+        /// <summary>
         /// Converts an asset's composite FIGI into a Lean <see cref="Symbol"/>
         /// </summary>
         /// <param name="compositeFigi">
@@ -98,6 +108,16 @@ namespace QuantConnect.Securities
             return SecurityDefinitionToSymbol(
                 GetSecurityDefinitions().FirstOrDefault(x => x.CompositeFIGI != null && x.CompositeFIGI.Equals(compositeFigi, StringComparison.InvariantCultureIgnoreCase)),
                 tradingDate);
+        }
+
+        /// <summary>
+        /// Converts a Lean <see cref="Symbol"/> to its composite FIGI representation
+        /// </summary>
+        /// <param name="symbol">The Lean <see cref="Symbol"/></param>
+        /// <returns>The composite Financial Instrument Global Identifier (FIGI) corresponding to the given Lean <see cref="Symbol"/></returns>
+        public string CompositeFIGI(Symbol symbol)
+        {
+            return SymbolToSecurityDefinition(symbol)?.CompositeFIGI;
         }
 
         /// <summary>
@@ -124,6 +144,16 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Converts a Lean <see cref="Symbol"/> to its SEDOL representation
+        /// </summary>
+        /// <param name="symbol">The Lean <see cref="Symbol"/></param>
+        /// <returns>The Stock Exchange Daily Official List (SEDOL) security identifier corresponding to the given Lean <see cref="Symbol"/></returns>
+        public string SEDOL(Symbol symbol)
+        {
+            return SymbolToSecurityDefinition(symbol)?.SEDOL;
+        }
+
+        /// <summary>
         /// Converts ISIN into a Lean <see cref="Symbol"/>
         /// </summary>
         /// <param name="isin">
@@ -144,6 +174,16 @@ namespace QuantConnect.Securities
             return SecurityDefinitionToSymbol(
                 GetSecurityDefinitions().FirstOrDefault(x => x.ISIN != null && x.ISIN.Equals(isin, StringComparison.InvariantCultureIgnoreCase)),
                 tradingDate);
+        }
+
+        /// <summary>
+        /// Converts a Lean <see cref="Symbol"/> to its ISIN representation
+        /// </summary>
+        /// <param name="symbol">The Lean <see cref="Symbol"/></param>
+        /// <returns>The International Securities Identification Number (ISIN) corresponding to the given Lean <see cref="Symbol"/></returns>
+        public string ISIN(Symbol symbol)
+        {
+            return SymbolToSecurityDefinition(symbol)?.ISIN;
         }
 
         /// <summary>
@@ -182,6 +222,20 @@ namespace QuantConnect.Securities
             return string.IsNullOrWhiteSpace(mappedTicker)
                 ? null
                 : new Symbol(securityDefinition.SecurityIdentifier, mappedTicker);
+        }
+
+        /// <summary>
+        /// Gets the SecurityDefinition corresponding to the given Lean <see cref="Symbol"/>
+        /// </summary>
+        private SecurityDefinition SymbolToSecurityDefinition(Symbol symbol)
+        {
+            if (symbol == null)
+            {
+                return null;
+            }
+
+            return GetSecurityDefinitions()
+                .FirstOrDefault(x => x.SecurityIdentifier.ToString().Equals(symbol.ID.ToString(), StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>

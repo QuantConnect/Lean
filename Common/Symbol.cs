@@ -18,6 +18,8 @@ using System;
 using ProtoBuf;
 using Newtonsoft.Json;
 
+using QuantConnect.Securities;
+
 namespace QuantConnect
 {
     /// <summary>
@@ -29,6 +31,8 @@ namespace QuantConnect
     [ProtoContract(SkipConstructor = true)]
     public sealed class Symbol : IEquatable<Symbol>, IComparable
     {
+        private static readonly SecurityDefinitionSymbolResolver _securityDefinitionSymbolResolver = new();
+
         private Symbol _canonical;
         // for performance we register how we compare with empty
         private bool? _isEmpty;
@@ -359,6 +363,26 @@ namespace QuantConnect
         {
             get { return ID.SecurityType; }
         }
+
+        /// <summary>
+        /// The Committee on Uniform Securities Identification Procedures (CUSIP) number corresponding to this <see cref="Symbol"/>
+        /// </summary>
+        public string CUSIP { get { return _securityDefinitionSymbolResolver.CUSIP(this); } }
+
+        /// <summary>
+        /// The composite Financial Instrument Global Identifier (FIGI) corresponding to this <see cref="Symbol"/>
+        /// </summary>
+        public string CompositeFIGI { get { return _securityDefinitionSymbolResolver.CompositeFIGI(this); } }
+
+        /// <summary>
+        /// The Stock Exchange Daily Official List (SEDOL) security identifier corresponding to this <see cref="Symbol"/>
+        /// </summary>
+        public string SEDOL { get { return _securityDefinitionSymbolResolver.SEDOL(this); } }
+
+        /// <summary>
+        /// The International Securities Identification Number (ISIN) corresponding to this <see cref="Symbol"/>
+        /// </summary>
+        public string ISIN { get { return _securityDefinitionSymbolResolver.ISIN(this); } }
 
 
         #endregion
