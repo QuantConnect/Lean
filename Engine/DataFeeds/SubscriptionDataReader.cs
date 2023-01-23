@@ -149,7 +149,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _dataCacheProvider = dataCacheProvider;
 
             //Save access to securities
-            _tradeableDates = dataRequest.TradableDays.GetEnumerator();
+            _tradeableDates = dataRequest.TradableDaysInDataTimeZone.GetEnumerator();
             _dataProvider = dataProvider;
         }
 

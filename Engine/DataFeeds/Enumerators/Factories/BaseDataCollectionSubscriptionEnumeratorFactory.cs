@@ -54,7 +54,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                     1,
                     false,
                     configuration.DataTimeZone);
-                var tradableDays = new[] { previousTradableDay }.Concat(request.TradableDays);
+                var tradableDays = new[] { previousTradableDay }.Concat(request.TradableDaysInDataTimeZone);
 
                 // Behaves in the same way as in live trading
                 // (i.e. only emit coarse data on dates following a trading day)

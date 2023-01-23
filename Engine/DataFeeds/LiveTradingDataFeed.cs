@@ -428,7 +428,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // we will not fill forward each warmup enumerators separately but concatenated bellow
                     configuration: new SubscriptionDataConfig(request.Configuration, fillForward: false,
                     resolution: _algorithm.Settings.WarmupResolution));
-                if (warmupRequest.TradableDays.Any()
+                if (warmupRequest.TradableDaysInDataTimeZone.Any()
                     // make sure there is at least room for a single bar of the requested resolution, else can cause issues with some history providers
                     // this could happen when we create some internal subscription whose start time is 'Now', which we don't really want to warmup
                     && warmupRequest.EndTimeUtc - warmupRequest.StartTimeUtc >= warmupRequest.Configuration.Resolution.ToTimeSpan()

@@ -50,7 +50,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="factorFileProvider">The factor file provider</param>
         /// <param name="cacheProvider">Provider used to get data when it is not present on disk</param>
         /// <param name="tradableDaysProvider">Function used to provide the tradable dates to be enumerator.
-        /// Specify null to default to <see cref="SubscriptionRequest.TradableDays"/></param>
+        /// Specify null to default to <see cref="SubscriptionRequest.TradableDaysInDataTimeZone"/></param>
         /// <param name="enablePriceScaling">Applies price factor</param>
         public SubscriptionDataReaderSubscriptionEnumeratorFactory(IResultHandler resultHandler,
             IMapFileProvider mapFileProvider,
