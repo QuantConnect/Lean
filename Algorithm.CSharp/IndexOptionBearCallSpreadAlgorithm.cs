@@ -30,10 +30,10 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2021, 1, 1);
             SetCash(100000);
 
-            AddEquity("SPY", Resolution.Hour);
+            AddEquity("SPY", Resolution.Minute);
 
-            var index = AddIndex("VIX", Resolution.Hour).Symbol;
-            var option = AddIndexOption(index, "VIXW", Resolution.Hour);
+            var index = AddIndex("VIX", Resolution.Minute).Symbol;
+            var option = AddIndexOption(index, "VIXW", Resolution.Minute);
             option.SetFilter((x) => x.Strikes(-5, 5).Expiration(90, 120));
             _symbol = option.Symbol;
         }
@@ -53,7 +53,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (chain == null) return;
 
             // Get the nearest expiry date of the contracts
-            var expiry = chain.Select(x => x.Expiry).OrderBy(x => x).First();
+            var expiry = chain.Min(x => x.Expiry);
             
             // Select the call Option contracts with the nearest expiry and sort by strike price
             var calls = chain.Where(x => x.Expiry == expiry && x.Right == OptionRight.Call).OrderBy(x => x.Strike);

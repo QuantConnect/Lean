@@ -22,10 +22,10 @@ class IndexOptionBearCallSpreadAlgorithm(QCAlgorithm):
         self.SetEndDate(2021, 1, 1)
         self.SetCash(100000)
 
-        self.AddEquity("SPY", Resolution.Hour)
+        self.AddEquity("SPY", Resolution.Minute)
 
-        index = self.AddIndex("VIX", Resolution.Hour).Symbol
-        option = self.AddIndexOption(index, "VIXW", Resolution.Hour)
+        index = self.AddIndex("VIX", Resolution.Minute).Symbol
+        option = self.AddIndexOption(index, "VIXW", Resolution.Minute)
         option.SetFilter(lambda x: x.Strikes(-5, 5).Expiration(90, 120))
         self.symbol = option.Symbol
 
@@ -41,12 +41,12 @@ class IndexOptionBearCallSpreadAlgorithm(QCAlgorithm):
         if not chain: return
 
         # Get the nearest expiry date of the contracts
-        expiry = sorted(chain, key = lambda x: x.Expiry)[0].Expiry
+        expiry = min([x.Expiry for x in chain])
         
         # Select the call Option contracts with the nearest expiry and sort by strike price
         calls = sorted([i for i in chain if i.Expiry == expiry and i.Right == OptionRight.Call], 
                         key=lambda x: x.Strike)
-        if len(calls) == 0: return
+        if not calls: return
 
         # Create combo order legs by selecting the ITM and OTM contract
         legs = [
