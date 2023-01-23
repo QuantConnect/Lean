@@ -26,7 +26,7 @@ class IndexOptionBearCallSpreadAlgorithm(QCAlgorithm):
 
         index = self.AddIndex("SPX", Resolution.Minute).Symbol
         option = self.AddIndexOption(index, "SPXW", Resolution.Minute)
-        option.SetFilter(lambda x: x.Strikes(-5, 5).Expiration(40, 60))
+        option.SetFilter(lambda x: x.WeeklysOnly().Strikes(-5, 5).Expiration(40, 60))
         self.symbol = option.Symbol
 
     def OnData(self, slice: Slice) -> None:
@@ -34,7 +34,7 @@ class IndexOptionBearCallSpreadAlgorithm(QCAlgorithm):
             self.MarketOrder("SPY", 100)
         
         # Return if hedge position presents
-        if any([x.Type == SecurityType.IndexOption for x in self.Portfolio.Values if x.Invested]):
+        if any([x.Type == SecurityType.IndexOption and x.Invested for x in self.Portfolio.Values]):
             return
 
         # Return if hedge position presents
