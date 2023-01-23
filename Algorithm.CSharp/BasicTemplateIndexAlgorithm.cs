@@ -112,7 +112,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 16690;
+        public virtual long DataPoints => 16540;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -131,27 +131,27 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "10.100%"},
             {"Expectancy", "-1"},
             {"Net Profit", "-9.915%"},
-            {"Sharpe Ratio", "-3.845"},
-            {"Probabilistic Sharpe Ratio", "0.053%"},
+            {"Sharpe Ratio", "-4.753"},
+            {"Probabilistic Sharpe Ratio", "0.014%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.558"},
-            {"Beta", "0.313"},
-            {"Annual Standard Deviation", "0.112"},
-            {"Annual Variance", "0.013"},
-            {"Information Ratio", "-6.652"},
-            {"Tracking Error", "0.125"},
-            {"Treynor Ratio", "-1.379"},
+            {"Alpha", "-0.52"},
+            {"Beta", "0.216"},
+            {"Annual Standard Deviation", "0.091"},
+            {"Annual Variance", "0.008"},
+            {"Information Ratio", "-7.318"},
+            {"Tracking Error", "0.114"},
+            {"Treynor Ratio", "-2.003"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$13000000.00"},
             {"Lowest Capacity Asset", "SPX XL80P3GHDZXQ|SPX 31"},
-            {"Fitness Score", "0.039"},
+            {"Fitness Score", "0.037"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-1.763"},
+            {"Sortino Ratio", "-1.862"},
             {"Return Over Maximum Drawdown", "-9.371"},
-            {"Portfolio Turnover", "0.278"},
+            {"Portfolio Turnover", "0.277"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},

@@ -163,7 +163,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 16486;
+        public long DataPoints => 16386;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -176,24 +176,24 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "2"},
-            {"Average Win", "0.01%"},
+            {"Average Win", "0.02%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0.142%"},
+            {"Compounding Annual Return", "0.213%"},
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
-            {"Net Profit", "0.010%"},
-            {"Sharpe Ratio", "4.589"},
-            {"Probabilistic Sharpe Ratio", "98.983%"},
+            {"Net Profit", "0.015%"},
+            {"Sharpe Ratio", "4.336"},
+            {"Probabilistic Sharpe Ratio", "98.801%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "100%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.001"},
+            {"Alpha", "0.002"},
             {"Beta", "-0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-0.32"},
+            {"Information Ratio", "-0.316"},
             {"Tracking Error", "0.138"},
-            {"Treynor Ratio", "-9.479"},
+            {"Treynor Ratio", "-7.277"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$22000.00"},
             {"Lowest Capacity Asset", "SPX XL80P59H5E6M|SPX 31"},
@@ -216,7 +216,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "1f665263bd88e1668dfaf31e70f72705"}
+            {"OrderListHash", "d0bc030ffef9f5fd1422cc439a4966d0"}
         };
     }
 }

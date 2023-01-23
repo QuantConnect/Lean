@@ -156,7 +156,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 20443;
+        public long DataPoints => 20293;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -175,26 +175,26 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "9.800%"},
             {"Expectancy", "-1"},
             {"Net Profit", "2.644%"},
-            {"Sharpe Ratio", "5.789"},
-            {"Probabilistic Sharpe Ratio", "89.964%"},
+            {"Sharpe Ratio", "5.291"},
+            {"Probabilistic Sharpe Ratio", "85.823%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "2.169"},
-            {"Beta", "-0.238"},
-            {"Annual Standard Deviation", "0.373"},
-            {"Annual Variance", "0.139"},
-            {"Information Ratio", "5.17"},
-            {"Tracking Error", "0.409"},
-            {"Treynor Ratio", "-9.071"},
+            {"Alpha", "2.05"},
+            {"Beta", "-0.244"},
+            {"Annual Standard Deviation", "0.385"},
+            {"Annual Variance", "0.149"},
+            {"Information Ratio", "4.742"},
+            {"Tracking Error", "0.42"},
+            {"Treynor Ratio", "-8.361"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$44000000.00"},
             {"Lowest Capacity Asset", "SPX XL80P3GHDZXQ|SPX 31"},
             {"Fitness Score", "0.023"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "0.535"},
-            {"Return Over Maximum Drawdown", "5.789"},
+            {"Sortino Ratio", "0.626"},
+            {"Return Over Maximum Drawdown", "6.092"},
             {"Portfolio Turnover", "0.03"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
