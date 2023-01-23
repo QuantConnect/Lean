@@ -20,7 +20,7 @@ using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
-    public class IndexOptionBearCallSpreadAlgorithm : QCAlgorithm
+    public class IndexOptionBullCallSpreadAlgorithm : QCAlgorithm
     {
         private Symbol _symbol;
 
@@ -30,11 +30,11 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2021, 1, 1);
             SetCash(100000);
 
-            AddEquity("SPY", Resolution.Hour);
+            AddEquity("SPY", Resolution.Minute);
 
-            var index = AddIndex("VIX", Resolution.Hour).Symbol;
-            var option = AddIndexOption(index, "VIXW", Resolution.Hour);
-            option.SetFilter((x) => x.Strikes(-5, 5).Expiration(90, 120));
+            var index = AddIndex("SPX", Resolution.Minute).Symbol;
+            var option = AddIndexOption(index, "SPXW", Resolution.Minute);
+            option.SetFilter((x) => x.WeeklysOnly().Strikes(-5, 5).Expiration(40, 60));
             _symbol = option.Symbol;
         }
 
@@ -62,8 +62,8 @@ namespace QuantConnect.Algorithm.CSharp
             // Create combo order legs
             var legs = new List<Leg>
             {
-                Leg.Create(calls.First().Symbol, -1),
-                Leg.Create(calls.Last().Symbol, 1)
+                Leg.Create(calls.First().Symbol, 1),
+                Leg.Create(calls.Last().Symbol, -1)
             };
             ComboMarketOrder(legs, 1);
         }

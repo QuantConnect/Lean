@@ -15,24 +15,25 @@
 from AlgorithmImports import *
 #endregion
 
-class IndexOptionBearCallSpreadAlgorithm(QCAlgorithm):
+class IndexOptionBullCallSpreadAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         self.SetStartDate(2020, 1, 1)
         self.SetEndDate(2021, 1, 1)
         self.SetCash(100000)
 
-        self.AddEquity("SPY", Resolution.Hour)
+        self.AddEquity("SPY", Resolution.Minute)
 
-        index = self.AddIndex("VIX", Resolution.Hour).Symbol
-        option = self.AddIndexOption(index, "VIXW", Resolution.Hour)
-        option.SetFilter(lambda x: x.Strikes(-5, 5).Expiration(90, 120))
+        index = self.AddIndex("SPX", Resolution.Minute).Symbol
+        option = self.AddIndexOption(index, "SPXW", Resolution.Minute)
+        option.SetFilter(lambda x: x.WeeklysOnly().Strikes(-5, 5).Expiration(40, 60))
         self.symbol = option.Symbol
 
     def OnData(self, slice: Slice) -> None:
         if not self.Portfolio["SPY"].Invested:
             self.MarketOrder("SPY", 100)
         
+        # Return if hedge position presents
         if any([x.Type == SecurityType.IndexOption and x.Invested for x in self.Portfolio.Values]):
             return
 
@@ -50,7 +51,7 @@ class IndexOptionBearCallSpreadAlgorithm(QCAlgorithm):
 
         # Create combo order legs by selecting the ITM and OTM contract
         legs = [
-            Leg.Create(calls[0].Symbol, -1),
-            Leg.Create(calls[-1].Symbol, 1)
+            Leg.Create(calls[0].Symbol, 1),
+            Leg.Create(calls[-1].Symbol, -1)
         ]
         self.ComboMarketOrder(legs, 1)
