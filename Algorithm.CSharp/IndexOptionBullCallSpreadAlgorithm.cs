@@ -53,7 +53,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (chain == null) return;
 
             // Get the nearest expiry date of the contracts
-            var expiry = chain.Select(x => x.Expiry).OrderBy(x => x).First();
+            var expiry = chain.Min(x => x.Expiry);
             
             // Select the call Option contracts with the nearest expiry and sort by strike price
             var calls = chain.Where(x => x.Expiry == expiry && x.Right == OptionRight.Call).OrderBy(x => x.Strike);

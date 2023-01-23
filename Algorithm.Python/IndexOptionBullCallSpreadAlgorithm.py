@@ -42,12 +42,12 @@ class IndexOptionBullCallSpreadAlgorithm(QCAlgorithm):
         if not chain: return
 
         # Get the nearest expiry date of the contracts
-        expiry = sorted(chain, key = lambda x: x.Expiry)[0].Expiry
+        expiry = min([x.Expiry for x in chain])
         
         # Select the call Option contracts with the nearest expiry and sort by strike price
         calls = sorted([i for i in chain if i.Expiry == expiry and i.Right == OptionRight.Call], 
                         key=lambda x: x.Strike)
-        if len(calls) == 0: return
+        if not calls: return
 
         # Create combo order legs by selecting the ITM and OTM contract
         legs = [
