@@ -95,6 +95,22 @@ namespace QuantConnect.Interfaces
         ProjectFilesResponse ReadProjectFiles(int projectId);
 
         /// <summary>
+        /// Read all nodes in a project.
+        /// </summary>
+        /// <param name="projectId">Project id to which the nodes refer</param>
+        /// <returns><see cref="ProjectNodesResponse"/> that includes the information about all nodes in the project</returns>
+        ProjectNodesResponse ReadProjectNodes(int projectId);
+
+        /// <summary>
+        /// Update the active state of some nodes to true.
+        /// If you don't provide any nodes, all the nodes become inactive and AutoSelectNode is true.
+        /// </summary>
+        /// <param name="projectId">Project id to which the nodes refer</param>
+        /// <param name="nodes">List of node ids to update</param>
+        /// <returns><see cref="ProjectNodesResponse"/> that includes the information about all nodes in the project</returns>
+        ProjectNodesResponse UpdateProjectNodes(int projectId, string[] nodes);
+
+        /// <summary>
         /// Delete a file in a project
         /// </summary>
         /// <param name="projectId">Project id to which the file belongs</param>

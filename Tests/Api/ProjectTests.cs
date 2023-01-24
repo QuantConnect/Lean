@@ -127,6 +127,51 @@ namespace QuantConnect.Tests.API
         }
 
         /// <summary>
+        /// Test updating the nodes associated with a project
+        /// </summary>
+        [Test]
+        public void RU_ProjectNodes_Successfully()
+        {
+            // Create a new project
+            var project = ApiClient.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp, TestOrganization);
+            Assert.IsTrue(project.Success);
+
+            var projectId = project.Projects.First().ProjectId;
+            Assert.Greater(projectId, 0);
+
+            // Read the nodes
+            var nodesResponse = ApiClient.ReadProjectNodes(projectId);
+            Assert.IsTrue(nodesResponse.Success);
+            Assert.Greater(nodesResponse.Nodes.BacktestNodes.Count, 0);
+
+            // Save reference node
+            var node = nodesResponse.Nodes.BacktestNodes.First();
+            var nodeId = node.Id;
+            var active = node.Active;
+
+            // If the node is active, deactivate it. Otherwise, set active to true
+            var nodes = node.Active ? Array.Empty<string>() : new[] { nodeId };
+
+            // Update the nodes
+            nodesResponse = ApiClient.UpdateProjectNodes(projectId, nodes);
+            Assert.IsTrue(nodesResponse.Success);
+
+            // Node has a new active state
+            node = nodesResponse.Nodes.BacktestNodes.First(x => x.Id == nodeId);
+            Assert.AreNotEqual(active, node.Active);
+
+            // Set it back to previous state
+            nodes = node.Active ? Array.Empty<string>() : new[] { nodeId };
+
+            nodesResponse = ApiClient.UpdateProjectNodes(projectId, nodes);
+            Assert.IsTrue(nodesResponse.Success);
+
+            // Node has a new active state
+            node = nodesResponse.Nodes.BacktestNodes.First(x => x.Id == nodeId);
+            Assert.AreEqual(active, node.Active);
+        }
+
+        /// <summary>
         /// Test creating, compiling and backtesting a C# project via the Api
         /// </summary>
         [Test]

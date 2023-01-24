@@ -251,6 +251,50 @@ namespace QuantConnect.Api
             return result;
         }
 
+        /// <summary>
+        /// Read all nodes in a project.
+        /// </summary>
+        /// <param name="projectId">Project id to which the nodes refer</param>
+        /// <returns><see cref="ProjectNodesResponse"/> that includes the information about all nodes in the project</returns>
+        public ProjectNodesResponse ReadProjectNodes(int projectId)
+        {
+            var request = new RestRequest("projects/nodes/read", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                projectId
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out ProjectNodesResponse result);
+            return result;
+        }
+
+        /// <summary>
+        /// Update the active state of some nodes to true.
+        /// If you don't provide any nodes, all the nodes become inactive and AutoSelectNode is true.
+        /// </summary>
+        /// <param name="projectId">Project id to which the nodes refer</param>
+        /// <param name="nodes">List of node ids to update</param>
+        /// <returns><see cref="ProjectNodesResponse"/> that includes the information about all nodes in the project</returns>
+        public ProjectNodesResponse UpdateProjectNodes(int projectId, string[] nodes)
+        {
+            var request = new RestRequest("projects/nodes/update", Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                projectId,
+                nodes
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out ProjectNodesResponse result);
+            return result;
+        }
 
         /// <summary>
         /// Read a file in a project
