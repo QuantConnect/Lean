@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Api
@@ -26,18 +25,18 @@ namespace QuantConnect.Api
     }
 
     /// <summary>
-    /// Response received when reading all files of a project
+    /// Response received when reading or updating some nodes of a project
     /// </summary>
     public class ProjectNodesResponse : RestResponse
     {
         /// <summary>
-        /// List of project file information
+        /// List of project nodes.
         /// </summary>
         [JsonProperty(PropertyName = "nodes")]
         public ProjectNodes Nodes { get; set; }
 
         /// <summary>
-        /// True if the node is automatically selected
+        /// Indicate if the node is automatically selected
         /// </summary>
         [JsonProperty(PropertyName = "autoSelectNode")]
         public bool AutoSelectNode { get; set; }
