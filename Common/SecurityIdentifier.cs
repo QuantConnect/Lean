@@ -615,6 +615,10 @@ namespace QuantConnect
             {
                 throw new ArgumentOutOfRangeException(nameof(optionRight), "optionType must be either 0 or 1");
             }
+            if (date < Time.BeginningOfTime)
+            {
+                throw new ArgumentOutOfRangeException(date.ToStringInvariant(), $"date must be after the earliest possible date {Time.BeginningOfTime}");
+            }
 
             // normalize input strings
             symbol = forceSymbolToUpper ? symbol.LazyToUpper() : symbol;
