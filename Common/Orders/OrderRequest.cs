@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -113,7 +113,7 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Invariant($"{Time} UTC: Order: ({OrderId.ToStringInvariant()}) - {Tag} Status: {Status}");
+            return Messages.OrderRequestToString(this);
         }
     }
 }

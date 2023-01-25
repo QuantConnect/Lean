@@ -18,7 +18,7 @@ using System.Linq;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 using System.Collections.Generic;
-using QuantConnect.Orders.Fills;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Orders
 {
@@ -99,9 +99,7 @@ namespace QuantConnect.Orders
 
         public static string GetErrorMessage(this Dictionary<Order, Security> securities, HasSufficientBuyingPowerForOrderResult hasSufficientBuyingPowerResult)
         {
-            return $"Order Error: ids: [{string.Join(",", securities.Keys.Select(o => o.Id))}]," +
-                $" Insufficient buying power to complete orders (Value:[{string.Join(",", securities.Select(o => o.Key.GetValue(o.Value).SmartRounding()))}])," +
-                $" Reason: {hasSufficientBuyingPowerResult.Reason}.";
+            return Messages.InsufficientBuyingPowerForOrders(securities, hasSufficientBuyingPowerResult);
         }
     }
 }

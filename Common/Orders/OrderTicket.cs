@@ -269,7 +269,7 @@ namespace QuantConnect.Orders
                     throw new ArgumentOutOfRangeException(nameof(field), field, null);
             }
 
-            throw new ArgumentException(Invariant($"Unable to get field {field} on order of type {_submitRequest.OrderType}"));
+            throw new ArgumentException(Messages.OrderTicketGetFieldError(this, field));
         }
 
         /// <summary>
@@ -380,8 +380,7 @@ namespace QuantConnect.Orders
                 if (_cancelRequest != null && _cancelRequest.Status != OrderRequestStatus.Error)
                 {
                     return OrderResponse.Error(request, OrderResponseErrorCode.RequestCanceled,
-                        Invariant($"Order {OrderId} has already received a cancellation request.")
-                    );
+                        Messages.OrderTicketCancelRequestAlreadySubmitted(this));
                 }
             }
 
@@ -395,7 +394,7 @@ namespace QuantConnect.Orders
                 }
             }
 
-            throw new ArgumentException("CancelRequest is null.");
+            throw new ArgumentException(Messages.OrderTicketNullCancelRequest);
         }
 
         /// <summary>
@@ -587,13 +586,7 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            var counts = Invariant($"Request Count: {RequestCount()} Response Count: {ResponseCount()}");
-            if (_order != null)
-            {
-                return Invariant($"{OrderId}: {_order} {counts}");
-            }
-
-            return Invariant($"{OrderId}: {counts}");
+            return Messages.OrderTicketToString(this, _order, RequestCount(), ResponseCount());
         }
 
         private int ResponseCount()

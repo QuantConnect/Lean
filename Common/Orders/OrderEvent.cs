@@ -269,40 +269,7 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            var message = Invariant($"Time: {UtcTime} OrderID: {OrderId} EventID: {Id} Symbol: {Symbol.Value} Status: {Status} Quantity: {Quantity}");
-            if (FillQuantity != 0)
-            {
-                message += Invariant($" FillQuantity: {FillQuantity} FillPrice: {FillPrice.SmartRounding()} {FillPriceCurrency}");
-            }
-
-            if (LimitPrice.HasValue)
-            {
-                message += Invariant($" LimitPrice: {LimitPrice.Value.SmartRounding()}");
-            }
-            if (StopPrice.HasValue)
-            {
-                message += Invariant($" StopPrice: {StopPrice.Value.SmartRounding()}");
-            }
-            if (TriggerPrice.HasValue)
-            {
-                message += Invariant($" TriggerPrice: {TriggerPrice.Value.SmartRounding()}");
-            }
-
-            // attach the order fee so it ends up in logs properly.
-            if (OrderFee.Value.Amount != 0m) message += Invariant($" OrderFee: {OrderFee}");
-
-            // add message from brokerage
-            if (!string.IsNullOrEmpty(Message))
-            {
-                message += Invariant($" Message: {Message}");
-            }
-
-            if (Symbol.SecurityType.IsOption())
-            {
-                message += Invariant($" IsAssignment: {IsAssignment}");
-            }
-
-            return message;
+            return Messages.OrderEventToString(this);
         }
 
         /// <summary>
@@ -310,40 +277,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public string ShortToString()
         {
-            var message = Invariant($"{UtcTime} OID:{OrderId} {Symbol.Value} {Status} Q:{Quantity}");
-            if (FillQuantity != 0)
-            {
-                message += Invariant($" FQ:{FillQuantity} FP:{FillPrice.SmartRounding()} {FillPriceCurrency}");
-            }
-
-            if (LimitPrice.HasValue)
-            {
-                message += Invariant($" LP:{LimitPrice.Value.SmartRounding()}");
-            }
-            if (StopPrice.HasValue)
-            {
-                message += Invariant($" SP:{StopPrice.Value.SmartRounding()}");
-            }
-            if (TriggerPrice.HasValue)
-            {
-                message += Invariant($" TP:{TriggerPrice.Value.SmartRounding()}");
-            }
-
-            // attach the order fee so it ends up in logs properly.
-            if (OrderFee.Value.Amount != 0m) message += Invariant($" OF:{OrderFee}");
-
-            // add message from brokerage
-            if (!string.IsNullOrEmpty(Message))
-            {
-                message += Invariant($" M:{Message}");
-            }
-
-            if (Symbol.SecurityType.IsOption())
-            {
-                message += Invariant($" IA:{IsAssignment}");
-            }
-
-            return message;
+            return Messages.OrderEventToString(this);
         }
 
         /// <summary>

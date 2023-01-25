@@ -14,9 +14,9 @@
 */
 
 using System;
+
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Orders
 {
@@ -74,7 +74,7 @@ namespace QuantConnect.Orders
             if (string.IsNullOrEmpty(tag))
             {
                 //Default tag values to display trigger price in GUI.
-                Tag = Invariant($"Trigger Price: {triggerPrice:C} Limit Price: {limitPrice:C}");
+                Tag = Messages.LimitIfTouchedOrderTriggerPriceTag(this);
             }
         }
 
@@ -124,8 +124,7 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Invariant(
-                $"{base.ToString()} at trigger {TriggerPrice.SmartRounding()} limit {LimitPrice.SmartRounding()}");
+            return Messages.LimitIfTouchedOrderToString(this);
         }
 
         /// <summary>
