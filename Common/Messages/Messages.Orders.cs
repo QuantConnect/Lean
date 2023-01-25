@@ -26,338 +26,325 @@ namespace QuantConnect
 {
     public static partial class Messages
     {
-        #region CancelOrderRequest Messages
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string CancelOrderRequestToString(CancelOrderRequest request)
+        public static class CancelOrderRequest
         {
-            return Invariant($"{request.Time.ToStringInvariant()} UTC: Cancel Order: ({request.Tag}) - {request.OrderId} Status: {request.Status}");
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string ToString(Orders.CancelOrderRequest request)
+            {
+                return Invariant($"{request.Time.ToStringInvariant()} UTC: Cancel Order: ({request.Tag}) - {request.OrderId} Status: {request.Status}");
+            }
         }
 
-        #endregion
-
-        #region GroupOrderManagerExtensions Messages
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string InsufficientBuyingPowerForOrders(Dictionary<Order, Security> securities,
+        public static class GroupOrderExtensions
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string InsufficientBuyingPowerForOrders(Dictionary<Orders.Order, Security> securities,
             HasSufficientBuyingPowerForOrderResult hasSufficientBuyingPowerResult)
-        {
-            var ids = string.Join(",", securities.Keys.Select(o => o.Id));
-            var values = string.Join(",", securities.Select(o => o.Key.GetValue(o.Value).SmartRounding()));
-            return $"Order Error: ids: [{ids}], Insufficient buying power to complete orders (Value:[{values}]), " +
-                $"Reason: {hasSufficientBuyingPowerResult.Reason}.";
-        }
-
-        #endregion
-
-        #region LimitIfTouchedOrder Messages
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string LimitIfTouchedOrderTriggerPriceTag(LimitIfTouchedOrder order)
-        {
-            return Invariant($"Trigger Price: {order.TriggerPrice:C} Limit Price: {order.LimitPrice:C}");
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string LimitIfTouchedOrderToString(LimitIfTouchedOrder order)
-        {
-            return Invariant($"{OrderToString(order)} at trigger {order.TriggerPrice.SmartRounding()} limit {order.LimitPrice.SmartRounding()}");
-        }
-
-        #endregion
-
-        #region LimitOrder Messages
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string LimitOrderLimitPriceTag(LimitOrder order)
-        {
-            return Invariant($"Limit Price: {order.LimitPrice:C}");
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string LimitOrderToString(LimitOrder order)
-        {
-            return Invariant($"{OrderToString(order)} at limit {order.LimitPrice.SmartRounding()}");
-        }
-
-        #endregion
-
-        #region Order Messages
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string OrderToString(Order order)
-        {
-            var tag = string.IsNullOrEmpty(order.Tag) ? string.Empty : $": {order.Tag}";
-            return Invariant($"OrderId: {order.Id} (BrokerId: {string.Join(",", order.BrokerId)}) {order.Status} " +
-                $"{order.Type} order for {order.Quantity} unit{(order.Quantity == 1 ? "" : "s")} of {order.Symbol}{tag}");
-        }
-
-        #endregion
-
-        #region OrderEvent Messages
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string OrderEventToString(OrderEvent orderEvent)
-        {
-            var message = Invariant($"Time: {orderEvent.UtcTime} OrderID: {orderEvent.OrderId} EventID: {orderEvent.Id} Symbol: {orderEvent.Symbol.Value} Status: {orderEvent.Status} Quantity: {orderEvent.Quantity}");
-            if (orderEvent.FillQuantity != 0)
             {
-                message += Invariant($" FillQuantity: {orderEvent.FillQuantity} FillPrice: {orderEvent.FillPrice.SmartRounding()} {orderEvent.FillPriceCurrency}");
+                var ids = string.Join(",", securities.Keys.Select(o => o.Id));
+                var values = string.Join(",", securities.Select(o => o.Key.GetValue(o.Value).SmartRounding()));
+                return $"Order Error: ids: [{ids}], Insufficient buying power to complete orders (Value:[{values}]), " +
+                    $"Reason: {hasSufficientBuyingPowerResult.Reason}.";
+            }
+        }
+
+        public static class LimitIfTouchedOrder
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string Tag(Orders.LimitIfTouchedOrder order)
+            {
+                return Invariant($"Trigger Price: {order.TriggerPrice:C} Limit Price: {order.LimitPrice:C}");
             }
 
-            if (orderEvent.LimitPrice.HasValue)
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string ToString(Orders.LimitIfTouchedOrder order)
             {
-                message += Invariant($" LimitPrice: {orderEvent.LimitPrice.Value.SmartRounding()}");
+                return Invariant($"{Messages.Order.ToString(order)} at trigger {order.TriggerPrice.SmartRounding()} limit {order.LimitPrice.SmartRounding()}");
             }
-
-            if (orderEvent.StopPrice.HasValue)
-            {
-                message += Invariant($" StopPrice: {orderEvent.StopPrice.Value.SmartRounding()}");
-            }
-
-            if (orderEvent.TriggerPrice.HasValue)
-            {
-                message += Invariant($" TriggerPrice: {orderEvent.TriggerPrice.Value.SmartRounding()}");
-            }
-
-            // attach the order fee so it ends up in logs properly.
-            if (orderEvent.OrderFee.Value.Amount != 0m)
-            {
-                message += Invariant($" OrderFee: {orderEvent.OrderFee}");
-            }
-
-            // add message from brokerage
-            if (!string.IsNullOrEmpty(orderEvent.Message))
-            {
-                message += Invariant($" Message: {orderEvent.Message}");
-            }
-
-            if (orderEvent.Symbol.SecurityType.IsOption())
-            {
-                message += Invariant($" IsAssignment: {orderEvent.IsAssignment}");
-            }
-
-            return message;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string OrderEventShortToString(OrderEvent orderEvent)
+        public static class LimitOrder
         {
-            var message = Invariant($"{orderEvent.UtcTime} OID:{orderEvent.OrderId} {orderEvent.Symbol.Value} {orderEvent.Status} Q:{orderEvent.Quantity}");
-            if (orderEvent.FillQuantity != 0)
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string Tag(Orders.LimitOrder order)
             {
-                message += Invariant($" FQ:{orderEvent.FillQuantity} FP:{orderEvent.FillPrice.SmartRounding()} {orderEvent.FillPriceCurrency}");
+                return Invariant($"Limit Price: {order.LimitPrice:C}");
             }
 
-            if (orderEvent.LimitPrice.HasValue)
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string ToString(Orders.LimitOrder order)
             {
-                message += Invariant($" LP:{orderEvent.LimitPrice.Value.SmartRounding()}");
+                return Invariant($"{Messages.Order.ToString(order)} at limit {order.LimitPrice.SmartRounding()}");
+            }
+        }
+
+        public static class Order
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string ToString(Orders.Order order)
+            {
+                var tag = string.IsNullOrEmpty(order.Tag) ? string.Empty : $": {order.Tag}";
+                return Invariant($"OrderId: {order.Id} (BrokerId: {string.Join(",", order.BrokerId)}) {order.Status} " +
+                    $"{order.Type} order for {order.Quantity} unit{(order.Quantity == 1 ? "" : "s")} of {order.Symbol}{tag}");
+            }
+        }
+
+        public static class OrderEvent
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string ToString(Orders.OrderEvent orderEvent)
+            {
+                var message = Invariant($"Time: {orderEvent.UtcTime} OrderID: {orderEvent.OrderId} EventID: {orderEvent.Id} Symbol: {orderEvent.Symbol.Value} Status: {orderEvent.Status} Quantity: {orderEvent.Quantity}");
+                if (orderEvent.FillQuantity != 0)
+                {
+                    message += Invariant($" FillQuantity: {orderEvent.FillQuantity} FillPrice: {orderEvent.FillPrice.SmartRounding()} {orderEvent.FillPriceCurrency}");
+                }
+
+                if (orderEvent.LimitPrice.HasValue)
+                {
+                    message += Invariant($" LimitPrice: {orderEvent.LimitPrice.Value.SmartRounding()}");
+                }
+
+                if (orderEvent.StopPrice.HasValue)
+                {
+                    message += Invariant($" StopPrice: {orderEvent.StopPrice.Value.SmartRounding()}");
+                }
+
+                if (orderEvent.TriggerPrice.HasValue)
+                {
+                    message += Invariant($" TriggerPrice: {orderEvent.TriggerPrice.Value.SmartRounding()}");
+                }
+
+                // attach the order fee so it ends up in logs properly.
+                if (orderEvent.OrderFee.Value.Amount != 0m)
+                {
+                    message += Invariant($" OrderFee: {orderEvent.OrderFee}");
+                }
+
+                // add message from brokerage
+                if (!string.IsNullOrEmpty(orderEvent.Message))
+                {
+                    message += Invariant($" Message: {orderEvent.Message}");
+                }
+
+                if (orderEvent.Symbol.SecurityType.IsOption())
+                {
+                    message += Invariant($" IsAssignment: {orderEvent.IsAssignment}");
+                }
+
+                return message;
             }
 
-            if (orderEvent.StopPrice.HasValue)
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string ShortToString(Orders.OrderEvent orderEvent)
             {
-                message += Invariant($" SP:{orderEvent.StopPrice.Value.SmartRounding()}");
+                var message = Invariant($"{orderEvent.UtcTime} OID:{orderEvent.OrderId} {orderEvent.Symbol.Value} {orderEvent.Status} Q:{orderEvent.Quantity}");
+                if (orderEvent.FillQuantity != 0)
+                {
+                    message += Invariant($" FQ:{orderEvent.FillQuantity} FP:{orderEvent.FillPrice.SmartRounding()} {orderEvent.FillPriceCurrency}");
+                }
+
+                if (orderEvent.LimitPrice.HasValue)
+                {
+                    message += Invariant($" LP:{orderEvent.LimitPrice.Value.SmartRounding()}");
+                }
+
+                if (orderEvent.StopPrice.HasValue)
+                {
+                    message += Invariant($" SP:{orderEvent.StopPrice.Value.SmartRounding()}");
+                }
+
+                if (orderEvent.TriggerPrice.HasValue)
+                {
+                    message += Invariant($" TP:{orderEvent.TriggerPrice.Value.SmartRounding()}");
+                }
+
+                // attach the order fee so it ends up in logs properly.
+                if (orderEvent.OrderFee.Value.Amount != 0m)
+                {
+                    message += Invariant($" OF:{orderEvent.OrderFee}");
+                }
+
+                // add message from brokerage
+                if (!string.IsNullOrEmpty(orderEvent.Message))
+                {
+                    message += Invariant($" M:{orderEvent.Message}");
+                }
+
+                if (orderEvent.Symbol.SecurityType.IsOption())
+                {
+                    message += Invariant($" IA:{orderEvent.IsAssignment}");
+                }
+
+                return message;
+            }
+        }
+
+        public static class OrderRequest
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string ToString(Orders.OrderRequest request)
+            {
+                return Invariant($"{request.Time} UTC: Order: ({request.OrderId.ToStringInvariant()}) - {request.Tag} Status: {request.Status}");
+            }
+        }
+
+        public static class OrderResponse
+        {
+            public static string DefaultErrorMessage = "An unexpected error occurred.";
+
+            public static string UnprocessedOrderResponseErrorMessage = "The request has not yet been processed.";
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string ToString(Orders.OrderResponse response)
+            {
+                if (response == Orders.OrderResponse.Unprocessed)
+                {
+                    return "Unprocessed";
+                }
+
+                if (response.IsError)
+                {
+                    return Invariant($"Error: {response.ErrorCode} - {response.ErrorMessage}");
+                }
+
+                return "Success";
             }
 
-            if (orderEvent.TriggerPrice.HasValue)
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string InvalidStatus(Orders.OrderRequest request, Orders.Order order)
             {
-                message += Invariant($" TP:{orderEvent.TriggerPrice.Value.SmartRounding()}");
+                return Invariant($"Unable to update order with id {request.OrderId} because it already has {order.Status} status.");
             }
 
-            // attach the order fee so it ends up in logs properly.
-            if (orderEvent.OrderFee.Value.Amount != 0m)
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string InvalidNewStatus(Orders.OrderRequest request, Orders.Order order)
             {
-                message += Invariant($" OF:{orderEvent.OrderFee}");
+                return Invariant($"Unable to update or cancel order with id {request.OrderId} and status {order.Status} " +
+                    $"because the submit confirmation has not been received yet.");
             }
 
-            // add message from brokerage
-            if (!string.IsNullOrEmpty(orderEvent.Message))
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string UnableToFindOrder(Orders.OrderRequest request)
             {
-                message += Invariant($" M:{orderEvent.Message}");
+                return Invariant($"Unable to locate order with id {request.OrderId}.");
             }
 
-            if (orderEvent.Symbol.SecurityType.IsOption())
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string ZeroQuantity(Orders.OrderRequest request)
             {
-                message += Invariant($" IA:{orderEvent.IsAssignment}");
+                return Invariant($"Unable to {request.OrderRequestType.ToLower()} order with id {request.OrderId} that has zero quantity.");
             }
 
-            return message;
-        }
-
-        #endregion
-
-        #region OrderRequest Messages
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string OrderRequestToString(OrderRequest request)
-        {
-            return Invariant($"{request.Time} UTC: Order: ({request.OrderId.ToStringInvariant()}) - {request.Tag} Status: {request.Status}");
-        }
-
-        #endregion
-
-        #region OrderResponse Messages
-
-        public static string OrderResponseDefaultErrorMessage = "An unexpected error occurred.";
-
-        public static string UnprocessedOrderResponseErrorMessage = "The request has not yet been processed.";
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string OrderResponseToString(OrderResponse response)
-        {
-            if (response == OrderResponse.Unprocessed)
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string MissingSecurity(Orders.SubmitOrderRequest request)
             {
-                return "Unprocessed";
+                return Invariant($"You haven't requested {request.Symbol} data. Add this with AddSecurity() in the Initialize() Method.");
             }
 
-            if (response.IsError)
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string WarmingUp(Orders.OrderRequest request)
             {
-                return Invariant($"Error: {response.ErrorCode} - {response.ErrorMessage}");
+                return Invariant($"This operation is not allowed in Initialize or during warm up: OrderRequest.{request.OrderRequestType}. ") +
+                    "Please move this code to the OnWarmupFinished() method.";
+            }
+        }
+
+        public static class OrderTicket
+        {
+            public static string NullCancelRequest = "CancelRequest is null.";
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string GetFieldError(Orders.OrderTicket ticket, OrderField field)
+            {
+                return Invariant($"Unable to get field {field} on order of type {ticket.SubmitRequest.OrderType}");
             }
 
-            return "Success";
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string OrderResponseInvalidStatusErrorMessage(OrderRequest request, Order order)
-        {
-            return Invariant($"Unable to update order with id {request.OrderId} because it already has {order.Status} status.");
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string OrderResponseInvalidNewStatusErrorMessage(OrderRequest request, Order order)
-        {
-            return Invariant($"Unable to update or cancel order with id {request.OrderId} and status {order.Status} " +
-                $"because the submit confirmation has not been received yet.");
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string OrderResponseUnableToFindOrderErrorMessage(OrderRequest request)
-        {
-            return Invariant($"Unable to locate order with id {request.OrderId}.");
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string OrderResponseZeroQuantityErrorMessage(OrderRequest request)
-        {
-            return Invariant($"Unable to {request.OrderRequestType.ToLower()} order with id {request.OrderId} that has zero quantity.");
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string OrderResponseMissingSecurityErrorMessage(SubmitOrderRequest request)
-        {
-            return Invariant($"You haven't requested {request.Symbol} data. Add this with AddSecurity() in the Initialize() Method.");
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string OrderResponseWarmingUpErrorMessage(OrderRequest request)
-        {
-            return Invariant($"This operation is not allowed in Initialize or during warm up: OrderRequest.{request.OrderRequestType}. ") +
-                "Please move this code to the OnWarmupFinished() method.";
-        }
-
-        #endregion
-
-        #region OrderTicket Messages
-
-        public static string OrderTicketNullCancelRequest = "CancelRequest is null.";
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string OrderTicketGetFieldError(OrderTicket ticket, OrderField field)
-        {
-            return Invariant($"Unable to get field {field} on order of type {ticket.SubmitRequest.OrderType}");
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string OrderTicketCancelRequestAlreadySubmitted(OrderTicket ticket)
-        {
-            return Invariant($"Order {ticket.OrderId} has already received a cancellation request.");
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string OrderTicketToString(OrderTicket ticket, Order order, int requestCount, int responseCount)
-        {
-            var counts = Invariant($"Request Count: {requestCount} Response Count: {responseCount}");
-            if (order != null)
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string CancelRequestAlreadySubmitted(Orders.OrderTicket ticket)
             {
-                return Invariant($"{ticket.OrderId}: {order} {counts}");
+                return Invariant($"Order {ticket.OrderId} has already received a cancellation request.");
             }
 
-            return Invariant($"{ticket.OrderId}: {counts}");
-        }
-
-        #endregion
-
-        #region StopLimitOrder Messages
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string StopLimitOrderTag(StopLimitOrder order)
-        {
-            return Invariant($"Stop Price: {order.StopPrice:C} Limit Price: {order.LimitPrice:C}");
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string StopLimitOrderToString(StopLimitOrder order)
-        {
-            return Invariant($"{OrderToString(order)} at stop {order.StopPrice.SmartRounding()} limit {order.LimitPrice.SmartRounding()}");
-        }
-
-        #endregion
-
-        #region StopMarketOrder Messages
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string StopMarketOrderTag(StopMarketOrder order)
-        {
-            return Invariant($"Stop Price: {order.StopPrice:C}");
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string StopMarketOrderToString(StopMarketOrder order)
-        {
-            return Invariant($"{OrderToString(order)} at stop {order.StopPrice.SmartRounding()}");
-        }
-
-        #endregion
-
-        #region SubmitOrderRequest Messages
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string SubmitOrderRequestToString(SubmitOrderRequest request)
-        {
-            // create a proxy order object to steal its ToString method
-            var proxy = Order.CreateOrder(request);
-            return Invariant($"{request.Time} UTC: Submit Order: ({request.OrderId}) - {proxy} {request.Tag} Status: {request.Status}");
-        }
-
-        #endregion
-
-        #region UpdateOrderRequest Messages
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string UpdateOrderRequestToString(UpdateOrderRequest request)
-        {
-            var updates = new List<string>(4);
-            if (request.Quantity.HasValue)
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string ToString(Orders.OrderTicket ticket, Orders.Order order, int requestCount, int responseCount)
             {
-                updates.Add(Invariant($"Quantity: {request.Quantity.Value}"));
+                var counts = Invariant($"Request Count: {requestCount} Response Count: {responseCount}");
+                if (order != null)
+                {
+                    return Invariant($"{ticket.OrderId}: {order} {counts}");
+                }
+
+                return Invariant($"{ticket.OrderId}: {counts}");
             }
-            if (request.LimitPrice.HasValue)
+        }
+
+        public static class StopLimitOrder
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string Tag(Orders.StopLimitOrder order)
             {
-                updates.Add(Invariant($"LimitPrice: {request.LimitPrice.Value.SmartRounding()}"));
-            }
-            if (request.StopPrice.HasValue)
-            {
-                updates.Add(Invariant($"StopPrice: {request.StopPrice.Value.SmartRounding()}"));
-            }
-            if (request.TriggerPrice.HasValue)
-            {
-                updates.Add(Invariant($"TriggerPrice: {request.TriggerPrice.Value.SmartRounding()}"));
+                return Invariant($"Stop Price: {order.StopPrice:C} Limit Price: {order.LimitPrice:C}");
             }
 
-            return Invariant($"{request.Time} UTC: Update Order: ({request.OrderId}) - {string.Join(", ", updates)} {request.Tag} Status: {request.Status}");
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string ToString(Orders.StopLimitOrder order)
+            {
+                return Invariant($"{Messages.Order.ToString(order)} at stop {order.StopPrice.SmartRounding()} limit {order.LimitPrice.SmartRounding()}");
+            }
         }
 
-        #endregion
+        public static class StopMarketOrder
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string Tag(Orders.StopMarketOrder order)
+            {
+                return Invariant($"Stop Price: {order.StopPrice:C}");
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string ToString(Orders.StopMarketOrder order)
+            {
+                return Invariant($"{Messages.Order.ToString(order)} at stop {order.StopPrice.SmartRounding()}");
+            }
+        }
+
+        public static class SubmitOrderRequest
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string ToString(Orders.SubmitOrderRequest request)
+            {
+                // create a proxy order object to steal its ToString method
+                var proxy = Orders.Order.CreateOrder(request);
+                return Invariant($"{request.Time} UTC: Submit Order: ({request.OrderId}) - {proxy} {request.Tag} Status: {request.Status}");
+            }
+        }
+
+        public static class UpdateOrderRequest
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string ToString(Orders.UpdateOrderRequest request)
+            {
+                var updates = new List<string>(4);
+                if (request.Quantity.HasValue)
+                {
+                    updates.Add(Invariant($"Quantity: {request.Quantity.Value}"));
+                }
+                if (request.LimitPrice.HasValue)
+                {
+                    updates.Add(Invariant($"LimitPrice: {request.LimitPrice.Value.SmartRounding()}"));
+                }
+                if (request.StopPrice.HasValue)
+                {
+                    updates.Add(Invariant($"StopPrice: {request.StopPrice.Value.SmartRounding()}"));
+                }
+                if (request.TriggerPrice.HasValue)
+                {
+                    updates.Add(Invariant($"TriggerPrice: {request.TriggerPrice.Value.SmartRounding()}"));
+                }
+
+                return Invariant($"{request.Time} UTC: Update Order: ({request.OrderId}) - {string.Join(", ", updates)} {request.Tag} Status: {request.Status}");
+            }
+        }
     }
 }

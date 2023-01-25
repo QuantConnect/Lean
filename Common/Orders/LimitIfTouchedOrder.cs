@@ -74,7 +74,7 @@ namespace QuantConnect.Orders
             if (string.IsNullOrEmpty(tag))
             {
                 //Default tag values to display trigger price in GUI.
-                Tag = Messages.LimitIfTouchedOrderTriggerPriceTag(this);
+                Tag = Messages.LimitIfTouchedOrder.Tag(this);
             }
         }
 
@@ -124,7 +124,7 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Messages.LimitIfTouchedOrderToString(this);
+            return Messages.LimitIfTouchedOrder.ToString(this);
         }
 
         /// <summary>

@@ -99,7 +99,7 @@ namespace QuantConnect.Orders
 
         public static string GetErrorMessage(this Dictionary<Order, Security> securities, HasSufficientBuyingPowerForOrderResult hasSufficientBuyingPowerResult)
         {
-            return Messages.InsufficientBuyingPowerForOrders(securities, hasSufficientBuyingPowerResult);
+            return Messages.GroupOrderExtensions.InsufficientBuyingPowerForOrders(securities, hasSufficientBuyingPowerResult);
         }
     }
 }

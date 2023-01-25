@@ -76,7 +76,7 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Messages.UpdateOrderRequestToString(this);
+            return Messages.UpdateOrderRequest.ToString(this);
         }
     }
 }

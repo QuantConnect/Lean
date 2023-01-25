@@ -269,7 +269,7 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Messages.OrderEventToString(this);
+            return Messages.OrderEvent.ToString(this);
         }
 
         /// <summary>
@@ -277,7 +277,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public string ShortToString()
         {
-            return Messages.OrderEventToString(this);
+            return Messages.OrderEvent.ShortToString(this);
         }
 
         /// <summary>

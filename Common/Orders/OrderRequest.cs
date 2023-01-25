@@ -113,7 +113,7 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Messages.OrderRequestToString(this);
+            return Messages.OrderRequest.ToString(this);
         }
     }
 }

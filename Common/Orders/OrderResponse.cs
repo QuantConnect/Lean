@@ -85,7 +85,7 @@ namespace QuantConnect.Orders
             ErrorCode = errorCode;
             if (errorCode != OrderResponseErrorCode.None)
             {
-                ErrorMessage = errorMessage ?? Messages.OrderResponseDefaultErrorMessage;
+                ErrorMessage = errorMessage ?? Messages.OrderResponse.DefaultErrorMessage;
             }
         }
 
@@ -98,7 +98,7 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Messages.OrderResponseToString(this);
+            return Messages.OrderResponse.ToString(this);
         }
 
         #region Statics - implicit(int), Unprocessed constant, response factory methods
@@ -106,7 +106,8 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Gets an <see cref="OrderResponse"/> for a request that has not yet been processed
         /// </summary>
-        public static readonly OrderResponse Unprocessed = new OrderResponse(int.MinValue, OrderResponseErrorCode.None, Messages.UnprocessedOrderResponseErrorMessage);
+        public static readonly OrderResponse Unprocessed = new OrderResponse(int.MinValue, OrderResponseErrorCode.None,
+            Messages.OrderResponse.UnprocessedOrderResponseErrorMessage);
 
         /// <summary>
         /// Helper method to create a successful response from a request
@@ -129,7 +130,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public static OrderResponse InvalidStatus(OrderRequest request, Order order)
         {
-            return Error(request, OrderResponseErrorCode.InvalidOrderStatus, Messages.OrderResponseInvalidStatusErrorMessage(request, order));
+            return Error(request, OrderResponseErrorCode.InvalidOrderStatus, Messages.OrderResponse.InvalidStatus(request, order));
         }
 
         /// <summary>
@@ -137,7 +138,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public static OrderResponse InvalidNewStatus(OrderRequest request, Order order)
         {
-            return Error(request, OrderResponseErrorCode.InvalidNewOrderStatus, Messages.OrderResponseInvalidNewStatusErrorMessage(request, order));
+            return Error(request, OrderResponseErrorCode.InvalidNewOrderStatus, Messages.OrderResponse.InvalidNewStatus(request, order));
         }
 
         /// <summary>
@@ -145,7 +146,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public static OrderResponse UnableToFindOrder(OrderRequest request)
         {
-            return Error(request, OrderResponseErrorCode.UnableToFindOrder, Messages.OrderResponseUnableToFindOrderErrorMessage(request));
+            return Error(request, OrderResponseErrorCode.UnableToFindOrder, Messages.OrderResponse.UnableToFindOrder(request));
         }
 
         /// <summary>
@@ -153,7 +154,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public static OrderResponse ZeroQuantity(OrderRequest request)
         {
-            return Error(request, OrderResponseErrorCode.OrderQuantityZero, Messages.OrderResponseZeroQuantityErrorMessage(request));
+            return Error(request, OrderResponseErrorCode.OrderQuantityZero, Messages.OrderResponse.ZeroQuantity(request));
         }
 
         /// <summary>
@@ -161,7 +162,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public static OrderResponse MissingSecurity(SubmitOrderRequest request)
         {
-            return Error(request, OrderResponseErrorCode.MissingSecurity, Messages.OrderResponseMissingSecurityErrorMessage(request));
+            return Error(request, OrderResponseErrorCode.MissingSecurity, Messages.OrderResponse.MissingSecurity(request));
         }
 
         /// <summary>
@@ -169,7 +170,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public static OrderResponse WarmingUp(OrderRequest request)
         {
-            return Error(request, OrderResponseErrorCode.AlgorithmWarmingUp, Messages.OrderResponseWarmingUpErrorMessage(request));
+            return Error(request, OrderResponseErrorCode.AlgorithmWarmingUp, Messages.OrderResponse.WarmingUp(request));
         }
 
         #endregion

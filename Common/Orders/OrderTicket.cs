@@ -269,7 +269,7 @@ namespace QuantConnect.Orders
                     throw new ArgumentOutOfRangeException(nameof(field), field, null);
             }
 
-            throw new ArgumentException(Messages.OrderTicketGetFieldError(this, field));
+            throw new ArgumentException(Messages.OrderTicket.GetFieldError(this, field));
         }
 
         /// <summary>
@@ -380,7 +380,7 @@ namespace QuantConnect.Orders
                 if (_cancelRequest != null && _cancelRequest.Status != OrderRequestStatus.Error)
                 {
                     return OrderResponse.Error(request, OrderResponseErrorCode.RequestCanceled,
-                        Messages.OrderTicketCancelRequestAlreadySubmitted(this));
+                        Messages.OrderTicket.CancelRequestAlreadySubmitted(this));
                 }
             }
 
@@ -394,7 +394,7 @@ namespace QuantConnect.Orders
                 }
             }
 
-            throw new ArgumentException(Messages.OrderTicketNullCancelRequest);
+            throw new ArgumentException(Messages.OrderTicket.NullCancelRequest);
         }
 
         /// <summary>
@@ -586,7 +586,7 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Messages.OrderTicketToString(this, _order, RequestCount(), ResponseCount());
+            return Messages.OrderTicket.ToString(this, _order, RequestCount(), ResponseCount());
         }
 
         private int ResponseCount()

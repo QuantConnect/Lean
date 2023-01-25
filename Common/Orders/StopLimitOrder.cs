@@ -74,7 +74,7 @@ namespace QuantConnect.Orders
             if (string.IsNullOrEmpty(tag))
             {
                 //Default tag values to display stop price in GUI.
-                Tag = Messages.StopLimitOrderTag(this);
+                Tag = Messages.StopLimitOrder.Tag(this);
             }
         }
 
@@ -125,7 +125,7 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Messages.StopLimitOrderToString(this);
+            return Messages.StopLimitOrder.ToString(this);
         }
 
         /// <summary>
