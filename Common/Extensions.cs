@@ -306,7 +306,7 @@ namespace QuantConnect
                    " to confirm the Slice object has price before using the data. Data does not necessarily all arrive at the same" +
                    " time so your algorithm should confirm the data is ready before using it. In live trading this can mean you do" +
                    " not have an active subscription to the asset class you're trying to trade. If using custom data make sure you've" +
-                   " set the 'Value' property.";
+                   " set the 'Value' property. See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#security-price-zero";
         }
 
         /// <summary>

@@ -257,7 +257,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             if (!shortable)
             {
                 response = OrderResponse.Error(request, OrderResponseErrorCode.ExceedsShortableQuantity,
-                    $"Order exceeds maximum shortable quantity for Symbol {request.Symbol} (requested short: {Math.Abs(request.Quantity)})");
+                    $"Order exceeds maximum shortable quantity for Symbol {request.Symbol} (requested short: {Math.Abs(request.Quantity)})" + 
+                    ". See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#exceeds-shortable-quantity");
             }
 
             request.SetResponse(response);
@@ -372,7 +373,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 else if (!shortable)
                 {
                     var shortableResponse = OrderResponse.Error(request, OrderResponseErrorCode.ExceedsShortableQuantity,
-                        $"Order exceeds maximum shortable quantity for Symbol {ticket.Symbol} (requested short: {Math.Abs(orderQuantity)})");
+                        $"Order exceeds maximum shortable quantity for Symbol {ticket.Symbol} (requested short: {Math.Abs(orderQuantity)})" + 
+                        ". See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#exceeds-shortable-quantity");
 
                     request.SetResponse(shortableResponse);
                 }
@@ -384,6 +386,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
             catch (Exception err)
             {
+                err.Message += ". See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#processing-error.";
                 Log.Error(err);
                 request.SetResponse(OrderResponse.Error(request, OrderResponseErrorCode.ProcessingError, err.Message));
             }
@@ -411,7 +414,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 if (!ticket.TrySetCancelRequest(request))
                 {
                     // the ticket has already been cancelled
-                    request.SetResponse(OrderResponse.Error(request, OrderResponseErrorCode.InvalidRequest, "Cancellation is already in progress."));
+                    request.SetResponse(OrderResponse.Error(request, OrderResponseErrorCode.InvalidRequest, "Cancellation is already in progress." +
+                        " See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#invalid-request"));
                     return ticket;
                 }
 
@@ -458,6 +462,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
             catch (Exception err)
             {
+                err.Message += ". See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#processing-error.";
                 Log.Error(err);
                 request.SetResponse(OrderResponse.Error(request, OrderResponseErrorCode.ProcessingError, err.Message));
             }
@@ -737,7 +742,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             if (!_openOrders.TryAdd(order.Id, order) || !_completeOrders.TryAdd(order.Id, order))
             {
                 Log.Error("BrokerageTransactionHandler.HandleSubmitOrderRequest(): Unable to add new order, order not processed.");
-                return OrderResponse.Error(request, OrderResponseErrorCode.OrderAlreadyExists, "Cannot process submit request because order with id {0} already exists");
+                return OrderResponse.Error(request, OrderResponseErrorCode.OrderAlreadyExists, "Cannot process submit request because order with id {0} already exists. See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#order-already-exists.");
             }
             if (!_completeOrderTickets.TryGetValue(order.Id, out ticket))
             {
@@ -795,7 +800,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     _algorithm.UtcTime,
                     OrderFee.Zero,
                     "Error executing margin models"));
-                return OrderResponse.Error(request, OrderResponseErrorCode.ProcessingError, "Error in GetSufficientCapitalForOrder");
+                return OrderResponse.Error(request, OrderResponseErrorCode.ProcessingError, "Error in GetSufficientCapitalForOrder. See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#processing-error.");
             }
 
             if (!hasSufficientBuyingPowerResult.IsSufficient)
@@ -812,7 +817,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 if (!_algorithm.BrokerageModel.CanSubmitOrder(kvp.Value, kvp.Key, out var message))
                 {
-                    var errorMessage = $"BrokerageModel declared unable to submit order: [{string.Join(",", orders.Select(o => o.Id))}]";
+                    var errorMessage = $"BrokerageModel declared unable to submit order: [{string.Join(",", orders.Select(o => o.Id))}]." +
+                        "See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#brokerage-model-refused-to-submit-order";
 
                     // if we couldn't actually process the order, mark it as invalid and bail
                     message ??= new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidOrder", string.Empty);
@@ -839,7 +845,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             if (!orderPlaced)
             {
                 // we failed to submit the order, invalidate it
-                var errorMessage = $"Brokerage failed to place orders: [{string.Join(",", orders.Select(o => o.Id))}]";
+                var errorMessage = $"Brokerage failed to place orders: [{string.Join(",", orders.Select(o => o.Id))}]. " +
+                    "See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#brokerage-failed-to-submit-order";
 
                 InvalidateOrders(orders, errorMessage);
                 _algorithm.Error(errorMessage);
@@ -881,7 +888,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             if (!_algorithm.LiveMode && !_algorithm.BrokerageModel.CanUpdateOrder(_algorithm.Securities[order.Symbol], order, request, out message))
             {
                 if (message == null) message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidRequest", "BrokerageModel declared unable to update order: " + order.Id);
-                var response = OrderResponse.Error(request, OrderResponseErrorCode.BrokerageModelRefusedToUpdateOrder, "OrderID: " + order.Id + " " + message);
+                var response = OrderResponse.Error(request, OrderResponseErrorCode.BrokerageModelRefusedToUpdateOrder, "OrderID: " + order.Id + " " + message + 
+                    ". See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#brokerage-model-refused-to-update-order");
                 _algorithm.Error(response.ErrorMessage);
                 HandleOrderEvent(new OrderEvent(order,
                     _algorithm.UtcTime,
@@ -912,7 +920,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             if (!orderUpdated)
             {
                 // we failed to update the order for some reason
-                var errorMessage = "Brokerage failed to update order with id " + request.OrderId;
+                var errorMessage = "Brokerage failed to update order with id " + request.OrderId + 
+                    ". See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#brokerage-failed-to-update-order";
                 _algorithm.Error(errorMessage);
                 HandleOrderEvent(new OrderEvent(order,
                     _algorithm.UtcTime,
@@ -966,7 +975,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             if (!orderCanceled)
             {
                 // failed to cancel the order
-                var message = "Brokerage failed to cancel order with id " + order.Id;
+                var message = "Brokerage failed to cancel order with id " + order.Id +
+                    ". See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#brokerage-failed-to-cancel-order";
                 _algorithm.Error(message);
                 _cancelPendingOrders.RemoveAndFallback(order);
                 return OrderResponse.Error(request, OrderResponseErrorCode.BrokerageFailedToCancelOrder, message);

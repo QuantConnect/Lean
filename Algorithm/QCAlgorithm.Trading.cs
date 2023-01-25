@@ -873,14 +873,16 @@ namespace QuantConnect.Algorithm
                 return OrderResponse.Error(request, OrderResponseErrorCode.OrderQuantityLessThanLoteSize,
                     Invariant($"Unable to {request.OrderRequestType.ToLower()} order with id {request.OrderId} which ") +
                     Invariant($"quantity ({Math.Abs(request.Quantity)}) is less than lot ") +
-                    Invariant($"size ({security.SymbolProperties.LotSize}).")
+                    Invariant($"size ({security.SymbolProperties.LotSize}).") + 
+                    " See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#order-quantity-less-than-lot-size"
                 );
             }
 
             if (!security.IsTradable)
             {
                 return OrderResponse.Error(request, OrderResponseErrorCode.NonTradableSecurity,
-                    $"The security with symbol '{request.Symbol}' is marked as non-tradable."
+                    $"The security with symbol '{request.Symbol}' is marked as non-tradable." + 
+                    " See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#non-tradable-security"
                 );
             }
 
@@ -890,7 +892,8 @@ namespace QuantConnect.Algorithm
             if (request.OrderType == OrderType.OptionExercise && !security.Exchange.ExchangeOpen)
             {
                 return OrderResponse.Error(request, OrderResponseErrorCode.ExchangeNotOpen,
-                    $"{request.OrderType} order and exchange not open."
+                    $"{request.OrderType} order and exchange not open." + 
+                    " See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#exchange-not-open"
                 );
             }
 
@@ -904,7 +907,8 @@ namespace QuantConnect.Algorithm
                 }
 
                 return OrderResponse.Error(request, OrderResponseErrorCode.ExchangeNotOpen,
-                    $"{request.OrderType} orders not supported for {security.Type}."
+                    $"{request.OrderType} orders not supported for {security.Type}." + 
+                    " See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#exchange-not-open"
                 );
             }
 
@@ -918,13 +922,15 @@ namespace QuantConnect.Algorithm
             if (!Portfolio.CashBook.TryGetValue(quoteCurrency, out var quoteCash))
             {
                 return OrderResponse.Error(request, OrderResponseErrorCode.QuoteCurrencyRequired,
-                    $"{request.Symbol.Value}: requires {quoteCurrency} in the cashbook to trade."
+                    $"{request.Symbol.Value}: requires {quoteCurrency} in the cashbook to trade." + 
+                    " See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#quote-currency-required"
                 );
             }
             if (security.QuoteCurrency.ConversionRate == 0m)
             {
                 return OrderResponse.Error(request, OrderResponseErrorCode.ConversionRateZero,
-                    $"{request.Symbol.Value}: requires {quoteCurrency} to have a non-zero conversion rate. This can be caused by lack of data."
+                    $"{request.Symbol.Value}: requires {quoteCurrency} to have a non-zero conversion rate. This can be caused by lack of data." + 
+                    " See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#conversion-rate-zero"
                 );
             }
 
@@ -935,13 +941,15 @@ namespace QuantConnect.Algorithm
                 if (!Portfolio.CashBook.TryGetValue(baseCurrency, out var baseCash))
                 {
                     return OrderResponse.Error(request, OrderResponseErrorCode.ForexBaseAndQuoteCurrenciesRequired,
-                        $"{request.Symbol.Value}: requires {baseCurrency} and {quoteCurrency} in the cashbook to trade."
+                        $"{request.Symbol.Value}: requires {baseCurrency} and {quoteCurrency} in the cashbook to trade." +
+                        " See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#forex-base-and-quote-currencies-required"
                     );
                 }
                 if (baseCash.ConversionRate == 0m)
                 {
                     return OrderResponse.Error(request, OrderResponseErrorCode.ForexConversionRateZero,
-                        $"{request.Symbol.Value}: requires {baseCurrency} and {quoteCurrency} to have non-zero conversion rates. This can be caused by lack of data."
+                        $"{request.Symbol.Value}: requires {baseCurrency} and {quoteCurrency} to have non-zero conversion rates. This can be caused by lack of data." + 
+                        " See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#forex-conversion-rate-zero"
                     );
                 }
             }
@@ -950,7 +958,8 @@ namespace QuantConnect.Algorithm
             if (!security.HasData)
             {
                 return OrderResponse.Error(request, OrderResponseErrorCode.SecurityHasNoData,
-                    "There is no data for this symbol yet, please check the security.HasData flag to ensure there is at least one data point."
+                    "There is no data for this symbol yet, please check the security.HasData flag to ensure there is at least one data point." +
+                    " See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#security-has-no-data"
                 );
             }
 
@@ -959,7 +968,8 @@ namespace QuantConnect.Algorithm
             {
                 Status = AlgorithmStatus.Stopped;
                 return OrderResponse.Error(request, OrderResponseErrorCode.ExceededMaximumOrders,
-                    Invariant($"You have exceeded maximum number of orders ({_maxOrders}), for unlimited orders upgrade your account.")
+                    Invariant($"You have exceeded maximum number of orders ({_maxOrders}), for unlimited orders upgrade your account." +
+                        " See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#exceeded-maximum-orders")
                 );
             }
 
@@ -968,28 +978,32 @@ namespace QuantConnect.Algorithm
                 if (!security.Type.IsOption())
                 {
                     return OrderResponse.Error(request, OrderResponseErrorCode.NonExercisableSecurity,
-                        $"The security with symbol '{request.Symbol}' is not exercisable."
+                        $"The security with symbol '{request.Symbol}' is not exercisable." + 
+                        " See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#non-exercisable-security"
                     );
                 }
 
                 if ((security as Option).Style == OptionStyle.European && UtcTime.Date < security.Symbol.ID.Date.ConvertToUtc(security.Exchange.TimeZone).Date)
                 {
                     return OrderResponse.Error(request, OrderResponseErrorCode.EuropeanOptionNotExpiredOnExercise,
-                        $"Cannot exercise European style option with symbol '{request.Symbol}' before its expiration date."
+                        $"Cannot exercise European style option with symbol '{request.Symbol}' before its expiration date." + 
+                        " See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#european-option-not-expired-on-exercise"
                     );
                 }
 
                 if (security.Holdings.IsShort)
                 {
                     return OrderResponse.Error(request, OrderResponseErrorCode.UnsupportedRequestType,
-                        $"The security with symbol '{request.Symbol}' has a short option position. Only long option positions are exercisable."
+                        $"The security with symbol '{request.Symbol}' has a short option position. Only long option positions are exercisable." + 
+                        " See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#unsupported-request-type"
                     );
                 }
 
                 if (Math.Abs(request.Quantity) > security.Holdings.Quantity)
                 {
                     return OrderResponse.Error(request, OrderResponseErrorCode.UnsupportedRequestType,
-                        $"Cannot exercise more contracts of '{request.Symbol}' than is currently available in the portfolio. "
+                        $"Cannot exercise more contracts of '{request.Symbol}' than is currently available in the portfolio. " + 
+                        "See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#unsupported-request-type"
                     );
                 }
             }
@@ -1019,7 +1033,8 @@ namespace QuantConnect.Algorithm
                     // if the latest time is 3:45 it is already too late to submit one of these orders
                     return OrderResponse.Error(request, OrderResponseErrorCode.MarketOnCloseOrderTooLate,
                         $"MarketOnClose orders must be placed within {Orders.MarketOnCloseOrder.SubmissionTimeBuffer} before market close." +
-                        " Override this TimeSpan buffer by setting Orders.MarketOnCloseOrder.SubmissionTimeBuffer in QCAlgorithm.Initialize()."
+                        " Override this TimeSpan buffer by setting Orders.MarketOnCloseOrder.SubmissionTimeBuffer in QCAlgorithm.Initialize()." +
+                        " See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#market-on-close-order-too-late"
                     );
                 }
             }

@@ -140,7 +140,8 @@ namespace QuantConnect.Orders
         public static OrderResponse InvalidStatus(OrderRequest request, Order order)
         {
             return Error(request, OrderResponseErrorCode.InvalidOrderStatus,
-                Invariant($"Unable to update order with id {request.OrderId} because it already has {order.Status} status.")
+                Invariant($"Unable to update order with id {request.OrderId} because it already has {order.Status} status." + 
+                    " See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#invalid-order-status")
             );
         }
 
@@ -150,7 +151,8 @@ namespace QuantConnect.Orders
         public static OrderResponse InvalidNewStatus(OrderRequest request, Order order)
         {
             return Error(request, OrderResponseErrorCode.InvalidNewOrderStatus,
-                Invariant($"Unable to update or cancel order with id {request.OrderId} and status {order.Status} because the submit confirmation has not been received yet.")
+                Invariant($"Unable to update or cancel order with id {request.OrderId} and status {order.Status} because the submit confirmation has not been received yet." + 
+                    " See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#invalid-new-order-status")
             );
         }
 
@@ -160,7 +162,8 @@ namespace QuantConnect.Orders
         public static OrderResponse UnableToFindOrder(OrderRequest request)
         {
             return Error(request, OrderResponseErrorCode.UnableToFindOrder,
-                Invariant($"Unable to locate order with id {request.OrderId}.")
+                Invariant($"Unable to locate order with id {request.OrderId}." + 
+                    " See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#unable-to-find-order")
             );
         }
 
@@ -170,7 +173,8 @@ namespace QuantConnect.Orders
         public static OrderResponse ZeroQuantity(OrderRequest request)
         {
             return Error(request, OrderResponseErrorCode.OrderQuantityZero,
-                Invariant($"Unable to {request.OrderRequestType.ToLower()} order with id {request.OrderId} that has zero quantity.")
+                Invariant($"Unable to {request.OrderRequestType.ToLower()} order with id {request.OrderId} that has zero quantity." + 
+                    " See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#order-quantity-zero")
             );
         }
 
@@ -180,7 +184,8 @@ namespace QuantConnect.Orders
         public static OrderResponse MissingSecurity(SubmitOrderRequest request)
         {
             return Error(request, OrderResponseErrorCode.MissingSecurity,
-                Invariant($"You haven't requested {request.Symbol} data. Add this with AddSecurity() in the Initialize() Method.")
+                Invariant($"You haven't requested {request.Symbol} data. Add this with AddSecurity() in the Initialize() Method." + 
+                    " See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#missing-security")
             );
         }
 
@@ -191,7 +196,8 @@ namespace QuantConnect.Orders
         {
             return Error(request, OrderResponseErrorCode.AlgorithmWarmingUp,
                 Invariant($"This operation is not allowed in Initialize or during warm up: OrderRequest.{request.OrderRequestType}. ") +
-                "Please move this code to the OnWarmupFinished() method."
+                "Please move this code to the OnWarmupFinished() method." + 
+                " See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#algorithm-warming-up"
             );
         }
 

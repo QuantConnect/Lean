@@ -101,7 +101,7 @@ namespace QuantConnect.Orders
         {
             return $"Order Error: ids: [{string.Join(",", securities.Keys.Select(o => o.Id))}]," +
                 $" Insufficient buying power to complete orders (Value:[{string.Join(",", securities.Select(o => o.Key.GetValue(o.Value).SmartRounding()))}])," +
-                $" Reason: {hasSufficientBuyingPowerResult.Reason}.";
+                $" Reason: {hasSufficientBuyingPowerResult.Reason}. See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#insufficient-buying-power.";
         }
     }
 }

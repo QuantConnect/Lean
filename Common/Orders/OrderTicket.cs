@@ -380,7 +380,8 @@ namespace QuantConnect.Orders
                 if (_cancelRequest != null && _cancelRequest.Status != OrderRequestStatus.Error)
                 {
                     return OrderResponse.Error(request, OrderResponseErrorCode.RequestCanceled,
-                        Invariant($"Order {OrderId} has already received a cancellation request.")
+                        Invariant($"Order {OrderId} has already received a cancellation request." + 
+                            " See https://www.quantconnect.com/docs/v2/writing-algorithms/trading-and-orders/order-errors#request-canceled")
                     );
                 }
             }
