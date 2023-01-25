@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -110,7 +110,7 @@ namespace QuantConnect.Orders.Fees
                     EquityFee equityFee;
                     if (!_equityFee.TryGetValue(market, out equityFee))
                     {
-                        throw new KeyNotFoundException($"AlphaStreamsFeeModel(): unexpected equity Market {market}");
+                        throw new KeyNotFoundException(Messages.AlphaStreamsFeeModel.UnexpectedEquityMarket(market));
                     }
                     var tradeValue = Math.Abs(order.GetValue(security));
 
@@ -133,7 +133,7 @@ namespace QuantConnect.Orders.Fees
 
                 default:
                     // unsupported security type
-                    throw new ArgumentException(Invariant($"Unsupported security type: {security.Type}"));
+                    throw new ArgumentException(Messages.FeeModel.UnsupportedSecurityType(security));
             }
         }
 

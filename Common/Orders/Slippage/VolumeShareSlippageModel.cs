@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -63,9 +63,7 @@ namespace QuantConnect.Orders.Slippage
                         : ((QuoteBar)lastData).LastAskSize;
                     break;
                 default:
-                    throw new InvalidOperationException(
-                        $"VolumeShareSlippageModel.GetSlippageApproximation: Cannot use this model with market data type {lastData.GetType()}"
-                    );
+                    throw new InvalidOperationException(Messages.VolumeShareSlippageModel.InvalidMarketDataType(lastData));
             }
 
             // If volume is zero or negative, we use the maximum slippage percentage since the impact of any quantity is infinite
@@ -75,15 +73,11 @@ namespace QuantConnect.Orders.Slippage
                 var securityType = asset.Symbol.ID.SecurityType;
                 if (securityType == SecurityType.Cfd || securityType == SecurityType.Forex || securityType == SecurityType.Crypto)
                 {
-                    Log.Error(Invariant($"VolumeShareSlippageModel.GetSlippageApproximation: {securityType} security type often ") +
-                        "does not report volume. If you intend to model slippage beyond the spread, please consider another model."
-                    );
+                    Log.Error(Messages.VolumeShareSlippageModel.VolumeNotReportedForMarketDataType(securityType));
                     return 0;
                 }
 
-                Log.Error("VolumeShareSlippageModel.GetSlippageApproximation: Bar volume cannot be zero or negative. " +
-                    Invariant($"Volume: {barVolume}. Using maximum slippage percentage of {slippagePercent}")
-                );
+                Log.Error(Messages.VolumeShareSlippageModel.NegativeOrZeroBarVolume(barVolume, slippagePercent));
             }
             else
             {

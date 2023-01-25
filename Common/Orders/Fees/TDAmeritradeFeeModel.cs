@@ -42,7 +42,7 @@ namespace QuantConnect.Orders.Fees
                     return new OrderFee(new CashAmount(0.65m * order.AbsoluteQuantity, Currencies.USD));
             };
 
-            throw new System.ArgumentException($"TDAmeritradeFeeModel doesn't return correct fee model for SecurityType = {nameof(symbolSecurityType)}");
+            throw new System.ArgumentException(Messages.TDAmeritradeFeeModel.UnsupportedSecurityType(symbolSecurityType));
         }
     }
 }
