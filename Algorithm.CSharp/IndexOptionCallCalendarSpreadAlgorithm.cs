@@ -16,6 +16,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Orders;
 
@@ -23,41 +24,37 @@ namespace QuantConnect.Algorithm.CSharp
 {
     public class IndexOptionCallCalendarSpreadAlgorithm : QCAlgorithm
     {
-        private Symbol _option;
+        private Symbol _option, _vxz, _spy;
+        private decimal _multiplier;
         private DateTime _firstExpiry = DateTime.MaxValue;
 
         public override void Initialize()
         {
-            SetStartDate(2020, 1, 1);
+            SetStartDate(2019, 1, 1);
             SetEndDate(2023, 1, 1);
             SetCash(50000);
+            SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage, AccountType.Margin);
 
-            AddEquity("VXZ", Resolution.Minute);
+            _vxz = AddEquity("VXZ", Resolution.Minute).Symbol;
+            _spy = AddEquity("SPY", Resolution.Minute).Symbol;
 
             var index = AddIndex("VIX", Resolution.Minute).Symbol;
             var option = AddIndexOption(index, "VIXW", Resolution.Minute);
             option.SetFilter((x) => x.Strikes(-2, 2).Expiration(15, 45));
+
             _option = option.Symbol;
+            _multiplier = option.SymbolProperties.ContractMultiplier;
         }
 
         public override void OnData(Slice slice)
         {
-            if (!Portfolio["VXZ"].Invested)
-            {
-                MarketOrder("VXZ", 100);
-            }
-            
-            var indexOptionsInvested = Portfolio.Values.Where(x => x.Type == SecurityType.IndexOption && x.Invested);
             // Liquidate if the shorter term option is about to expire
             if (_firstExpiry < Time.AddDays(2))
             {
-                foreach (var holding in indexOptionsInvested)
-                {
-                    Liquidate(holding.Symbol);
-                }
+                Liquidate();
             }
             // Return if there is any opening index option position
-            else if (indexOptionsInvested.Count() > 0)
+            else if (Portfolio.Values.Where(x => x.Type == SecurityType.IndexOption && x.Invested).Count() > 0)
             {
                 return;
             }
@@ -79,9 +76,22 @@ namespace QuantConnect.Algorithm.CSharp
             var legs = new List<Leg>
             {
                 Leg.Create(calls[0].Symbol, -1),
-                Leg.Create(calls[^1].Symbol, 1)
+                Leg.Create(calls[^1].Symbol, 1),
+                Leg.Create(_vxz, -100),
+                Leg.Create(_spy, -10)
             };
-            ComboMarketOrder(legs, -1, asynchronous: true);
+            var qty = Portfolio.TotalPortfolioValue / legs.Sum(x => {
+                var q = Math.Abs(Securities[x.Symbol].Price * x.Quantity);
+                if (x.Symbol.ID.SecurityType == SecurityType.IndexOption) 
+                {
+                    return q * _multiplier;
+                }
+                else 
+                {
+                    return q;
+                }
+            });
+            ComboMarketOrder(legs, -(int)Math.Floor(qty), asynchronous: true);
         }
     }
 }

@@ -16,31 +16,27 @@ from AlgorithmImports import *
 class IndexOptionCallCalendarSpreadAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        self.SetStartDate(2020, 1, 1)
+        self.SetStartDate(2019, 1, 1)
         self.SetEndDate(2023, 1, 1)
         self.SetCash(50000)
 
-        self.AddEquity("VXZ", Resolution.Minute)
+        self.vxz = self.AddEquity("VXZ", Resolution.Minute).Symbol
+        self.spy = self.AddEquity("SPY", Resolution.Minute).Symbol
 
         index = self.AddIndex("VIX", Resolution.Minute).Symbol
         option = self.AddIndexOption(index, "VIXW", Resolution.Minute)
         option.SetFilter(lambda x: x.Strikes(-2, 2).Expiration(15, 45))
+        
         self.symbol = option.Symbol
-
+        self.multiplier = option.SymbolProperties.ContractMultiplier
         self.expiry = datetime.max
 
     def OnData(self, slice: Slice) -> None:
-        if not self.Portfolio["VXZ"].Invested:
-            self.MarketOrder("VXZ", 100)
-        
-        index_options_invested = [x for x in self.Portfolio.Values
-                                  if x.Type == SecurityType.IndexOption and x.Invested]
         # Liquidate if the shorter term option is about to expire
         if self.expiry < self.Time + timedelta(2):
-            for holding in index_options_invested:
-                self.Liquidate(holding.Symbol)
+            self.Liquidate()
         # Return if there is any opening index option position
-        elif index_options_invested:
+        elif [x for x in self.Portfolio.Values if x.Type == SecurityType.IndexOption and x.Invested]:
             return
 
         # Get the OptionChain
@@ -59,6 +55,12 @@ class IndexOptionCallCalendarSpreadAlgorithm(QCAlgorithm):
         # Create combo order legs
         legs = [
             Leg.Create(calls[0].Symbol, -1),
-            Leg.Create(calls[-1].Symbol, 1)
+            Leg.Create(calls[-1].Symbol, 1),
+            Leg.Create(self.vxz, -100),
+            Leg.Create(self.spy, -10)
         ]
-        self.ComboMarketOrder(legs, -1, asynchronous=True)
+        qty = self.Portfolio.TotalPortfolioValue // \
+            sum([abs(self.Securities[x.Symbol].Price * x.Quantity) * self.multiplier if x.Symbol.ID.SecurityType == SecurityType.IndexOption
+                 else abs(self.Securities[x.Symbol].Price * x.Quantity)
+                 for x in legs])
+        self.ComboMarketOrder(legs, -qty, asynchronous=True)
