@@ -310,6 +310,7 @@
     "live-samco": {
       "live-mode": true,
 
+      "live-optionchainprovider": "QuantConnect.Brokerages.Samco.SamcoLiveOptionChainProvider",
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "SamcoBrokerage",
       "data-queue-handler": [ "SamcoBrokerage" ],

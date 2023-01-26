@@ -79,7 +79,7 @@ namespace QuantConnect.Lean.Engine.Setup
         // saves ref to algo so we can call quit if runtime error encountered
         private IBrokerageFactory _factory;
         private IBrokerage _dataQueueHandlerBrokerage;
-
+        IOptionChainProvider optionChainProvider;
         /// <summary>
         /// Initializes a new BrokerageSetupHandler
         /// </summary>
@@ -248,9 +248,10 @@ namespace QuantConnect.Lean.Engine.Setup
 
                         //Set the source impl for the event scheduling
                         algorithm.Schedule.SetEventSchedule(parameters.RealTimeHandler);
-
-                        var optionChainProvider = Composer.Instance.GetPart<IOptionChainProvider>();
-                        if (optionChainProvider == null)
+                        
+                        optionChainProvider = Composer.Instance.GetPart<IOptionChainProvider>();
+                         if (optionChainProvider == null) optionChainProvider = Composer.Instance.GetExportedValueByTypeName<IOptionChainProvider>(Config.Get("live-optionchainprovider"));
+			if (optionChainProvider == null)
                         {
                             optionChainProvider = new CachingOptionChainProvider(new LiveOptionChainProvider(parameters.DataCacheProvider, parameters.MapFileProvider));
                         }
