@@ -15,7 +15,6 @@
 
 using System;
 using QuantConnect.Interfaces;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Orders
 {

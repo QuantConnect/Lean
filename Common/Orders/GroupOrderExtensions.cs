@@ -18,7 +18,6 @@ using System.Linq;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 using System.Collections.Generic;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Orders
 {

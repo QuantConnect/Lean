@@ -21,8 +21,14 @@ using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
 {
+    /// <summary>
+    /// Provides user-facing message construction methods and static messages for the <see cref="Orders.Fees"/> namespace
+    /// </summary>
     public static partial class Messages
     {
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Orders.Fees.FeeModel"/> class and its consumers or related classes
+        /// </summary>
         public static class FeeModel
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -32,6 +38,9 @@ namespace QuantConnect
             }
         }
 
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Orders.Fees.AlphaStreamsFeeModel"/> class and its consumers or related classes
+        /// </summary>
         public static class AlphaStreamsFeeModel
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -41,6 +50,9 @@ namespace QuantConnect
             }
         }
 
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Orders.Fees.ExanteFeeModel"/> class and its consumers or related classes
+        /// </summary>
         public static class ExanteFeeModel
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -50,6 +62,9 @@ namespace QuantConnect
             }
         }
 
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Orders.Fees.InteractiveBrokersFeeModel"/> class and its consumers or related classes
+        /// </summary>
         public static class InteractiveBrokersFeeModel
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -83,6 +98,9 @@ namespace QuantConnect
             }
         }
 
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Orders.Fees.TDAmeritradeFeeModel"/> class and its consumers or related classes
+        /// </summary>
         public static class TDAmeritradeFeeModel
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

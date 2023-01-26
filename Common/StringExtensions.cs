@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -126,17 +126,6 @@ namespace QuantConnect
         public static string Invariant(FormattableString formattable)
         {
             return FormattableString.Invariant(formattable);
-        }
-
-        /// <summary>
-        /// Non-extension method alias for <see cref="String.Format"/>
-        /// This supports the <code>using static QuantConnect.StringExtensions</code> syntax
-        /// and is aimed at ensuring all formatting is piped through this class instead of
-        /// alternatively piping through directly to <see cref="String.Format"/>
-        /// </summary>
-        public static string Invariant(string stringFormat, params object[] args)
-        {
-            return string.Format(CultureInfo, stringFormat, args);
         }
 
         /// <summary>

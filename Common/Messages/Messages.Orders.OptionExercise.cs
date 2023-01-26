@@ -19,8 +19,14 @@ using QuantConnect.Securities.Option;
 
 namespace QuantConnect
 {
+    /// <summary>
+    /// Provides user-facing message construction methods and static messages for the <see cref="Orders.OptionExercise"/> namespace
+    /// </summary>
     public static partial class Messages
     {
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Orders.OptionExercise.DefaultExerciseModel"/> class and its consumers or related classes
+        /// </summary>
         public static class DefaultExerciseModel
         {
             public static string OptionAssignment = "Option Assignment";

@@ -17,7 +17,6 @@ using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 using System;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Orders.Slippage
 {

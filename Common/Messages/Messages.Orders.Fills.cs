@@ -15,11 +15,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
-using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fills;
@@ -29,8 +27,14 @@ using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
 {
+    /// <summary>
+    /// Provides user-facing message construction methods and static messages for the <see cref="Orders.Fills"/> namespace
+    /// </summary>
     public static partial class Messages
     {
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Orders.Fills.FillModel"/> class and its consumers or related classes
+        /// </summary>
         public static class FillModel
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -50,7 +54,7 @@ namespace QuantConnect
             {
                 return subscribedTypes == null
                     ? string.Empty
-                    : Invariant($" SubscribedTypes: [{{string.Join(\",\", subscribedTypes.Select(type => type.Name))}}]");
+                    : Invariant($" SubscribedTypes: [{string.Join(",", subscribedTypes.Select(type => type.Name))}]");
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -74,6 +78,9 @@ namespace QuantConnect
             }
         }
 
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Orders.Fills.EquityFillModel"/> class and its consumers or related classes
+        /// </summary>
         public static class EquityFillModel
         {
             public static string MarketOnOpenFillNoOfficialOpenOrOpeningPrintsWithinOneMinute =
@@ -94,31 +101,36 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string FilledWithQuoteData(Security security)
             {
-                return Invariant($"Warning: No trade information available at {security.LocalTime.ToStringInvariant()} {security.Exchange.TimeZone}, order filled using Quote data");
+                return Invariant($@"Warning: No trade information available at {security.LocalTime.ToStringInvariant()} {
+                    security.Exchange.TimeZone}, order filled using Quote data");
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string FilledWithQuoteTickData(Security security, Tick quoteTick)
             {
-                return Invariant($"Warning: fill at stale price ({quoteTick.EndTime.ToStringInvariant()} {security.Exchange.TimeZone}), using Quote Tick data.");
+                return Invariant($@"Warning: fill at stale price ({quoteTick.EndTime.ToStringInvariant()} {
+                    security.Exchange.TimeZone}), using Quote Tick data.");
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string FilledWithTradeTickData(Security security, Tick tradeTick)
             {
-                return Invariant($"Warning: No quote information available at {tradeTick.EndTime.ToStringInvariant()} {security.Exchange.TimeZone}, order filled using Trade Tick data");
+                return Invariant($@"Warning: No quote information available at {tradeTick.EndTime.ToStringInvariant()} {
+                    security.Exchange.TimeZone}, order filled using Trade Tick data");
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string FilledWithQuoteBarData(Security security, QuoteBar quoteBar)
             {
-                return Invariant($"Warning: fill at stale price ({quoteBar.EndTime.ToStringInvariant()} {security.Exchange.TimeZone}), using QuoteBar data.");
+                return Invariant($@"Warning: fill at stale price ({quoteBar.EndTime.ToStringInvariant()} {
+                    security.Exchange.TimeZone}), using QuoteBar data.");
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string FilledWithTradeBarData(Security security, TradeBar tradeBar)
             {
-                return Invariant($"Warning: No quote information available at {tradeBar.EndTime.ToStringInvariant()} {security.Exchange.TimeZone}, order filled using TradeBar data");
+                return Invariant($@"Warning: No quote information available at {tradeBar.EndTime.ToStringInvariant()} {
+                    security.Exchange.TimeZone}, order filled using TradeBar data");
             }
         }
     }

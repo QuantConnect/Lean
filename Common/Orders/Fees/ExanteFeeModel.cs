@@ -15,7 +15,6 @@
 
 using System;
 using QuantConnect.Securities;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Orders.Fees
 {

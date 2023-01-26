@@ -20,7 +20,6 @@ using ProtoBuf;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Serialization;
 using QuantConnect.Securities;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Orders
 {

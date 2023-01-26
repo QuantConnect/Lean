@@ -24,17 +24,27 @@ using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
 {
+    /// <summary>
+    /// Provides user-facing message construction methods and static messages for the <see cref="Orders"/> namespace
+    /// </summary>
     public static partial class Messages
     {
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Orders.CancelOrderRequest"/> class and its consumers or related classes
+        /// </summary>
         public static class CancelOrderRequest
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Orders.CancelOrderRequest request)
             {
-                return Invariant($"{request.Time.ToStringInvariant()} UTC: Cancel Order: ({request.Tag}) - {request.OrderId} Status: {request.Status}");
+                return Invariant($@"{request.Time.ToStringInvariant()} UTC: Cancel Order: ({request.OrderId}) - {
+                    request.Tag} Status: {request.Status}");
             }
         }
 
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Orders.GroupOrderExtensions"/> class and its consumers or related classes
+        /// </summary>
         public static class GroupOrderExtensions
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -43,11 +53,14 @@ namespace QuantConnect
             {
                 var ids = string.Join(",", securities.Keys.Select(o => o.Id));
                 var values = string.Join(",", securities.Select(o => o.Key.GetValue(o.Value).SmartRounding()));
-                return $"Order Error: ids: [{ids}], Insufficient buying power to complete orders (Value:[{values}]), " +
-                    $"Reason: {hasSufficientBuyingPowerResult.Reason}.";
+                return $@"Order Error: ids: [{ids}], Insufficient buying power to complete orders (Value:[{values}]), Reason: {
+                    hasSufficientBuyingPowerResult.Reason}.";
             }
         }
 
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Orders.LimitIfTouchedOrder"/> class and its consumers or related classes
+        /// </summary>
         public static class LimitIfTouchedOrder
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -59,10 +72,14 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Orders.LimitIfTouchedOrder order)
             {
-                return Invariant($"{Messages.Order.ToString(order)} at trigger {order.TriggerPrice.SmartRounding()} limit {order.LimitPrice.SmartRounding()}");
+                return Invariant($@"{Messages.Order.ToString(order)} at trigger {order.TriggerPrice.SmartRounding()} limit {
+                    order.LimitPrice.SmartRounding()}");
             }
         }
 
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Orders.LimitOrder"/> class and its consumers or related classes
+        /// </summary>
         public static class LimitOrder
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -78,26 +95,34 @@ namespace QuantConnect
             }
         }
 
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Orders.Order"/> class and its consumers or related classes
+        /// </summary>
         public static class Order
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Orders.Order order)
             {
                 var tag = string.IsNullOrEmpty(order.Tag) ? string.Empty : $": {order.Tag}";
-                return Invariant($"OrderId: {order.Id} (BrokerId: {string.Join(",", order.BrokerId)}) {order.Status} " +
-                    $"{order.Type} order for {order.Quantity} unit{(order.Quantity == 1 ? "" : "s")} of {order.Symbol}{tag}");
+                return Invariant($@"OrderId: {order.Id} (BrokerId: {string.Join(",", order.BrokerId)}) {order.Status} {
+                    order.Type} order for {order.Quantity} unit{(order.Quantity == 1 ? "" : "s")} of {order.Symbol}{tag}");
             }
         }
 
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Orders.OrderEvent"/> class and its consumers or related classes
+        /// </summary>
         public static class OrderEvent
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Orders.OrderEvent orderEvent)
             {
-                var message = Invariant($"Time: {orderEvent.UtcTime} OrderID: {orderEvent.OrderId} EventID: {orderEvent.Id} Symbol: {orderEvent.Symbol.Value} Status: {orderEvent.Status} Quantity: {orderEvent.Quantity}");
+                var message = Invariant($@"Time: {orderEvent.UtcTime} OrderID: {orderEvent.OrderId} EventID: {
+                    orderEvent.Id} Symbol: {orderEvent.Symbol.Value} Status: {orderEvent.Status} Quantity: {orderEvent.Quantity}");
                 if (orderEvent.FillQuantity != 0)
                 {
-                    message += Invariant($" FillQuantity: {orderEvent.FillQuantity} FillPrice: {orderEvent.FillPrice.SmartRounding()} {orderEvent.FillPriceCurrency}");
+                    message += Invariant($@" FillQuantity: {orderEvent.FillQuantity} FillPrice: {
+                        orderEvent.FillPrice.SmartRounding()} {orderEvent.FillPriceCurrency}");
                 }
 
                 if (orderEvent.LimitPrice.HasValue)
@@ -180,15 +205,21 @@ namespace QuantConnect
             }
         }
 
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Orders.OrderRequest"/> class and its consumers or related classes
+        /// </summary>
         public static class OrderRequest
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Orders.OrderRequest request)
             {
-                return Invariant($"{request.Time} UTC: Order: ({request.OrderId.ToStringInvariant()}) - {request.Tag} Status: {request.Status}");
+                return Invariant($"{request.Time} UTC: Order: ({request.OrderId}) - {request.Tag} Status: {request.Status}");
             }
         }
 
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Orders.OrderResponse"/> class and its consumers or related classes
+        /// </summary>
         public static class OrderResponse
         {
             public static string DefaultErrorMessage = "An unexpected error occurred.";
@@ -220,8 +251,8 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string InvalidNewStatus(Orders.OrderRequest request, Orders.Order order)
             {
-                return Invariant($"Unable to update or cancel order with id {request.OrderId} and status {order.Status} " +
-                    $"because the submit confirmation has not been received yet.");
+                return Invariant($@"Unable to update or cancel order with id {
+                    request.OrderId} and status {order.Status} because the submit confirmation has not been received yet.");
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -245,11 +276,14 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string WarmingUp(Orders.OrderRequest request)
             {
-                return Invariant($"This operation is not allowed in Initialize or during warm up: OrderRequest.{request.OrderRequestType}. ") +
-                    "Please move this code to the OnWarmupFinished() method.";
+                return Invariant($@"This operation is not allowed in Initialize or during warm up: OrderRequest.{
+                    request.OrderRequestType}. Please move this code to the OnWarmupFinished() method.");
             }
         }
 
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Orders.OrderTicket"/> class and its consumers or related classes
+        /// </summary>
         public static class OrderTicket
         {
             public static string NullCancelRequest = "CancelRequest is null.";
@@ -279,6 +313,9 @@ namespace QuantConnect
             }
         }
 
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Orders.StopLimitOrder"/> class and its consumers or related classes
+        /// </summary>
         public static class StopLimitOrder
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -290,10 +327,14 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Orders.StopLimitOrder order)
             {
-                return Invariant($"{Messages.Order.ToString(order)} at stop {order.StopPrice.SmartRounding()} limit {order.LimitPrice.SmartRounding()}");
+                return Invariant($@"{Messages.Order.ToString(order)} at stop {order.StopPrice.SmartRounding()} limit {
+                    order.LimitPrice.SmartRounding()}");
             }
         }
 
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Orders.StopMarketOrder"/> class and its consumers or related classes
+        /// </summary>
         public static class StopMarketOrder
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -309,6 +350,9 @@ namespace QuantConnect
             }
         }
 
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Orders.SubmitOrderRequest"/> class and its consumers or related classes
+        /// </summary>
         public static class SubmitOrderRequest
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -320,6 +364,9 @@ namespace QuantConnect
             }
         }
 
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Orders.UpdateOrderRequest"/> class and its consumers or related classes
+        /// </summary>
         public static class UpdateOrderRequest
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -343,7 +390,8 @@ namespace QuantConnect
                     updates.Add(Invariant($"TriggerPrice: {request.TriggerPrice.Value.SmartRounding()}"));
                 }
 
-                return Invariant($"{request.Time} UTC: Update Order: ({request.OrderId}) - {string.Join(", ", updates)} {request.Tag} Status: {request.Status}");
+                return Invariant($@"{request.Time} UTC: Update Order: ({request.OrderId}) - {string.Join(", ", updates)} {
+                    request.Tag} Status: {request.Status}");
             }
         }
     }

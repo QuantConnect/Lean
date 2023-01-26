@@ -14,7 +14,6 @@
 */
 
 using System;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Orders
 {

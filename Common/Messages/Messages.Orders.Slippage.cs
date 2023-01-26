@@ -21,8 +21,14 @@ using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
 {
+    /// <summary>
+    /// Provides user-facing message construction methods and static messages for the <see cref="Orders.Slippage"/> namespace
+    /// </summary>
     public static partial class Messages
     {
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Orders.Slippage.VolumeShareSlippageModel"/> class and its consumers or related classes
+        /// </summary>
         public static class VolumeShareSlippageModel
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -41,8 +47,8 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string NegativeOrZeroBarVolume(decimal barVolume, decimal slippagePercent)
             {
-                return "VolumeShareSlippageModel.GetSlippageApproximation: Bar volume cannot be zero or negative. " +
-                    Invariant($"Volume: {barVolume}. Using maximum slippage percentage of {slippagePercent}");
+                return Invariant($@"VolumeShareSlippageModel.GetSlippageApproximation: Bar volume cannot be zero or negative. Volume: {
+                    barVolume}. Using maximum slippage percentage of {slippagePercent}");
             }
         }
     }
