@@ -19,6 +19,7 @@ class IndexOptionCallCalendarSpreadAlgorithm(QCAlgorithm):
         self.SetStartDate(2019, 1, 1)
         self.SetEndDate(2023, 1, 1)
         self.SetCash(50000)
+        self.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage, AccountType.Margin)
 
         self.vxz = self.AddEquity("VXZ", Resolution.Minute).Symbol
         self.spy = self.AddEquity("SPY", Resolution.Minute).Symbol
