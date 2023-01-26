@@ -6,10 +6,10 @@
   // two predefined environments, 'backtesting' and 'live', feel free
   // to add more!
 
-  "environment": "backtesting", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
+  "environment": "live-samco", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
 
   // algorithm class selector
-  "algorithm-type-name": "BasicTemplateFrameworkAlgorithm",
+  "algorithm-type-name": "SamcoBasicTemplateOptionsAlgorithm",
 
   // Algorithm language selector - options CSharp, Python
   "algorithm-language": "CSharp",
@@ -23,6 +23,9 @@
 
   // engine
   "data-folder": "../../../Data/",
+
+  //composer parameter
+  "plugin-directory": "./",
 
   // debugging configuration - options for debugging-method LocalCmdLine, VisualStudio, Debugpy, PyCharm
   "debugging": false,
@@ -309,7 +312,6 @@
     // defines 'live-samco' environment
     "live-samco": {
       "live-mode": true,
-
       "live-optionchainprovider": "QuantConnect.Brokerages.Samco.SamcoLiveOptionChainProvider",
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "SamcoBrokerage",

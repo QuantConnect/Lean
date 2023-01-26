@@ -34,25 +34,51 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="filter selection"/>
     public class SamcoBasicTemplateOptionsAlgorithm : QCAlgorithm
     {
+        private bool subscribed = false;
         private const string UnderlyingTicker = "NIFTY";
-        public Symbol OptionSymbol;
-
+        public Symbol IndexSymbol;
+        public Securities.Option.Option canonicalOption; 
+        public IEnumerable<Symbol> filteredOptions;
+        private HashSet<Symbol> _subscribedOptoinsContract= new();
         public override void Initialize()
         {
             SetTimeZone(TimeZones.Kolkata);
             SetBrokerageModel(BrokerageName.Samco, AccountType.Margin);
             SetAccountCurrency(Currencies.INR);
 
-            var equity = AddEquity(UnderlyingTicker, market: Market.India);
-            var option = AddOption(equity.Symbol, market: Market.India);
-            OptionSymbol = option.Symbol;
-
+            var index = AddIndex(UnderlyingTicker,resolution:Resolution.Minute, market: Market.India);
+            var option = AddIndexOption(index.Symbol, resolution: Resolution.Minute, market: Market.India);
+            //OptionSymbol = option.Symbol;
+            IndexSymbol = index.Symbol;
+            //addOptions();
+            
             // set our strike/expiry filter for this option chain
-            option.SetFilter(u => u.Strikes(-2, +2)
-                                   // Expiration method accepts TimeSpan objects or integer for
-                                   // days. The following statements yield the same filtering criteria
-                                   .Expiration(0, 180));
-            // .Expiration(TimeSpan.Zero, TimeSpan.FromDays(180)));
+            /*option.SetFilter(u => u.Strikes(-2, +2)
+                                                    //.Expiration(0, 180));
+                                                    .Expiration(TimeSpan.Zero, TimeSpan.FromDays(180)));
+            */
+        }
+        private void addOptions()
+        {
+            var contracts = OptionChainProvider.GetOptionContractList(IndexSymbol, Time);
+            filteredOptions = (from symbol in contracts
+                                   where ((symbol.ID.Date - Time).TotalDays < 6)
+                                   select symbol);
+            foreach (var contract in filteredOptions)
+            {
+                canonicalOption = AddIndexOptionContract(contract, Resolution.Minute);
+                _subscribedOptoinsContract.Add(contract);
+            }
+        }
+        private void removeOptions()
+        {
+            foreach(var contract in _subscribedOptoinsContract)
+            {
+                RemoveOptionContract(contract);
+                
+            }
+            _subscribedOptoinsContract.Clear();
+            subscribed = false;
         }
 
         /// <summary>
@@ -62,26 +88,39 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">The current slice of data keyed by symbol string</param>
         public override void OnData(Slice slice)
         {
-            if (!Portfolio.Invested && IsMarketOpen(OptionSymbol))
+            /*
+            if (!subscribed) { addOptions(); //subscribed = true;
+                                             }
+            
+            if (slice.ContainsKey(IndexSymbol))
+            {
+                var myData = slice.Bars[IndexSymbol];
+                Log($"Nifty bar : {myData}");
+            }
+            
+            if (!Portfolio.Invested )
             {
                 OptionChain chain;
-                if (slice.OptionChains.TryGetValue(OptionSymbol, out chain))
+                if (slice.OptionChains.TryGetValue(canonicalOption.Symbol, out chain))
                 {
                     // we find at the money (ATM) put contract with farthest expiration
-                    var atmContract = chain
-                        .OrderByDescending(x => x.Expiry)
-                        .ThenBy(x => Math.Abs(chain.Underlying.Price - x.Strike))
-                        .ThenByDescending(x => x.Right)
+                    var atmContract = filteredOptions
+                        .OrderByDescending(x => x.ID.Date)
+                        .ThenBy(x => Math.Abs(chain.Underlying.Price - x.ID.StrikePrice))
+                        .ThenByDescending(x => x.ID.OptionRight)
                         .FirstOrDefault();
 
                     if (atmContract != null)
                     {
                         // if found, trade it
-                        MarketOrder(atmContract.Symbol, 1);
-                        MarketOnCloseOrder(atmContract.Symbol, -1);
+                        //MarketOrder(atmContract.Symbol, 1);
+                        //MarketOnCloseOrder(atmContract.Symbol, -1);
+                        var myData = slice.Bars[atmContract];
+                        Log($"Nifty atm contract {atmContract.ID.Underlying.ToString()} {atmContract.ID.StrikePrice} {atmContract.ID.Date} {atmContract.ID.OptionRight} bar : {myData}");
                     }
                 }
             }
+            */
         }
 
         /// <summary>

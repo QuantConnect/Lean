@@ -63,7 +63,8 @@ namespace QuantConnect.Brokerages
             // validate security type
             if (security.Type != SecurityType.Equity &&
                 security.Type != SecurityType.Option &&
-                security.Type != SecurityType.Future)
+                security.Type != SecurityType.Future &&
+                security.Type != SecurityType.IndexOption)
             {
                 return false;
             }
@@ -98,7 +99,8 @@ namespace QuantConnect.Brokerages
             // validate security type
             if (security.Type != SecurityType.Equity &&
                 security.Type != SecurityType.Option &&
-                security.Type != SecurityType.Future)
+                security.Type != SecurityType.Future &&
+                security.Type != SecurityType.IndexOption)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Invariant($"The {nameof(SamcoBrokerageModel)} does not support {security.Type} security type.")
@@ -153,7 +155,7 @@ namespace QuantConnect.Brokerages
                 return 1m;
             }
 
-            if (security.Type == SecurityType.Equity || security.Type == SecurityType.Future || security.Type == SecurityType.Option || security.Type == SecurityType.Index)
+            if (security.Type == SecurityType.Equity || security.Type == SecurityType.Future || security.Type == SecurityType.Option || security.Type == SecurityType.Index|| security.Type == SecurityType.IndexOption)
             {
                 return _maxLeverage;
             }
@@ -188,6 +190,7 @@ namespace QuantConnect.Brokerages
             map[SecurityType.Equity] = Market.India;
             map[SecurityType.Future] = Market.India;
             map[SecurityType.Option] = Market.India;
+            map[SecurityType.IndexOption] = Market.India;
             return map.ToReadOnlyDictionary();
         }
     }

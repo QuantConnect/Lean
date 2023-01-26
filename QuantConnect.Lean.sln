@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30717.126
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33205.214
 MinimumVisualStudioVersion = 15.0.0.0
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Lean.Launcher", "Launcher\QuantConnect.Lean.Launcher.csproj", "{09E7B916-E58B-4021-BD8B-C10B4446E226}"
 EndProject
@@ -57,6 +57,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Optimizer", "Optimizer\QuantConnect.Optimizer.csproj", "{4ECD7DF3-A675-4E9E-ACA3-2B51C88736CE}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Optimizer.Launcher", "Optimizer.Launcher\QuantConnect.Optimizer.Launcher.csproj", "{D46D2A8D-340C-4B40-8EE6-6BAA7B1198AB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.SamcoBrokerage", "..\Lean.Brokerages.Samco-2\QuantConnect.SamcoBrokerage\QuantConnect.SamcoBrokerage.csproj", "{5108F635-238A-4DE9-B742-1AD852936734}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -154,6 +156,10 @@ Global
 		{D46D2A8D-340C-4B40-8EE6-6BAA7B1198AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D46D2A8D-340C-4B40-8EE6-6BAA7B1198AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D46D2A8D-340C-4B40-8EE6-6BAA7B1198AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5108F635-238A-4DE9-B742-1AD852936734}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5108F635-238A-4DE9-B742-1AD852936734}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5108F635-238A-4DE9-B742-1AD852936734}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5108F635-238A-4DE9-B742-1AD852936734}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
