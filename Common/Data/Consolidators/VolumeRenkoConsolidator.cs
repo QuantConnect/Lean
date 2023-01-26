@@ -67,20 +67,22 @@ namespace QuantConnect.Data.Consolidators
 
             if (dataType == typeof(TradeBar))
             {
-                volume = ((TradeBar)data).Volume;
-                open = ((TradeBar)data).Open;
-                high = ((TradeBar)data).High;
-                low = ((TradeBar)data).Low;
+                var tradeBar = (TradeBar)data;
+                volume = tradeBar.Volume;
+                open = tradeBar.Open;
+                high = tradeBar.High;
+                low = tradeBar.Low;
             }
             else if (dataType == typeof(Tick))
             {
+                var tick = (Tick)data;
                 // Only include actual trade information
-                if (((Tick)data).TickType != TickType.Trade)
+                if (tick.TickType != TickType.Trade)
                 {
                     return;
                 }
 
-                volume = ((Tick)data).Quantity;
+                volume = tick.Quantity;
                 open = close;
                 high = close;
                 low = close;

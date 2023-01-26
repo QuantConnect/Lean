@@ -42,7 +42,7 @@ namespace QuantConnect.Tests.Common.Data
                 bar = consolidated;
             };
 
-            var reference = DateTime.Today;
+            var reference = new DateTime(2013, 10, 1);
             consolidator.Update(new Tick(reference, Symbol.Empty, String.Empty, String.Empty, 2m, 1m));
             Assert.IsNull(bar);
 
@@ -77,7 +77,7 @@ namespace QuantConnect.Tests.Common.Data
                 bar = consolidated;
             };
 
-            var reference = DateTime.Today;
+            var reference = new DateTime(2013, 10, 1);
             consolidator.Update(new TradeBar(reference, Symbol.Empty, 1m, 2m, 0.5m, 1.5m, 2m, new TimeSpan(1, 0, 0)));
             Assert.IsNull(bar);
 
@@ -107,7 +107,7 @@ namespace QuantConnect.Tests.Common.Data
         {
             var consolidator = new VolumeRenkoConsolidator(10);
 
-            var reference = DateTime.Today;
+            var reference = new DateTime(2013, 10, 1);
             Assert.Throws<ArgumentException>(() => 
                 consolidator.Update(new QuoteBar(reference, Symbol.Empty, new Bar(1m, 1m, 1m, 1m), 1m, new Bar(1m, 1m, 1m, 1m), 1m, TimeSpan.MinValue)));
         }
@@ -171,7 +171,7 @@ namespace QuantConnect.Tests.Common.Data
                 bar = consolidated;
             };
 
-            var reference = DateTime.Today;
+            var reference = new DateTime(2013, 10, 1);
             consolidator.Update(new Tick(reference, Symbol.Empty, String.Empty, String.Empty, 2m, 1m));
             Assert.IsNull(bar);
 
