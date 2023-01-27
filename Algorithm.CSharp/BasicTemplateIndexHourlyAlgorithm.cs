@@ -8,7 +8,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class BasicTemplateIndexHourlyAlgorithm : BasicTemplateIndexDailyAlgorithm
     {
         protected override Resolution Resolution => Resolution.Hour;
-        protected override int ExpectedBarCount => base.ExpectedBarCount * 8;
+        protected override int ExpectedBarCount => base.ExpectedBarCount * 7;
 
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
@@ -23,7 +23,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 408;
+        public override long DataPoints => 397;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -38,30 +38,30 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "70"},
             {"Average Win", "0%"},
             {"Average Loss", "-0.23%"},
-            {"Compounding Annual Return", "-34.441%"},
+            {"Compounding Annual Return", "-34.409%"},
             {"Drawdown", "2.000%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "-2.028%"},
-            {"Sharpe Ratio", "-11.139"},
+            {"Net Profit", "-2.021%"},
+            {"Sharpe Ratio", "-11.085"},
             {"Probabilistic Sharpe Ratio", "0.000%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.269"},
+            {"Alpha", "-0.268"},
             {"Beta", "0.086"},
-            {"Annual Standard Deviation", "0.023"},
+            {"Annual Standard Deviation", "0.024"},
             {"Annual Variance", "0.001"},
-            {"Information Ratio", "-3.624"},
+            {"Information Ratio", "-3.615"},
             {"Tracking Error", "0.094"},
-            {"Treynor Ratio", "-3.042"},
+            {"Treynor Ratio", "-3.034"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$310000.00"},
             {"Lowest Capacity Asset", "SPX XL80P3GHDZXQ|SPX 31"},
             {"Fitness Score", "0.002"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-14.51"},
-            {"Return Over Maximum Drawdown", "-17.213"},
+            {"Sortino Ratio", "-14.436"},
+            {"Return Over Maximum Drawdown", "-17.225"},
             {"Portfolio Turnover", "0.299"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -76,7 +76,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "0c74daf716d7782a7e89c7a0ea57856f"}
+            {"OrderListHash", "0d06436d422c515e72e00941c3581b31"}
         };
     }
 }

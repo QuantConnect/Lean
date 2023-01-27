@@ -145,7 +145,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all time slices of algorithm
         /// </summary>
-        public long DataPoints => 2009;
+        public long DataPoints => 1989;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -160,12 +160,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "-4.10%"},
-            {"Compounding Annual Return", "10.046%"},
+            {"Compounding Annual Return", "10.590%"},
             {"Drawdown", "1.900%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "0.676%"},
-            {"Sharpe Ratio", "3.284"},
-            {"Probabilistic Sharpe Ratio", "86.292%"},
+            {"Net Profit", "0.712%"},
+            {"Sharpe Ratio", "3.343"},
+            {"Probabilistic Sharpe Ratio", "87.312%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
@@ -173,7 +173,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0.081"},
             {"Annual Variance", "0.007"},
-            {"Information Ratio", "3.284"},
+            {"Information Ratio", "3.343"},
             {"Tracking Error", "0.081"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$1.00"},
@@ -182,8 +182,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Fitness Score", "0.001"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "0.632"},
-            {"Return Over Maximum Drawdown", "6.244"},
+            {"Sortino Ratio", "0.651"},
+            {"Return Over Maximum Drawdown", "6.583"},
             {"Portfolio Turnover", "0.002"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -198,7 +198,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "d17bee5fb89f2e6cd94ed1fb776c7582"}
+            {"OrderListHash", "b9dfd17bb95246e5d04d9e6c4b959d71"}
         };
     }
 }
