@@ -1253,7 +1253,7 @@ namespace QuantConnect.Algorithm
                 return Consolidate(symbol, period, tickType, handler.ConvertToDelegate<Action<QuoteBar>>());
             }
 
-            return Consolidate(symbol, period, null, handler.ConvertToDelegate<Action<BaseData>>());
+            return Consolidate(symbol, period, tickType, handler.ConvertToDelegate<Action<BaseData>>());
         }
 
         /// <summary>
