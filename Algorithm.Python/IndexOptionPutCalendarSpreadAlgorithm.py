@@ -33,7 +33,7 @@ class IndexOptionPutCalendarSpreadAlgorithm(QCAlgorithm):
         if not self.Portfolio["VXZ"].Invested:
             self.MarketOrder("VXZ", 100)
         
-        index_options_invested = [x for x in self.Portfolio.Values
+        index_options_invested = [x for x in self.Portfolio.Value
                                   if x.Type == SecurityType.IndexOption and x.Invested]
         # Liquidate if the shorter term option is about to expire
         if self.expiry < self.Time + timedelta(2):
