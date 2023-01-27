@@ -25,7 +25,7 @@ class IndexOptionIronCondorAlgorithm(QCAlgorithm):
         index = self.AddIndex("SPX", Resolution.Minute).Symbol
         option = self.AddIndexOption(index, "SPXW", Resolution.Minute)
         option.SetFilter(lambda x: x.WeeklysOnly().Strikes(-5, 5).Expiration(0, 14))
-        self.symbol = option.Symbol
+        self.spxw = option.Symbol
 
         self.bb = self.BB(index, 10, 2, resolution=Resolution.Daily)
         self.WarmUpIndicator(index, self.bb)
@@ -34,7 +34,7 @@ class IndexOptionIronCondorAlgorithm(QCAlgorithm):
         if self.Portfolio.Invested: return
 
         # Get the OptionChain
-        chain = slice.OptionChains.get(self.symbol)
+        chain = slice.OptionChains.get(self.spxw)
         if not chain: return
 
         # Get the closest expiry date

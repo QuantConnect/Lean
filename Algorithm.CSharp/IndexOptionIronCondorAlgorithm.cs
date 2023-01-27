@@ -23,7 +23,7 @@ namespace QuantConnect.Algorithm.CSharp
 {
     public class IndexOptionIronCondorAlgorithm : QCAlgorithm
     {
-        private Symbol _symbol;
+        private Symbol _spxw;
         private BollingerBands _bb;
 
         public override void Initialize()
@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.CSharp
             var index = AddIndex("SPX", Resolution.Minute).Symbol;
             var option = AddIndexOption(index, "SPXW", Resolution.Minute);
             option.SetFilter((x) => x.WeeklysOnly().Strikes(-5, 5).Expiration(0, 14));
-            _symbol = option.Symbol;
+            _spxw = option.Symbol;
 
             _bb = BB(index, 10, 2, resolution: Resolution.Daily);
             WarmUpIndicator(index, _bb);
@@ -46,11 +46,11 @@ namespace QuantConnect.Algorithm.CSharp
             if (Portfolio.Invested) return;
 
             // Get the OptionChain
-            if (!slice.OptionChains.TryGetValue(_symbol, out var chain)) return;
+            if (!slice.OptionChains.TryGetValue(_spxw, out var chain)) return;
 
             // Get the closest expiry date
             var expiry = chain.Min(x => x.Expiry);
-            var contracts = chain.Where(x => x.Expiry == expiry);
+            var contracts = chain.Where(x => x.Expiry == expiry).ToList();
 
             // Separate the call and put contracts and sort by Strike to find OTM contracts
             var calls = contracts.Where(x => x.Right == OptionRight.Call)
@@ -58,7 +58,7 @@ namespace QuantConnect.Algorithm.CSharp
             var puts = contracts.Where(x => x.Right == OptionRight.Put)
                 .OrderBy(x => x.Strike).ToArray();
 
-            if (calls.Length < 3 || puts.Length  < 3) return;
+            if (calls.Length < 3 || puts.Length < 3) return;
 
             // Create combo order legs
             var price = _bb.Price.Current.Value;
@@ -75,7 +75,6 @@ namespace QuantConnect.Algorithm.CSharp
                 Leg.Create(calls[2].Symbol, -quantity),
                 Leg.Create(puts[2].Symbol, -quantity),
             };
-
             ComboMarketOrder(legs, 10, asynchronous: true);
         }
     }
