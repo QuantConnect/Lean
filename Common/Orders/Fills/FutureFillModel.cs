@@ -46,7 +46,7 @@ namespace QuantConnect.Orders.Fills
             // if the order is filled on stale (fill-forward) data, set a warning message on the order event
             if (pricesEndTimeUtc.Add(Parameters.StalePriceTimeSpan) < order.Time)
             {
-                fill.Message = $"Warning: fill at stale price ({prices.EndTime.ToStringInvariant()} {asset.Exchange.TimeZone})";
+                fill.Message = Messages.FillModel.FilledAtStalePrice(asset, prices);
             }
 
             //Order [fill]price for a market order model is the current security price

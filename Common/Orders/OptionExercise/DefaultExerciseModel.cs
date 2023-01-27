@@ -48,7 +48,7 @@ namespace QuantConnect.Orders.OptionExercise
                 0.0m,
                 order.Quantity,
                 OrderFee.Zero,
-                GetContractHoldingsAdjustmentFillTag(inTheMoney, isAssignment, option)
+                Messages.DefaultExerciseModel.ContractHoldingsAdjustmentFillTag(inTheMoney, isAssignment, option)
             )
             {
                 IsAssignment = isAssignment,
@@ -69,17 +69,9 @@ namespace QuantConnect.Orders.OptionExercise
                     option.StrikePrice,
                     exerciseQuantity,
                     OrderFee.Zero,
-                    isAssignment ? "Option Assignment" : "Option Exercise"
+                    isAssignment ? Messages.DefaultExerciseModel.OptionAssignment : Messages.DefaultExerciseModel.OptionExercise
                 ) { IsInTheMoney = true };
             }
-        }
-
-        private static string GetContractHoldingsAdjustmentFillTag(bool inTheMoney, bool isAssignment, Option option)
-        {
-            var action = isAssignment ? "Assignment" : "Exercise";
-            var tag = inTheMoney ? $"Automatic {action}" : "OTM";
-
-            return $"{tag}. Underlying: {option.Underlying.Price}";
         }
     }
 }

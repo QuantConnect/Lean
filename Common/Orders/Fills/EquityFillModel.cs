@@ -442,7 +442,7 @@ namespace QuantConnect.Orders.Fills
                         .GetMarketHours(asset.LocalTime)
                         .GetMarketOpen(TimeSpan.Zero, false);
 
-                    fill.Message = "No trade with the OfficialOpen or OpeningPrints flag within the 1-minute timeout.";
+                    fill.Message = Messages.EquityFillModel.MarketOnOpenFillNoOfficialOpenOrOpeningPrintsWithinOneMinute;
 
                     tick = trades.LastOrDefault() ?? asset.Cache.GetAll<Tick>().LastOrDefault();
                     if ((tick?.EndTime.TimeOfDay - previousOpen)?.TotalMinutes < 1)
@@ -450,7 +450,7 @@ namespace QuantConnect.Orders.Fills
                         return fill;
                     }
 
-                    fill.Message += $" Fill with last {tick.TickType} data.";
+                    fill.Message += " " + Messages.EquityFillModel.FilledWithLastTickTypeData(tick);
                 }
 
                 endTime = tick?.EndTime ?? endTime;
@@ -480,7 +480,7 @@ namespace QuantConnect.Orders.Fills
             }
             else
             {
-                fill.Message = $"Warning: No trade information available at {asset.LocalTime.ToStringInvariant()} {asset.Exchange.TimeZone}, order filled using Quote data";
+                fill.Message = Messages.EquityFillModel.FilledWithQuoteData(asset);
             }
 
             if (localOrderTime >= endTime) return fill;
@@ -581,7 +581,7 @@ namespace QuantConnect.Orders.Fills
                     tick = trades.LastOrDefault() ?? asset.Cache.GetAll<Tick>().LastOrDefault();
                     if (Parameters.ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol).IsExtendedMarketHours())
                     {
-                        fill.Message = "No trade with the OfficialClose or ClosingPrints flag within the 1-minute timeout.";
+                        fill.Message = Messages.EquityFillModel.MarketOnCloseFillNoOfficialCloseOrClosingPrintsWithinOneMinute;
 
                         if ((tick?.EndTime - nextMarketClose)?.TotalMinutes < 1)
                         {
@@ -590,10 +590,10 @@ namespace QuantConnect.Orders.Fills
                     }
                     else
                     {
-                        fill.Message = "No trade with the OfficialClose or ClosingPrints flag for data that does not include extended market hours.";
+                        fill.Message = Messages.EquityFillModel.MarketOnCloseFillNoOfficialCloseOrClosingPrintsWithoutExtendedMarketHours;
                     }
 
-                    fill.Message += $" Fill with last {tick.TickType} data.";
+                    fill.Message += " " + Messages.EquityFillModel.FilledWithLastTickTypeData(tick);
                 }
 
                 if (tick?.TickType == TickType.Trade)
@@ -613,7 +613,7 @@ namespace QuantConnect.Orders.Fills
             }
             else
             {
-                fill.Message = $"Warning: No trade information available at {asset.LocalTime.ToStringInvariant()} {asset.Exchange.TimeZone}, order filled using Quote data";
+                fill.Message = Messages.EquityFillModel.FilledWithQuoteData(asset);
             }
 
             // Calculate the model slippage: e.g. 0.01c
@@ -707,7 +707,7 @@ namespace QuantConnect.Orders.Fills
 
                     baseData = quote;
                     bestEffortAskPrice = quote.AskPrice;
-                    message = $"Warning: fill at stale price ({baseData.EndTime.ToStringInvariant()} {asset.Exchange.TimeZone}), using Quote Tick data.";
+                    message = Messages.EquityFillModel.FilledWithQuoteTickData(asset, quote);
                 }
             }
 
@@ -723,7 +723,7 @@ namespace QuantConnect.Orders.Fills
 
                     baseData = quoteBar;
                     bestEffortAskPrice = quoteBar.Ask?.Close ?? quoteBar.Close;
-                    message = $"Warning: fill at stale price ({baseData.EndTime.ToStringInvariant()} {asset.Exchange.TimeZone}), using QuoteBar data.";
+                    message = Messages.EquityFillModel.FilledWithQuoteBarData(asset, quoteBar);
                 }
             }
 
@@ -732,7 +732,7 @@ namespace QuantConnect.Orders.Fills
                 var trade = ticks.LastOrDefault(x => x.TickType == TickType.Trade && x.Price > 0);
                 if (trade != null && (baseData == null || trade.EndTime > baseData.EndTime))
                 {
-                    message = $"Warning: No quote information available at {trade.EndTime.ToStringInvariant()} {asset.Exchange.TimeZone}, order filled using Trade Tick data";
+                    message = Messages.EquityFillModel.FilledWithTradeTickData(asset, trade);
 
                     if (trade.EndTime >= cutOffTime)
                     {
@@ -749,7 +749,7 @@ namespace QuantConnect.Orders.Fills
                 var tradeBar = asset.Cache.GetData<TradeBar>();
                 if (tradeBar != null && (baseData == null || tradeBar.EndTime > baseData.EndTime))
                 {
-                    message = $"Warning: No quote information available at {tradeBar.EndTime.ToStringInvariant()} {asset.Exchange.TimeZone}, order filled using TradeBar data";
+                    message = Messages.EquityFillModel.FilledWithTradeBarData(asset, tradeBar);
 
                     if (tradeBar.EndTime >= cutOffTime)
                     {
@@ -766,7 +766,7 @@ namespace QuantConnect.Orders.Fills
                 return bestEffortAskPrice;
             }
 
-            throw new InvalidOperationException($"Cannot get ask price to perform fill for {asset.Symbol} because no market data was found. SubscribedTypes: [{string.Join(",", subscribedTypes.Select(type => type.Name))}]");
+            throw new InvalidOperationException(Messages.FillModel.NoMarketDataToGetAskPriceForFilling(asset, subscribedTypes));
         }
 
         /// <summary>
@@ -806,7 +806,7 @@ namespace QuantConnect.Orders.Fills
 
                     baseData = quote;
                     bestEffortBidPrice = quote.BidPrice;
-                    message = $"Warning: fill at stale price ({baseData.EndTime.ToStringInvariant()} {asset.Exchange.TimeZone}), using Quote Tick data.";
+                    message = Messages.EquityFillModel.FilledWithQuoteTickData(asset, quote);
                 }
             }
 
@@ -822,7 +822,7 @@ namespace QuantConnect.Orders.Fills
 
                     baseData = quoteBar;
                     bestEffortBidPrice = quoteBar.Bid?.Close ?? quoteBar.Close;
-                    message = $"Warning: fill at stale price ({baseData.EndTime.ToStringInvariant()} {asset.Exchange.TimeZone}), using QuoteBar data.";
+                    message = Messages.EquityFillModel.FilledWithQuoteBarData(asset, quoteBar);
                 }
             }
 
@@ -831,7 +831,7 @@ namespace QuantConnect.Orders.Fills
                 var trade = ticks.LastOrDefault(x => x.TickType == TickType.Trade && x.Price > 0);
                 if (trade != null && (baseData == null || trade.EndTime > baseData.EndTime))
                 {
-                    message = $"Warning: No quote information available at {trade.EndTime.ToStringInvariant()} {asset.Exchange.TimeZone}, order filled using Trade Tick data";
+                    message = Messages.EquityFillModel.FilledWithTradeTickData(asset, trade);
 
                     if (trade.EndTime >= cutOffTime)
                     {
@@ -848,7 +848,7 @@ namespace QuantConnect.Orders.Fills
                 var tradeBar = asset.Cache.GetData<TradeBar>();
                 if (tradeBar != null && (baseData == null || tradeBar.EndTime > baseData.EndTime))
                 {
-                    message = $"Warning: No quote information available at {tradeBar.EndTime.ToStringInvariant()} {asset.Exchange.TimeZone}, order filled using TradeBar data";
+                    message = Messages.EquityFillModel.FilledWithTradeBarData(asset, tradeBar);
 
                     if (tradeBar.EndTime >= cutOffTime)
                     {
@@ -865,7 +865,7 @@ namespace QuantConnect.Orders.Fills
                 return bestEffortBidPrice;
             }
 
-            throw new InvalidOperationException($"Cannot get bid price to perform fill for {asset.Symbol} because no market data was found. SubscribedTypes: [{string.Join(",", subscribedTypes.Select(type => type.Name))}]");
+            throw new InvalidOperationException(Messages.FillModel.NoMarketDataToGetBidPriceForFilling(asset, subscribedTypes));
         }
 
         /// <summary>

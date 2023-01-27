@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -16,7 +16,6 @@
 using System;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Orders
 {
@@ -74,7 +73,7 @@ namespace QuantConnect.Orders
             if (string.IsNullOrEmpty(tag))
             {
                 //Default tag values to display stop price in GUI.
-                Tag = Invariant($"Stop Price: {stopPrice:C} Limit Price: {limitPrice:C}");
+                Tag = Messages.StopLimitOrder.Tag(this);
             }
         }
 
@@ -125,7 +124,7 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Invariant($"{base.ToString()} at stop {StopPrice.SmartRounding()} limit {LimitPrice.SmartRounding()}");
+            return Messages.StopLimitOrder.ToString(this);
         }
 
         /// <summary>

@@ -15,7 +15,6 @@
 
 using System;
 using QuantConnect.Interfaces;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Orders
 {
@@ -193,9 +192,7 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            // create a proxy order object to steal his to string method
-            var proxy = Order.CreateOrder(this);
-            return Invariant($"{Time} UTC: Submit Order: ({OrderId}) - {proxy} {Tag} Status: {Status}");
+            return Messages.SubmitOrderRequest.ToString(this);
         }
     }
 }

@@ -283,7 +283,7 @@ namespace QuantConnect.Orders.Fills
             // if the order is filled on stale (fill-forward) data, set a warning message on the order event
             if (pricesEndTimeUtc.Add(Parameters.StalePriceTimeSpan) < order.Time)
             {
-                fill.Message = $"Warning: fill at stale price ({prices.EndTime.ToStringInvariant()} {asset.Exchange.TimeZone})";
+                fill.Message = Messages.FillModel.FilledAtStalePrice(asset, prices);
             }
 
             //Order [fill]price for a market order model is the current security price
@@ -632,7 +632,7 @@ namespace QuantConnect.Orders.Fills
         {
             if (asset.Exchange.Hours.IsMarketAlwaysOpen)
             {
-                throw new InvalidOperationException($"Market never closes for this symbol {asset.Symbol}, can no submit a {nameof(OrderType.MarketOnOpen)} order.");
+                throw new InvalidOperationException(Messages.FillModel.MarketNeverCloses(asset, OrderType.MarketOnOpen));
             }
 
             var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
@@ -693,7 +693,7 @@ namespace QuantConnect.Orders.Fills
         {
             if (asset.Exchange.Hours.IsMarketAlwaysOpen)
             {
-                throw new InvalidOperationException($"Market never closes for this symbol {asset.Symbol}, can no submit a {nameof(OrderType.MarketOnClose)} order.");
+                throw new InvalidOperationException(Messages.FillModel.MarketNeverCloses(asset, OrderType.MarketOnClose));
             }
 
             var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
@@ -791,7 +791,7 @@ namespace QuantConnect.Orders.Fills
                 }
             }
 
-            throw new InvalidOperationException($"Cannot get ask price to perform fill for {asset.Symbol} because no market data subscription were found.");
+            throw new InvalidOperationException(Messages.FillModel.NoMarketDataToGetAskPriceForFilling(asset));
         }
 
         /// <summary>
@@ -850,7 +850,7 @@ namespace QuantConnect.Orders.Fills
                 }
             }
 
-            throw new InvalidOperationException($"Cannot get bid price to perform fill for {asset.Symbol} because no market data subscription were found.");
+            throw new InvalidOperationException(Messages.FillModel.NoMarketDataToGetBidPriceForFilling(asset));
         }
 
         /// <summary>
@@ -868,7 +868,7 @@ namespace QuantConnect.Orders.Fills
 
             if (subscribedTypes.Count == 0)
             {
-                throw new InvalidOperationException($"Cannot perform fill for {asset.Symbol} because no data subscription were found.");
+                throw new InvalidOperationException(Messages.FillModel.NoDataSubscriptionFoundForFilling(asset));
             }
 
             return subscribedTypes;
@@ -885,7 +885,7 @@ namespace QuantConnect.Orders.Fills
             var configs = Parameters.ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol, includeInternalConfigs: true);
             if (configs.Count == 0)
             {
-                throw new InvalidOperationException($"Cannot perform fill for {asset.Symbol} because no data subscription were found.");
+                throw new InvalidOperationException(Messages.FillModel.NoDataSubscriptionFoundForFilling(asset));
             }
 
             var hasNonInternals = false;

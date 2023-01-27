@@ -24,7 +24,6 @@ using QuantConnect.Orders.Serialization;
 using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Positions;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Orders
 {
@@ -326,8 +325,7 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            var tag = string.IsNullOrEmpty(Tag) ? string.Empty : $": {Tag}";
-            return Invariant($"OrderId: {Id} (BrokerId: {string.Join(",", BrokerId)}) {Status} {Type} order for {Quantity} unit{(Quantity == 1 ? "" : "s")} of {Symbol}{tag}");
+            return Messages.Order.ToString(this);
         }
 
         /// <summary>
