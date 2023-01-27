@@ -27,18 +27,20 @@ class IndexOptionBearCallSpreadAlgorithm(QCAlgorithm):
         index = self.AddIndex("VIX", Resolution.Minute).Symbol
         option = self.AddIndexOption(index, "VIXW", Resolution.Minute)
         option.SetFilter(lambda x: x.Strikes(-5, 5).Expiration(15, 45))
-        self.option = option.Symbol
+        
+        self.vixw = option.Symbol
+        self.legs = []
 
     def OnData(self, slice: Slice) -> None:
         if not self.Portfolio[self.spy].Invested:
             self.MarketOrder(self.spy, 100)
         
         # Return if hedge position presents
-        if any([x.Type == SecurityType.IndexOption and x.Invested for x in self.Portfolio.Values]):
+        if any([self.Portfolio[x.Symbol].Invested for x in self.legs]):
             return
 
         # Return if hedge position presents
-        chain = slice.OptionChains.get(self.option)
+        chain = slice.OptionChains.get(self.vixw)
         if not chain: return
 
         # Get the nearest expiry date of the contracts
@@ -50,8 +52,8 @@ class IndexOptionBearCallSpreadAlgorithm(QCAlgorithm):
         if len(calls) < 2: return
 
         # Create combo order legs by selecting the ITM and OTM contract
-        legs = [
+        self.legs = [
             Leg.Create(calls[0].Symbol, -1),
             Leg.Create(calls[-1].Symbol, 1)
         ]
-        self.ComboMarketOrder(legs, 1)
+        self.ComboMarketOrder(self.legs, 1)

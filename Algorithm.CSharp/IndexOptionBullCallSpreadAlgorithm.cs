@@ -22,7 +22,8 @@ namespace QuantConnect.Algorithm.CSharp
 {
     public class IndexOptionBullCallSpreadAlgorithm : QCAlgorithm
     {
-        private Symbol _option, _spy;
+        private Symbol _spxw, _spy;
+        private List<Leg> _legs = new();
 
         public override void Initialize()
         {
@@ -35,7 +36,7 @@ namespace QuantConnect.Algorithm.CSharp
             var index = AddIndex("SPX", Resolution.Minute).Symbol;
             var option = AddIndexOption(index, "SPXW", Resolution.Minute);
             option.SetFilter((x) => x.WeeklysOnly().Strikes(-5, 5).Expiration(40, 60));
-            _option = option.Symbol;
+            _spxw = option.Symbol;
         }
 
         public override void OnData(Slice slice)
@@ -46,10 +47,10 @@ namespace QuantConnect.Algorithm.CSharp
             }
         
             // Return if hedge position presents
-            if (Portfolio.Values.Any(x => x.Type == SecurityType.IndexOption && x.Invested)) return;
+            if (_legs.Any(x => Portfolio[x.Symbol].Invested)) return;
 
             // Get the OptionChain
-            if (!slice.OptionChains.TryGetValue(_option, out var chain)) return;
+            if (!slice.OptionChains.TryGetValue(_spxw, out var chain)) return;
 
             // Get the nearest expiry date of the contracts
             var expiry = chain.Min(x => x.Expiry);
@@ -60,12 +61,12 @@ namespace QuantConnect.Algorithm.CSharp
             if (calls.Length < 2) return;
 
             // Create combo order legs
-            var legs = new List<Leg>
+            _legs = new List<Leg>
             {
                 Leg.Create(calls[0].Symbol, 1),
                 Leg.Create(calls[^1].Symbol, -1)
             };
-            ComboMarketOrder(legs, 1);
+            ComboMarketOrder(_legs, 1);
         }
     }
 }
