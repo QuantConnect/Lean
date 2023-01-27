@@ -46,7 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
         
             // Return if hedge position presents
-            if (Portfolio.Any(x => x.Value.Type == SecurityType.IndexOption && x.Value.Invested)) return;
+            if (Portfolio.Values.Any(x => x.Type == SecurityType.IndexOption && x.Invested)) return;
 
             // Get the OptionChain
             if (!slice.OptionChains.TryGetValue(_option, out var chain)) return;

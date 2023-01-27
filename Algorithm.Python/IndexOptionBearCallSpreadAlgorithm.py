@@ -34,7 +34,7 @@ class IndexOptionBearCallSpreadAlgorithm(QCAlgorithm):
             self.MarketOrder(self.spy, 100)
         
         # Return if hedge position presents
-        if any([x.Values.Type == SecurityType.IndexOption and x.Values.Invested for x in self.Portfolio]):
+        if any([x.Type == SecurityType.IndexOption and x.Invested for x in self.Portfolio.Values]):
             return
 
         # Return if hedge position presents
