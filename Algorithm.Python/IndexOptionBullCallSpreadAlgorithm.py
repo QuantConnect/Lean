@@ -22,23 +22,23 @@ class IndexOptionBullCallSpreadAlgorithm(QCAlgorithm):
         self.SetEndDate(2021, 1, 1)
         self.SetCash(100000)
 
-        self.AddEquity("SPY", Resolution.Minute)
+        self.spy = self.AddEquity("SPY", Resolution.Minute).Symbol
 
         index = self.AddIndex("SPX", Resolution.Minute).Symbol
         option = self.AddIndexOption(index, "SPXW", Resolution.Minute)
         option.SetFilter(lambda x: x.WeeklysOnly().Strikes(-5, 5).Expiration(40, 60))
-        self.symbol = option.Symbol
+        self.option = option.Symbol
 
     def OnData(self, slice: Slice) -> None:
-        if not self.Portfolio["SPY"].Invested:
-            self.MarketOrder("SPY", 100)
+        if not self.Portfolio[self.spy].Invested:
+            self.MarketOrder(self.spy, 100)
         
         # Return if hedge position presents
-        if any([x.Type == SecurityType.IndexOption and x.Invested for x in self.Portfolio.Values]):
+        if any([x.Values.Type == SecurityType.IndexOption and x.Values.Invested for x in self.Portfolio]):
             return
 
         # Return if hedge position presents
-        chain = slice.OptionChains.get(self.symbol)
+        chain = slice.OptionChains.get(self.option)
         if not chain: return
 
         # Get the nearest expiry date of the contracts
@@ -47,7 +47,7 @@ class IndexOptionBullCallSpreadAlgorithm(QCAlgorithm):
         # Select the call Option contracts with the nearest expiry and sort by strike price
         calls = sorted([i for i in chain if i.Expiry == expiry and i.Right == OptionRight.Call], 
                         key=lambda x: x.Strike)
-        if not calls: return
+        if len(calls) < 2: return
 
         # Create combo order legs by selecting the ITM and OTM contract
         legs = [

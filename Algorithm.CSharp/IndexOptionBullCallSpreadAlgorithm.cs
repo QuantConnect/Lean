@@ -22,7 +22,7 @@ namespace QuantConnect.Algorithm.CSharp
 {
     public class IndexOptionBullCallSpreadAlgorithm : QCAlgorithm
     {
-        private Symbol _symbol;
+        private Symbol _option, _spy;
 
         public override void Initialize()
         {
@@ -30,40 +30,40 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2021, 1, 1);
             SetCash(100000);
 
-            AddEquity("SPY", Resolution.Minute);
+            _spy = AddEquity("SPY", Resolution.Minute).Symbol;
 
             var index = AddIndex("SPX", Resolution.Minute).Symbol;
             var option = AddIndexOption(index, "SPXW", Resolution.Minute);
             option.SetFilter((x) => x.WeeklysOnly().Strikes(-5, 5).Expiration(40, 60));
-            _symbol = option.Symbol;
+            _option = option.Symbol;
         }
 
         public override void OnData(Slice slice)
         {
-            if (!Portfolio["SPY"].Invested)
+            if (!Portfolio[_spy].Invested)
             {
-                MarketOrder("SPY", 100);
+                MarketOrder(_spy, 100);
             }
         
             // Return if hedge position presents
-            if (Portfolio.Values.Any(x => x.Type == SecurityType.IndexOption && x.Invested)) return;
+            if (Portfolio.Any(x => x.Value.Type == SecurityType.IndexOption && x.Value.Invested)) return;
 
             // Get the OptionChain
-            var chain = slice.OptionChains.get(_symbol);
-            if (chain == null) return;
+            if (!slice.OptionChains.TryGetValue(_option, out var chain)) return;
 
             // Get the nearest expiry date of the contracts
             var expiry = chain.Min(x => x.Expiry);
             
             // Select the call Option contracts with the nearest expiry and sort by strike price
-            var calls = chain.Where(x => x.Expiry == expiry && x.Right == OptionRight.Call).OrderBy(x => x.Strike);
-            if (calls.Count() == 0) return;
+            var calls = chain.Where(x => x.Expiry == expiry && x.Right == OptionRight.Call)
+                            .OrderBy(x => x.Strike).ToArray();
+            if (calls.Length < 2) return;
 
             // Create combo order legs
             var legs = new List<Leg>
             {
-                Leg.Create(calls.First().Symbol, 1),
-                Leg.Create(calls.Last().Symbol, -1)
+                Leg.Create(calls[0].Symbol, 1),
+                Leg.Create(calls[^1].Symbol, -1)
             };
             ComboMarketOrder(legs, 1);
         }
