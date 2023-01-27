@@ -20,21 +20,21 @@ class IndexOptionPutCalendarSpreadAlgorithm(QCAlgorithm):
         self.SetEndDate(2023, 1, 1)
         self.SetCash(50000)
 
-        self.AddEquity("VXZ", Resolution.Minute)
+        self.vxz = self.AddEquity("VXZ", Resolution.Minute).Symbol
 
         index = self.AddIndex("VIX", Resolution.Minute).Symbol
         option = self.AddIndexOption(index, "VIXW", Resolution.Minute)
         option.SetFilter(lambda x: x.Strikes(-2, 2).Expiration(15, 45))
-        self.symbol = option.Symbol
-
+        
+        self.vixw = option.Symbol
+        self.legs = []
         self.expiry = datetime.max
 
     def OnData(self, slice: Slice) -> None:
-        if not self.Portfolio["VXZ"].Invested:
-            self.MarketOrder("VXZ", 100)
+        if not self.Portfolio[self.vxz].Invested:
+            self.MarketOrder(self.vxz, 100)
         
-        index_options_invested = [x for x in self.Portfolio.Values
-                                  if x.Type == SecurityType.IndexOption and x.Invested]
+        index_options_invested = [leg for leg in self.legs if self.Portfolio[leg.Symbol].Invested]
         # Liquidate if the shorter term option is about to expire
         if self.expiry < self.Time + timedelta(2) and all([slice.ContainsKey(x.Symbol) for x in self.legs]):
             for holding in index_options_invested:
@@ -44,7 +44,7 @@ class IndexOptionPutCalendarSpreadAlgorithm(QCAlgorithm):
             return
 
         # Get the OptionChain
-        chain = slice.OptionChains.get(self.symbol)
+        chain = slice.OptionChains.get(self.vixw)
         if not chain: return
 
         # Get ATM strike price

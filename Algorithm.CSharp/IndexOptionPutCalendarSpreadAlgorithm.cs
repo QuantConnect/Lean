@@ -23,7 +23,7 @@ namespace QuantConnect.Algorithm.CSharp
 {
     public class IndexOptionPutCalendarSpreadAlgorithm : QCAlgorithm
     {
-        private Symbol _option, _vxz;
+        private Symbol _vixw, _vxz;
         private List<Leg> _legs = new();
         private DateTime _firstExpiry = DateTime.MaxValue;
 
@@ -38,7 +38,7 @@ namespace QuantConnect.Algorithm.CSharp
             var index = AddIndex("VIX", Resolution.Minute).Symbol;
             var option = AddIndexOption(index, "VIXW", Resolution.Minute);
             option.SetFilter((x) => x.Strikes(-2, 2).Expiration(15, 45));
-            _option = option.Symbol;
+            _vixw = option.Symbol;
         }
 
         public override void OnData(Slice slice)
@@ -48,7 +48,7 @@ namespace QuantConnect.Algorithm.CSharp
                 MarketOrder(_vxz, 100);
             }
             
-            var indexOptionsInvested = Portfolio.Values.Where(x => x.Type == SecurityType.IndexOption && x.Invested).ToList();
+            var indexOptionsInvested = _legs.Where(x => Portfolio[x.Symbol].Invested).ToList();
             // Liquidate if the shorter term option is about to expire
             if (_firstExpiry < Time.AddDays(2) && _legs.All(x => slice.ContainsKey(x.Symbol)))
             {
@@ -58,17 +58,16 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
             // Return if there is any opening index option position
-            else if (indexOptionsInvested.Count() > 0)
+            else if (indexOptionsInvested.Count > 0)
             {
                 return;
             }
 
             // Get the OptionChain
-            var chain = slice.OptionChains.get(_option);
-            if (chain == null) return;
+            if (!slice.OptionChains.TryGetValue(_vixw, out var chain)) return;
 
             // Get ATM strike price
-            var strike = chain.OrderBy(x => Math.Abs(x.Strike - chain.Underlying.Value)).First().Strike;
+            var strike = chain.MinBy(x => Math.Abs(x.Strike - chain.Underlying.Value)).Strike;
             
             // Select the ATM put Option contracts and sort by expiration date
             var puts = chain.Where(x => x.Strike == strike && x.Right == OptionRight.Put)

@@ -27,20 +27,21 @@ class IndexOptionCallCalendarSpreadAlgorithm(QCAlgorithm):
         option = self.AddIndexOption(index, "VIXW", Resolution.Minute)
         option.SetFilter(lambda x: x.Strikes(-2, 2).Expiration(15, 45))
         
-        self.symbol = option.Symbol
+        self.vixw = option.Symbol
         self.multiplier = option.SymbolProperties.ContractMultiplier
+        self.legs = []
         self.expiry = datetime.max
 
     def OnData(self, slice: Slice) -> None:
         # Liquidate if the shorter term option is about to expire
         if self.expiry < self.Time + timedelta(2) and all([slice.ContainsKey(x.Symbol) for x in self.legs]):
             self.Liquidate()
-        # Return if there is any opening index option position
-        elif [x for x in self.Portfolio.Values if x.Type == SecurityType.IndexOption and x.Invested]:
+        # Return if there is any opening position
+        elif [leg for leg in self.legs if self.Portfolio[leg.Symbol].Invested]:
             return
 
         # Get the OptionChain
-        chain = slice.OptionChains.get(self.symbol)
+        chain = slice.OptionChains.get(self.vixw)
         if not chain: return
 
         # Get ATM strike price
