@@ -34,7 +34,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             var index = AddIndex("VIX", Resolution.Minute).Symbol;
             var option = AddIndexOption(index, "VIXW", Resolution.Minute);
-            option.SetFilter((x) => x.Strikes(-5, 5).Expiration(90, 120));
+            option.SetFilter((x) => x.Strikes(-5, 5).Expiration(15, 45));
             _option = option.Symbol;
         }
 

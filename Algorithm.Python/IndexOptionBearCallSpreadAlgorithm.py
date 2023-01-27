@@ -26,7 +26,7 @@ class IndexOptionBearCallSpreadAlgorithm(QCAlgorithm):
 
         index = self.AddIndex("VIX", Resolution.Minute).Symbol
         option = self.AddIndexOption(index, "VIXW", Resolution.Minute)
-        option.SetFilter(lambda x: x.Strikes(-5, 5).Expiration(90, 120))
+        option.SetFilter(lambda x: x.Strikes(-5, 5).Expiration(15, 45))
         self.option = option.Symbol
 
     def OnData(self, slice: Slice) -> None:
