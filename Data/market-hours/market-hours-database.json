@@ -22760,10 +22760,10 @@
     },
     "Future-cme-ETH": {
       "dataTimeZone": "UTC",
-      "exchangeTimeZone": "America/New_York",
+      "exchangeTimeZone": "US/Central",
       "sunday": [
         {
-          "start": "18:00:00",
+          "start": "17:00:00",
           "end": "1.00:00:00",
           "state": "premarket"
         }
@@ -22776,11 +22776,11 @@
         },
         {
           "start": "09:30:00",
-          "end": "17:00:00",
+          "end": "16:00:00",
           "state": "market"
         },
         {
-          "start": "18:00:00",
+          "start": "17:00:00",
           "end": "1.00:00:00",
           "state": "postmarket"
         }
@@ -22793,11 +22793,11 @@
         },
         {
           "start": "09:30:00",
-          "end": "17:00:00",
+          "end": "16:00:00",
           "state": "market"
         },
         {
-          "start": "18:00:00",
+          "start": "17:00:00",
           "end": "1.00:00:00",
           "state": "postmarket"
         }
@@ -22810,11 +22810,11 @@
         },
         {
           "start": "09:30:00",
-          "end": "17:00:00",
+          "end": "16:00:00",
           "state": "market"
         },
         {
-          "start": "18:00:00",
+          "start": "17:00:00",
           "end": "1.00:00:00",
           "state": "postmarket"
         }
@@ -22827,11 +22827,11 @@
         },
         {
           "start": "09:30:00",
-          "end": "17:00:00",
+          "end": "16:00:00",
           "state": "market"
         },
         {
-          "start": "18:00:00",
+          "start": "17:00:00",
           "end": "1.00:00:00",
           "state": "postmarket"
         }
@@ -22844,7 +22844,7 @@
         },
         {
           "start": "09:30:00",
-          "end": "17:00:00",
+          "end": "16:00:00",
           "state": "market"
         }
       ],
