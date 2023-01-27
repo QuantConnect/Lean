@@ -60,8 +60,7 @@ namespace QuantConnect.Brokerages
             if (securityType != SecurityType.Equity && securityType != SecurityType.Option)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    "This model only supports equities and options."
-                );
+                    Messages.TradierBrokerageModel.UnsupportedSecurityType);
 
                 return false;
             }
@@ -69,8 +68,7 @@ namespace QuantConnect.Brokerages
             if (order.Type == OrderType.MarketOnOpen || order.Type == OrderType.MarketOnClose)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    "Tradier brokerage only supports Market orders. MarketOnOpen and MarketOnClose orders not supported."
-                );
+                    Messages.TradierBrokerageModel.UnsupportedOrderType);
 
                 return false;
             }
@@ -78,8 +76,7 @@ namespace QuantConnect.Brokerages
             if (!CanExecuteOrder(security, order))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "ExtendedMarket",
-                    "Tradier does not support extended market hours trading.  Your order will be processed at market open."
-                );
+                    Messages.TradierBrokerageModel.ExtendedMarketHoursTradingNotSupported);
             }
 
             // tradier order limits
@@ -102,8 +99,7 @@ namespace QuantConnect.Brokerages
             if (request.Quantity != null && request.Quantity != order.Quantity)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "UpdateRejected",
-                    "Tradier does not support updating order quantities."
-                );
+                    Messages.TradierBrokerageModel.OrderQuantityUpdateNotSupported);
 
                 return false;
             }
@@ -150,7 +146,7 @@ namespace QuantConnect.Brokerages
             var splitFactor = split.SplitFactor;
             if (splitFactor > 1.0m)
             {
-                tickets.ForEach(ticket => ticket.Cancel("Tradier Brokerage cancels open orders on reverse split symbols"));
+                tickets.ForEach(ticket => ticket.Cancel(Messages.TradierBrokerageModel.OpenOrdersCancelOnReverseSplitSymbols));
             }
             else
             {

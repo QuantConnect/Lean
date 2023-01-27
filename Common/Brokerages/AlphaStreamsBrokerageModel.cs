@@ -28,13 +28,13 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Initializes a new instance of the <see cref="AlphaStreamsBrokerageModel"/> class
         /// </summary>
-        /// <param name="accountType">The type of account to be modelled, defaults to <see cref="AccountType.Margin"/> does not accept <see cref="AccountType.Cash"/>.</param>
+        /// <param name="accountType">The type of account to be modeled, defaults to <see cref="AccountType.Margin"/> does not accept <see cref="AccountType.Cash"/>.</param>
         public AlphaStreamsBrokerageModel(AccountType accountType = AccountType.Margin)
             : base(accountType)
         {
             if (accountType == AccountType.Cash)
             {
-                throw new ArgumentException("The Alpha Streams brokerage does not currently support Cash trading.", nameof(accountType));
+                throw new ArgumentException(Messages.AlphaStreamsBrokerageModel.UnsupportedAccountType, nameof(accountType));
             }
         }
 

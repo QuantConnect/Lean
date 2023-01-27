@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Brokerages
 {
@@ -69,7 +68,7 @@ namespace QuantConnect.Brokerages
         /// <returns>A brokerage disconnect message</returns>
         public static BrokerageMessageEvent Disconnected(string message)
         {
-            return new BrokerageMessageEvent(BrokerageMessageType.Disconnect, "Disconnect", message);
+            return new BrokerageMessageEvent(BrokerageMessageType.Disconnect, Messages.BrokerageMessageEvent.DisconnectCode, message);
         }
 
         /// <summary>
@@ -79,7 +78,7 @@ namespace QuantConnect.Brokerages
         /// <returns>A brokerage reconnect message</returns>
         public static BrokerageMessageEvent Reconnected(string message)
         {
-            return new BrokerageMessageEvent(BrokerageMessageType.Reconnect, "Reconnect", message);
+            return new BrokerageMessageEvent(BrokerageMessageType.Reconnect, Messages.BrokerageMessageEvent.ReconnectCode, message);
         }
 
         /// <summary>
@@ -91,7 +90,7 @@ namespace QuantConnect.Brokerages
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Invariant($"{Type} - Code: {Code} - {Message}");
+            return Messages.BrokerageMessageEvent.ToString(this);
         }
     }
 }

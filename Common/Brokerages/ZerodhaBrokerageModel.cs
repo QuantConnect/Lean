@@ -21,7 +21,6 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities;
 using QuantConnect.Util;
-using static QuantConnect.StringExtensions;
 
 
 namespace QuantConnect.Brokerages
@@ -68,7 +67,7 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-           
+
             // validate time in force
             if (!_supportedTimeInForces.Contains(order.TimeInForce.GetType()))
             {
@@ -97,19 +96,17 @@ namespace QuantConnect.Brokerages
             if (security.Type != SecurityType.Equity)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(ZerodhaBrokerageModel)} does not support {security.Type} security type.")
-                );
+                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
 
                 return false;
             }
 
-           
+
             // validate time in force
             if (!_supportedTimeInForces.Contains(order.TimeInForce.GetType()))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(ZerodhaBrokerageModel)} does not support {order.TimeInForce.GetType().Name} time in force.")
-                );
+                    Messages.DefaultBrokerageModel.UnsupportedTimeInForce(this, order));
 
                 return false;
             }
@@ -153,7 +150,7 @@ namespace QuantConnect.Brokerages
                 return _maxLeverage;
             }
 
-            throw new ArgumentException($"Invalid security type: {security.Type}", nameof(security));
+            throw new ArgumentException(Messages.DefaultBrokerageModel.InvalidSecurityTypeForLeverage(security), nameof(security));
         }
 
         /// <summary>
