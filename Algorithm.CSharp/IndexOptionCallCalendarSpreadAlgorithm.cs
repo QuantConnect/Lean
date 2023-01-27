@@ -16,7 +16,6 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Orders;
 
@@ -30,10 +29,9 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void Initialize()
         {
-            SetStartDate(2019, 1, 1);
-            SetEndDate(2023, 1, 1);
+            SetStartDate(2020, 1, 1);
+            SetEndDate(2021, 1, 1);
             SetCash(50000);
-            SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage, AccountType.Margin);
 
             _vxz = AddEquity("VXZ", Resolution.Minute).Symbol;
             _spy = AddEquity("SPY", Resolution.Minute).Symbol;
@@ -54,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Liquidate();
             }
             // Return if there is any opening index option position
-            else if (Portfolio.Any(x => x.Value.Type == SecurityType.IndexOption && x.Value.Invested))
+            else if (Portfolio.Values.Any(x => x.Type == SecurityType.IndexOption && x.Invested))
             {
                 return;
             }
@@ -79,14 +77,14 @@ namespace QuantConnect.Algorithm.CSharp
                 Leg.Create(_vxz, -100),
                 Leg.Create(_spy, -10)
             };
-            var quantity = Portfolio.TotalPortfolioValue / legs.Sum(x =>
+            var quanitity = Portfolio.TotalPortfolioValue / legs.Sum(x =>
             {
                 var value = Math.Abs(Securities[x.Symbol].Price * x.Quantity);
                 return x.Symbol.ID.SecurityType == SecurityType.IndexOption
                     ? value * _multiplier
                     : value;
             });
-            ComboMarketOrder(legs, -(int)Math.Floor(quantity), asynchronous: true);
+            ComboMarketOrder(legs, -(int)Math.Floor(quanitity), asynchronous: true);
         }
     }
 }
