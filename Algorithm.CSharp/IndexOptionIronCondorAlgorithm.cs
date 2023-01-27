@@ -58,7 +58,7 @@ namespace QuantConnect.Algorithm.CSharp
             var puts = contracts.Where(x => x.Right == OptionRight.Put)
                 .OrderBy(x => x.Strike).ToArray();
 
-            if (calls.Count() == 0 || puts.Count() == 0) return;
+            if (calls.Length < 3 || puts.Length  < 3) return;
 
             // Create combo order legs
             var price = _bb.Price.Current.Value;

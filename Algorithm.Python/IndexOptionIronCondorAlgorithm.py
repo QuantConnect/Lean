@@ -44,7 +44,7 @@ class IndexOptionIronCondorAlgorithm(QCAlgorithm):
         # Separate the call and put contracts and sort by Strike to find OTM contracts
         calls = sorted([x for x in chain if x.Right == OptionRight.Call], key=lambda x: x.Strike, reverse=True)
         puts = sorted([x for x in chain if x.Right == OptionRight.Put], key=lambda x: x.Strike)
-        if not calls or not puts: return
+        if len(calls) < 3 or len(puts) < 3: return
 
         # Create combo order legs
         price = self.bb.Price.Current.Value
