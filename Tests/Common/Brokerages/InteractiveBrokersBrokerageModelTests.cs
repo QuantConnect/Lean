@@ -146,11 +146,38 @@ namespace QuantConnect.Tests.Common.Brokerages
 
                 if (min != 0m || max != 0)
                 {
+                    if (min == 0m)
+                    {
+                        return new[]
+                        {
+                            // buy
+                            new TestCaseData(forex, min, false),
+                            new TestCaseData(forex, max * 1.001m, false),
+                            new TestCaseData(forex, 0.001m, true),
+                            new TestCaseData(forex, max, true),
+                            new TestCaseData(forex, max / 2, true),
+                            // sell
+                            new TestCaseData(forex, -max * 1.001m, false),
+                            new TestCaseData(forex, -0.001m, true),
+                            new TestCaseData(forex, -max, true),
+                            new TestCaseData(forex, -max / 2, true)
+                        };
+                    }
+
                     return new[]
                     {
-                        new TestCaseData(forex, min, false),
-                        new TestCaseData(forex, max, false),
-                        new TestCaseData(forex, (min + max) / 2, true)
+                        // buy
+                        new TestCaseData(forex, min * 0.999m, false),
+                        new TestCaseData(forex, max * 1.001m, false),
+                        new TestCaseData(forex, min, true),
+                        new TestCaseData(forex, max, true),
+                        new TestCaseData(forex, (min + max) / 2, true),
+                        // sell
+                        new TestCaseData(forex, -min * 0.999m, false),
+                        new TestCaseData(forex, -max * 1.001m, false),
+                        new TestCaseData(forex, -min, true),
+                        new TestCaseData(forex, -max, true),
+                        new TestCaseData(forex, -(min + max) / 2, true)
                     };
                 }
 

@@ -231,7 +231,8 @@ namespace QuantConnect.Brokerages
             var min = limits?.Item1 ?? 0m;
             var max = limits?.Item2 ?? 0m;
 
-            var orderIsWithinForexSizeLimits = quantity > min && quantity < max;
+            var absoluteQuantity = Math.Abs(quantity);
+            var orderIsWithinForexSizeLimits = ((min == 0 && absoluteQuantity > min) || (min > 0 && absoluteQuantity >= min)) && absoluteQuantity <= max;
             if (!orderIsWithinForexSizeLimits)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "OrderSizeLimit",
