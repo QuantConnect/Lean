@@ -33,7 +33,7 @@ class IndexOptionCallCalendarSpreadAlgorithm(QCAlgorithm):
 
     def OnData(self, slice: Slice) -> None:
         # Liquidate if the shorter term option is about to expire
-        if self.expiry < self.Time + timedelta(2):
+        if self.expiry < self.Time + timedelta(2) and all([slice.ContainsKey(x.Symbol) for x in self.legs]):
             self.Liquidate()
         # Return if there is any opening index option position
         elif [x for x in self.Portfolio.Values if x.Type == SecurityType.IndexOption and x.Invested]:
@@ -53,7 +53,7 @@ class IndexOptionCallCalendarSpreadAlgorithm(QCAlgorithm):
         self.expiry = calls[0].Expiry
 
         # Create combo order legs
-        legs = [
+        self.legs = [
             Leg.Create(calls[0].Symbol, -1),
             Leg.Create(calls[-1].Symbol, 1),
             Leg.Create(self.vxz, -100),
@@ -62,5 +62,5 @@ class IndexOptionCallCalendarSpreadAlgorithm(QCAlgorithm):
         quantity = self.Portfolio.TotalPortfolioValue // \
             sum([abs(self.Securities[x.Symbol].Price * x.Quantity * 
                  (self.multiplier if x.Symbol.ID.SecurityType == SecurityType.IndexOption else 1))
-                 for x in legs])
-        self.ComboMarketOrder(legs, -quantity, asynchronous=True)
+                 for x in self.legs])
+        self.ComboMarketOrder(self.legs, -quantity, asynchronous=True)

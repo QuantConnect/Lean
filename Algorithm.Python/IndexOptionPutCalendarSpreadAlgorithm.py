@@ -36,7 +36,7 @@ class IndexOptionPutCalendarSpreadAlgorithm(QCAlgorithm):
         index_options_invested = [x for x in self.Portfolio.Values
                                   if x.Type == SecurityType.IndexOption and x.Invested]
         # Liquidate if the shorter term option is about to expire
-        if self.expiry < self.Time + timedelta(2):
+        if self.expiry < self.Time + timedelta(2) and all([slice.ContainsKey(x.Symbol) for x in self.legs]):
             for holding in index_options_invested:
                 self.Liquidate(holding.Symbol)
         # Return if there is any opening index option position
@@ -57,8 +57,8 @@ class IndexOptionPutCalendarSpreadAlgorithm(QCAlgorithm):
         self.expiry = puts[0].Expiry
 
         # Create combo order legs
-        legs = [
+        self.legs = [
             Leg.Create(puts[0].Symbol, -1),
             Leg.Create(puts[-1].Symbol, 1)
         ]
-        self.ComboMarketOrder(legs, -1, asynchronous=True)
+        self.ComboMarketOrder(self.legs, -1, asynchronous=True)

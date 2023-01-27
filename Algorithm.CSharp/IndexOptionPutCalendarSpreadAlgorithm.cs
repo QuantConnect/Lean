@@ -24,6 +24,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class IndexOptionPutCalendarSpreadAlgorithm : QCAlgorithm
     {
         private Symbol _option, _vxz;
+        private List<Leg> _legs = new();
         private DateTime _firstExpiry = DateTime.MaxValue;
 
         public override void Initialize()
@@ -49,7 +50,7 @@ namespace QuantConnect.Algorithm.CSharp
             
             var indexOptionsInvested = Portfolio.Values.Where(x => x.Type == SecurityType.IndexOption && x.Invested).ToList();
             // Liquidate if the shorter term option is about to expire
-            if (_firstExpiry < Time.AddDays(2))
+            if (_firstExpiry < Time.AddDays(2) && _legs.All(x => slice.ContainsKey(x.Symbol)))
             {
                 foreach (var holding in indexOptionsInvested)
                 {
@@ -76,12 +77,12 @@ namespace QuantConnect.Algorithm.CSharp
             _firstExpiry = puts[0].Expiry;
 
             // Create combo order legs
-            var legs = new List<Leg>
+            _legs = new List<Leg>
             {
                 Leg.Create(puts[0].Symbol, -1),
                 Leg.Create(puts[^1].Symbol, 1)
             };
-            ComboMarketOrder(legs, -1, asynchronous: true);
+            ComboMarketOrder(_legs, -1, asynchronous: true);
         }
     }
 }

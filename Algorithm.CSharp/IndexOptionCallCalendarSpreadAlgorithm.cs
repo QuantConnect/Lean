@@ -25,6 +25,7 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private Symbol _option, _vxz, _spy;
         private decimal _multiplier;
+        private List<Leg> _legs = new();
         private DateTime _firstExpiry = DateTime.MaxValue;
 
         public override void Initialize()
@@ -47,7 +48,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnData(Slice slice)
         {
             // Liquidate if the shorter term option is about to expire
-            if (_firstExpiry < Time.AddDays(2))
+            if (_firstExpiry < Time.AddDays(2) && _legs.All(x => slice.ContainsKey(x.Symbol)))
             {
                 Liquidate();
             }
@@ -70,21 +71,21 @@ namespace QuantConnect.Algorithm.CSharp
             _firstExpiry = calls[0].Expiry;
 
             // Create combo order legs
-            var legs = new List<Leg>
+            _legs = new List<Leg>
             {
                 Leg.Create(calls[0].Symbol, -1),
                 Leg.Create(calls[^1].Symbol, 1),
                 Leg.Create(_vxz, -100),
                 Leg.Create(_spy, -10)
             };
-            var quanitity = Portfolio.TotalPortfolioValue / legs.Sum(x =>
+            var quanitity = Portfolio.TotalPortfolioValue / _legs.Sum(x =>
             {
                 var value = Math.Abs(Securities[x.Symbol].Price * x.Quantity);
                 return x.Symbol.ID.SecurityType == SecurityType.IndexOption
                     ? value * _multiplier
                     : value;
             });
-            ComboMarketOrder(legs, -(int)Math.Floor(quanitity), asynchronous: true);
+            ComboMarketOrder(_legs, -(int)Math.Floor(quanitity), asynchronous: true);
         }
     }
 }
