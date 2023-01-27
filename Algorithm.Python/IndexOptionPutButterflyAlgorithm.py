@@ -28,6 +28,7 @@ class IndexOptionPutButterflyAlgorithm(QCAlgorithm):
 
         self.option = option.Symbol
         self.multiplier = option.SymbolProperties.ContractMultiplier
+        self.legs = []
 
     def OnData(self, slice: Slice) -> None:
         # The order of magnitude per SPXW order's value is 10000 times of VXZ
@@ -35,7 +36,7 @@ class IndexOptionPutButterflyAlgorithm(QCAlgorithm):
             self.MarketOrder(self.vxz, 10000)
         
         # Return if there is any opening index option position
-        if any([x.Type == SecurityType.IndexOption and x.Invested for x in self.Portfolio.Values]): return
+        if any([self.Portfolio[x.Symbol].Invested for x in self.legs]): return
 
         # Get the OptionChain
         chain = slice.OptionChains.get(self.option)
@@ -53,12 +54,12 @@ class IndexOptionPutButterflyAlgorithm(QCAlgorithm):
         atm_put = sorted(puts, key=lambda x: abs(x.Strike - chain.Underlying.Value))[0]
 
         # Create combo order legs
-        legs = [
+        self.legs = [
             Leg.Create(sorted_puts[0].Symbol, -1),
             Leg.Create(sorted_puts[-1].Symbol, -1),
             Leg.Create(atm_put.Symbol, 2)
         ]
-        price = sum([abs(self.Securities[x.Symbol].Price * x.Quantity) * self.multiplier for x in legs])
+        price = sum([abs(self.Securities[x.Symbol].Price * x.Quantity) * self.multiplier for x in self.legs])
         if price > 0:
             quantity = self.Portfolio.TotalPortfolioValue // price
-            self.ComboMarketOrder(legs, -quantity, asynchronous=True)
+            self.ComboMarketOrder(self.legs, -quantity, asynchronous=True)

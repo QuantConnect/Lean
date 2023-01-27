@@ -23,8 +23,9 @@ namespace QuantConnect.Algorithm.CSharp
 {
     public class IndexOptionPutButterflyAlgorithm : QCAlgorithm
     {
-        private Symbol _option, _vxz;
+        private Symbol _spxw, _vxz;
         private decimal _multiplier;
+        private List<Leg> _legs = new();
 
         public override void Initialize()
         {
@@ -38,7 +39,7 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddIndexOption(index, "SPXW", Resolution.Minute);
             option.SetFilter((x) => x.IncludeWeeklys().Strikes(-3, 3).Expiration(15, 45));
 
-            _option = option.Symbol;
+            _spxw = option.Symbol;
             _multiplier = option.SymbolProperties.ContractMultiplier;
         }
 
@@ -51,10 +52,10 @@ namespace QuantConnect.Algorithm.CSharp
             }
             
             // Return if any opening index option position
-            if (Portfolio.Values.Any(x => x.Type == SecurityType.IndexOption && x.Invested)) return;
+            if (_legs.Any(x => Portfolio[x.Symbol].Invested)) return;
 
             // Get the OptionChain
-            if (!slice.OptionChains.TryGetValue(_option, out var chain)) return;
+            if (!slice.OptionChains.TryGetValue(_spxw, out var chain)) return;
 
             // Get nearest expiry date
             var expiry = chain.Min(x => x.Expiry);
@@ -65,20 +66,20 @@ namespace QuantConnect.Algorithm.CSharp
             var sortedPuts = puts.OrderBy(x => x.Strike).ToArray();
             
             // Select ATM put
-            var atmPut = puts.OrderBy(x => Math.Abs(x.Strike - chain.Underlying.Value)).First();
+            var atmPut = puts.MinBy(x => Math.Abs(x.Strike - chain.Underlying.Value));
 
             // Create combo order legs
-            var legs = new List<Leg>
+            _legs = new List<Leg>
             {
                 Leg.Create(sortedPuts[0].Symbol, -1),
                 Leg.Create(sortedPuts[^1].Symbol, -1),
                 Leg.Create(atmPut.Symbol, 2)
             };
-            var price = legs.Sum(x => Math.Abs(Securities[x.Symbol].Price * x.Quantity) * _multiplier);
+            var price = _legs.Sum(x => Math.Abs(Securities[x.Symbol].Price * x.Quantity) * _multiplier);
             if (price > 0)
             {
                 var quantity = Portfolio.TotalPortfolioValue / price;
-                ComboMarketOrder(legs, -(int)Math.Floor(quantity), asynchronous: true);
+                ComboMarketOrder(_legs, -(int)Math.Floor(quantity), asynchronous: true);
             }
             
         }
