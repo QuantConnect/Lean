@@ -23,7 +23,7 @@ namespace QuantConnect.Algorithm.CSharp
 {
     public class IndexOptionPutCalendarSpreadAlgorithm : QCAlgorithm
     {
-        private Symbol _option;
+        private Symbol _option, _vxz;
         private DateTime _firstExpiry = DateTime.MaxValue;
 
         public override void Initialize()
@@ -32,7 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2023, 1, 1);
             SetCash(50000);
 
-            AddEquity("VXZ", Resolution.Minute);
+            _vxz = AddEquity("VXZ", Resolution.Minute).Symbol;
 
             var index = AddIndex("VIX", Resolution.Minute).Symbol;
             var option = AddIndexOption(index, "VIXW", Resolution.Minute);
@@ -42,12 +42,12 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
-            if (!Portfolio["VXZ"].Invested)
+            if (!Portfolio[_vxz].Invested)
             {
-                MarketOrder("VXZ", 100);
+                MarketOrder(_vxz, 100);
             }
             
-            var indexOptionsInvested = Portfolio.Values.Where(x => x.Type == SecurityType.IndexOption && x.Invested);
+            var indexOptionsInvested = Portfolio.Values.Where(x => x.Type == SecurityType.IndexOption && x.Invested).ToList();
             // Liquidate if the shorter term option is about to expire
             if (_firstExpiry < Time.AddDays(2))
             {

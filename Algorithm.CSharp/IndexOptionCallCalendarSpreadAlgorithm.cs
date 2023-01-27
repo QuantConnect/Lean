@@ -54,14 +54,13 @@ namespace QuantConnect.Algorithm.CSharp
                 Liquidate();
             }
             // Return if there is any opening index option position
-            else if (Portfolio.Values.Where(x => x.Type == SecurityType.IndexOption && x.Invested).Count() > 0)
+            else if (Portfolio.Any(x => x.Value.Type == SecurityType.IndexOption && x.Value.Invested))
             {
                 return;
             }
 
             // Get the OptionChain
-            var chain = slice.OptionChains.get(_option);
-            if (chain == null) return;
+            if (!slice.OptionChains.TryGetValue(_option, out var chain)) return;
 
             // Get ATM strike price
             var strike = chain.OrderBy(x => Math.Abs(x.Strike - chain.Underlying.Value)).First().Strike;
@@ -80,18 +79,14 @@ namespace QuantConnect.Algorithm.CSharp
                 Leg.Create(_vxz, -100),
                 Leg.Create(_spy, -10)
             };
-            var qty = Portfolio.TotalPortfolioValue / legs.Sum(x => {
-                var q = Math.Abs(Securities[x.Symbol].Price * x.Quantity);
-                if (x.Symbol.ID.SecurityType == SecurityType.IndexOption) 
-                {
-                    return q * _multiplier;
-                }
-                else 
-                {
-                    return q;
-                }
+            var quantity = Portfolio.TotalPortfolioValue / legs.Sum(x =>
+            {
+                var value = Math.Abs(Securities[x.Symbol].Price * x.Quantity);
+                return x.Symbol.ID.SecurityType == SecurityType.IndexOption
+                    ? value * _multiplier
+                    : value;
             });
-            ComboMarketOrder(legs, -(int)Math.Floor(qty), asynchronous: true);
+            ComboMarketOrder(legs, -(int)Math.Floor(quantity), asynchronous: true);
         }
     }
 }

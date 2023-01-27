@@ -60,8 +60,8 @@ class IndexOptionCallCalendarSpreadAlgorithm(QCAlgorithm):
             Leg.Create(self.vxz, -100),
             Leg.Create(self.spy, -10)
         ]
-        qty = self.Portfolio.TotalPortfolioValue // \
-            sum([abs(self.Securities[x.Symbol].Price * x.Quantity) * self.multiplier if x.Symbol.ID.SecurityType == SecurityType.IndexOption
-                 else abs(self.Securities[x.Symbol].Price * x.Quantity)
+        quantity = self.Portfolio.TotalPortfolioValue // \
+            sum([abs(self.Securities[x.Symbol].Price * x.Quantity * 
+                 (self.multiplier if x.Symbol.ID.SecurityType == SecurityType.IndexOption else 1))
                  for x in legs])
-        self.ComboMarketOrder(legs, -qty, asynchronous=True)
+        self.ComboMarketOrder(legs, -quantity, asynchronous=True)
