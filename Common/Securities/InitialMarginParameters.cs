@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -51,7 +51,7 @@ namespace QuantConnect.Securities
             var derivative = Security as IDerivativeSecurity;
             if (derivative == null)
             {
-                throw new InvalidOperationException("ForUnderlying is only invokable for IDerivativeSecurity (Option|Future)");
+                throw new InvalidOperationException(Messages.InitialMarginParameters.ForUnderlyingOnlyInvokableForIDerivativeSecurity);
             }
 
             return new InitialMarginParameters(derivative.Underlying, Quantity);

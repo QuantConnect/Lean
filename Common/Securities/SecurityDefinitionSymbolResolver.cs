@@ -36,7 +36,7 @@ namespace QuantConnect.Securities
         private readonly IMapFileProvider _mapFileProvider;
         private readonly string _securitiesDefinitionKey;
         private readonly IDataProvider _dataProvider;
-        
+
         /// <summary>
         /// Creates an instance of the symbol resolver
         /// </summary>
@@ -45,15 +45,15 @@ namespace QuantConnect.Securities
         public SecurityDefinitionSymbolResolver(IDataProvider dataProvider = null, string securitiesDefinitionKey = null)
         {
             _securitiesDefinitionKey = securitiesDefinitionKey ?? Path.Combine(Globals.DataFolder, "symbol-properties", "security-database.csv");
-            
-            _dataProvider = dataProvider ?? 
+
+            _dataProvider = dataProvider ??
                 Composer.Instance.GetExportedValueByTypeName<IDataProvider>(
                     Config.Get("data-provider", "QuantConnect.Lean.Engine.DataFeeds.DefaultDataProvider"));
 
             _mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"));
             _mapFileProvider.Initialize(_dataProvider);
         }
-        
+
         /// <summary>
         /// Converts CUSIP into a Lean <see cref="Symbol"/>
         /// </summary>
@@ -71,12 +71,12 @@ namespace QuantConnect.Securities
             {
                 return null;
             }
-            
+
             return SecurityDefinitionToSymbol(
                 GetSecurityDefinitions().FirstOrDefault(x => x.CUSIP != null && x.CUSIP.Equals(cusip, StringComparison.InvariantCultureIgnoreCase)),
                 tradingDate);
         }
-        
+
         /// <summary>
         /// Converts an asset's composite FIGI into a Lean <see cref="Symbol"/>
         /// </summary>
@@ -94,12 +94,12 @@ namespace QuantConnect.Securities
             {
                 return null;
             }
-            
+
             return SecurityDefinitionToSymbol(
                 GetSecurityDefinitions().FirstOrDefault(x => x.CompositeFIGI != null && x.CompositeFIGI.Equals(compositeFigi, StringComparison.InvariantCultureIgnoreCase)),
                 tradingDate);
         }
-        
+
         /// <summary>
         /// Converts SEDOL into a Lean <see cref="Symbol"/>
         /// </summary>
@@ -117,7 +117,7 @@ namespace QuantConnect.Securities
             {
                 return null;
             }
-            
+
             return SecurityDefinitionToSymbol(
                 GetSecurityDefinitions().FirstOrDefault(x => x.SEDOL != null && x.SEDOL.Equals(sedol, StringComparison.InvariantCultureIgnoreCase)),
                 tradingDate);
@@ -140,7 +140,7 @@ namespace QuantConnect.Securities
             {
                 return null;
             }
-            
+
             return SecurityDefinitionToSymbol(
                 GetSecurityDefinitions().FirstOrDefault(x => x.ISIN != null && x.ISIN.Equals(isin, StringComparison.InvariantCultureIgnoreCase)),
                 tradingDate);
@@ -163,7 +163,7 @@ namespace QuantConnect.Securities
             }
 
             var mapFileResolver = _mapFileProvider.Get(AuxiliaryDataKey.Create(securityDefinition.SecurityIdentifier));
-            
+
             // Get the first ticker the symbol traded under, and then lookup the
             // trading date to get the ticker on the trading date.
             var mapFile = mapFileResolver
@@ -172,15 +172,15 @@ namespace QuantConnect.Securities
             // The mapped ticker will be null if the map file is null or there's
             // no entry found for the given trading date.
             var mappedTicker = mapFile?.GetMappedSymbol(tradingDate, null);
-            
+
             // If we're null, then try again; get the last entry of the map file and use
             // it as the Symbol we return to the caller.
             mappedTicker ??= mapFile?
                 .LastOrDefault()?
                 .MappedSymbol;
 
-            return string.IsNullOrWhiteSpace(mappedTicker) 
-                ? null 
+            return string.IsNullOrWhiteSpace(mappedTicker)
+                ? null
                 : new Symbol(securityDefinition.SecurityIdentifier, mappedTicker);
         }
 
@@ -197,7 +197,8 @@ namespace QuantConnect.Securities
             if (!SecurityDefinition.TryRead(_dataProvider, _securitiesDefinitionKey, out _securityDefinitions))
             {
                 _securityDefinitions = new List<SecurityDefinition>();
-                Log.Error($"SecurityDefinitionSymbolResolver(): No security definitions data loaded from file: {_securitiesDefinitionKey}");
+                Log.Error("SecurityDefinitionSymbolResolver(): " +
+                    Messages.SecurityDefinitionSymbolResolver.NoSecurityDefinitionsLoaded(_securitiesDefinitionKey));
             }
             return _securityDefinitions;
         }

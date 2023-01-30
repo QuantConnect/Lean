@@ -118,7 +118,7 @@ namespace QuantConnect.Securities
         /// <param name="holding">SecurityHoldings object</param>
         /// <exception cref="NotImplementedException">Portfolio object is an adaptor for Security Manager. This method is not applicable for PortfolioManager class.</exception>
         /// <remarks>This method is not implemented and using it will throw an exception</remarks>
-        public void Add(Symbol symbol, SecurityHolding holding) { throw new NotImplementedException("Portfolio object is an adaptor for Security Manager. To add a new asset add the required data during initialization."); }
+        public void Add(Symbol symbol, SecurityHolding holding) { throw new NotImplementedException(Messages.SecurityPortfolioManager.DictionaryAddNotImplemented); }
 
         /// <summary>
         /// Add a new securities key value pair to the portfolio.
@@ -126,14 +126,14 @@ namespace QuantConnect.Securities
         /// <param name="pair">Key value pair of dictionary</param>
         /// <exception cref="NotImplementedException">Portfolio object is an adaptor for Security Manager. This method is not applicable for PortfolioManager class.</exception>
         /// <remarks>This method is not implemented and using it will throw an exception</remarks>
-        public void Add(KeyValuePair<Symbol, SecurityHolding> pair) { throw new NotImplementedException("Portfolio object is an adaptor for Security Manager. To add a new asset add the required data during initialization."); }
+        public void Add(KeyValuePair<Symbol, SecurityHolding> pair) { throw new NotImplementedException(Messages.SecurityPortfolioManager.DictionaryAddNotImplemented); }
 
         /// <summary>
         /// Clear the portfolio of securities objects.
         /// </summary>
         /// <exception cref="NotImplementedException">Portfolio object is an adaptor for Security Manager. This method is not applicable for PortfolioManager class.</exception>
         /// <remarks>This method is not implemented and using it will throw an exception</remarks>
-        public override void Clear() { throw new NotImplementedException("Portfolio object is an adaptor for Security Manager and cannot be cleared."); }
+        public override void Clear() { throw new NotImplementedException(Messages.SecurityPortfolioManager.DictionaryClearNotImplemented); }
 
         /// <summary>
         /// Remove this keyvalue pair from the portfolio.
@@ -141,7 +141,7 @@ namespace QuantConnect.Securities
         /// <exception cref="NotImplementedException">Portfolio object is an adaptor for Security Manager. This method is not applicable for PortfolioManager class.</exception>
         /// <param name="pair">Key value pair of dictionary</param>
         /// <remarks>This method is not implemented and using it will throw an exception</remarks>
-        public bool Remove(KeyValuePair<Symbol, SecurityHolding> pair) { throw new NotImplementedException("Portfolio object is an adaptor for Security Manager and objects cannot be removed."); }
+        public bool Remove(KeyValuePair<Symbol, SecurityHolding> pair) { throw new NotImplementedException(Messages.SecurityPortfolioManager.DictionaryRemoveNotImplemented); }
 
         /// <summary>
         /// Remove this symbol from the portfolio.
@@ -149,7 +149,7 @@ namespace QuantConnect.Securities
         /// <exception cref="NotImplementedException">Portfolio object is an adaptor for Security Manager. This method is not applicable for PortfolioManager class.</exception>
         /// <param name="symbol">Symbol of dictionary</param>
         /// <remarks>This method is not implemented and using it will throw an exception</remarks>
-        public override bool Remove(Symbol symbol) { throw new NotImplementedException("Portfolio object is an adaptor for Security Manager and objects cannot be removed."); }
+        public override bool Remove(Symbol symbol) { throw new NotImplementedException(Messages.SecurityPortfolioManager.DictionaryRemoveNotImplemented); }
 
         /// <summary>
         /// Check if the portfolio contains this symbol string.
@@ -580,9 +580,8 @@ namespace QuantConnect.Securities
             {
                 if (accountCurrency != CashBook.AccountCurrency)
                 {
-                    Log.Trace("SecurityPortfolioManager.SetAccountCurrency():" +
-                        $" account currency has already been set to {CashBook.AccountCurrency}." +
-                        $" Will ignore new value {accountCurrency}");
+                    Log.Trace("SecurityPortfolioManager.SetAccountCurrency(): " +
+                        Messages.SecurityPortfolioManager.AccountCurrencyAlreadySet(CashBook, accountCurrency));
                 }
                 return;
             }
@@ -591,19 +590,17 @@ namespace QuantConnect.Securities
             if (Securities.Count > 0)
             {
                 throw new InvalidOperationException("SecurityPortfolioManager.SetAccountCurrency(): " +
-                    "Cannot change AccountCurrency after adding a Security. " +
-                    "Please move SetAccountCurrency() before AddSecurity().");
+                    Messages.SecurityPortfolioManager.CannotChangeAccountCurrencyAfterAddingSecurity);
             }
 
             if (_setCashWasCalled)
             {
                 throw new InvalidOperationException("SecurityPortfolioManager.SetAccountCurrency(): " +
-                    "Cannot change AccountCurrency after setting cash. " +
-                    "Please move SetAccountCurrency() before SetCash().");
+                    Messages.SecurityPortfolioManager.CannotChangeAccountCurrencyAfterSettingCash);
             }
 
-            Log.Trace("SecurityPortfolioManager.SetAccountCurrency():" +
-                $" setting account currency to {accountCurrency}");
+            Log.Trace("SecurityPortfolioManager.SetAccountCurrency(): " +
+                Messages.SecurityPortfolioManager.SettingAccountCurrency(accountCurrency));
 
             UnsettledCashBook.AccountCurrency = accountCurrency;
             CashBook.AccountCurrency = accountCurrency;
@@ -860,10 +857,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public void LogMarginInformation(OrderRequest orderRequest = null)
         {
-            Log.Trace("Total margin information: " +
-                  Invariant($"TotalMarginUsed: {TotalMarginUsed:F2}, ") +
-                  Invariant($"MarginRemaining: {MarginRemaining:F2}")
-              );
+            Log.Trace(Messages.SecurityPortfolioManager.TotalMarginInformation(TotalMarginUsed, MarginRemaining));
 
             var orderSubmitRequest = orderRequest as SubmitOrderRequest;
             if (orderSubmitRequest != null)
@@ -880,10 +874,7 @@ namespace QuantConnect.Securities
                     this, positionGroup, direction
                 );
 
-                Log.Trace("Order request margin information: " +
-                    Invariant($"MarginUsed: {marginUsed:F2}, ") +
-                    Invariant($"MarginRemaining: {marginRemaining.Value:F2}")
-                );
+                Log.Trace(Messages.SecurityPortfolioManager.OrderRequestMarginInformation(marginUsed, marginRemaining.Value));
             }
         }
 

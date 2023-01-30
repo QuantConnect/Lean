@@ -22,7 +22,6 @@ using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
-using static QuantConnect.StringExtensions;
 using QuantConnect.Securities.CurrencyConversion;
 
 namespace QuantConnect.Securities
@@ -123,7 +122,7 @@ namespace QuantConnect.Securities
         {
             if (string.IsNullOrEmpty(symbol))
             {
-                throw new ArgumentException("Cash symbols cannot be null or empty.");
+                throw new ArgumentException(Messages.Cash.NullOrEmptyCashSymbol);
             }
             Amount = amount;
             ConversionRate = conversionRate;
@@ -249,7 +248,7 @@ namespace QuantConnect.Securities
                     Symbol == x.Value.QuoteCurrency))
             {
                 // currency not found in any tradeable pair
-                Log.Error($"No tradeable pair was found for currency {Symbol}, conversion rate to account currency ({accountCurrency}) will be set to zero.");
+                Log.Error(Messages.Cash.NoTradablePairFoundForCurrencyConversion(Symbol, accountCurrency));
                 CurrencyConversion = null;
                 ConversionRate = 0m;
                 return null;
@@ -259,7 +258,7 @@ namespace QuantConnect.Securities
             // This allows us to add cash for "StableCoins" that are 1-1 with our account currency without needing a conversion security.
             // Check out the StableCoinsWithoutPairs static var for those that are missing their 1-1 conversion pairs
             if (marketMap.TryGetValue(SecurityType.Crypto, out var market)
-                && 
+                &&
                 (Currencies.IsStableCoinWithoutPair(Symbol + accountCurrency, market)
                 || Currencies.IsStableCoinWithoutPair(accountCurrency + Symbol, market)))
             {
@@ -297,7 +296,7 @@ namespace QuantConnect.Securities
                     config,
                     addToSymbolCache: false);
 
-                Log.Trace($"Cash.EnsureCurrencyDataFeed(): Adding {symbol.Value} for cash {Symbol} currency feed");
+                Log.Trace("Cash.EnsureCurrencyDataFeed(): " + Messages.Cash.AddingSecuritySymbolForCashCurrencyFeed(symbol, Symbol));
 
                 securities.Add(symbol, newSecurity);
                 requiredSecurities.Add(config);
@@ -329,10 +328,7 @@ namespace QuantConnect.Securities
         /// <returns>A <see cref="string"/> that represents the current <see cref="Cash"/>.</returns>
         public string ToString(string accountCurrency)
         {
-            // round the conversion rate for output
-            var rate = ConversionRate;
-            rate = rate < 1000 ? rate.RoundToSignificantDigits(5) : Math.Round(rate, 2);
-            return Invariant($"{Symbol}: {CurrencySymbol}{Amount,15:0.00} @ {rate,10:0.00####} = {Currencies.GetCurrencySymbol(accountCurrency)}{Math.Round(ValueInAccountCurrency, 2)}");
+            return Messages.Cash.ToString(this, accountCurrency);
         }
 
         private static IEnumerable<KeyValuePair<SecurityDatabaseKey, SymbolProperties>> GetAvailableSymbolPropertiesDatabaseEntries(
