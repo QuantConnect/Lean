@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -73,7 +73,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
                 {
                     if (_securityValuesBySymbolFunc == null)
                     {
-                        throw new KeyNotFoundException(Invariant($"SecurityValues for symbol {symbol} was not found"));
+                        throw new KeyNotFoundException(Messages.ReadOnlySecurityValuesCollection.SecurityValuesForSymbolNotFound(symbol));
                     }
                     result = _securityValuesBySymbolFunc(symbol);
                     _securityValuesBySymbol[symbol] = result;
