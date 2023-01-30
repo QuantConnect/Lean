@@ -46,7 +46,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
                 var castResolution = allResolutions ? Resolution.Tick : (Resolution)Enum.Parse(typeof(Resolution), resolution);
 
                 // Load settings from config.json
-                var dataDirectory = Config.Get("data-directory", "../../../Data");
+                var dataDirectory = "../../../Data";
 
                 // Download the data
                 var downloader = new DukascopyDataDownloader();
