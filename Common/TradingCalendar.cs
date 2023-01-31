@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Securities;
 using QLNet;
-using QuantConnect.Logging;
 
 namespace QuantConnect
 {
@@ -129,9 +128,7 @@ namespace QuantConnect
             var totalDays = (int)(end.Date.AddDays(1.0) - start.Date).TotalDays;
             if (totalDays < 0)
             {
-                throw new ArgumentException(
-                    $"TradingCalendar.PopulateTradingDays(): Total days is negative ({totalDays}), indicating reverse start and end times." +
-                    $" Check your usage of TradingCalendar to ensure proper arrangement of variables");
+                throw new ArgumentException($"TradingCalendar.PopulateTradingDays(): {Messages.TradingCalendar.InvalidTotalDays(totalDays)}");
             }
 
             foreach (var dayIdx in Enumerable.Range(0, totalDays))

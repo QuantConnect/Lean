@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -247,25 +247,82 @@ namespace QuantConnect
 
             return new Dictionary<string, string>
             {
-                {"Fitness Score", $"{Invariant(FitnessScore)}"},
-                {"Kelly Criterion Estimate", $"{Invariant(KellyCriterionEstimate)}"},
-                {"Kelly Criterion Probability Value", $"{Invariant(KellyCriterionProbabilityValue)}"},
-                {"Sortino Ratio", $"{Invariant(SortinoRatio)}"},
-                {"Return Over Maximum Drawdown", $"{Invariant(ReturnOverMaxDrawdown)}"},
-                {"Portfolio Turnover", $"{Invariant(PortfolioTurnover)}"},
-                {"Total Insights Generated", $"{Invariant(TotalInsightsGenerated)}"},
-                {"Total Insights Closed", $"{Invariant(TotalInsightsClosed)}"},
-                {"Total Insights Analysis Completed", $"{Invariant(TotalInsightsAnalysisCompleted)}"},
-                {"Long Insight Count", $"{Invariant(LongCount)}"},
-                {"Short Insight Count", $"{Invariant(ShortCount)}"},
-                {"Long/Short Ratio", $"{Invariant(Math.Round(100*LongShortRatio, 2))}%"},
-                {"Estimated Monthly Alpha Value", $"{accountCurrencySymbol}{Invariant(EstimatedMonthlyAlphaValue.SmartRounding())}"},
-                {"Total Accumulated Estimated Alpha Value", $"{accountCurrencySymbol}{Invariant(TotalAccumulatedEstimatedAlphaValue.SmartRounding())}"},
-                {"Mean Population Estimated Insight Value", $"{accountCurrencySymbol}{Invariant(MeanPopulationEstimatedInsightValue.SmartRounding())}"},
-                {"Mean Population Direction", $"{Invariant(Math.Round(100 * MeanPopulationScore.Direction, 4))}%"},
-                {"Mean Population Magnitude", $"{Invariant(Math.Round(100 * MeanPopulationScore.Magnitude, 4))}%"},
-                {"Rolling Averaged Population Direction", $"{Invariant(Math.Round(100 * RollingAveragedPopulationScore.Direction, 4))}%"},
-                {"Rolling Averaged Population Magnitude", $"{Invariant(Math.Round(100 * RollingAveragedPopulationScore.Magnitude, 4))}%"},
+                {
+                    Messages.AlphaRuntimeStatistics.FitnessScoreKey,
+                    Invariant(FitnessScore)
+                },
+                {
+                    Messages.AlphaRuntimeStatistics.KellyCriterionEstimateKey,
+                    Invariant(KellyCriterionEstimate)
+                },
+                {
+                    Messages.AlphaRuntimeStatistics.KellyCriterionProbabilityValueKey,
+                    Invariant(KellyCriterionProbabilityValue)
+                },
+                {
+                    Messages.AlphaRuntimeStatistics.SortinoRatioKey,
+                    Invariant(SortinoRatio)
+                },
+                {
+                    Messages.AlphaRuntimeStatistics.ReturnOverMaximumDrawdownKey,
+                    Invariant(ReturnOverMaxDrawdown)
+                },
+                {
+                    Messages.AlphaRuntimeStatistics.PortfolioTurnoverKey,
+                    Invariant(PortfolioTurnover)
+                },
+                {
+                    Messages.AlphaRuntimeStatistics.TotalInsightsGeneratedKey,
+                    Invariant(TotalInsightsGenerated)
+                },
+                {
+                    Messages.AlphaRuntimeStatistics.TotalInsightsClosedKey,
+                    Invariant(TotalInsightsClosed)
+                },
+                {
+                    Messages.AlphaRuntimeStatistics.TotalInsightsAnalysisCompletedKey,
+                    Invariant(TotalInsightsAnalysisCompleted)
+                },
+                {
+                    Messages.AlphaRuntimeStatistics.LongInsightCountKey,
+                    Invariant(LongCount)
+                },
+                {
+                    Messages.AlphaRuntimeStatistics.ShortInsightCountKey,
+                    Invariant(ShortCount)
+                },
+                {
+                    Messages.AlphaRuntimeStatistics.LongShortRatioKey,
+                    $"{Invariant(Math.Round(100*LongShortRatio, 2))}%"
+                },
+                {
+                    Messages.AlphaRuntimeStatistics.EstimatedMonthlyAlphaValueKey,
+                    $"{accountCurrencySymbol}{Invariant(EstimatedMonthlyAlphaValue.SmartRounding())}"
+                },
+                {
+                    Messages.AlphaRuntimeStatistics.TotalAccumulatedEstimatedAlphaValueKey,
+                    $"{accountCurrencySymbol}{Invariant(TotalAccumulatedEstimatedAlphaValue.SmartRounding())}"
+                },
+                {
+                    Messages.AlphaRuntimeStatistics.MeanPopulationEstimatedInsightValueKey,
+                    $"{accountCurrencySymbol}{Invariant(MeanPopulationEstimatedInsightValue.SmartRounding())}"
+                },
+                {
+                    Messages.AlphaRuntimeStatistics.MeanPopulationDirectionKey,
+                    $"{Invariant(Math.Round(100 * MeanPopulationScore.Direction, 4))}%"
+                },
+                {
+                    Messages.AlphaRuntimeStatistics.MeanPopulationMagnitudeKey,
+                    $"{Invariant(Math.Round(100 * MeanPopulationScore.Magnitude, 4))}%"
+                },
+                {
+                    Messages.AlphaRuntimeStatistics.RollingAveragedPopulationDirectionKey,
+                    $"{Invariant(Math.Round(100 * RollingAveragedPopulationScore.Direction, 4))}%"
+                },
+                {
+                    Messages.AlphaRuntimeStatistics.RollingAveragedPopulationMagnitudeKey,
+                    $"{Invariant(Math.Round(100 * RollingAveragedPopulationScore.Magnitude, 4))}%"
+                },
             };
         }
 

@@ -26,7 +26,6 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Securities.Future;
 using QuantConnect.Util;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
 {
@@ -145,7 +144,7 @@ namespace QuantConnect
             {
                 if (_underlying == null)
                 {
-                    throw new InvalidOperationException("No underlying specified for this identifier. Check that HasUnderlying is true before accessing the Underlying property.");
+                    throw new InvalidOperationException(Messages.SecurityIdentifier.NoUnderlyingForIdentifier);
                 }
                 return _underlying;
             }
@@ -182,7 +181,7 @@ namespace QuantConnect
                         _date = DateTime.FromOADate(oadate);
                         return _date.Value;
                     default:
-                        throw new InvalidOperationException("Date is only defined for SecurityType.Equity, SecurityType.Option, SecurityType.Future, SecurityType.FutureOption, SecurityType.IndexOption, and SecurityType.Base");
+                        throw new InvalidOperationException(Messages.SecurityIdentifier.DateNotSupportedBySecurityType);
                 }
             }
         }
@@ -238,7 +237,7 @@ namespace QuantConnect
 
                 if (!SecurityType.IsOption())
                 {
-                    throw new InvalidOperationException("StrikePrice is only defined for SecurityType.Option, SecurityType.FutureOption, and SecurityType.IndexOption");
+                    throw new InvalidOperationException(Messages.SecurityIdentifier.StrikePriceNotSupportedBySecurityType);
                 }
 
                 // performance: lets calculate strike price once
@@ -276,7 +275,7 @@ namespace QuantConnect
 
                 if (!SecurityType.IsOption())
                 {
-                    throw new InvalidOperationException("OptionRight is only defined for SecurityType.Option, SecurityType.FutureOption, and SecurityType.IndexOption");
+                    throw new InvalidOperationException(Messages.SecurityIdentifier.OptionRightNotSupportedBySecurityType);
                 }
                 _optionRight = (OptionRight)ExtractFromProperties(PutCallOffset, PutCallWidth);
                 return _optionRight.Value;
@@ -299,7 +298,7 @@ namespace QuantConnect
 
                 if (!SecurityType.IsOption())
                 {
-                    throw new InvalidOperationException("OptionStyle is only defined for SecurityType.Option, SecurityType.FutureOption, and SecurityType.IndexOption");
+                    throw new InvalidOperationException(Messages.SecurityIdentifier.OptionStyleNotSupportedBySecurityType);
                 }
 
                 _optionStyle = (OptionStyle)(ExtractFromProperties(OptionStyleOffset, OptionStyleWidth));
@@ -321,11 +320,11 @@ namespace QuantConnect
         {
             if (symbol == null)
             {
-                throw new ArgumentNullException(nameof(symbol), "SecurityIdentifier requires a non-null string 'symbol'");
+                throw new ArgumentNullException(nameof(symbol), Messages.SecurityIdentifier.NullSymbol);
             }
             if (symbol.IndexOfAny(InvalidCharacters) != -1)
             {
-                throw new ArgumentException("symbol must not contain the characters '|' or ' '.", nameof(symbol));
+                throw new ArgumentException(Messages.SecurityIdentifier.SymbolWithInvalidCharacters, nameof(symbol));
             }
             _symbol = symbol;
             _properties = properties;
@@ -337,7 +336,7 @@ namespace QuantConnect
             SecurityType = (SecurityType)ExtractFromProperties(SecurityTypeOffset, SecurityTypeWidth, properties);
             if (!SecurityType.IsValid())
             {
-                throw new ArgumentException($"The provided properties do not match with a valid {nameof(SecurityType)}", "properties");
+                throw new ArgumentException(Messages.SecurityIdentifier.PropertiesDoNotMatchAnySecurityType, nameof(properties));
             }
             _hashCode = unchecked (symbol.GetHashCode() * 397) ^ properties.GetHashCode();
             _hashCodeSet = true;
@@ -355,7 +354,7 @@ namespace QuantConnect
         {
             if (symbol == null)
             {
-                throw new ArgumentNullException(nameof(symbol), "SecurityIdentifier requires a non-null string 'symbol'");
+                throw new ArgumentNullException(nameof(symbol), Messages.SecurityIdentifier.NullSymbol);
             }
             _symbol = symbol;
             _properties = properties;
@@ -609,11 +608,11 @@ namespace QuantConnect
         {
             if ((ulong)securityType >= SecurityTypeWidth || securityType < 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(securityType), "securityType must be between 0 and 99");
+                throw new ArgumentOutOfRangeException(nameof(securityType), Messages.SecurityIdentifier.InvalidSecurityType(nameof(securityType)));
             }
             if ((int)optionRight > 1 || optionRight < 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(optionRight), "optionType must be either 0 or 1");
+                throw new ArgumentOutOfRangeException(nameof(optionRight), Messages.SecurityIdentifier.InvalidOptionRight(nameof(optionRight)));
             }
 
             // normalize input strings
@@ -712,7 +711,7 @@ namespace QuantConnect
 
             if (strike >= maxStrikePrice || strike <= -(long)maxStrikePrice)
             {
-                throw new ArgumentException(Invariant($"The specified strike price\'s precision is too high: {str}"));
+                throw new ArgumentException(Messages.SecurityIdentifier.InvalidStrikePrice(str));
             }
 
             var encodedStrike = (long)strike;
@@ -834,7 +833,7 @@ namespace QuantConnect
                         var parts = current.Split(SplitSpace, StringSplitOptions.RemoveEmptyEntries);
                         if (parts.Length != 2)
                         {
-                            exception = new FormatException("The string must be splittable on space into two parts.");
+                            exception = new FormatException(Messages.SecurityIdentifier.StringIsNotSplittable);
                             return false;
                         }
 
@@ -852,7 +851,8 @@ namespace QuantConnect
                 catch (Exception error)
                 {
                     exception = error;
-                    Log.Error($"SecurityIdentifier.TryParseProperties(): Error parsing SecurityIdentifier: '{value}', Exception: {exception}");
+                    Log.Error($@"SecurityIdentifier.TryParseProperties(): {
+                        Messages.SecurityIdentifier.ErrorParsingSecurityIdentifier(value, exception)}");
                     SecurityIdentifierCache[value] = null;
                     return false;
                 }
@@ -894,8 +894,7 @@ namespace QuantConnect
                 return marketIdentifier.Value;
             }
 
-            throw new ArgumentOutOfRangeException(nameof(market), "The specified market wasn't found in the markets lookup. " +
-                $"Requested: {market}. You can add markets by calling QuantConnect.Market.Add(string,int)");
+            throw new ArgumentOutOfRangeException(nameof(market), Messages.SecurityIdentifier.MarketNotFound(market));
         }
         #endregion
 
@@ -938,7 +937,7 @@ namespace QuantConnect
 
             if (!(obj is SecurityIdentifier))
             {
-                throw new ArgumentException($"Object must be of type {nameof(SecurityIdentifier)}");
+                throw new ArgumentException(Messages.SecurityIdentifier.UnexpectedTypeToCompareTo);
             }
 
             return CompareTo((SecurityIdentifier) obj);

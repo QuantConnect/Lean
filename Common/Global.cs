@@ -151,16 +151,7 @@ namespace QuantConnect
         /// </summary>
         public override string ToString()
         {
-            var value = Invariant($"{Symbol.Value}: {Quantity} @ ") +
-                Invariant($"{CurrencySymbol}{AveragePrice} - ") +
-                Invariant($"Market: {CurrencySymbol}{MarketPrice}");
-
-            if (ConversionRate != 1m)
-            {
-                value += Invariant($" - Conversion: {ConversionRate}");
-            }
-
-            return value;
+            return Messages.Holding.ToString(this);
         }
     }
 
@@ -528,7 +519,7 @@ namespace QuantConnect
             Initialized = false;
             HasSubscribers = true;
             Status = AlgorithmStatus.Running;
-            ChartSubscription = "Strategy Equity";
+            ChartSubscription = Messages.AlgorithmControl.ChartSubscription;
         }
 
         /// <summary>
