@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -17,7 +17,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Indicators
 {
@@ -48,7 +47,7 @@ namespace QuantConnect.Indicators
         {
             if (size < 1)
             {
-                throw new ArgumentException("RollingWindow must have size of at least 1.", nameof(size));
+                throw new ArgumentException(Messages.RollingWindow.InvalidSize, nameof(size));
             }
             _list = new List<T>(size);
             Size = size;
@@ -112,7 +111,7 @@ namespace QuantConnect.Indicators
 
                     if (Samples <= Size)
                     {
-                        throw new InvalidOperationException("No items have been removed yet!");
+                        throw new InvalidOperationException(Messages.RollingWindow.NoItemsRemovedYet);
                     }
                     return _mostRecentlyRemoved;
                 }
@@ -140,19 +139,15 @@ namespace QuantConnect.Indicators
 
                     if (Count == 0)
                     {
-                        throw new ArgumentOutOfRangeException(nameof(i), "Rolling window is empty");
+                        throw new ArgumentOutOfRangeException(nameof(i), Messages.RollingWindow.WindowIsEmpty);
                     }
                     else if (i > Size - 1 || i < 0)
                     {
-                        throw new ArgumentOutOfRangeException(nameof(i), i,
-                            Invariant($"Index must be between 0 and {Size - 1} (rolling window is of size {Size})")
-                        );
+                        throw new ArgumentOutOfRangeException(nameof(i), i, Messages.RollingWindow.IndexOutOfSizeRange(Size));
                     }
                     else if (i > Count - 1)
                     {
-                        throw new ArgumentOutOfRangeException(nameof(i), i,
-                            Invariant($"Index must be between 0 and {Count - 1} (entry {i} does not exist yet)")
-                        );
+                        throw new ArgumentOutOfRangeException(nameof(i), i, Messages.RollingWindow.IndexOutOfCountRange(Count, i));
                     }
 
                     return _list[(Count + _tail - i - 1) % Count];
@@ -170,7 +165,7 @@ namespace QuantConnect.Indicators
 
                     if (i < 0 || i > Count - 1)
                     {
-                        throw new ArgumentOutOfRangeException(nameof(i), i, Invariant($"Must be between 0 and {Count - 1}"));
+                        throw new ArgumentOutOfRangeException(nameof(i), i, Messages.RollingWindow.SetIndexOutOfRange(Count));
                     }
                     _list[(Count + _tail - i - 1) % Count] = value;
                 }

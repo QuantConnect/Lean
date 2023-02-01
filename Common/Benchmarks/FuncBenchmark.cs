@@ -46,8 +46,7 @@ namespace QuantConnect.Benchmarks
         {
             if (!pyFunc.TryConvertToDelegate(out _benchmark))
             {
-                throw new ArgumentException("FuncBenchmark(): Unable to convert Python function to benchmark function," +
-                    " please ensure the function supports Datetime input and decimal output");
+                throw new ArgumentException(Messages.FuncBenchmark.UnableToConvertPythonFunctionToBenchmarkFunction);
             }
         }
 
