@@ -46,7 +46,7 @@ namespace QuantConnect.Benchmarks
         {
             if (!pyFunc.TryConvertToDelegate(out _benchmark))
             {
-                throw new ArgumentException(Messages.FuncBenchmark.UnableToConvertPythonFunctionToBenchmarkFunction);
+                throw new ArgumentException($"FuncBenchmark(): {Messages.FuncBenchmark.UnableToConvertPythonFunctionToBenchmarkFunction}");
             }
         }
 

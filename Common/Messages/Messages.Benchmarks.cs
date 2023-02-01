@@ -26,7 +26,7 @@ namespace QuantConnect
         public static class FuncBenchmark
         {
             public static string UnableToConvertPythonFunctionToBenchmarkFunction =
-            "Unable to convert Python function to benchmark function, please ensure the function supports Datetime input and decimal output";
+                "Unable to convert Python function to benchmark function, please ensure the function supports Datetime input and decimal output";
         }
     }
 }

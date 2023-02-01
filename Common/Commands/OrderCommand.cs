@@ -79,7 +79,7 @@ namespace QuantConnect.Commands
             var request = new SubmitOrderRequest(OrderType, Symbol.SecurityType, Symbol, Quantity, StopPrice, LimitPrice, DateTime.UtcNow, Tag);
             var ticket = algorithm.SubmitOrderRequest(request);
             var response = ticket.GetMostRecentOrderResponse();
-            var message = $"{OrderType} for {Quantity} units of {Symbol}: {response}";
+            var message = Messages.OrderCommand.CommandInfo(OrderType, Symbol, Quantity, response);
 
             if (response.IsError)
             {
