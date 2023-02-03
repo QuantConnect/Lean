@@ -37,7 +37,7 @@ namespace QuantConnect.Notifications
         /// <param name="writer">The <see cref="T:Newtonsoft.Json.JsonWriter"/> to write to.</param><param name="value">The value.</param><param name="serializer">The calling serializer.</param>
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            throw new NotImplementedException("Not implemented, should not be called");
+            throw new NotImplementedException(Messages.NotificationJsonConverter.WriteNotImplemented);
         }
 
         /// <summary>
@@ -81,7 +81,7 @@ namespace QuantConnect.Notifications
                 return new NotificationTelegram(token.ToString(), message?.ToString(), botToken?.ToString());
             }
 
-            throw new NotImplementedException($"Unexpected json object: '{jObject.ToString(Formatting.None)}'");
+            throw new NotImplementedException(Messages.NotificationJsonConverter.UnexpectedJsonObject(jObject));
         }
 
         /// <summary>
