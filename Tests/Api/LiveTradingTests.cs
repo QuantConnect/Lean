@@ -332,42 +332,43 @@ namespace QuantConnect.Tests.API
         {
             // Create a new project
             var project = ApiClient.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp, TestOrganization);
+            var projectId = project.Projects.First().ProjectId;
 
             // Update Project Files
-            var updateProjectFileContent = ApiClient.UpdateProjectFileContent(project.Projects.First().ProjectId, "Main.cs", file.Code);
+            var updateProjectFileContent = ApiClient.UpdateProjectFileContent(projectId, "Main.cs", file.Code);
             Assert.IsTrue(updateProjectFileContent.Success);
 
             // Create compile
-            var compile = ApiClient.CreateCompile(project.Projects.First().ProjectId);
+            var compile = ApiClient.CreateCompile(projectId);
             Assert.IsTrue(compile.Success);
 
             // Wait at max 30 seconds for project to compile
-            Compile compileCheck = WaitForCompilerResponse(project.Projects.First().ProjectId, compile.CompileId, 30);
+            var compileCheck = WaitForCompilerResponse(projectId, compile.CompileId, 30);
             Assert.IsTrue(compileCheck.Success);
             Assert.IsTrue(compileCheck.State == CompileState.BuildSuccess);
 
             // Get a live node to launch the algorithm on
-            var nodes = ApiClient.ReadNodes(TestOrganization);
-            Assert.IsTrue(nodes.Success);
-            var freeNode = nodes.LiveNodes.Where(x => x.Busy == false);
+            var nodesResponse = ApiClient.ReadProjectNodes(projectId);
+            Assert.IsTrue(nodesResponse.Success);
+            var freeNode = nodesResponse.Nodes.LiveNodes.Where(x => x.Busy == false);
             Assert.IsNotEmpty(freeNode, "No free Live Nodes found");
 
             // Create live default algorithm
-            var createLiveAlgorithm = ApiClient.CreateLiveAlgorithm(project.Projects.First().ProjectId, compile.CompileId, freeNode.FirstOrDefault().Id, settings);
+            var createLiveAlgorithm = ApiClient.CreateLiveAlgorithm(projectId, compile.CompileId, freeNode.FirstOrDefault().Id, settings);
             Assert.IsTrue(createLiveAlgorithm.Success);
 
             if (stopLiveAlgos)
             {
                 // Liquidate live algorithm; will also stop algorithm
-                var liquidateLive = ApiClient.LiquidateLiveAlgorithm(project.Projects.First().ProjectId);
+                var liquidateLive = ApiClient.LiquidateLiveAlgorithm(projectId);
                 Assert.IsTrue(liquidateLive.Success);
 
                 // Delete the project
-                var deleteProject = ApiClient.DeleteProject(project.Projects.First().ProjectId);
+                var deleteProject = ApiClient.DeleteProject(projectId);
                 Assert.IsTrue(deleteProject.Success);
             }
 
-            return project.Projects.First().ProjectId;
+            return projectId;
         }
 
         [Test]

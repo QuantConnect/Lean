@@ -95,6 +95,22 @@ namespace QuantConnect.Interfaces
         ProjectFilesResponse ReadProjectFiles(int projectId);
 
         /// <summary>
+        /// Read all nodes in a project.
+        /// </summary>
+        /// <param name="projectId">Project id to which the nodes refer</param>
+        /// <returns><see cref="ProjectNodesResponse"/> that includes the information about all nodes in the project</returns>
+        ProjectNodesResponse ReadProjectNodes(int projectId);
+
+        /// <summary>
+        /// Update the active state of some nodes to true.
+        /// If you don't provide any nodes, all the nodes become inactive and AutoSelectNode is true.
+        /// </summary>
+        /// <param name="projectId">Project id to which the nodes refer</param>
+        /// <param name="nodes">List of node ids to update</param>
+        /// <returns><see cref="ProjectNodesResponse"/> that includes the information about all nodes in the project</returns>
+        ProjectNodesResponse UpdateProjectNodes(int projectId, string[] nodes);
+
+        /// <summary>
         /// Delete a file in a project
         /// </summary>
         /// <param name="projectId">Project id to which the file belongs</param>
@@ -306,50 +322,6 @@ namespace QuantConnect.Interfaces
         /// <param name="filePath">File path representing the data requested</param>
         /// <returns>A bool indicating whether the data was successfully downloaded or not.</returns>
         bool DownloadData(string filePath, string organizationId);
-
-        /// <summary>
-        /// Create a new node in the organization, node configuration is defined by the
-        /// <see cref="SKU"/>
-        /// </summary>
-        /// <param name="name">The name of the new node</param>
-        /// <param name="organizationId">ID of the organization</param>
-        /// <param name="sku"><see cref="SKU"/> Object representing configuration</param>
-        /// <returns>Returns <see cref="CreatedNode"/> which contains API response and
-        /// <see cref="Node"/></returns>
-        public CreatedNode CreateNode(string name, string organizationId, SKU sku);
-
-        /// <summary>
-        /// Reads the nodes associated with the organization, creating a
-        /// <see cref="NodeList"/> for the response
-        /// </summary>
-        /// <param name="organizationId">ID of the organization</param>
-        /// <returns><see cref="NodeList"/> containing Backtest, Research, and Live Nodes</returns>
-        public NodeList ReadNodes(string organizationId);
-
-        /// <summary>
-        /// Update an organizations node with a new name
-        /// </summary>
-        /// <param name="nodeId">The node ID of the node you want to update</param>
-        /// <param name="newName">The new name for that node</param>
-        /// <param name="organizationId">ID of the organization</param>
-        /// <returns><see cref="RestResponse"/> containing success response and errors</returns>
-        public RestResponse UpdateNode(string nodeId, string newName, string organizationId);
-
-        /// <summary>
-        /// Delete a node from an organization, requires node ID.
-        /// </summary>
-        /// <param name="nodeId">The node ID of the node you want to delete</param>
-        /// <param name="organizationId">ID of the organization</param>
-        /// <returns><see cref="RestResponse"/> containing success response and errors</returns>
-        public RestResponse DeleteNode(string nodeId, string organizationId);
-
-        /// <summary>
-        /// Stop a running node in a organization
-        /// </summary>
-        /// <param name="nodeId">The node ID of the node you want to stop</param>
-        /// <param name="organizationId">ID of the organization</param>
-        /// <returns><see cref="RestResponse"/> containing success response and errors</returns>
-        public RestResponse StopNode(string nodeId, string organizationId);
 
         /// <summary>
         /// Will read the organization account status
