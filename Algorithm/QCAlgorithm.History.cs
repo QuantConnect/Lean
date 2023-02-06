@@ -633,7 +633,17 @@ namespace QuantConnect.Algorithm
                     $"This could be due to the specified security not being of the requested type. Symbol: {symbol} Requested Type: {typeof(T).Name}");
             }
 
-            return History(requests).Get<T>(symbol).Memoize();
+            var slices = History(requests);
+
+            // TODO: This is a patch to fix the issue with the Slice.GetImpl method returning only the last tick
+            //       for each symbol instead of the whole list of ticks.
+            //       The actual issue is Slice.GetImpl, so patch this can be removed right after it is properly addressed.
+            if (typeof(T) == typeof(Tick))
+            {
+                return (IEnumerable<T>)slices.Select(x => x.Ticks).Where(x => x.ContainsKey(symbol)).SelectMany(x => x[symbol]);
+            }
+
+            return slices.Get<T>(symbol).Memoize();
         }
 
         [DocumentationAttribute(HistoricalData)]
