@@ -82,6 +82,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
 
                 if (_maximumDrawdownPercent < drawdown)
                 {
+                    _trailingAbsoluteHoldingsState.Remove(symbol);
                     // liquidate
                     yield return new PortfolioTarget(security.Symbol, 0);
                 }

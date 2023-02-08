@@ -75,12 +75,13 @@ namespace QuantConnect.Tests.Algorithm
     {
         public virtual void Dispose() {}
 #pragma warning disable 0067 // NullBrokerage doesn't use any of these so we will just ignore them
-        public event EventHandler<OrderEvent> OrderStatusChanged;
+        public event EventHandler<List<OrderEvent>> OrdersStatusChanged;
         public event EventHandler<OrderEvent> OptionPositionAssigned;
         public event EventHandler<OptionNotificationEventArgs> OptionNotification;
         public event EventHandler<AccountEvent> AccountChanged;
         public event EventHandler<BrokerageMessageEvent> Message;
         public event EventHandler<DelistingNotificationEventArgs> DelistingNotification;
+        public event EventHandler<BrokerageOrderIdChangedEvent> OrderIdChanged;
 #pragma warning restore 0067
 
         public string Name => "NullBrokerage";

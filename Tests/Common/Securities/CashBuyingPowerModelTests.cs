@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
@@ -73,6 +74,7 @@ namespace QuantConnect.Tests.Common.Securities
             _btcusd = new Crypto(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 _portfolio.CashBook[Currencies.USD],
+                _portfolio.CashBook["BTC"],
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.BTCUSD, Resolution.Minute, tz, tz, true, false, false),
                 new SymbolProperties("BTCUSD", Currencies.USD, 1, 0.01m, 0.00000001m, string.Empty),
                 ErrorCurrencyConverter.Instance,
@@ -82,6 +84,7 @@ namespace QuantConnect.Tests.Common.Securities
             _ethusd = new Crypto(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 _portfolio.CashBook[Currencies.USD],
+                _portfolio.CashBook["ETH"],
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.ETHUSD, Resolution.Minute, tz, tz, true, false, false),
                 new SymbolProperties("ETHUSD", Currencies.USD, 1, 0.01m, 0.00000001m, string.Empty),
                 ErrorCurrencyConverter.Instance,
@@ -91,6 +94,7 @@ namespace QuantConnect.Tests.Common.Securities
             _btceur = new Crypto(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 _portfolio.CashBook["EUR"],
+                _portfolio.CashBook["BTC"],
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.BTCEUR, Resolution.Minute, tz, tz, true, false, false),
                 new SymbolProperties("BTCEUR", "EUR", 1, 0.01m, 0.00000001m, string.Empty),
                 ErrorCurrencyConverter.Instance,
@@ -100,6 +104,7 @@ namespace QuantConnect.Tests.Common.Securities
             _ethbtc = new Crypto(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 _portfolio.CashBook["BTC"],
+                _portfolio.CashBook["ETH"],
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.ETHBTC, Resolution.Minute, tz, tz, true, false, false),
                 new SymbolProperties("ETHBTC", "BTC", 1, 0.00001m, 0.00000001m, string.Empty),
                 ErrorCurrencyConverter.Instance,
@@ -863,9 +868,9 @@ namespace QuantConnect.Tests.Common.Securities
         {
             using (var resetEvent = new ManualResetEvent(false))
             {
-                EventHandler<OrderEvent> handler = (s, e) => { resetEvent.Set(); };
+                EventHandler<List<OrderEvent>> handler = (s, e) => { resetEvent.Set(); };
 
-                _brokerage.OrderStatusChanged += handler;
+                _brokerage.OrdersStatusChanged += handler;
 
                 _algorithm.LimitOrder(symbol, quantity, limitPrice);
 
@@ -874,7 +879,7 @@ namespace QuantConnect.Tests.Common.Securities
                     throw new TimeoutException("SubmitLimitOrder");
                 }
 
-                _brokerage.OrderStatusChanged -= handler;
+                _brokerage.OrdersStatusChanged -= handler;
             }
         }
 
@@ -882,9 +887,9 @@ namespace QuantConnect.Tests.Common.Securities
         {
             using (var resetEvent = new ManualResetEvent(false))
             {
-                EventHandler<OrderEvent> handler = (s, e) => { resetEvent.Set(); };
+                EventHandler<List<OrderEvent>> handler = (s, e) => { resetEvent.Set(); };
 
-                _brokerage.OrderStatusChanged += handler;
+                _brokerage.OrdersStatusChanged += handler;
 
                 _algorithm.StopMarketOrder(symbol, quantity, stopPrice);
 
@@ -893,7 +898,7 @@ namespace QuantConnect.Tests.Common.Securities
                     throw new TimeoutException("SubmitStopMarketOrder");
                 }
 
-                _brokerage.OrderStatusChanged -= handler;
+                _brokerage.OrdersStatusChanged -= handler;
             }
         }
 

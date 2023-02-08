@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NodaTime;
 using NUnit.Framework;
@@ -99,12 +100,13 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
             Assert.AreEqual(2, fills.Count);
             Assert.IsFalse(fills[0].IsAssignment);
-            Assert.AreEqual("Automatic Exercise", fills[0].Message);
+
+            StringAssert.Contains("Automatic Exercise", fills[0].Message);
             Assert.AreEqual("Option Exercise", fills[1].Message);
 
             foreach (var fill in fills)
             {
-                portfolio.ProcessFill(fill);
+                portfolio.ProcessFills(new List<OrderEvent> { fill });
             }
 
             // now we have long position in SPY with average price equal to strike

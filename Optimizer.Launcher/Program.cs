@@ -29,10 +29,16 @@ namespace QuantConnect.Optimizer.Launcher
 {
     public class Program
     {
-        public static void Main()
+        public static void Main(string[] args)
         {
-            var endedEvent = new ManualResetEvent(false);
-            
+            // Parse report arguments and merge with config to use in the optimizer
+            if (args.Length > 0)
+            {
+                Config.MergeCommandLineArgumentsWithConfiguration(OptimizerArgumentParser.ParseArguments(args));
+            }
+
+            using var endedEvent = new ManualResetEvent(false);
+
             try
             {
                 Log.DebuggingEnabled = Config.GetBool("debug-mode");
@@ -46,7 +52,7 @@ namespace QuantConnect.Optimizer.Launcher
                     OptimizationId = Guid.NewGuid().ToString(),
                     OptimizationStrategy = optimizationStrategyName,
                     OptimizationStrategySettings = (OptimizationStrategySettings)JsonConvert.DeserializeObject(Config.Get(
-                        "optimization-strategy-settings", 
+                        "optimization-strategy-settings",
                         "{\"$type\":\"QuantConnect.Optimizer.Strategies.OptimizationStrategySettings, QuantConnect.Optimizer\"}"), new JsonSerializerSettings(){TypeNameHandling = TypeNameHandling.All}),
                     Criterion = JsonConvert.DeserializeObject<Target>(Config.Get("optimization-criterion", "{\"target\":\"Statistics.TotalProfit\", \"extremum\": \"max\"}")),
                     Constraints = JsonConvert.DeserializeObject<List<Constraint>>(Config.Get("constraints", "[]")).AsReadOnly(),
@@ -56,13 +62,24 @@ namespace QuantConnect.Optimizer.Launcher
 
                 var optimizer = new ConsoleLeanOptimizer(packet);
 
-                optimizer.Start();
-
-                optimizer.Ended += (s, e) =>
+                if (Config.GetBool("estimate", false))
                 {
+                    var backtestsCount = optimizer.GetCurrentEstimate();
+                    Log.Trace($"Optimization estimate: {backtestsCount}");
+
                     optimizer.DisposeSafely();
                     endedEvent.Set();
-                };
+                }
+                else
+                {
+                    optimizer.Start();
+
+                    optimizer.Ended += (s, e) =>
+                    {
+                        optimizer.DisposeSafely();
+                        endedEvent.Set();
+                    };
+                }
             }
             catch (Exception e)
             {

@@ -236,6 +236,7 @@ namespace QuantConnect.Lean.Engine
                         initializeComplete = false;
                         //Get all the error messages: internal in algorithm and external in setup handler.
                         var errorMessage = string.Join(",", algorithm.ErrorMessages);
+                        string stackTrace = "";
                         errorMessage += string.Join(",", AlgorithmHandlers.Setup.Errors.Select(e =>
                         {
                             var message = e.Message;
@@ -243,12 +244,14 @@ namespace QuantConnect.Lean.Engine
                             {
                                 var interpreter = StackExceptionInterpreter.Instance.Value;
                                 var err = interpreter.Interpret(e.InnerException);
-                                message += interpreter.GetExceptionMessageHeader(err);
+                                var stackMessage = interpreter.GetExceptionMessageHeader(err);
+                                message += stackMessage;
+                                stackTrace += stackMessage;
                             }
                             return message;
                         }));
                         Log.Error("Engine.Run(): " + errorMessage);
-                        AlgorithmHandlers.Results.RuntimeError(errorMessage);
+                        AlgorithmHandlers.Results.RuntimeError(errorMessage, stackTrace);
                         SystemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, errorMessage);
                     }
                 }
@@ -448,6 +451,7 @@ namespace QuantConnect.Lean.Engine
                 AlgorithmHandlers.DataFeed.Exit();
                 AlgorithmHandlers.Transactions.Exit();
                 AlgorithmHandlers.RealTime.Exit();
+                AlgorithmHandlers.DataMonitor.Exit();
             }
         }
 

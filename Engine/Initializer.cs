@@ -73,9 +73,9 @@ namespace QuantConnect.Lean.Engine
         /// <summary>
         /// Get and initializes Algorithm Handler
         /// </summary>
-        public static LeanEngineAlgorithmHandlers GetAlgorithmHandlers()
+        public static LeanEngineAlgorithmHandlers GetAlgorithmHandlers(bool researchMode = false)
         {
-            return LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance);
+            return LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance, researchMode);
         }
     }
 }

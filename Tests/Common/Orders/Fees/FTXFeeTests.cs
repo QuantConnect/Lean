@@ -44,6 +44,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             _xrpusdt = new Crypto(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new Cash("USDT", 0, 1),
+                new Cash("XRP", 0, 0),
                 new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create("XRPUSDT", SecurityType.Crypto, Market.FTX), Resolution.Minute, tz, tz, true, false, false),
                 spdb.GetSymbolProperties(Market.FTX, Symbol.Create("XRPUSDT", SecurityType.Crypto, Market.FTX), SecurityType.Crypto, "USDT"),
                 ErrorCurrencyConverter.Instance,
@@ -54,6 +55,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             _ethusd = new Crypto(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new Cash(Currencies.USD, 0, 10),
+                new Cash("ETH", 0, 0),
                 new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create("ETHUSD", SecurityType.Crypto, Market.FTX), Resolution.Minute, tz, tz, true, false, false),
                 spdb.GetSymbolProperties(Market.FTX, Symbol.Create("ETHUSD", SecurityType.Crypto, Market.FTX), SecurityType.Crypto, Currencies.USD),
                 ErrorCurrencyConverter.Instance,
@@ -201,7 +203,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 )
             );
 
-            Assert.AreEqual(_ethusd.BaseCurrencySymbol, fee.Value.Currency);
+            Assert.AreEqual(_ethusd.BaseCurrency.Symbol, fee.Value.Currency);
             // 0.0002 (maker fee, in base currency)
             Assert.AreEqual(MakerFee / 100, fee.Value.Amount);
         }

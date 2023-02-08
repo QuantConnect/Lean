@@ -120,6 +120,30 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// The string representation of these symbol properties
+        /// </summary>
+        public override string ToString()
+        {
+            var marketTicker = ",";
+            var minimumOrderSize = marketTicker;
+            var priceMagnifier = marketTicker;
+            if (!string.IsNullOrEmpty(MarketTicker))
+            {
+                marketTicker = $",{MarketTicker}";
+            }
+            if (MinimumOrderSize != null)
+            {
+                minimumOrderSize = $",{MinimumOrderSize}";
+            }
+            if (PriceMagnifier != 1)
+            {
+                priceMagnifier = $",{PriceMagnifier}";
+            }
+
+            return $"{Description},{QuoteCurrency},{ContractMultiplier},{MinimumPriceVariation},{LotSize}{marketTicker}{minimumOrderSize}{priceMagnifier}";
+        }
+
+        /// <summary>
         /// Gets a default instance of the <see cref="SymbolProperties"/> class for the specified <paramref name="quoteCurrency"/>
         /// </summary>
         /// <param name="quoteCurrency">The quote currency of the symbol</param>

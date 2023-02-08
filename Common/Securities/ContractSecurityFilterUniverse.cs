@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -30,6 +30,11 @@ namespace QuantConnect.Securities
     public abstract class ContractSecurityFilterUniverse<T> : IDerivativeSecurityFilterUniverse
     where T: ContractSecurityFilterUniverse<T>
     {
+        /// <summary>
+        /// Mark this filter to be applied only on market open, even if it's dynamic
+        /// </summary>
+        private bool _onlyApplyOnMarketOpen;
+
         /// <summary>
         /// Defines listed contract types with Flags attribute
         /// </summary>
@@ -73,7 +78,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// True if the universe is dynamic and filter needs to be reapplied
         /// </summary>
-        public bool IsDynamic => IsDynamicInternal;
+        public bool IsDynamic => IsDynamicInternal && !_onlyApplyOnMarketOpen;
 
         /// <summary>
         /// The underlying price data
@@ -163,6 +168,7 @@ namespace QuantConnect.Securities
             UnderlyingInternal = underlying;
             Type = ContractExpirationType.Standard;
             IsDynamicInternal = false;
+            _onlyApplyOnMarketOpen = false;
         }
 
         /// <summary>
@@ -316,7 +322,7 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public T OnlyApplyFilterAtMarketOpen()
         {
-            IsDynamicInternal = false;
+            _onlyApplyOnMarketOpen = true;
             return (T) this;
         }
 

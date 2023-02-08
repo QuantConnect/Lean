@@ -14,7 +14,6 @@
 */
 
 using System;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Orders
 {
@@ -51,7 +50,7 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Invariant($"{Time.ToStringInvariant()} UTC: Cancel Order: ({OrderId}) - {Tag} Status: {Status}");
+            return Messages.CancelOrderRequest.ToString(this);
         }
     }
 }

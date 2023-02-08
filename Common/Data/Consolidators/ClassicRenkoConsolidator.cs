@@ -140,30 +140,33 @@ namespace QuantConnect.Data.Consolidators
             bool evenBars = true)
             : this(barSize, evenBars)
         {
-            if (selector != null)
+            using (Py.GIL())
             {
-                if (!selector.TryConvertToDelegate(out _selector))
+                if (selector != null && !selector.IsNone())
                 {
-                    throw new ArgumentException(
-                        "Unable to convert parameter 'selector' to delegate type Func<IBaseData, decimal>");
+                    if (!selector.TryConvertToDelegate(out _selector))
+                    {
+                        throw new ArgumentException(
+                            "Unable to convert parameter 'selector' to delegate type Func<IBaseData, decimal>");
+                    }
                 }
-            }
-            else
-            {
-                _selector = x => x.Value;
-            }
+                else
+                {
+                    _selector = x => x.Value;
+                }
 
-            if (volumeSelector != null)
-            {
-                if (!volumeSelector.TryConvertToDelegate(out _volumeSelector))
+                if (volumeSelector != null && !volumeSelector.IsNone())
                 {
-                    throw new ArgumentException(
-                        "Unable to convert parameter 'volumeSelector' to delegate type Func<IBaseData, decimal>");
+                    if (!volumeSelector.TryConvertToDelegate(out _volumeSelector))
+                    {
+                        throw new ArgumentException(
+                            "Unable to convert parameter 'volumeSelector' to delegate type Func<IBaseData, decimal>");
+                    }
                 }
-            }
-            else
-            {
-                _volumeSelector = x => 0;
+                else
+                {
+                    _volumeSelector = x => 0;
+                }
             }
         }
 
@@ -282,7 +285,7 @@ namespace QuantConnect.Data.Consolidators
             : this(barSize, x => x.Value, x => 0, evenBars)
         {
         }
-        
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ClassicRenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
         /// The value selector will by default select <see cref="IBaseData.Value"/>

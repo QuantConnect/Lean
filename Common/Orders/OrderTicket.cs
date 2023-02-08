@@ -233,7 +233,11 @@ namespace QuantConnect.Orders
             switch (field)
             {
                 case OrderField.LimitPrice:
-                    if (_submitRequest.OrderType == OrderType.Limit)
+                    if (_submitRequest.OrderType == OrderType.ComboLimit)
+                    {
+                        return AccessOrder<ComboLimitOrder>(this, field, o => o.GroupOrderManager.LimitPrice, r => r.LimitPrice);
+                    }
+                    if (_submitRequest.OrderType == OrderType.Limit || _submitRequest.OrderType == OrderType.ComboLegLimit)
                     {
                         return AccessOrder<LimitOrder>(this, field, o => o.LimitPrice, r => r.LimitPrice);
                     }
@@ -257,7 +261,7 @@ namespace QuantConnect.Orders
                         return AccessOrder<StopMarketOrder>(this, field, o => o.StopPrice, r => r.StopPrice);
                     }
                     break;
-                
+
                 case OrderField.TriggerPrice:
                     return AccessOrder<LimitIfTouchedOrder>(this, field, o => o.TriggerPrice, r => r.TriggerPrice);
 
@@ -265,7 +269,7 @@ namespace QuantConnect.Orders
                     throw new ArgumentOutOfRangeException(nameof(field), field, null);
             }
 
-            throw new ArgumentException(Invariant($"Unable to get field {field} on order of type {_submitRequest.OrderType}"));
+            throw new ArgumentException(Messages.OrderTicket.GetFieldError(this, field));
         }
 
         /// <summary>
@@ -376,8 +380,7 @@ namespace QuantConnect.Orders
                 if (_cancelRequest != null && _cancelRequest.Status != OrderRequestStatus.Error)
                 {
                     return OrderResponse.Error(request, OrderResponseErrorCode.RequestCanceled,
-                        Invariant($"Order {OrderId} has already received a cancellation request.")
-                    );
+                        Messages.OrderTicket.CancelRequestAlreadySubmitted(this));
                 }
             }
 
@@ -391,7 +394,7 @@ namespace QuantConnect.Orders
                 }
             }
 
-            throw new ArgumentException("CancelRequest is null.");
+            throw new ArgumentException(Messages.OrderTicket.NullCancelRequest);
         }
 
         /// <summary>
@@ -435,18 +438,34 @@ namespace QuantConnect.Orders
             {
                 _orderEvents.Add(orderEvent);
 
-                //Update the ticket and order, if it is a OptionExercise order we must only update it if the fill price is not zero
-                //this fixes issue #2846 where average price is skewed by the removal of the option.
-                if (orderEvent.FillQuantity != 0 && (_order.Type != OrderType.OptionExercise || orderEvent.FillPrice != 0))
+                // Update the ticket and order
+                if (orderEvent.FillQuantity != 0)
                 {
-                    // keep running totals of quantity filled and the average fill price so we
-                    // don't need to compute these on demand
-                    _quantityFilled += orderEvent.FillQuantity;
-                    var quantityWeightedFillPrice = _orderEvents.Where(x => x.Status.IsFill())
-                        .Aggregate(0m, (d, x) => d + x.AbsoluteFillQuantity*x.FillPrice);
-                    _averageFillPrice = quantityWeightedFillPrice/Math.Abs(_quantityFilled);
+                    if (_order.Type != OrderType.OptionExercise)
+                    {
+                        // keep running totals of quantity filled and the average fill price so we
+                        // don't need to compute these on demand
+                        _quantityFilled += orderEvent.FillQuantity;
+                        var quantityWeightedFillPrice = _orderEvents.Where(x => x.Status.IsFill())
+                            .Aggregate(0m, (d, x) => d + x.AbsoluteFillQuantity * x.FillPrice);
+                        _averageFillPrice = quantityWeightedFillPrice / Math.Abs(_quantityFilled);
 
-                    _order.Price = _averageFillPrice;
+                        _order.Price = _averageFillPrice;
+                    }
+                    // For ITM option exercise orders we set the order price to the strike price.
+                    // For OTM the fill price should be zero, which is the default for OptionExerciseOrders
+                    else if (orderEvent.IsInTheMoney)
+                    {
+                        _order.Price = Symbol.ID.StrikePrice;
+
+                        // We update the ticket only if the fill price is not zero (this fixes issue #2846 where average price
+                        // is skewed by the removal of the option).
+                        if (orderEvent.FillPrice != 0)
+                        {
+                            _quantityFilled += orderEvent.FillQuantity;
+                            _averageFillPrice = _order.Price;
+                        }
+                    }
                 }
             }
 
@@ -567,13 +586,7 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            var counts = Invariant($"Request Count: {RequestCount()} Response Count: {ResponseCount()}");
-            if (_order != null)
-            {
-                return Invariant($"{OrderId}: {_order} {counts}");
-            }
-
-            return Invariant($"{OrderId}: {counts}");
+            return Messages.OrderTicket.ToString(this, _order, RequestCount(), ResponseCount());
         }
 
         private int ResponseCount()

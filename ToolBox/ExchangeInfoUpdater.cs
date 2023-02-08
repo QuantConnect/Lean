@@ -13,10 +13,11 @@
  * limitations under the License.
 */
 
-using QuantConnect.Configuration;
 using System;
 using System.IO;
 using System.Linq;
+using QuantConnect.Securities;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.ToolBox
 {
@@ -50,6 +51,7 @@ namespace QuantConnect.ToolBox
             {
                 throw new FileNotFoundException("Unable to locate symbol properties file: " + file);
             }
+
             // Read file data before to escape from clash if file == tmp
             // Dispose off enumerator to free up resource
             var fileLines = File.ReadLines(file).ToList();
@@ -57,19 +59,16 @@ namespace QuantConnect.ToolBox
             using (var writer = new StreamWriter(tmp))
             {
                 var fetch = false;
-                // skip the first header line, also skip #'s as these are comment lines
+                var filter = $"{_eidl.Market},";
                 foreach (var line in fileLines)
                 {
-                    if (!line.StartsWithInvariant(_eidl.Market, true))
+                    if (!line.StartsWithInvariant(filter, true))
                     {
                         writer.WriteLine(line);
                     }
                     else if (!fetch)
                     {
-                        foreach (var upd in _eidl.Get())
-                        {
-                            writer.WriteLine(upd);
-                        }
+                        WriteData(writer);
                         fetch = true;
                     }
                 }
@@ -77,11 +76,31 @@ namespace QuantConnect.ToolBox
                 if (!fetch)
                 {
                     writer.WriteLine(Environment.NewLine);
-                    foreach (var upd in _eidl.Get())
-                    {
-                        writer.WriteLine(upd);
-                    }
+                    WriteData(writer);
                 }
+            }
+        }
+
+        private void WriteData(StreamWriter writer)
+        {
+            var existingSymbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
+            var entryPerSymbol = _eidl.Get().ToDictionary(newLine => {
+                var splitted = newLine.Split(',');
+                return new SecurityDatabaseKey(splitted[0], splitted[1], (SecurityType)Enum.Parse(typeof(SecurityType), splitted[2], true));
+            });
+
+            foreach (var existingEntry in existingSymbolPropertiesDatabase.GetSymbolPropertiesList(_eidl.Market))
+            {
+                if (!entryPerSymbol.ContainsKey(existingEntry.Key))
+                {
+                    // let's keep any existing which is no longer available, to take into account for delistings/removals
+                    entryPerSymbol[existingEntry.Key] = $"{existingEntry.Key.Market},{existingEntry.Key.Symbol},{existingEntry.Key.SecurityType},{existingEntry.Value}";
+                }
+            }
+
+            foreach (var upd in entryPerSymbol.OrderBy(x => x.Key.SecurityType).ThenBy(x => x.Key.Symbol))
+            {
+                writer.WriteLine(upd.Value);
             }
         }
     }

@@ -13,13 +13,14 @@
  * limitations under the License.
 */
 
-using QuantConnect.Benchmarks;
-using QuantConnect.Orders;
-using QuantConnect.Orders.Fees;
-using QuantConnect.Securities;
-using QuantConnect.Util;
-using System.Collections.Generic;
+using System;
 using System.Linq;
+using QuantConnect.Util;
+using QuantConnect.Orders;
+using QuantConnect.Benchmarks;
+using QuantConnect.Securities;
+using QuantConnect.Orders.Fees;
+using System.Collections.Generic;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Brokerages
@@ -30,6 +31,7 @@ namespace QuantConnect.Brokerages
     public class BinanceBrokerageModel : DefaultBrokerageModel
     {
         private const decimal _defaultLeverage = 3;
+        private const decimal _defaultFutureLeverage = 25;
 
         /// <summary>
         /// Market name
@@ -61,7 +63,7 @@ namespace QuantConnect.Brokerages
                 return 1m;
             }
 
-            return _defaultLeverage;
+            return security.Symbol.SecurityType == SecurityType.CryptoFuture ? _defaultFutureLeverage : _defaultLeverage;
         }
 
         /// <summary>
@@ -136,6 +138,11 @@ namespace QuantConnect.Brokerages
                     quantityIsValid &= IsOrderSizeLargeEnough(price);
                     break;
                 case StopLimitOrder stopLimitOrder:
+                    if (security.Symbol.SecurityType == SecurityType.CryptoFuture)
+                    {
+                        message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", Invariant($"{order.Type} orders are not supported for this symbol ${security.Symbol}"));
+                        return false;
+                    }
                     quantityIsValid &= IsOrderSizeLargeEnough(stopLimitOrder.LimitPrice);
                     // Binance Trading UI requires this check too...
                     quantityIsValid &= IsOrderSizeLargeEnough(stopLimitOrder.StopPrice);
@@ -167,10 +174,10 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (security.Type != SecurityType.Crypto)
+            if (security.Type != SecurityType.Crypto && security.Type != SecurityType.CryptoFuture)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    StringExtensions.Invariant($"The {nameof(BinanceBrokerageModel)} does not support {security.Type} security type.")
+                    Invariant($"The {nameof(BinanceBrokerageModel)} does not support {security.Type} security type.")
                 );
 
                 return false;
@@ -178,7 +185,8 @@ namespace QuantConnect.Brokerages
             return base.CanSubmitOrder(security, order, out message);
 
             bool IsOrderSizeLargeEnough(decimal price) =>
-                order.AbsoluteQuantity * price > security.SymbolProperties.MinimumOrderSize;
+                // if we have a minimum order size we enforce it
+                !security.SymbolProperties.MinimumOrderSize.HasValue || order.AbsoluteQuantity * price > security.SymbolProperties.MinimumOrderSize;
         }
 
         protected static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets(string marketName)

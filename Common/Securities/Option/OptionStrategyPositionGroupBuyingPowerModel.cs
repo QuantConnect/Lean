@@ -58,12 +58,12 @@ namespace QuantConnect.Securities.Option
                 var intrinsicValue = optionSecurity.GetIntrinsicValue(underlyingSecurity.Price);
                 var inTheMoneyAmount = intrinsicValue * optionSecurity.ContractUnitOfTrade * Math.Abs(optionPosition.Quantity);
 
-                var underlyingValue = underlyingSecurity.Holdings.GetQuantityValue(underlyingPosition.Quantity);
-                var optionValue = optionSecurity.Holdings.GetQuantityValue(optionPosition.Quantity);
+                var underlyingValue = underlyingSecurity.Holdings.GetQuantityValue(underlyingPosition.Quantity).InAccountCurrency;
+                var optionValue = optionSecurity.Holdings.GetQuantityValue(optionPosition.Quantity).InAccountCurrency;
 
                 // mark price, strike price
                 var underlyingPriceToEvaluate = Math.Min(optionSecurity.Price, optionSecurity.StrikePrice);
-                var underlyingHypotheticalValue = underlyingSecurity.Holdings.GetQuantityValue(underlyingPosition.Quantity, underlyingPriceToEvaluate);
+                var underlyingHypotheticalValue = underlyingSecurity.Holdings.GetQuantityValue(underlyingPosition.Quantity, underlyingPriceToEvaluate).InAccountCurrency;
 
                 var hypotheticalMarginRequired = underlyingSecurity.BuyingPowerModel.GetMaintenanceMargin(
                         new MaintenanceMarginParameters(underlyingSecurity, underlyingPosition.Quantity, 0, underlyingHypotheticalValue));
@@ -156,7 +156,7 @@ namespace QuantConnect.Securities.Option
                 var optionSecurity = (Option)parameters.Portfolio.Securities[optionPosition.Symbol];
                 var underlyingSecurity = parameters.Portfolio.Securities[underlyingPosition.Symbol];
 
-                var optionValue = optionSecurity.Holdings.GetQuantityValue(optionPosition.Quantity);
+                var optionValue = optionSecurity.Holdings.GetQuantityValue(optionPosition.Quantity).InAccountCurrency;
 
                 var marginRequired = underlyingSecurity.BuyingPowerModel.GetInitialMarginRequirement(underlyingSecurity, underlyingPosition.Quantity);
 

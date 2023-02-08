@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
@@ -42,7 +41,6 @@ namespace QuantConnect.Securities.Option
         /// available to the algorithm</param>
         /// <param name="contract">The option contract to evaluate</param>
         /// <returns>The estimate</returns>
-        public double Estimate(Security security, Slice slice, OptionContract contract)
-            => Convert.ToDouble(_riskFreeRate);
+        public decimal Estimate(Security security, Slice slice, OptionContract contract) => _riskFreeRate;
     }
 }

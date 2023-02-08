@@ -13,18 +13,18 @@
  * limitations under the License.
 */
 
-using System;
-using QuantConnect.Data;
-using QuantConnect.Orders.Fees;
-using QuantConnect.Orders.Fills;
-using QuantConnect.Orders.Slippage;
-using QuantConnect.Orders.OptionExercise;
 using Python.Runtime;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
-using System.Collections.Generic;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Orders.OptionExercise;
+using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities.Interfaces;
+using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Securities.Option
 {
@@ -42,7 +42,7 @@ namespace QuantConnect.Securities.Option
         /// <summary>
         /// The default time of day for settlement
         /// </summary>
-        public static readonly TimeSpan DefaultSettlementTime = new TimeSpan(8, 0, 0);
+        public static readonly TimeSpan DefaultSettlementTime = new (8, 0, 0);
 
         /// <summary>
         /// Constructor for the option security
@@ -75,13 +75,19 @@ namespace QuantConnect.Securities.Option
                 new OptionDataFilter(),
                 new SecurityPriceVariationModel(),
                 currencyConverter,
-                registeredTypes
+                registeredTypes,
+                Securities.MarginInterestRateModel.Null
                 )
         {
             ExerciseSettlement = SettlementType.PhysicalDelivery;
             SetDataNormalizationMode(DataNormalizationMode.Raw);
             OptionExerciseModel = new DefaultExerciseModel();
-            PriceModel = new CurrentPriceOptionPriceModel();
+            PriceModel = config.Symbol.ID.OptionStyle switch
+            {
+                OptionStyle.American => OptionPriceModels.BjerksundStensland(),
+                OptionStyle.European => OptionPriceModels.BlackScholes(),
+                _ => throw new ArgumentException("Invalid OptionStyle")
+            };
             Holdings = new OptionHolding(this, currencyConverter);
             _symbolProperties = symbolProperties;
             SetFilter(-1, 1, TimeSpan.Zero, TimeSpan.FromDays(35));
@@ -167,13 +173,19 @@ namespace QuantConnect.Securities.Option
             dataFilter,
             priceVariationModel,
             currencyConverter,
-            registeredTypesProvider
+            registeredTypesProvider,
+            Securities.MarginInterestRateModel.Null
         )
         {
             ExerciseSettlement = SettlementType.PhysicalDelivery;
             SetDataNormalizationMode(DataNormalizationMode.Raw);
             OptionExerciseModel = new DefaultExerciseModel();
-            PriceModel = new CurrentPriceOptionPriceModel();
+            PriceModel = symbol.ID.OptionStyle switch
+            {
+                OptionStyle.American => OptionPriceModels.BjerksundStensland(),
+                OptionStyle.European => OptionPriceModels.BlackScholes(),
+                _ => throw new ArgumentException("Invalid OptionStyle")
+            };
             Holdings = new OptionHolding(this, currencyConverter);
             _symbolProperties = (OptionSymbolProperties)symbolProperties;
             SetFilter(-1, 1, TimeSpan.Zero, TimeSpan.FromDays(35));
@@ -196,34 +208,22 @@ namespace QuantConnect.Securities.Option
         /// <summary>
         /// Gets the strike price
         /// </summary>
-        public decimal StrikePrice
-        {
-            get { return Symbol.ID.StrikePrice; }
-        }
+        public decimal StrikePrice => Symbol.ID.StrikePrice;
 
         /// <summary>
         /// Gets the expiration date
         /// </summary>
-        public DateTime Expiry
-        {
-            get { return Symbol.ID.Date; }
-        }
+        public DateTime Expiry => Symbol.ID.Date;
 
         /// <summary>
         /// Gets the right being purchased (call [right to buy] or put [right to sell])
         /// </summary>
-        public OptionRight Right
-        {
-            get { return Symbol.ID.OptionRight; }
-        }
+        public OptionRight Right => Symbol.ID.OptionRight;
 
         /// <summary>
         /// Gets the option style
         /// </summary>
-        public OptionStyle Style
-        {
-            get { return Symbol.ID.OptionStyle;  }
-        }
+        public OptionStyle Style => Symbol.ID.OptionStyle;
 
         /// <summary>
         /// Gets the most recent bid price if available

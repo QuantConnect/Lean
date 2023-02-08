@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -64,19 +64,17 @@ namespace QuantConnect.Securities.Option
 
             return new OptionStrategy
             {
-                Name = "Bear Call Spread",
+                Name = OptionStrategyDefinitions.BearCallSpread.Name,
                 Underlying = canonicalOption.Underlying,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = leg1Strike, Quantity = -1,
-                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                        Right = OptionRight.Call, Strike = leg1Strike, Quantity = -1, Expiration = expiration
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = leg2Strike, Quantity = 1,
-                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                        Right = OptionRight.Call, Strike = leg2Strike, Quantity = 1, Expiration = expiration
                     }
                 }
             };
@@ -117,19 +115,18 @@ namespace QuantConnect.Securities.Option
 
             return new OptionStrategy
             {
-                Name = "Bear Put Spread",
+                Name = OptionStrategyDefinitions.BearPutSpread.Name,
                 Underlying = canonicalOption.Underlying,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Put, Strike = leg1Strike, Quantity = 1, OrderType = Orders.OrderType.Market,
+                        Right = OptionRight.Put, Strike = leg1Strike, Quantity = 1,
                         Expiration = expiration
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Put, Strike = leg2Strike, Quantity = -1,
-                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                        Right = OptionRight.Put, Strike = leg2Strike, Quantity = -1, Expiration = expiration
                     }
                 }
             };
@@ -170,19 +167,17 @@ namespace QuantConnect.Securities.Option
 
             return new OptionStrategy
             {
-                Name = "Bull Call Spread",
+                Name = OptionStrategyDefinitions.BullCallSpread.Name,
                 Underlying = canonicalOption.Underlying,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = leg1Strike, Quantity = 1,
-                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                        Right = OptionRight.Call, Strike = leg1Strike, Quantity = 1, Expiration = expiration
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = leg2Strike, Quantity = -1,
-                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                        Right = OptionRight.Call, Strike = leg2Strike, Quantity = -1, Expiration = expiration
                     }
                 }
             };
@@ -223,18 +218,17 @@ namespace QuantConnect.Securities.Option
 
             return new OptionStrategy
             {
-                Name = "Bull Put Spread",
+                Name = OptionStrategyDefinitions.BullPutSpread.Name,
                 Underlying = canonicalOption.Underlying,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Put, Strike = leg1Strike, Quantity = -1,
-                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                        Right = OptionRight.Put, Strike = leg1Strike, Quantity = -1, Expiration = expiration
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Put, Strike = leg2Strike, Quantity = 1, OrderType = Orders.OrderType.Market,
+                        Right = OptionRight.Put, Strike = leg2Strike, Quantity = 1,
                         Expiration = expiration
                     }
                 }
@@ -264,18 +258,18 @@ namespace QuantConnect.Securities.Option
 
             return new OptionStrategy
             {
-                Name = "Straddle",
+                Name = OptionStrategyDefinitions.Straddle.Name,
                 Underlying = canonicalOption.Underlying,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = strike, Quantity = 1, OrderType = Orders.OrderType.Market,
+                        Right = OptionRight.Call, Strike = strike, Quantity = 1,
                         Expiration = expiration
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Put, Strike = strike, Quantity = 1, OrderType = Orders.OrderType.Market,
+                        Right = OptionRight.Put, Strike = strike, Quantity = 1,
                         Expiration = expiration
                     }
                 }
@@ -317,18 +311,17 @@ namespace QuantConnect.Securities.Option
 
             return new OptionStrategy
             {
-                Name = "Strangle",
+                Name = OptionStrategyDefinitions.Strangle.Name,
                 Underlying = canonicalOption.Underlying,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = leg1Strike, Quantity = 1,
-                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                        Right = OptionRight.Call, Strike = leg1Strike, Quantity = 1, Expiration = expiration
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Put, Strike = leg2Strike, Quantity = 1, OrderType = Orders.OrderType.Market,
+                        Right = OptionRight.Put, Strike = leg2Strike, Quantity = 1,
                         Expiration = expiration
                     }
                 }
@@ -374,24 +367,21 @@ namespace QuantConnect.Securities.Option
 
             return new OptionStrategy
             {
-                Name = "Call Butterfly",
+                Name = OptionStrategyDefinitions.ButterflyCall.Name,
                 Underlying = canonicalOption.Underlying,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = leg1Strike, Quantity = 1,
-                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                        Right = OptionRight.Call, Strike = leg1Strike, Quantity = 1, Expiration = expiration
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = leg2Strike, Quantity = -2,
-                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                        Right = OptionRight.Call, Strike = leg2Strike, Quantity = -2, Expiration = expiration
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = leg3Strike, Quantity = 1,
-                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                        Right = OptionRight.Call, Strike = leg3Strike, Quantity = 1, Expiration = expiration
                     }
                 }
             };
@@ -436,23 +426,23 @@ namespace QuantConnect.Securities.Option
 
             return new OptionStrategy
             {
-                Name = "Put Butterfly",
+                Name = OptionStrategyDefinitions.ButterflyPut.Name,
                 Underlying = canonicalOption.Underlying,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Put, Strike = leg1Strike, Quantity = 1, OrderType = Orders.OrderType.Market,
+                        Right = OptionRight.Put, Strike = leg1Strike, Quantity = 1,
                         Expiration = expiration
                     },
                     new OptionStrategy.OptionLegData
                     {
                         Right = OptionRight.Put, Strike = leg2Strike, Quantity = -2,
-                        OrderType = Orders.OrderType.Market, Expiration = expiration
+                        Expiration = expiration
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Put, Strike = leg3Strike, Quantity = 1, OrderType = Orders.OrderType.Market,
+                        Right = OptionRight.Put, Strike = leg3Strike, Quantity = 1,
                         Expiration = expiration
                     }
                 }
@@ -495,19 +485,17 @@ namespace QuantConnect.Securities.Option
 
             return new OptionStrategy
             {
-                Name = "Call Calendar Spread",
+                Name = OptionStrategyDefinitions.CallCalendarSpread.Name,
                 Underlying = canonicalOption.Underlying,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = strike, Quantity = -1, OrderType = Orders.OrderType.Market,
-                        Expiration = expiration1
+                        Right = OptionRight.Call, Strike = strike, Quantity = -1, Expiration = expiration1
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = strike, Quantity = 1, OrderType = Orders.OrderType.Market,
-                        Expiration = expiration2
+                        Right = OptionRight.Call, Strike = strike, Quantity = 1, Expiration = expiration2
                     }
                 }
             };
@@ -549,19 +537,17 @@ namespace QuantConnect.Securities.Option
 
             return new OptionStrategy
             {
-                Name = "Put Calendar Spread",
+                Name = OptionStrategyDefinitions.PutCalendarSpread.Name,
                 Underlying = canonicalOption.Underlying,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Put, Strike = strike, Quantity = -1, OrderType = Orders.OrderType.Market,
-                        Expiration = expiration1
+                        Right = OptionRight.Put, Strike = strike, Quantity = -1, Expiration = expiration1
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Put, Strike = strike, Quantity = 1, OrderType = Orders.OrderType.Market,
-                        Expiration = expiration2
+                        Right = OptionRight.Put, Strike = strike, Quantity = 1, Expiration = expiration2
                     }
                 }
             };

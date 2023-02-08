@@ -113,7 +113,10 @@ namespace QuantConnect.ToolBox.CoinApi
         /// </summary>
         public CoinApiSymbolMapper()
         {
-            LoadSymbolMap(MapMarketsToExchangeIds.Values.ToArray());
+            MapExchangeIdsToMarkets["BINANCEFTS"] = Market.Binance;
+            MapExchangeIdsToMarkets["BINANCEFTSC"] = Market.Binance;
+
+            LoadSymbolMap(MapExchangeIdsToMarkets.Keys.ToArray());
         }
 
         /// <summary>
@@ -146,7 +149,7 @@ namespace QuantConnect.ToolBox.CoinApi
             DateTime expirationDate = new DateTime(), decimal strike = 0, OptionRight optionRight = OptionRight.Call)
         {
             var parts = brokerageSymbol.Split('_');
-            if (parts.Length != 4 || parts[1] != "SPOT")
+            if (parts.Length != 4)
             {
                 throw new Exception($"CoinApiSymbolMapper.GetLeanSymbol(): Unsupported SymbolId: {brokerageSymbol}");
             }
@@ -162,7 +165,7 @@ namespace QuantConnect.ToolBox.CoinApi
 
             var ticker = baseCurrency + quoteCurrency;
 
-            return Symbol.Create(ticker, SecurityType.Crypto, symbolMarket);
+            return Symbol.Create(ticker, securityType, symbolMarket);
         }
 
         /// <summary>
@@ -203,15 +206,28 @@ namespace QuantConnect.ToolBox.CoinApi
             // <Exchange>_SPOT_<BaseCurrency>_<QuoteCurrency>_<ExtraSuffix>
             // Those cases should be ignored for SPOT prices.
             foreach (var x in  result
-                .Where(x => x.SymbolType == "SPOT" &&
-                    x.SymbolId.Split('_').Length == 4 &&
+                .Where(x => x.SymbolId.Split('_').Length == 4 &&
                     // exclude Bitfinex BCH pre-2018-fork as for now we don't have historical mapping data
                     (x.ExchangeId != "BITFINEX" || x.AssetIdBase != "BCH" && x.AssetIdQuote != "BCH")
                     // solves the cases where we request 'binance' and get 'binanceus'
                     && MapExchangeIdsToMarkets.ContainsKey(x.ExchangeId)))
             {
                 var market = MapExchangeIdsToMarkets[x.ExchangeId];
-                var symbol = GetLeanSymbol(x.SymbolId, SecurityType.Crypto, market);
+
+                SecurityType securityType;
+                if(x.SymbolType == "SPOT")
+                {
+                    securityType = SecurityType.Crypto;
+                }
+                else if (x.SymbolType == "PERPETUAL")
+                {
+                    securityType = SecurityType.CryptoFuture;
+                }
+                else
+                {
+                    continue;
+                }
+                var symbol = GetLeanSymbol(x.SymbolId, securityType, market);
 
                 if (_symbolMap.ContainsKey(symbol))
                 {

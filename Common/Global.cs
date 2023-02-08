@@ -310,6 +310,11 @@ namespace QuantConnect
         /// For index options traded on American markets, they tend to be European-style options and are Cash-settled.
         /// </remarks>
         IndexOption,
+
+        /// <summary>
+        /// Crypto futures
+        /// </summary>
+        CryptoFuture,
     }
 
     /// <summary>
@@ -826,6 +831,12 @@ namespace QuantConnect
                         return Exchange.BOSTON;
                     case "BSE":
                         return Exchange.BSE;
+                    case "IEX":
+                        return Exchange.IEX;
+                    case "SMART":
+                        return Exchange.SMART;
+                    case "OTCX":
+                        return Exchange.OTCX;
                 }
             }
             else if (securityType == SecurityType.Option)

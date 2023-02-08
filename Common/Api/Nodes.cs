@@ -26,7 +26,7 @@ namespace QuantConnect.Api
     public class Node
     {
         /// <summary>
-        /// The nodes cpu clock speed in GHz
+        /// The nodes cpu clock speed in GHz.
         /// </summary>
         [JsonProperty(PropertyName = "speed")]
         public decimal Speed { get; set; }
@@ -39,63 +39,86 @@ namespace QuantConnect.Api
         public NodePrices Prices { get; set; }
 
         /// <summary>
-        /// CPU core count of node
+        /// CPU core count of node.
         /// </summary>
         [JsonProperty(PropertyName = "cpu")]
         public int CpuCount { get; set; }
 
         /// <summary>
-        /// Size of RAM in Gigabytes
+        /// Size of RAM in Gigabytes.
         /// </summary>
         [JsonProperty(PropertyName = "ram")]
         public decimal Ram { get; set; }
 
         /// <summary>
-        /// Name of the node
+        /// Name of the node.
         /// </summary>
         [JsonProperty(PropertyName = "name")]
         public string Name { get; set; }
 
         /// <summary>
-        /// Node type identifier for configuration
+        /// Node type identifier for configuration.
         /// </summary>
         [JsonProperty(PropertyName = "sku")]
         public string SKU { get; set; }
 
         /// <summary>
-        /// String description of the node
+        /// String description of the node.
         /// </summary>
         [JsonProperty(PropertyName = "description")]
         public string Description { get; set; }
 
         /// <summary>
-        /// User currently using the node
+        /// User currently using the node.
         /// </summary>
         [JsonProperty(PropertyName = "usedBy")]
         public string UsedBy { get; set; }
 
         /// <summary>
-        /// Project the node is being used for
+        /// Project the node is being used for.
         /// </summary>
         [JsonProperty(PropertyName = "projectName")]
         public string ProjectName { get; set; }
 
         /// <summary>
-        /// Boolean if the node is currently busy
+        /// Id of the project the node is being used for.
+        /// </summary>
+        [JsonProperty(PropertyName = "projectId")]
+        public int? ProjectId { get; set; }
+
+        /// <summary>
+        /// Boolean if the node is currently busy.
         /// </summary>
         [JsonProperty(PropertyName = "busy")]
         public bool Busy { get; set; }
 
         /// <summary>
-        /// Full ID of node
+        /// Full ID of node.
         /// </summary>
         [JsonProperty(PropertyName = "id")]
         public string Id { get; set; }
+
+        /// <summary>
+        /// Maximum number of assets recommended for this node.
+        /// </summary>
+        [JsonProperty(PropertyName = "assets")]
+        public int Assets { get; set; }
+
+        /// <summary>
+        /// Node host.
+        /// </summary>
+        [JsonProperty(PropertyName = "host")]
+        public string Host { get; set; }
+
+        /// <summary>
+        /// Indicate if this is the active node. The project will use this node if it's not busy.
+        /// </summary>
+        [JsonProperty(PropertyName = "active")]
+        public bool Active { get; set; }
     }
 
     /// <summary>
-    /// Rest api response wrapper for node/read, contains sets of node lists for each
-    /// target environment. List are composed of <see cref="Node"/> objects.
+    /// Collection of <see cref="Node"/> objects for each target environment.
     /// </summary>
     public class NodeList : RestResponse
     {

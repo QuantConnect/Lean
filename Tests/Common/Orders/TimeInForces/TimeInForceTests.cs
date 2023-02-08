@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -120,6 +120,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
             var security = new Forex(
                 SecurityExchangeHoursTests.CreateForexSecurityExchangeHours(),
                 new Cash(Currencies.USD, 0, 1m),
+                new Cash("EUR", 0, 0),
                 new SubscriptionDataConfig(
                     typeof(QuoteBar),
                     Symbols.EURUSD,
@@ -170,6 +171,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
             var security = new Forex(
                 SecurityExchangeHoursTests.CreateForexSecurityExchangeHours(),
                 new Cash(Currencies.USD, 0, 1m),
+                new Cash(Currencies.EUR, 0, 0),
                 new SubscriptionDataConfig(
                     typeof(QuoteBar),
                     Symbols.EURUSD,
@@ -223,6 +225,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
             var security = new Crypto(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 new Cash(Currencies.USD, 0, 1m),
+                new Cash("BTC", 0, 0),
                 new SubscriptionDataConfig(
                     typeof(QuoteBar),
                     Symbols.BTCUSD,
@@ -332,6 +335,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
             var security = new Forex(
                 SecurityExchangeHoursTests.CreateForexSecurityExchangeHours(),
                 new Cash(Currencies.USD, 0, 1m),
+                new Cash(Currencies.EUR, 0, 0),
                 new SubscriptionDataConfig(
                     typeof(QuoteBar),
                     Symbols.EURUSD,
@@ -393,6 +397,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
             var security = new Crypto(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 new Cash(Currencies.USD, 0, 1m),
+                new Cash("BTC", 0, 0),
                 new SubscriptionDataConfig(
                     typeof(QuoteBar),
                     Symbols.BTCUSD,
@@ -502,6 +507,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
             var security = new Forex(
                 SecurityExchangeHoursTests.CreateForexSecurityExchangeHours(),
                 new Cash(Currencies.USD, 0, 1m),
+                new Cash(Currencies.EUR, 0, 0),
                 new SubscriptionDataConfig(
                     typeof(QuoteBar),
                     Symbols.EURUSD,
@@ -552,6 +558,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
             var security = new Forex(
                 SecurityExchangeHoursTests.CreateForexSecurityExchangeHours(),
                 new Cash(Currencies.USD, 0, 1m),
+                new Cash(Currencies.EUR, 0, 0),
                 new SubscriptionDataConfig(
                     typeof(QuoteBar),
                     Symbols.EURUSD,
@@ -605,6 +612,7 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
             var security = new Crypto(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 new Cash(Currencies.USD, 0, 1m),
+                new Cash("BTC", 0, 0),
                 new SubscriptionDataConfig(
                     typeof(QuoteBar),
                     Symbols.BTCUSD,

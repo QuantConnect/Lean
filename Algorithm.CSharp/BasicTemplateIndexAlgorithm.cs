@@ -34,7 +34,7 @@ namespace QuantConnect.Algorithm.CSharp
         protected Symbol SpxOption;
         private ExponentialMovingAverage _emaSlow;
         private ExponentialMovingAverage _emaFast;
-        
+
         protected virtual Resolution Resolution => Resolution.Minute;
         protected virtual int StartDay => 4;
 
@@ -165,7 +165,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "0668385036aba3e95127607dfc2f1a59"}
+            {"OrderListHash", "3b71b146c15d234b4dc9e201838b551c"}
         };
     }
 }

@@ -244,7 +244,7 @@ namespace QuantConnect.Lean.Engine.Results
                         var orderEvents = GetOrderEventsToStore();
 
                         var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
-                        var complete = new LiveResultPacket(_job, new LiveResult(new LiveResultParameters(chartComplete, orders, Algorithm.Transactions.TransactionRecord, holdings, Algorithm.Portfolio.CashBook, deltaStatistics, runtimeStatistics, orderEvents, serverStatistics)));
+                        var complete = new LiveResultPacket(_job, new LiveResult(new LiveResultParameters(chartComplete, orders, Algorithm.Transactions.TransactionRecord, holdings, Algorithm.Portfolio.CashBook, deltaStatistics, runtimeStatistics, orderEvents, serverStatistics, state: GetAlgorithmState())));
                         StoreResult(complete);
                         _nextChartsUpdate = DateTime.UtcNow.Add(ChartUpdateInterval);
                         Log.Debug("LiveTradingResultHandler.Update(): End-store result");
@@ -276,7 +276,7 @@ namespace QuantConnect.Lean.Engine.Results
                                 _job.AlgorithmId,
                                 Algorithm.Portfolio.TotalUnrealizedProfit,
                                 Algorithm.Portfolio.TotalFees,
-                                Algorithm.Portfolio.TotalProfit,
+                                Algorithm.Portfolio.TotalNetProfit,
                                 Algorithm.Portfolio.TotalHoldingsValue,
                                 Algorithm.Portfolio.TotalPortfolioValue,
                                 GetNetReturn(),
@@ -587,6 +587,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             Messages.Enqueue(new RuntimeErrorPacket(_job.UserId, AlgorithmId, message, stacktrace));
             AddToLogStore(message + (!string.IsNullOrEmpty(stacktrace) ? ": StackTrace: " + stacktrace : string.Empty));
+            SetAlgorithmState(message, stacktrace);
         }
 
         /// <summary>
@@ -803,11 +804,12 @@ namespace QuantConnect.Lean.Engine.Results
                     result = new LiveResultPacket(_job,
                         new LiveResult(new LiveResultParameters(charts, orders, profitLoss, new Dictionary<string, Holding>(),
                             Algorithm.Portfolio.CashBook, statisticsResults.Summary, runtime, GetOrderEventsToStore(),
-                            algorithmConfiguration: AlgorithmConfiguration.Create(Algorithm))));
+                            algorithmConfiguration: AlgorithmConfiguration.Create(Algorithm), state: GetAlgorithmState(DateTime.UtcNow.ToStringInvariant()))));
                 }
                 else
                 {
                     result = LiveResultPacket.CreateEmpty(_job);
+                    result.Results.State = GetAlgorithmState(DateTime.UtcNow.ToStringInvariant());
                 }
                 result.ProcessingTime = (DateTime.UtcNow - StartTime).TotalSeconds;
 

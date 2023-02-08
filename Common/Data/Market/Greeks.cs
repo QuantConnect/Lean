@@ -149,6 +149,15 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
+        /// Gets the theta per day.
+        /// <para>
+        /// Theta measures the rate of change of the option value with respect to changes in
+        /// time. This is commonly known as the 'time decay.' (∂V/∂τ)
+        /// </para>
+        /// </summary>
+        public decimal ThetaPerDay => Theta / 365m;
+
+        /// <summary>
         /// Initializes a new default instance of the <see cref="Greeks"/> class
         /// </summary>
         public Greeks() 

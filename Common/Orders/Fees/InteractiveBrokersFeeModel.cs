@@ -14,11 +14,9 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using QuantConnect.Orders.Fills;
 using QuantConnect.Securities;
-using static QuantConnect.StringExtensions;
+using QuantConnect.Orders.Fills;
+using System.Collections.Generic;
 
 namespace QuantConnect.Orders.Fees
 {
@@ -84,6 +82,12 @@ namespace QuantConnect.Orders.Fees
                 }
             }
 
+            var quantity = order.AbsoluteQuantity;
+            if (order.GroupOrderManager != null)
+            {
+                quantity *= order.GroupOrderManager.AbsoluteQuantity;
+            }
+
             decimal feeResult;
             string feeCurrency;
             var market = security.Symbol.ID.Market;
@@ -103,10 +107,10 @@ namespace QuantConnect.Orders.Fees
                     Func<decimal, decimal, CashAmount> optionsCommissionFunc;
                     if (!_optionFee.TryGetValue(market, out optionsCommissionFunc))
                     {
-                        throw new KeyNotFoundException($"InteractiveBrokersFeeModel(): unexpected option Market {market}");
+                        throw new KeyNotFoundException(Messages.InteractiveBrokersFeeModel.UnexpectedOptionMarket(market));
                     }
                     // applying commission function to the order
-                    var optionFee = optionsCommissionFunc(order.AbsoluteQuantity, order.Price);
+                    var optionFee = optionsCommissionFunc(quantity, order.Price);
                     feeResult = optionFee.Amount;
                     feeCurrency = optionFee.Currency;
                     break;
@@ -125,11 +129,11 @@ namespace QuantConnect.Orders.Fees
 
                     if (!_futureFee.TryGetValue(market, out var feeRatePerContractFunc))
                     {
-                        throw new KeyNotFoundException($"InteractiveBrokersFeeModel(): unexpected future Market {market}");
+                        throw new KeyNotFoundException(Messages.InteractiveBrokersFeeModel.UnexpectedFutureMarket(market));
                     }
 
                     var feeRatePerContract = feeRatePerContractFunc(security);
-                    feeResult = order.AbsoluteQuantity * feeRatePerContract.Amount;
+                    feeResult = quantity * feeRatePerContract.Amount;
                     feeCurrency = feeRatePerContract.Currency;
                     break;
 
@@ -144,12 +148,12 @@ namespace QuantConnect.Orders.Fees
                             equityFee = new EquityFee(Currencies.INR, feePerShare: 0.01m, minimumFee: 6, maximumFeeRate: 20);
                             break;
                         default:
-                            throw new KeyNotFoundException($"InteractiveBrokersFeeModel(): unexpected equity Market {market}");
+                            throw new KeyNotFoundException(Messages.InteractiveBrokersFeeModel.UnexpectedEquityMarket(market));
                     }
                     var tradeValue = Math.Abs(order.GetValue(security));
 
                     //Per share fees
-                    var tradeFee = equityFee.FeePerShare * order.AbsoluteQuantity;
+                    var tradeFee = equityFee.FeePerShare * quantity;
 
                     //Maximum Per Order: equityFee.MaximumFeeRate
                     //Minimum per order. $equityFee.MinimumFee
@@ -170,7 +174,7 @@ namespace QuantConnect.Orders.Fees
 
                 default:
                     // unsupported security type
-                    throw new ArgumentException(Invariant($"Unsupported security type: {security.Type}"));
+                    throw new ArgumentException(Messages.FeeModel.UnsupportedSecurityType(security));
             }
 
             return new OrderFee(new CashAmount(
@@ -266,7 +270,7 @@ namespace QuantConnect.Orders.Fees
                     symbol = security.Symbol.Underlying.ID.Symbol;
                     break;
                 default:
-                    throw new ArgumentException(Invariant($"InteractiveBrokersFeeModel.UnitedStatesFutureFees(): Unsupported security type: {security.Type}"));
+                    throw new ArgumentException(Messages.InteractiveBrokersFeeModel.UnitedStatesFutureFeesUnsupportedSecurityType(security));
             }
 
             if (!fees.TryGetValue(symbol, out ibFeePerContract))
@@ -307,7 +311,7 @@ namespace QuantConnect.Orders.Fees
                     ibFeePerContract = 2.40m;
                     break;
                 default:
-                    throw new ArgumentException($"Unexpected quote currency {security.QuoteCurrency.Symbol} for Hong Kong futures exchange");
+                    throw new ArgumentException(Messages.InteractiveBrokersFeeModel.HongKongFutureFeesUnexpectedQuoteCurrency(security));
             }
 
             // let's add a 50% extra charge for exchange fees

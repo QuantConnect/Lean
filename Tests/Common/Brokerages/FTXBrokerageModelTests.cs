@@ -45,6 +45,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             new(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 new Cash(Currencies.USD, 0, 1m),
+                new Cash("ETH", 0, 0),
                 new SubscriptionDataConfig(
                     typeof(TradeBar),
                     _symbol,

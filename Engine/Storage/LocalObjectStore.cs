@@ -106,12 +106,12 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <summary>
         /// Loads objects from the AlgorithmStorageRoot into the ObjectStore
         /// </summary>
-        private IEnumerable<ObjectStoreEntry> GetObjectStoreEntries(bool loadContent)
+        private IEnumerable<ObjectStoreEntry> GetObjectStoreEntries(bool loadContent, bool takePersistLock = true)
         {
             if (Controls.StoragePermissions.HasFlag(FileAccess.Read))
             {
                 // Acquire the persist lock to avoid yielding twice the same value, just in case
-                lock (_persistLock)
+                lock (takePersistLock ? _persistLock : new object())
                 {
                     foreach (var kvp in _storage)
                     {
@@ -132,8 +132,11 @@ namespace QuantConnect.Lean.Engine.Storage
                         {
                             if (!_storage.TryGetValue(path, out objectStoreEntry) || objectStoreEntry.Data == null)
                             {
-                                // load file if content is null or not present, we prioritize the version we have in memory
-                                yield return _storage[path] = new ObjectStoreEntry(path, File.ReadAllBytes(file.FullName));
+                                if(TryCreateObjectStoreEntry(file.FullName, path, out objectStoreEntry))
+                                {
+                                    // load file if content is null or not present, we prioritize the version we have in memory
+                                    yield return _storage[path] = objectStoreEntry;
+                                }
                             }
                         }
                         else
@@ -222,10 +225,10 @@ namespace QuantConnect.Lean.Engine.Storage
             if(!_storage.TryGetValue(path, out var objectStoreEntry) || objectStoreEntry.Data == null)
             {
                 var filePath = PathForKey(path);
-                if (File.Exists(filePath))
+                if (TryCreateObjectStoreEntry(filePath, path, out objectStoreEntry))
                 {
                     // if there is no data in the cache and the file exists on disk let's load it
-                    objectStoreEntry = _storage[path] = new ObjectStoreEntry(path, File.ReadAllBytes(filePath));
+                    _storage[path] = objectStoreEntry;
                 }
             }
             return objectStoreEntry?.Data;
@@ -281,11 +284,27 @@ namespace QuantConnect.Lean.Engine.Storage
         /// </summary>
         protected bool InternalSaveBytes(string path, byte[] contents)
         {
+            if(!IsWithinStorageLimit(path, contents, takePersistLock: true))
+            {
+                return false;
+            }
+
+            // Add the dirty entry
+            var entry = _storage[path] = new ObjectStoreEntry(path, contents);
+            entry.SetDirty();
+            return true;
+        }
+
+        /// <summary>
+        /// Validates storage limits are respected on a new save operation
+        /// </summary>
+        protected virtual bool IsWithinStorageLimit(string path, byte[] contents, bool takePersistLock)
+        {
             // Before saving confirm we are abiding by the control rules
             // Start by counting our file and its length
             var fileCount = 1;
             var expectedStorageSizeBytes = contents?.Length ?? 0L;
-            foreach (var kvp in GetObjectStoreEntries(loadContent: false))
+            foreach (var kvp in GetObjectStoreEntries(loadContent: false, takePersistLock: takePersistLock))
             {
                 if (path.Equals(kvp.Path))
                 {
@@ -329,9 +348,6 @@ namespace QuantConnect.Lean.Engine.Storage
                 return false;
             }
 
-            // Add the dirty entry
-            var entry = _storage[path] = new ObjectStoreEntry(path, contents);
-            entry.SetDirty();
             return true;
         }
 
@@ -544,6 +560,37 @@ namespace QuantConnect.Lean.Engine.Storage
                 return path;
             }
             return path.TrimStart('.').TrimStart('/', '\\').Replace('\\', '/');
+        }
+
+        private static bool TryCreateObjectStoreEntry(string filePath, string path, out ObjectStoreEntry objectStoreEntry)
+        {
+            var count = 0;
+            do
+            {
+                count++;
+                try
+                {
+                    if (File.Exists(filePath))
+                    {
+                        objectStoreEntry = new ObjectStoreEntry(path, File.ReadAllBytes(filePath));
+                        return true;
+                    }
+                    objectStoreEntry = null;
+                    return false;
+                }
+                catch (Exception)
+                {
+                    if (count > 3)
+                    {
+                        throw;
+                    }
+                    else
+                    {
+                        // let's be resilient and retry, avoid race conditions, someone updating it or just random io failure
+                        Thread.Sleep(250);
+                    }
+                }
+            } while (true);
         }
 
         /// <summary>

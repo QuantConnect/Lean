@@ -150,7 +150,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 284403;
+        public long DataPoints => 709638;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -188,7 +188,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "0.32"},
-            {"Return Over Maximum Drawdown", "2.573"},
+            {"Return Over Maximum Drawdown", "2.576"},
             {"Portfolio Turnover", "0.016"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},

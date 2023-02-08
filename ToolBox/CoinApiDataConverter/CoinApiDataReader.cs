@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -48,15 +48,16 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
         /// </summary>
         /// <param name="file">The source file.</param>
         /// <param name="processingDate">The processing date.</param>
+        /// <param name="securityType">The security type of this file.</param>
         /// <returns></returns>
-        public CoinApiEntryData GetCoinApiEntryData(FileInfo file, DateTime processingDate)
+        public CoinApiEntryData GetCoinApiEntryData(FileInfo file, DateTime processingDate, SecurityType securityType)
         {
             // crypto/<market>/<date>/<ticktype>-563-BITFINEX_SPOT_BTC_USD.csv.gz
-            var tickType = file.FullName.Contains("trades") ? TickType.Trade : TickType.Quote;
+            var tickType = file.FullName.Contains("trades", StringComparison.InvariantCultureIgnoreCase) ? TickType.Trade : TickType.Quote;
 
             var symbolId = Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(file.Name)).Split('-').Last();
 
-            var symbol = _symbolMapper.GetLeanSymbol(symbolId, SecurityType.Crypto, null);
+            var symbol = _symbolMapper.GetLeanSymbol(symbolId, securityType, null);
 
             return new CoinApiEntryData
             {
@@ -77,7 +78,7 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
         public IEnumerable<Tick> ProcessCoinApiEntry(CoinApiEntryData entryData, FileInfo file)
         {
             Log.Trace("CoinApiDataReader.ProcessTarEntry(): Processing " +
-                      $"{entryData.Symbol.ID.Market}-{entryData.Symbol.Value}-{entryData.TickType} " +
+                      $"{entryData.Symbol.ID.Market}-{entryData.Symbol.Value}-{entryData.TickType}-{entryData.Symbol.SecurityType} " +
                       $"for {entryData.Date:yyyy-MM-dd}");
 
 

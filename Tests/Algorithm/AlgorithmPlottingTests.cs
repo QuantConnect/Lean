@@ -200,5 +200,25 @@ class CustomIndicator:
                 Assert.AreEqual(10, charts.First().Series["PlotTest"].Values.First().y);
             }
         }
+
+        [Test]
+        public void PlotIndicatorPlotsBaseIndicator()
+        {
+            var sma1 = new SimpleMovingAverage(1);
+            var sma2 = new SimpleMovingAverage(1);
+            var ratio = sma1.Over(sma2);
+
+            Assert.DoesNotThrow(() => _algorithm.PlotIndicator("PlotTest", ratio));
+
+            sma1.Update(new DateTime(2022, 11, 15), 1);
+            sma2.Update(new DateTime(2022, 11, 15), 2);
+
+            var charts = _algorithm.GetChartUpdates();
+            Assert.IsTrue(charts.Where(x => x.Name == "PlotTest").Any());
+
+            var chart = charts.First();
+            Assert.AreEqual("PlotTest", chart.Name);
+            Assert.AreEqual(sma1.Current.Value / sma2.Current.Value, chart.Series[ratio.Name].Values.First().y);
+        }
     }
 }

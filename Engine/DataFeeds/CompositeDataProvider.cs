@@ -28,6 +28,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class CompositeDataProvider : IDataProvider
     {
+        /// <summary>
+        /// Event raised each time data fetch is finished (successfully or not)
+        /// </summary>
+        public event EventHandler<DataProviderNewDataRequestEventArgs> NewDataRequest;
+
         private readonly List<IDataProvider> _dataProviders;
 
         /// <summary>
@@ -55,6 +60,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 throw new ArgumentException("CompositeDataProvider(): requires 'composite-data-providers' to be set with a valid type name");
             }
+
+            _dataProviders.ForEach(x => x.NewDataRequest += OnNewDataRequest);
         }
 
         /// <summary>
@@ -75,6 +82,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="NewDataRequest"/> event
+        /// </summary>
+        private void OnNewDataRequest(object sender, DataProviderNewDataRequestEventArgs e)
+        {
+            NewDataRequest?.Invoke(this, e);
         }
     }
 }

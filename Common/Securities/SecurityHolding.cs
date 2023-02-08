@@ -14,10 +14,10 @@
 */
 
 using System;
-using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using static QuantConnect.StringExtensions;
+using QuantConnect.Algorithm.Framework.Portfolio;
 
 namespace QuantConnect.Securities
 {
@@ -39,6 +39,7 @@ namespace QuantConnect.Securities
         private decimal _profit;
         private decimal _lastTradeProfit;
         private decimal _totalFees;
+        private decimal _totalDividends;
         private readonly Security _security;
         private readonly ICurrencyConverter _currencyConverter;
 
@@ -168,7 +169,7 @@ namespace QuantConnect.Securities
                 {
                     return 0;
                 }
-                return AveragePrice * Quantity * _security.QuoteCurrency.ConversionRate * _security.SymbolProperties.ContractMultiplier;
+                return GetQuantityValue(Quantity, AveragePrice).InAccountCurrency;
             }
         }
 
@@ -230,7 +231,7 @@ namespace QuantConnect.Securities
                     return 0;
                 }
 
-                return GetQuantityValue(Quantity);
+                return GetQuantityValue(Quantity).InAccountCurrency;
             }
         }
 
@@ -281,6 +282,14 @@ namespace QuantConnect.Securities
         public virtual decimal TotalFees
         {
             get { return _totalFees; }
+        }
+
+        /// <summary>
+        /// Total dividends for this company since the algorithm started in units of the account's currency.
+        /// </summary>
+        public virtual decimal TotalDividends
+        {
+            get { return _totalDividends; }
         }
 
         /// <summary>
@@ -336,7 +345,7 @@ namespace QuantConnect.Securities
         /// <seealso cref="NetProfit"/>
         public virtual decimal Profit
         {
-            get { return _profit; }
+            get { return _profit + _totalDividends; }
         }
 
         /// <summary>
@@ -353,7 +362,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets the unrealized profit as a percenage of holdings cost
+        /// Gets the unrealized profit as a percentage of holdings cost
         /// </summary>
         public virtual decimal UnrealizedProfitPercent
         {
@@ -397,6 +406,15 @@ namespace QuantConnect.Securities
         public void AddNewSale(decimal saleValue)
         {
             _totalSaleVolume += saleValue;
+        }
+
+        /// <summary>
+        /// Adds a new dividend payment to the running total dividend in units of the account's currency.
+        /// </summary>
+        /// <param name="dividend"></param>
+        public void AddNewDividend(decimal dividend)
+        {
+            _totalDividends += dividend;
         }
 
         /// <summary>
@@ -445,7 +463,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="quantity">The quantity of shares</param>
         /// <returns>The value of the quantity of shares in the account currency</returns>
-        public virtual decimal GetQuantityValue(decimal quantity)
+        public virtual ConvertibleCashAmount GetQuantityValue(decimal quantity)
         {
             return GetQuantityValue(quantity, _price);
         }
@@ -457,9 +475,10 @@ namespace QuantConnect.Securities
         /// <param name="quantity">The quantity of shares</param>
         /// <param name="price">The current price</param>
         /// <returns>The value of the quantity of shares in the account currency</returns>
-        public virtual decimal GetQuantityValue(decimal quantity, decimal price)
+        public virtual ConvertibleCashAmount GetQuantityValue(decimal quantity, decimal price)
         {
-            return price * quantity * _security.QuoteCurrency.ConversionRate * _security.SymbolProperties.ContractMultiplier;
+            var amount = price * quantity * _security.SymbolProperties.ContractMultiplier;
+            return new ConvertibleCashAmount(amount, _security.QuoteCurrency);
         }
 
         /// <summary>
@@ -489,8 +508,9 @@ namespace QuantConnect.Securities
                 price = _security.Price;
             }
 
-            return (price - AveragePrice) * Quantity * _security.QuoteCurrency.ConversionRate
-                * _security.SymbolProperties.ContractMultiplier - feesInAccountCurrency;
+            var entryValue = GetQuantityValue(Quantity, AveragePrice).InAccountCurrency;
+            var potentialExitValue = GetQuantityValue(Quantity, price).InAccountCurrency;
+            return potentialExitValue - entryValue - feesInAccountCurrency;
         }
 
         /// <summary>

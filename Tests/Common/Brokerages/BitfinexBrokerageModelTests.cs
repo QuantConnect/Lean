@@ -39,6 +39,7 @@ namespace QuantConnect.Tests.Common.Brokerages
                 return new Crypto(
                     SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                     new Cash(Currencies.USD, 0, 1m),
+                    new Cash("ETH", 0, 0),
                     new SubscriptionDataConfig(
                         typeof(TradeBar),
                         Symbol,
@@ -161,6 +162,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             return new Crypto(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 new Cash(Currencies.USD, 0, 1m),
+                new Cash(symbol.Value.RemoveFromEnd(Currencies.USD), 0, 0),
                 new SubscriptionDataConfig(
                     typeof(TradeBar),
                     symbol,

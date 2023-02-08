@@ -14,10 +14,11 @@
  *
 */
 
-using System.Collections.Generic;
+using System;
+using QuantConnect.Util;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Securities
 {
@@ -97,37 +98,23 @@ namespace QuantConnect.Securities
 
             // verify the cash book is in a ready state
             var quoteCurrency = symbolProperties.QuoteCurrency;
-            if (!_cashBook.ContainsKey(quoteCurrency))
+            if (!_cashBook.TryGetValue(quoteCurrency, out var quoteCash))
             {
                 // since we have none it's safe to say the conversion is zero
-                _cashBook.Add(quoteCurrency, 0, 0);
+                quoteCash = _cashBook.Add(quoteCurrency, 0, 0);
             }
-            if (symbol.ID.SecurityType == SecurityType.Forex || symbol.ID.SecurityType == SecurityType.Crypto)
+
+            Cash baseCash = null;
+            // we skip cfd because we don't need to add the base cash
+            if (symbol.SecurityType != SecurityType.Cfd && CurrencyPairUtil.TryDecomposeCurrencyPair(symbol, out var baseCurrencySymbol, out _))
             {
-                // decompose the symbol into each currency pair
-                string baseCurrency;
-                if (symbol.ID.SecurityType == SecurityType.Forex)
-                {
-                    Forex.Forex.DecomposeCurrencyPair(symbol.Value, out baseCurrency, out quoteCurrency);
-                }
-                else
-                {
-                    Crypto.Crypto.DecomposeCurrencyPair(symbol, symbolProperties, out baseCurrency, out quoteCurrency);
-                }
-
-                if (!_cashBook.ContainsKey(baseCurrency))
+                if (!_cashBook.TryGetValue(baseCurrencySymbol, out baseCash))
                 {
                     // since we have none it's safe to say the conversion is zero
-                    _cashBook.Add(baseCurrency, 0, 0);
-                }
-                if (!_cashBook.ContainsKey(quoteCurrency))
-                {
-                    // since we have none it's safe to say the conversion is zero
-                    _cashBook.Add(quoteCurrency, 0, 0);
+                    baseCash = _cashBook.Add(baseCurrencySymbol, 0, 0);
                 }
             }
 
-            var quoteCash = _cashBook[symbolProperties.QuoteCurrency];
             var cache = _cacheProvider.GetSecurityCache(symbol);
 
             Security security;
@@ -166,7 +153,7 @@ namespace QuantConnect.Securities
                     break;
 
                 case SecurityType.Forex:
-                    security = new Forex.Forex(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook, _registeredTypes, cache);
+                    security = new Forex.Forex(symbol, exchangeHours, quoteCash, baseCash, symbolProperties, _cashBook, _registeredTypes, cache);
                     break;
 
                 case SecurityType.Cfd:
@@ -178,7 +165,11 @@ namespace QuantConnect.Securities
                     break;
 
                 case SecurityType.Crypto:
-                    security = new Crypto.Crypto(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook, _registeredTypes, cache);
+                    security = new Crypto.Crypto(symbol, exchangeHours, quoteCash, baseCash, symbolProperties, _cashBook, _registeredTypes, cache);
+                    break;
+
+                case SecurityType.CryptoFuture:
+                    security = new CryptoFuture.CryptoFuture(symbol, exchangeHours, quoteCash, baseCash, symbolProperties, _cashBook, _registeredTypes, cache);
                     break;
 
                 default:

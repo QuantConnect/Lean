@@ -58,7 +58,7 @@ namespace QuantConnect.Orders.Fees
                 if (order.Direction == OrderDirection.Buy)
                 {
                     unitPrice = 1;
-                    currency = ((IBaseCurrencySymbol)security).BaseCurrencySymbol;
+                    currency = ((IBaseCurrencySymbol)security).BaseCurrency.Symbol;
                 }
             }
 

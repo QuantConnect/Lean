@@ -93,13 +93,13 @@ namespace QuantConnect.Securities
             if (parameters.Order.Direction == OrderDirection.Buy)
             {
                 // quantity available for buying in quote currency
-                totalQuantity = parameters.Portfolio.CashBook[parameters.Security.QuoteCurrency.Symbol].Amount;
+                totalQuantity = parameters.Security.QuoteCurrency.Amount;
                 orderQuantity = parameters.Order.AbsoluteQuantity * GetOrderPrice(parameters.Security, parameters.Order);
             }
             else
             {
                 // quantity available for selling in base currency
-                totalQuantity = parameters.Portfolio.CashBook[baseCurrency.BaseCurrencySymbol].Amount;
+                totalQuantity = baseCurrency.BaseCurrency.Amount;
                 orderQuantity = parameters.Order.AbsoluteQuantity;
             }
 
@@ -114,15 +114,14 @@ namespace QuantConnect.Securities
                     return parameters.Sufficient();
                 }
 
-                return parameters.Insufficient(Invariant($"Your portfolio holds {totalQuantity.Normalize()} {baseCurrency.BaseCurrencySymbol}, {openOrdersReservedQuantity.Normalize()} {baseCurrency.BaseCurrencySymbol} of which are reserved for open orders, but your Sell order is for {orderQuantity.Normalize()} {baseCurrency.BaseCurrencySymbol}. Cash Modeling trading does not permit short holdings so ensure you only sell what you have, including any additional open orders."));
+                return parameters.Insufficient(Invariant($"Your portfolio holds {totalQuantity.Normalize()} {baseCurrency.BaseCurrency.Symbol}, {openOrdersReservedQuantity.Normalize()} {baseCurrency.BaseCurrency.Symbol} of which are reserved for open orders, but your Sell order is for {orderQuantity.Normalize()} {baseCurrency.BaseCurrency.Symbol}. Cash Modeling trading does not permit short holdings so ensure you only sell what you have, including any additional open orders."));
             }
 
             if (parameters.Order.Type == OrderType.Market)
             {
                 // include existing holdings (in quote currency)
-                var holdingsValue =
-                    parameters.Portfolio.CashBook.Convert(
-                        parameters.Portfolio.CashBook[baseCurrency.BaseCurrencySymbol].Amount, baseCurrency.BaseCurrencySymbol, parameters.Security.QuoteCurrency.Symbol);
+                var holdingsValue = 
+                    parameters.Portfolio.CashBook.Convert(baseCurrency.BaseCurrency.Amount, baseCurrency.BaseCurrency.Symbol, parameters.Security.QuoteCurrency.Symbol);
 
                 // find a target value in account currency for buy market orders
                 var targetValue =
@@ -142,7 +141,7 @@ namespace QuantConnect.Securities
                     return parameters.Sufficient();
                 }
 
-                return parameters.Insufficient(Invariant($"Your portfolio holds {totalQuantity.Normalize()} {parameters.Security.QuoteCurrency.Symbol}, {openOrdersReservedQuantity.Normalize()} {parameters.Security.QuoteCurrency.Symbol} of which are reserved for open orders, but your Buy order is for {parameters.Order.AbsoluteQuantity.Normalize()} {baseCurrency.BaseCurrencySymbol}. Your order requires a total value of {orderQuantity.Normalize()} {parameters.Security.QuoteCurrency.Symbol}, but only a total value of {Math.Abs(maximumQuantity).Normalize()} {parameters.Security.QuoteCurrency.Symbol} is available."));
+                return parameters.Insufficient(Invariant($"Your portfolio holds {totalQuantity.Normalize()} {parameters.Security.QuoteCurrency.Symbol}, {openOrdersReservedQuantity.Normalize()} {parameters.Security.QuoteCurrency.Symbol} of which are reserved for open orders, but your Buy order is for {parameters.Order.AbsoluteQuantity.Normalize()} {baseCurrency.BaseCurrency.Symbol}. Your order requires a total value of {orderQuantity.Normalize()} {parameters.Security.QuoteCurrency.Symbol}, but only a total value of {Math.Abs(maximumQuantity).Normalize()} {parameters.Security.QuoteCurrency.Symbol} is available."));
             }
 
             // for limit orders, add fees to the order cost
@@ -163,7 +162,7 @@ namespace QuantConnect.Securities
                 return parameters.Sufficient();
             }
 
-            return parameters.Insufficient(Invariant($"Your portfolio holds {totalQuantity.Normalize()} {parameters.Security.QuoteCurrency.Symbol}, {openOrdersReservedQuantity.Normalize()} {parameters.Security.QuoteCurrency.Symbol} of which are reserved for open orders, but your Buy order is for {parameters.Order.AbsoluteQuantity.Normalize()} {baseCurrency.BaseCurrencySymbol}. Your order requires a total value of {orderQuantity.Normalize()} {parameters.Security.QuoteCurrency.Symbol}, but only a total value of {(totalQuantity - openOrdersReservedQuantity - orderFee).Normalize()} {parameters.Security.QuoteCurrency.Symbol} is available."));
+            return parameters.Insufficient(Invariant($"Your portfolio holds {totalQuantity.Normalize()} {parameters.Security.QuoteCurrency.Symbol}, {openOrdersReservedQuantity.Normalize()} {parameters.Security.QuoteCurrency.Symbol} of which are reserved for open orders, but your Buy order is for {parameters.Order.AbsoluteQuantity.Normalize()} {baseCurrency.BaseCurrency.Symbol}. Your order requires a total value of {orderQuantity.Normalize()} {parameters.Security.QuoteCurrency.Symbol}, but only a total value of {(totalQuantity - openOrdersReservedQuantity - orderFee).Normalize()} {parameters.Security.QuoteCurrency.Symbol} is available."));
         }
 
         /// <summary>
@@ -204,13 +203,13 @@ namespace QuantConnect.Securities
             // if target value is zero, return amount of base currency available to sell
             if (targetPortfolioValue == 0)
             {
-                return new GetMaximumOrderQuantityResult(-parameters.Portfolio.CashBook[baseCurrency.BaseCurrencySymbol].Amount);
+                return new GetMaximumOrderQuantityResult(-baseCurrency.BaseCurrency.Amount);
             }
 
             // convert base currency cash to account currency
             var baseCurrencyPosition = parameters.Portfolio.CashBook.ConvertToAccountCurrency(
-                parameters.Portfolio.CashBook[baseCurrency.BaseCurrencySymbol].Amount,
-                baseCurrency.BaseCurrencySymbol);
+                baseCurrency.BaseCurrency.Amount,
+                baseCurrency.BaseCurrency.Symbol);
 
             // remove directionality, we'll work in the land of absolutes
             var targetOrderValue = Math.Abs(targetPortfolioValue - baseCurrencyPosition);
@@ -341,7 +340,7 @@ namespace QuantConnect.Securities
                 return parameters.ResultInAccountCurrency(0m);
             }
 
-            var baseCurrencyPosition = portfolio.CashBook[baseCurrency.BaseCurrencySymbol].Amount;
+            var baseCurrencyPosition = baseCurrency.BaseCurrency.Amount;
             var quoteCurrencyPosition = portfolio.CashBook[security.QuoteCurrency.Symbol].Amount;
 
             // determine the unit price in terms of the quote currency
@@ -357,12 +356,12 @@ namespace QuantConnect.Securities
             {
                 // invert units for math, 6500USD per BTC, currency pairs aren't real fractions
                 // (USD)/(BTC/USD) => 10kUSD/ (6500 USD/BTC) => 10kUSD * (1BTC/6500USD) => ~ 1.5BTC
-                return parameters.Result(quoteCurrencyPosition / unitPrice, baseCurrency.BaseCurrencySymbol);
+                return parameters.Result(quoteCurrencyPosition / unitPrice, baseCurrency.BaseCurrency.Symbol);
             }
 
             if (direction == OrderDirection.Sell)
             {
-                return parameters.Result(baseCurrencyPosition, baseCurrency.BaseCurrencySymbol);
+                return parameters.Result(baseCurrencyPosition, baseCurrency.BaseCurrency.Symbol);
             }
 
             return parameters.ResultInAccountCurrency(0m);
@@ -405,7 +404,7 @@ namespace QuantConnect.Securities
             // find the target currency for the requested direction and the securities potentially involved
             var targetCurrency = order.Direction == OrderDirection.Buy
                 ? security.QuoteCurrency.Symbol
-                : baseCurrency.BaseCurrencySymbol;
+                : baseCurrency.BaseCurrency.Symbol;
 
             var symbolDirectionPairs = new Dictionary<Symbol, OrderDirection>();
             foreach (var portfolioSecurity in portfolio.Securities.Values)
@@ -413,7 +412,7 @@ namespace QuantConnect.Securities
                 var basePortfolioSecurity = portfolioSecurity as IBaseCurrencySymbol;
                 if (basePortfolioSecurity == null) continue;
 
-                if (basePortfolioSecurity.BaseCurrencySymbol == targetCurrency)
+                if (basePortfolioSecurity.BaseCurrency.Symbol == targetCurrency)
                 {
                     symbolDirectionPairs.Add(portfolioSecurity.Symbol, OrderDirection.Sell);
                 }

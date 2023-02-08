@@ -104,7 +104,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var dataConfig = GetConfig();
             var enumerator = compositeDataQueueHandler.Subscribe(dataConfig, (_, _) => {});
 
-            Assert.Throws<ArgumentException>(() => compositeDataQueueHandler.Subscribe(dataConfig, (_, _) => { }));
+            Assert.DoesNotThrow(() => compositeDataQueueHandler.Subscribe(dataConfig, (_, _) => { }));
             compositeDataQueueHandler.Dispose();
         }
 

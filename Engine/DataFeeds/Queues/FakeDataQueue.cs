@@ -166,6 +166,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
 
             foreach (var symbol in symbols)
             {
+                if (symbol.IsCanonical() || symbol.Contains("UNIVERSE"))
+                {
+                    continue;
+                }
                 var offsetProvider = GetTimeZoneOffsetProvider(symbol);
                 var trades = SubscriptionManager.DefaultDataTypes()[symbol.SecurityType].Contains(TickType.Trade);
                 var quotes = SubscriptionManager.DefaultDataTypes()[symbol.SecurityType].Contains(TickType.Quote);
@@ -226,7 +230,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
                 case SecurityType.Option:
                 case SecurityType.IndexOption:
                 case SecurityType.FutureOption:
-                    foreach (var result in _optionChainProvider.GetOptionContractList(symbol.Underlying, DateTime.UtcNow.Date))
+                    foreach (var result in _optionChainProvider.GetOptionContractList(symbol, DateTime.UtcNow.Date))
                     {
                         yield return result;
                     }

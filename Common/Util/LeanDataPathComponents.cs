@@ -15,7 +15,7 @@
 
 using System;
 using System.IO;
-using QuantConnect.Securities.Future;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Util
 {
@@ -147,7 +147,7 @@ namespace QuantConnect.Util
                     // ticker_year_trade_american
                     ticker = ticker.Substring(0, ticker.IndexOf("_", StringComparison.InvariantCulture));
                 }
-                if (securityType == SecurityType.Future)
+                if (securityType == SecurityType.Future || securityType == SecurityType.CryptoFuture)
                 {
                     // ticker_trade
                     ticker = ticker.Substring(0, ticker.LastIndexOfInvariant("_"));
@@ -172,15 +172,16 @@ namespace QuantConnect.Util
                 var withoutExtension = Path.GetFileNameWithoutExtension(filename);
                 rawValue = withoutExtension.Substring(withoutExtension.LastIndexOf("_", StringComparison.Ordinal) + 1);
                 var style = (OptionStyle) Enum.Parse(typeof (OptionStyle), rawValue, true);
-                symbol = Symbol.CreateOption(ticker, market, style, OptionRight.Call | OptionRight.Put, 0, SecurityIdentifier.DefaultDate);
+                symbol = Symbol.CreateOption(ticker, market, style, default, 0, SecurityIdentifier.DefaultDate);
             }
-            else if (securityType == SecurityType.FutureOption)
+            else if (securityType == SecurityType.FutureOption || securityType == SecurityType.IndexOption)
             {
                 var withoutExtension = Path.GetFileNameWithoutExtension(filename);
                 rawValue = withoutExtension.Substring(withoutExtension.LastIndexOf("_", StringComparison.Ordinal) + 1);
                 var style = (OptionStyle) Enum.Parse(typeof (OptionStyle), rawValue, true);
-                var futureSymbol = QuantConnect.Symbol.Create(FuturesOptionsSymbolMappings.MapFromOption(ticker), SecurityType.Future, market);
-                symbol = Symbol.CreateOption(futureSymbol, market, style, OptionRight.Call | OptionRight.Put, 0, SecurityIdentifier.DefaultDate);
+                var underlyingSecurityType = Symbol.GetUnderlyingFromOptionType(securityType);
+                var underlyingSymbol = Symbol.Create(OptionSymbol.MapToUnderlying(ticker, securityType), underlyingSecurityType, market);
+                symbol = Symbol.CreateOption(underlyingSymbol, ticker, market, style, default, 0, SecurityIdentifier.DefaultDate);
             }
             else if (securityType == SecurityType.Future)
             {

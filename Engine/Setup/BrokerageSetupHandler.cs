@@ -393,7 +393,7 @@ namespace QuantConnect.Lean.Engine.Setup
         {
             var supportedSecurityTypes = new HashSet<SecurityType>
             {
-                SecurityType.Equity, SecurityType.Forex, SecurityType.Cfd, SecurityType.Option, SecurityType.Future, SecurityType.FutureOption, SecurityType.IndexOption, SecurityType.Crypto
+                SecurityType.Equity, SecurityType.Forex, SecurityType.Cfd, SecurityType.Option, SecurityType.Future, SecurityType.FutureOption, SecurityType.IndexOption, SecurityType.Crypto, SecurityType.CryptoFuture
             };
 
             Log.Trace("BrokerageSetupHandler.Setup(): Fetching open orders from brokerage...");

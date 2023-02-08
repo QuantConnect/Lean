@@ -140,6 +140,13 @@ namespace QuantConnect.Brokerages
         ISettlementModel GetSettlementModel(Security security);
 
         /// <summary>
+        /// Gets a new margin interest rate model for the security
+        /// </summary>
+        /// <param name="security">The security to get a margin interest rate model for</param>
+        /// <returns>The margin interest rate model for this brokerage</returns>
+        IMarginInterestRateModel GetMarginInterestRateModel(Security security);
+
+        /// <summary>
         /// Gets a new settlement model for the security
         /// </summary>
         /// <param name="security">The security to get a settlement model for</param>
@@ -205,6 +212,12 @@ namespace QuantConnect.Brokerages
                 case BrokerageName.Bitfinex:
                     return new BitfinexBrokerageModel(accountType);
 
+                case BrokerageName.BinanceFutures:
+                    return new BinanceFuturesBrokerageModel(accountType);
+
+                case BrokerageName.BinanceCoinFutures:
+                    return new BinanceCoinFuturesBrokerageModel(accountType);
+
                 case BrokerageName.Binance:
                     return new BinanceBrokerageModel(accountType);
 
@@ -240,6 +253,12 @@ namespace QuantConnect.Brokerages
 
                 case BrokerageName.FTXUS:
                     return new FTXUSBrokerageModel(accountType);
+                
+                case BrokerageName.Wolverine:
+                    return new WolverineBrokerageModel(accountType);
+
+                case BrokerageName.TDAmeritrade:
+                    return new TDAmeritradeBrokerageModel(accountType);
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(brokerage), brokerage, null);
@@ -313,6 +332,12 @@ namespace QuantConnect.Brokerages
 
                 case FTXBrokerageModel _:
                     return BrokerageName.FTX;
+
+                case WolverineBrokerageModel _:
+                    return BrokerageName.Wolverine;
+
+                case TDAmeritradeBrokerageModel _:
+                    return BrokerageName.TDAmeritrade;
 
                 case DefaultBrokerageModel _:
                     return BrokerageName.Default;

@@ -14,23 +14,24 @@
  *
 */
 
-using System;
-using System.Linq;
-using System.IO;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
+using QuantConnect.Data.Custom.AlphaStreams;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
-using System.Collections.Generic;
 using QuantConnect.Securities.Cfd;
 using QuantConnect.Securities.Crypto;
+using QuantConnect.Securities.CryptoFuture;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Future;
-using QuantConnect.Securities.Option;
-using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Securities.IndexOption;
-using QuantConnect.Data.Custom.AlphaStreams;
+using QuantConnect.Securities.Option;
+using QuantConnect.Tests.Engine.DataFeeds;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using Index = QuantConnect.Securities.Index.Index;
 
 namespace QuantConnect.Tests.Algorithm
@@ -90,6 +91,9 @@ namespace QuantConnect.Tests.Algorithm
                         break;
                     case SecurityType.Crypto:
                         var crypto = (Crypto)security;
+                        break;
+                    case SecurityType.CryptoFuture:
+                        var cryptoFuture = (CryptoFuture)security;
                         break;
                     case SecurityType.Base:
                         break;

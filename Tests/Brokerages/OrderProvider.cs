@@ -63,15 +63,12 @@ namespace QuantConnect.Tests.Brokerages
             return order?.Clone();
         }
 
-        public Order GetOrderByBrokerageId(string brokerageId)
+        public List<Order> GetOrdersByBrokerageId(string brokerageId)
         {
-            Order order;
             lock (_lock)
             {
-                order = _orders.FirstOrDefault(x => x.BrokerId.Contains(brokerageId));
+                return _orders.Where(o => o.BrokerId.Contains(brokerageId)).Select(o => o.Clone()).ToList();
             }
-
-            return order?.Clone();
         }
 
         public IEnumerable<OrderTicket> GetOrderTickets(Func<OrderTicket, bool> filter = null)

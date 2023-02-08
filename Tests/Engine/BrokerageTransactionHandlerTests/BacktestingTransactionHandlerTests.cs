@@ -103,9 +103,10 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             _algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
 
             var orderEventCalls = 0;
-            brokerage.OrderStatusChanged += (sender, orderEvent) =>
+            brokerage.OrdersStatusChanged += (sender, orderEvents) =>
             {
                 orderEventCalls++;
+                var orderEvent = orderEvents[0];
                 switch (orderEventCalls)
                 {
                     case 1:
@@ -175,9 +176,10 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             _algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
 
             var orderEventCalls = 0;
-            brokerage.OrderStatusChanged += (sender, orderEvent) =>
+            brokerage.OrdersStatusChanged += (sender, orderEvents) =>
             {
                 orderEventCalls++;
+                var orderEvent = orderEvents[0];
                 switch (orderEventCalls)
                 {
                     case 1:

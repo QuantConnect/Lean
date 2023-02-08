@@ -177,18 +177,19 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual("A", oldSymbol.Permtick);
         }
 
-        [TestCase("{\"value\":\"Fb    210618c00322500\",\"type\":\"2\"}", SecurityType.Option, "FB", OptionRight.Call, OptionStyle.American, 2021)]
-        [TestCase("{\"value\":\"aapl  210618C00129000\",\"type\":\"2\"}", SecurityType.Option, "AAPL", OptionRight.Call, OptionStyle.American, 2021)]
+        [TestCase("{\"value\":\"Fb    210618c00322500\",\"type\":\"2\"}", SecurityType.Option, "FB", "FB", OptionRight.Call, OptionStyle.American, 2021)]
+        [TestCase("{\"value\":\"aapl  210618C00129000\",\"type\":\"2\"}", SecurityType.Option, "AAPL", "AAPL", OptionRight.Call, OptionStyle.American, 2021)]
 
-        [TestCase("{\"value\":\"OGV1 C2040\",\"type\":\"8\"}", SecurityType.FutureOption, "GC", OptionRight.Call, OptionStyle.American, 2021)]
-        [TestCase("{\"value\":\"ESZ30 C3505\",\"type\":\"8\"}", SecurityType.FutureOption, "ES", OptionRight.Call, OptionStyle.American, 2030)]
-        [TestCase("{\"value\":\"SPXW  210618C04165000\",\"type\":\"10\"}", SecurityType.IndexOption, "SPXW", OptionRight.Call, OptionStyle.American, 2021)]
-        public void OptionUserFriendlyDeserialization(string jsonValue, SecurityType type, string underlying, OptionRight optionRight, OptionStyle optionStyle, int expirationYear)
+        [TestCase("{\"value\":\"OGV1 C2040\",\"type\":\"8\"}", SecurityType.FutureOption, "GC", "OG", OptionRight.Call, OptionStyle.American, 2021)]
+        [TestCase("{\"value\":\"ESZ30 C3505\",\"type\":\"8\"}", SecurityType.FutureOption, "ES", "ES", OptionRight.Call, OptionStyle.American, 2030)]
+        [TestCase("{\"value\":\"SPXW  210618C04165000\",\"type\":\"10\"}", SecurityType.IndexOption, "SPX", "SPXW", OptionRight.Call, OptionStyle.American, 2021)]
+        public void OptionUserFriendlyDeserialization(string jsonValue, SecurityType type, string underlying, string option, OptionRight optionRight, OptionStyle optionStyle, int expirationYear)
         {
             var symbol = JsonConvert.DeserializeObject<Symbol>(jsonValue);
 
             Assert.IsNotNull(symbol);
             Assert.AreEqual(type, symbol.SecurityType);
+            Assert.AreEqual(option, symbol.ID.Symbol);
             Assert.AreEqual(underlying, symbol.ID.Underlying.Symbol);
             Assert.AreEqual(optionRight, symbol.ID.OptionRight);
             Assert.AreEqual(optionStyle, symbol.ID.OptionStyle);

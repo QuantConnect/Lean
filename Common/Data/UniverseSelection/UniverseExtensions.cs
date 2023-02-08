@@ -83,6 +83,8 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>A symbol for user defined universe of the specified security type and market</returns>
         public static Symbol CreateSymbol(SecurityType securityType, string market, string ticker)
         {
+            // TODO looks like we can just replace this for Symbol.Create?
+
             SecurityIdentifier sid;
             switch (securityType)
             {
@@ -127,6 +129,10 @@ namespace QuantConnect.Data.UniverseSelection
 
                 case SecurityType.Crypto:
                     sid = SecurityIdentifier.GenerateCrypto(ticker, market);
+                    break;
+
+                case SecurityType.CryptoFuture:
+                    sid = SecurityIdentifier.GenerateCryptoFuture(SecurityIdentifier.DefaultDate, ticker, market);
                     break;
 
                 case SecurityType.Commodity:

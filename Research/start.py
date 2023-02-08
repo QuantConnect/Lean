@@ -34,7 +34,7 @@ AddReference("Fasterflect")
 
 Initializer.Start()
 api = Initializer.GetSystemHandlers().Api
-algorithmHandlers = Initializer.GetAlgorithmHandlers()
+algorithmHandlers = Initializer.GetAlgorithmHandlers(researchMode=True)
 
 # Required to configure pythonpath with additional paths the user may have 
 # set in the config, like a project library.

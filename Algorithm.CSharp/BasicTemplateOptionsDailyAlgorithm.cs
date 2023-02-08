@@ -88,7 +88,7 @@ namespace QuantConnect.Algorithm.CSharp
             Log(orderEvent.ToString());
 
             // Check for our expected OTM option expiry
-            if (orderEvent.Message == "OTM")
+            if (orderEvent.Message.Contains("OTM", StringComparison.InvariantCulture))
             {
                 // Assert it is at midnight (5AM UTC)
                 if (orderEvent.UtcTime != new DateTime(2016, 1, 16, 5, 0, 0))
@@ -175,7 +175,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "c6d089f1fb86379c74a7413a9c2f8553"}
+            {"OrderListHash", "0b52bbe98ade8e3aab943e64fcf4abfe"}
         };
     }
 }

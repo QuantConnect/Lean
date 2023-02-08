@@ -35,6 +35,12 @@ namespace QuantConnect.Tests.Common.Orders
         [Test, TestCaseSource("GetValueTestParameters")]
         public void GetValueTest(ValueTestParameters parameters)
         {
+            // By default the price for option exercise orders is 0, so we need to set it to the strike price
+            if (parameters.Order.Type == OrderType.OptionExercise)
+            {
+                parameters.Order.Price = parameters.Order.Symbol.ID.StrikePrice;
+            }
+
             var value = parameters.Order.GetValue(parameters.Security);
             Assert.AreEqual(parameters.ExpectedValue, value);
         }
@@ -101,6 +107,7 @@ namespace QuantConnect.Tests.Common.Orders
             var forex = new Forex(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 gbpCash,
+                new Cash("EUR", 0, 0),
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.EURGBP, Resolution.Minute, tz, tz, true, false, false),
                 properties,
                 ErrorCurrencyConverter.Instance,

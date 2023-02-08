@@ -85,7 +85,7 @@ namespace QuantConnect.Orders
             ErrorCode = errorCode;
             if (errorCode != OrderResponseErrorCode.None)
             {
-                ErrorMessage = errorMessage ?? "An unexpected error occurred.";
+                ErrorMessage = errorMessage ?? Messages.OrderResponse.DefaultErrorMessage;
             }
         }
 
@@ -98,25 +98,16 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            if (this == Unprocessed)
-            {
-                return "Unprocessed";
-            }
-
-            if (IsError)
-            {
-                return Invariant($"Error: {ErrorCode} - {ErrorMessage}");
-            }
-
-            return "Success";
+            return Messages.OrderResponse.ToString(this);
         }
 
-        #region Statics - implicit(int), Unprocessed constant, reponse factory methods
+        #region Statics - implicit(int), Unprocessed constant, response factory methods
 
         /// <summary>
         /// Gets an <see cref="OrderResponse"/> for a request that has not yet been processed
         /// </summary>
-        public static readonly OrderResponse Unprocessed = new OrderResponse(int.MinValue, OrderResponseErrorCode.None, "The request has not yet been processed.");
+        public static readonly OrderResponse Unprocessed = new OrderResponse(int.MinValue, OrderResponseErrorCode.None,
+            Messages.OrderResponse.UnprocessedOrderResponseErrorMessage);
 
         /// <summary>
         /// Helper method to create a successful response from a request
@@ -139,9 +130,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public static OrderResponse InvalidStatus(OrderRequest request, Order order)
         {
-            return Error(request, OrderResponseErrorCode.InvalidOrderStatus,
-                Invariant($"Unable to update order with id {request.OrderId} because it already has {order.Status} status.")
-            );
+            return Error(request, OrderResponseErrorCode.InvalidOrderStatus, Messages.OrderResponse.InvalidStatus(request, order));
         }
 
         /// <summary>
@@ -149,9 +138,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public static OrderResponse InvalidNewStatus(OrderRequest request, Order order)
         {
-            return Error(request, OrderResponseErrorCode.InvalidNewOrderStatus,
-                Invariant($"Unable to update or cancel order with id {request.OrderId} and status {order.Status} because the submit confirmation has not been received yet.")
-            );
+            return Error(request, OrderResponseErrorCode.InvalidNewOrderStatus, Messages.OrderResponse.InvalidNewStatus(request, order));
         }
 
         /// <summary>
@@ -159,9 +146,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public static OrderResponse UnableToFindOrder(OrderRequest request)
         {
-            return Error(request, OrderResponseErrorCode.UnableToFindOrder,
-                Invariant($"Unable to locate order with id {request.OrderId}.")
-            );
+            return Error(request, OrderResponseErrorCode.UnableToFindOrder, Messages.OrderResponse.UnableToFindOrder(request));
         }
 
         /// <summary>
@@ -169,9 +154,15 @@ namespace QuantConnect.Orders
         /// </summary>
         public static OrderResponse ZeroQuantity(OrderRequest request)
         {
-            return Error(request, OrderResponseErrorCode.OrderQuantityZero,
-                Invariant($"Unable to {request.OrderRequestType.ToLower()} order with id {request.OrderId} that has zero quantity.")
-            );
+            return Error(request, OrderResponseErrorCode.OrderQuantityZero, Messages.OrderResponse.ZeroQuantity(request));
+        }
+
+        /// <summary>
+        /// Helper method to create an error response due to a missing security
+        /// </summary>
+        public static OrderResponse MissingSecurity(SubmitOrderRequest request)
+        {
+            return Error(request, OrderResponseErrorCode.MissingSecurity, Messages.OrderResponse.MissingSecurity(request));
         }
 
         /// <summary>
@@ -179,10 +170,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public static OrderResponse WarmingUp(OrderRequest request)
         {
-            return Error(request, OrderResponseErrorCode.AlgorithmWarmingUp,
-                Invariant($"This operation is not allowed in Initialize or during warm up: OrderRequest.{request.OrderRequestType}. ") +
-                "Please move this code to the OnWarmupFinished() method."
-            );
+            return Error(request, OrderResponseErrorCode.AlgorithmWarmingUp, Messages.OrderResponse.WarmingUp(request));
         }
 
         #endregion

@@ -429,7 +429,7 @@ namespace QuantConnect.Tests.Common
 
             Assert.AreEqual(canonicalFutureOption.Underlying.ID.Symbol, futureTicker);
             Assert.AreEqual(canonicalFutureOption.ID.Symbol, expectedFutureOptionTicker);
-            Assert.IsTrue(canonicalFutureOption.Value.StartsWith("?" + futureTicker));
+            Assert.IsTrue(canonicalFutureOption.Value.StartsWith("?" + expectedFutureOptionTicker));
 
             Assert.AreEqual(nonCanonicalFutureOption.Underlying.ID.Symbol, futureTicker);
             Assert.AreEqual(nonCanonicalFutureOption.ID.Symbol, expectedFutureOptionTicker);

@@ -177,6 +177,7 @@ namespace QuantConnect
                     case SecurityType.Index:
                     case SecurityType.FutureOption:
                     case SecurityType.IndexOption:
+                    case SecurityType.CryptoFuture:
                         var oadate = ExtractFromProperties(DaysOffset, DaysWidth);
                         _date = DateTime.FromOADate(oadate);
                         return _date.Value;
@@ -386,7 +387,44 @@ namespace QuantConnect
             OptionRight optionRight,
             OptionStyle optionStyle)
         {
-            return Generate(expiry, underlying.Symbol, QuantConnect.Symbol.GetOptionTypeFromUnderlying(underlying.SecurityType), market, strike, optionRight, optionStyle, underlying);
+            return GenerateOption(expiry, underlying, null, market, strike, optionRight, optionStyle);
+        }
+
+        /// <summary>
+        /// Generates a new <see cref="SecurityIdentifier"/> for an option
+        /// </summary>
+        /// <param name="expiry">The date the option expires</param>
+        /// <param name="underlying">The underlying security's symbol</param>
+        /// <param name="targetOption">The target option ticker. This is useful when the option ticker does not match the underlying, e.g. SPX index and the SPXW weekly option. If null is provided will use underlying</param>
+        /// <param name="market">The market</param>
+        /// <param name="strike">The strike price</param>
+        /// <param name="optionRight">The option type, call or put</param>
+        /// <param name="optionStyle">The option style, American or European</param>
+        /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified option security</returns>
+        public static SecurityIdentifier GenerateOption(DateTime expiry,
+            SecurityIdentifier underlying,
+            string targetOption,
+            string market,
+            decimal strike,
+            OptionRight optionRight,
+            OptionStyle optionStyle)
+        {
+            if (string.IsNullOrEmpty(targetOption))
+            {
+                if (underlying.SecurityType == SecurityType.Future)
+                {
+                    // Futures options tickers might not match, so we need
+                    // to map the provided future Symbol to the actual future option Symbol.
+                    targetOption = FuturesOptionsSymbolMappings.Map(underlying.Symbol);
+                }
+                else
+                {
+                    // by default the target option matches the underlying symbol
+                    targetOption = underlying.Symbol;
+                }
+            }
+
+            return Generate(expiry, targetOption, QuantConnect.Symbol.GetOptionTypeFromUnderlying(underlying.SecurityType), market, strike, optionRight, optionStyle, underlying);
         }
 
         /// <summary>
@@ -522,6 +560,18 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Generates a new <see cref="SecurityIdentifier"/> for a CryptoFuture pair
+        /// </summary>
+        /// <param name="expiry">The date the future expires</param>
+        /// <param name="symbol">The currency pair in the format similar to: 'EURUSD'</param>
+        /// <param name="market">The security's market</param>
+        /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified CryptoFuture pair</returns>
+        public static SecurityIdentifier GenerateCryptoFuture(DateTime expiry, string symbol, string market)
+        {
+            return Generate(expiry, symbol, SecurityType.CryptoFuture, market);
+        }
+
+        /// <summary>
         /// Generates a new <see cref="SecurityIdentifier"/> for a CFD security
         /// </summary>
         /// <param name="symbol">The CFD contract symbol</param>
@@ -568,13 +618,6 @@ namespace QuantConnect
 
             // normalize input strings
             symbol = forceSymbolToUpper ? symbol.LazyToUpper() : symbol;
-
-            if (securityType == SecurityType.FutureOption)
-            {
-                // Futures options tickers might not match, so we need
-                // to map the provided future Symbol to the actual future option Symbol.
-                symbol = FuturesOptionsSymbolMappings.Map(symbol);
-            }
 
             var marketIdentifier = GetMarketIdentifier(market);
 

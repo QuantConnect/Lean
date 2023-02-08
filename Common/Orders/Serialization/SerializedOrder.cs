@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -157,13 +157,13 @@ namespace QuantConnect.Orders.Serialization
         /// </summary>
         [JsonProperty("stop-triggered", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public bool? StopTriggered { get; set; }
-        
+
         /// <summary>
         /// Signal showing the "LimitIfTouchedOrder" has been converted into a Limit Order
         /// </summary>
         [JsonProperty("trigger-touched", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public bool? TriggerTouched { get; set; }
-        
+
         /// <summary>
         /// The price which must first be reached before submitting a limit order.
         /// </summary>
@@ -187,7 +187,13 @@ namespace QuantConnect.Orders.Serialization
         /// </summary>
         [JsonProperty("time-in-force-expiry", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public double? TimeInForceExpiry { get; set; }
-        
+
+        /// <summary>
+        /// The group order manager for combo orders
+        /// </summary>
+        [JsonProperty("group-order-manager", DefaultValueHandling = DefaultValueHandling.Ignore, NullValueHandling = NullValueHandling.Ignore)]
+        public GroupOrderManager GroupOrderManager { get; set; }
+
         /// <summary>
         /// Empty constructor required for JSON converter.
         /// </summary>
@@ -267,6 +273,8 @@ namespace QuantConnect.Orders.Serialization
                 TriggerPrice = limitIfTouched.TriggerPrice;
                 TriggerTouched = limitIfTouched.TriggerTouched;
             }
+
+            GroupOrderManager = order.GroupOrderManager;
         }
     }
 }

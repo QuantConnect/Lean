@@ -18,6 +18,7 @@ using System.Linq;
 using QuantConnect.Orders;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Collections.ObjectModel;
 
 namespace QuantConnect.Securities.Positions
 {
@@ -113,18 +114,17 @@ namespace QuantConnect.Securities.Positions
         /// <summary>
         /// Creates a position group for the specified order, pulling
         /// </summary>
-        /// <param name="order">The order</param>
+        /// <param name="orders">The order</param>
         /// <returns>A new position group matching the provided order</returns>
-        public IPositionGroup CreatePositionGroup(Order order)
+        public IPositionGroup CreatePositionGroup(IEnumerable<Order> orders)
         {
-            IPositionGroup group;
-            var newPositions = order.CreatePositions(_securities).ToList();
+            var newPositions = orders.Select(order => order.CreatePositions(_securities)).SelectMany(x => x).ToList();
 
             // We send new and current positions to try resolve any strategy being executed by multiple orders
             // else the PositionGroup we will get out here will just be the default in those cases
-            if (!_resolver.TryGroup(newPositions, Groups, out group))
+            if (!_resolver.TryGroup(newPositions, Groups, out var group))
             {
-                throw new InvalidOperationException($"Unable to create group for order: {order.Id}");
+                throw new InvalidOperationException($"Unable to create group for orders: [{string.Join(",", orders.Select(o => o.Id))}]");
             }
 
             return group;

@@ -401,24 +401,22 @@ namespace QuantConnect.Data.Market
                             break;
                         }
 
+                    case SecurityType.CryptoFuture:
                     case SecurityType.Crypto:
                         {
                             TickType = config.TickType;
                             Exchange = config.Market;
+                            Time = date.Date.AddTicks(Convert.ToInt64(10000 * reader.GetDecimal()))
+                                .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
 
                             if (TickType == TickType.Trade)
                             {
-                                Time = date.Date.AddTicks(Convert.ToInt64(10000 * reader.GetDecimal()))
-                                    .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
                                 Value = reader.GetDecimal();
                                 Quantity = reader.GetDecimal(out var endOfLine);
                                 Suspicious = !endOfLine && reader.GetInt32() == 1;
                             }
-
-                            if (TickType == TickType.Quote)
+                            else if(TickType == TickType.Quote)
                             {
-                                Time = date.Date.AddTicks(Convert.ToInt64(10000 * reader.GetDecimal()))
-                                    .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
                                 BidPrice = reader.GetDecimal();
                                 BidSize = reader.GetDecimal();
                                 AskPrice = reader.GetDecimal();

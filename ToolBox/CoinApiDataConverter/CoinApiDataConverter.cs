@@ -48,6 +48,7 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
 
         private readonly DirectoryInfo _rawDataFolder;
         private readonly DirectoryInfo _destinationFolder;
+        private readonly SecurityType _securityType;
         private readonly DateTime _processingDate;
         private readonly string _market;
 
@@ -57,15 +58,17 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
         /// <param name="date">the processing date.</param>
         /// <param name="rawDataFolder">path to the raw data folder.</param>
         /// <param name="destinationFolder">destination of the newly generated files.</param>
+        /// <param name="securityType">The security type to process</param>
         /// <param name="market">The market to process (optional). Defaults to processing all markets in parallel.</param>
-        public CoinApiDataConverter(DateTime date, string rawDataFolder, string destinationFolder, string market = null)
+        public CoinApiDataConverter(DateTime date, string rawDataFolder, string destinationFolder, string market = null, SecurityType securityType = SecurityType.Crypto)
         {
             _market = string.IsNullOrWhiteSpace(market) 
                 ? null 
                 : market.ToLowerInvariant();
-            
+
             _processingDate = date;
-            _rawDataFolder = new DirectoryInfo(Path.Combine(rawDataFolder, SecurityType.Crypto.ToLower(), "coinapi"));
+            _securityType = securityType;
+            _rawDataFolder = new DirectoryInfo(Path.Combine(rawDataFolder, "crypto", "coinapi"));
             if (!_rawDataFolder.Exists)
             {
                 throw new ArgumentException($"CoinApiDataConverter(): Source folder not found: {_rawDataFolder.FullName}");
@@ -105,6 +108,12 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
                 CoinApiSymbolMapper.MapMarketsToExchangeIds.TryGetValue(_market, out var rawMarketValue)
                     ? rawMarketValue
                     : null;
+
+            var securityTypeFilter = (string name) => name.Contains("_SPOT_");
+            if(_securityType == SecurityType.CryptoFuture)
+            {
+                securityTypeFilter = (string name) => name.Contains("_FTS_") || name.Contains("_PERP_");
+            }
             
             // Distinct by tick type and first two parts of the raw file name, separated by '-'.
             // This prevents us from double processing the same ticker twice, in case we're given
@@ -112,7 +121,7 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
             var apiDataReader = new CoinApiDataReader(symbolMapper);
             var filesToProcessCandidates = tradesFolder.EnumerateFiles("*.gz")
                 .Concat(quotesFolder.EnumerateFiles("*.gz"))
-                .Where(f => f.Name.Contains("SPOT") && (rawMarket == null || f.Name.Contains(rawMarket)))
+                .Where(f => securityTypeFilter(f.Name) && (rawMarket == null || f.Name.Contains(rawMarket)))
                 .Where(f => f.Name.Split('_').Length == 4)
                 .ToList();
 
@@ -123,9 +132,8 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
             {
                 try
                 {
-                    var entryData = apiDataReader.GetCoinApiEntryData(candidate, _processingDate);
-                    CurrencyPairUtil.DecomposeCurrencyPair(entryData.Symbol, out var baseCurrency,
-                        out var quoteCurrency);
+                    var entryData = apiDataReader.GetCoinApiEntryData(candidate, _processingDate, _securityType);
+                    CurrencyPairUtil.DecomposeCurrencyPair(entryData.Symbol, out var baseCurrency, out var quoteCurrency);
 
                     if (!candidate.FullName.Contains(baseCurrency) && !candidate.FullName.Contains(quoteCurrency))
                     {
@@ -173,7 +181,7 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
         /// <param name="file">The file.</param>
         private void ProcessEntry(CoinApiDataReader coinapiDataReader, FileInfo file)
         {
-            var entryData = coinapiDataReader.GetCoinApiEntryData(file, _processingDate);
+            var entryData = coinapiDataReader.GetCoinApiEntryData(file, _processingDate, _securityType);
 
             if (!SupportedMarkets.Contains(entryData.Symbol.ID.Market))
             {
@@ -191,7 +199,7 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
                     yesterdayDate.ToStringInvariant(DateFormat.EightCharacter)));
             if (yesterdaysFile.Exists)
             {
-                var yesterdaysEntryData = coinapiDataReader.GetCoinApiEntryData(yesterdaysFile, yesterdayDate);
+                var yesterdaysEntryData = coinapiDataReader.GetCoinApiEntryData(yesterdaysFile, yesterdayDate, _securityType);
                 tickData = tickData.Concat(coinapiDataReader.ProcessCoinApiEntry(yesterdaysEntryData, yesterdaysFile));
             }
             else

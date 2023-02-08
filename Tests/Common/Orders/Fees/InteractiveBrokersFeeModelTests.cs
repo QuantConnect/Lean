@@ -190,6 +190,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             var security = new Forex(
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new Cash("GBP", 0, 0),
+                new Cash("EUR", 0, 0),
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.EURGBP, Resolution.Minute, tz, tz, true, false, false),
                 new SymbolProperties("EURGBP", "GBP", 1, 0.01m, 0.00000001m, string.Empty),
                 ErrorCurrencyConverter.Instance,

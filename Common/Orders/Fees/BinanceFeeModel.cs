@@ -1,4 +1,4 @@
-﻿/*
+/*
 * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 *
@@ -15,6 +15,7 @@
 
 using QuantConnect.Util;
 using QuantConnect.Securities;
+using QuantConnect.Securities.CryptoFuture;
 
 namespace QuantConnect.Orders.Fees
 {
@@ -68,6 +69,12 @@ namespace QuantConnect.Orders.Fees
             {
                 // limit order posted to the order book
                 fee = _makerFee;
+            }
+
+            if(security.Symbol.ID.SecurityType == SecurityType.CryptoFuture)
+            {
+                var positionValue = security.Holdings.GetQuantityValue(order.AbsoluteQuantity, security.Price);
+                return new OrderFee(new CashAmount(positionValue.Amount * fee, positionValue.Cash.Symbol));
             }
 
             if (order.Direction == OrderDirection.Buy)

@@ -32,6 +32,7 @@ using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Data.Custom.AlphaStreams;
 using QuantConnect.Lean.Engine.HistoricalData;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
+using QuantConnect.Orders.Fills;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -151,7 +152,8 @@ def getHistory(algorithm, symbol, start, resolution):
                 Assert.IsTrue(result2.Any(tick => tick.TickType == TickType.Trade));
                 Assert.IsTrue(result2.Any(tick => tick.TickType == TickType.Quote));
 
-                Assert.AreEqual(result.Count, result2.Count);
+                var resultTickCount = result.Sum(slice => slice.Ticks[Symbols.SPY].Count);
+                Assert.AreEqual(resultTickCount, result2.Count);
             }
             else
             {
@@ -1266,7 +1268,7 @@ def getHistoryForContractDepthOffset(algorithm, symbol, start, end, resolution, 
                 Assert.AreEqual(390, quoteHistory.Count());
 
                 var tickHistory = algorithm.History<Tick>(ibmSymbol, ibmHistoryStart, ibmHistoryEnd, Resolution.Tick);
-                Assert.AreEqual(57460, tickHistory.Count());
+                Assert.AreEqual(132104, tickHistory.Count());
 
                 var openInterestHistory = algorithm.History<OpenInterest>(twxSymbol, twxHistoryStart, twxHistoryEnd);
                 Assert.AreEqual(1050, openInterestHistory.Count());
@@ -1312,6 +1314,24 @@ def getOpenInterestHistory(algorithm, symbol, start, end):
                     Assert.AreEqual(1050, openInterestHistory.shape[0].As<int>());
                 }
             }
+        }
+
+        [Test]
+        public void HistoryCallsGetSameTickCount()
+        {
+            var algorithm = GetAlgorithm(new DateTime(2014, 6, 6));
+            var ibmSymbol = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
+
+            var start = new DateTime(2013, 10, 7);
+            var end = new DateTime(2013, 10, 8);
+
+            var history = algorithm.History(new [] { ibmSymbol }, start, end, Resolution.Tick);
+            var tickCountInSliceHistoryCall = history.Sum(x => x.Ticks[ibmSymbol].Count);
+            Assert.AreEqual(132104, tickCountInSliceHistoryCall);
+
+            var tickHistory = algorithm.History<Tick>(ibmSymbol, start, end, Resolution.Tick).ToList();
+            var tickCountInTickHistoryCall = tickHistory.Count;
+            Assert.AreEqual(tickCountInSliceHistoryCall, tickCountInTickHistoryCall);
         }
 
         private QCAlgorithm GetAlgorithm(DateTime dateTime)

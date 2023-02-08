@@ -110,7 +110,7 @@ namespace QuantConnect.Util
                 return currencyPair.Value.Length == 6;
             }
 
-            if (currencyPair.SecurityType == SecurityType.Cfd || currencyPair.SecurityType == SecurityType.Crypto)
+            if (currencyPair.SecurityType == SecurityType.Cfd || currencyPair.SecurityType == SecurityType.Crypto || currencyPair.SecurityType == SecurityType.CryptoFuture)
             {
                 var symbolProperties = SymbolPropertiesDatabase.Value.GetSymbolProperties(
                     currencyPair.ID.Market,
@@ -254,7 +254,8 @@ namespace QuantConnect.Util
 
             if (securityType != SecurityType.Forex &&
                 securityType != SecurityType.Cfd &&
-                securityType != SecurityType.Crypto)
+                securityType != SecurityType.Crypto &&
+                securityType != SecurityType.CryptoFuture)
             {
                 if (throwException)
                 {

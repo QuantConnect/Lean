@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -30,10 +30,20 @@ namespace QuantConnect.Securities.Crypto
     public class Crypto : Security, IBaseCurrencySymbol
     {
         /// <summary>
+        /// Gets the currency acquired by going long this currency pair
+        /// </summary>
+        /// <remarks>
+        /// For example, the EUR/USD has a base currency of the euro, and as a result
+        /// of going long the EUR/USD a trader is acquiring euros in exchange for US dollars
+        /// </remarks>
+        public Cash BaseCurrency { get; protected set; }
+
+        /// <summary>
         /// Constructor for the Crypto security
         /// </summary>
         /// <param name="exchangeHours">Defines the hours this exchange is open</param>
         /// <param name="quoteCurrency">The cash object that represent the quote currency</param>
+        /// <param name="baseCurrency">The cash object that represent the base currency</param>
         /// <param name="config">The subscription configuration for this security</param>
         /// <param name="symbolProperties">The symbol properties for this security</param>
         /// <param name="currencyConverter">Currency converter used to convert <see cref="CashAmount"/>
@@ -41,6 +51,7 @@ namespace QuantConnect.Securities.Crypto
         /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
         public Crypto(SecurityExchangeHours exchangeHours,
             Cash quoteCurrency,
+            Cash baseCurrency,
             SubscriptionDataConfig config,
             SymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
@@ -60,15 +71,12 @@ namespace QuantConnect.Securities.Crypto
                 new ForexDataFilter(),
                 new SecurityPriceVariationModel(),
                 currencyConverter,
-                registeredTypes
+                registeredTypes,
+                Securities.MarginInterestRateModel.Null
                 )
         {
+            BaseCurrency = baseCurrency;
             Holdings = new CryptoHolding(this, currencyConverter);
-
-            // decompose the symbol into each currency pair
-            string quoteCurrencySymbol, baseCurrencySymbol;
-            DecomposeCurrencyPair(config.Symbol, symbolProperties, out baseCurrencySymbol, out quoteCurrencySymbol);
-            BaseCurrencySymbol = baseCurrencySymbol;
         }
 
         /// <summary>
@@ -77,6 +85,7 @@ namespace QuantConnect.Securities.Crypto
         /// <param name="symbol">The security's symbol</param>
         /// <param name="exchangeHours">Defines the hours this exchange is open</param>
         /// <param name="quoteCurrency">The cash object that represent the quote currency</param>
+        /// <param name="baseCurrency">The cash object that represent the base currency</param>
         /// <param name="symbolProperties">The symbol properties for this security</param>
         /// <param name="currencyConverter">Currency converter used to convert <see cref="CashAmount"/>
         /// instances into units of the account currency</param>
@@ -85,6 +94,7 @@ namespace QuantConnect.Securities.Crypto
         public Crypto(Symbol symbol,
             SecurityExchangeHours exchangeHours,
             Cash quoteCurrency,
+            Cash baseCurrency,
             SymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
             IRegisteredSecurityDataTypesProvider registeredTypes,
@@ -104,25 +114,13 @@ namespace QuantConnect.Securities.Crypto
                 new ForexDataFilter(),
                 new SecurityPriceVariationModel(),
                 currencyConverter,
-                registeredTypes
+                registeredTypes,
+                Securities.MarginInterestRateModel.Null
                 )
         {
+            BaseCurrency = baseCurrency;
             Holdings = new CryptoHolding(this, currencyConverter);
-
-            // decompose the symbol into each currency pair
-            string quoteCurrencySymbol, baseCurrencySymbol;
-            DecomposeCurrencyPair(symbol, symbolProperties, out baseCurrencySymbol, out quoteCurrencySymbol);
-            BaseCurrencySymbol = baseCurrencySymbol;
         }
-
-        /// <summary>
-        /// Gets the currency acquired by going long this currency pair
-        /// </summary>
-        /// <remarks>
-        /// For example, the EUR/USD has a base currency of the euro, and as a result
-        /// of going long the EUR/USD a trader is acquiring euros in exchange for US dollars
-        /// </remarks>
-        public string BaseCurrencySymbol { get; protected set; }
 
         /// <summary>
         /// Get the current value of the security.
