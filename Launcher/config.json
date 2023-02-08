@@ -9,14 +9,14 @@
   "environment": "backtesting", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
 
   // algorithm class selector
-  "algorithm-type-name": "BasicTemplateFrameworkAlgorithm",
+  "algorithm-type-name": "CustomDataTypeHistoryAlgorithm",
 
   // Algorithm language selector - options CSharp, Python
-  "algorithm-language": "CSharp",
+  "algorithm-language": "Python",
 
   //Physical DLL location
-  "algorithm-location": "QuantConnect.Algorithm.CSharp.dll",
-  //"algorithm-location": "../../../Algorithm.Python/BasicTemplateFrameworkAlgorithm.py",
+  //"algorithm-location": "QuantConnect.Algorithm.CSharp.dll",
+  "algorithm-location": "../../../Algorithm.Python/CustomDataTypeHistoryAlgorithm.py",
 
   //Research notebook
   //"composer-dll-directory": ".",

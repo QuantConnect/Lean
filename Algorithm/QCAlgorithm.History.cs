@@ -22,6 +22,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
+using QuantConnect.Python;
 
 namespace QuantConnect.Algorithm
 {
@@ -382,7 +383,13 @@ namespace QuantConnect.Algorithm
                 throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
             }
 
-            var requests = CreateBarCountHistoryRequests(new [] { symbol }, typeof(T), periods, resolution);
+            var requestedType = typeof(T);
+            if (requestedType == typeof(PythonData))
+            {
+                requestedType = symbol.GetPythonCustomDataType();
+            }
+
+            var requests = CreateBarCountHistoryRequests(new [] { symbol }, requestedType, periods, resolution);
             return GetDataTypedHistory<T>(symbol, requests);
         }
 
@@ -515,7 +522,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(HistoricalData)]
         public IEnumerable<Slice> History(IEnumerable<HistoryRequest> requests)
         {
-            return History(requests, TimeZone).Memoize();
+            return History(requests, TimeZone);
         }
 
         /// <summary>
@@ -645,7 +652,7 @@ namespace QuantConnect.Algorithm
                 return (IEnumerable<T>)slices.Select(x => x.Ticks).Where(x => x.ContainsKey(symbol)).SelectMany(x => x[symbol]);
             }
 
-            return slices.Get<T>(symbol).Memoize();
+            return slices.Get<T>(symbol);
         }
 
         [DocumentationAttribute(HistoricalData)]

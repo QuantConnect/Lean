@@ -214,6 +214,8 @@ namespace QuantConnect.Python
         /// <returns>True if this instance is of the provided type</returns>
         public bool IsOfType(Type type)
         {
+            var pyo = this as dynamic as PyObject;
+
             if (HasProperty("__typename"))
             {
                 return (string)GetProperty("__typename") == type.FullName;

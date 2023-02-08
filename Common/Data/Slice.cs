@@ -427,10 +427,19 @@ namespace QuantConnect.Data
                     var dataDictionaryCache = GenericDataDictionary.Get(type, isPythonData);
                     dictionary = Activator.CreateInstance(dataDictionaryCache.GenericType);
 
-                    foreach (var data in instance._data.Value.Values)
+                    foreach (var kvp in instance._data.Value)
                     {
+                        var symbol = kvp.Key;
+                        var data = kvp.Value;
+
+                        var requestedType = type;
+                        if (isPythonData)
+                        {
+                            requestedType = symbol.GetPythonCustomDataType();
+                        }
+
                         // let's first check custom data, else double check the user isn't requesting auxiliary data we have
-                        if (IsDataPointOfType(data.Custom, type, isPythonData))
+                        if (IsDataPointOfType(data.Custom, requestedType, isPythonData))
                         {
                             dataDictionaryCache.MethodInfo.Invoke(dictionary, new object[] { data.Symbol, data.Custom });
                         }

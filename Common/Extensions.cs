@@ -2916,6 +2916,31 @@ namespace QuantConnect
             return pythonType.Type;
         }
 
+        public static Type GetPythonType(this string typeName)
+        {
+            var activator = PythonActivators.Values.FirstOrDefault(x => x.Type.Name == typeName);
+
+            return activator?.Type;
+        }
+
+        public static Type GetPythonCustomDataType(this Symbol customDataSymbol)
+        {
+            if (customDataSymbol.SecurityType != SecurityType.Base)
+            {
+                return null;
+            }
+
+            var customDataTypeName = customDataSymbol.ID.Symbol.Split('.').Last();
+            var type = customDataTypeName?.GetPythonType();
+
+            if (type == null)
+            {
+                throw new ArgumentException($"Unable to find Python type for {customDataTypeName}");
+            }
+
+            return type;
+        }
+
         /// <summary>
         /// Helper method to get the assembly name from a python type
         /// </summary>
