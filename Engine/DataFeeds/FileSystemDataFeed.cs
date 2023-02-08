@@ -97,7 +97,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IEnumerator<BaseData> CreateDataEnumerator(SubscriptionRequest request, Resolution? fillForwardResolution)
         {
             // ReSharper disable once PossibleMultipleEnumeration
-            if (!request.TradableDays.Any())
+            if (!request.TradableDaysInDataTimeZone.Any())
             {
                 _algorithm.Error(
                     $"No data loaded for {request.Security.Symbol} because there were no tradeable dates for this security."
@@ -127,7 +127,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var warmupRequest = new SubscriptionRequest(request, endTimeUtc: pivotTimeUtc,
                     configuration: new SubscriptionDataConfig(request.Configuration, resolution: _algorithm.Settings.WarmupResolution));
                 IEnumerator<BaseData> warmupEnumerator = null;
-                if (warmupRequest.TradableDays.Any()
+                if (warmupRequest.TradableDaysInDataTimeZone.Any()
                     // since we change the resolution, let's validate it's still valid configuration (example daily equity quotes are not!)
                     && LeanData.IsValidConfiguration(warmupRequest.Configuration.SecurityType, warmupRequest.Configuration.Resolution, warmupRequest.Configuration.TickType))
                 {

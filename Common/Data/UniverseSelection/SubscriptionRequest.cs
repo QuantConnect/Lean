@@ -47,11 +47,11 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Gets the tradable days specified by this request, in the security's data time zone
         /// </summary>
-        public override IEnumerable<DateTime> TradableDays => Time.EachTradeableDayInTimeZone(Security.Exchange.Hours,
+        public override IEnumerable<DateTime> TradableDaysInDataTimeZone => Time.EachTradeableDayInTimeZone(Security.Exchange.Hours,
             StartTimeLocal,
-                EndTimeLocal,
-                Configuration.DataTimeZone,
-                Configuration.ExtendedMarketHours);
+            EndTimeLocal,
+            Configuration.DataTimeZone,
+            Configuration.ExtendedMarketHours);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SubscriptionRequest"/> class

@@ -42,7 +42,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         {
             _futureChainProvider = futureChainProvider;
             _optionChainProvider = optionChainProvider;
-            _tradableDaysProvider = (request => request.TradableDays);
+            _tradableDaysProvider = (request => request.TradableDaysInDataTimeZone);
         }
 
         /// <summary>
