@@ -14,23 +14,24 @@
  *
 */
 
-using System;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Orders;
 using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
+using QuantConnect.Securities.Option;
+using System;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This example demonstrates how to add and trade SPX index weekly options
+    /// This example demonstrates how to add and trade SPX index weekly option strategy
     /// </summary>
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="options" />
     /// <meta name="tag" content="indexes" />
-    public class BasicTemplateSPXWeeklyIndexOptionsAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class BasicTemplateSPXWeeklyIndexOptionsStrategyAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _spxOption;
 
@@ -45,10 +46,6 @@ namespace QuantConnect.Algorithm.CSharp
 
             var spx = AddIndex("SPX").Symbol;
 
-            // regular option SPX contracts
-            var spxOptions = AddIndexOption(spx);
-            spxOptions.SetFilter(u => u.Strikes(0, 1).Expiration(0, 30));
-
             // weekly option SPX contracts
             var spxw = AddIndexOption(spx, "SPXW");
             spxw.SetFilter(u => u.Strikes(0, 1)
@@ -59,9 +56,6 @@ namespace QuantConnect.Algorithm.CSharp
             _spxOption = spxw.Symbol;
         }
 
-        /// <summary>
-        /// Index EMA Cross trading underlying.
-        /// </summary>
         public override void OnData(Slice slice)
         {
             if (Portfolio.Invested)
@@ -72,17 +66,23 @@ namespace QuantConnect.Algorithm.CSharp
             OptionChain chain;
             if (slice.OptionChains.TryGetValue(_spxOption, out chain))
             {
-                // we find at the money (ATM) put contract with closest expiration
-                var atmContract = chain
+                // we find the first expiration group of call options and order them in ascending strike 
+                var contracts = chain
+                    .Where(x => x.Right == OptionRight.Call)
                     .OrderBy(x => x.Expiry)
-                    .ThenBy(x => Math.Abs(chain.Underlying.Price - x.Strike))
-                    .ThenByDescending(x => x.Right)
-                    .FirstOrDefault();
+                    .GroupBy(x => x.Expiry)
+                    .First()
+                    .OrderBy(x => x.Strike)
+                    .ToList();
 
-                if (atmContract != null)
+                if (contracts.Count > 1)
                 {
+                    var smallerStrike = contracts[0];
+                    var higherStrike = contracts[1];
+
                     // if found, buy until it expires
-                    MarketOrder(atmContract.Symbol, 1);
+                    var optionStrategy = OptionStrategies.BearCallSpread(_spxOption, smallerStrike.Strike, higherStrike.Strike, smallerStrike.Expiry);
+                    Buy(optionStrategy, 1);
                 }
             }
         }
@@ -90,6 +90,10 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
             Debug(orderEvent.ToString());
+            if (orderEvent.Symbol.ID.Symbol != "SPXW")
+            {
+                throw new Exception("Unexpected order event symbol!");
+            }
         }
 
         /// <summary>
@@ -100,12 +104,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public virtual Language[] Languages { get; } = { Language.CSharp, Language.Python };
+        public virtual Language[] Languages { get; } = { Language.CSharp };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 65830;
+        public virtual long DataPoints => 35611;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -117,34 +121,34 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "5"},
-            {"Average Win", "0%"},
-            {"Average Loss", "-0.75%"},
-            {"Compounding Annual Return", "44.538%"},
-            {"Drawdown", "0.500%"},
-            {"Expectancy", "-1"},
-            {"Net Profit", "0.474%"},
-            {"Sharpe Ratio", "-12.503"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.846"},
-            {"Beta", "-0.141"},
-            {"Annual Standard Deviation", "0.013"},
+            {"Total Trades", "4"},
+            {"Average Win", "0.46%"},
+            {"Average Loss", "0.00%"},
+            {"Compounding Annual Return", "42.201%"},
+            {"Drawdown", "0.100%"},
+            {"Expectancy", "115.281"},
+            {"Net Profit", "0.452%"},
+            {"Sharpe Ratio", "7.967"},
+            {"Probabilistic Sharpe Ratio", "95.977%"},
+            {"Loss Rate", "50%"},
+            {"Win Rate", "50%"},
+            {"Profit-Loss Ratio", "231.56"},
+            {"Alpha", "0.029"},
+            {"Beta", "-0.003"},
+            {"Annual Standard Deviation", "0.001"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-91.834"},
-            {"Tracking Error", "0.08"},
-            {"Treynor Ratio", "1.143"},
+            {"Information Ratio", "-102.62"},
+            {"Tracking Error", "0.07"},
+            {"Treynor Ratio", "-2.462"},
             {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$7500000.00"},
-            {"Lowest Capacity Asset", "SPXW 31K54PVWHUJHQ|SPX 31"},
-            {"Fitness Score", "0.006"},
+            {"Estimated Strategy Capacity", "$4100000.00"},
+            {"Lowest Capacity Asset", "SPXW XKX6S2GM9PGU|SPX 31"},
+            {"Fitness Score", "0.001"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "48.874"},
-            {"Return Over Maximum Drawdown", "332.561"},
-            {"Portfolio Turnover", "0.006"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
+            {"Portfolio Turnover", "0.001"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -158,7 +162,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "846032599f3c31838f5fe6c63ec12d3c"}
+            {"OrderListHash", "4b25b40cc766201845f66b3b613d1444"}
         };
     }
 }

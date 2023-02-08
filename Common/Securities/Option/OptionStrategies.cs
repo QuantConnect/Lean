@@ -66,6 +66,7 @@ namespace QuantConnect.Securities.Option
             {
                 Name = OptionStrategyDefinitions.BearCallSpread.Name,
                 Underlying = canonicalOption.Underlying,
+                CanonicalOption = canonicalOption,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
@@ -117,6 +118,7 @@ namespace QuantConnect.Securities.Option
             {
                 Name = OptionStrategyDefinitions.BearPutSpread.Name,
                 Underlying = canonicalOption.Underlying,
+                CanonicalOption = canonicalOption,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
@@ -169,6 +171,7 @@ namespace QuantConnect.Securities.Option
             {
                 Name = OptionStrategyDefinitions.BullCallSpread.Name,
                 Underlying = canonicalOption.Underlying,
+                CanonicalOption = canonicalOption,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
@@ -220,6 +223,7 @@ namespace QuantConnect.Securities.Option
             {
                 Name = OptionStrategyDefinitions.BullPutSpread.Name,
                 Underlying = canonicalOption.Underlying,
+                CanonicalOption = canonicalOption,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
@@ -260,6 +264,7 @@ namespace QuantConnect.Securities.Option
             {
                 Name = OptionStrategyDefinitions.Straddle.Name,
                 Underlying = canonicalOption.Underlying,
+                CanonicalOption = canonicalOption,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
@@ -313,6 +318,7 @@ namespace QuantConnect.Securities.Option
             {
                 Name = OptionStrategyDefinitions.Strangle.Name,
                 Underlying = canonicalOption.Underlying,
+                CanonicalOption = canonicalOption,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
@@ -369,6 +375,7 @@ namespace QuantConnect.Securities.Option
             {
                 Name = OptionStrategyDefinitions.ButterflyCall.Name,
                 Underlying = canonicalOption.Underlying,
+                CanonicalOption = canonicalOption,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
@@ -428,6 +435,7 @@ namespace QuantConnect.Securities.Option
             {
                 Name = OptionStrategyDefinitions.ButterflyPut.Name,
                 Underlying = canonicalOption.Underlying,
+                CanonicalOption = canonicalOption,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
@@ -487,6 +495,7 @@ namespace QuantConnect.Securities.Option
             {
                 Name = OptionStrategyDefinitions.CallCalendarSpread.Name,
                 Underlying = canonicalOption.Underlying,
+                CanonicalOption = canonicalOption,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
@@ -539,6 +548,7 @@ namespace QuantConnect.Securities.Option
             {
                 Name = OptionStrategyDefinitions.PutCalendarSpread.Name,
                 Underlying = canonicalOption.Underlying,
+                CanonicalOption = canonicalOption,
                 OptionLegs = new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
