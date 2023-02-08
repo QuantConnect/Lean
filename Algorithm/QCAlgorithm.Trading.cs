@@ -714,6 +714,10 @@ namespace QuantConnect.Algorithm
 
         private IEnumerable<OrderTicket> GenerateOptionStrategyOrders(OptionStrategy strategy, int strategyQuantity, bool asynchronous, string tag, IOrderProperties orderProperties)
         {
+            // if the option strategy canonical is set let's use it to make sure we target the right option, for example SPXW for SPX underlying,
+            // it could be null if the user created the option strategy manually and just set the underlying, in which case we use the default option target by using 'null'
+            var targetOption = strategy.CanonicalOption != null ? strategy.CanonicalOption.Canonical.ID.Symbol : null;
+
             // setting up the tag text for all orders of one strategy
             tag ??= $"{strategy.Name} ({strategyQuantity.ToStringInvariant()})";
 
@@ -726,7 +730,7 @@ namespace QuantConnect.Algorithm
                 // search for both american/european style -- much better than looping through all securities
                 foreach (var optionStyle in new[] { OptionStyle.American, OptionStyle.European })
                 {
-                    var option = QuantConnect.Symbol.CreateOption(strategy.Underlying, strategy.Underlying.ID.Market, optionStyle, optionLeg.Right, optionLeg.Strike, optionLeg.Expiration);
+                    var option = QuantConnect.Symbol.CreateOption(strategy.Underlying, targetOption, strategy.Underlying.ID.Market, optionStyle, optionLeg.Right, optionLeg.Strike, optionLeg.Expiration);
                     if (Securities.ContainsKey(option))
                     {
                         // we found it, we add it a break/stop searching
