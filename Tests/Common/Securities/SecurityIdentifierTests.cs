@@ -19,11 +19,9 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using Accord;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Algorithm.CSharp;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
 using QuantConnect.Util;
@@ -48,6 +46,13 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var spy = SecurityIdentifier.GenerateEquity("SPY", Market.USA);
             Assert.AreEqual(new DateTime(1998, 01, 02), spy.Date);
+        }
+
+        [Test]
+        public void GenerateFailsOnInvalidDate()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                SecurityIdentifier.GenerateEquity(Time.BeginningOfTime.AddDays(-1), "SPY", Market.USA));
         }
 
         [Test]
