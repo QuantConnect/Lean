@@ -18,7 +18,6 @@ using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Securities.Positions;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -76,11 +75,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             if (absolutePercentage > algorithm.Settings.MaxAbsolutePortfolioTargetPercentage
                 || absolutePercentage != 0 && absolutePercentage < algorithm.Settings.MinAbsolutePortfolioTargetPercentage)
             {
-                algorithm.Error(
-                    Invariant($"The portfolio target percent: {percent}, does not comply with the current ") +
-                    Invariant($"'Algorithm.Settings' 'MaxAbsolutePortfolioTargetPercentage': {algorithm.Settings.MaxAbsolutePortfolioTargetPercentage}") +
-                    Invariant($" or 'MinAbsolutePortfolioTargetPercentage': {algorithm.Settings.MinAbsolutePortfolioTargetPercentage}. Skipping")
-                );
+                algorithm.Error(Messages.PortfolioTarget.InvalidTargetPercent(algorithm, percent));
                 return null;
             }
 
@@ -91,7 +86,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             }
             catch (KeyNotFoundException)
             {
-                algorithm.Error(Invariant($"{symbol} not found in portfolio. Request this data when initializing the algorithm."));
+                algorithm.Error(Messages.PortfolioTarget.SymbolNotFound(symbol));
                 return null;
             }
 
@@ -115,9 +110,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
             if (result.IsError)
             {
-                algorithm.Error(Invariant(
-                    $"Unable to compute order quantity of {symbol}. Reason: {result.Reason} Returning null."
-                ));
+                algorithm.Error(Messages.PortfolioTarget.UnableToComputeOrderQuantityDueToNullResult(symbol, result));
 
                 return null;
             }
@@ -135,7 +128,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return $"{Symbol}: {Quantity.Normalize()}";
+            return Messages.PortfolioTarget.ToString(this);
         }
     }
 }
