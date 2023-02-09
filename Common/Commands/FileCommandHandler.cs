@@ -77,7 +77,7 @@ namespace QuantConnect.Commands
         {
             if (string.IsNullOrEmpty(command.Id))
             {
-                Log.Error($"FileCommandHandler.Acknowledge(): command Id is null or empty, will skip writting result file");
+                Log.Error($"FileCommandHandler.Acknowledge(): {Messages.FileCommandHandler.NullOrEmptyCommandId}");
                 return;
             }
             var resultFilePath = $"{_resultFileBaseName}-{command.Id}.json";
@@ -89,15 +89,15 @@ namespace QuantConnect.Commands
         /// </summary>
         private void ReadCommandFile(string commandFilePath)
         {
-            Log.Trace($"FileCommandHandler.ReadCommandFile(): Reading command file {commandFilePath}");
+            Log.Trace($"FileCommandHandler.ReadCommandFile(): {Messages.FileCommandHandler.ReadingCommandFile(commandFilePath)}");
             object deserialized;
             try
             {
-                if (!File.Exists(commandFilePath)) 
+                if (!File.Exists(commandFilePath))
                 {
-                    Log.Error($"FileCommandHandler.ReadCommandFile(): File {commandFilePath} does not exists");
+                    Log.Error($"FileCommandHandler.ReadCommandFile(): {Messages.FileCommandHandler.CommandFileDoesNotExist(commandFilePath)}");
                     return;
-                } 
+                }
                 var contents = File.ReadAllText(commandFilePath);
                 deserialized = JsonConvert.DeserializeObject(contents, new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All });
             }

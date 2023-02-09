@@ -14,6 +14,7 @@
 */
 
 using System;
+
 using QuantConnect.Data;
 
 namespace QuantConnect.Indicators
@@ -102,7 +103,7 @@ namespace QuantConnect.Indicators
             var other = obj as IndicatorDataPoint;
             if (other == null)
             {
-                throw new ArgumentException($"Object must be of type {GetType().GetBetterTypeName()}");
+                throw new ArgumentException(Messages.IndicatorDataPoint.InvalidObjectTypeToCompareTo(GetType()));
             }
             return CompareTo(other);
         }
@@ -116,7 +117,7 @@ namespace QuantConnect.Indicators
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return $"{Time.ToStringInvariant("s")} - {Value}";
+            return Messages.IndicatorDataPoint.ToString(this);
         }
 
         /// <summary>
@@ -163,7 +164,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            throw new NotImplementedException("IndicatorDataPoint does not support the Reader function. This function should never be called on this type.");
+            throw new NotImplementedException(Messages.IndicatorDataPoint.UnsupportedMethod(nameof(Reader)));
         }
 
         /// <summary>
@@ -171,7 +172,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            throw new NotImplementedException("IndicatorDataPoint does not support the GetSource function. This function should never be called on this type.");
+            throw new NotImplementedException(Messages.IndicatorDataPoint.UnsupportedMethod(nameof(GetSource)));
         }
     }
 }

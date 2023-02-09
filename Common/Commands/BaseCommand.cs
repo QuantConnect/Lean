@@ -55,7 +55,7 @@ namespace QuantConnect.Commands
             }
             else
             {
-                throw new ArgumentException($"BaseCommand.GetSymbol(): Please provide values for: Ticker, Market & SecurityType");
+                throw new ArgumentException($"BaseCommand.GetSymbol(): {Messages.BaseCommand.MissingValuesToGetSymbol}");
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -54,7 +54,7 @@ namespace QuantConnect.Exceptions
             var message = exception.Message;
             if (!message.Contains(see.ScheduledEventName))
             {
-                message = $"In Scheduled Event '{see.ScheduledEventName}',";
+                message = Messages.ScheduledEventExceptionInterpreter.ScheduledEventName(see.ScheduledEventName);
             }
 
             return new ScheduledEventException(see.ScheduledEventName, message, inner);
