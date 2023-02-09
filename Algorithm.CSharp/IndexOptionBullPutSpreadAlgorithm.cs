@@ -17,13 +17,14 @@ using System.Linq;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Orders;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     public class IndexOptionBullPutSpreadAlgorithm : QCAlgorithm
     {
         private Symbol _spxw;
-        private List<Leg> _legs = new();
+        private IEnumerable<OrderTicket> _tickets = Enumerable.Empty<OrderTicket>();
 
         public override void Initialize()
         {
@@ -41,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnData(Slice slice)
         {
             // Return if open position exists
-            if (_legs.Any(x => Portfolio[x.Symbol].Invested)) return;
+            if (_tickets.Any(x => Portfolio[x.Symbol].Invested)) return;
 
             // Get the OptionChain
             if (!slice.OptionChains.TryGetValue(_spxw, out var chain)) return;
@@ -54,13 +55,9 @@ namespace QuantConnect.Algorithm.CSharp
                 .OrderBy(x => x.Strike).ToArray();
             if (puts.Length < 2) return;
 
-            // Create combo order legs
-            _legs = new List<Leg>
-            {
-                Leg.Create(puts[0].Symbol, 1),
-                Leg.Create(puts[^1].Symbol, -1)
-            };
-            ComboMarketOrder(_legs, 1);
+            // Buy the bull put spread
+            var bullCallSpread = OptionStrategies.BullPutSpread(_spxw, puts[^1].Strike, puts[0].Strike, expiry);
+            _tickets = Buy(bullCallSpread, 1);
         }
     }
 }
