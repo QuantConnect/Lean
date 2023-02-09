@@ -16,7 +16,6 @@
 using System;
 using System.Linq;
 using QuantConnect.Orders;
-using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Securities.CryptoFuture
 {
