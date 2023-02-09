@@ -2711,53 +2711,6 @@ namespace QuantConnect.Tests.Common.Securities
                 .All(kvp => kvp.Value.Amount == 0));
         }
 
-        [Test]
-        public void UpdatesUnsettledCashConversionRateAsSettledCashConversionRateIsUpdated()
-        {
-            var algorithm = new QCAlgorithm();
-            var securities = new SecurityManager(TimeKeeper);
-            var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
-
-            algorithm.Securities = securities;
-            algorithm.Transactions = transactions;
-            algorithm.Portfolio = portfolio;
-
-            var updates = new List<Tuple<string, decimal>>();
-            portfolio.UnsettledCashBook.Updated += (sender, args) =>
-            {
-                if (args.UpdateType == UpdateType.Updated)
-                {
-                    updates.Add(Tuple.Create(args.Cash.Symbol, args.Cash.ConversionRate));
-                }
-            };
-
-            algorithm.SetCash("EUR", 1000, 1.08m);
-            algorithm.SetCash("AUD", 1000, 0.7m);
-
-            var expectedUpdates = new List<Tuple<string, decimal>>()
-            {
-                Tuple.Create("EUR", 1.07m),
-                Tuple.Create("AUD", 0.71m),
-                Tuple.Create("AUD", 0.72m),
-                Tuple.Create("EUR", 1.09m),
-                Tuple.Create("AUD", 0.69m)
-            };
-            for (var i = 0; i < expectedUpdates.Count; i++)
-            {
-                var update = expectedUpdates[i];
-                algorithm.Portfolio.CashBook[update.Item1].ConversionRate = update.Item2;
-            }
-
-            CollectionAssert.AreEqual(expectedUpdates, updates);
-
-            var lastEurConversionRate = expectedUpdates.Last(x => x.Item1 == "EUR").Item2;
-            Assert.AreEqual(lastEurConversionRate, portfolio.UnsettledCashBook["EUR"].ConversionRate);
-
-            var lastAudConversionRate = expectedUpdates.Last(x => x.Item1 == "AUD").Item2;
-            Assert.AreEqual(lastAudConversionRate, portfolio.UnsettledCashBook["AUD"].ConversionRate);
-        }
-
         private SubscriptionDataConfig CreateTradeBarDataConfig(SecurityType type, Symbol symbol)
         {
             if (type == SecurityType.Equity)

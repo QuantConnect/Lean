@@ -103,13 +103,6 @@ namespace QuantConnect.Securities
                     // add the same currency entry to the unsettled cashbook as well
                     UnsettledCashBook.Add(args.Cash.Symbol, new Cash(args.Cash.Symbol, 0, args.Cash.ConversionRate));
                 }
-                // if updated, let's keep track of conversion rate changes
-                else if (args.UpdateType == CashBook.UpdateType.Updated &&
-                         UnsettledCashBook.TryGetValue(args.Cash.Symbol, out var cash) &&
-                         args.Cash.ConversionRate != cash.ConversionRate)
-                {
-                    cash.ConversionRate = args.Cash.ConversionRate;
-                }
 
                 InvalidateTotalPortfolioValue();
             };
