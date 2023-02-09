@@ -29,14 +29,14 @@ class IndexOptionBullCallSpreadAlgorithm(QCAlgorithm):
         option.SetFilter(lambda x: x.WeeklysOnly().Strikes(-5, 5).Expiration(40, 60))
         
         self.spxw = option.Symbol
-        self.legs = []
+        self.tickets = []
 
     def OnData(self, slice: Slice) -> None:
         if not self.Portfolio[self.spy].Invested:
             self.MarketOrder(self.spy, 100)
         
         # Return if hedge position presents
-        if any([self.Portfolio[x.Symbol].Invested for x in self.legs]):
+        if any([self.Portfolio[x.Symbol].Invested for x in self.tickets]):
             return
 
         # Return if hedge position presents
@@ -51,9 +51,6 @@ class IndexOptionBullCallSpreadAlgorithm(QCAlgorithm):
                         key=lambda x: x.Strike)
         if len(calls) < 2: return
 
-        # Create combo order legs by selecting the ITM and OTM contract
-        self.legs = [
-            Leg.Create(calls[0].Symbol, 1),
-            Leg.Create(calls[-1].Symbol, -1)
-        ]
-        self.ComboMarketOrder(self.legs, 1)
+        # Buy the bull call spread
+        bull_call_spread = OptionStrategies.BullCallSpread(self.spxw, calls[0].Strike, calls[-1].Strike, expiry)
+        self.tickets = self.Buy(bull_call_spread, 1)
