@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -114,7 +114,8 @@ namespace QuantConnect.Tests.Report
         [TestCase("EUR", BrokerageName.Bitfinex, AccountType.Margin)]
         public void SetsTheRightAlgorithmConfiguration(string currency, BrokerageName brokerageName, AccountType accountType)
         {
-            var algorithm = CreateAlgorithm(new List<Order>(), new AlgorithmConfiguration(currency, brokerageName, accountType));
+            var algorithm = CreateAlgorithm(new List<Order>(),
+                new AlgorithmConfiguration(currency, brokerageName, accountType, new Dictionary<string, string>()));
             algorithm.Initialize();
 
             Assert.AreEqual(currency, algorithm.AccountCurrency);
