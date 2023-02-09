@@ -51,8 +51,8 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Provides Binance Futures fee model
         /// </summary>
-        /// <param name="security"></param>
-        /// <returns></returns>
+        /// <param name="security">The security to get a fee model for</param>
+        /// <returns>The new fee model for this brokerage</returns>
         public override IFeeModel GetFeeModel(Security security)
         {
             return new BinanceFuturesFeeModel();

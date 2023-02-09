@@ -46,20 +46,6 @@ namespace QuantConnect.Orders.Fees
         /// </summary>
         public const decimal TakerTier1BUSDFee = 0.00036m;
 
-        /// <summary>
-        /// Tier 1 USDT maker fees.
-        /// https://www.binance.com/en/fee/futureFee
-        /// This is a alias for <see cref="BinanceFuturesFeeModel.MakerTier1USDTFee"/>
-        /// </summary>
-        public new const decimal MakerTier1Fee = MakerTier1USDTFee;
-
-        /// <summary>
-        /// Tier 1 USDT taker fees
-        /// https://www.binance.com/en/fee/futureFee
-        /// This is a alias for <see cref="BinanceFuturesFeeModel.TakerTier1USDTFee"/>
-        /// </summary>
-        public new const decimal TakerTier1Fee = TakerTier1USDTFee;
-
         private decimal _makerUsdtFee;
         private decimal _takerUsdtFee;
         private decimal _makerBusdFee;
@@ -74,7 +60,7 @@ namespace QuantConnect.Orders.Fees
         /// <param name="tBusdFee">Taker fee value for BUSD pair contracts</param>
         public BinanceFuturesFeeModel(decimal mUsdtFee = MakerTier1USDTFee, decimal tUsdtFee = TakerTier1USDTFee,
             decimal mBusdFee = MakerTier1BUSDFee, decimal tBusdFee = TakerTier1BUSDFee)
-            : base(mUsdtFee, tUsdtFee)
+            : base(-1, -1)
         {
             _makerUsdtFee = mUsdtFee;
             _takerUsdtFee = tUsdtFee;
@@ -93,17 +79,7 @@ namespace QuantConnect.Orders.Fees
                 takerFee = _takerBusdFee;
             }
 
-            // apply fee factor, currently we do not model 30-day volume, so we use the first tier
-            var fee = takerFee;
-            var props = order.Properties as BinanceOrderProperties;
-
-            if (order.Type == OrderType.Limit && ((props != null && props.PostOnly) || !order.IsMarketable))
-            {
-                // limit order posted to the order book
-                fee = makerFee;
-            }
-
-            return fee;
+            return GetFee(order, makerFee, takerFee);
         }
     }
 }

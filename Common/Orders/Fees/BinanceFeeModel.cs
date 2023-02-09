@@ -96,15 +96,19 @@ namespace QuantConnect.Orders.Fees
         /// <returns>The fee factor for the given order</returns>
         protected virtual decimal GetFee(Order order)
         {
+            return GetFee(order, _makerFee, _takerFee);
+        }
+
+        protected static decimal GetFee(Order order, decimal makerFee, decimal takerFee)
+        {
             // apply fee factor, currently we do not model 30-day volume, so we use the first tier
-            var fee = _takerFee;
+            var fee = takerFee;
             var props = order.Properties as BinanceOrderProperties;
 
-            if (order.Type == OrderType.Limit &&
-                ((props != null && props.PostOnly) || !order.IsMarketable))
+            if (order.Type == OrderType.Limit && ((props != null && props.PostOnly) || !order.IsMarketable))
             {
                 // limit order posted to the order book
-                fee = _makerFee;
+                fee = makerFee;
             }
 
             return fee;

@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using QuantConnect.Securities.Option;
+
 namespace QuantConnect.Securities.CryptoFuture
 {
     /// <summary>
@@ -45,7 +47,7 @@ namespace QuantConnect.Securities.CryptoFuture
             Cash cash;
             decimal notionalPositionValue;
             // We could check quote currency or the contract multiplier being 1
-            if (cryptoFuture.QuoteCurrency.Symbol == "USDT" || cryptoFuture.QuoteCurrency.Symbol == "BUSD")
+            if (!cryptoFuture.IsCryptoCoinFuture())
             {
                 // https://www.binance.com/en/support/faq/how-to-calculate-cost-required-to-open-a-position-in-perpetual-futures-contracts-87fa7ee33b574f7084d42bd2ce2e463b
                 // example BTCUSDT: (9,253.30 * 1 BTC) = 9,253.3 USDT
