@@ -177,10 +177,7 @@ namespace QuantConnect.Python
                         inputTypeStr = $"{currentKvp[0].GetPythonType()}: {currentKvp[1].GetPythonType()}";
                     }
 
-                    throw new ArgumentException(
-                        $"ConvertToDictionary cannot be used to convert a {inputTypeStr} into {targetTypeStr}. Reason: {e.Message}",
-                        e
-                    );
+                    throw new ArgumentException(Messages.PandasConverter.ConvertToDictionaryFailed(inputTypeStr, targetTypeStr, e.Message), e);
                 }
             }
         }
@@ -192,7 +189,7 @@ namespace QuantConnect.Python
         public override string ToString()
         {
             return _pandas == null
-                ? "pandas module was not imported."
+                ? Messages.PandasConverter.PandasModuleNotImported
                 : _pandas.Repr();
         }
 

@@ -31,16 +31,16 @@ namespace QuantConnect.Python
         /// Gets the most recently consolidated piece of data. This will be null if this consolidator
         /// has not produced any data yet.
         /// </summary>
-        public IBaseData Consolidated 
-        { 
+        public IBaseData Consolidated
+        {
             get { using (Py.GIL()) {return _consolidator.Consolidated;} }
         }
 
         /// <summary>
         /// Gets a clone of the data being currently consolidated
         /// </summary>
-        public IBaseData WorkingData 
-        { 
+        public IBaseData WorkingData
+        {
             get { using (Py.GIL()) {return _consolidator.WorkingData;} }
         }
 
@@ -55,9 +55,9 @@ namespace QuantConnect.Python
         /// <summary>
         /// Gets the type produced by this consolidator
         /// </summary>
-        public Type OutputType 
-        { 
-            get { using (Py.GIL()) {return _consolidator.OutputType;} } 
+        public Type OutputType
+        {
+            get { using (Py.GIL()) {return _consolidator.OutputType;} }
         }
 
         /// <summary>
@@ -81,13 +81,14 @@ namespace QuantConnect.Python
                 {
                     if (!consolidator.HasAttr(attributeName))
                     {
-                        throw new NotImplementedException($"IDataConsolidator.{attributeName} must be implemented. Please implement this missing method on {consolidator.GetPythonType()}");
+                        throw new NotImplementedException(
+                            Messages.PythonCommon.AttributeNotImplemented($"IDataConsolidator.{attributeName}", consolidator.GetPythonType()));
                     }
                 }
             }
             _consolidator = consolidator;
         }
-        
+
         /// <summary>
         /// Scans this consolidator to see if it should emit a bar due to time passing
         /// </summary>
