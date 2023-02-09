@@ -29,14 +29,14 @@ class IndexOptionBearCallSpreadAlgorithm(QCAlgorithm):
         option.SetFilter(lambda x: x.Strikes(-5, 5).Expiration(15, 45))
         
         self.vixw = option.Symbol
-        self.legs = []
+        self.tickets = []
 
     def OnData(self, slice: Slice) -> None:
         if not self.Portfolio[self.spy].Invested:
             self.MarketOrder(self.spy, 100)
         
         # Return if hedge position presents
-        if any([self.Portfolio[x.Symbol].Invested for x in self.legs]):
+        if any([self.Portfolio[x.Symbol].Invested for x in self.tickets]):
             return
 
         # Return if hedge position presents
@@ -50,10 +50,7 @@ class IndexOptionBearCallSpreadAlgorithm(QCAlgorithm):
         calls = sorted([i for i in chain if i.Expiry == expiry and i.Right == OptionRight.Call], 
                         key=lambda x: x.Strike)
         if len(calls) < 2: return
-
-        # Create combo order legs by selecting the ITM and OTM contract
-        self.legs = [
-            Leg.Create(calls[0].Symbol, -1),
-            Leg.Create(calls[-1].Symbol, 1)
-        ]
-        self.ComboMarketOrder(self.legs, 1)
+        
+        # Buy the bear call spread
+        bear_call_spread = OptionStrategies.BearCallSpread(self.vixw, calls[0].Strike, calls[-1].Strike, expiry)
+        self.tickets = self.Buy(bear_call_spread, 1)

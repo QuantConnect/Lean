@@ -17,13 +17,14 @@ using System.Linq;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Orders;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     public class IndexOptionBearCallSpreadAlgorithm : QCAlgorithm
     {
         private Symbol _vixw, _spy;
-        private List<Leg> _legs = new();
+        private IEnumerable<OrderTicket> _tickets = Enumerable.Empty<OrderTicket>();
 
         public override void Initialize()
         {
@@ -47,7 +48,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
         
             // Return if hedge position presents
-            if (_legs.Any(x => Portfolio[x.Symbol].Invested)) return;
+            if (_tickets.Any(x => Portfolio[x.Symbol].Invested)) return;
 
             // Get the OptionChain
             if (!slice.OptionChains.TryGetValue(_vixw, out var chain)) return;
@@ -60,13 +61,9 @@ namespace QuantConnect.Algorithm.CSharp
                             .OrderBy(x => x.Strike).ToArray();
             if (calls.Length < 2) return;
 
-            // Create combo order legs
-            _legs = new List<Leg>
-            {
-                Leg.Create(calls[0].Symbol, -1),
-                Leg.Create(calls[^1].Symbol, 1)
-            };
-            ComboMarketOrder(_legs, 1);
+            // Buy the bear call spread
+            var bearCallSpread = OptionStrategies.BearCallSpread(_vixw, calls[0].Strike, calls[^1].Strike, expiry);
+            _tickets = Buy(bearCallSpread, 1);
         }
     }
 }
