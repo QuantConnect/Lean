@@ -313,18 +313,6 @@ namespace QuantConnect.Securities
             /// </summary>
             /// <returns>The symbol</returns>
             public const string MicroBTC = "MBT";
-
-            /// <summary>
-            /// BTIC on Micro Ether Futures
-            /// </summary>
-            /// <returns>The symbol</returns>
-            public const string BTICMicroEther = "MRB";
-
-            /// <summary>
-            /// BTIC on Micro Bitcoin Futures
-            /// </summary>
-            /// <returns>The symbol</returns>
-            public const string BTICMicroBTC = "MIB";
         }
 
         /// <summary>
