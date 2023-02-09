@@ -315,6 +315,25 @@ namespace QuantConnect.Research
         /// Gets <see cref="OptionHistory"/> object for a given symbol, date and resolution
         /// </summary>
         /// <param name="symbol">The symbol to retrieve historical option data for</param>
+        /// <param name="targetOption">The target option ticker. This is useful when the option ticker does not match the underlying, e.g. SPX index and the SPXW weekly option. If null is provided will use underlying</param>
+        /// <param name="start">The history request start time</param>
+        /// <param name="end">The history request end time. Defaults to 1 day if null</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
+        /// <returns>A <see cref="OptionHistory"/> object that contains historical option data.</returns>
+        public OptionHistory GetOptionHistory(Symbol symbol, string targetOption, DateTime start, DateTime? end = null, Resolution? resolution = null,
+            bool fillForward = true, bool extendedMarket = false)
+        {
+            symbol = GetOptionSymbolForHistoryRequest(symbol, targetOption, resolution, fillForward);
+
+            return GetOptionHistory(symbol, start, end, resolution, fillForward, extendedMarket);
+        }
+
+        /// <summary>
+        /// Gets <see cref="OptionHistory"/> object for a given symbol, date and resolution
+        /// </summary>
+        /// <param name="symbol">The symbol to retrieve historical option data for</param>
         /// <param name="start">The history request start time</param>
         /// <param name="end">The history request end time. Defaults to 1 day if null</param>
         /// <param name="resolution">The resolution to request</param>
@@ -330,25 +349,7 @@ namespace QuantConnect.Research
             }
 
             // Load a canonical option Symbol if the user provides us with an underlying Symbol
-            if (!symbol.SecurityType.IsOption())
-            {
-                var option = AddOption(symbol, resolution, symbol.ID.Market, fillForward);
-
-                // Allow 20 strikes from the money for futures. No expiry filter is applied
-                // so that any future contract provided will have data returned.
-                if (symbol.SecurityType == SecurityType.Future && symbol.IsCanonical())
-                {
-                    throw new ArgumentException("The Future Symbol provided is a canonical Symbol (i.e. a Symbol representing all Futures), which is not supported at this time. " +
-                        "If you are using the Symbol accessible from `AddFuture(...)`, use the Symbol from `AddFutureContract(...)` instead. " +
-                        "You can use `qb.FutureOptionChainProvider(canonicalFuture, datetime)` to get a list of futures contracts for a given date, and add them to your algorithm with `AddFutureContract(symbol, Resolution)`.");
-                }
-                if (symbol.SecurityType == SecurityType.Future && !symbol.IsCanonical())
-                {
-                    option.SetFilter(universe => universe.Strikes(-10, +10));
-                }
-
-                symbol = option.Symbol;
-            }
+            symbol = GetOptionSymbolForHistoryRequest(symbol, null, resolution, fillForward);
 
             IEnumerable<Symbol> symbols;
             if (symbol.IsCanonical())
@@ -366,7 +367,12 @@ namespace QuantConnect.Research
                         AddEquity(symbol.Underlying.Value, resolutionToUseForUnderlying, fillDataForward: fillForward,
                             extendedMarketHours: extendedMarket);
                     }
-                    if (symbol.Underlying.SecurityType == SecurityType.Future && symbol.Underlying.IsCanonical())
+                    else if (symbol.Underlying.SecurityType == SecurityType.Index)
+                    {
+                        // only add underlying if not present
+                        AddIndex(symbol.Underlying.Value, resolutionToUseForUnderlying, fillDataForward: fillForward);
+                    }
+                    else if(symbol.Underlying.SecurityType == SecurityType.Future && symbol.Underlying.IsCanonical())
                     {
                         AddFuture(symbol.Underlying.ID.Symbol, resolutionToUseForUnderlying, fillDataForward: fillForward,
                             extendedMarketHours: extendedMarket);
@@ -862,6 +868,32 @@ namespace QuantConnect.Research
                 }
             });
             return data;
+        }
+
+        private Symbol GetOptionSymbolForHistoryRequest(Symbol symbol, string targetOption, Resolution? resolution, bool fillForward)
+        {
+            // Load a canonical option Symbol if the user provides us with an underlying Symbol
+            if (!symbol.SecurityType.IsOption())
+            {
+                var option = AddOption(symbol, targetOption,  resolution, symbol.ID.Market, fillForward);
+
+                // Allow 20 strikes from the money for futures. No expiry filter is applied
+                // so that any future contract provided will have data returned.
+                if (symbol.SecurityType == SecurityType.Future && symbol.IsCanonical())
+                {
+                    throw new ArgumentException("The Future Symbol provided is a canonical Symbol (i.e. a Symbol representing all Futures), which is not supported at this time. " +
+                        "If you are using the Symbol accessible from `AddFuture(...)`, use the Symbol from `AddFutureContract(...)` instead. " +
+                        "You can use `qb.FutureOptionChainProvider(canonicalFuture, datetime)` to get a list of futures contracts for a given date, and add them to your algorithm with `AddFutureContract(symbol, Resolution)`.");
+                }
+                if (symbol.SecurityType == SecurityType.Future && !symbol.IsCanonical())
+                {
+                    option.SetFilter(universe => universe.Strikes(-10, +10));
+                }
+
+                symbol = option.Symbol;
+            }
+
+            return symbol;
         }
     }
 }
