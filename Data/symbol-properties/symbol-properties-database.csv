@@ -142,6 +142,7 @@ cme,EI,future,E-mini FTSE Emerging Index Futures,USD,100.0,0.1,1.0
 cme,EMD,future,E-mini S&P MidCap 400 Futures,USD,100.0,0.1,1.0
 cme,ES,future,E-mini S&P 500 Futures,USD,50.0,0.25,1.0
 cme,ESK,future,Euro/Swedish Krona Futures,SEK,125000.0,0.0005,1.0
+cme,ETH,future,Ether Futures,USD,50.0,0.50,1.0
 cme,GD,future,S&P-GSCI Commodity Index Futures,USD,250.0,0.05,1.0
 cme,GDK,future,Class IV Milk Futures,USD,2000.0,0.01,1.0
 cme,GE,future,Eurodollar Futures,USD,2500.0,0.0025,1.0
@@ -163,12 +164,10 @@ cme,MBT,future,Micro Bitcoin Futures,USD,0.1,5,1,,1
 cme,MCD,future,Micro Canadian Dollar/U.S.Dollar(CAD/USD) Futures,USD,10000,0.0001,1,,1
 cme,MES,future,Micro E-mini Standard and Poor's 500 Stock Price Index Futures,USD,5,0.25,1,,1
 cme,MET,future,Micro Ether Futures,USD,0.1,0.5,1,,1
-cme,MIB,future,BTIC on Micro Bitcoin Futures,USD,0.1,5,1
 cme,MIR,future,Micro INR/USD Futures,USD,1000000,0.01,100,,1,100
 cme,MJY,future,Micro Japanese Yen/U.S. Dollar (JPY/USD) Futures,USD,1250000,1e-06,1,,1
 cme,MNH,future,Micro USD/CNH Futures,USD,10000,0.0001,1
 cme,MNQ,future,Micro E-mini Nasdaq-100 Index Futures,USD,2,0.25,1,,1
-cme,MRB,future,BTIC on Micro Ether Futures,USD,0.1,0.5,1
 cme,MSF,future,Micro Swiss Franc/U.S. Dollar (CHF/USD) Futures,USD,12500,0.0001,1,,1
 cme,NKD,future,Nikkei/USD Futures,USD,5.0,5.0,1.0
 cme,NQ,future,E-mini Nasdaq-100 Futures,USD,20.0,0.25,1.0
