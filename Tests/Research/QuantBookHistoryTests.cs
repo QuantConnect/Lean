@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -193,6 +193,40 @@ namespace QuantConnect.Tests.Research
                 var firstIndex = (DateTime)(startEndHistory.index.values[0][4] as PyObject).AsManagedObject(typeof(DateTime));
                 Assert.GreaterOrEqual(startDate.AddDays(-1).Date, firstIndex.Date);
             }
+        }
+
+        [Test]
+        public void OptionIndexWeekly()
+        {
+            var qb = new QuantBook();
+            var spxw = qb.AddIndexOption(Symbols.SPX, "SPXW");
+            spxw.SetFilter(u => u.Strikes(0, 1)
+                 // single week ahead since there are many SPXW contracts and we want to preserve performance
+                 .Expiration(0, 7)
+                 .IncludeWeeklys());
+
+            var startTime = new DateTime(2021, 1, 4);
+
+            var historyByOptionSymbol = qb.GetOptionHistory(spxw.Symbol, startTime);
+            var historyByUnderlyingSymbol = qb.GetOptionHistory(Symbols.SPX, "SPXW", startTime);
+
+            List<DateTime> expiry;
+            List<DateTime> byUnderlyingExpiry;
+
+            historyByOptionSymbol.GetExpiryDates().TryConvert(out expiry);
+            historyByUnderlyingSymbol.GetExpiryDates().TryConvert(out byUnderlyingExpiry);
+
+            List<decimal> strikes;
+            List<decimal> byUnderlyingStrikes;
+
+            historyByOptionSymbol.GetStrikes().TryConvert(out strikes);
+            historyByUnderlyingSymbol.GetStrikes().TryConvert(out byUnderlyingStrikes);
+
+            Assert.IsTrue(expiry.Count > 0);
+            Assert.IsTrue(expiry.SequenceEqual(byUnderlyingExpiry));
+
+            Assert.IsTrue(strikes.Count > 0);
+            Assert.IsTrue(strikes.SequenceEqual(byUnderlyingStrikes));
         }
 
         [Test]
