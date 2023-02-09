@@ -359,7 +359,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Gets a read-only dictionary with all current parameters
         /// </summary>
-        public IReadOnlyDictionary<string, string> GetParameters();
+        IReadOnlyDictionary<string, string> GetParameters();
 
         /// <summary>
         /// Gets the parameter with the specified name. If a parameter with the specified name does not exist,
