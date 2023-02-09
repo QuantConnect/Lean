@@ -2591,7 +2591,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var spy = algorithm.AddEquity("SPY");
             spy.SetMarketPrice(new Tick(new DateTime(2000, 01, 01), Symbols.SPY, 100m, 99m, 101m));
-            spy.Holdings.SetHoldings(100m, quantity); 
+            spy.Holdings.SetHoldings(100m, quantity);
             spy.Holdings.AddNewFee(fee);
             spy.Holdings.AddNewProfit(profitLoss);
 
@@ -2670,6 +2670,44 @@ namespace QuantConnect.Tests.Common.Securities
                 portfolio.SetCash(Currencies.USD, 1, 1);
             }
             Assert.Throws<InvalidOperationException>(() => portfolio.SetAccountCurrency(Currencies.USD));
+        }
+
+        [Test]
+        public void AddsEmptyUnsettledCashInstancesAsNewCashInstancesAreAddedToTheCashBook()
+        {
+            var algorithm = new QCAlgorithm();
+            var securities = new SecurityManager(TimeKeeper);
+            var transactions = new SecurityTransactionManager(null, securities);
+            var portfolio = new SecurityPortfolioManager(securities, transactions);
+
+            algorithm.Securities = securities;
+            algorithm.Transactions = transactions;
+            algorithm.Portfolio = portfolio;
+
+            var additions = 0;
+            portfolio.UnsettledCashBook.Updated += (sender, args) =>
+            {
+                if (args.UpdateType == CashBookUpdateType.Added)
+                {
+                    additions++;
+                }
+            };
+
+            algorithm.SetCash(Currencies.EUR, 1000, 1.08m);
+            algorithm.SetCash("AUD", 1000, 0.7m);
+
+            // expected only 2 additions, USD is the account currency so it its supposed to already be there
+            Assert.AreEqual(2, additions);
+            Assert.AreEqual(3, algorithm.Portfolio.UnsettledCashBook.Count);
+
+            Assert.IsTrue(algorithm.Portfolio.UnsettledCashBook.ContainsKey(Currencies.USD));
+            Assert.IsTrue(algorithm.Portfolio.UnsettledCashBook.ContainsKey(Currencies.EUR));
+            Assert.IsTrue(algorithm.Portfolio.UnsettledCashBook.ContainsKey("AUD"));
+
+            // When added, the amount should be 0
+            Assert.IsTrue(algorithm.Portfolio.UnsettledCashBook
+                .Where(kvp => kvp.Key != Currencies.USD)
+                .All(kvp => kvp.Value.Amount == 0));
         }
 
         private SubscriptionDataConfig CreateTradeBarDataConfig(SecurityType type, Symbol symbol)
