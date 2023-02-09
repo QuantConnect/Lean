@@ -27,6 +27,7 @@ class VolumeRenkoConsolidatorAlgorithm(QCAlgorithm):
         self.SetCash(100000)
 
         self.sma = SimpleMovingAverage(10)
+        self.tick_consolidated = False
 
         self.spy = self.AddEquity("SPY", Resolution.Minute).Symbol
         self.tradebar_volume_consolidator = VolumeRenkoConsolidator(1000000)
@@ -50,6 +51,7 @@ class VolumeRenkoConsolidatorAlgorithm(QCAlgorithm):
         self.Debug(f"IBM {bar.Time} to {bar.EndTime} :: O:{bar.Open} H:{bar.High} L:{bar.Low} C:{bar.Close} V:{bar.Volume}")
         if bar.Volume != 1000000:
             raise Exception("Volume of consolidated bar does not match set value!")
+        self.tick_consolidated = True
 
     def OnData(self, slice):
         # Update by TradeBar
@@ -65,3 +67,7 @@ class VolumeRenkoConsolidatorAlgorithm(QCAlgorithm):
             self.SetHoldings(self.spy, 1)
         else:
             self.SetHoldings(self.spy, 0)
+            
+    def OnEndOfAlgorithm(self):
+        if not self.tick_consolidated:
+            raise Exception("Tick consolidator was never been called")

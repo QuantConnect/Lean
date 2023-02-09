@@ -226,33 +226,5 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(reference.AddHours(6), bar.EndTime);
             Assert.IsTrue(bar.IsClosed);
         }
-
-        [TestCase(Language.CSharp)]
-        [TestCase(Language.Python)]
-        public void SelectorCanBeOptionalWhenVolumeSelectorIsPassed(Language language)
-        {
-            if (language == Language.CSharp)
-            {
-                Assert.DoesNotThrow(() =>
-                {
-                    using var consolidator = new VolumeRenkoConsolidator(10);
-                });
-            }
-            else
-            {
-                using (Py.GIL())
-                {
-                    var testModule = PyModule.FromString("test", @"
-from AlgorithmImports import *
-def getConsolidator():
-    return VolumeRenkoConsolidator(10)
-");
-                    Assert.DoesNotThrow(() =>
-                    {
-                        var consolidator = testModule.GetAttr("getConsolidator").Invoke();
-                    });
-                }
-            }
-        }
     }
 }

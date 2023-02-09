@@ -34,6 +34,7 @@ namespace QuantConnect.Algorithm.CSharp
         private Symbol _spy, _ibm;
         private VolumeRenkoConsolidator _tradebarVolumeConsolidator, _tickVolumeConsolidator;
         private SimpleMovingAverage _sma = new SimpleMovingAverage(10);
+        private bool _tickConsolidated = false;
 
         public override void Initialize()
         {
@@ -60,6 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     throw new Exception("Volume of consolidated bar does not match set value!");
                 }
+                _tickConsolidated = true;
             };
 
             var history = History<TradeBar>(new[] {_spy}, 1000, Resolution.Minute);
@@ -93,6 +95,14 @@ namespace QuantConnect.Algorithm.CSharp
             else
             {
                 SetHoldings(_spy, 0m);
+            }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            if (!_tickConsolidated)
+            {
+                throw new Exception("Tick consolidator was never been called");
             }
         }
 
