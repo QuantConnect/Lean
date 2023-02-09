@@ -152,7 +152,7 @@ namespace QuantConnect.Securities.CryptoFuture
             var cryptoFuture = (CryptoFuture)security;
 
             var collateralCurrency = cryptoFuture.BaseCurrency;
-            if (security.QuoteCurrency.Symbol == "USDT" || security.QuoteCurrency.Symbol == "BUSD")
+            if (!cryptoFuture.IsCryptoCoinFuture())
             {
                 collateralCurrency = cryptoFuture.QuoteCurrency;
             }

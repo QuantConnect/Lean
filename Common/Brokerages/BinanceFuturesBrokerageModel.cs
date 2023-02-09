@@ -15,6 +15,7 @@
 
 using System;
 using QuantConnect.Benchmarks;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.CryptoFuture;
 
@@ -45,6 +46,16 @@ namespace QuantConnect.Brokerages
         {
             var symbol = Symbol.Create("BTCUSDT", SecurityType.CryptoFuture, MarketName);
             return SecurityBenchmark.CreateInstance(securities, symbol);
+        }
+
+        /// <summary>
+        /// Provides Binance Futures fee model
+        /// </summary>
+        /// <param name="security">The security to get a fee model for</param>
+        /// <returns>The new fee model for this brokerage</returns>
+        public override IFeeModel GetFeeModel(Security security)
+        {
+            return new BinanceFuturesFeeModel();
         }
 
         /// <summary>
