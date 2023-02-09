@@ -142,7 +142,7 @@ cme,EI,future,E-mini FTSE Emerging Index Futures,USD,100.0,0.1,1.0
 cme,EMD,future,E-mini S&P MidCap 400 Futures,USD,100.0,0.1,1.0
 cme,ES,future,E-mini S&P 500 Futures,USD,50.0,0.25,1.0
 cme,ESK,future,Euro/Swedish Krona Futures,SEK,125000.0,0.0005,1.0
-cme,ETH,future,Ether Futures,USD,50.0,5.50,1.0
+cme,ETH,future,Ether Futures,USD,50.0,0.50,1.0
 cme,GD,future,S&P-GSCI Commodity Index Futures,USD,250.0,0.05,1.0
 cme,GDK,future,Class IV Milk Futures,USD,2000.0,0.01,1.0
 cme,GE,future,Eurodollar Futures,USD,2500.0,0.0025,1.0

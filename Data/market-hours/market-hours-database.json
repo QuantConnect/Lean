@@ -22760,7 +22760,7 @@
     },
     "Future-cme-ETH": {
       "dataTimeZone": "UTC",
-      "exchangeTimeZone": "US/Central",
+      "exchangeTimeZone": "America/Chicago",
       "sunday": [
         {
           "start": "17:00:00",
@@ -22771,11 +22771,11 @@
       "monday": [
         {
           "start": "00:00:00",
-          "end": "09:30:00",
+          "end": "08:30:00",
           "state": "premarket"
         },
         {
-          "start": "09:30:00",
+          "start": "08:30:00",
           "end": "16:00:00",
           "state": "market"
         },
@@ -22788,11 +22788,11 @@
       "tuesday": [
         {
           "start": "00:00:00",
-          "end": "09:30:00",
+          "end": "08:30:00",
           "state": "premarket"
         },
         {
-          "start": "09:30:00",
+          "start": "08:30:00",
           "end": "16:00:00",
           "state": "market"
         },
@@ -22805,11 +22805,11 @@
       "wednesday": [
         {
           "start": "00:00:00",
-          "end": "09:30:00",
+          "end": "08:30:00",
           "state": "premarket"
         },
         {
-          "start": "09:30:00",
+          "start": "08:30:00",
           "end": "16:00:00",
           "state": "market"
         },
@@ -22822,11 +22822,11 @@
       "thursday": [
         {
           "start": "00:00:00",
-          "end": "09:30:00",
+          "end": "08:30:00",
           "state": "premarket"
         },
         {
-          "start": "09:30:00",
+          "start": "08:30:00",
           "end": "16:00:00",
           "state": "market"
         },
@@ -22839,11 +22839,11 @@
       "friday": [
         {
           "start": "00:00:00",
-          "end": "09:30:00",
+          "end": "08:30:00",
           "state": "premarket"
         },
         {
-          "start": "09:30:00",
+          "start": "08:30:00",
           "end": "16:00:00",
           "state": "market"
         }
@@ -47218,10 +47218,10 @@
     },
     "Future-cme-MET": {
       "dataTimeZone": "UTC",
-      "exchangeTimeZone": "America/New_York",
+      "exchangeTimeZone": "America/Chicago",
       "sunday": [
         {
-          "start": "18:00:00",
+          "start": "17:00:00",
           "end": "1.00:00:00",
           "state": "premarket"
         }
@@ -47229,16 +47229,16 @@
       "monday": [
         {
           "start": "00:00:00",
-          "end": "09:30:00",
+          "end": "08:30:00",
           "state": "premarket"
         },
         {
-          "start": "09:30:00",
-          "end": "17:00:00",
+          "start": "08:30:00",
+          "end": "16:00:00",
           "state": "market"
         },
         {
-          "start": "18:00:00",
+          "start": "17:00:00",
           "end": "1.00:00:00",
           "state": "postmarket"
         }
@@ -47246,16 +47246,16 @@
       "tuesday": [
         {
           "start": "00:00:00",
-          "end": "09:30:00",
+          "end": "08:30:00",
           "state": "premarket"
         },
         {
-          "start": "09:30:00",
-          "end": "17:00:00",
+          "start": "08:30:00",
+          "end": "16:00:00",
           "state": "market"
         },
         {
-          "start": "18:00:00",
+          "start": "17:00:00",
           "end": "1.00:00:00",
           "state": "postmarket"
         }
@@ -47263,16 +47263,16 @@
       "wednesday": [
         {
           "start": "00:00:00",
-          "end": "09:30:00",
+          "end": "08:30:00",
           "state": "premarket"
         },
         {
-          "start": "09:30:00",
-          "end": "17:00:00",
+          "start": "08:30:00",
+          "end": "16:00:00",
           "state": "market"
         },
         {
-          "start": "18:00:00",
+          "start": "17:00:00",
           "end": "1.00:00:00",
           "state": "postmarket"
         }
@@ -47280,16 +47280,16 @@
       "thursday": [
         {
           "start": "00:00:00",
-          "end": "09:30:00",
+          "end": "08:30:00",
           "state": "premarket"
         },
         {
-          "start": "09:30:00",
-          "end": "17:00:00",
+          "start": "08:30:00",
+          "end": "16:00:00",
           "state": "market"
         },
         {
-          "start": "18:00:00",
+          "start": "17:00:00",
           "end": "1.00:00:00",
           "state": "postmarket"
         }
@@ -47297,12 +47297,12 @@
       "friday": [
         {
           "start": "00:00:00",
-          "end": "09:30:00",
+          "end": "08:30:00",
           "state": "premarket"
         },
         {
-          "start": "09:30:00",
-          "end": "17:00:00",
+          "start": "08:30:00",
+          "end": "16:00:00",
           "state": "market"
         }
       ],
@@ -47472,10 +47472,10 @@
     },
     "Future-cme-MBT": {
       "dataTimeZone": "UTC",
-      "exchangeTimeZone": "America/New_York",
+      "exchangeTimeZone": "America/Chicago",
       "sunday": [
         {
-          "start": "18:00:00",
+          "start": "17:00:00",
           "end": "1.00:00:00",
           "state": "premarket"
         }
@@ -47483,16 +47483,16 @@
       "monday": [
         {
           "start": "00:00:00",
-          "end": "09:30:00",
+          "end": "08:30:00",
           "state": "premarket"
         },
         {
-          "start": "09:30:00",
-          "end": "17:00:00",
+          "start": "08:30:00",
+          "end": "16:00:00",
           "state": "market"
         },
         {
-          "start": "18:00:00",
+          "start": "17:00:00",
           "end": "1.00:00:00",
           "state": "postmarket"
         }
@@ -47500,16 +47500,16 @@
       "tuesday": [
         {
           "start": "00:00:00",
-          "end": "09:30:00",
+          "end": "08:30:00",
           "state": "premarket"
         },
         {
-          "start": "09:30:00",
-          "end": "17:00:00",
+          "start": "08:30:00",
+          "end": "16:00:00",
           "state": "market"
         },
         {
-          "start": "18:00:00",
+          "start": "17:00:00",
           "end": "1.00:00:00",
           "state": "postmarket"
         }
@@ -47517,16 +47517,16 @@
       "wednesday": [
         {
           "start": "00:00:00",
-          "end": "09:30:00",
+          "end": "08:30:00",
           "state": "premarket"
         },
         {
-          "start": "09:30:00",
-          "end": "17:00:00",
+          "start": "08:30:00",
+          "end": "16:00:00",
           "state": "market"
         },
         {
-          "start": "18:00:00",
+          "start": "17:00:00",
           "end": "1.00:00:00",
           "state": "postmarket"
         }
@@ -47534,16 +47534,16 @@
       "thursday": [
         {
           "start": "00:00:00",
-          "end": "09:30:00",
+          "end": "08:30:00",
           "state": "premarket"
         },
         {
-          "start": "09:30:00",
-          "end": "17:00:00",
+          "start": "08:30:00",
+          "end": "16:00:00",
           "state": "market"
         },
         {
-          "start": "18:00:00",
+          "start": "17:00:00",
           "end": "1.00:00:00",
           "state": "postmarket"
         }
@@ -47551,12 +47551,12 @@
       "friday": [
         {
           "start": "00:00:00",
-          "end": "09:30:00",
+          "end": "08:30:00",
           "state": "premarket"
         },
         {
-          "start": "09:30:00",
-          "end": "17:00:00",
+          "start": "08:30:00",
+          "end": "16:00:00",
           "state": "market"
         }
       ],

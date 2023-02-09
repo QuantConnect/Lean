@@ -189,6 +189,12 @@ namespace QuantConnect.Securities
             public const string BTC = "BTC";
 
             /// <summary>
+            /// Ether Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string ETH = "ETH";
+
+            /// <summary>
             /// Canadian Dollar/Japanese Yen Futures
             /// </summary>
             /// <returns>The symbol</returns>

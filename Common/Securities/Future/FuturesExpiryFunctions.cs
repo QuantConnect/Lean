@@ -1202,6 +1202,26 @@ namespace QuantConnect.Securities.Future
                     return lastFriday.Add(new TimeSpan(15, 0, 0));
                 })
             },
+            // Ether (ETH): https://www.cmegroup.com/markets/cryptocurrencies/ether/ether.contractSpecs.html
+            {Symbol.Create(Futures.Currencies.ETH, SecurityType.Future, Market.CME), (time =>
+                {
+                    // Monthly contracts listed for 6 consecutive months, quarterly contracts (Mar, Jun, Sep, Dec) listed for 4 additional quarters and a second Dec contract if only one is listed.
+                    // Trading terminates at 4:00 p.m. London time on the last Friday of the contract month that is either a London or U.S. business day. If the last Friday of the contract month day is not a business day in both London and the U.S., trading terminates on the prior London or U.S. business day.
+                    var lastFriday = FuturesExpiryUtilityFunctions.LastFriday(time);
+
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.CME, Futures.Currencies.ETH, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(lastFriday))
+                    {
+                        lastFriday = FuturesExpiryUtilityFunctions.AddBusinessDays(lastFriday, -1);
+                    }
+
+                    return lastFriday.Add(new TimeSpan(15, 0, 0));
+                })
+            },
             // Canadian Dollar/Japanese Yen (CJY): https://www.cmegroup.com/trading/fx/g10/canadian-dollar-japanese-yen_contract_specifications.html
             {Symbol.Create(Futures.Currencies.CADJPY, SecurityType.Future, Market.CME), (time =>
                 {
@@ -2843,7 +2863,7 @@ namespace QuantConnect.Securities.Future
                         // Good Friday
                         FuturesExpiryUtilityFunctions.GetGoodFriday(time.Year)
                     };
-                   
+
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 3, holidays);
 
                     return lastBusinessDay.Add(new TimeSpan(13, 25, 0));
@@ -3423,7 +3443,7 @@ namespace QuantConnect.Securities.Future
             // Micro Ether Futures (MET): https://www.cmegroup.com/markets/cryptocurrencies/ether/micro-ether.contractSpecs.html
             {Symbol.Create(Futures.Currencies.MicroEther, SecurityType.Future, Market.CME), (time =>
                 {
-                    // Monthly contracts listed for 6 consecutive months and 2 additional Dec contract months. 
+                    // Monthly contracts listed for 6 consecutive months and 2 additional Dec contract months.
 
                     // Trading terminates at 4:00 p.m. London time on the last Friday of the contract month that
                     // is either a London or U.S. business day. If the last Friday of the contract month day is

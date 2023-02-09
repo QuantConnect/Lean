@@ -148,6 +148,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase(QuantConnect.Securities.Futures.Currencies.AUDJPY, NineSixteenCentralTime)]
         [TestCase(QuantConnect.Securities.Futures.Currencies.AUDNZD, NineSixteenCentralTime)]
         [TestCase(QuantConnect.Securities.Futures.Currencies.BTC, FourPMLondonTime)]
+        [TestCase(QuantConnect.Securities.Futures.Currencies.ETH, FourPMLondonTime)]
         [TestCase(QuantConnect.Securities.Futures.Currencies.CADJPY, NineSixteenCentralTime)]
         [TestCase(QuantConnect.Securities.Futures.Currencies.StandardSizeUSDOffshoreRMBCNH, ElevenAmHongKongTime)]
         [TestCase(QuantConnect.Securities.Futures.Currencies.EuroFXEmini, NineSixteenCentralTime)]
@@ -157,6 +158,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase(QuantConnect.Securities.Futures.Currencies.JapaneseYenEmini, NineSixteenCentralTime)]
         [TestCase(QuantConnect.Securities.Futures.Currencies.MicroEUR, NineSixteenCentralTime)]
         [TestCase(QuantConnect.Securities.Futures.Currencies.MicroBTC, FourPMLondonTime)]
+        [TestCase(QuantConnect.Securities.Futures.Currencies.MicroEther, FourPMLondonTime)]
         public void CurrenciesExpiryDateFunction_WithDifferentDates_ShouldFollowContract(string symbol, string dayTime)
         {
             Assert.IsTrue(_data.ContainsKey(symbol), "Symbol " + symbol + " not present in Test Data");
