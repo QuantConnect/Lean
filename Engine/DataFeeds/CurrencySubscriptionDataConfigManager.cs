@@ -55,7 +55,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             cashBook.Updated += (sender, args) =>
             {
-                if (args.UpdateType == CashBook.UpdateType.Added)
+                if (args.UpdateType == CashBookUpdateType.Added)
                 {
                     _ensureCurrencyDataFeeds = true;
                 }

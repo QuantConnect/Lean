@@ -16,8 +16,6 @@
 
 using System;
 
-using static QuantConnect.Securities.CashBook;
-
 namespace QuantConnect.Securities
 {
     /// <summary>
@@ -28,18 +26,18 @@ namespace QuantConnect.Securities
         /// <summary>
         /// The update type
         /// </summary>
-        public UpdateType UpdateType { get; }
+        public CashBookUpdateType UpdateType { get; }
 
         /// <summary>
         /// The updated cash instance.
         /// </summary>
-        /// <remarks>This will be null for <see cref="UpdateType.Removed"/> events that clear the whole cash book</remarks>
+        /// <remarks>This will be null for <see cref="CashBookUpdateType.Removed"/> events that clear the whole cash book</remarks>
         public Cash Cash { get; }
 
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        public CashBookUpdatedEventArgs(UpdateType type, Cash cash)
+        public CashBookUpdatedEventArgs(CashBookUpdateType type, Cash cash)
         {
             UpdateType = type;
             Cash = cash;

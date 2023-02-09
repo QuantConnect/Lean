@@ -253,7 +253,7 @@ namespace QuantConnect.Securities
         public void Clear()
         {
             _currencies.Clear();
-            OnUpdate(UpdateType.Removed, null);
+            OnUpdate(CashBookUpdateType.Removed, null);
         }
 
         /// <summary>
@@ -403,7 +403,7 @@ namespace QuantConnect.Securities
                 value.Updated += OnCashUpdate;
                 _currencies.AddOrUpdate(symbol, value);
 
-                OnUpdate(UpdateType.Added, value);
+                OnUpdate(CashBookUpdateType.Added, value);
 
                 return value;
             }
@@ -434,7 +434,7 @@ namespace QuantConnect.Securities
                 cash.Updated -= OnCashUpdate;
                 if (!calledInternally)
                 {
-                    OnUpdate(UpdateType.Removed, cash);
+                    OnUpdate(CashBookUpdateType.Removed, cash);
                 }
             }
             return removed;
@@ -442,31 +442,12 @@ namespace QuantConnect.Securities
 
         private void OnCashUpdate(object sender, EventArgs eventArgs)
         {
-            OnUpdate(UpdateType.Updated, sender as Cash);
+            OnUpdate(CashBookUpdateType.Updated, sender as Cash);
         }
 
-        private void OnUpdate(UpdateType updateType, Cash cash)
+        private void OnUpdate(CashBookUpdateType updateType, Cash cash)
         {
             Updated?.Invoke(this, new CashBookUpdatedEventArgs(updateType, cash));
-        }
-
-        /// <summary>
-        /// The different types of <see cref="Updated"/> events
-        /// </summary>
-        public enum UpdateType
-        {
-            /// <summary>
-            /// A new <see cref="Cash.Symbol"/> was added (0)
-            /// </summary>
-            Added,
-            /// <summary>
-            /// One or more <see cref="Cash"/> instances were removed (1)
-            /// </summary>
-            Removed,
-            /// <summary>
-            /// An existing <see cref="Cash.Symbol"/> was updated (2)
-            /// </summary>
-            Updated
         }
     }
 }

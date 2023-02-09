@@ -35,7 +35,6 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Tests.Engine.DataFeeds;
-using static QuantConnect.Securities.CashBook;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -2688,7 +2687,7 @@ namespace QuantConnect.Tests.Common.Securities
             var additions = 0;
             portfolio.UnsettledCashBook.Updated += (sender, args) =>
             {
-                if (args.UpdateType == UpdateType.Added)
+                if (args.UpdateType == CashBookUpdateType.Added)
                 {
                     additions++;
                 }

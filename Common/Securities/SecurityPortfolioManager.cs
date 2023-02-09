@@ -98,7 +98,7 @@ namespace QuantConnect.Securities
 
             CashBook.Updated += (sender, args) =>
             {
-                if (args.UpdateType == CashBook.UpdateType.Added)
+                if (args.UpdateType == CashBookUpdateType.Added)
                 {
                     // add the same currency entry to the unsettled cashbook as well
                     UnsettledCashBook.Add(args.Cash.Symbol, new Cash(args.Cash.Symbol, 0, args.Cash.ConversionRate));

@@ -158,7 +158,7 @@ namespace QuantConnect.Tests.Common.Securities
             cashBook.Add(cash.Symbol, cash);
             cashBook.Updated += (sender, args) =>
             {
-                if (args.UpdateType == CashBook.UpdateType.Added)
+                if (args.UpdateType == CashBookUpdateType.Added)
                 {
                     called = true;
                 }
@@ -177,7 +177,7 @@ namespace QuantConnect.Tests.Common.Securities
             cashBook.Add(cash.Symbol, cash);
             cashBook.Updated += (sender, args) =>
             {
-                if (args.UpdateType == CashBook.UpdateType.Updated)
+                if (args.UpdateType == CashBookUpdateType.Updated)
                 {
                     called = true;
                 }
@@ -199,7 +199,7 @@ namespace QuantConnect.Tests.Common.Securities
             var cash = new Cash(Currencies.USD, 1, 1);
             cashBook.Updated += (sender, args) =>
             {
-                if (args.UpdateType == CashBook.UpdateType.Added)
+                if (args.UpdateType == CashBookUpdateType.Added)
                 {
                     called = true;
                 }
@@ -219,7 +219,7 @@ namespace QuantConnect.Tests.Common.Securities
             var cash = new Cash(Currencies.USD, 1, 1);
             cashBook.Updated += (sender, args) =>
             {
-                if (args.UpdateType == CashBook.UpdateType.Added)
+                if (args.UpdateType == CashBookUpdateType.Added)
                 {
                     called = true;
                 }
@@ -239,7 +239,7 @@ namespace QuantConnect.Tests.Common.Securities
             cashBook.Add(cash.Symbol, cash);
             cashBook.Updated += (sender, args) =>
             {
-                if (args.UpdateType == CashBook.UpdateType.Removed)
+                if (args.UpdateType == CashBookUpdateType.Removed)
                 {
                     called = true;
                 }
@@ -281,7 +281,7 @@ namespace QuantConnect.Tests.Common.Securities
             cashBook.Updated += (sender, args) =>
             {
                 called = true;
-                updatedCalled = args.UpdateType == CashBook.UpdateType.Updated;
+                updatedCalled = args.UpdateType == CashBookUpdateType.Updated;
             };
             cash.Update();
             var conversionRate = cash.ConversionRate;
@@ -304,7 +304,7 @@ namespace QuantConnect.Tests.Common.Securities
             cashBook.Updated += (sender, args) =>
             {
                 called++;
-                calledUpdated = args.UpdateType == CashBook.UpdateType.Updated;
+                calledUpdated = args.UpdateType == CashBookUpdateType.Updated;
             };
 
             cashBook.Add(cash.Symbol, new Cash(Currencies.USD, 1, 2));
@@ -322,7 +322,7 @@ namespace QuantConnect.Tests.Common.Securities
             cashBook.Add(cash.Symbol, cash);
             cashBook.Updated += (sender, args) =>
             {
-                called = args.UpdateType == CashBook.UpdateType.Removed;
+                called = args.UpdateType == CashBookUpdateType.Removed;
             };
 
             cashBook.Clear();
