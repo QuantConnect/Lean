@@ -44,11 +44,11 @@ class IndustryStandardSecurityIdentifiersRegressionAlgorithm(QCAlgorithm):
                  f"\nSPY SEDOL: {spySedol}"
                  f"\nSPY ISIN: {spyIsin}")
 
-    def CheckSymbolRepresentation(symbol: str, standard: str) -> None:
+    def CheckSymbolRepresentation(self, symbol: str, standard: str) -> None:
         if not symbol:
             raise Exception(f"{standard} symbol representation is null or empty")
 
-    def CheckAPIsSymbolRepresentations(symbolApiSymbol: str, algorithmApiSymbol: str, standard: str) -> None:
+    def CheckAPIsSymbolRepresentations(self, symbolApiSymbol: str, algorithmApiSymbol: str, standard: str) -> None:
         if symbolApiSymbol != algorithmApiSymbol:
             raise Exception(f"Symbol API {standard} symbol representation ({symbolApiSymbol}) does not match "
                             f"QCAlgorithm API {standard} symbol representation ({algorithmApiSymbol})")
