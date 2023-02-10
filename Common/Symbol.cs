@@ -31,7 +31,7 @@ namespace QuantConnect
     [ProtoContract(SkipConstructor = true)]
     public sealed class Symbol : IEquatable<Symbol>, IComparable
     {
-        private static readonly SecurityDefinitionSymbolResolver _securityDefinitionSymbolResolver = new();
+        private static readonly SecurityDefinitionSymbolResolver _securityDefinitionSymbolResolver = SecurityDefinitionSymbolResolver.GetInstance();
 
         private Symbol _canonical;
         // for performance we register how we compare with empty

@@ -13,9 +13,11 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 
 using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -30,10 +32,44 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 07);
 
             var spy = AddEquity("SPY").Symbol;
-            Log($"\nSPY CUSIP: {spy.CUSIP}" +
-                $"\nSPY Composite FIGI: {spy.CompositeFIGI}" +
-                $"\nSPY SEDOL: {spy.SEDOL}" +
-                $"\nSPY ISIN: {spy.ISIN}");
+
+            var spyCusip = spy.CUSIP;
+            var spyCompositeFigi = spy.CompositeFIGI;
+            var spySedol = spy.SEDOL;
+            var spyIsin = spy.ISIN;
+
+            CheckSymbolRepresentation(spyCusip, "CUSIP");
+            CheckSymbolRepresentation(spyCompositeFigi, "Composite FIGI");
+            CheckSymbolRepresentation(spySedol, "SEDOL");
+            CheckSymbolRepresentation(spyIsin, "ISIN");
+
+            // Check Symbol API vs QCAlgorithm API
+            CheckAPIsSymbolRepresentations(spyCusip, CUSIP(spy), "CUSIP");
+            CheckAPIsSymbolRepresentations(spyCompositeFigi, CompositeFIGI(spy), "Composite FIGI");
+            CheckAPIsSymbolRepresentations(spySedol, SEDOL(spy), "SEDOL");
+            CheckAPIsSymbolRepresentations(spyIsin, ISIN(spy), "ISIN");
+
+            Log($"\nSPY CUSIP: {spyCusip}" +
+                $"\nSPY Composite FIGI: {spyCompositeFigi}" +
+                $"\nSPY SEDOL: {spySedol}" +
+                $"\nSPY ISIN: {spyIsin}");
+        }
+
+        private static void CheckSymbolRepresentation(string symbol, string standard)
+        {
+            if (symbol.IsNullOrEmpty())
+            {
+                throw new Exception($"{standard} symbol representation is null or empty");
+            }
+        }
+
+        private static void CheckAPIsSymbolRepresentations(string symbolApiSymbol, string algorithmApiSymbol, string standard)
+        {
+            if (symbolApiSymbol != algorithmApiSymbol)
+            {
+                throw new Exception($@"Symbol API {standard} symbol representation ({symbolApiSymbol}) does not match QCAlgorithm API {
+                    standard} symbol representation ({algorithmApiSymbol})");
+            }
         }
 
         /// <summary>

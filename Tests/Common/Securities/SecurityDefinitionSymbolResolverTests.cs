@@ -42,7 +42,9 @@ namespace QuantConnect.Tests.Common.Securities
             _testingDataDirectory = Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "testing_data"));
             var symbolPropertiesDirectory = Directory.CreateDirectory(Path.Combine(_testingDataDirectory.FullName, "symbol-properties"));
             var securityDatabaseFilePath = Path.Combine(symbolPropertiesDirectory.FullName, "security-database.csv");
-            _instance = new SecurityDefinitionSymbolResolver(TestGlobals.DataProvider, securityDatabaseFilePath);
+
+            SecurityDefinitionSymbolResolver.Reset();
+            _instance = SecurityDefinitionSymbolResolver.GetInstance(TestGlobals.DataProvider, securityDatabaseFilePath);
 
             var securityDatabaseLines = string.Join("\n",
                 "AAPL R735QTJ8XC9X,03783310,BBG000B9XRY4,2046251,US0378331005",
@@ -55,6 +57,7 @@ namespace QuantConnect.Tests.Common.Securities
         [OneTimeTearDown]
         public void TearDown()
         {
+            SecurityDefinitionSymbolResolver.Reset();
             _testingDataDirectory.Delete(true);
         }
 
@@ -62,11 +65,11 @@ namespace QuantConnect.Tests.Common.Securities
         public void NoExistingSecurityDefinitions()
         {
             var date = DateTime.UtcNow;
-            var definitionSymbolResolver = new SecurityDefinitionSymbolResolver(TestGlobals.DataProvider);
-            Assert.IsNull(definitionSymbolResolver.ISIN("US46090E1038", date));
-            Assert.IsNull(definitionSymbolResolver.CUSIP("03783310", date));
-            Assert.IsNull(definitionSymbolResolver.CompositeFIGI("BBG000BSWKH7", date));
-            Assert.IsNull(definitionSymbolResolver.SEDOL("bdqyp67", date));
+            // SPY
+            Assert.IsNull(_instance.ISIN("US78462F1030", date));
+            Assert.IsNull(_instance.CUSIP("78462F103", date));
+            Assert.IsNull(_instance.CompositeFIGI("BBG001S72SM3", date));
+            Assert.IsNull(_instance.SEDOL("BDDXTY3", date));
         }
 
         [TestCase("03783310", 2021, 9, 9, "AAPL", Market.USA)]

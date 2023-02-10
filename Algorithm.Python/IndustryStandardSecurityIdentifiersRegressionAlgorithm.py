@@ -23,8 +23,32 @@ class IndustryStandardSecurityIdentifiersRegressionAlgorithm(QCAlgorithm):
 
         spy = self.AddEquity("SPY").Symbol
 
-        self.Log(f"\nSPY CUSIP: {spy.CUSIP}"
-                 f"\nSPY Composite FIGI: {spy.CompositeFIGI}"
-                 f"\nSPY SEDOL: {spy.SEDOL}"
-                 f"\nSPY ISIN: {spy.ISIN}")
+        spyCusip = spy.CUSIP
+        spyCompositeFigi = spy.CompositeFIGI
+        spySedol = spy.SEDOL
+        spyIsin = spy.ISIN
 
+        self.CheckSymbolRepresentation(spyCusip, "CUSIP")
+        self.CheckSymbolRepresentation(spyCompositeFigi, "Composite FIGI")
+        self.CheckSymbolRepresentation(spySedol, "SEDOL")
+        self.CheckSymbolRepresentation(spyIsin, "ISIN")
+
+        # Check Symbol API vs QCAlgorithm API
+        self.CheckAPIsSymbolRepresentations(spyCusip, self.CUSIP(spy), "CUSIP");
+        self.CheckAPIsSymbolRepresentations(spyCompositeFigi, self.CompositeFIGI(spy), "Composite FIGI");
+        self.CheckAPIsSymbolRepresentations(spySedol, self.SEDOL(spy), "SEDOL");
+        self.CheckAPIsSymbolRepresentations(spyIsin, self.ISIN(spy), "ISIN");
+
+        self.Log(f"\nSPY CUSIP: {spyCusip}"
+                 f"\nSPY Composite FIGI: {spyCompositeFigi}"
+                 f"\nSPY SEDOL: {spySedol}"
+                 f"\nSPY ISIN: {spyIsin}")
+
+    def CheckSymbolRepresentation(symbol: str, standard: str) -> None:
+        if not symbol:
+            raise Exception(f"{standard} symbol representation is null or empty")
+
+    def CheckAPIsSymbolRepresentations(symbolApiSymbol: str, algorithmApiSymbol: str, standard: str) -> None:
+        if symbolApiSymbol != algorithmApiSymbol:
+            raise Exception(f"Symbol API {standard} symbol representation ({symbolApiSymbol}) does not match "
+                            f"QCAlgorithm API {standard} symbol representation ({algorithmApiSymbol})")

@@ -147,7 +147,7 @@ namespace QuantConnect.Algorithm
             //Initialise End Date:
             SetEndDate(DateTime.UtcNow.ConvertFromUtc(TimeZone));
 
-            _securityDefinitionSymbolResolver = new SecurityDefinitionSymbolResolver();
+            _securityDefinitionSymbolResolver = SecurityDefinitionSymbolResolver.GetInstance();
 
             Settings = new AlgorithmSettings();
             DefaultOrderProperties = new OrderProperties();
@@ -2888,8 +2888,8 @@ namespace QuantConnect.Algorithm
         /// The date is used to create a Symbol with the ticker set to the ticker the asset traded under on the trading date.
         /// </param>
         /// <returns>Symbol corresponding to the ISIN. If no Symbol with a matching ISIN was found, returns null.</returns>
-        [Documentation(HandlingData)]
-        [Documentation(SecuritiesAndPortfolio)]
+        [DocumentationAttribute(HandlingData)]
+        [DocumentationAttribute(SecuritiesAndPortfolio)]
         public Symbol ISIN(string isin, DateTime? tradingDate = null)
         {
             return _securityDefinitionSymbolResolver.ISIN(isin, GetVerifiedTradingDate(tradingDate));
@@ -2900,8 +2900,8 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The <see cref="Symbol"/></param>
         /// <returns>ISIN corresponding to the Symbol. If no matching ISIN is found, returns null.</returns>
-        [Documentation(HandlingData)]
-        [Documentation(SecuritiesAndPortfolio)]
+        [DocumentationAttribute(HandlingData)]
+        [DocumentationAttribute(SecuritiesAndPortfolio)]
         public string ISIN(Symbol symbol)
         {
             return _securityDefinitionSymbolResolver.ISIN(symbol);
@@ -2920,8 +2920,8 @@ namespace QuantConnect.Algorithm
         /// The composite FIGI differs from an exchange-level FIGI, in that it identifies
         /// an asset across all exchanges in a single country that the asset trades in.
         /// </remarks>
-        [Documentation(HandlingData)]
-        [Documentation(SecuritiesAndPortfolio)]
+        [DocumentationAttribute(HandlingData)]
+        [DocumentationAttribute(SecuritiesAndPortfolio)]
         public Symbol CompositeFIGI(string compositeFigi, DateTime? tradingDate = null)
         {
             return _securityDefinitionSymbolResolver.CompositeFIGI(compositeFigi, GetVerifiedTradingDate(tradingDate));
@@ -2932,8 +2932,8 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The <see cref="Symbol"/></param>
         /// <returns>Composite FIGI corresponding to the Symbol. If no matching composite FIGI is found, returns null.</returns>
-        [Documentation(HandlingData)]
-        [Documentation(SecuritiesAndPortfolio)]
+        [DocumentationAttribute(HandlingData)]
+        [DocumentationAttribute(SecuritiesAndPortfolio)]
         public string CompositeFIGI(Symbol symbol)
         {
             return _securityDefinitionSymbolResolver.CompositeFIGI(symbol);
@@ -2948,8 +2948,8 @@ namespace QuantConnect.Algorithm
         /// The date is used to create a Symbol with the ticker set to the ticker the asset traded under on the trading date.
         /// </param>
         /// <returns>Symbol corresponding to the CUSIP. If no Symbol with a matching CUSIP was found, returns null.</returns>
-        [Documentation(HandlingData)]
-        [Documentation(SecuritiesAndPortfolio)]
+        [DocumentationAttribute(HandlingData)]
+        [DocumentationAttribute(SecuritiesAndPortfolio)]
         public Symbol CUSIP(string cusip, DateTime? tradingDate = null)
         {
             return _securityDefinitionSymbolResolver.CUSIP(cusip, GetVerifiedTradingDate(tradingDate));
@@ -2960,8 +2960,8 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The <see cref="Symbol"/></param>
         /// <returns>CUSIP corresponding to the Symbol. If no matching CUSIP is found, returns null.</returns>
-        [Documentation(HandlingData)]
-        [Documentation(SecuritiesAndPortfolio)]
+        [DocumentationAttribute(HandlingData)]
+        [DocumentationAttribute(SecuritiesAndPortfolio)]
         public string CUSIP(Symbol symbol)
         {
             return _securityDefinitionSymbolResolver.CUSIP(symbol);
@@ -2976,8 +2976,8 @@ namespace QuantConnect.Algorithm
         /// The date is used to create a Symbol with the ticker set to the ticker the asset traded under on the trading date.
         /// </param>
         /// <returns>Symbol corresponding to the SEDOL. If no Symbol with a matching SEDOL was found, returns null.</returns>
-        [Documentation(HandlingData)]
-        [Documentation(SecuritiesAndPortfolio)]
+        [DocumentationAttribute(HandlingData)]
+        [DocumentationAttribute(SecuritiesAndPortfolio)]
         public Symbol SEDOL(string sedol, DateTime? tradingDate = null)
         {
             return _securityDefinitionSymbolResolver.SEDOL(sedol, GetVerifiedTradingDate(tradingDate));
@@ -2988,8 +2988,8 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The <see cref="Symbol"/></param>
         /// <returns>SEDOL corresponding to the Symbol. If no matching SEDOL is found, returns null.</returns>
-        [Documentation(HandlingData)]
-        [Documentation(SecuritiesAndPortfolio)]
+        [DocumentationAttribute(HandlingData)]
+        [DocumentationAttribute(SecuritiesAndPortfolio)]
         public string SEDOL(Symbol symbol)
         {
             return _securityDefinitionSymbolResolver.SEDOL(symbol);
