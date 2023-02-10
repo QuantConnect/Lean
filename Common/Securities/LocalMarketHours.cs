@@ -327,16 +327,7 @@ namespace QuantConnect.Securities
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            if (IsClosedAllDay)
-            {
-                return "Closed All Day";
-            }
-            if (IsOpenAllDay)
-            {
-                return "Open All Day";
-            }
-
-            return Invariant($"{DayOfWeek}: {string.Join(" | ", Segments)}");
+            return Messages.LocalMarketHours.ToString(this);
         }
     }
 }

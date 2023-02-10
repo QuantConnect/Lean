@@ -208,24 +208,21 @@ namespace QuantConnect.Securities
             if (!TryGetEntry(market, symbol, securityType, out entry))
             {
                 var key = new SecurityDatabaseKey(market, symbol, securityType);
-                var keys = string.Join(", ", _entries.Keys);
-                Log.Error($"MarketHoursDatabase.GetExchangeHours(): Unable to locate exchange hours for {key}.Available keys: {keys}");
+                Log.Error($"MarketHoursDatabase.GetExchangeHours(): {Messages.MarketHoursDatabase.ExchangeHoursNotFound(key, _entries.Keys)}");
 
                 if (securityType == SecurityType.Future && market == Market.USA)
                 {
-                    var exception =
-                        "Future.Usa market type is no longer supported as we mapped each ticker to its actual exchange. " +
-                        "Please find your specific market in the symbol-properties database.";
+                    var exception = Messages.MarketHoursDatabase.FutureUsaMarketTypeNoLongerSupported;
                     if (SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(symbol, SecurityType.Future, out market))
                     {
                         // let's suggest a market
-                        exception += $" Suggested market based on the provided ticker 'Market.{market.ToUpperInvariant()}'.";
+                        exception += " " + Messages.MarketHoursDatabase.SuggestedMarketBasedOnTicker(market);
                     }
 
                     throw new ArgumentException(exception);
                 }
                 // there was nothing that really matched exactly
-                throw new ArgumentException($"Unable to locate exchange hours for {key}");
+                throw new ArgumentException(Messages.MarketHoursDatabase.ExchangeHoursNotFound(key));
             }
 
             return entry;

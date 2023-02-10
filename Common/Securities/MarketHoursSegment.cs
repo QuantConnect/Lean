@@ -90,15 +90,15 @@ namespace QuantConnect.Securities
             // perform some sanity checks
             if (marketOpen < extendedMarketOpen)
             {
-                throw new ArgumentException("Extended market open time must be less than or equal to market open time.");
+                throw new ArgumentException(Messages.MarketHoursSegment.InvalidExtendedMarketOpenTime);
             }
             if (marketClose < marketOpen)
             {
-                throw new ArgumentException("Market close time must be after market open time.");
+                throw new ArgumentException(Messages.MarketHoursSegment.InvalidMarketCloseTime);
             }
             if (extendedMarketClose < marketClose)
             {
-                throw new ArgumentException("Extended market close time must be greater than or equal to market close time.");
+                throw new ArgumentException(Messages.MarketHoursSegment.InvalidExtendedMarketCloseTime);
             }
 
             var segments = new List<MarketHoursSegment>();
@@ -150,7 +150,7 @@ namespace QuantConnect.Securities
         /// </returns>
         public override string ToString()
         {
-            return $"{State}: {Start.ToStringInvariant(null)}-{End.ToStringInvariant(null)}";
+            return Messages.MarketHoursSegment.ToString(this);
         }
     }
 }

@@ -14,7 +14,6 @@
 */
 
 using System;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Securities
 {
@@ -66,7 +65,7 @@ namespace QuantConnect.Securities
             var parts = key.Split('-');
             if (parts.Length != 3 || parts[0] == Wildcard)
             {
-                throw new FormatException($"The specified key was not in the expected format: {key}");
+                throw new FormatException(Messages.SecurityDatabaseKey.KeyNotInExpectedFormat(key));
             }
             SecurityType type;
             if (!parts[0].TryParseSecurityType(out type))
@@ -155,7 +154,7 @@ namespace QuantConnect.Securities
         /// </returns>
         public override string ToString()
         {
-            return Invariant($"{SecurityType}-{Market}-{Symbol}");
+            return Messages.SecurityDatabaseKey.ToString(this);
         }
     }
 }

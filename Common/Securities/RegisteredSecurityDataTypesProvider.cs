@@ -47,7 +47,7 @@ namespace QuantConnect.Securities
                     {
                         // shouldn't happen but we want to know if it does
                         throw new InvalidOperationException(
-                            $"Two different types were detected trying to register the same type name: {existingType} - {type}");
+                            Messages.RegisteredSecurityDataTypesProvider.TwoDifferentTypesDetectedForTheSameTypeName(type, existingType));
                     }
                     return true;
                 }

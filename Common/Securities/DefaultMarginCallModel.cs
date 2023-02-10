@@ -168,7 +168,9 @@ namespace QuantConnect.Securities
 
             var quantity = result.NumberOfLots * security.SymbolProperties.LotSize;
 
-            return new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, quantity, 0, 0, security.LocalTime.ConvertToUtc(security.Exchange.TimeZone), "Margin Call", DefaultOrderProperties?.Clone());
+            return new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, quantity, 0, 0,
+                security.LocalTime.ConvertToUtc(security.Exchange.TimeZone), Messages.DefaultMarginCallModel.MarginCallOrderTag,
+                DefaultOrderProperties?.Clone());
         }
 
         /// <summary>

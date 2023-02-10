@@ -25,7 +25,6 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Util;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Securities
 {
@@ -160,12 +159,12 @@ namespace QuantConnect.Securities
 
             if (source.ConversionRate == 0)
             {
-                throw new ArgumentException($"The conversion rate for {sourceCurrency} is not available.");
+                throw new ArgumentException(Messages.CashBook.ConversionRateNotFound(sourceCurrency));
             }
 
             if (destination.ConversionRate == 0)
             {
-                throw new ArgumentException($"The conversion rate for {destinationCurrency} is not available.");
+                throw new ArgumentException(Messages.CashBook.ConversionRateNotFound(destinationCurrency));
             }
 
             var conversionRate = source.ConversionRate / destination.ConversionRate;
@@ -196,19 +195,7 @@ namespace QuantConnect.Securities
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            var sb = new StringBuilder();
-            sb.AppendLine(Invariant($"Symbol {"Quantity",13}    {"Conversion",10} = Value in {AccountCurrency}"));
-            foreach (var value in _currencies.Select(x => x.Value))
-            {
-                sb.AppendLine(value.ToString(AccountCurrency));
-            }
-            sb.AppendLine("-------------------------------------------------");
-            sb.AppendLine("CashBook Total Value:                " +
-                Invariant($"{Currencies.GetCurrencySymbol(AccountCurrency)}") +
-                Invariant($"{Math.Round(TotalValueInAccountCurrency, 2).ToStringInvariant()}")
-            );
-
-            return sb.ToString();
+            return Messages.CashBook.ToString(this);
         }
 
         #region IDictionary Implementation
@@ -325,13 +312,12 @@ namespace QuantConnect.Securities
             {
                 if (symbol == Currencies.NullCurrency)
                 {
-                    throw new InvalidOperationException(
-                        "Unexpected request for NullCurrency Cash instance");
+                    throw new InvalidOperationException(Messages.CashBook.UnexpectedRequestForNullCurrency);
                 }
                 Cash cash;
                 if (!_currencies.TryGetValue(symbol, out cash))
                 {
-                    throw new KeyNotFoundException($"This cash symbol ({symbol}) was not found in your cash book.");
+                    throw new KeyNotFoundException(Messages.CashBook.CashSymbolNotFound(symbol));
                 }
                 return cash;
             }
@@ -426,7 +412,7 @@ namespace QuantConnect.Securities
             {
                 if (!calledInternally)
                 {
-                    Log.Error($"CashBook.Remove(): Failed to remove the cash book record for symbol {symbol}");
+                    Log.Error("CashBook.Remove(): " + Messages.CashBook.FailedToRemoveRecord(symbol));
                 }
             }
             else
