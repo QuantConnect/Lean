@@ -134,7 +134,7 @@ namespace QuantConnect
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string AddingSecuritySymbolForCashCurrencyFeed(Symbol symbol, string cashCurrencySymbol)
+            public static string AddingSecuritySymbolForCashCurrencyFeed(QuantConnect.Symbol symbol, string cashCurrencySymbol)
             {
                 return Invariant($"Adding {symbol.Value} for cash {cashCurrencySymbol} currency feed");
             }
@@ -146,7 +146,7 @@ namespace QuantConnect
                 var rate = cash.ConversionRate;
                 rate = rate < 1000 ? rate.RoundToSignificantDigits(5) : Math.Round(rate, 2);
                 return Invariant($@"{cash.Symbol}: {cash.CurrencySymbol}{cash.Amount,15:0.00} @ {rate,10:0.00####} = {
-                    Currencies.GetCurrencySymbol(accountCurrency)}{Math.Round(cash.ValueInAccountCurrency, 2)}");
+                    QuantConnect.Currencies.GetCurrencySymbol(accountCurrency)}{Math.Round(cash.ValueInAccountCurrency, 2)}");
             }
         }
 
@@ -174,7 +174,7 @@ namespace QuantConnect
                 }
                 sb.AppendLine("-------------------------------------------------");
                 sb.AppendLine(Invariant($@"CashBook Total Value:                {
-                    Currencies.GetCurrencySymbol(cashBook.AccountCurrency)}{
+                    QuantConnect.Currencies.GetCurrencySymbol(cashBook.AccountCurrency)}{
                     Math.Round(cashBook.TotalValueInAccountCurrency, 2).ToStringInvariant()}"));
 
                 return sb.ToString();
@@ -543,15 +543,15 @@ namespace QuantConnect
         public static class SecurityManager
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string SymbolNotFoundInSecurities(Symbol symbol)
+            public static string SymbolNotFoundInSecurities(QuantConnect.Symbol symbol)
             {
                 return Invariant($@"This asset symbol ({
                     symbol}) was not found in your security list. Please add this security or check it exists before using it with 'Securities.ContainsKey(""{
-                    SymbolCache.GetTicker(symbol)}"")'");
+                    QuantConnect.SymbolCache.GetTicker(symbol)}"")'");
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string UnableToOverwriteSecurity(Symbol symbol)
+            public static string UnableToOverwriteSecurity(QuantConnect.Symbol symbol)
             {
                 return Invariant($"Unable to overwrite existing Security: {symbol}");
             }
@@ -606,7 +606,7 @@ namespace QuantConnect
         public static class SecurityService
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string SymbolNotFoundInSymbolPropertiesDatabase(Symbol symbol)
+            public static string SymbolNotFoundInSymbolPropertiesDatabase(QuantConnect.Symbol symbol)
             {
                 return $"Symbol can't be found in the Symbol Properties Database: {symbol.Value}";
             }
