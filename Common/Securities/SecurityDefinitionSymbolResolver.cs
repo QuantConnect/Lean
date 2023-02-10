@@ -249,8 +249,8 @@ namespace QuantConnect.Securities
             {
                 if (_securityDefinitions == null && !SecurityDefinition.TryRead(_dataProvider, _securitiesDefinitionKey, out _securityDefinitions))
                 {
-                        _securityDefinitions = new List<SecurityDefinition>();
-                        Log.Error($"SecurityDefinitionSymbolResolver(): No security definitions data loaded from file: {_securitiesDefinitionKey}");
+                    _securityDefinitions = new List<SecurityDefinition>();
+                    Log.Error($"SecurityDefinitionSymbolResolver(): No security definitions data loaded from file: {_securitiesDefinitionKey}");
                 }
             }
 
