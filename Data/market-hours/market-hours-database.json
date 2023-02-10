@@ -45124,60 +45124,85 @@
         {
           "start": "02:15:00",
           "end": "08:15:00",
-          "state": "market"
+          "state": "premarket"
         },
         {
           "start": "08:30:00",
-          "end": "16:00:00",
+          "end": "15:15:00",
           "state": "market"
+        },
+        {
+          "start": "15:15:00",
+          "end": "16:00:00",
+          "state": "postmarket"
         }
       ],
       "tuesday": [
         {
           "start": "02:15:00",
           "end": "08:15:00",
-          "state": "market"
+          "state": "premarket"
         },
         {
           "start": "08:30:00",
-          "end": "16:00:00",
+          "end": "15:15:00",
           "state": "market"
+        },
+        {
+          "start": "15:15:00",
+          "end": "16:00:00",
+          "state": "postmarket"
         }
       ],
       "wednesday": [
         {
           "start": "02:15:00",
           "end": "08:15:00",
-          "state": "market"
+          "state": "premarket"
         },
         {
           "start": "08:30:00",
-          "end": "16:00:00",
+          "end": "15:15:00",
           "state": "market"
+        },
+        {
+          "start": "15:15:00",
+          "end": "16:00:00",
+          "state": "postmarket"
         }
       ],
       "thursday": [
         {
           "start": "02:15:00",
           "end": "08:15:00",
-          "state": "market"
+          "state": "premarket"
         },
         {
           "start": "08:30:00",
-          "end": "16:00:00",
+          "end": "15:15:00",
           "state": "market"
+        },
+        {
+          "start": "15:15:00",
+          "end": "16:00:00",
+          "state": "postmarket"
         }
       ],
       "friday": [
         {
           "start": "02:15:00",
           "end": "08:15:00",
-          "state": "market"
+          "state": "premarket"
         },
         {
           "start": "08:30:00",
-          "end": "16:00:00",
+          "end": "15:15:00",
           "state": "market"
+        },
+        {
+          "start": "15:15:00",
+          "end": "16:00:00",
+          "state": "postmarket"
         }
       ],
       "saturday": [],
