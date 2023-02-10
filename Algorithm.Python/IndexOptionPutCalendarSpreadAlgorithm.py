@@ -27,16 +27,16 @@ class IndexOptionPutCalendarSpreadAlgorithm(QCAlgorithm):
         option.SetFilter(lambda x: x.Strikes(-2, 2).Expiration(15, 45))
         
         self.vixw = option.Symbol
-        self.legs = []
+        self.tickets = []
         self.expiry = datetime.max
 
     def OnData(self, slice: Slice) -> None:
         if not self.Portfolio[self.vxz].Invested:
             self.MarketOrder(self.vxz, 100)
         
-        index_options_invested = [leg for leg in self.legs if self.Portfolio[leg.Symbol].Invested]
+        index_options_invested = [leg for leg in self.tickets if self.Portfolio[leg.Symbol].Invested]
         # Liquidate if the shorter term option is about to expire
-        if self.expiry < self.Time + timedelta(2) and all([slice.ContainsKey(x.Symbol) for x in self.legs]):
+        if self.expiry < self.Time + timedelta(2) and all([slice.ContainsKey(x.Symbol) for x in self.tickets]):
             for holding in index_options_invested:
                 self.Liquidate(holding.Symbol)
         # Return if there is any opening index option position
@@ -56,9 +56,6 @@ class IndexOptionPutCalendarSpreadAlgorithm(QCAlgorithm):
         if len(puts) < 2: return
         self.expiry = puts[0].Expiry
 
-        # Create combo order legs
-        self.legs = [
-            Leg.Create(puts[0].Symbol, -1),
-            Leg.Create(puts[-1].Symbol, 1)
-        ]
-        self.ComboMarketOrder(self.legs, -1, asynchronous=True)
+        # Sell the put calendar spread
+        put_calendar_spread = OptionStrategies.PutCalendarSpread(self.vixw, strike, self.expiry, puts[-1].Expiry)
+        self.tickets = self.Sell(put_calendar_spread, 1, asynchronous=True)
