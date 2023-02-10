@@ -31,6 +31,8 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
+using QuantConnect.Securities.Option.StrategyMatcher;
 using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
@@ -368,6 +370,49 @@ namespace QuantConnect.Tests.Engine.Setup
             setupHandler.DisposeSafely();
             Assert.AreEqual(1, setupHandler.Errors.Count);
             Assert.IsTrue(setupHandler.Errors[0].InnerException.Message.Equals("Some failure"));
+        }
+
+        [Test]
+        public void HoldingsPositionGroupResolved()
+        {
+            var algorithm = new TestAlgorithm();
+            algorithm.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage);
+
+            algorithm.SetHistoryProvider(new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.EmptyHistoryProvider());
+            var job = GetJob();
+
+            var resultHandler = new Mock<IResultHandler>();
+            var transactionHandler = new Mock<ITransactionHandler>();
+            var realTimeHandler = new Mock<IRealTimeHandler>();
+            var brokerage = new Mock<IBrokerage>();
+            var objectStore = new Mock<IObjectStore>();
+
+            brokerage.Setup(x => x.IsConnected).Returns(true);
+            brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
+            brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount>());
+            brokerage.Setup(x => x.GetAccountHoldings()).Returns(new List<Holding>
+            {
+                // covered call
+                new Holding { Symbol = Symbols.SPY_C_192_Feb19_2016, Quantity = -1 },
+                new Holding { Symbol = Symbols.SPY, Quantity = 100 }
+            });
+            brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>());
+
+            using var setupHandler = new BrokerageSetupHandler();
+
+            IBrokerageFactory factory;
+            setupHandler.CreateBrokerage(job, algorithm, out factory);
+
+            Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
+                transactionHandler.Object, realTimeHandler.Object, objectStore.Object, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider)));
+
+            // let's assert be detect the covered call option strategy for existing position correctly
+            if (algorithm.Portfolio.PositionGroups.Where(group => group.BuyingPowerModel is OptionStrategyPositionGroupBuyingPowerModel)
+                .Count(group => ((OptionStrategyPositionGroupBuyingPowerModel)@group.BuyingPowerModel).ToString() == OptionStrategyDefinitions.CoveredCall.Name
+                    && (Math.Abs(group.Quantity) == 1)) != 1)
+            {
+                throw new Exception($"Option strategy: '{OptionStrategyDefinitions.CoveredCall.Name}' was not found!");
+            }
         }
 
         [Test]

@@ -131,7 +131,7 @@ namespace QuantConnect.Securities.Positions
         {
             foreach (var positionsByUnderlying in positions
                 .Where(position => position.Symbol.SecurityType.HasOptions() || position.Symbol.SecurityType.IsOption())
-                .GroupBy(position => position.Symbol.HasUnderlying? position.Symbol.Underlying : position.Symbol))
+                .GroupBy(GroupBySymbol))
             {
                 var optionPosition = positionsByUnderlying.FirstOrDefault(position => position.Symbol.SecurityType.IsOption());
                 if (optionPosition == null)
@@ -159,6 +159,17 @@ namespace QuantConnect.Securities.Positions
                     yield return new PositionGroup(new OptionStrategyPositionGroupBuyingPowerModel(matchedStrategy), positionsToGroup);
                 }
             }
+        }
+
+        private Symbol GroupBySymbol(IPosition position)
+        {
+            if (position.Symbol.SecurityType == SecurityType.IndexOption)
+            {
+                // index can not be traded and index options can share the underlying but be entirely different option contracts (SPX vs SPXW)
+                // so to avoid confusing the matcher we directly group by the canonical option symbol
+                return position.Symbol.Canonical;
+            }
+            return position.Symbol.HasUnderlying ? position.Symbol.Underlying : position.Symbol;
         }
     }
 }
