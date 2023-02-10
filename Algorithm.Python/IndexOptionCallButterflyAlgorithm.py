@@ -57,12 +57,12 @@ class IndexOptionCallButterflyAlgorithm(QCAlgorithm):
 
         # Get the strike prices for the ITM & OTM contracts, make sure they're in equidistance
         spread = min(atm_strike - sorted_call_strikes[0], sorted_call_strikes[-1] - atm_strike)
-        otm_strike = atm_strike - spread
-        itm_strike = atm_strike + spread
+        itm_strike = atm_strike - spread
+        otm_strike = atm_strike + spread
         if otm_strike not in sorted_call_strikes or itm_strike not in sorted_call_strikes: return
         
         # Buy the call butterfly
-        call_butterfly = OptionStrategies.CallButterfly(self.spxw, itm_strike, atm_strike, otm_strike, expiry)
+        call_butterfly = OptionStrategies.CallButterfly(self.spxw, otm_strike, atm_strike, itm_strike, expiry)
         price = sum([abs(self.Securities[x.Symbol].Price * x.Quantity) * self.multiplier for x in call_butterfly.UnderlyingLegs])
         if price > 0:
             quantity = self.Portfolio.TotalPortfolioValue // price

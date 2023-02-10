@@ -71,12 +71,12 @@ namespace QuantConnect.Algorithm.CSharp
 
             // Get the strike prices for the ITM & OTM contracts, make sure they're in equidistance
             var spread = Math.Min(atmStrike - sortedCallStrikes[0], sortedCallStrikes[^1] - atmStrike);
-            var otmStrike = atmStrike - spread;
-            var itmStrike = atmStrike + spread;
+            var itmStrike = atmStrike - spread;
+            var otmStrike = atmStrike + spread;
             if (!sortedCallStrikes.Contains(otmStrike) || !sortedCallStrikes.Contains(itmStrike)) return;
 
             // Buy the call butterfly
-            var callButterfly = OptionStrategies.CallButterfly(_spxw, itmStrike, atmStrike, otmStrike, expiry);
+            var callButterfly = OptionStrategies.CallButterfly(_spxw, otmStrike, atmStrike, itmStrike, expiry);
             var price = callButterfly.UnderlyingLegs.Sum(x => Math.Abs(Securities[x.Symbol].Price * x.Quantity) * _multiplier);
             if (price > 0)
             {
