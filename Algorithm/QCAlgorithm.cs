@@ -147,7 +147,7 @@ namespace QuantConnect.Algorithm
             //Initialise End Date:
             SetEndDate(DateTime.UtcNow.ConvertFromUtc(TimeZone));
 
-            _securityDefinitionSymbolResolver = new SecurityDefinitionSymbolResolver();
+            _securityDefinitionSymbolResolver = SecurityDefinitionSymbolResolver.GetInstance();
 
             Settings = new AlgorithmSettings();
             DefaultOrderProperties = new OrderProperties();
@@ -2896,6 +2896,18 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Converts a <see cref="Symbol"/> into an ISIN identifier
+        /// </summary>
+        /// <param name="symbol">The <see cref="Symbol"/></param>
+        /// <returns>ISIN corresponding to the Symbol. If no matching ISIN is found, returns null.</returns>
+        [DocumentationAttribute(HandlingData)]
+        [DocumentationAttribute(SecuritiesAndPortfolio)]
+        public string ISIN(Symbol symbol)
+        {
+            return _securityDefinitionSymbolResolver.ISIN(symbol);
+        }
+
+        /// <summary>
         /// Converts a composite FIGI identifier into a <see cref="Symbol"/>
         /// </summary>
         /// <param name="compositeFigi">The composite Financial Instrument Global Identifier (FIGI) of an asset</param>
@@ -2916,6 +2928,18 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Converts a <see cref="Symbol"/> into a composite FIGI identifier
+        /// </summary>
+        /// <param name="symbol">The <see cref="Symbol"/></param>
+        /// <returns>Composite FIGI corresponding to the Symbol. If no matching composite FIGI is found, returns null.</returns>
+        [DocumentationAttribute(HandlingData)]
+        [DocumentationAttribute(SecuritiesAndPortfolio)]
+        public string CompositeFIGI(Symbol symbol)
+        {
+            return _securityDefinitionSymbolResolver.CompositeFIGI(symbol);
+        }
+
+        /// <summary>
         /// Converts a CUSIP identifier into a <see cref="Symbol"/>
         /// </summary>
         /// <param name="cusip">The CUSIP number of an asset</param>
@@ -2932,6 +2956,18 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Converts a <see cref="Symbol"/> into a CUSIP identifier
+        /// </summary>
+        /// <param name="symbol">The <see cref="Symbol"/></param>
+        /// <returns>CUSIP corresponding to the Symbol. If no matching CUSIP is found, returns null.</returns>
+        [DocumentationAttribute(HandlingData)]
+        [DocumentationAttribute(SecuritiesAndPortfolio)]
+        public string CUSIP(Symbol symbol)
+        {
+            return _securityDefinitionSymbolResolver.CUSIP(symbol);
+        }
+
+        /// <summary>
         /// Converts a SEDOL identifier into a <see cref="Symbol"/>
         /// </summary>
         /// <param name="sedol">The SEDOL identifier of an asset</param>
@@ -2945,6 +2981,18 @@ namespace QuantConnect.Algorithm
         public Symbol SEDOL(string sedol, DateTime? tradingDate = null)
         {
             return _securityDefinitionSymbolResolver.SEDOL(sedol, GetVerifiedTradingDate(tradingDate));
+        }
+
+        /// <summary>
+        /// Converts a <see cref="Symbol"/> into a SEDOL identifier
+        /// </summary>
+        /// <param name="symbol">The <see cref="Symbol"/></param>
+        /// <returns>SEDOL corresponding to the Symbol. If no matching SEDOL is found, returns null.</returns>
+        [DocumentationAttribute(HandlingData)]
+        [DocumentationAttribute(SecuritiesAndPortfolio)]
+        public string SEDOL(Symbol symbol)
+        {
+            return _securityDefinitionSymbolResolver.SEDOL(symbol);
         }
 
         /// <summary>

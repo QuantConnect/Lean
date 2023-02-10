@@ -14,10 +14,10 @@
  *
 */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using QLNet;
+
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Securities
@@ -33,13 +33,13 @@ namespace QuantConnect.Securities
         /// the industry-standard security identifiers contained within this class.
         /// </summary>
         public SecurityIdentifier SecurityIdentifier { get; set; }
-        
+
         /// <summary>
         /// The Committee on Uniform Securities Identification Procedures (CUSIP) number of a security
         /// </summary>
         /// <remarks>For more information on CUSIP numbers: https://en.wikipedia.org/wiki/CUSIP</remarks>
         public string CUSIP { get; set; }
-       
+
         /// <summary>
         /// The composite Financial Instrument Global Identifier (FIGI) of a security
         /// </summary>
@@ -49,19 +49,19 @@ namespace QuantConnect.Securities
         /// For more information about the FIGI standard: https://en.wikipedia.org/wiki/Financial_Instrument_Global_Identifier
         /// </remarks>
         public string CompositeFIGI { get; set; }
-        
+
         /// <summary>
         /// The Stock Exchange Daily Official List (SEDOL) security identifier of a security
         /// </summary>
         /// <remarks>For more information about SEDOL security identifiers: https://en.wikipedia.org/wiki/SEDOL</remarks>
         public string SEDOL { get; set; }
-       
+
         /// <summary>
         /// The International Securities Identification Number (ISIN) of a security
         /// </summary>
         /// <remarks>For more information about the ISIN standard: https://en.wikipedia.org/wiki/International_Securities_Identification_Number</remarks>
         public string ISIN { get; set; }
-        
+
         /// <summary>
         /// Reads data from the specified file and converts it to a list of SecurityDefinition
         /// </summary>
@@ -72,13 +72,13 @@ namespace QuantConnect.Securities
         {
             using var stream = dataProvider.Fetch(securitiesDefinitionKey);
             using var reader = new StreamReader(stream);
-            
+
             var securityDefinitions = new List<SecurityDefinition>();
-            
+
             string line;
             while ((line = reader.ReadLine()) != null)
             {
-                if (string.IsNullOrWhiteSpace(line))
+                if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#", StringComparison.InvariantCulture))
                 {
                     continue;
                 }
