@@ -36,8 +36,8 @@ namespace QuantConnect.Exceptions
         public override bool CanInterpret(Exception exception)
         {
             return base.CanInterpret(exception) &&
-                (exception.Message.Contains("invalid token", StringComparison.InvariantCultureIgnoreCase)
-                || exception.Message.Contains("are not permitted;", StringComparison.InvariantCultureIgnoreCase));
+                (exception.Message.Contains(Messages.InvalidTokenPythonExceptionInterpreter.InvalidTokenExpectedSubstring, StringComparison.InvariantCultureIgnoreCase)
+                || exception.Message.Contains(Messages.InvalidTokenPythonExceptionInterpreter.NotPermittedExpectedSubstring, StringComparison.InvariantCultureIgnoreCase));
         }
 
         /// <summary>
@@ -49,11 +49,7 @@ namespace QuantConnect.Exceptions
         public override Exception Interpret(Exception exception, IExceptionInterpreter innerInterpreter)
         {
             var pe = (PythonException)exception;
-
-            var message = "Trying to include an invalid token/character in any statement throws a SyntaxError exception. To prevent the exception, ensure no invalid token are mistakenly included (e.g: leading zero).";
-            var errorLine = pe.Message.GetStringBetweenChars('(', ')');
-
-            return new Exception($"{message}{Environment.NewLine}  in {errorLine}{Environment.NewLine}", pe);
+            return new Exception(Messages.InvalidTokenPythonExceptionInterpreter.InterpretException(pe), pe);
         }
     }
 }

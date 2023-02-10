@@ -25,11 +25,11 @@ class IndexOptionBullPutSpreadAlgorithm(QCAlgorithm):
         option.SetFilter(lambda x: x.WeeklysOnly().Strikes(-10, -5).Expiration(0, 0))
         
         self.spxw = option.Symbol
-        self.legs = []
+        self.tickets = []
 
     def OnData(self, slice: Slice) -> None:
         # Return if open position exists
-        if any([self.Portfolio[x.Symbol].Invested for x in self.legs]):
+        if any([self.Portfolio[x.Symbol].Invested for x in self.tickets]):
             return
 
         # Get option chain
@@ -44,9 +44,6 @@ class IndexOptionBullPutSpreadAlgorithm(QCAlgorithm):
                         key=lambda x: x.Strike)
         if len(puts) < 2: return
 
-        # Create combo order legs
-        self.legs = [
-            Leg.Create(puts[0].Symbol, 1),
-            Leg.Create(puts[-1].Symbol, -1)
-        ]
-        self.ComboMarketOrder(self.legs, 1)
+        # Buy the bull put spread
+        bull_call_spread = OptionStrategies.BullPutSpread(self.spxw, puts[-1].Strike, puts[0].Strike, expiry)
+        self.tickets = self.Buy(bull_call_spread, 1)

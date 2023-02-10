@@ -146,7 +146,7 @@ namespace QuantConnect.Notifications
         {
             if (!Validate.EmailAddress(address))
             {
-                throw new ArgumentException($"Invalid email address: {address}");
+                throw new ArgumentException(Messages.NotificationEmail.InvalidEmailAddress(address));
             }
 
             Address = address;

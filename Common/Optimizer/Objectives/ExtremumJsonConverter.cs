@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -39,7 +39,7 @@ namespace QuantConnect.Optimizer.Objectives
                 case "max": return new Maximization();
                 case "min": return new Minimization();
                 default:
-                    throw new InvalidOperationException("ExtremumJsonConverter.Convert: could not recognize target direction");
+                    throw new InvalidOperationException($"ExtremumJsonConverter.Convert: {Messages.ExtremumJsonConverter.UnrecognizedTargetDirection}");
             }
         }
     }

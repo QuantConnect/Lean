@@ -30,6 +30,11 @@ namespace QuantConnect.Securities.Option
         public string Name { get; set; }
 
         /// <summary>
+        /// The canonical Option symbol of the strategy
+        /// </summary>
+        public Symbol CanonicalOption { get; set; }
+
+        /// <summary>
         /// Underlying symbol of the strategy
         /// </summary>
         public Symbol Underlying { get; set; }

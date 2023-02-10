@@ -55,7 +55,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Gets the tradable days specified by this request, in the security's data time zone
         /// </summary>
-        public abstract IEnumerable<DateTime> TradableDays { get; }
+        public abstract IEnumerable<DateTime> TradableDaysInDataTimeZone { get; }
 
         /// <summary>
         /// Initializes the base data request

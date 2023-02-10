@@ -67,7 +67,7 @@ namespace QuantConnect.Commands
             {
                 foreach (var command in GetCommands().Where(c => c != null))
                 {
-                    Log.Trace($"BaseCommandHandler.ProcessCommands(): Executing {command}");
+                    Log.Trace($"BaseCommandHandler.ProcessCommands(): {Messages.BaseCommandHandler.ExecutingCommand(command)}");
                     CommandResultPacket result;
                     try
                     {

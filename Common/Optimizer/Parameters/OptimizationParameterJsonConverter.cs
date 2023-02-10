@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -57,7 +57,7 @@ namespace QuantConnect.Optimizer.Parameters
             var parameterName = token.GetValue("name", StringComparison.OrdinalIgnoreCase)?.Value<string>();
             if (string.IsNullOrEmpty(parameterName))
             {
-                throw new ArgumentException("Optimization parameter name is not specified.");
+                throw new ArgumentException(Messages.OptimizationParameterJsonConverter.OptimizationParameterNotSpecified);
             }
 
             JToken value;
@@ -101,8 +101,7 @@ namespace QuantConnect.Optimizer.Parameters
 
             if (optimizationParameter == null)
             {
-                throw new ArgumentException(
-                    "Optimization parameter are not currently supported.");
+                throw new ArgumentException(Messages.OptimizationParameterJsonConverter.OptimizationParameterNotSupported);
             }
 
             return optimizationParameter;

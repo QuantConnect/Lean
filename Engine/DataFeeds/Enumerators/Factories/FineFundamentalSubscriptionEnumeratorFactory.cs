@@ -47,11 +47,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// </summary>
         /// <param name="isLiveMode">True for live mode, false otherwise</param>
         /// <param name="tradableDaysProvider">Function used to provide the tradable dates to the enumerator.
-        /// Specify null to default to <see cref="SubscriptionRequest.TradableDays"/></param>
+        /// Specify null to default to <see cref="SubscriptionRequest.TradableDaysInDataTimeZone"/></param>
         public FineFundamentalSubscriptionEnumeratorFactory(bool isLiveMode, Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null)
         {
             _isLiveMode = isLiveMode;
-            _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
+            _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDaysInDataTimeZone);
         }
 
         /// <summary>

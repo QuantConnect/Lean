@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Logging;
 using QuantConnect.Util;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
 {
@@ -100,7 +99,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         {
             if (extraAnalysisPeriodRatio < 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(extraAnalysisPeriodRatio), "extraAnalysisPeriodRatio must be greater than or equal to zero.");
+                throw new ArgumentOutOfRangeException(nameof(extraAnalysisPeriodRatio), Messages.InsightManager.InvalidExtraAnalysisPeriodRatio);
             }
 
             _scoreFunctionProvider = scoreFunctionProvider;
@@ -160,7 +159,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
 
                         if (context.InitialValues.Price == 0)
                         {
-                            Log.Error(Invariant($"InsightManager.Step(): Warning {frontierTimeUtc} UTC: insight {insight} initial price value is 0"));
+                            Log.Error(Messages.InsightManager.ZeroInitialPriceValue(frontierTimeUtc, insight));
                         }
 
                         // let everyone know we've received an insight

@@ -275,16 +275,14 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 new { Symbol = Futures.Energies.MicroCrudeOilWTI, Type = SecurityType.FutureOption, ExpectedFee = 0.47m },
                 // Cryptocurrency futures
                 new { Symbol = Futures.Currencies.BTC, Type = SecurityType.Future, ExpectedFee = 11.02m },
+                new { Symbol = Futures.Currencies.ETH, Type = SecurityType.Future, ExpectedFee = 7.02m },
                 new { Symbol = Futures.Currencies.MicroBTC, Type = SecurityType.Future, ExpectedFee = 4.77m },
-                new { Symbol = Futures.Currencies.BTICMicroBTC, Type = SecurityType.Future, ExpectedFee = 4.77m },
                 new { Symbol = Futures.Currencies.MicroEther, Type = SecurityType.Future, ExpectedFee = 0.42m },
-                new { Symbol = Futures.Currencies.BTICMicroEther, Type = SecurityType.Future, ExpectedFee = 0.42m },
                 // Cryptocurrency future options
                 new { Symbol = Futures.Currencies.BTC, Type = SecurityType.FutureOption, ExpectedFee = 10.02m },
+                new { Symbol = Futures.Currencies.ETH, Type = SecurityType.FutureOption, ExpectedFee = 7.02m },
                 new { Symbol = Futures.Currencies.MicroBTC, Type = SecurityType.FutureOption, ExpectedFee = 3.77m },
-                new { Symbol = Futures.Currencies.BTICMicroBTC, Type = SecurityType.FutureOption, ExpectedFee = 3.77m },
                 new { Symbol = Futures.Currencies.MicroEther, Type = SecurityType.FutureOption, ExpectedFee = 0.32m },
-                new { Symbol = Futures.Currencies.BTICMicroEther, Type = SecurityType.FutureOption, ExpectedFee = 0.32m },
                 // E-mini FX (currencies) Futures
                 new { Symbol = Futures.Currencies.EuroFXEmini, Type = SecurityType.Future, ExpectedFee = 1.37m },
                 new { Symbol = Futures.Currencies.JapaneseYenEmini, Type = SecurityType.Future, ExpectedFee = 1.37m },

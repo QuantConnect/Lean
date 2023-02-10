@@ -239,9 +239,7 @@ namespace QuantConnect
         {
             if (identifier >= MaxMarketIdentifier)
             {
-                throw new ArgumentOutOfRangeException(nameof(identifier),
-                    $"The market identifier is limited to positive values less than {MaxMarketIdentifier.ToStringInvariant()}."
-                );
+                throw new ArgumentOutOfRangeException(nameof(identifier), Messages.Market.InvalidMarketIdentifier(MaxMarketIdentifier));
             }
 
             market = market.ToLowerInvariant();
@@ -249,18 +247,13 @@ namespace QuantConnect
             int marketIdentifier;
             if (Markets.TryGetValue(market, out marketIdentifier) && identifier != marketIdentifier)
             {
-                throw new ArgumentException(
-                    $"Attempted to add an already added market with a different identifier. Market: {market}"
-                );
+                throw new ArgumentException(Messages.Market.TriedToAddExistingMarketWithDifferentIdentifier(market));
             }
 
             string existingMarket;
             if (ReverseMarkets.TryGetValue(identifier, out existingMarket))
             {
-                throw new ArgumentException(
-                    "Attempted to add a market identifier that is already in use. " +
-                    $"New Market: {market} Existing Market: {existingMarket}"
-                );
+                throw new ArgumentException(Messages.Market.TriedToAddExistingMarketIdentifier(market, existingMarket));
             }
 
             // update our maps.

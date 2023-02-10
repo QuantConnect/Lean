@@ -53,9 +53,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             ISecurityService securityService,
             Resolution defaultResolution)
         {
-            cashBook.Updated += (sender, updateType) =>
+            cashBook.Updated += (sender, args) =>
             {
-                if (updateType == CashBook.UpdateType.Added)
+                if (args.UpdateType == CashBookUpdateType.Added)
                 {
                     _ensureCurrencyDataFeeds = true;
                 }

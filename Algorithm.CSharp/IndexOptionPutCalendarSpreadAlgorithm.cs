@@ -18,13 +18,14 @@ using System.Linq;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Orders;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     public class IndexOptionPutCalendarSpreadAlgorithm : QCAlgorithm
     {
         private Symbol _vixw, _vxz;
-        private List<Leg> _legs = new();
+        private IEnumerable<OrderTicket> _tickets = Enumerable.Empty<OrderTicket>();
         private DateTime _firstExpiry = DateTime.MaxValue;
 
         public override void Initialize()
@@ -48,9 +49,9 @@ namespace QuantConnect.Algorithm.CSharp
                 MarketOrder(_vxz, 100);
             }
             
-            var indexOptionsInvested = _legs.Where(x => Portfolio[x.Symbol].Invested).ToList();
+            var indexOptionsInvested = _tickets.Where(x => Portfolio[x.Symbol].Invested).ToList();
             // Liquidate if the shorter term option is about to expire
-            if (_firstExpiry < Time.AddDays(2) && _legs.All(x => slice.ContainsKey(x.Symbol)))
+            if (_firstExpiry < Time.AddDays(2) && _tickets.All(x => slice.ContainsKey(x.Symbol)))
             {
                 foreach (var holding in indexOptionsInvested)
                 {
@@ -75,13 +76,9 @@ namespace QuantConnect.Algorithm.CSharp
             if (puts.Length < 2) return;
             _firstExpiry = puts[0].Expiry;
 
-            // Create combo order legs
-            _legs = new List<Leg>
-            {
-                Leg.Create(puts[0].Symbol, -1),
-                Leg.Create(puts[^1].Symbol, 1)
-            };
-            ComboMarketOrder(_legs, -1, asynchronous: true);
+            // Sell the put calendar spread
+            var putCalendarSpread = OptionStrategies.PutCalendarSpread(_vixw, strike, _firstExpiry, puts[^1].Expiry);
+            _tickets = Sell(putCalendarSpread, 1, asynchronous: true);
         }
     }
 }

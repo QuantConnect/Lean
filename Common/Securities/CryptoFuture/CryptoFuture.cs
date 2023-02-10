@@ -60,7 +60,7 @@ namespace QuantConnect.Securities.CryptoFuture
                 cache,
                 new SecurityPortfolioModel(),
                 new ImmediateFillModel(),
-                new BinanceFeeModel(),
+                IsCryptoCoinFuture(quoteCurrency.Symbol) ? new BinanceCoinFuturesFeeModel() : new BinanceFuturesFeeModel(),
                 new ConstantSlippageModel(0),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
@@ -75,6 +75,25 @@ namespace QuantConnect.Securities.CryptoFuture
         {
             BaseCurrency = baseCurrency;
             Holdings = new CryptoFutureHolding(this, currencyConverter);
+        }
+
+        /// <summary>
+        /// Checks whether the security is a crypto coin future
+        /// </summary>
+        /// <returns>True if the security is a crypto coin future</returns>
+        public bool IsCryptoCoinFuture()
+        {
+            return IsCryptoCoinFuture(QuoteCurrency.Symbol);
+        }
+
+        /// <summary>
+        /// Checks whether the security is a crypto coin future
+        /// </summary>
+        /// <param name="quoteCurrency">The security quote currency</param>
+        /// <returns>True if the security is a crypto coin future</returns>
+        private static bool IsCryptoCoinFuture(string quoteCurrency)
+        {
+            return quoteCurrency != "USDT" && quoteCurrency != "BUSD";
         }
     }
 }

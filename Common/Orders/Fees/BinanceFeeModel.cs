@@ -15,7 +15,6 @@
 
 using QuantConnect.Util;
 using QuantConnect.Securities;
-using QuantConnect.Securities.CryptoFuture;
 
 namespace QuantConnect.Orders.Fees
 {
@@ -60,16 +59,7 @@ namespace QuantConnect.Orders.Fees
             var security = parameters.Security;
             var order = parameters.Order;
 
-            // apply fee factor, currently we do not model 30-day volume, so we use the first tier
-            var fee = _takerFee;
-            var props = order.Properties as BinanceOrderProperties;
-
-            if (order.Type == OrderType.Limit &&
-                (props?.PostOnly == true || !order.IsMarketable))
-            {
-                // limit order posted to the order book
-                fee = _makerFee;
-            }
+            var fee = GetFee(order);
 
             if(security.Symbol.ID.SecurityType == SecurityType.CryptoFuture)
             {
@@ -97,6 +87,31 @@ namespace QuantConnect.Orders.Fees
             return new OrderFee(new CashAmount(
                 unitPrice * order.AbsoluteQuantity * fee,
                 security.QuoteCurrency.Symbol));
+        }
+
+        /// <summary>
+        /// Gets the fee factor for the given order
+        /// </summary>
+        /// <param name="order">The order to get the fee factor for</param>
+        /// <returns>The fee factor for the given order</returns>
+        protected virtual decimal GetFee(Order order)
+        {
+            return GetFee(order, _makerFee, _takerFee);
+        }
+
+        protected static decimal GetFee(Order order, decimal makerFee, decimal takerFee)
+        {
+            // apply fee factor, currently we do not model 30-day volume, so we use the first tier
+            var fee = takerFee;
+            var props = order.Properties as BinanceOrderProperties;
+
+            if (order.Type == OrderType.Limit && ((props != null && props.PostOnly) || !order.IsMarketable))
+            {
+                // limit order posted to the order book
+                fee = makerFee;
+            }
+
+            return fee;
         }
     }
 }

@@ -40,7 +40,8 @@ namespace QuantConnect.Python
                 {
                     if (!model.HasAttr(attributeName))
                     {
-                        throw new NotImplementedException($"IMarginCallModel.{attributeName} must be implemented. Please implement this missing method on {model.GetPythonType()}");
+                        throw new NotImplementedException(
+                            Messages.PythonCommon.AttributeNotImplemented($"IMarginCallModel.{attributeName}", model.GetPythonType()));
                     }
                 }
             }
@@ -94,7 +95,8 @@ namespace QuantConnect.Python
                 // a tuple where the out parameter comes after the other returned values
                 if (!PyTuple.IsTupleType(value))
                 {
-                    throw new ArgumentException($"{_model.__class__.__name__}.GetMarginCallOrders: Must return a tuple, where the first item is a list and the second a boolean");
+                    throw new ArgumentException($@"{_model.__class__.__name__}.GetMarginCallOrders(): {
+                        Messages.MarginCallModelPythonWrapper.GetMarginCallOrdersMustReturnTuple}");
                 }
 
                 // In this case, the first item holds the list of margin calls

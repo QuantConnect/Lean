@@ -191,7 +191,7 @@ namespace QuantConnect
             }
             return time;
         }
-        
+
         /// <summary>
         /// Create a C# DateTime from a UnixTimestamp
         /// </summary>
@@ -201,7 +201,7 @@ namespace QuantConnect
         {
             return UnixMillisecondTimeStampToDateTime(unixTimeStamp * SecondToMillisecond);
         }
-        
+
         /// <summary>
         /// Create a C# DateTime from a UnixTimestamp
         /// </summary>
@@ -587,7 +587,7 @@ namespace QuantConnect
         public static int TradeableDates(ICollection<Security> securities, DateTime start, DateTime finish)
         {
             var count = 0;
-            Log.Trace(Invariant($"Time.TradeableDates(): Security Count: {securities.Count}"));
+            Log.Trace(Invariant($"Time.TradeableDates(): {Messages.Time.SecurityCount(securities.Count)}"));
             try
             {
                 foreach (var day in EachDay(start, finish))
@@ -619,7 +619,7 @@ namespace QuantConnect
         {
             if (barSize <= TimeSpan.Zero)
             {
-                throw new ArgumentException("barSize must be greater than TimeSpan.Zero", nameof(barSize));
+                throw new ArgumentException(Messages.Time.InvalidBarSize, nameof(barSize));
             }
 
             // need to round down in data timezone because data is stored in this time zone
@@ -650,7 +650,7 @@ namespace QuantConnect
         {
             if (barSize <= TimeSpan.Zero)
             {
-                throw new ArgumentException("barSize must be greater than TimeSpan.Zero", nameof(barSize));
+                throw new ArgumentException(Messages.Time.InvalidBarSize, nameof(barSize));
             }
 
             var current = start;
@@ -692,7 +692,7 @@ namespace QuantConnect
         {
             if (barSize <= TimeSpan.Zero)
             {
-                throw new ArgumentException("barSize must be greater than TimeSpan.Zero", nameof(barSize));
+                throw new ArgumentException(Messages.Time.InvalidBarSize, nameof(barSize));
             }
 
             var count = 0;

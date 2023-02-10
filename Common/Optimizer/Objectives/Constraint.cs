@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -43,7 +43,7 @@ namespace QuantConnect.Optimizer.Objectives
 
             if (!TargetValue.HasValue)
             {
-                throw new ArgumentNullException(nameof(targetValue), $"Constraint target value is not specified");
+                throw new ArgumentNullException(nameof(targetValue), Messages.Constraint.ConstraintTargetValueNotSpecified);
             }
         }
 
@@ -54,7 +54,7 @@ namespace QuantConnect.Optimizer.Objectives
         {
             if (string.IsNullOrEmpty(jsonBacktestResult))
             {
-                throw new ArgumentNullException(nameof(jsonBacktestResult), "Constraint.IsMet: backtest result can not be null or empty.");
+                throw new ArgumentNullException(nameof(jsonBacktestResult), $"Constraint.IsMet(): {Messages.OptimizerObjectivesCommon.NullOrEmptyBacktestResult}");
             }
 
             var token = JObject.Parse(jsonBacktestResult).SelectToken(Target);

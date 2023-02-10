@@ -261,7 +261,7 @@ namespace QuantConnect
 
             if (!TryParse(value, out parsedValue))
             {
-                throw new ArgumentException($"The value {value} cannot be converted to a decimal number");
+                throw new ArgumentException(Messages.Currencies.FailedConversionToDecimal(value));
             }
 
             return parsedValue;

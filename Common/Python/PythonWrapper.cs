@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -36,7 +36,8 @@ namespace QuantConnect.Python
         {
             if (!typeof(TInterface).IsInterface)
             {
-                throw new ArgumentException($"{nameof(PythonWrapper)}.{nameof(ValidateImplementationOf)} expected an interface type parameter.");
+                throw new ArgumentException(
+                    $"{nameof(PythonWrapper)}.{nameof(ValidateImplementationOf)}(): {Messages.PythonWrapper.ExpectedInterfaceTypeParameter}");
             }
 
             var missingMembers = new List<string>();
@@ -53,9 +54,8 @@ namespace QuantConnect.Python
 
                 if (missingMembers.Any())
                 {
-                    throw new NotImplementedException($"{nameof(TInterface)} must be fully implemented. Please implement " +
-                        $"these missing methods on {model.GetPythonType()}: {string.Join(", ", missingMembers)}"
-                    );
+                    throw new NotImplementedException(
+                        Messages.PythonWrapper.InterfaceNotFullyImplemented(typeof(TInterface).Name, model.GetPythonType().Name, missingMembers));
                 }
             }
 

@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace QuantConnect
@@ -144,7 +143,7 @@ namespace QuantConnect
                 if (match.Count == 0)
                 {
                     // no matches
-                    error = new InvalidOperationException($"We were unable to locate the ticker '{ticker}'.");
+                    error = new InvalidOperationException(Messages.SymbolCache.UnableToLocateTicker(ticker));
                 }
                 else if (match.Count == 1)
                 {
@@ -155,10 +154,7 @@ namespace QuantConnect
                 {
                     // too many matches
                     error = new InvalidOperationException(
-                        "We located multiple potentially matching tickers. For custom data, be sure to " +
-                        "append a dot followed by the custom data type name. For example: 'BTC.Bitcoin'. " +
-                        $"Potential Matches: {string.Join(", ", match.Select(kvp => kvp.Key))}"
-                    );
+                        Messages.SymbolCache.MultipleMatchingTickersLocated(match.Select(kvp => kvp.Key)));
                 }
             }
 

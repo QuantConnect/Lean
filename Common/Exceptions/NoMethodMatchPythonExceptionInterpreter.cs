@@ -37,7 +37,7 @@ namespace QuantConnect.Exceptions
         public override bool CanInterpret(Exception exception)
         {
             return base.CanInterpret(exception) &&
-                exception.Message.Contains("No method match");
+                exception.Message.Contains(Messages.NoMethodMatchPythonExceptionInterpreter.NoMethodMatchExpectedSubstring);
         }
 
         /// <summary>
@@ -52,7 +52,7 @@ namespace QuantConnect.Exceptions
 
             var startIndex = pe.Message.LastIndexOfInvariant(" ");
             var methodName = pe.Message.Substring(startIndex).Trim();
-            var message = $"Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the {methodName} method. Please checkout the API documentation.";
+            var message = Messages.NoMethodMatchPythonExceptionInterpreter.AttemptedToAccessMethodThatDoesNotExist(methodName);
 
             message += PythonUtil.PythonExceptionStackParser(pe.StackTrace);
 
