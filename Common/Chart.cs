@@ -79,7 +79,7 @@ namespace QuantConnect
             }
             else
             {
-                throw new DuplicateNameException("Chart.AddSeries(): Chart series name already exists");
+                throw new DuplicateNameException($"Chart.AddSeries(): ${Messages.Chart.ChartSeriesAlreadyExists}");
             }
         }
 

@@ -143,11 +143,11 @@ namespace QuantConnect
         {
             return new Dictionary<string, string>
             {
-                { "CPU Usage", Invariant($"{CpuUsage:0.0}%")},
-                { "Used RAM (MB)", TotalPhysicalMemoryUsed.ToStringInvariant() },
-                { "Total RAM (MB)", "" },
-                { "Hostname", Environment.MachineName },
-                { "LEAN Version", $"v{Globals.Version}"}
+                { Messages.OS.CPUUsageKey, Invariant($"{CpuUsage:0.0}%")},
+                { Messages.OS.UsedRAMKey, TotalPhysicalMemoryUsed.ToStringInvariant() },
+                { Messages.OS.TotalRAMKey, "" },
+                { Messages.OS.HostnameKey, Environment.MachineName },
+                { Messages.OS.LEANVersionKey, $"v{Globals.Version}"}
             };
         }
 

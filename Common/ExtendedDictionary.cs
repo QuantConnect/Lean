@@ -35,9 +35,9 @@ namespace QuantConnect
         {
             if (IsReadOnly)
             {
-                throw new InvalidOperationException($"Clear/clear method call is an invalid operation. {GetType().Name} is a read-only collection.");
+                throw new InvalidOperationException(Messages.ExtendedDictionary.ClearInvalidOperation(this));
             }
-            throw new NotImplementedException("Types deriving from 'ExtendedDictionary' must implement the 'void Clear() method.");
+            throw new NotImplementedException(Messages.ExtendedDictionary.ClearMethodNotImplemented);
         }
 
         /// <summary>
@@ -80,9 +80,9 @@ namespace QuantConnect
         {
             if (IsReadOnly)
             {
-                throw new InvalidOperationException($"Remove/pop method call is an invalid operation. {GetType().Name} is a read-only collection.");
+                throw new InvalidOperationException(Messages.ExtendedDictionary.RemoveInvalidOperation(this));
             }
-            throw new NotImplementedException("Types deriving from 'ExtendedDictionary' must implement the 'void Remove(Symbol) method.");
+            throw new NotImplementedException(Messages.ExtendedDictionary.RemoveMethodNotImplemented);
         }
 
         /// <summary>
@@ -95,11 +95,11 @@ namespace QuantConnect
         {
             get
             {
-                throw new NotImplementedException("Types deriving from 'ExtendedDictionary' must implement the 'T this[Symbol] method.");
+                throw new NotImplementedException(Messages.ExtendedDictionary.IndexerBySymbolNotImplemented);
             }
             set
             {
-                throw new NotImplementedException("Types deriving from 'ExtendedDictionary' must implement the 'T this[Symbol] method.");
+                throw new NotImplementedException(Messages.ExtendedDictionary.IndexerBySymbolNotImplemented);
             }
         }
 
@@ -116,7 +116,7 @@ namespace QuantConnect
                 Symbol symbol;
                 if (!SymbolCache.TryGetSymbol(ticker, out symbol))
                 {
-                    throw new KeyNotFoundException($"The ticker {ticker} was not found in the SymbolCache. Use the Symbol object as key instead. Accessing the securities collection/slice object by string ticker is only available for securities added with the AddSecurity-family methods. For more details, please check out the documentation.");
+                    throw new KeyNotFoundException(Messages.ExtendedDictionary.TickerNotFoundInSymbolCache(ticker));
                 }
                 return this[symbol];
             }
@@ -125,7 +125,7 @@ namespace QuantConnect
                 Symbol symbol;
                 if (!SymbolCache.TryGetSymbol(ticker, out symbol))
                 {
-                    throw new KeyNotFoundException($"The ticker {ticker} was not found in the SymbolCache. Use the Symbol object as key instead. Accessing the securities collection/slice object by string ticker is only available for securities added with the AddSecurity-family methods. For more details, please check out the documentation.");
+                    throw new KeyNotFoundException(Messages.ExtendedDictionary.TickerNotFoundInSymbolCache(ticker));
                 }
                 this[symbol] = value;
             }
@@ -243,7 +243,7 @@ namespace QuantConnect
         /// Note: Arbitrary elements and random elements are not same.The popitem() doesn't return a random element.</returns>
         public PyTuple popitem()
         {
-            throw new NotSupportedException($"popitem method is not supported for {GetType().Name}");
+            throw new NotSupportedException(Messages.ExtendedDictionary.PopitemMethodNotSupported(this));
         }
 
         /// <summary>
@@ -274,7 +274,7 @@ namespace QuantConnect
 
             if (IsReadOnly)
             {
-                throw new KeyNotFoundException($"'{symbol}' wasn't found in the {GetType().Name} object, likely because there was no-data at this moment in time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with data.ContainsKey(\"{symbol}\"). The collection is read-only, cannot set default.");
+                throw new KeyNotFoundException(Messages.ExtendedDictionary.SymbolNotFoundDueToNoData(this, symbol));
             }
 
             this[symbol] = default_value;
@@ -319,7 +319,7 @@ namespace QuantConnect
         {
             if (IsReadOnly)
             {
-                throw new InvalidOperationException($"update method call is an invalid operation. {GetType().Name} is a read-only collection.");
+                throw new InvalidOperationException(Messages.ExtendedDictionary.UpdateInvalidOperation(this));
             }
 
             var dictionary = other.ConvertToDictionary<Symbol, T>();
