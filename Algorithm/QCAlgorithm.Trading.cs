@@ -766,6 +766,7 @@ namespace QuantConnect.Algorithm
             var groupOrderManager = new GroupOrderManager(Transactions.GetIncrementGroupOrderManagerId(), legs.Count, quantity, limitPrice);
 
             List<OrderTicket> orderTickets = new(capacity: legs.Count);
+            List<SubmitOrderRequest> submitRequests = new(capacity: legs.Count);
             foreach (var leg in legs)
             {
                 var security = Securities[leg.Symbol];
@@ -778,24 +779,21 @@ namespace QuantConnect.Algorithm
                 }
                 var request = CreateSubmitOrderRequest(orderType, security, leg.Quantity, tag, orderProperties ?? DefaultOrderProperties?.Clone(), groupOrderManager: groupOrderManager, limitPrice: limitPrice);
 
-                //Add the order and create a new order Id.
-                var orderTicket = SubmitOrderRequest(request);
-
-                orderTickets.Add(orderTicket);
-                if (orderTicket.Status == OrderStatus.Invalid)
+                // we execture pre order checks for all requests before submitting, so that if anything fails we are not left with half submitted combo orders
+                var response = PreOrderChecks(request);
+                if (response.IsError)
                 {
-                    foreach (var ticket in orderTickets)
-                    {
-                        // we should cancel all of them if any failed
-                        if (ticket.Status.IsOpen())
-                        {
-                            ticket.Cancel();
-                        }
-                    }
-
-                    // break out
-                    break;
+                    orderTickets.Add(OrderTicket.InvalidSubmitRequest(Transactions, request, response));
+                    return orderTickets;
                 }
+
+                submitRequests.Add(request);
+            }
+
+            foreach (var request in submitRequests)
+            {
+                //Add the order and create a new order Id.
+                orderTickets.Add(Transactions.AddOrder(request));
             }
 
             // Wait for the order event to process, only if the exchange is open
