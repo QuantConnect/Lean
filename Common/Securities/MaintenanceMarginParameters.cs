@@ -108,7 +108,7 @@ namespace QuantConnect.Securities
             var derivative = Security as IDerivativeSecurity;
             if (derivative == null)
             {
-                throw new InvalidOperationException("ForUnderlying is only invokable for IDerivativeSecurity (Option|Future)");
+                throw new InvalidOperationException(Messages.MaintenanceMarginParameters.ForUnderlyingOnlyInvokableForIDerivativeSecurity);
             }
 
             return ForQuantityAtCurrentPrice(derivative.Underlying, quantity);

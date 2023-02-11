@@ -1478,6 +1478,42 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(OrderStatus.New, ticket.Status);
         }
 
+        [Test]
+        public void ComboOrderPreChecks()
+        {
+            var start = DateTime.UtcNow;
+            var algo = new AlgorithmStub();
+            algo.SetFinishedWarmingUp();
+            algo.AddEquity("SPY").SetMarketPrice(new TradeBar
+            {
+                Time = algo.Time,
+                Open = 10m,
+                High = 10,
+                Low = 10,
+                Close = 10,
+                Volume = 0,
+                Symbol = Symbols.SPY,
+                DataType = MarketDataType.TradeBar
+            });
+
+            algo.AddOptionContract(Symbols.SPY_C_192_Feb19_2016);
+            var legs = new List<Leg>
+            {
+                new Leg { Symbol = Symbols.SPY, Quantity = 1 },
+                new Leg { Symbol = Symbols.SPY_C_192_Feb19_2016, Quantity = 1 },
+            };
+
+            // the underlying has a price but the option does not
+            var result = algo.ComboMarketOrder(legs, 1);
+
+            Assert.AreEqual(1, result.Count);
+            Assert.AreEqual(OrderStatus.Invalid, result.Single().Status);
+            Assert.IsTrue(result.Single().SubmitRequest.Response.IsError);
+            Assert.IsTrue(result.Single().SubmitRequest.Response.ErrorMessage.Contains("does not have an accurate price"));
+
+            Assert.IsTrue(DateTime.UtcNow - start < TimeSpan.FromMilliseconds(500));
+        }
+
         [TestCase(new int[] { 1, 2 }, false)]
         [TestCase(new int[] { -1, 10 }, false)]
         [TestCase(new int[] { 2, -5 }, false)]

@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
@@ -399,12 +398,12 @@ namespace QuantConnect.Securities
         {
             if (symbolProperties == null)
             {
-                throw new ArgumentNullException(nameof(symbolProperties), "Security requires a valid SymbolProperties instance.");
+                throw new ArgumentNullException(nameof(symbolProperties), Messages.Security.ValidSymbolPropertiesInstanceRequired);
             }
 
             if (symbolProperties.QuoteCurrency != quoteCurrency.Symbol)
             {
-                throw new ArgumentException("symbolProperties.QuoteCurrency must match the quoteCurrency.Symbol");
+                throw new ArgumentException(Messages.Security.UnmatchingQuoteCurrencies);
             }
 
             Symbol = symbol;
@@ -494,7 +493,7 @@ namespace QuantConnect.Securities
             {
                 if (_localTimeKeeper == null)
                 {
-                    throw new InvalidOperationException("Security.SetLocalTimeKeeper(LocalTimeKeeper) must be called in order to use the LocalTime property.");
+                    throw new InvalidOperationException(Messages.Security.SetLocalTimeKeeperMustBeCalledBeforeUsingLocalTime);
                 }
 
                 return _localTimeKeeper.LocalTime;
@@ -860,8 +859,14 @@ namespace QuantConnect.Securities
         {
             lock (_subscriptionsBag)
             {
-                if (subscription.Symbol != Symbol) throw new ArgumentException("Symbols must match.", "subscription.Symbol");
-                if (!subscription.ExchangeTimeZone.Equals(Exchange.TimeZone)) throw new ArgumentException("ExchangeTimeZones must match.", "subscription.ExchangeTimeZone");
+                if (subscription.Symbol != Symbol)
+                {
+                    throw new ArgumentException(Messages.Security.UnmatchingSymbols, "subscription.Symbol");
+                }
+                if (!subscription.ExchangeTimeZone.Equals(Exchange.TimeZone))
+                {
+                    throw new ArgumentException(Messages.Security.UnmatchingExchangeTimeZones, "subscription.ExchangeTimeZone");
+                }
                 _subscriptionsBag.Add(subscription);
                 UpdateSubscriptionProperties();
             }
@@ -877,8 +882,14 @@ namespace QuantConnect.Securities
             {
                 foreach (var subscription in subscriptions)
                 {
-                    if (subscription.Symbol != Symbol) throw new ArgumentException("Symbols must match.", "subscription.Symbol");
-                    if (!subscription.ExchangeTimeZone.Equals(Exchange.TimeZone)) throw new ArgumentException("ExchangeTimeZones must match.", "subscription.ExchangeTimeZone");
+                    if (subscription.Symbol != Symbol)
+                    {
+                        throw new ArgumentException(Messages.Security.UnmatchingSymbols, "subscription.Symbol");
+                    }
+                    if (!subscription.ExchangeTimeZone.Equals(Exchange.TimeZone))
+                    {
+                         throw new ArgumentException(Messages.Security.UnmatchingExchangeTimeZones, "subscription.ExchangeTimeZone");
+                    }
                     _subscriptionsBag.Add(subscription);
                 }
                 UpdateSubscriptionProperties();

@@ -15,44 +15,87 @@
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Securities.Option;
+
+using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm exercising an equity covered European style option, using an option price model
-    /// that does not support European style options and asserting that the option price model is not used.
+    /// Algorithm illustrating how to get a security's industry-standard identifier from its <see cref="Symbol"/>
     /// </summary>
-    public class OptionPriceModelForUnsupportedEuropeanOptionRegressionAlgorithm : OptionPriceModelForOptionStylesBaseRegressionAlgorithm
+    public class IndustryStandardSecurityIdentifiersRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
-            SetStartDate(2021, 1, 14);
-            SetEndDate(2021, 1, 14);
+            SetStartDate(2013, 10, 07);
+            SetEndDate(2013, 10, 07);
 
-            var option = AddIndexOption("SPX", Resolution.Hour);
-            // BaroneAdesiWhaley model does not support European style options
-            option.PriceModel = OptionPriceModels.BaroneAdesiWhaley();
+            var spy = AddEquity("SPY").Symbol;
 
-            SetWarmup(7, Resolution.Daily);
+            var spyCusip = spy.CUSIP;
+            var spyCompositeFigi = spy.CompositeFIGI;
+            var spySedol = spy.SEDOL;
+            var spyIsin = spy.ISIN;
 
-            Init(option, optionStyleIsSupported: false);
+            CheckSymbolRepresentation(spyCusip, "CUSIP");
+            CheckSymbolRepresentation(spyCompositeFigi, "Composite FIGI");
+            CheckSymbolRepresentation(spySedol, "SEDOL");
+            CheckSymbolRepresentation(spyIsin, "ISIN");
+
+            // Check Symbol API vs QCAlgorithm API
+            CheckAPIsSymbolRepresentations(spyCusip, CUSIP(spy), "CUSIP");
+            CheckAPIsSymbolRepresentations(spyCompositeFigi, CompositeFIGI(spy), "Composite FIGI");
+            CheckAPIsSymbolRepresentations(spySedol, SEDOL(spy), "SEDOL");
+            CheckAPIsSymbolRepresentations(spyIsin, ISIN(spy), "ISIN");
+
+            Log($"\nSPY CUSIP: {spyCusip}" +
+                $"\nSPY Composite FIGI: {spyCompositeFigi}" +
+                $"\nSPY SEDOL: {spySedol}" +
+                $"\nSPY ISIN: {spyIsin}");
         }
+
+        private static void CheckSymbolRepresentation(string symbol, string standard)
+        {
+            if (symbol.IsNullOrEmpty())
+            {
+                throw new Exception($"{standard} symbol representation is null or empty");
+            }
+        }
+
+        private static void CheckAPIsSymbolRepresentations(string symbolApiSymbol, string algorithmApiSymbol, string standard)
+        {
+            if (symbolApiSymbol != algorithmApiSymbol)
+            {
+                throw new Exception($@"Symbol API {standard} symbol representation ({symbolApiSymbol}) does not match QCAlgorithm API {
+                    standard} symbol representation ({algorithmApiSymbol})");
+            }
+        }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 209;
+        public long DataPoints => 795;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public override int AlgorithmHistoryDataPoints => 0;
+        public int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "0"},
             {"Average Win", "0%"},
@@ -79,8 +122,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
+            {"Sortino Ratio", "0"},
+            {"Return Over Maximum Drawdown", "0"},
             {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},

@@ -80,7 +80,7 @@ namespace QuantConnect.Securities
 
             if (symbol.ID.SecurityType == SecurityType.Crypto && !_symbolPropertiesDatabase.ContainsKey(symbol.ID.Market, symbol, symbol.ID.SecurityType))
             {
-                throw new ArgumentException($"Symbol can't be found in the Symbol Properties Database: {symbol.Value}");
+                throw new ArgumentException(Messages.SecurityService.SymbolNotFoundInSymbolPropertiesDatabase(symbol));
             }
 
             // For Futures Options that don't have a SPDB entry, the futures entry will be used instead.

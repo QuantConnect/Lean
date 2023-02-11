@@ -16,11 +16,9 @@
 using System;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Fees;
 using System.Linq;
 using QuantConnect.Benchmarks;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Brokerages
 {
@@ -29,7 +27,8 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class GDAXBrokerageModel : DefaultBrokerageModel
     {
-        private readonly BrokerageMessageEvent _message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, "Brokerage does not support update. You must cancel and re-create instead.");
+        private readonly BrokerageMessageEvent _message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0,
+            Messages.DefaultBrokerageModel.OrderUpdateNotSupported);
 
         // https://blog.coinbase.com/coinbase-pro-market-structure-update-fbd9d49f43d7
         private readonly DateTime _stopMarketOrderSupportEndDate = new DateTime(2019, 3, 23, 1, 0, 0);
@@ -44,7 +43,7 @@ namespace QuantConnect.Brokerages
         {
             if (accountType == AccountType.Margin)
             {
-                throw new ArgumentException("The GDAX brokerage does not currently support Margin trading.", nameof(accountType));
+                throw new ArgumentException(Messages.GDAXBrokerageModel.UnsupportedAccountType, nameof(accountType));
             }
         }
 
@@ -117,8 +116,7 @@ namespace QuantConnect.Brokerages
             if (security.Type != SecurityType.Crypto)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(GDAXBrokerageModel)} does not support {security.Type} security type.")
-                );
+                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
 
                 return false;
             }
@@ -126,8 +124,7 @@ namespace QuantConnect.Brokerages
             if (order.Type != OrderType.Limit && order.Type != OrderType.Market && order.Type != OrderType.StopMarket && order.Type != OrderType.StopLimit)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(GDAXBrokerageModel)} does not support {order.Type} order type.")
-                );
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order));
 
                 return false;
             }
@@ -135,8 +132,7 @@ namespace QuantConnect.Brokerages
             if (order.Type == OrderType.StopMarket && order.Time >= _stopMarketOrderSupportEndDate)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"Stop Market orders are no longer supported since {_stopMarketOrderSupportEndDate}.")
-                );
+                    Messages.GDAXBrokerageModel.StopMarketOrdersNoLongerSupported(_stopMarketOrderSupportEndDate));
 
                 return false;
             }
@@ -144,8 +140,7 @@ namespace QuantConnect.Brokerages
             if (order.TimeInForce != TimeInForce.GoodTilCanceled)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(GDAXBrokerageModel)} does not support {order.TimeInForce.GetType().Name} time in force.")
-                );
+                    Messages.DefaultBrokerageModel.UnsupportedTimeInForce(this, order));
 
                 return false;
             }

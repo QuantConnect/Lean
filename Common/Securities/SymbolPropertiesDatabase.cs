@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
-using QuantConnect.Logging;
 
 namespace QuantConnect.Securities
 {
@@ -46,7 +45,7 @@ namespace QuantConnect.Securities
             {
                 if (allEntries.ContainsKey(keyValuePair.Key))
                 {
-                    throw new DuplicateNameException($"Encountered duplicate key while processing file: {file}. Key: {keyValuePair.Key}");
+                    throw new DuplicateNameException(Messages.SymbolPropertiesDatabase.DuplicateKeyInFile(file, keyValuePair.Key));
                 }
                 // we wildcard the market, so per security type and symbol we will keep the *first* instance
                 // this allows us to fetch deterministically, in O(1), an entry without knowing the market, see 'TryGetMarket()'
@@ -231,7 +230,7 @@ namespace QuantConnect.Securities
         {
             if (!File.Exists(file))
             {
-                throw new FileNotFoundException("Unable to locate symbol properties file: " + file);
+                throw new FileNotFoundException(Messages.SymbolPropertiesDatabase.DatabaseFileNotFound(file));
             }
 
             // skip the first header line, also skip #'s as these are comment lines

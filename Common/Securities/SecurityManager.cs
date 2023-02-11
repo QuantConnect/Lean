@@ -251,7 +251,7 @@ namespace QuantConnect.Securities
                 Security security;
                 if (!_securityManager.TryGetValue(symbol, out security))
                 {
-                    throw new KeyNotFoundException($"This asset symbol ({symbol}) was not found in your security list. Please add this security or check it exists before using it with 'Securities.ContainsKey(\"{SymbolCache.GetTicker(symbol)}\")'");
+                    throw new KeyNotFoundException(Messages.SecurityManager.SymbolNotFoundInSecurities(symbol));
                 }
                 return security;
             }
@@ -260,7 +260,7 @@ namespace QuantConnect.Securities
                 Security existing;
                 if (_securityManager.TryGetValue(symbol, out existing) && existing != value)
                 {
-                    throw new ArgumentException($"Unable to over write existing Security: {symbol}");
+                    throw new ArgumentException(Messages.SecurityManager.UnableToOverwriteSecurity(symbol));
                 }
 
                 // no security exists for the specified symbol key, add it now

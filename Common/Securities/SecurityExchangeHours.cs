@@ -261,7 +261,7 @@ namespace QuantConnect.Securities
                 marketHours = GetMarketHours(time);
             }
 
-            throw new InvalidOperationException($"Did not find last market open for {localDateTime}. IsMarketAlwaysOpen: {IsMarketAlwaysOpen}");
+            throw new InvalidOperationException(Messages.SecurityExchangeHours.LastMarketOpenNotFound(localDateTime, IsMarketAlwaysOpen));
         }
 
         /// <summary>
@@ -314,7 +314,7 @@ namespace QuantConnect.Securities
             }
             while (time < oneWeekLater);
 
-            throw new ArgumentException("Unable to locate next market open within two weeks.");
+            throw new ArgumentException(Messages.SecurityExchangeHours.UnableToLocateNextMarketOpenInTwoWeeks);
         }
 
         /// <summary>
@@ -352,7 +352,7 @@ namespace QuantConnect.Securities
             }
             while (time < oneWeekLater);
 
-            throw new ArgumentException("Unable to locate next market close within two weeks.");
+            throw new ArgumentException(Messages.SecurityExchangeHours.UnableToLocateNextMarketCloseInTwoWeeks);
         }
 
         /// <summary>

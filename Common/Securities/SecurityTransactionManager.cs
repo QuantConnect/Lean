@@ -190,13 +190,13 @@ namespace QuantConnect.Securities
         {
             if (_algorithm != null && _algorithm.IsWarmingUp)
             {
-                throw new InvalidOperationException("This operation is not allowed in Initialize or during warm up: CancelOpenOrders. Please move this code to the OnWarmupFinished() method.");
+                throw new InvalidOperationException(Messages.SecurityTransactionManager.CancelOpenOrdersNotAllowedOnInitializeOrWarmUp);
             }
 
             var cancelledOrders = new List<OrderTicket>();
             foreach (var ticket in GetOpenOrderTickets())
             {
-                ticket.Cancel($"Canceled by CancelOpenOrders() at {_algorithm.UtcTime:o}");
+                ticket.Cancel(Messages.SecurityTransactionManager.OrderCanceledByCancelOpenOrders(_algorithm.UtcTime));
                 cancelledOrders.Add(ticket);
             }
             return cancelledOrders;
@@ -212,7 +212,7 @@ namespace QuantConnect.Securities
         {
             if (_algorithm != null && _algorithm.IsWarmingUp)
             {
-                throw new InvalidOperationException("This operation is not allowed in Initialize or during warm up: CancelOpenOrders. Please move this code to the OnWarmupFinished() method.");
+                throw new InvalidOperationException(Messages.SecurityTransactionManager.CancelOpenOrdersNotAllowedOnInitializeOrWarmUp);
             }
 
             var cancelledOrders = new List<OrderTicket>();
@@ -355,18 +355,16 @@ namespace QuantConnect.Securities
             var orderTicket = GetOrderTicket(orderId);
             if (orderTicket == null)
             {
-                Log.Error(Invariant(
-                    $"SecurityTransactionManager.WaitForOrder(): Unable to locate ticket for order: {orderId}"
-                ));
+                Log.Error($@"SecurityTransactionManager.WaitForOrder(): {
+                    Messages.SecurityTransactionManager.UnableToLocateOrderTicket(orderId)}");
 
                 return false;
             }
 
             if (!orderTicket.OrderClosed.WaitOne(_marketOrderFillTimeout))
             {
-                Log.Error(Invariant(
-                    $"SecurityTransactionManager.WaitForOrder(): Order did not fill within {_marketOrderFillTimeout.TotalSeconds} seconds."
-                ));
+                Log.Error($@"SecurityTransactionManager.WaitForOrder(): {
+                    Messages.SecurityTransactionManager.OrderNotFilledWithinExpectedTime(_marketOrderFillTimeout)}");
 
                 return false;
             }

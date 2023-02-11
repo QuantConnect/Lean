@@ -16,8 +16,6 @@
 using System;
 using System.Runtime.CompilerServices;
 
-using QuantConnect.Algorithm.Framework.Alphas;
-
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
@@ -47,7 +45,7 @@ namespace QuantConnect
         public static class ReadOnlySecurityValuesCollection
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string SecurityValuesForSymbolNotFound(Symbol symbol)
+            public static string SecurityValuesForSymbolNotFound(QuantConnect.Symbol symbol)
             {
                 return Invariant($"SecurityValues for symbol {symbol} was not found");
             }

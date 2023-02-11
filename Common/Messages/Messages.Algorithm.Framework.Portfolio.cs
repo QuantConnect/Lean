@@ -42,13 +42,13 @@ namespace QuantConnect
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string SymbolNotFound(Symbol symbol)
+            public static string SymbolNotFound(QuantConnect.Symbol symbol)
             {
                 return Invariant($"{symbol} not found in portfolio. Request this data when initializing the algorithm.");
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string UnableToComputeOrderQuantityDueToNullResult(Symbol symbol, GetMaximumLotsResult result)
+            public static string UnableToComputeOrderQuantityDueToNullResult(QuantConnect.Symbol symbol, GetMaximumLotsResult result)
             {
                 return Invariant($"Unable to compute order quantity of {symbol}. Reason: {result.Reason} Returning null.");
             }

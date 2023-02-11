@@ -518,7 +518,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public override string ToString()
         {
-            return Invariant($"{Symbol.Value}: {Quantity} @ {AveragePrice}");
+            return Messages.SecurityHolding.ToString(this);
         }
 
         /// <summary>

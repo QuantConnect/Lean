@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -23,7 +23,6 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities;
 using QuantConnect.Util;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Brokerages
 {
@@ -111,8 +110,7 @@ namespace QuantConnect.Brokerages
             if (!DefaultMarketMap.ContainsKey(security.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(AtreyuBrokerageModel)} does not support {security.Type} security type.")
-                );
+                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
 
                 return false;
             }
@@ -121,8 +119,7 @@ namespace QuantConnect.Brokerages
             if (!_supportedOrderTypes.Contains(order.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(AtreyuBrokerageModel)} does not support {order.Type} order type.")
-                );
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order));
 
                 return false;
             }
@@ -131,8 +128,7 @@ namespace QuantConnect.Brokerages
             if (!_supportedTimeInForces.Contains(order.TimeInForce.GetType()))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(AtreyuBrokerageModel)} does not support {order.TimeInForce.GetType().Name} time in force.")
-                );
+                    Messages.DefaultBrokerageModel.UnsupportedTimeInForce(this, order));
 
                 return false;
             }
@@ -141,8 +137,7 @@ namespace QuantConnect.Brokerages
             if (order.AbsoluteQuantity % 1 != 0)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"Order Quantity must be Integer, but provided {order.Quantity}.")
-                );
+                    Messages.AtreyuBrokerageModel.NonIntegerOrderQuantity(order));
 
                 return false;
             }

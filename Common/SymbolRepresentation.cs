@@ -160,7 +160,8 @@ namespace QuantConnect
 
             if (!SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(underlying, SecurityType.Future, out var market))
             {
-                Log.Debug($"SymbolRepresentation.ParseFutureSymbol(): Failed to get market for future '{ticker}' and underlying '{underlying}'");
+                Log.Debug($@"SymbolRepresentation.ParseFutureSymbol(): {
+                    Messages.SymbolRepresentation.FailedToGetMarketForTickerAndUnderlying(ticker, underlying)}");
                 return null;
             }
 
@@ -218,7 +219,7 @@ namespace QuantConnect
 
             if (!SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(futureTicker, SecurityType.Future, out var market))
             {
-                Log.Debug($"SymbolRepresentation.ParseFutureOptionSymbol(): No market found for '{futureTicker}'");
+                Log.Debug($"SymbolRepresentation.ParseFutureOptionSymbol(): {Messages.SymbolRepresentation.NoMarketFound(futureTicker)}");
                 return null;
             }
 
@@ -288,7 +289,8 @@ namespace QuantConnect
         {
             if (!symbol.SecurityType.IsOption())
             {
-                throw new ArgumentException(Invariant($"{nameof(GenerateOptionTickerOSI)} returns symbol to be an option, received {symbol.SecurityType}."));
+                throw new ArgumentException(
+                    Messages.SymbolRepresentation.UnexpectedSecurityTypeForMethod(nameof(GenerateOptionTickerOSI), symbol.SecurityType));
             }
 
             return GenerateOptionTickerOSI(symbol.Underlying.Value, symbol.ID.OptionRight, symbol.ID.StrikePrice, symbol.ID.Date);
@@ -331,7 +333,7 @@ namespace QuantConnect
             }
             else
             {
-                throw new FormatException($"Expected 12th character to be 'C' or 'P' for OptionRight: {ticker} but was '{ticker[12]}'");
+                throw new FormatException(Messages.SymbolRepresentation.UnexpectedOptionRightFormatForParseOptionTickerOSI(ticker));
             }
             var strike = Parse.Decimal(ticker.Substring(13, 8)) / 1000m;
             SecurityIdentifier underlyingSid;
@@ -347,7 +349,7 @@ namespace QuantConnect
             }
             else
             {
-                throw new NotImplementedException($"ParseOptionTickerOSI(): security type {securityType} not implemented");
+                throw new NotImplementedException($"ParseOptionTickerOSI(): {Messages.SymbolRepresentation.SecurityTypeNotImplemented(securityType)}");
             }
             var sid = SecurityIdentifier.GenerateOption(expiration, underlyingSid, optionTicker, market, strike, right, OptionStyle.American);
             return new Symbol(sid, ticker, new Symbol(underlyingSid, underlyingSid.Symbol));

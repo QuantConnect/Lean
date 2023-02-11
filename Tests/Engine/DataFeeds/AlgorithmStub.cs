@@ -40,7 +40,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 DataFeed = dataManagerStub.DataFeed;
                 SubscriptionManager.SetDataManager(DataManager);
             }
-            Transactions.SetOrderProcessor(new FakeOrderProcessor());
+            var orderProcessor = new FakeOrderProcessor();
+            orderProcessor.TransactionManager = Transactions;
+            Transactions.SetOrderProcessor(orderProcessor);
         }
 
         public AlgorithmStub(IDataFeed dataFeed)

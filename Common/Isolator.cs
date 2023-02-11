@@ -128,8 +128,7 @@ namespace QuantConnect
                 // if the rolling EMA > cap; or the spike is more than 2x the allocation.
                 if (memoryUsed > memoryCap || sample > spikeLimit)
                 {
-                    message = $"Execution Security Error: Memory Usage Maxed Out - {PrettyFormatRam(memoryCap)}MB max, " +
-                              $"with last sample of {PrettyFormatRam((long) sample)}MB.";
+                    message = Messages.Isolator.MemoryUsageMaxedOut(PrettyFormatRam(memoryCap), PrettyFormatRam((long)sample));
                     break;
                 }
 
@@ -137,15 +136,16 @@ namespace QuantConnect
                 {
                     if (memoryUsed > memoryCap * 0.8)
                     {
-                        Log.Error(Invariant($"Execution Security Error: Memory usage over 80% capacity. Sampled at {sample}"));
+                        Log.Error(Messages.Isolator.MemoryUsageOver80Percent(sample));
                     }
 
                     Log.Trace("Isolator.ExecuteWithTimeLimit(): " +
-                              $"Used: {PrettyFormatRam(memoryUsed)}, " +
-                              $"Sample: {PrettyFormatRam((long)sample)}, " +
-                              $"App: {PrettyFormatRam(OS.ApplicationMemoryUsed * 1024 * 1024)}, " +
-                              Invariant($"CurrentTimeStepElapsed: {isolatorLimitResult.CurrentTimeStepElapsed:mm':'ss'.'fff}. ") +
-                              $"CPU: {(int)Math.Ceiling(OS.CpuUsage)}%");
+                        Messages.Isolator.MemoryUsageInfo(
+                            PrettyFormatRam(memoryUsed),
+                            PrettyFormatRam((long)sample),
+                            PrettyFormatRam(OS.ApplicationMemoryUsed * 1024 * 1024),
+                            isolatorLimitResult.CurrentTimeStepElapsed,
+                            (int)Math.Ceiling(OS.CpuUsage)));
 
                     memoryLogger = utcNow.AddMinutes(1);
                 }
@@ -168,7 +168,7 @@ namespace QuantConnect
 
             if (task.IsCompleted == false && string.IsNullOrEmpty(message))
             {
-                message = $"Execution Security Error: Operation timed out - {timeSpan.TotalMinutes.ToStringInvariant()} minutes max. Check for recursive loops.";
+                message = Messages.Isolator.MemoryUsageMonitorTaskTimedOut(timeSpan);
                 Log.Trace($"Isolator.ExecuteWithTimeLimit(): {message}");
             }
 

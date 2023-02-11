@@ -18,6 +18,7 @@ using System.Linq;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Orders;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -25,7 +26,7 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private Symbol _spxw, _vxz;
         private decimal _multiplier;
-        private List<Leg> _legs = new();
+        private IEnumerable<OrderTicket> _tickets = Enumerable.Empty<OrderTicket>();
 
         public override void Initialize()
         {
@@ -52,7 +53,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
             
             // Return if any opening index option position
-            if (_legs.Any(x => Portfolio[x.Symbol].Invested)) return;
+            if (_tickets.Any(x => Portfolio[x.Symbol].Invested)) return;
 
             // Get the OptionChain
             if (!slice.OptionChains.TryGetValue(_spxw, out var chain)) return;
@@ -63,25 +64,25 @@ namespace QuantConnect.Algorithm.CSharp
             // Select the call Option contracts with nearest expiry and sort by strike price
             var calls = chain.Where(x => x.Expiry == expiry && x.Right == OptionRight.Call).ToList();
             if (calls.Count < 3) return;
-            var sortedCalls = calls.OrderBy(x => x.Strike).ToArray();
+            var sortedCallStrikes = calls.Select(x => x.Strike).OrderBy(x => x).ToArray();
             
             // Select ATM call
-            var atmCall = calls.MinBy(x => Math.Abs(x.Strike - chain.Underlying.Value));
+            var atmStrike = calls.MinBy(x => Math.Abs(x.Strike - chain.Underlying.Value)).Strike;
 
-            // Create combo order legs
-            _legs = new List<Leg>
-            {
-                Leg.Create(sortedCalls[0].Symbol, -1),
-                Leg.Create(sortedCalls[^1].Symbol, -1),
-                Leg.Create(atmCall.Symbol, 2)
-            };
-            var price = _legs.Sum(x => Math.Abs(Securities[x.Symbol].Price * x.Quantity) * _multiplier);
+            // Get the strike prices for the ITM & OTM contracts, make sure they're in equidistance
+            var spread = Math.Min(atmStrike - sortedCallStrikes[0], sortedCallStrikes[^1] - atmStrike);
+            var itmStrike = atmStrike - spread;
+            var otmStrike = atmStrike + spread;
+            if (!sortedCallStrikes.Contains(otmStrike) || !sortedCallStrikes.Contains(itmStrike)) return;
+
+            // Buy the call butterfly
+            var callButterfly = OptionStrategies.CallButterfly(_spxw, otmStrike, atmStrike, itmStrike, expiry);
+            var price = callButterfly.UnderlyingLegs.Sum(x => Math.Abs(Securities[x.Symbol].Price * x.Quantity) * _multiplier);
             if (price > 0)
             {
                 var quantity = Portfolio.TotalPortfolioValue / price;
-                ComboMarketOrder(_legs, -(int)Math.Floor(quantity), asynchronous: true);
+                _tickets = Buy(callButterfly, (int)Math.Floor(quantity), asynchronous: true);
             }
-            
         }
     }
 }
