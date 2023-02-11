@@ -1988,6 +1988,25 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates an RelativeVolume indicator for the symbol. The indicator will be automatically
+        /// updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose RVOL we want</param>
+        /// <param name="period">The period of the RVOL</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The RelativeVolume for the given parameters</returns>
+        [DocumentationAttribute(Indicators)]
+        public RelativeVolume RVOL(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"RVOL({period})", resolution);
+            var relativeVolume = new RelativeVolume(name, period);
+            InitializeIndicator(symbol, relativeVolume, resolution, selector);
+
+            return relativeVolume;
+        }
+
+        /// <summary>
         /// Creates a new name for an indicator created with the convenience functions (SMA, EMA, ect...)
         /// </summary>
         /// <param name="symbol">The symbol this indicator is registered to</param>
