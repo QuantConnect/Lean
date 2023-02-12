@@ -56,7 +56,7 @@ namespace QuantConnect.Indicators
         /// Initializes a new instance of the RelativeVolume class with the default name
         /// </summary>
         /// <param name="period">The period of the RVOL</param>
-        public RelativeVolume(int period)
+        public RelativeVolume(int period = 50)
             : this($"RVOL({period})", period)
         {
         }
