@@ -85,11 +85,18 @@ namespace QuantConnect.Report
 
                 if (!String.IsNullOrEmpty(reportFormat) && reportFormat.ToUpperInvariant() == "PDF")
                 {
-                    Log.Trace("QuantConnect.Report.Main(): Starting conversion to PDF");
-                    // Ensure wkhtmltopdf and xvfb are installed and accessible from the $PATH
-                    var pdfDestination = destination.Replace(".html", ".pdf");
-                    var convertProcess = Process.Start($"xvfb-run", $"--server-args=\"-screen 0, 1600x1200x24+32\" wkhtmltopdf --no-background {destination} {pdfDestination}");
-                    convertProcess.WaitForExit();
+                    try
+                    {
+                        Log.Trace("QuantConnect.Report.Main(): Starting conversion to PDF");
+                        // Ensure wkhtmltopdf and xvfb are installed and accessible from the $PATH
+                        var pdfDestination = destination.Replace(".html", ".pdf");
+                        var convertProcess = Process.Start($"xvfb-run", $"--server-args=\"-screen 0, 1600x1200x24+32\" wkhtmltopdf --no-background {destination} {pdfDestination}");
+                        convertProcess.WaitForExit();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error($"QuantConnect.Report.Main(): {ex.Message}");
+                    }
                 }
             }
             else

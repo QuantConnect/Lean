@@ -8,13 +8,6 @@ FROM quantconnect/lean:foundation
 
 MAINTAINER QuantConnect <contact@quantconnect.com>
 
-# Install wkhtmltopdf and xvfb
-RUN apt-get update && \
-    apt-get install -y xvfb libfontconfig xfonts-75dpi
-RUN wget https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.focal_amd64.deb && \
-    dpkg -i wkhtmltox_0.12.5-1.focal_amd64.deb && \
-    rm wkhtmltox_0.12.5-1.focal_amd64.deb
-
 #Install debugpy and PyDevD for remote python debugging
 RUN pip install --no-cache-dir ptvsd==4.3.2 debugpy~=1.5.1 pydevd-pycharm~=201.8538.36
 
