@@ -31,7 +31,7 @@ namespace QuantConnect
     [ProtoContract(SkipConstructor = true)]
     public sealed class Symbol : IEquatable<Symbol>, IComparable
     {
-        private static readonly SecurityDefinitionSymbolResolver _securityDefinitionSymbolResolver = SecurityDefinitionSymbolResolver.GetInstance();
+        private static readonly Lazy<SecurityDefinitionSymbolResolver> _securityDefinitionSymbolResolver = new (() => SecurityDefinitionSymbolResolver.GetInstance());
 
         private Symbol _canonical;
         // for performance we register how we compare with empty
@@ -367,22 +367,22 @@ namespace QuantConnect
         /// <summary>
         /// The Committee on Uniform Securities Identification Procedures (CUSIP) number corresponding to this <see cref="Symbol"/>
         /// </summary>
-        public string CUSIP { get { return _securityDefinitionSymbolResolver.CUSIP(this); } }
+        public string CUSIP { get { return _securityDefinitionSymbolResolver.Value.CUSIP(this); } }
 
         /// <summary>
         /// The composite Financial Instrument Global Identifier (FIGI) corresponding to this <see cref="Symbol"/>
         /// </summary>
-        public string CompositeFIGI { get { return _securityDefinitionSymbolResolver.CompositeFIGI(this); } }
+        public string CompositeFIGI { get { return _securityDefinitionSymbolResolver.Value.CompositeFIGI(this); } }
 
         /// <summary>
         /// The Stock Exchange Daily Official List (SEDOL) security identifier corresponding to this <see cref="Symbol"/>
         /// </summary>
-        public string SEDOL { get { return _securityDefinitionSymbolResolver.SEDOL(this); } }
+        public string SEDOL { get { return _securityDefinitionSymbolResolver.Value.SEDOL(this); } }
 
         /// <summary>
         /// The International Securities Identification Number (ISIN) corresponding to this <see cref="Symbol"/>
         /// </summary>
-        public string ISIN { get { return _securityDefinitionSymbolResolver.ISIN(this); } }
+        public string ISIN { get { return _securityDefinitionSymbolResolver.Value.ISIN(this); } }
 
 
         #endregion
