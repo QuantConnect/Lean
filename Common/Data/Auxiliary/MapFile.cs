@@ -63,6 +63,11 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public MapFile(string permtick, IEnumerable<MapFileRow> data)
         {
+            if (string.IsNullOrEmpty(permtick))
+            {
+                throw new ArgumentNullException(nameof(permtick), "Provided ticker is null or empty");
+            }
+
             Permtick = permtick.LazyToUpper();
             _data = data.Distinct().OrderBy(row => row.Date).ToList();
 
