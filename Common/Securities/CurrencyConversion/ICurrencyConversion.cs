@@ -36,7 +36,7 @@ namespace QuantConnect.Securities.CurrencyConversion
         /// <summary>
         /// The current conversion rate between <see cref="SourceCurrency"/> and <see cref="DestinationCurrency"/>
         /// </summary>
-        decimal ConversionRate { get; }
+        decimal ConversionRate { get; set; }
 
         /// <summary>
         /// The securities which the conversion rate is based on
@@ -47,6 +47,6 @@ namespace QuantConnect.Securities.CurrencyConversion
         /// Updates the internal conversion rate based on the latest data, and returns the new conversion rate
         /// </summary>
         /// <returns>The new conversion rate</returns>
-        decimal Update();
+        void Update();
     }
 }

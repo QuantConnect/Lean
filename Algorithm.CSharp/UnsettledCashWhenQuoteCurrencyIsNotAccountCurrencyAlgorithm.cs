@@ -71,6 +71,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (orderEvent.Status == OrderStatus.Filled && orderEvent.Direction == OrderDirection.Sell)
             {
                 Debug($"OrderEvent: {orderEvent}");
+                Debug($"CashBook:\n{Portfolio.CashBook}\n");
                 Debug($"UnsettledCashBook:\n{Portfolio.UnsettledCashBook}\n");
 
                 if (!Portfolio.UnsettledCashBook.TryGetValue(orderEvent.FillPriceCurrency, out var unsettledCash))
@@ -136,12 +137,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Fees", "€10.32"},
             {"Estimated Strategy Capacity", "€7700000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Fitness Score", "0.58"},
+            {"Fitness Score", "0.796"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-2.929"},
-            {"Portfolio Turnover", "1.036"},
+            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
+            {"Portfolio Turnover", "0.796"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -155,7 +156,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "a08299c3ae9e54b878847fbf6f56e596"}
+            {"OrderListHash", "1cd26ea7fbdc73902f4d63d92929aa0e"}
         };
     }
 }
