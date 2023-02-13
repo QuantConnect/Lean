@@ -43,6 +43,8 @@ namespace QuantConnect.Algorithm.CSharp
         {
             foreach (var addedSecurity in changes.AddedSecurities.Where(added => !added.Symbol.IsCanonical()))
             {
+                // With no future chain filters specified, it should return no contracts in security changes event.
+                // The canonical continuous future will get mapped and emit symbol changed events, while it's current mapped security is an internal feed
                 throw new Exception($"We expect no non canonical security to be added: {addedSecurity.Symbol}");
             }
         }
