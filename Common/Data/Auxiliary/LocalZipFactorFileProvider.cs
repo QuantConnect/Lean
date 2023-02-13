@@ -141,12 +141,12 @@ namespace QuantConnect.Data.Auxiliary
                 }
 
                 // Otherwise we will search back another day
-                Log.Debug($"LocalZipFactorFileProvider.Get(): No factor file found for date {date.ToShortDateString()}");
+                Log.Debug($"LocalZipFactorFileProvider.Get({market}): No factor file found for date {date.ToShortDateString()}");
 
                 // prevent infinite recursion if something is wrong
                 if (count++ > 7)
                 {
-                    throw new InvalidOperationException($"LocalZipFactorFileProvider.Get(): Could not find any factor files going all the way back to {date}");
+                    throw new InvalidOperationException($"LocalZipFactorFileProvider.Get(): Could not find any factor files going all the way back to {date} for {market}");
                 }
 
                 date = date.AddDays(-1);

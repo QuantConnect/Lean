@@ -123,7 +123,7 @@ namespace QuantConnect.Data.Auxiliary
                 // prevent infinite recursion if something is wrong
                 if (count++ > 30)
                 {
-                    throw new InvalidOperationException($"LocalZipMapFileProvider couldn't find any map files going all the way back to {date}");
+                    throw new InvalidOperationException($"LocalZipMapFileProvider couldn't find any map files going all the way back to {date} for {market}");
                 }
 
                 date = date.AddDays(-1);
