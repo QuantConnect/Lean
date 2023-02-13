@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using System.Collections.Generic;
 
 namespace QuantConnect.Securities.CurrencyConversion
@@ -23,6 +24,11 @@ namespace QuantConnect.Securities.CurrencyConversion
     /// </summary>
     public interface ICurrencyConversion
     {
+        /// <summary>
+        /// Event fired when the conversion rate is updated
+        /// </summary>
+        event EventHandler<decimal> ConversionRateUpdated;
+
         /// <summary>
         /// The currency this conversion converts from
         /// </summary>

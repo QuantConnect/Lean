@@ -60,6 +60,11 @@ namespace QuantConnect.Securities.CurrencyConversion
         private bool _conversionRateNeedsUpdate;
 
         /// <summary>
+        /// Event fired when the conversion rate is updated
+        /// </summary>
+        public event EventHandler<decimal> ConversionRateUpdated;
+
+        /// <summary>
         /// The currency this conversion converts from
         /// </summary>
         public string SourceCurrency { get; }
@@ -106,7 +111,9 @@ namespace QuantConnect.Securities.CurrencyConversion
                         }
                     });
 
+                    _conversionRateNeedsUpdate = false;
                     _conversionRate = newConversionRate;
+                    ConversionRateUpdated?.Invoke(this, _conversionRate);
                 }
 
                 return _conversionRate;

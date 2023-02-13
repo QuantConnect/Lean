@@ -19,6 +19,7 @@ using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
+using QuantConnect.Securities.CurrencyConversion;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -87,6 +88,56 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 _lastUnsettledCash = unsettledCash.Amount;
+            }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            foreach (var kvp in Portfolio.CashBook)
+            {
+                var symbol = kvp.Key;
+                var cash = kvp.Value;
+                var unsettledCash = Portfolio.UnsettledCashBook[symbol];
+
+                if (unsettledCash.ConversionRate != cash.ConversionRate)
+                {
+                    throw new Exception($@"Unsettled cash conversion rate for {symbol} is {unsettledCash.ConversionRate} but should be {cash.ConversionRate}");
+                }
+
+                var accountCurrency = Portfolio.CashBook.AccountCurrency;
+
+                if (unsettledCash.Symbol == accountCurrency)
+                {
+                    if (unsettledCash.ConversionRate != 1)
+                    {
+                        throw new Exception($@"Conversion rate for {unsettledCash.Symbol} (the account currency) in the UnsettledCashBook should be 1 but was {unsettledCash.ConversionRate}.");
+                    }
+
+                    if (unsettledCash.CurrencyConversion.GetType() != typeof(DefaultCurrencyConversion) ||
+                        unsettledCash.CurrencyConversion.SourceCurrency != accountCurrency ||
+                        unsettledCash.CurrencyConversion.DestinationCurrency != accountCurrency)
+                    {
+                        throw new Exception($@"Currency conversion for {unsettledCash.Symbol} (the account currency) in the UnsettledCashBook should be an identity conversion of type {nameof(DefaultCurrencyConversion)}");
+                    }
+                }
+                else
+                {
+                    if (unsettledCash.CurrencyConversion.GetType() != typeof(SecurityCurrencyConversion))
+                    {
+                        throw new Exception($@"Currency conversion for {unsettledCash.Symbol} in the UnsettledCashBook should be of type {nameof(SecurityCurrencyConversion)}");
+                    }
+
+                    var sourceCurrency = unsettledCash.CurrencyConversion.SourceCurrency;
+                    var destinationCurrency = unsettledCash.CurrencyConversion.DestinationCurrency;
+
+                    if (!(
+                        (sourceCurrency == accountCurrency && destinationCurrency == unsettledCash.Symbol) ||
+                        (sourceCurrency == unsettledCash.Symbol && destinationCurrency == accountCurrency)
+                        ))
+                    {
+                        throw new Exception($@"Currency conversion for {unsettledCash.Symbol} in UnsettledCashBook is not correct. Source and destination currency should have been {accountCurrency} and {unsettledCash.Symbol} or vice versa but were {sourceCurrency} and {destinationCurrency}.");
+                    }
+                }
             }
         }
 

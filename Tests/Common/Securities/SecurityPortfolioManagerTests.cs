@@ -2848,6 +2848,8 @@ namespace QuantConnect.Tests.Common.Securities
 
         class TestCurrencyConversion : ICurrencyConversion
         {
+            public event EventHandler<decimal> ConversionRateUpdated;
+
             public string SourceCurrency { get; }
 
             public string DestinationCurrency { get; }

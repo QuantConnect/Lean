@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using System.Collections.Generic;
 
 namespace QuantConnect.Securities.CurrencyConversion
@@ -23,6 +24,13 @@ namespace QuantConnect.Securities.CurrencyConversion
     /// </summary>
     public class DefaultCurrencyConversion : ICurrencyConversion
     {
+        private decimal _conversionRate;
+
+        /// <summary>
+        /// Event fired when the conversion rate is updated
+        /// </summary>
+        public event EventHandler<decimal> ConversionRateUpdated;
+
         /// <summary>
         /// The currency this conversion converts from
         /// </summary>
@@ -36,7 +44,18 @@ namespace QuantConnect.Securities.CurrencyConversion
         /// <summary>
         /// The current conversion rate
         /// </summary>
-        public decimal ConversionRate { get; set; }
+        public decimal ConversionRate
+        {
+            get
+            {
+                return _conversionRate;
+            }
+            set
+            {
+                _conversionRate = value;
+                ConversionRateUpdated?.Invoke(this, value);
+            }
+        }
 
         /// <summary>
         /// The securities which the conversion rate is based on

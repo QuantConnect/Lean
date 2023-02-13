@@ -33,7 +33,6 @@ namespace QuantConnect.Securities
     public class Cash
     {
         private ICurrencyConversion _currencyConversion;
-        private decimal _lastConversionRate;
         private bool _isBaseCurrency;
 
         private readonly object _locker = new object();
@@ -70,6 +69,13 @@ namespace QuantConnect.Securities
             internal set
             {
                 _currencyConversion = value;
+                if (_currencyConversion != null)
+                {
+                    _currencyConversion.ConversionRateUpdated += (sender, rate) =>
+                    {
+                        OnUpdate();
+                    };
+                }
                 CurrencyConversionUpdated?.Invoke(this, EventArgs.Empty);
             }
         }
@@ -94,23 +100,20 @@ namespace QuantConnect.Securities
         {
             get
             {
-                var conversionRate = _currencyConversion.ConversionRate;
-                if (conversionRate != _lastConversionRate)
-                {
-                    _lastConversionRate = conversionRate;
-                    OnUpdate();
-                }
-
-                return conversionRate;
+                return _currencyConversion?.ConversionRate ?? 1m;
             }
             internal set
             {
+                if (_currencyConversion == null)
+                {
+                    CurrencyConversion = new DefaultCurrencyConversion(Symbol, Symbol, value);
+                }
+
                 var conversionRate = _currencyConversion.ConversionRate;
                 if (conversionRate != value)
                 {
                     // only update if there was actually one
                     _currencyConversion.ConversionRate = value;
-                    OnUpdate();
                 }
             }
         }

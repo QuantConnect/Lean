@@ -169,6 +169,7 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        [Ignore("Outdated. ICurrencyConversion manages the conversion rates now, not Cash")]
         public void UpdateEventCalledForCashUpdatesWhenAccessingConversionRate()
         {
             var cashBook = new CashBook();
@@ -268,6 +269,7 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        [Ignore("Outdated. ICurrencyConversion manages the conversion rates now, not Cash")]
         public void UpdateEventNotCalledForCashUpdates()
         {
             var cashBook = new CashBook();
