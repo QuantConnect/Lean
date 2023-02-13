@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,12 +15,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
-using QuantConnect.Python;
 
 namespace QuantConnect.Report
 {
@@ -42,6 +42,7 @@ namespace QuantConnect.Report
             var backtestDataFile = Config.Get("backtest-data-source-file");
             var liveDataFile = Config.Get("live-data-source-file");
             var destination = Config.Get("report-destination");
+            var reportFormat = Config.Get("report-format");
 
             // Parse content from source files into result objects
             Log.Trace($"QuantConnect.Report.Main(): Parsing source files...{backtestDataFile}, {liveDataFile}");
@@ -81,12 +82,21 @@ namespace QuantConnect.Report
             {
                 Log.Trace($"QuantConnect.Report.Main(): Writing content to file {destination}");
                 File.WriteAllText(destination, html);
+
+                if (!String.IsNullOrEmpty(reportFormat) && reportFormat.ToUpperInvariant() == "PDF")
+                {
+                    Log.Trace("PacketWatcher.Listen(): Starting conversion to PDF");
+                    // Ensure wkhtmltopdf and xvfb are installed and accessible from the $PATH
+                    var pdfDestination = destination.Replace(".html", ".pdf");
+                    var convertProcess = Process.Start($"xvfb-run", $"--server-args=\"-screen 0, 1600x1200x24+32\" wkhtmltopdf {destination} {pdfDestination}");
+                    convertProcess.WaitForExit();
+                }
             }
             else
             {
                 Console.Write(html);
             }
-            
+
             Log.Trace("QuantConnect.Report.Main(): Completed.");
 
             if (!Console.IsInputRedirected)
