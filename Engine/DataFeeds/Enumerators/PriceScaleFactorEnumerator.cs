@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -97,13 +97,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 && _factorFileProvider != null
                 && _config.DataNormalizationMode != DataNormalizationMode.Raw)
             {
-                if (Current.Time >= _nextTradableDate)
+                var priceScaleFrontier = Current.GetUpdatePriceScaleFrontier();
+                if (priceScaleFrontier >= _nextTradableDate)
                 {
                     _factorFile = _factorFileProvider.Get(_config.Symbol);
-                    _config.PriceScaleFactor = _factorFile.GetPriceScale(Current.Time.Date, _config.DataNormalizationMode, _config.ContractDepthOffset, _config.DataMappingMode);
+                    _config.PriceScaleFactor = _factorFile.GetPriceScale(priceScaleFrontier.Date, _config.DataNormalizationMode, _config.ContractDepthOffset, _config.DataMappingMode);
 
                     // update factor files every day
-                    _nextTradableDate = Current.Time.Date.AddDays(1);
+                    _nextTradableDate = priceScaleFrontier.Date.AddDays(1);
                     if (_liveMode)
                     {
                         // in live trading we add a offset to make sure new factor files are available
