@@ -35,6 +35,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Securities.CurrencyConversion;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -2710,6 +2711,57 @@ namespace QuantConnect.Tests.Common.Securities
                 .All(kvp => kvp.Value.Amount == 0));
         }
 
+        [Test]
+        public void UpdatesUnsettledCashCurrencyConversionAsItIsUpdatedForSettledCash()
+        {
+            var algorithm = new QCAlgorithm();
+            var securities = new SecurityManager(TimeKeeper);
+            var transactions = new SecurityTransactionManager(null, securities);
+            var portfolio = new SecurityPortfolioManager(securities, transactions);
+
+            algorithm.Securities = securities;
+            algorithm.Transactions = transactions;
+            algorithm.Portfolio = portfolio;
+
+            algorithm.SetCash(Currencies.EUR, 1000, 1.08m);
+            algorithm.SetCash("AUD", 1000, 0.7m);
+
+            var unsettledCashBook = algorithm.Portfolio.UnsettledCashBook;
+            var currencyConversionUpdates = 0;
+            foreach (var unsettledCash in unsettledCashBook.Values)
+            {
+                unsettledCash.CurrencyConversionUpdated += (sender, args) =>
+                {
+                    currencyConversionUpdates++;
+                };
+            }
+
+            var cashBook = algorithm.Portfolio.CashBook;
+            var settledEurCash = cashBook["EUR"];
+            var settledAudCash = cashBook["AUD"];
+            var unsettledEurCash = unsettledCashBook["EUR"];
+            var unsettledAudCash = unsettledCashBook["AUD"];
+
+            settledEurCash.CurrencyConversion = new TestCurrencyConversion(cashBook.AccountCurrency, "EUR", 1.08m);
+            Assert.AreEqual(1, currencyConversionUpdates);
+            settledAudCash.CurrencyConversion = new TestCurrencyConversion(cashBook.AccountCurrency, "AUD", 0.7m);
+            Assert.AreEqual(2, currencyConversionUpdates);
+
+
+            var prevEurConversionRate = unsettledEurCash.ConversionRate;
+            var prevAudConversionRate = unsettledAudCash.ConversionRate;
+
+            foreach (var cash in cashBook.Values)
+            {
+                cash.Update();
+            }
+
+            Assert.AreEqual(prevEurConversionRate * 1.01m, settledEurCash.ConversionRate);
+            Assert.AreEqual(prevAudConversionRate * 1.01m, settledAudCash.ConversionRate);
+            Assert.AreEqual(settledEurCash.ConversionRate, unsettledEurCash.ConversionRate);
+            Assert.AreEqual(settledAudCash.ConversionRate, unsettledAudCash.ConversionRate);
+        }
+
         private SubscriptionDataConfig CreateTradeBarDataConfig(SecurityType type, Symbol symbol)
         {
             if (type == SecurityType.Equity)
@@ -2791,6 +2843,31 @@ namespace QuantConnect.Tests.Common.Securities
             public OrderTicket Process(OrderRequest request)
             {
                 throw new NotImplementedException();
+            }
+        }
+
+        class TestCurrencyConversion : ICurrencyConversion
+        {
+            public event EventHandler<decimal> ConversionRateUpdated;
+
+            public string SourceCurrency { get; }
+
+            public string DestinationCurrency { get; }
+
+            public decimal ConversionRate { get; set; }
+
+            public IEnumerable<Security> ConversionRateSecurities { get; } = Enumerable.Empty<Security>();
+
+            public TestCurrencyConversion(string sourceCurrency, string destinationCurrency, decimal conversionRate)
+            {
+                SourceCurrency = sourceCurrency;
+                DestinationCurrency = destinationCurrency;
+                ConversionRate = conversionRate;
+            }
+
+            public void Update()
+            {
+                ConversionRate *= 1.01m;
             }
         }
     }

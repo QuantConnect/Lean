@@ -18,7 +18,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using QuantConnect.Data;
 using System.Collections.Concurrent;
 using QuantConnect.Data.UniverseSelection;

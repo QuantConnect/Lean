@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Securities.CurrencyConversion;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -59,8 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
             else
             {
                 var cash = Portfolio.CashBook["EUR"];
-                if (cash.CurrencyConversion == null
-                    || cash.ConversionRate == 0)
+                if (cash.CurrencyConversion.GetType() == typeof(ConstantCurrencyConversion) || cash.ConversionRate == 0)
                 {
                     throw new Exception("Expected 'EUR' Cash to be fully set");
                 }

@@ -101,7 +101,17 @@ namespace QuantConnect.Securities
                 if (args.UpdateType == CashBookUpdateType.Added)
                 {
                     // add the same currency entry to the unsettled cashbook as well
-                    UnsettledCashBook.Add(args.Cash.Symbol, new Cash(args.Cash.Symbol, 0, args.Cash.ConversionRate));
+                    var cash = args.Cash;
+                    var unsettledCash = new Cash(cash.Symbol, 0m, cash.ConversionRate);
+                    unsettledCash.CurrencyConversion = cash.CurrencyConversion;
+
+                    cash.CurrencyConversionUpdated += (sender, args) =>
+                    {
+                        // Share the currency conversion instance between the settled and unsettled cash instances to synchronize the conversion rates
+                        UnsettledCashBook[((Cash)sender).Symbol].CurrencyConversion = cash.CurrencyConversion;
+                    };
+
+                    UnsettledCashBook.Add(cash.Symbol, unsettledCash);
                 }
 
                 InvalidateTotalPortfolioValue();

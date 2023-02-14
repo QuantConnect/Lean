@@ -1,3 +1,4 @@
+
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
@@ -55,6 +56,14 @@ namespace QuantConnect.Securities.CurrencyConversion
 
         private readonly List<Step> _steps;
 
+        private decimal _conversionRate;
+        private bool _conversionRateNeedsUpdate;
+
+        /// <summary>
+        /// Event fired when the conversion rate is updated
+        /// </summary>
+        public event EventHandler<decimal> ConversionRateUpdated;
+
         /// <summary>
         /// The currency this conversion converts from
         /// </summary>
@@ -68,7 +77,59 @@ namespace QuantConnect.Securities.CurrencyConversion
         /// <summary>
         /// The current conversion rate
         /// </summary>
-        public decimal ConversionRate { get; private set; }
+        public decimal ConversionRate
+        {
+            get
+            {
+                if (_conversionRateNeedsUpdate)
+                {
+                    var newConversionRate = 1m;
+                    var stepWithoutDataFound = false;
+
+                    _steps.ForEach(step =>
+                    {
+                        if (stepWithoutDataFound)
+                        {
+                            return;
+                        }
+
+                        var lastData = step.RateSecurity.GetLastData();
+                        if (lastData == null || lastData.Price == 0m)
+                        {
+                            newConversionRate = 0m;
+                            stepWithoutDataFound = true;
+                            return;
+                        }
+
+                        if (step.Inverted)
+                        {
+                            newConversionRate /= lastData.Price;
+                        }
+                        else
+                        {
+                            newConversionRate *= lastData.Price;
+                        }
+                    });
+
+                    _conversionRateNeedsUpdate = false;
+                    _conversionRate = newConversionRate;
+                    ConversionRateUpdated?.Invoke(this, _conversionRate);
+                }
+
+                return _conversionRate;
+            }
+            set
+            {
+                if (_conversionRate != value)
+                {
+                    // only update if there was actually one
+                    _conversionRate = value;
+                    _conversionRateNeedsUpdate = false;
+                    ConversionRateUpdated?.Invoke(this, _conversionRate);
+
+                }
+            }
+        }
 
         /// <summary>
         /// The securities which the conversion rate is based on
@@ -91,41 +152,12 @@ namespace QuantConnect.Securities.CurrencyConversion
         }
 
         /// <summary>
-        /// Updates the internal conversion rate based on the latest data, and returns the new conversion rate
+        /// Signals an updates to the internal conversion rate based on the latest data.
+        /// It will set the conversion rate as potentially outdated so it gets re-calculated.
         /// </summary>
-        /// <returns>The new conversion rate</returns>
-        public decimal Update()
+        public void Update()
         {
-            var newConversionRate = 1m;
-            var stepWithoutDataFound = false;
-
-            _steps.ForEach(step =>
-            {
-                if (stepWithoutDataFound)
-                {
-                    return;
-                }
-
-                var lastData = step.RateSecurity.GetLastData();
-                if (lastData == null || lastData.Price == 0m)
-                {
-                    newConversionRate = 0m;
-                    stepWithoutDataFound = true;
-                    return;
-                }
-
-                if (step.Inverted)
-                {
-                    newConversionRate /= lastData.Price;
-                }
-                else
-                {
-                    newConversionRate *= lastData.Price;
-                }
-            });
-
-            ConversionRate = newConversionRate;
-            return ConversionRate;
+            _conversionRateNeedsUpdate = true;
         }
 
         /// <summary>
