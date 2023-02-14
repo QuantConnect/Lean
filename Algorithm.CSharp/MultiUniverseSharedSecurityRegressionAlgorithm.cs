@@ -40,7 +40,7 @@ namespace QuantConnect.Algorithm.CSharp
             UniverseSettings.Resolution = Resolution.Hour;
             AddUniverse("my-universe", x =>
             {
-                if (x.Day == 7)
+                if (x.Day == 8)
                 {
                     return new List<string> { "SPY" };
                 }
