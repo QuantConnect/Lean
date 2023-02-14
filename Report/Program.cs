@@ -92,7 +92,7 @@ namespace QuantConnect.Report
                         var pdfDestination = destination.Replace(".html", ".pdf");
                         Process process = new();
                         process.StartInfo.FileName = "xvfb-run";
-                        process.StartInfo.Arguments = $"--server-args=\"-screen 0, 1600x1200x24+32\" wkhtmltopdf --no-background {destination} {pdfDestination}";
+                        process.StartInfo.Arguments = $"--server-args=\"-screen 0, 1600x1200x24+32\" wkhtmltopdf {destination} {pdfDestination}";
                         process.StartInfo.UseShellExecute = false;
                         process.StartInfo.RedirectStandardOutput = true;
                         process.StartInfo.RedirectStandardError = true;
