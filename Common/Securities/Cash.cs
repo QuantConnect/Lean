@@ -68,14 +68,21 @@ namespace QuantConnect.Securities
             }
             internal set
             {
+
+                var lastConversionRate = 0m;
                 if (_currencyConversion != null)
                 {
+                    lastConversionRate = _currencyConversion.ConversionRate;
                     _currencyConversion.ConversionRateUpdated -= OnConversionRateUpdated;
                 }
 
                 _currencyConversion = value;
                 if (_currencyConversion != null)
                 {
+                    if (lastConversionRate != 0m)
+                    {
+                        _currencyConversion.ConversionRate = lastConversionRate;
+                    }
                     _currencyConversion.ConversionRateUpdated += OnConversionRateUpdated;
                 }
                 CurrencyConversionUpdated?.Invoke(this, EventArgs.Empty);
