@@ -60,7 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
             else
             {
                 var cash = Portfolio.CashBook["EUR"];
-                if (cash.CurrencyConversion.GetType() == typeof(DefaultCurrencyConversion) || cash.ConversionRate == 0)
+                if (cash.CurrencyConversion.GetType() == typeof(ConstantCurrencyConversion) || cash.ConversionRate == 0)
                 {
                     throw new Exception("Expected 'EUR' Cash to be fully set");
                 }

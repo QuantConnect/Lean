@@ -113,11 +113,11 @@ namespace QuantConnect.Algorithm.CSharp
                         throw new Exception($@"Conversion rate for {unsettledCash.Symbol} (the account currency) in the UnsettledCashBook should be 1 but was {unsettledCash.ConversionRate}.");
                     }
 
-                    if (unsettledCash.CurrencyConversion.GetType() != typeof(DefaultCurrencyConversion) ||
+                    if (unsettledCash.CurrencyConversion.GetType() != typeof(ConstantCurrencyConversion) ||
                         unsettledCash.CurrencyConversion.SourceCurrency != accountCurrency ||
                         unsettledCash.CurrencyConversion.DestinationCurrency != accountCurrency)
                     {
-                        throw new Exception($@"Currency conversion for {unsettledCash.Symbol} (the account currency) in the UnsettledCashBook should be an identity conversion of type {nameof(DefaultCurrencyConversion)}");
+                        throw new Exception($@"Currency conversion for {unsettledCash.Symbol} (the account currency) in the UnsettledCashBook should be an identity conversion of type {nameof(ConstantCurrencyConversion)}");
                     }
                 }
                 else

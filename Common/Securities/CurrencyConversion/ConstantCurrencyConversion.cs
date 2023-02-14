@@ -16,13 +16,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Securities.CurrencyConversion
 {
     /// <summary>
     /// Provides an implementation of <see cref="ICurrencyConversion"/> with a fixed conversion rate
     /// </summary>
-    public class DefaultCurrencyConversion : ICurrencyConversion
+    public class ConstantCurrencyConversion : ICurrencyConversion
     {
         private decimal _conversionRate;
 
@@ -52,23 +53,27 @@ namespace QuantConnect.Securities.CurrencyConversion
             }
             set
             {
-                _conversionRate = value;
-                ConversionRateUpdated?.Invoke(this, value);
+                if (_conversionRate != value)
+                {
+                    // only update if there was actually one
+                    _conversionRate = value;
+                    ConversionRateUpdated?.Invoke(this, value);
+                }
             }
         }
 
         /// <summary>
         /// The securities which the conversion rate is based on
         /// </summary>
-        public IEnumerable<Security> ConversionRateSecurities => new List<Security>(0);
+        public IEnumerable<Security> ConversionRateSecurities => Enumerable.Empty<Security>();
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="DefaultCurrencyConversion"/> class.
+        /// Initializes a new instance of the <see cref="ConstantCurrencyConversion"/> class.
         /// </summary>
         /// <param name="sourceCurrency">The currency this conversion converts from</param>
         /// <param name="destinationCurrency">The currency this conversion converts to</param>
         /// <param name="conversionRate">The conversion rate between the currencies</param>
-        public DefaultCurrencyConversion(string sourceCurrency, string destinationCurrency, decimal conversionRate = 1m)
+        public ConstantCurrencyConversion(string sourceCurrency, string destinationCurrency, decimal conversionRate = 1m)
         {
             SourceCurrency = sourceCurrency;
             DestinationCurrency = destinationCurrency;
@@ -78,6 +83,7 @@ namespace QuantConnect.Securities.CurrencyConversion
         /// <summary>
         /// Marks the conversion rate as potentially outdated, needing an update based on the latest data
         /// </summary>
+        /// <remarks>This conversion is not based on securities, so we don't really need an update</remarks>
         public void Update()
         {
         }
@@ -88,14 +94,17 @@ namespace QuantConnect.Securities.CurrencyConversion
         /// <param name="sourceCurrency">The currency this conversion converts from</param>
         /// <param name="destinationCurrency">The currency this conversion converts to. If null, the destination and source currencies are the same</param>
         /// <returns>The identity currency conversion</returns>
-        public static DefaultCurrencyConversion Identity(string sourceCurrency, string destinationCurrency = null)
+        public static ConstantCurrencyConversion Identity(string sourceCurrency, string destinationCurrency = null)
         {
-            return new DefaultCurrencyConversion(sourceCurrency, destinationCurrency ?? sourceCurrency);
+            return new ConstantCurrencyConversion(sourceCurrency, destinationCurrency ?? sourceCurrency);
         }
 
         /// <summary>
-        /// Returns an instance of <see cref="DefaultCurrencyConversion"/> that represents a null conversion
+        /// Returns an instance of <see cref="ConstantCurrencyConversion"/> that represents a null conversion
         /// </summary>
-        public static readonly DefaultCurrencyConversion Null = new DefaultCurrencyConversion(null, null, 0m);
+        public static ConstantCurrencyConversion Null(string sourceCurrency, string destinationCurrency)
+        {
+            return new ConstantCurrencyConversion(sourceCurrency, destinationCurrency, 0m);
+        }
     }
 }

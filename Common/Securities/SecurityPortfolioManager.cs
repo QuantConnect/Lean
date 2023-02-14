@@ -107,7 +107,8 @@ namespace QuantConnect.Securities
 
                     cash.CurrencyConversionUpdated += (sender, args) =>
                     {
-                        unsettledCash.CurrencyConversion = cash.CurrencyConversion;
+                        // Share the currency conversion instance between the settled and unsettled cash instances to synchronize the conversion rates
+                        UnsettledCashBook[((Cash)sender).Symbol].CurrencyConversion = cash.CurrencyConversion;
                     };
 
                     UnsettledCashBook.Add(cash.Symbol, unsettledCash);

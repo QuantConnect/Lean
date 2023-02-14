@@ -120,8 +120,14 @@ namespace QuantConnect.Securities.CurrencyConversion
             }
             set
             {
-                _conversionRate = value;
-                _conversionRateNeedsUpdate = false;
+                if (_conversionRate != value)
+                {
+                    // only update if there was actually one
+                    _conversionRate = value;
+                    _conversionRateNeedsUpdate = false;
+                    ConversionRateUpdated?.Invoke(this, _conversionRate);
+
+                }
             }
         }
 

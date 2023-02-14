@@ -33,7 +33,6 @@ namespace QuantConnect.Securities
     public class Cash
     {
         private ICurrencyConversion _currencyConversion;
-        private bool _isBaseCurrency;
 
         private readonly object _locker = new object();
 
@@ -52,9 +51,10 @@ namespace QuantConnect.Securities
         /// Gets the symbols of the securities required to provide conversion rates.
         /// If this cash represents the account currency, then an empty enumerable is returned.
         /// </summary>
-        public IEnumerable<Symbol> SecuritySymbols => CurrencyConversion.GetType() == typeof(DefaultCurrencyConversion)
-            ? new List<Symbol>(0)
-            : CurrencyConversion.ConversionRateSecurities.Select(x => x.Symbol);
+        public IEnumerable<Symbol> SecuritySymbols => CurrencyConversion.ConversionRateSecurities.Any()
+            ? CurrencyConversion.ConversionRateSecurities.Select(x => x.Symbol)
+            // we do this only because Newtonsoft.Json complains about empty enumerables
+            : new List<Symbol>(0);
 
         /// <summary>
         /// Gets the object that calculates the conversion rate to account currency
@@ -68,16 +68,19 @@ namespace QuantConnect.Securities
             }
             internal set
             {
+                _currencyConversion.ConversionRateUpdated -= OnConversionRateUpdated;
                 _currencyConversion = value;
                 if (_currencyConversion != null)
                 {
-                    _currencyConversion.ConversionRateUpdated += (sender, rate) =>
-                    {
-                        OnUpdate();
-                    };
+                    _currencyConversion.ConversionRateUpdated += OnConversionRateUpdated;
                 }
                 CurrencyConversionUpdated?.Invoke(this, EventArgs.Empty);
             }
+        }
+
+        private void OnConversionRateUpdated(object sender, decimal e)
+        {
+            OnUpdate();
         }
 
         /// <summary>
@@ -100,21 +103,16 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return _currencyConversion?.ConversionRate ?? 1m;
+                return _currencyConversion.ConversionRate;
             }
             internal set
             {
                 if (_currencyConversion == null)
                 {
-                    CurrencyConversion = new DefaultCurrencyConversion(Symbol, Symbol, value);
+                    CurrencyConversion = new ConstantCurrencyConversion(Symbol, null, value);
                 }
 
-                var conversionRate = _currencyConversion.ConversionRate;
-                if (conversionRate != value)
-                {
-                    // only update if there was actually one
-                    _currencyConversion.ConversionRate = value;
-                }
+                _currencyConversion.ConversionRate = value;
             }
         }
 
@@ -144,7 +142,7 @@ namespace QuantConnect.Securities
             Amount = amount;
             Symbol = symbol.LazyToUpper();
             CurrencySymbol = Currencies.GetCurrencySymbol(Symbol);
-            CurrencyConversion = new DefaultCurrencyConversion(Symbol, Symbol, conversionRate);
+            CurrencyConversion = new ConstantCurrencyConversion(Symbol, null, conversionRate);
         }
 
         /// <summary>
@@ -152,8 +150,6 @@ namespace QuantConnect.Securities
         /// </summary>
         public void Update()
         {
-            if (_isBaseCurrency) return;
-
             _currencyConversion.Update();
         }
 
@@ -220,15 +216,14 @@ namespace QuantConnect.Securities
         {
             // this gets called every time we add securities using universe selection,
             // so must of the time we've already resolved the value and don't need to again
-            if (CurrencyConversion.GetType() == typeof(SecurityCurrencyConversion))
+            if (CurrencyConversion.DestinationCurrency != null)
             {
                 return null;
             }
 
             if (Symbol == accountCurrency)
             {
-                _isBaseCurrency = true;
-                CurrencyConversion = DefaultCurrencyConversion.Identity(accountCurrency);
+                CurrencyConversion = ConstantCurrencyConversion.Identity(accountCurrency);
                 return null;
             }
 
@@ -265,7 +260,7 @@ namespace QuantConnect.Securities
             {
                 // currency not found in any tradeable pair
                 Log.Error(Messages.Cash.NoTradablePairFoundForCurrencyConversion(Symbol, accountCurrency));
-                CurrencyConversion = DefaultCurrencyConversion.Null;
+                CurrencyConversion = ConstantCurrencyConversion.Null(accountCurrency, Symbol);
                 return null;
             }
 
@@ -277,7 +272,7 @@ namespace QuantConnect.Securities
                 (Currencies.IsStableCoinWithoutPair(Symbol + accountCurrency, market)
                 || Currencies.IsStableCoinWithoutPair(accountCurrency + Symbol, market)))
             {
-                CurrencyConversion = DefaultCurrencyConversion.Identity(accountCurrency, Symbol);
+                CurrencyConversion = ConstantCurrencyConversion.Identity(accountCurrency, Symbol);
                 return null;
             }
 
