@@ -90,8 +90,33 @@ namespace QuantConnect.Report
                         Log.Trace("QuantConnect.Report.Main(): Starting conversion to PDF");
                         // Ensure wkhtmltopdf and xvfb are installed and accessible from the $PATH
                         var pdfDestination = destination.Replace(".html", ".pdf");
-                        var convertProcess = Process.Start($"xvfb-run", $"--server-args=\"-screen 0, 1600x1200x24+32\" wkhtmltopdf --no-background {destination} {pdfDestination}");
-                        convertProcess.WaitForExit();
+                        Process process = new();
+                        process.StartInfo.FileName = "xvfb-run";
+                        process.StartInfo.Arguments = $"--server-args=\"-screen 0, 1600x1200x24+32\" wkhtmltopdf --no-background {destination} {pdfDestination}";
+                        process.StartInfo.UseShellExecute = false;
+                        process.StartInfo.RedirectStandardOutput = true;
+                        process.StartInfo.RedirectStandardError = true;
+                        process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+
+                        process.OutputDataReceived += (sender, e) => Log.Trace($"QuantConnect.Report.Main(): {e.Data}");
+                        process.ErrorDataReceived += (sender, e) => Log.Error($"QuantConnect.Report.Main(): {e.Data}");
+
+                        process.Start();
+
+                        process.BeginOutputReadLine();
+                        process.BeginErrorReadLine();
+
+                        bool processExited = process.WaitForExit(1*60*1000); // wait for up to 1 minutes
+
+                        if (processExited)
+                        {
+                            Log.Trace("QuantConnect.Report.Main(): Convert to PDF process exited with code " + process.ExitCode);
+                        }
+                        else
+                        {
+                            Log.Error("QuantConnect.Report.Main(): Process did not exit within the timeout period.");
+                            process.Kill(); // kill the process if it's still running
+                        }
                     }
                     catch (Exception ex)
                     {

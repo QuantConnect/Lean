@@ -267,13 +267,6 @@ RUN python -m venv /Foundation-Tensorforce && . /Foundation-Tensorforce/bin/acti
 
 RUN echo "{\"argv\":[\"python\",\"-m\",\"ipykernel_launcher\",\"-f\",\"{connection_file}\"],\"display_name\":\"Foundation-Py-Default\",\"language\":\"python\",\"metadata\":{\"debugger\":true}}" > /opt/miniconda3/share/jupyter/kernels/python3/kernel.json
 
-# List all packages
-RUN conda list
-
 # Install wkhtmltopdf and xvfb to support HTML to PDF conversion of reports
-RUN apt-get update && \
-    apt-get install -y xvfb libfontconfig xfonts-75dpi && \
-    wget https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.focal_amd64.deb && \
-    dpkg -i wkhtmltox_0.12.5-1.focal_amd64.deb && \
-    rm wkhtmltox_0.12.5-1.focal_amd64.deb && \
+RUN apt-get update && apt install -y xvfb wkhtmltopdf && \
     apt-get clean && apt-get autoclean && apt-get autoremove --purge -y && rm -rf /var/lib/apt/lists/*
