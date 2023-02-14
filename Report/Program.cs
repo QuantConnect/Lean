@@ -106,7 +106,7 @@ namespace QuantConnect.Report
                         process.BeginOutputReadLine();
                         process.BeginErrorReadLine();
 
-                        bool processExited = process.WaitForExit(1*60*1000); // wait for up to 1 minutes
+                        var processExited = process.WaitForExit(1*60*1000); // wait for up to 1 minutes
 
                         if (processExited)
                         {
