@@ -110,13 +110,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             requestMode = requestMode != DataNormalizationMode.Raw ? requestMode : DataNormalizationMode.Adjusted;
                         }
 
+                        var priceScaleFrontierDate = data.GetUpdatePriceScaleFrontier().Date;
+
                         // We update our price scale factor when the date changes for non fill forward bars or if we haven't initialized yet.
                         // We don't take into account auxiliary data because we don't scale it and because the underlying price data could be fill forwarded
-                        if (enablePriceScale && data?.Time.Date > lastTradableDate && data.DataType != MarketDataType.Auxiliary && (!data.IsFillForward || lastTradableDate == DateTime.MinValue))
+                        if (enablePriceScale && priceScaleFrontierDate > lastTradableDate && data.DataType != MarketDataType.Auxiliary && (!data.IsFillForward || lastTradableDate == DateTime.MinValue))
                         {
                             var factorFile = factorFileProvider.Get(request.Configuration.Symbol);
-                            lastTradableDate = data.Time.Date;
-                            request.Configuration.PriceScaleFactor = factorFile.GetPriceScale(data.Time.Date, requestMode, config.ContractDepthOffset, config.DataMappingMode);
+                            lastTradableDate = priceScaleFrontierDate;
+                            request.Configuration.PriceScaleFactor = factorFile.GetPriceScale(lastTradableDate, requestMode, config.ContractDepthOffset, config.DataMappingMode);
                         }
 
                         SubscriptionData subscriptionData = SubscriptionData.Create(

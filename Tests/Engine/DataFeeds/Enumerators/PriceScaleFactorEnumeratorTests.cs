@@ -15,15 +15,13 @@
 */
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
+using System.Collections;
 using QuantConnect.Data.Market;
-using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using System.Collections.Generic;
 using Tick = QuantConnect.Data.Market.Tick;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 {
