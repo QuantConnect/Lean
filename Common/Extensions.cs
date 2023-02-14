@@ -3338,6 +3338,7 @@ namespace QuantConnect
                     // in the daily bar itself is filtered by exchange open, so it has data from 09:30 'X+1 day' to 17:00 'X+1 day' as expected.
                     // A potential solution to avoid the need of this check is to adjust the daily data time zone to match the exchange time zone, following this example above
                     // the daily bar would go from midnight X+1 day to midnight X+2
+                    // TODO: see related issue https://github.com/QuantConnect/Lean/issues/6964 which would avoid the need for this
                     priceScaleFrontier = data.EndTime;
                 }
                 return priceScaleFrontier;
