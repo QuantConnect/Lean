@@ -432,14 +432,8 @@ namespace QuantConnect.Data
                         var symbol = kvp.Key;
                         var data = kvp.Value;
 
-                        var requestedType = type;
-                        if (isPythonData)
-                        {
-                            requestedType = symbol.GetPythonCustomDataType();
-                        }
-
                         // let's first check custom data, else double check the user isn't requesting auxiliary data we have
-                        if (IsDataPointOfType(data.Custom, requestedType, isPythonData))
+                        if (IsDataPointOfType(data.Custom, type, isPythonData))
                         {
                             dataDictionaryCache.MethodInfo.Invoke(dictionary, new object[] { data.Symbol, data.Custom });
                         }

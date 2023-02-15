@@ -23,6 +23,7 @@ using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Python;
+using Python.Runtime;
 
 namespace QuantConnect.Algorithm
 {
@@ -383,14 +384,9 @@ namespace QuantConnect.Algorithm
                 throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
             }
 
-            var requestedType = typeof(T);
-            if (requestedType == typeof(PythonData))
-            {
-                requestedType = symbol.GetPythonCustomDataType();
-            }
-
-            var requests = CreateBarCountHistoryRequests(new [] { symbol }, requestedType, periods, resolution);
-            return GetDataTypedHistory<T>(symbol, requests);
+            var requests = CreateBarCountHistoryRequests(new[] { symbol }, typeof(T), periods, resolution);
+            // TODO only use this dynamice version if python algorithm, explain Why
+            return GetDataTypedHistory(symbol, requests, requests.First().DataType).OfType<T>();
         }
 
         /// <summary>
@@ -522,7 +518,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(HistoricalData)]
         public IEnumerable<Slice> History(IEnumerable<HistoryRequest> requests)
         {
-            return History(requests, TimeZone);
+            return History(requests, TimeZone).Memoize();
         }
 
         /// <summary>
@@ -626,6 +622,12 @@ namespace QuantConnect.Algorithm
                 .LastOrDefault();
         }
 
+        private IEnumerable<dynamic> GetDataTypedHistory(Symbol symbol, IEnumerable<HistoryRequest> requests, Type pythonType)
+        {
+            var slices = History(requests);
+            return slices.Select(x => x.Get(pythonType)).Where(x => x.ContainsKey(symbol)).Select(x => x[symbol]);
+        }
+
         /// <summary>
         /// Centralized logic to get data typed history given a list of requests for the specified symbol.
         /// This method is used to keep backwards compatibility for those History methods that expect an ArgumentException to be thrown
@@ -652,7 +654,7 @@ namespace QuantConnect.Algorithm
                 return (IEnumerable<T>)slices.Select(x => x.Ticks).Where(x => x.ContainsKey(symbol)).SelectMany(x => x[symbol]);
             }
 
-            return slices.Get<T>(symbol);
+            return slices.Get<T>(symbol).Memoize();
         }
 
         [DocumentationAttribute(HistoricalData)]
@@ -689,7 +691,32 @@ namespace QuantConnect.Algorithm
             }
 
             // filter out future data to prevent look ahead bias
-            return ((IAlgorithm)this).HistoryProvider.GetHistory(filteredRequests, timeZone);
+            return AA(HistoryProvider.GetHistory(filteredRequests, timeZone));
+        }
+
+
+        /// <summary>
+        /// Explain why, only do this if python algorithm & parallel history requests are enabled
+        /// maybe only do it if requestion python custom data types?
+        /// Performance?
+        /// DO this before memozing, so it happens once 
+        /// </summary>
+        private IEnumerable<Slice> AA(IEnumerable<Slice> aa)
+        {
+            using var t = aa.GetEnumerator();
+
+            var moreData = true;
+            while (moreData)
+            {
+                var u = PythonEngine.BeginAllowThreads();
+                moreData = t.MoveNext();
+                PythonEngine.EndAllowThreads(u);
+
+                if (moreData)
+                {
+                    yield return t.Current;
+                }
+            }
         }
 
         /// <summary>
