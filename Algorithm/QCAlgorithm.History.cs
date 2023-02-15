@@ -699,7 +699,7 @@ namespace QuantConnect.Algorithm
         /// Explain why, only do this if python algorithm & parallel history requests are enabled
         /// maybe only do it if requestion python custom data types?
         /// Performance?
-        /// DO this before memozing, so it happens once 
+        /// DO this before memozing, so it happens once
         /// </summary>
         private IEnumerable<Slice> AA(IEnumerable<Slice> aa)
         {
