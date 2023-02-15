@@ -24,6 +24,7 @@ using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Python;
 using Python.Runtime;
+using QLNet;
 
 namespace QuantConnect.Algorithm
 {
@@ -384,9 +385,8 @@ namespace QuantConnect.Algorithm
                 throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
             }
 
-            var requests = CreateBarCountHistoryRequests(new[] { symbol }, typeof(T), periods, resolution);
-            // TODO only use this dynamice version if python algorithm, explain Why
-            return GetDataTypedHistory(symbol, requests, requests.First().DataType).OfType<T>();
+            var requests = CreateBarCountHistoryRequests(new [] { symbol }, typeof(T), periods, resolution);
+            return GetDataTypedHistory<T>(symbol, requests);
         }
 
         /// <summary>
@@ -622,12 +622,6 @@ namespace QuantConnect.Algorithm
                 .LastOrDefault();
         }
 
-        private IEnumerable<dynamic> GetDataTypedHistory(Symbol symbol, IEnumerable<HistoryRequest> requests, Type pythonType)
-        {
-            var slices = History(requests);
-            return slices.Select(x => x.Get(pythonType)).Where(x => x.ContainsKey(symbol)).Select(x => x[symbol]);
-        }
-
         /// <summary>
         /// Centralized logic to get data typed history given a list of requests for the specified symbol.
         /// This method is used to keep backwards compatibility for those History methods that expect an ArgumentException to be thrown
@@ -636,10 +630,15 @@ namespace QuantConnect.Algorithm
         private IEnumerable<T> GetDataTypedHistory<T>(Symbol symbol, IEnumerable<HistoryRequest> requests)
             where T : IBaseData
         {
-            if (requests == null || !requests.Any())
+            var type = typeof(T);
+            CheckHistoryRequests(requests, symbol, type);
+
+            // If T is a custom data coming from Python (a class derived from PythonData), T will get here as PythonData
+            // and not the actual custom type. We take care of this especial case by using a dynamic version of GetDataTypedHistory that
+            // receives the Python type, and we get it from the history requests.
+            if (type == typeof(PythonData))
             {
-                throw new ArgumentException($"No history data could be fetched. " +
-                    $"This could be due to the specified security not being of the requested type. Symbol: {symbol} Requested Type: {typeof(T).Name}");
+                return GetDataTypedHistory(symbol, requests, requests.First().DataType).OfType<T>();
             }
 
             var slices = History(requests);
@@ -649,12 +648,31 @@ namespace QuantConnect.Algorithm
             //       The actual issue is Slice.GetImpl, so patch this can be removed right after it is properly addressed.
             //       A proposed solution making the Tick class a BaseDataCollection and make the Ticks class a dictionary Symbol->Tick instead of
             //       Symbol->List<Tick> so we can use the Slice.Get methods to collect all ticks in every slice instead of only the last one.
-            if (typeof(T) == typeof(Tick))
+            if (type == typeof(Tick))
             {
                 return (IEnumerable<T>)slices.Select(x => x.Ticks).Where(x => x.ContainsKey(symbol)).SelectMany(x => x[symbol]);
             }
 
             return slices.Get<T>(symbol).Memoize();
+        }
+
+        /// <summary>
+        /// Centralized logic to get data typed history given a list of requests for the specified symbol.
+        /// This method is used to keep backwards compatibility for those History methods that expect an ArgumentException to be thrown
+        /// when the security and the requested data type do not match
+        /// </summary>
+        /// <remarks>
+        /// This method is only used for Python algorithms, specially for those requesting custom data type history.
+        /// The reason for using this method is that custom data type Python history calls to
+        /// <see cref="History{T}(QuantConnect.Symbol, int, Resolution?)"/> will always use <see cref="PythonData"/> (the custom data base class)
+        /// as the T argument, because the custom data class is a Python type, which will cause the history data in the slices to not be matched
+        /// to the actual requested type, resulting in an empty list of slices.
+        /// </remarks>
+        private IEnumerable<dynamic> GetDataTypedHistory(Symbol symbol, IEnumerable<HistoryRequest> requests, Type pythonType)
+        {
+            CheckHistoryRequests(requests, symbol, pythonType);
+
+            return History(requests).Select(x => x.Get(pythonType)).Where(x => x.ContainsKey(symbol)).Select(x => x[symbol]);
         }
 
         [DocumentationAttribute(HistoricalData)]
@@ -691,32 +709,14 @@ namespace QuantConnect.Algorithm
             }
 
             // filter out future data to prevent look ahead bias
-            return AA(HistoryProvider.GetHistory(filteredRequests, timeZone));
-        }
+            var history = HistoryProvider.GetHistory(filteredRequests, timeZone);
 
-
-        /// <summary>
-        /// Explain why, only do this if python algorithm & parallel history requests are enabled
-        /// maybe only do it if requestion python custom data types?
-        /// Performance?
-        /// DO this before memozing, so it happens once
-        /// </summary>
-        private IEnumerable<Slice> AA(IEnumerable<Slice> aa)
-        {
-            using var t = aa.GetEnumerator();
-
-            var moreData = true;
-            while (moreData)
+            if (filteredRequests.Any(request => typeof(PythonData).IsAssignableFrom(request.DataType)))
             {
-                var u = PythonEngine.BeginAllowThreads();
-                moreData = t.MoveNext();
-                PythonEngine.EndAllowThreads(u);
-
-                if (moreData)
-                {
-                    yield return t.Current;
-                }
+                return WrapPythonDataHistory(history);
             }
+
+            return history;
         }
 
         /// <summary>
@@ -968,6 +968,41 @@ namespace QuantConnect.Algorithm
             _warmupTimeSpan = timeSpan;
             _warmupBarCount = barCount;
             Settings.WarmupResolution = resolution;
+        }
+
+        /// <summary>
+        /// Checks the given history requests and throws if they are either null or empty
+        /// </summary>
+        private static void CheckHistoryRequests(IEnumerable<HistoryRequest> requests, Symbol symbol, Type requestedType)
+        {
+            if (requests == null || !requests.Any())
+            {
+                throw new ArgumentException($"No history data could be fetched. " +
+                    $"This could be due to the specified security not being of the requested type. Symbol: {symbol} Requested Type: {requestedType.Name}");
+            }
+        }
+
+        /// <summary>
+        /// Wraps the resulting history enumerable in case of a Python custom data history request.
+        /// We need to get and release the Python GIL when parallel history requests are enabled to avoid deadlocks
+        /// in the custom data readers.
+        /// </summary>
+        private static IEnumerable<Slice> WrapPythonDataHistory(IEnumerable<Slice> history)
+        {
+            using var enumerator = history.GetEnumerator();
+
+            var moreData = true;
+            while (moreData)
+            {
+                var u = PythonEngine.BeginAllowThreads();
+                moreData = enumerator.MoveNext();
+                PythonEngine.EndAllowThreads(u);
+
+                if (moreData)
+                {
+                    yield return enumerator.Current;
+                }
+            }
         }
     }
 }

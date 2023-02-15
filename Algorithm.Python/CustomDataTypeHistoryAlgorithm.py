@@ -17,48 +17,48 @@ from AlgorithmImports import *
 ### </summary>
 class CustomDataTypeHistoryAlgorithm(QCAlgorithm):
     def Initialize(self):
-        self.SetStartDate(2010, 1, 1)
-        self.SetEndDate(2010, 1, 2)
-        self.SetCash(100000)
+        self.SetStartDate(2017, 8, 20)
+        self.SetEndDate(2017, 8, 20)
 
-        self.symbol = self.AddData(MyCustomDataType, "MyCustomDataType", Resolution.Daily).Symbol
+        self.symbol = self.AddData(CustomDataType, "CustomDataType", Resolution.Hour).Symbol
 
-        #df_history = self.History(self.symbol, 30, Resolution.Daily)
-        #self.Debug(f"DataFrame shape: {df_history.shape}")
-        #self.Debug(f"DataFrame:\n{df_history}")
+        history = self.History[CustomDataType](self.symbol, 48, Resolution.Hour)
+        history = [x for x in history]
 
+        if len(history) == 0:
+            raise Exception("History request returned no data")
 
+        expectedKeys = ['open', 'close', 'high', 'low', 'some_property']
+        if any(any(not x[key] for key in expectedKeys)
+               or x["some_property"] != "some property value"
+               for x in history):
+            raise Exception("History request returned data without the expected properties")
 
-    def OnData(self, slice: Slice) -> None:
-        #history = self.History[MyCustomDataType](self.symbol, 30, Resolution.Daily)
-        history = list(self.History[MyCustomDataType](self.symbol, 30, Resolution.Daily))
-        self.Quit(f"History count: {len(history)}")
-
-class MyCustomDataType(PythonData):
+class CustomDataType(PythonData):
 
     def GetSource(self, config: SubscriptionDataConfig, date: datetime, isLive: bool) -> SubscriptionDataSource:
-        return SubscriptionDataSource("https://www.dropbox.com/s/rsmg44jr6wexn2h/CNXNIFTY.csv?dl=1", SubscriptionTransportMedium.RemoteFile)
+        source = "https://www.dl.dropboxusercontent.com/s/d83xvd7mm9fzpk0/path_to_my_csv_data.csv?dl=0"
+        return SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile)
 
     def Reader(self, config: SubscriptionDataConfig, line: str, date: datetime, isLive: bool) -> BaseData:
-
         if not (line.strip()):
             return None
 
-        index = MyCustomDataType()
-        index.Symbol = config.Symbol
+        data = line.split(',')
+        obj_data = CustomDataType()
+        obj_data.Symbol = config.Symbol
 
         try:
-            data = line.split(',')
-            index.Time = datetime.strptime(data[0], "%Y-%m-%d")
-            index.EndTime = index.Time + timedelta(days=1)
-            index["open"] = float(data[1])
-            index["high"] = float(data[2])
-            index["low"] = float(data[3])
-            index["close"] = float(data[4])
-            index.Value = index["close"]
+            obj_data.Time = datetime.strptime(data[0], '%Y-%m-%d %H:%M:%S') + timedelta(hours=20)
+            obj_data["open"] = float(data[1])
+            obj_data["high"] = float(data[2])
+            obj_data["low"] = float(data[3])
+            obj_data["close"] = float(data[4])
+            obj_data.Value = obj_data["close"]
 
+            # property for asserting the correct data is fetched
+            obj_data["some_property"] = "some property value"
         except ValueError:
-            # Do nothing
             return None
 
-        return index
+        return obj_data

@@ -31,22 +31,22 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void Initialize()
         {
-            SetStartDate(2010, 1, 1);  //Set Start Date
-            SetEndDate(2010, 1, 2);
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2017, 8, 20);
+            SetEndDate(2017, 8, 20);
 
-            _symbol = AddData<MyCustomDataType>("MyCustomDataType", Resolution.Daily).Symbol;
-            var history = History<MyCustomDataType>(_symbol, 30, Resolution.Daily);
+            _symbol = AddData<CustomDataType>("CustomDataType", Resolution.Hour).Symbol;
 
-            Log($"History count: {history.Count()}");
+            var history = History<CustomDataType>(_symbol, 48, Resolution.Hour).ToList();
 
-            foreach (var data in history)
+            Log($"History count: {history.Count}");
+
+            if (history.Count == 0)
             {
-                Quit("Got data!");
+                throw new Exception("History request returned no data");
             }
         }
 
-        public class MyCustomDataType : DynamicData
+        public class CustomDataType : DynamicData
         {
             public decimal Open;
             public decimal High;
@@ -55,36 +55,37 @@ namespace QuantConnect.Algorithm.CSharp
 
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {
-                return new SubscriptionDataSource("https://www.dropbox.com/s/rsmg44jr6wexn2h/CNXNIFTY.csv?dl=1", SubscriptionTransportMedium.RemoteFile);
+                var source = "https://www.dl.dropboxusercontent.com/s/d83xvd7mm9fzpk0/path_to_my_csv_data.csv?dl=0";
+                return new SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile);
             }
 
-            public override BaseData Reader(SubscriptionDataConfig config, string line,DateTime date, bool isLiveMode)
+            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
             {
                 if (string.IsNullOrWhiteSpace(line.Trim()))
                 {
                     return null;
                 }
 
-                var index = new MyCustomDataType();
-                index.Symbol = config.Symbol;
-
                 try
                 {
-                    var data = line.Split(',');
-                    index.Time = DateTime.Parse(data[0], CultureInfo.InvariantCulture);
-                    index.EndTime = index.Time.AddDays(1);
-                    index.Open = Convert.ToDecimal(data[1], CultureInfo.InvariantCulture);
-                    index.High = Convert.ToDecimal(data[2], CultureInfo.InvariantCulture);
-                    index.Low = Convert.ToDecimal(data[3], CultureInfo.InvariantCulture);
-                    index.Close = Convert.ToDecimal(data[4], CultureInfo.InvariantCulture);
-                    index.Value = index.Close;
+                    var csv = line.Split(",");
+                    var data = new CustomDataType()
+                    {
+                        Symbol = config.Symbol,
+                        Time = DateTime.ParseExact(csv[0], DateFormat.DB, CultureInfo.InvariantCulture).AddHours(20),
+                        Value = csv[4].ToDecimal(),
+                        Open = csv[1].ToDecimal(),
+                        High = csv[2].ToDecimal(),
+                        Low = csv[3].ToDecimal(),
+                        Close = csv[4].ToDecimal()
+                    };
+
+                    return data;
                 }
                 catch
                 {
                     return null;
                 }
-
-                return index;
             }
         }
 
@@ -101,60 +102,60 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 58;
+        public long DataPoints => 28;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public int AlgorithmHistoryDataPoints => 27;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "9"},
-            {"Average Win", "0.86%"},
-            {"Average Loss", "-0.27%"},
-            {"Compounding Annual Return", "184.364%"},
-            {"Drawdown", "1.700%"},
-            {"Expectancy", "1.781"},
-            {"Net Profit", "1.442%"},
-            {"Sharpe Ratio", "4.86"},
-            {"Probabilistic Sharpe Ratio", "59.497%"},
-            {"Loss Rate", "33%"},
-            {"Win Rate", "67%"},
-            {"Profit-Loss Ratio", "3.17"},
-            {"Alpha", "4.181"},
-            {"Beta", "-1.322"},
-            {"Annual Standard Deviation", "0.321"},
-            {"Annual Variance", "0.103"},
-            {"Information Ratio", "-0.795"},
-            {"Tracking Error", "0.532"},
-            {"Treynor Ratio", "-1.18"},
-            {"Total Fees", "$14.78"},
-            {"Estimated Strategy Capacity", "$47000000.00"},
-            {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
-            {"Fitness Score", "0.408"},
-            {"Kelly Criterion Estimate", "16.559"},
-            {"Kelly Criterion Probability Value", "0.316"},
-            {"Sortino Ratio", "12.447"},
-            {"Return Over Maximum Drawdown", "106.327"},
-            {"Portfolio Turnover", "0.411"},
-            {"Total Insights Generated", "3"},
-            {"Total Insights Closed", "3"},
-            {"Total Insights Analysis Completed", "3"},
+            {"Total Trades", "0"},
+            {"Average Win", "0%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "0%"},
+            {"Drawdown", "0%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "0%"},
+            {"Sharpe Ratio", "0"},
+            {"Probabilistic Sharpe Ratio", "0%"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
+            {"Treynor Ratio", "0"},
+            {"Total Fees", "$0.00"},
+            {"Estimated Strategy Capacity", "$0"},
+            {"Lowest Capacity Asset", ""},
+            {"Fitness Score", "0"},
+            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "0"},
+            {"Return Over Maximum Drawdown", "0"},
+            {"Portfolio Turnover", "0"},
+            {"Total Insights Generated", "0"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
             {"Long Insight Count", "0"},
-            {"Short Insight Count", "3"},
-            {"Long/Short Ratio", "0%"},
-            {"Estimated Monthly Alpha Value", "$20784418.6104"},
-            {"Total Accumulated Estimated Alpha Value", "$3579538.7607"},
-            {"Mean Population Estimated Insight Value", "$1193179.5869"},
-            {"Mean Population Direction", "100%"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "0%"},
             {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "100%"},
+            {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "9da9afe1e9137638a55db1676adc2be1"}
+            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
         };
     }
 }
