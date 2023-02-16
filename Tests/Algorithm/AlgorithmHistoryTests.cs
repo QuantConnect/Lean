@@ -500,6 +500,8 @@ def getTickHistory(algorithm, symbol, start, end):
             {
                 using (Py.GIL())
                 {
+                    PythonInitializer.Initialize();
+
                     var customDataType = PyModule.FromString("testModule",
                         @"
 from AlgorithmImports import *

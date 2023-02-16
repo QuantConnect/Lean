@@ -24,7 +24,6 @@ using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Python;
 using Python.Runtime;
-using QLNet;
 
 namespace QuantConnect.Algorithm
 {
@@ -679,6 +678,7 @@ namespace QuantConnect.Algorithm
         private IEnumerable<Slice> History(IEnumerable<HistoryRequest> requests, DateTimeZone timeZone)
         {
             var sentMessage = false;
+            var hasPythonDataRequest = false;
             // filter out any universe securities that may have made it this far
             var filteredRequests = requests.Where(hr => HistoryRequestValid(hr.Symbol)).ToList();
             for (var i = 0; i < filteredRequests.Count; i++)
@@ -706,13 +706,19 @@ namespace QuantConnect.Algorithm
                         Debug("Request for future history modified to end now.");
                     }
                 }
+
+                if (!hasPythonDataRequest)
+                {
+                    hasPythonDataRequest = request.IsCustomData && typeof(PythonData).IsAssignableFrom(request.DataType);
+                }
             }
 
             // filter out future data to prevent look ahead bias
             var history = HistoryProvider.GetHistory(filteredRequests, timeZone);
 
-            if (filteredRequests.Any(request => typeof(PythonData).IsAssignableFrom(request.DataType)))
+            if (hasPythonDataRequest && PythonEngine.IsInitialized)
             {
+                // add protection against potential python deadlocks
                 return WrapPythonDataHistory(history);
             }
 
@@ -991,14 +997,17 @@ namespace QuantConnect.Algorithm
         {
             using var enumerator = history.GetEnumerator();
 
-            var moreData = true;
-            while (moreData)
+            var hasData = true;
+            while (hasData)
             {
-                var u = PythonEngine.BeginAllowThreads();
-                moreData = enumerator.MoveNext();
-                PythonEngine.EndAllowThreads(u);
+                using (Py.GIL())
+                {
+                    var state = PythonEngine.BeginAllowThreads();
+                    hasData = enumerator.MoveNext();
+                    PythonEngine.EndAllowThreads(state);
+                }
 
-                if (moreData)
+                if (hasData)
                 {
                     yield return enumerator.Current;
                 }
