@@ -22,12 +22,21 @@ class CustomDataTypeHistoryAlgorithm(QCAlgorithm):
 
         self.symbol = self.AddData(CustomDataType, "CustomDataType", Resolution.Hour).Symbol
 
-        history = self.History[CustomDataType](self.symbol, 48, Resolution.Hour)
-        history = [x for x in history]
+        history = list(self.History[CustomDataType](self.symbol, 48, Resolution.Hour))
 
         if len(history) == 0:
             raise Exception("History request returned no data")
 
+        self._assertHistoryData(history)
+
+        history2 = list(self.History[CustomDataType]([self.symbol], 48, Resolution.Hour))
+
+        if len(history2) != len(history):
+            raise Exception("History requests returned different data")
+
+        self._assertHistoryData([y.values()[0] for y in history2])
+
+    def _assertHistoryData(self, history:  List[PythonData]) -> None:
         expectedKeys = ['open', 'close', 'high', 'low', 'some_property']
         if any(any(not x[key] for key in expectedKeys)
                or x["some_property"] != "some property value"

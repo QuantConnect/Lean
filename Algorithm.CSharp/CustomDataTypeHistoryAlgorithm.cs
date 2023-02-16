@@ -24,6 +24,7 @@ using QuantConnect.Interfaces;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
+    /// Algorithm asserting that
     /// </summary>
     public class CustomDataTypeHistoryAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
@@ -44,6 +45,14 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception("History request returned no data");
             }
+
+            var history2 = History<CustomDataType>(new[] { _symbol }, 48, Resolution.Hour).ToList();
+
+            if (history2.Count != history.Count)
+            {
+                throw new Exception("History requests returned different data");
+            }
+
         }
 
         public class CustomDataType : DynamicData
@@ -107,7 +116,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 27;
+        public int AlgorithmHistoryDataPoints => 54;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
