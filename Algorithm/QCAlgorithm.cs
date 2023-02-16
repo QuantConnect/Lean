@@ -1681,10 +1681,10 @@ namespace QuantConnect.Algorithm
         {
             // allow users to specify negative numbers, we get the abs of it
             var contractOffset = (uint)Math.Abs(contractDepthOffset);
-            if (contractOffset > 2)
+            if (contractOffset > Futures.MaximumContractDepthOffset)
             {
-                throw new ArgumentOutOfRangeException(nameof(contractDepthOffset), "'contractDepthOffset' current maximum value is 2." +
-                    " Front month (0) and only 2 back month contracts are currently supported.");
+                throw new ArgumentOutOfRangeException(nameof(contractDepthOffset), $"'contractDepthOffset' current maximum value is {Futures.MaximumContractDepthOffset}." +
+                    $" Front month (0) and only {Futures.MaximumContractDepthOffset} back month contracts are currently supported.");
             }
 
             var isCanonical = symbol.IsCanonical();
