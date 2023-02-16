@@ -185,6 +185,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return subscription.Configuration.IsInternalFeed;
             }
 
+            if (request.Configuration.SecurityType == SecurityType.IndexOption && request.Configuration.Resolution == Resolution.Daily)
+            {
+                throw new InvalidOperationException($"{Resolution.Daily} resolution is currently not supported for {SecurityType.IndexOption}, please use {Resolution.Hour} instead");
+            }
+
             // before adding the configuration to the data feed let's assert it's valid
             _dataPermissionManager.AssertConfiguration(request.Configuration, request.StartTimeLocal, request.EndTimeLocal);
 
