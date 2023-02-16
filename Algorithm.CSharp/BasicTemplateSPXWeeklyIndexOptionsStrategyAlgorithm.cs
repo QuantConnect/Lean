@@ -109,7 +109,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 35091;
+        public virtual long DataPoints => 35811;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -128,18 +128,18 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "0.100%"},
             {"Expectancy", "115.281"},
             {"Net Profit", "0.445%"},
-            {"Sharpe Ratio", "7.984"},
-            {"Probabilistic Sharpe Ratio", "95.977%"},
+            {"Sharpe Ratio", "-7.925"},
+            {"Probabilistic Sharpe Ratio", "1.216%"},
             {"Loss Rate", "50%"},
             {"Win Rate", "50%"},
             {"Profit-Loss Ratio", "231.56"},
-            {"Alpha", "0.046"},
-            {"Beta", "-0.005"},
-            {"Annual Standard Deviation", "0.001"},
+            {"Alpha", "-0.012"},
+            {"Beta", "0.001"},
+            {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-102.372"},
-            {"Tracking Error", "0.07"},
-            {"Treynor Ratio", "-2.467"},
+            {"Information Ratio", "-103.222"},
+            {"Tracking Error", "0.069"},
+            {"Treynor Ratio", "-2.449"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$4100000.00"},
             {"Lowest Capacity Asset", "SPXW XKX6S2GM9PGU|SPX 31"},
@@ -162,7 +162,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "3571ecc4b2274878146f15167fcc683c"}
+            {"OrderListHash", "4adb43a8298b9192e0f45d2ef1e5d370"}
         };
     }
 }

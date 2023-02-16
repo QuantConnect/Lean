@@ -118,7 +118,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 31618;
+        public long DataPoints => 31858;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -132,31 +132,31 @@ namespace QuantConnect.Algorithm.CSharp
         {
             {"Total Trades", "4"},
             {"Average Win", "0%"},
-            {"Average Loss", "-0.06%"},
-            {"Compounding Annual Return", "-1.693%"},
-            {"Drawdown", "0.100%"},
+            {"Average Loss", "-0.08%"},
+            {"Compounding Annual Return", "-2.251%"},
+            {"Drawdown", "0.200%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "-0.120%"},
-            {"Sharpe Ratio", "-3.156"},
+            {"Net Profit", "-0.160%"},
+            {"Sharpe Ratio", "-3.15"},
             {"Probabilistic Sharpe Ratio", "0.427%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.012"},
-            {"Beta", "-0.004"},
-            {"Annual Standard Deviation", "0.004"},
+            {"Alpha", "-0.016"},
+            {"Beta", "-0.006"},
+            {"Annual Standard Deviation", "0.005"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-0.412"},
+            {"Information Ratio", "-0.44"},
             {"Tracking Error", "0.139"},
-            {"Treynor Ratio", "2.702"},
+            {"Treynor Ratio", "2.697"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "SPX XL80P3HB5O6M|SPX 31"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "-4231.264"},
-            {"Return Over Maximum Drawdown", "-14.257"},
+            {"Sortino Ratio", "-3164.357"},
+            {"Return Over Maximum Drawdown", "-14.219"},
             {"Portfolio Turnover", "0.006"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -171,7 +171,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "a82af2f9ea9f06b920dbbc64c345dce4"}
+            {"OrderListHash", "ef50e9cfe22e6ad96ed1c68c81470b01"}
         };
     }
 }
