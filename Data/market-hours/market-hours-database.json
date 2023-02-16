@@ -46031,7 +46031,7 @@
       ]
     },
     "IndexOption-usa-[*]": {
-      "dataTimeZone": "America/Chicago",
+      "dataTimeZone": "America/New_York",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [],
       "monday": [
@@ -46073,7 +46073,7 @@
       "holidays": []
     },
     "IndexOption-usa-VIX": {
-      "dataTimeZone": "America/Chicago",
+      "dataTimeZone": "America/New_York",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
         {
@@ -46725,7 +46725,7 @@
       ]
     },
     "IndexOption-usa-SPX": {
-      "dataTimeZone": "America/Chicago",
+      "dataTimeZone": "America/New_York",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
         {
@@ -47089,7 +47089,7 @@
       ]
     },
     "IndexOption-usa-SPXW": {
-      "dataTimeZone": "America/Chicago",
+      "dataTimeZone": "America/New_York",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
         {
