@@ -1119,16 +1119,87 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
             }
         }
 
-        [Test]
-        public void GetHistoryWithCustomData_CSharp()
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void GetHistoryWithCustomDataType(Language language)
         {
             var algorithm = GetAlgorithm(new DateTime(2013, 10, 8));
-            var symbol = algorithm.AddData<CustomData>("SPY").Symbol;
-            var history = algorithm.History<CustomData>(symbol, algorithm.StartDate, algorithm.EndDate, Resolution.Minute).ToList();
+            var start = algorithm.StartDate;
+            var end = algorithm.EndDate;
+            var span = end - start;
+            var periods = (int)span.TotalMinutes;
 
-            Assert.That(history, Has.Count.EqualTo(1539));
+            if (language == Language.CSharp)
+            {
+                var symbol = algorithm.AddData<CustomData>("SPY").Symbol;
+
+                var history = algorithm.History<CustomData>(symbol, start, end, Resolution.Minute).ToList();
+                AssertCustomDataTypeHistory(history);
+
+                history = algorithm.History<CustomData>(symbol, span, Resolution.Minute).ToList();
+                AssertCustomDataTypeHistory(history);
+
+                history = algorithm.History<CustomData>(symbol, periods, Resolution.Minute).ToList();
+                AssertCustomDataTypeHistory(history);
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    PythonInitializer.Initialize();
+
+                    var testModule = PyModule.FromString("testModule",
+                        @"
+from typing import Union
+from AlgorithmImports import *
+from QuantConnect.Tests import *
+
+class TestCustomData(PythonData):
+    def GetSource(self, config, date, isLiveMode):
+        fileName = LeanData.GenerateZipFileName(Symbols.SPY, date, config.Resolution, config.TickType)
+        source = f'{Globals.DataFolder}equity/usa/minute/spy/{fileName}'
+        return SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv)
+
+    def Reader(self, config, line, date, isLiveMode):
+
+        data = line.split(',')
+
+        result = TestCustomData()
+        result.DataType = MarketDataType.Base
+        result.Symbol = config.Symbol
+        result.Time = date + timedelta(milliseconds=int(data[0]))
+        result.Value = 1
+
+        return result
+
+def getDateRangeHistory(algorithm: QCAlgorithm, symbol: Symbol, start: datetime, end: datetime):
+    return list(algorithm.History[TestCustomData](symbol, start, end, Resolution.Minute))
+
+def getTimeSpanHistory(algorithm: QCAlgorithm, symbol: Symbol, span: Union[timedelta, int]):
+    return list(algorithm.History[TestCustomData](symbol, span, Resolution.Minute))
+        ");
+                    var customDataType = testModule.GetAttr("TestCustomData");
+                    var symbol = algorithm.AddData(customDataType, "SPY").Symbol;
+
+                    dynamic getDateRangeHistory = testModule.GetAttr("getDateRangeHistory");
+                    var history = getDateRangeHistory(algorithm, symbol, start, end).As<List<PythonData>>();
+                    AssertCustomDataTypeHistory(history);
+
+                    dynamic getTimeSpanHistory = testModule.GetAttr("getTimeSpanHistory");
+                    history = getTimeSpanHistory(algorithm, symbol, span).As<List<PythonData>>();
+                    AssertCustomDataTypeHistory(history);
+
+                    history = getTimeSpanHistory(algorithm, symbol, periods).As<List<PythonData>>();
+                    AssertCustomDataTypeHistory(history);
+                }
+            }
+        }
+
+        private void AssertCustomDataTypeHistory<T>(List<T> history)
+        {
+            Assert.AreEqual(1539, history.Count);
             Assert.That(history, Has.All.Property("DataType").EqualTo(MarketDataType.Base));
-            Assert.IsTrue(_testHistoryProvider.HistryRequests.All(x => x.IsCustomData));
+            Assert.That(_testHistoryProvider.HistryRequests, Has.All.Property("IsCustomData").True);
         }
 
         [Test]

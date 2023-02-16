@@ -669,8 +669,6 @@ namespace QuantConnect.Algorithm
         /// </remarks>
         private IEnumerable<dynamic> GetDataTypedHistory(Symbol symbol, IEnumerable<HistoryRequest> requests, Type pythonType)
         {
-            CheckHistoryRequests(requests, symbol, pythonType);
-
             return History(requests).Select(x => x.Get(pythonType)).Where(x => x.ContainsKey(symbol)).Select(x => x[symbol]);
         }
 
@@ -1000,6 +998,7 @@ namespace QuantConnect.Algorithm
             var hasData = true;
             while (hasData)
             {
+                // TODO: we don't really need the GIL. We should find a way to check whether we have the lock and only call this wrapper method if we do.
                 using (Py.GIL())
                 {
                     var state = PythonEngine.BeginAllowThreads();
