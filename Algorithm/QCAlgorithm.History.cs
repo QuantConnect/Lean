@@ -303,7 +303,7 @@ namespace QuantConnect.Algorithm
                 return _historyRequestFactory.CreateHistoryRequest(config, start, Time, exchange, res);
             });
 
-            return History(requests.Where(x => x != null)).Get<T>().Memoize();
+            return GetDataTypedHistory<T>(requests).Memoize();
         }
 
         /// <summary>
@@ -327,7 +327,7 @@ namespace QuantConnect.Algorithm
                 return _historyRequestFactory.CreateHistoryRequest(config, start, end, GetExchangeHours(x), resolution);
             });
 
-            return History(requests.Where(x => x != null)).Get<T>().Memoize();
+            return GetDataTypedHistory<T>(requests).Memoize();
         }
 
         /// <summary>
@@ -385,7 +385,7 @@ namespace QuantConnect.Algorithm
             }
 
             var requests = CreateBarCountHistoryRequests(new [] { symbol }, typeof(T), periods, resolution);
-            return GetDataTypedHistory<T>(symbol, requests);
+            return GetDataTypedHistory<T>(requests, symbol).Memoize();
         }
 
         /// <summary>
@@ -401,7 +401,7 @@ namespace QuantConnect.Algorithm
             where T : IBaseData
         {
             var requests = CreateDateRangeHistoryRequests(new[] { symbol }, typeof(T), start, end, resolution);
-            return GetDataTypedHistory<T>(symbol, requests);
+            return GetDataTypedHistory<T>(requests, symbol).Memoize();
         }
 
         /// <summary>
@@ -626,21 +626,29 @@ namespace QuantConnect.Algorithm
         /// This method is used to keep backwards compatibility for those History methods that expect an ArgumentException to be thrown
         /// when the security and the requested data type do not match
         /// </summary>
-        private IEnumerable<T> GetDataTypedHistory<T>(Symbol symbol, IEnumerable<HistoryRequest> requests)
+        /// <remarks>
+        /// This method will check for Python custom data types in order to call the right Slice.Get dynamic method
+        /// </remarks>
+        private IEnumerable<T> GetDataTypedHistory<T>(IEnumerable<HistoryRequest> requests, Symbol symbol)
             where T : IBaseData
         {
             var type = typeof(T);
-            CheckHistoryRequests(requests, symbol, type);
+
+            if (requests == null || !requests.Any())
+            {
+                throw new ArgumentException($"No history data could be fetched. " +
+                    $"This could be due to the specified security not being of the requested type. Symbol: {symbol} Requested Type: {type.Name}");
+            }
+
+            var slices = History(requests);
 
             // If T is a custom data coming from Python (a class derived from PythonData), T will get here as PythonData
             // and not the actual custom type. We take care of this especial case by using a dynamic version of GetDataTypedHistory that
             // receives the Python type, and we get it from the history requests.
             if (type == typeof(PythonData))
             {
-                return GetDataTypedHistory(symbol, requests, requests.First().DataType).OfType<T>();
+                return GetPythonCustomDataTypeHistory(slices, requests.First().DataType, symbol).OfType<T>();
             }
-
-            var slices = History(requests);
 
             // TODO: This is a patch to fix the issue with the Slice.GetImpl method returning only the last tick
             //       for each symbol instead of the whole list of ticks.
@@ -652,7 +660,26 @@ namespace QuantConnect.Algorithm
                 return (IEnumerable<T>)slices.Select(x => x.Ticks).Where(x => x.ContainsKey(symbol)).SelectMany(x => x[symbol]);
             }
 
-            return slices.Get<T>(symbol).Memoize();
+            return slices.Get<T>(symbol);
+        }
+
+        /// <summary>
+        /// Centralized logic to get data typed history for a given list of requests.
+        /// </summary>
+        /// <remarks>
+        /// This method will check for Python custom data types in order to call the right Slice.Get dynamic method
+        /// </remarks>
+        private IEnumerable<DataDictionary<T>> GetDataTypedHistory<T>(IEnumerable<HistoryRequest> requests)
+            where T : IBaseData
+        {
+            var slices = History(requests.Where(x => x != null));
+
+            if (typeof(T) == typeof(PythonData))
+            {
+                return GetPythonCustomDataTypeHistory(slices, requests.First().DataType).OfType<DataDictionary<T>>().Memoize();
+            }
+
+            return slices.Get<T>();
         }
 
         /// <summary>
@@ -667,9 +694,16 @@ namespace QuantConnect.Algorithm
         /// as the T argument, because the custom data class is a Python type, which will cause the history data in the slices to not be matched
         /// to the actual requested type, resulting in an empty list of slices.
         /// </remarks>
-        private IEnumerable<dynamic> GetDataTypedHistory(Symbol symbol, IEnumerable<HistoryRequest> requests, Type pythonType)
+        private IEnumerable<dynamic> GetPythonCustomDataTypeHistory(IEnumerable<Slice> slices, Type pythonType, Symbol symbol = null)
         {
-            return History(requests).Select(x => x.Get(pythonType)).Where(x => x.ContainsKey(symbol)).Select(x => x[symbol]);
+            var history = slices.Select(x => x.Get(pythonType));
+
+            if (symbol == null)
+            {
+                return history;
+            }
+
+            return history.Where(x => x.ContainsKey(symbol)).Select(x => x[symbol]);
         }
 
         [DocumentationAttribute(HistoricalData)]
@@ -972,18 +1006,6 @@ namespace QuantConnect.Algorithm
             _warmupTimeSpan = timeSpan;
             _warmupBarCount = barCount;
             Settings.WarmupResolution = resolution;
-        }
-
-        /// <summary>
-        /// Checks the given history requests and throws if they are either null or empty
-        /// </summary>
-        private static void CheckHistoryRequests(IEnumerable<HistoryRequest> requests, Symbol symbol, Type requestedType)
-        {
-            if (requests == null || !requests.Any())
-            {
-                throw new ArgumentException($"No history data could be fetched. " +
-                    $"This could be due to the specified security not being of the requested type. Symbol: {symbol} Requested Type: {requestedType.Name}");
-            }
         }
 
         /// <summary>

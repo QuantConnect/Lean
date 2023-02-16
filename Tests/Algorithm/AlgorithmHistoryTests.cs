@@ -1133,14 +1133,29 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
             {
                 var symbol = algorithm.AddData<CustomData>("SPY").Symbol;
 
-                var history = algorithm.History<CustomData>(symbol, start, end, Resolution.Minute).ToList();
-                AssertCustomDataTypeHistory(history);
+                var historyResults = new[]
+                {
+                    algorithm.History<CustomData>(symbol, start, end, Resolution.Minute),
+                    algorithm.History<CustomData>(symbol, span, Resolution.Minute),
+                    algorithm.History<CustomData>(symbol, periods, Resolution.Minute)
+                };
 
-                history = algorithm.History<CustomData>(symbol, span, Resolution.Minute).ToList();
-                AssertCustomDataTypeHistory(history);
+                foreach (var history in historyResults)
+                {
+                    AssertCustomDataTypeHistory(history.ToList());
+                }
 
-                history = algorithm.History<CustomData>(symbol, periods, Resolution.Minute).ToList();
-                AssertCustomDataTypeHistory(history);
+                var historyResults2 = new[]
+                {
+                    algorithm.History<CustomData>(new[] { symbol }, start, end, Resolution.Minute),
+                    algorithm.History<CustomData>(new[] { symbol }, span, Resolution.Minute),
+                    algorithm.History<CustomData>(new[] { symbol }, periods, Resolution.Minute)
+                };
+
+                foreach (var history in historyResults2)
+                {
+                    AssertCustomDataTypeHistory(history.ToList());
+                }
             }
             else
             {
@@ -1172,33 +1187,44 @@ class TestCustomData(PythonData):
 
         return result
 
-def getDateRangeHistory(algorithm: QCAlgorithm, symbol: Symbol, start: datetime, end: datetime):
+def getDateRangeHistory(algorithm: QCAlgorithm, symbol: Union[Symbol, List[Symbol]], start: datetime, end: datetime):
     return list(algorithm.History[TestCustomData](symbol, start, end, Resolution.Minute))
 
-def getTimeSpanHistory(algorithm: QCAlgorithm, symbol: Symbol, span: Union[timedelta, int]):
+def getTimeSpanHistory(algorithm: QCAlgorithm, symbol: Union[Symbol, List[Symbol]], span: Union[timedelta, int]):
     return list(algorithm.History[TestCustomData](symbol, span, Resolution.Minute))
         ");
                     var customDataType = testModule.GetAttr("TestCustomData");
                     var symbol = algorithm.AddData(customDataType, "SPY").Symbol;
 
                     dynamic getDateRangeHistory = testModule.GetAttr("getDateRangeHistory");
-                    var history = getDateRangeHistory(algorithm, symbol, start, end).As<List<PythonData>>();
-                    AssertCustomDataTypeHistory(history);
-
                     dynamic getTimeSpanHistory = testModule.GetAttr("getTimeSpanHistory");
-                    history = getTimeSpanHistory(algorithm, symbol, span).As<List<PythonData>>();
-                    AssertCustomDataTypeHistory(history);
 
-                    history = getTimeSpanHistory(algorithm, symbol, periods).As<List<PythonData>>();
-                    AssertCustomDataTypeHistory(history);
+                    var historyResults = new[]
+                    {
+                        getDateRangeHistory(algorithm, symbol, start, end),
+                        getTimeSpanHistory(algorithm, symbol, span),
+                        getTimeSpanHistory(algorithm, symbol, periods)
+                    };
+
+                    foreach (var history in historyResults)
+                    {
+                        AssertCustomDataTypeHistory(history.As<List<PythonData>>());
+                    }
+
+                    var historyResults2 = new[]
+                    {
+                        getDateRangeHistory(algorithm, new[] { symbol }, start, end),
+                        getTimeSpanHistory(algorithm, new[] { symbol }, span),
+                        getTimeSpanHistory(algorithm, new[] { symbol }, periods)
+                    };
+
+                    foreach (var history in historyResults2)
+                    {
+                        AssertCustomDataTypeHistory(history.As<List<DataDictionary<PythonData>>>());
+                    }
                 }
             }
-        }
 
-        private void AssertCustomDataTypeHistory<T>(List<T> history)
-        {
-            Assert.AreEqual(1539, history.Count);
-            Assert.That(history, Has.All.Property("DataType").EqualTo(MarketDataType.Base));
             Assert.That(_testHistoryProvider.HistryRequests, Has.All.Property("IsCustomData").True);
         }
 
@@ -1566,6 +1592,26 @@ def getOpenInterestHistory(algorithm, symbol, start, end):
             CheckThatHistoryResultsHaveEqualBarCount(historyResults, expectedHistoryCount);
             CheckThatHistoryResultsHaveDifferentPrices(historyResults,
                 "History results prices should have been different for each data normalization mode at each time");
+        }
+
+        /// <summary>
+        /// Helper method to assert that the right custom data history is fetched
+        /// </summary>
+        private static void AssertCustomDataTypeHistory<T>(List<T> history)
+            where T : IBaseData
+        {
+            Assert.AreEqual(1539, history.Count);
+            Assert.That(history, Has.All.Property("DataType").EqualTo(MarketDataType.Base));
+        }
+
+        /// <summary>
+        /// Helper method to assert that the right custom data history is fetched
+        /// </summary>
+        private static void AssertCustomDataTypeHistory<T>(List<DataDictionary<T>> history)
+            where T : IBaseData
+        {
+            Assert.AreEqual(1539, history.Count);
+            Assert.That(history.Select(x => x.Single().Value), Has.All.Property("DataType").EqualTo(MarketDataType.Base));
         }
 
         private static DataMappingMode[] GetAllDataMappingModes()
