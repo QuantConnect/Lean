@@ -40,13 +40,13 @@ namespace QuantConnect.Tests
     public class ResearchRegressionTests
     {
         // Update in config.json when template expected result needs to be updated
-        private static readonly bool _updateResearchRegressionOutput = Config.GetBool("research-regression-update-output", false);
+        private static readonly bool _updateResearchRegressionOutput = Config.GetBool("research-regression-update-output", true);
 
         [Test, TestCaseSource(nameof(GetResearchRegressionTestParameters))]
         public void ResearchRegression(ResearchRegressionTestParameters parameters)
         {
             var actualOutput = RunResearchNotebookAndGetOutput(parameters.NotebookPath, parameters.NotebookOutputPath, Directory.GetCurrentDirectory(), out Process process);
-            
+
             // Update expected result if required.
             if (_updateResearchRegressionOutput)
             {
@@ -55,7 +55,7 @@ namespace QuantConnect.Tests
             var actualCells = JToken.Parse(CleanDispensableEscapeCharacters(actualOutput))["cells"];
             var expectedCells = JToken.Parse(parameters.ExpectedOutput)["cells"];
             var expectedAndActualCells = expectedCells.Zip(actualCells, (e, a) => new { Expected = e, Actual = a });
-            
+
             foreach (var cell in expectedAndActualCells)
             {
                 // Assert Notebook Cell Input
@@ -126,7 +126,7 @@ namespace QuantConnect.Tests
 
                 if (line.Contains("public string ExpectedOutput =>"))
                 {
-                    // Add the line as it assumes the expected output starts from next line 
+                    // Add the line as it assumes the expected output starts from next line
                     lines.Add(line);
 
                     // Escape the "escape" sequence for correct parse back
