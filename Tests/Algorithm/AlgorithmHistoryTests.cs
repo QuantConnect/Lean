@@ -32,7 +32,6 @@ using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Data.Custom.AlphaStreams;
 using QuantConnect.Lean.Engine.HistoricalData;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
-using QuantConnect.Orders.Fills;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -1169,7 +1168,7 @@ from typing import Union
 from AlgorithmImports import *
 from QuantConnect.Tests import *
 
-class TestCustomData(PythonData):
+class TestCustomMarketData(PythonData):
     def GetSource(self, config, date, isLiveMode):
         fileName = LeanData.GenerateZipFileName(Symbols.SPY, date, config.Resolution, config.TickType)
         source = f'{Globals.DataFolder}equity/usa/minute/spy/{fileName}'
@@ -1179,7 +1178,7 @@ class TestCustomData(PythonData):
 
         data = line.split(',')
 
-        result = TestCustomData()
+        result = TestCustomMarketData()
         result.DataType = MarketDataType.Base
         result.Symbol = config.Symbol
         result.Time = date + timedelta(milliseconds=int(data[0]))
@@ -1188,12 +1187,12 @@ class TestCustomData(PythonData):
         return result
 
 def getDateRangeHistory(algorithm: QCAlgorithm, symbol: Union[Symbol, List[Symbol]], start: datetime, end: datetime):
-    return list(algorithm.History[TestCustomData](symbol, start, end, Resolution.Minute))
+    return list(algorithm.History[TestCustomMarketData](symbol, start, end, Resolution.Minute))
 
 def getTimeSpanHistory(algorithm: QCAlgorithm, symbol: Union[Symbol, List[Symbol]], span: Union[timedelta, int]):
-    return list(algorithm.History[TestCustomData](symbol, span, Resolution.Minute))
+    return list(algorithm.History[TestCustomMarketData](symbol, span, Resolution.Minute))
         ");
-                    var customDataType = testModule.GetAttr("TestCustomData");
+                    var customDataType = testModule.GetAttr("TestCustomMarketData");
                     var symbol = algorithm.AddData(customDataType, "SPY").Symbol;
 
                     dynamic getDateRangeHistory = testModule.GetAttr("getDateRangeHistory");
@@ -1222,6 +1221,65 @@ def getTimeSpanHistory(algorithm: QCAlgorithm, symbol: Union[Symbol, List[Symbol
                     {
                         AssertCustomDataTypeHistory(history.As<List<DataDictionary<PythonData>>>());
                     }
+                }
+            }
+
+            Assert.That(_testHistoryProvider.HistryRequests, Has.All.Property("IsCustomData").True);
+        }
+
+        [Test]
+        public void GetHistoryFromPythonWithCSharpCustomDataType()
+        {
+            var algorithm = GetAlgorithm(new DateTime(2013, 10, 8));
+            var start = algorithm.StartDate;
+            var end = algorithm.EndDate;
+            var span = end - start;
+            var periods = (int)span.TotalMinutes;
+
+            using (Py.GIL())
+            {
+                PythonInitializer.Initialize();
+
+                var testModule = PyModule.FromString("testModule",
+                    @"
+from typing import Union
+from AlgorithmImports import *
+from QuantConnect.Tests import *
+from QuantConnect.Tests.Algorithm import AlgorithmHistoryTests
+
+def getDateRangeHistory(algorithm: QCAlgorithm, symbol: Union[Symbol, List[Symbol]], start: datetime, end: datetime):
+    return list(algorithm.History[AlgorithmHistoryTests.CustomData](symbol, start, end, Resolution.Minute))
+
+def getTimeSpanHistory(algorithm: QCAlgorithm, symbol: Union[Symbol, List[Symbol]], span: Union[timedelta, int]):
+    return list(algorithm.History[AlgorithmHistoryTests.CustomData](symbol, span, Resolution.Minute))
+        ");
+                var symbol = algorithm.AddData<CustomData>("SPY").Symbol;
+
+                dynamic getDateRangeHistory = testModule.GetAttr("getDateRangeHistory");
+                dynamic getTimeSpanHistory = testModule.GetAttr("getTimeSpanHistory");
+
+                var historyResults = new[]
+                {
+                        getDateRangeHistory(algorithm, symbol, start, end),
+                        getTimeSpanHistory(algorithm, symbol, span),
+                        getTimeSpanHistory(algorithm, symbol, periods)
+                    };
+
+                foreach (var history in historyResults)
+                {
+                    AssertCustomDataTypeHistory(history.As<List<CustomData>>());
+                }
+
+                var historyResults2 = new[]
+                {
+                        getDateRangeHistory(algorithm, new[] { symbol }, start, end),
+                        getTimeSpanHistory(algorithm, new[] { symbol }, span),
+                        getTimeSpanHistory(algorithm, new[] { symbol }, periods)
+                    };
+
+                foreach (var history in historyResults2)
+                {
+                    AssertCustomDataTypeHistory(history.As<List<DataDictionary<CustomData>>>());
                 }
             }
 

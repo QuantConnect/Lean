@@ -303,7 +303,7 @@ namespace QuantConnect.Algorithm
                 return _historyRequestFactory.CreateHistoryRequest(config, start, Time, exchange, res);
             });
 
-            return GetDataTypedHistory<T>(requests).Memoize();
+            return GetDataTypedHistory<T>(requests);
         }
 
         /// <summary>
@@ -327,7 +327,7 @@ namespace QuantConnect.Algorithm
                 return _historyRequestFactory.CreateHistoryRequest(config, start, end, GetExchangeHours(x), resolution);
             });
 
-            return GetDataTypedHistory<T>(requests).Memoize();
+            return GetDataTypedHistory<T>(requests);
         }
 
         /// <summary>
@@ -385,7 +385,7 @@ namespace QuantConnect.Algorithm
             }
 
             var requests = CreateBarCountHistoryRequests(new [] { symbol }, typeof(T), periods, resolution);
-            return GetDataTypedHistory<T>(requests, symbol).Memoize();
+            return GetDataTypedHistory<T>(requests, symbol);
         }
 
         /// <summary>
@@ -401,7 +401,7 @@ namespace QuantConnect.Algorithm
             where T : IBaseData
         {
             var requests = CreateDateRangeHistoryRequests(new[] { symbol }, typeof(T), start, end, resolution);
-            return GetDataTypedHistory<T>(requests, symbol).Memoize();
+            return GetDataTypedHistory<T>(requests, symbol);
         }
 
         /// <summary>
@@ -640,27 +640,33 @@ namespace QuantConnect.Algorithm
                     $"This could be due to the specified security not being of the requested type. Symbol: {symbol} Requested Type: {type.Name}");
             }
 
-            var slices = History(requests);
+            var historyRequests = requests.ToList();
+            var slices = History(historyRequests, TimeZone);
+
+            IEnumerable<T> result = null;
 
             // If T is a custom data coming from Python (a class derived from PythonData), T will get here as PythonData
             // and not the actual custom type. We take care of this especial case by using a dynamic version of GetDataTypedHistory that
             // receives the Python type, and we get it from the history requests.
             if (type == typeof(PythonData))
             {
-                return GetPythonCustomDataTypeHistory(slices, requests.First().DataType, symbol).OfType<T>();
+                result = GetPythonCustomDataTypeHistory(slices, historyRequests.ToList(), symbol).OfType<T>();
             }
-
             // TODO: This is a patch to fix the issue with the Slice.GetImpl method returning only the last tick
             //       for each symbol instead of the whole list of ticks.
             //       The actual issue is Slice.GetImpl, so patch this can be removed right after it is properly addressed.
             //       A proposed solution making the Tick class a BaseDataCollection and make the Ticks class a dictionary Symbol->Tick instead of
             //       Symbol->List<Tick> so we can use the Slice.Get methods to collect all ticks in every slice instead of only the last one.
-            if (type == typeof(Tick))
+            else if (type == typeof(Tick))
             {
-                return (IEnumerable<T>)slices.Select(x => x.Ticks).Where(x => x.ContainsKey(symbol)).SelectMany(x => x[symbol]);
+                result = (IEnumerable<T>)slices.Select(x => x.Ticks).Where(x => x.ContainsKey(symbol)).SelectMany(x => x[symbol]);
+            }
+            else
+            {
+                result = slices.Get<T>(symbol);
             }
 
-            return slices.Get<T>(symbol);
+            return result.Memoize();
         }
 
         /// <summary>
@@ -672,38 +678,21 @@ namespace QuantConnect.Algorithm
         private IEnumerable<DataDictionary<T>> GetDataTypedHistory<T>(IEnumerable<HistoryRequest> requests)
             where T : IBaseData
         {
-            var slices = History(requests.Where(x => x != null));
+            var historyRequests = requests.Where(x => x != null).ToList();
+            var slices = History(historyRequests, TimeZone);
+
+            IEnumerable<DataDictionary<T>> result = null;
 
             if (typeof(T) == typeof(PythonData))
             {
-                return GetPythonCustomDataTypeHistory(slices, requests.First().DataType).OfType<DataDictionary<T>>().Memoize();
+                result = GetPythonCustomDataTypeHistory(slices, historyRequests.ToList()).OfType<DataDictionary<T>>();
             }
-
-            return slices.Get<T>();
-        }
-
-        /// <summary>
-        /// Centralized logic to get data typed history given a list of requests for the specified symbol.
-        /// This method is used to keep backwards compatibility for those History methods that expect an ArgumentException to be thrown
-        /// when the security and the requested data type do not match
-        /// </summary>
-        /// <remarks>
-        /// This method is only used for Python algorithms, specially for those requesting custom data type history.
-        /// The reason for using this method is that custom data type Python history calls to
-        /// <see cref="History{T}(QuantConnect.Symbol, int, Resolution?)"/> will always use <see cref="PythonData"/> (the custom data base class)
-        /// as the T argument, because the custom data class is a Python type, which will cause the history data in the slices to not be matched
-        /// to the actual requested type, resulting in an empty list of slices.
-        /// </remarks>
-        private IEnumerable<dynamic> GetPythonCustomDataTypeHistory(IEnumerable<Slice> slices, Type pythonType, Symbol symbol = null)
-        {
-            var history = slices.Select(x => x.Get(pythonType));
-
-            if (symbol == null)
+            else
             {
-                return history;
+                result = slices.Get<T>();
             }
 
-            return history.Where(x => x.ContainsKey(symbol)).Select(x => x[symbol]);
+            return result.Memoize();
         }
 
         [DocumentationAttribute(HistoricalData)]
@@ -1006,6 +995,37 @@ namespace QuantConnect.Algorithm
             _warmupTimeSpan = timeSpan;
             _warmupBarCount = barCount;
             Settings.WarmupResolution = resolution;
+        }
+
+        /// <summary>
+        /// Centralized logic to get data typed history given a list of requests for the specified symbol.
+        /// This method is used to keep backwards compatibility for those History methods that expect an ArgumentException to be thrown
+        /// when the security and the requested data type do not match
+        /// </summary>
+        /// <remarks>
+        /// This method is only used for Python algorithms, specially for those requesting custom data type history.
+        /// The reason for using this method is that custom data type Python history calls to
+        /// <see cref="History{T}(QuantConnect.Symbol, int, Resolution?)"/> will always use <see cref="PythonData"/> (the custom data base class)
+        /// as the T argument, because the custom data class is a Python type, which will cause the history data in the slices to not be matched
+        /// to the actual requested type, resulting in an empty list of slices.
+        /// </remarks>
+        private static IEnumerable<dynamic> GetPythonCustomDataTypeHistory(IEnumerable<Slice> slices, List<HistoryRequest> requests,
+            Symbol symbol = null)
+        {
+            if (requests.Count == 0 || requests.Any(x => x.DataType != requests[0].DataType))
+            {
+                throw new ArgumentException("QCAlgorithm.GetPythonCustomDataTypeHistory(): All history requests must be for the same data type");
+            }
+
+            var pythonType = requests[0].DataType;
+            var history = slices.Select(x => x.Get(pythonType));
+
+            if (symbol == null)
+            {
+                return history;
+            }
+
+            return history.Where(x => x.ContainsKey(symbol)).Select(x => x[symbol]);
         }
 
         /// <summary>
