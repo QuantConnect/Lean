@@ -25,6 +25,12 @@ namespace QuantConnect.Securities
     /// </summary>
     public class BuyingPowerModel : IBuyingPowerModel
     {
+        /// <summary>
+        /// Gets an implementation of <see cref="IBuyingPowerModel"/> that
+        /// does not check for sufficient buying power
+        /// </summary>
+        public static readonly IBuyingPowerModel Null = new NullBuyingPowerModel();
+
         private decimal _initialMarginRequirement;
         private decimal _maintenanceMarginRequirement;
 
