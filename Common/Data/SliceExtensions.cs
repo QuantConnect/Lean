@@ -49,6 +49,25 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
+        /// Gets the data dictionaries or points of the requested type in each slice
+        /// </summary>
+        /// <param name="slices">The enumerable of slice</param>
+        /// <param name="type">Data type of the data that will be fetched</param>
+        /// <param name="symbol">The symbol to retrieve</param>
+        /// <returns>An enumerable of data dictionary or data point of the requested type</returns>
+        public static IEnumerable<dynamic> Get(this IEnumerable<Slice> slices, Type type, Symbol symbol = null)
+        {
+            var result = slices.Select(x => x.Get(type));
+
+            if (symbol == null)
+            {
+                return result;
+            }
+
+            return result.Where(x => x.ContainsKey(symbol)).Select(x => x[symbol]);
+        }
+
+        /// <summary>
         /// Gets an enumerable of TradeBar for the given symbol. This method does not verify
         /// that the specified symbol points to a TradeBar
         /// </summary>

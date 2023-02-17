@@ -1018,14 +1018,13 @@ namespace QuantConnect.Algorithm
             }
 
             var pythonType = requests[0].DataType;
-            var history = slices.Select(x => x.Get(pythonType));
 
             if (symbol == null)
             {
-                return history;
+                return slices.Get(pythonType);
             }
 
-            return history.Where(x => x.ContainsKey(symbol)).Select(x => x[symbol]);
+            return slices.Get(pythonType, symbol);
         }
 
         /// <summary>
