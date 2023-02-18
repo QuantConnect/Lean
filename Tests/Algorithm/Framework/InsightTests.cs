@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -162,11 +162,9 @@ namespace QuantConnect.Tests.Algorithm.Framework
             insight.GeneratedTimeUtc = generatedTimeUtc;
             var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
             insight.SetPeriodAndCloseTime(exchangeHours);
-            var expectedPeriod = Time.Max(Time.OneSecond, resolution.ToTimeSpan()).Multiply(barCount);
-            Assert.AreEqual(expectedPeriod, insight.Period);
-
             var expectedCloseTime = Insight.ComputeCloseTime(exchangeHours, insight.GeneratedTimeUtc, resolution, barCount);
             Assert.AreEqual(expectedCloseTime, insight.CloseTimeUtc);
+            Assert.AreEqual(expectedCloseTime - generatedTimeUtc, insight.Period);
         }
 
         [Test]
@@ -240,9 +238,11 @@ namespace QuantConnect.Tests.Algorithm.Framework
         public void SetPeriodAndCloseTimeUsingExpiryEndOfDay(string ticker, SecurityType securityType, string market, int year, int month, int day, int hour, int minute)
         {
             var symbol = Symbol.Create(ticker, securityType, market);
+            var generatedTimeUtc = new DateTime(2018, 12, 3, 9, 31, 0).ConvertToUtc(TimeZones.NewYork);
 
-            SetPeriodAndCloseTimeUsingExpiryFunc(
+            SetPeriodAndCloseTimeUsingExpiryFuncOrDateTime(
                 Insight.Price(symbol, Expiry.EndOfDay, InsightDirection.Up),
+                generatedTimeUtc,
                 new DateTime(year, month, day, hour, minute, 0).ConvertToUtc(TimeZones.NewYork));
         }
 
@@ -252,9 +252,19 @@ namespace QuantConnect.Tests.Algorithm.Framework
         public void SetPeriodAndCloseTimeUsingExpiryEndOfWeek(string ticker, SecurityType securityType, string market, int year, int month, int day, int hour, int minute)
         {
             var symbol = Symbol.Create(ticker, securityType, market);
+            var generatedTime = new DateTime(2018, 12, 3, 9, 31, 0);
+            var generatedTimeUtc = generatedTime.ConvertToUtc(TimeZones.NewYork);
 
-            SetPeriodAndCloseTimeUsingExpiryFunc(
+            // Using Expiry Func
+            SetPeriodAndCloseTimeUsingExpiryFuncOrDateTime(
                 Insight.Price(symbol, Expiry.EndOfWeek, InsightDirection.Up),
+                generatedTimeUtc,
+                new DateTime(year, month, day, hour, minute, 0).ConvertToUtc(TimeZones.NewYork));
+
+            // Using DateTime
+            SetPeriodAndCloseTimeUsingExpiryFuncOrDateTime(
+                Insight.Price(symbol, Expiry.EndOfWeek(generatedTime), InsightDirection.Up),
+                generatedTimeUtc,
                 new DateTime(year, month, day, hour, minute, 0).ConvertToUtc(TimeZones.NewYork));
         }
 
@@ -264,9 +274,19 @@ namespace QuantConnect.Tests.Algorithm.Framework
         public void SetPeriodAndCloseTimeUsingExpiryEndOfMonth(string ticker, SecurityType securityType, string market, int year, int month, int day, int hour, int minute)
         {
             var symbol = Symbol.Create(ticker, securityType, market);
+            var generatedTime = new DateTime(2018, 12, 3, 9, 31, 0);
+            var generatedTimeUtc = generatedTime.ConvertToUtc(TimeZones.NewYork);
 
-            SetPeriodAndCloseTimeUsingExpiryFunc(
+            // Using Expiry Func
+            SetPeriodAndCloseTimeUsingExpiryFuncOrDateTime(
                 Insight.Price(symbol, Expiry.EndOfMonth, InsightDirection.Up),
+                generatedTimeUtc,
+                new DateTime(year, month, day, hour, minute, 0).ConvertToUtc(TimeZones.NewYork));
+
+            // Using DateTime
+            SetPeriodAndCloseTimeUsingExpiryFuncOrDateTime(
+                Insight.Price(symbol, Expiry.EndOfMonth(generatedTime), InsightDirection.Up),
+                generatedTimeUtc,
                 new DateTime(year, month, day, hour, minute, 0).ConvertToUtc(TimeZones.NewYork));
         }
 
@@ -276,77 +296,33 @@ namespace QuantConnect.Tests.Algorithm.Framework
         public void SetPeriodAndCloseTimeUsingExpiryOneMonth(string ticker, SecurityType securityType, string market, int year, int month, int day, int hour, int minute)
         {
             var symbol = Symbol.Create(ticker, securityType, market);
+            var generatedTime = new DateTime(2018, 12, 3, 9, 31, 0);
+            var generatedTimeUtc = generatedTime.ConvertToUtc(TimeZones.NewYork);
 
-            SetPeriodAndCloseTimeUsingExpiryFunc(
+            // Using Expiry Func
+            SetPeriodAndCloseTimeUsingExpiryFuncOrDateTime(
                 Insight.Price(symbol, Expiry.OneMonth, InsightDirection.Up),
+                generatedTimeUtc,
+                new DateTime(year, month, day, hour, minute, 0).ConvertToUtc(TimeZones.NewYork));
+
+            // Using DateTime
+            SetPeriodAndCloseTimeUsingExpiryFuncOrDateTime(
+                Insight.Price(symbol, Expiry.OneMonth(generatedTime), InsightDirection.Up),
+                generatedTimeUtc,
                 new DateTime(year, month, day, hour, minute, 0).ConvertToUtc(TimeZones.NewYork));
         }
 
-        private void SetPeriodAndCloseTimeUsingExpiryFunc(Insight insight, DateTime expected)
+        private void SetPeriodAndCloseTimeUsingExpiryFuncOrDateTime(Insight insight, DateTime generatedTimeUtc, DateTime expected)
         {
             var symbol = insight.Symbol;
-            insight.GeneratedTimeUtc = new DateTime(2018, 12, 3, 9, 31, 0).ConvertToUtc(TimeZones.NewYork);
+            insight.GeneratedTimeUtc = generatedTimeUtc;
 
             var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
             insight.SetPeriodAndCloseTime(exchangeHours);
 
             Assert.AreEqual(expected, insight.CloseTimeUtc);
         }
-
-        [Test]
-        [TestCase(Resolution.Tick, 1)]
-        [TestCase(Resolution.Tick, 10)]
-        [TestCase(Resolution.Tick, 100)]
-        [TestCase(Resolution.Second, 1)]
-        [TestCase(Resolution.Second, 10)]
-        [TestCase(Resolution.Second, 100)]
-        [TestCase(Resolution.Minute, 1)]
-        [TestCase(Resolution.Minute, 10)]
-        [TestCase(Resolution.Minute, 100)]
-        [TestCase(Resolution.Hour, 1)]
-        [TestCase(Resolution.Hour, 5)]
-        public void ComputePeriodOnSameLocalDateUsesSimpleSubtraction(Resolution resolution, int barCount)
-        {
-            var symbol = Symbols.SPY;
-            var generatedTimeUtc = new DateTime(2018, 08, 06, 9, 31, 0).ConvertToUtc(TimeZones.NewYork);
-            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
-            var closeTimeUtc = generatedTimeUtc.Add(resolution.ToTimeSpan().Multiply(barCount));
-
-            // confirm we're on the same date for the purposes of this test
-            if (generatedTimeUtc.ConvertFromUtc(TimeZones.NewYork).Date != closeTimeUtc.ConvertFromUtc(TimeZones.NewYork).Date)
-            {
-                Assert.Fail("Precondition failed. This test requires generated and close times are on the same local date.");
-            }
-
-            var period = Insight.ComputePeriod(exchangeHours, generatedTimeUtc, closeTimeUtc);
-
-            Assert.AreEqual(resolution.ToTimeSpan().Multiply(barCount), period);
-        }
-
-        [Test]
-        [TestCase(Resolution.Hour, 10)]
-        [TestCase(Resolution.Hour, 100)]
-        [TestCase(Resolution.Hour, 1000)]
-        [TestCase(Resolution.Daily, 1)]
-        [TestCase(Resolution.Daily, 10)]
-        [TestCase(Resolution.Daily, 100)]
-        public void ComputePeriodOnDifferentLocalDatesPicksPeriodThatMinimizesAbsoluteErrorInComputedCloseTimeUsingResolutionBarCountApproach(Resolution resolution, int barCount)
-        {
-            var symbol = Symbols.SPY;
-            var generatedTimeUtc = new DateTime(2018, 08, 06, 9, 31, 0).ConvertToUtc(TimeZones.NewYork);
-            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
-            var closeTimeUtc = Insight.ComputeCloseTime(exchangeHours, generatedTimeUtc, resolution, barCount);
-
-            // confirm we're on the same date for the purposes of this test
-            if (generatedTimeUtc.ConvertFromUtc(TimeZones.NewYork).Date == closeTimeUtc.ConvertFromUtc(TimeZones.NewYork).Date)
-            {
-                Assert.Fail("Precondition failed. This test requires generated and close times are on different local dates.");
-            }
-
-            var period = Insight.ComputePeriod(exchangeHours, generatedTimeUtc, closeTimeUtc);
-
-            Assert.AreEqual(resolution.ToTimeSpan().Multiply(barCount), period);
-        }
+        
 
         [Test]
         public void ComputeCloseTimeHandlesFractionalDays()
