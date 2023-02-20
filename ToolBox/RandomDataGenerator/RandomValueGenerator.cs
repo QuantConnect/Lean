@@ -159,22 +159,30 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
             decimal price;
             var attempts = 0;
+            var increaseProbabilityFactor = 0.5;
             do
             {
                 // what follows is a simple model of browning motion that
                 // limits the walk to the specified percent deviation
 
-                var deviation = referencePrice * maximumPercentDeviation * (decimal)(NextDouble() - 0.5);
+                var deviation = referencePrice * maximumPercentDeviation * (decimal)(NextDouble() - increaseProbabilityFactor);
+                deviation = Math.Sign(deviation) * Math.Max(Math.Abs(deviation), minimumPriceVariation);
                 price = referencePrice + deviation;
                 price = RoundPrice(price, minimumPriceVariation);
 
-                attempts++;
-            } while (!IsPriceValid(securityType, price) && attempts < 10);
+                if (price < 20 * minimumPriceVariation)
+                {
+                    // The price should not be to close to the minimum price variation.
+                    // Invalidate the price to try again and increase the probability of the it going up
+                    price = -1m;
+                    increaseProbabilityFactor = Math.Max(increaseProbabilityFactor - 0.05, 0);
+                }
+            } while (!IsPriceValid(securityType, price) && ++attempts < 10);
 
             if (!IsPriceValid(securityType, price))
             {
-                // if still invalid, bail
-                throw new TooManyFailedAttemptsException(nameof(NextPrice), attempts);
+                // if still invalid, use the last price
+                price = referencePrice;
             }
 
             return price;

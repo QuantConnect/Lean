@@ -80,5 +80,20 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                 randomValueGenerator.NextDate(min, max, DayOfWeek.Monday)
             );
         }
+
+        [Test]
+        public void NextPrice_PricesIsUpdatedEvenIfMaxPercentageDeviationIsLessThanMinPriceVariation()
+        {
+            // Default min price variation for crypto is 0.01
+            var maximumPercentDeviation = 0.45m;
+            var referencePrice = 2m;
+
+            // The maximum price variation is 0.45% of 2, which is 0.009, less than the minimum price variation of 0.01.
+            // The generated price will be rounded back to 2m, but this should be properly handled.
+
+            var price = randomValueGenerator.NextPrice(SecurityType.Crypto, Market.GDAX, referencePrice, maximumPercentDeviation);
+
+            Assert.AreNotEqual(referencePrice, price);
+        }
     }
 }
