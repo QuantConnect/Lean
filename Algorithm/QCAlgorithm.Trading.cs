@@ -872,7 +872,7 @@ namespace QuantConnect.Algorithm
 
             if (Math.Abs(request.Quantity) < security.SymbolProperties.LotSize)
             {
-                return OrderResponse.Error(request, OrderResponseErrorCode.OrderQuantityLessThanLoteSize,
+                return OrderResponse.Error(request, OrderResponseErrorCode.OrderQuantityLessThanLotSize,
                     Invariant($"Unable to {request.OrderRequestType.ToLower()} order with id {request.OrderId} which ") +
                     Invariant($"quantity ({Math.Abs(request.Quantity)}) is less than lot ") +
                     Invariant($"size ({security.SymbolProperties.LotSize}).")
