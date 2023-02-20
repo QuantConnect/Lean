@@ -634,13 +634,13 @@ namespace QuantConnect.Algorithm
         {
             var type = typeof(T);
 
-            if (requests == null || !requests.Any())
+            var historyRequests = requests.Where(x => x != null).ToList();
+            if (historyRequests.Count == 0)
             {
                 throw new ArgumentException($"No history data could be fetched. " +
                     $"This could be due to the specified security not being of the requested type. Symbol: {symbol} Requested Type: {type.Name}");
             }
 
-            var historyRequests = requests.ToList();
             var slices = History(historyRequests, TimeZone);
 
             IEnumerable<T> result = null;
@@ -650,7 +650,7 @@ namespace QuantConnect.Algorithm
             // receives the Python type, and we get it from the history requests.
             if (type == typeof(PythonData))
             {
-                result = GetPythonCustomDataTypeHistory(slices, historyRequests.ToList(), symbol).OfType<T>();
+                result = GetPythonCustomDataTypeHistory(slices, historyRequests, symbol).OfType<T>();
             }
             // TODO: This is a patch to fix the issue with the Slice.GetImpl method returning only the last tick
             //       for each symbol instead of the whole list of ticks.
@@ -685,7 +685,7 @@ namespace QuantConnect.Algorithm
 
             if (typeof(T) == typeof(PythonData))
             {
-                result = GetPythonCustomDataTypeHistory(slices, historyRequests.ToList()).OfType<DataDictionary<T>>();
+                result = GetPythonCustomDataTypeHistory(slices, historyRequests).OfType<DataDictionary<T>>();
             }
             else
             {

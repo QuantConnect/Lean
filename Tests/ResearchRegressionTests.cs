@@ -40,7 +40,7 @@ namespace QuantConnect.Tests
     public class ResearchRegressionTests
     {
         // Update in config.json when template expected result needs to be updated
-        private static readonly bool _updateResearchRegressionOutput = Config.GetBool("research-regression-update-output", true);
+        private static readonly bool _updateResearchRegressionOutput = Config.GetBool("research-regression-update-output", false);
 
         [Test, TestCaseSource(nameof(GetResearchRegressionTestParameters))]
         public void ResearchRegression(ResearchRegressionTestParameters parameters)
