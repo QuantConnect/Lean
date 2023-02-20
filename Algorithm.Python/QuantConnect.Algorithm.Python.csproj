@@ -33,6 +33,9 @@
     </PostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="CustomDataTypeHistoryAlgorithm.py" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -40,6 +43,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="AccumulativeInsightPortfolioRegressionAlgorithm.py" />
+    <Content Include="CustomDataTypeHistoryAlgorithm.py" />
     <Content Include="CorrectConsolidatedBarTypeForTickTypesAlgorithm.py" />
     <Content Include="IndustryStandardSecurityIdentifiersRegressionAlgorithm.py" />
     <Content Include="AddAlphaModelAlgorithm.py" />

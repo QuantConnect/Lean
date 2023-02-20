@@ -22,6 +22,8 @@ using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
+using QuantConnect.Python;
+using Python.Runtime;
 
 namespace QuantConnect.Algorithm
 {
@@ -301,7 +303,7 @@ namespace QuantConnect.Algorithm
                 return _historyRequestFactory.CreateHistoryRequest(config, start, Time, exchange, res);
             });
 
-            return History(requests.Where(x => x != null)).Get<T>().Memoize();
+            return GetDataTypedHistory<T>(requests);
         }
 
         /// <summary>
@@ -325,7 +327,7 @@ namespace QuantConnect.Algorithm
                 return _historyRequestFactory.CreateHistoryRequest(config, start, end, GetExchangeHours(x), resolution);
             });
 
-            return History(requests.Where(x => x != null)).Get<T>().Memoize();
+            return GetDataTypedHistory<T>(requests);
         }
 
         /// <summary>
@@ -383,7 +385,7 @@ namespace QuantConnect.Algorithm
             }
 
             var requests = CreateBarCountHistoryRequests(new [] { symbol }, typeof(T), periods, resolution);
-            return GetDataTypedHistory<T>(symbol, requests);
+            return GetDataTypedHistory<T>(requests, symbol);
         }
 
         /// <summary>
@@ -399,7 +401,7 @@ namespace QuantConnect.Algorithm
             where T : IBaseData
         {
             var requests = CreateDateRangeHistoryRequests(new[] { symbol }, typeof(T), start, end, resolution);
-            return GetDataTypedHistory<T>(symbol, requests);
+            return GetDataTypedHistory<T>(requests, symbol);
         }
 
         /// <summary>
@@ -624,34 +626,80 @@ namespace QuantConnect.Algorithm
         /// This method is used to keep backwards compatibility for those History methods that expect an ArgumentException to be thrown
         /// when the security and the requested data type do not match
         /// </summary>
-        private IEnumerable<T> GetDataTypedHistory<T>(Symbol symbol, IEnumerable<HistoryRequest> requests)
+        /// <remarks>
+        /// This method will check for Python custom data types in order to call the right Slice.Get dynamic method
+        /// </remarks>
+        private IEnumerable<T> GetDataTypedHistory<T>(IEnumerable<HistoryRequest> requests, Symbol symbol)
             where T : IBaseData
         {
-            if (requests == null || !requests.Any())
+            var type = typeof(T);
+
+            var historyRequests = requests.Where(x => x != null).ToList();
+            if (historyRequests.Count == 0)
             {
                 throw new ArgumentException($"No history data could be fetched. " +
-                    $"This could be due to the specified security not being of the requested type. Symbol: {symbol} Requested Type: {typeof(T).Name}");
+                    $"This could be due to the specified security not being of the requested type. Symbol: {symbol} Requested Type: {type.Name}");
             }
 
-            var slices = History(requests);
+            var slices = History(historyRequests, TimeZone);
 
+            IEnumerable<T> result = null;
+
+            // If T is a custom data coming from Python (a class derived from PythonData), T will get here as PythonData
+            // and not the actual custom type. We take care of this especial case by using a dynamic version of GetDataTypedHistory that
+            // receives the Python type, and we get it from the history requests.
+            if (type == typeof(PythonData))
+            {
+                result = GetPythonCustomDataTypeHistory(slices, historyRequests, symbol).OfType<T>();
+            }
             // TODO: This is a patch to fix the issue with the Slice.GetImpl method returning only the last tick
             //       for each symbol instead of the whole list of ticks.
             //       The actual issue is Slice.GetImpl, so patch this can be removed right after it is properly addressed.
             //       A proposed solution making the Tick class a BaseDataCollection and make the Ticks class a dictionary Symbol->Tick instead of
             //       Symbol->List<Tick> so we can use the Slice.Get methods to collect all ticks in every slice instead of only the last one.
-            if (typeof(T) == typeof(Tick))
+            else if (type == typeof(Tick))
             {
-                return (IEnumerable<T>)slices.Select(x => x.Ticks).Where(x => x.ContainsKey(symbol)).SelectMany(x => x[symbol]);
+                result = (IEnumerable<T>)slices.Select(x => x.Ticks).Where(x => x.ContainsKey(symbol)).SelectMany(x => x[symbol]);
+            }
+            else
+            {
+                result = slices.Get<T>(symbol);
             }
 
-            return slices.Get<T>(symbol).Memoize();
+            return result.Memoize();
+        }
+
+        /// <summary>
+        /// Centralized logic to get data typed history for a given list of requests.
+        /// </summary>
+        /// <remarks>
+        /// This method will check for Python custom data types in order to call the right Slice.Get dynamic method
+        /// </remarks>
+        private IEnumerable<DataDictionary<T>> GetDataTypedHistory<T>(IEnumerable<HistoryRequest> requests)
+            where T : IBaseData
+        {
+            var historyRequests = requests.Where(x => x != null).ToList();
+            var slices = History(historyRequests, TimeZone);
+
+            IEnumerable<DataDictionary<T>> result = null;
+
+            if (typeof(T) == typeof(PythonData))
+            {
+                result = GetPythonCustomDataTypeHistory(slices, historyRequests).OfType<DataDictionary<T>>();
+            }
+            else
+            {
+                result = slices.Get<T>();
+            }
+
+            return result.Memoize();
         }
 
         [DocumentationAttribute(HistoricalData)]
         private IEnumerable<Slice> History(IEnumerable<HistoryRequest> requests, DateTimeZone timeZone)
         {
             var sentMessage = false;
+            var hasPythonDataRequest = false;
             // filter out any universe securities that may have made it this far
             var filteredRequests = requests.Where(hr => HistoryRequestValid(hr.Symbol)).ToList();
             for (var i = 0; i < filteredRequests.Count; i++)
@@ -679,10 +727,23 @@ namespace QuantConnect.Algorithm
                         Debug("Request for future history modified to end now.");
                     }
                 }
+
+                if (!hasPythonDataRequest)
+                {
+                    hasPythonDataRequest = request.IsCustomData && typeof(PythonData).IsAssignableFrom(request.DataType);
+                }
             }
 
             // filter out future data to prevent look ahead bias
-            return ((IAlgorithm)this).HistoryProvider.GetHistory(filteredRequests, timeZone);
+            var history = HistoryProvider.GetHistory(filteredRequests, timeZone);
+
+            if (hasPythonDataRequest && PythonEngine.IsInitialized)
+            {
+                // add protection against potential python deadlocks
+                return WrapPythonDataHistory(history);
+            }
+
+            return history;
         }
 
         /// <summary>
@@ -934,6 +995,63 @@ namespace QuantConnect.Algorithm
             _warmupTimeSpan = timeSpan;
             _warmupBarCount = barCount;
             Settings.WarmupResolution = resolution;
+        }
+
+        /// <summary>
+        /// Centralized logic to get data typed history given a list of requests for the specified symbol.
+        /// This method is used to keep backwards compatibility for those History methods that expect an ArgumentException to be thrown
+        /// when the security and the requested data type do not match
+        /// </summary>
+        /// <remarks>
+        /// This method is only used for Python algorithms, specially for those requesting custom data type history.
+        /// The reason for using this method is that custom data type Python history calls to
+        /// <see cref="History{T}(QuantConnect.Symbol, int, Resolution?)"/> will always use <see cref="PythonData"/> (the custom data base class)
+        /// as the T argument, because the custom data class is a Python type, which will cause the history data in the slices to not be matched
+        /// to the actual requested type, resulting in an empty list of slices.
+        /// </remarks>
+        private static IEnumerable<dynamic> GetPythonCustomDataTypeHistory(IEnumerable<Slice> slices, List<HistoryRequest> requests,
+            Symbol symbol = null)
+        {
+            if (requests.Count == 0 || requests.Any(x => x.DataType != requests[0].DataType))
+            {
+                throw new ArgumentException("QCAlgorithm.GetPythonCustomDataTypeHistory(): All history requests must be for the same data type");
+            }
+
+            var pythonType = requests[0].DataType;
+
+            if (symbol == null)
+            {
+                return slices.Get(pythonType);
+            }
+
+            return slices.Get(pythonType, symbol);
+        }
+
+        /// <summary>
+        /// Wraps the resulting history enumerable in case of a Python custom data history request.
+        /// We need to get and release the Python GIL when parallel history requests are enabled to avoid deadlocks
+        /// in the custom data readers.
+        /// </summary>
+        private static IEnumerable<Slice> WrapPythonDataHistory(IEnumerable<Slice> history)
+        {
+            using var enumerator = history.GetEnumerator();
+
+            var hasData = true;
+            while (hasData)
+            {
+                // TODO: we don't really need the GIL. We should find a way to check whether we have the lock and only call this wrapper method if we do.
+                using (Py.GIL())
+                {
+                    var state = PythonEngine.BeginAllowThreads();
+                    hasData = enumerator.MoveNext();
+                    PythonEngine.EndAllowThreads(state);
+                }
+
+                if (hasData)
+                {
+                    yield return enumerator.Current;
+                }
+            }
         }
     }
 }
