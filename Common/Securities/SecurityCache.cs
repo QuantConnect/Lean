@@ -44,6 +44,8 @@ namespace QuantConnect.Securities
         private IReadOnlyList<BaseData> _lastTickTrades = _empty;
         private Dictionary<Type, IReadOnlyList<BaseData>> _dataByType;
 
+        public Dictionary<string, object> CustomProperties = new Dictionary<string, object> ();
+
         /// <summary>
         /// Gets the most recent price submitted to this cache
         /// </summary>

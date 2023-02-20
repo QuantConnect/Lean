@@ -16,6 +16,7 @@
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Securities.Equity;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -27,8 +28,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using quantconnect" />
     /// <meta name="tag" content="trading and orders" />
     public class BasicTemplateAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
-    {
-        private Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+    { 
+        private Equity _spy;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -43,10 +44,13 @@ namespace QuantConnect.Algorithm.CSharp
             // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
             // Futures Resolution: Tick, Second, Minute
             // Options Resolution: Minute Only.
-            AddEquity("SPY", Resolution.Minute);
+            _spy = AddEquity("SPY", Resolution.Minute);
 
             // There are other assets with similar methods. See "Selecting Options" etc for more details.
             // AddFuture, AddForex, AddCfd, AddOption
+
+            _spy.Short = EMA("SPY", 30, Resolution.Minute);
+            _spy.Long = EMA("SPY", 60, Resolution.Minute);
         }
 
         /// <summary>
@@ -55,10 +59,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            if (!Portfolio.Invested)
+            if (_spy["Short"] > _spy["Long"])
             {
-                SetHoldings(_spy, 1);
-                Debug("Purchased Stock");
+                SetHoldings("SPY", 1);
             }
         }
 

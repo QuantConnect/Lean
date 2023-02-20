@@ -29,6 +29,10 @@ using Python.Runtime;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using System.Dynamic;
+using System.Reflection;
+using System.Linq.Expressions;
+using Fasterflect;
 
 namespace QuantConnect.Securities
 {
@@ -39,7 +43,7 @@ namespace QuantConnect.Securities
     /// Security object is intended to hold properties of the specific security asset. These properties can include trade start-stop dates,
     /// price, market hours, resolution of the security, the holdings information for this security and the specific fill model.
     /// </remarks>
-    public class Security : ISecurityPrice
+    public class Security : DynamicObject, ISecurityPrice
     {
         private LocalTimeKeeper _localTimeKeeper;
 
@@ -49,6 +53,33 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>Just use a list + lock, not concurrent bag, avoid garbage it creates for features we don't need here. See https://github.com/dotnet/runtime/issues/23103</remarks>
         private readonly List<SubscriptionDataConfig> _subscriptionsBag;
+
+        public override bool TryGetMember(GetMemberBinder binder, out object result)
+        {
+            if (Cache.CustomProperties.ContainsKey(binder.Name))
+            {
+                result = Cache.CustomProperties[binder.Name];
+                return true;
+            }
+            else
+            {
+                throw new Exception($"Property {binder.Name} was not found");
+            }
+        }
+
+        public override bool TrySetMember(SetMemberBinder binder, object value)
+        {
+            Cache.CustomProperties[binder.Name] = value;
+            return true;
+        }
+
+        public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
+        {
+            dynamic method = Cache.CustomProperties[binder.Name];
+            result = method(args[0].ToString(), args[1].ToString());
+            return true;
+        }
+
 
         /// <summary>
         /// This securities <see cref="IShortableProvider"/>
