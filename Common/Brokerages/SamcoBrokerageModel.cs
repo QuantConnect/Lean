@@ -38,6 +38,13 @@ namespace QuantConnect.Brokerages
             typeof(GoodTilDateTimeInForce)
         };
 
+        private readonly OrderType[] _supportedOrderTypes =
+        {
+            OrderType.Market,
+            OrderType.Limit,
+            OrderType.StopMarket
+        };
+
         private const decimal _maxLeverage = 5m;
 
         /// <summary>
@@ -112,6 +119,15 @@ namespace QuantConnect.Brokerages
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.DefaultBrokerageModel.UnsupportedTimeInForce(this, order));
+
+                return false;
+            }
+
+            // validate order type
+            if (!_supportedOrderTypes.Contains(order.Type))
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order));
 
                 return false;
             }

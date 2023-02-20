@@ -14,6 +14,7 @@
 */
 
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
@@ -28,6 +29,14 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class TradierBrokerageModel : DefaultBrokerageModel
     {
+        private readonly OrderType[] _supportedOrderTypes =
+        {
+            OrderType.Limit,
+            OrderType.Market,
+            OrderType.StopMarket,
+            OrderType.StopLimit
+        };
+
         private static readonly EquityExchange EquityExchange =
             new EquityExchange(MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, null, SecurityType.Equity));
 
@@ -55,6 +64,14 @@ namespace QuantConnect.Brokerages
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
             message = null;
+
+            if (!_supportedOrderTypes.Contains(order.Type))
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.TradierBrokerageModel.UnsupportedOrderType);
+
+                return false;
+            }
 
             var securityType = order.SecurityType;
             if (securityType != SecurityType.Equity && securityType != SecurityType.Option)
