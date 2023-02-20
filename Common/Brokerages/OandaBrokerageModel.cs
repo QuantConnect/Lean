@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using QuantConnect.Benchmarks;
 using QuantConnect.Orders;
@@ -53,6 +54,10 @@ namespace QuantConnect.Brokerages
         public OandaBrokerageModel(AccountType accountType = AccountType.Margin)
             : base(accountType)
         {
+            if (accountType == AccountType.Cash)
+            {
+                throw new InvalidOperationException($"Oanda brokerage can only be used with a {AccountType.Margin} account type");
+            }
         }
 
         /// <summary>
