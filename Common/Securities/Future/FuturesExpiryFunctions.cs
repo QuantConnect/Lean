@@ -649,27 +649,6 @@ namespace QuantConnect.Securities.Future
                 })
             },
 
-            // HSI Index Futures:https://www.hkex.com.hk/Products/Listed-Derivatives/Equity-Index/Hang-Seng-Index-(HSI)/Hang-Seng-Index-Futures?sc_lang=en#&product=HSI
-            {Symbol.Create(Futures.Indices.HangSeng, SecurityType.Future, Market.HKFE), (time =>
-                {
-                    // Short-dated Futures: Spot, next calendar month & next two calendar quarter months; and Long-dated Futures: the following 5 December months
-
-                    // The Business Day immediately preceding the last Business Day of the Contract Month
-                    var lastDay = new DateTime(time.Year, time.Month, DateTime.DaysInMonth(time.Year, time.Month));
-                    var priorBusinessDay = lastDay.AddDays(-1);
-
-                    var holidays = MarketHoursDatabase.FromDataFolder()
-                        .GetEntry(Market.HKFE, Futures.Indices.HangSeng, SecurityType.Future)
-                        .ExchangeHours
-                        .Holidays;
-
-                    while (holidays.Contains(priorBusinessDay) || !priorBusinessDay.IsCommonBusinessDay())
-                    {
-                        priorBusinessDay = priorBusinessDay.AddDays(-1);
-                    }
-                    return priorBusinessDay.Add(new TimeSpan(16, 0, 0));
-                })
-            },
             // MSCI Europe Net Total Return (USD) Futures: https://www.theice.com/products/71512951/MSCI-Europe-NTR-Index-Future-USD & https://www.theice.com/publicdocs/futures_us/exchange_notices/ICE_Futures_US_2022_TRADING_HOLIDAY_CALENDAR_20211118.pdf
             {Symbol.Create(Futures.Indices.MSCIEuropeNTR, SecurityType.Future, Market.NYSELIFFE), (time =>
                 {

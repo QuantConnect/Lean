@@ -985,12 +985,6 @@ namespace QuantConnect.Securities
             public const string BseSensex = "SENSEX";
 
             /// <summary>
-            /// Hang Seng Index
-            /// </summary>
-            /// <returns>The symbol</returns>
-            public const string HangSeng = "HSI";
-
-            /// <summary>
             /// Micro E-mini S&amp;P 500 Index Futures
             /// </summary>
             /// <returns>The symbol</returns>

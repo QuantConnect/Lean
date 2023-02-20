@@ -275,7 +275,6 @@ sgx,IN,future,Nifty Indices Futures,USD,2,0.5,50.0
 india,NIFTY,future,Nifty50 Index,INR,0.05,75,1
 india,BANKNIFTY,future,BankNifty Index,INR,0.05,25,1.0
 india,SENSEX,future,BSE S&P Sensex Index,INR,0.05,25,1.0
-hkfe,HSI,future,Hang Seng Index,HKD,50,1,1.0
 
 # Futures options -- will default to Futures contract specs in case no entry exists
 cbot,OZB,futureoption,U.S. Treasury Bond American Futures Options,USD,1000.0,0.015625,1.0
