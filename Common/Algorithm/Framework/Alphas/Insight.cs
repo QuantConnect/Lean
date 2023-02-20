@@ -545,57 +545,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
             return closeTimeUtc;
         }
-
-        /// <summary>
-        /// Computes the insight period from the given generated and close times
-        /// </summary>
-        /// <param name="exchangeHours">The exchange hours of the insight's security</param>
-        /// <param name="generatedTimeUtc">The insight's generated time in utc</param>
-        /// <param name="closeTimeUtc">The insight's close time in utc</param>
-        /// <returns>The insight's period</returns>
-        public static TimeSpan ComputePeriod(SecurityExchangeHours exchangeHours, DateTime generatedTimeUtc, DateTime closeTimeUtc)
-        {
-            if (generatedTimeUtc > closeTimeUtc)
-            {
-                throw new ArgumentOutOfRangeException(nameof(closeTimeUtc), Messages.Insight.InvalidCloseTimeUtc);
-            }
-
-            var generatedTimeLocal = generatedTimeUtc.ConvertFromUtc(exchangeHours.TimeZone);
-            var closeTimeLocal = closeTimeUtc.ConvertFromUtc(exchangeHours.TimeZone);
-
-            if (generatedTimeLocal.Date == closeTimeLocal.Date)
-            {
-                return closeTimeLocal - generatedTimeLocal;
-            }
-
-            var choices = new[]
-            {
-                // don't use hourly since it causes issues with non-round open/close times
-                new {barSize = Time.OneDay, count = 0, delta = TimeSpan.MaxValue},
-                new {barSize = Time.OneMinute, count = 0, delta = TimeSpan.MaxValue}
-            };
-
-            for (int i = 0; i < choices.Length; i++)
-            {
-                var barSize = choices[i].barSize;
-                var count = Time.GetNumberOfTradeBarsInInterval(exchangeHours, generatedTimeLocal, closeTimeLocal, barSize);
-                var closeTime = Time.GetEndTimeForTradeBars(exchangeHours, generatedTimeLocal, barSize, count, false);
-                var delta = (closeTimeLocal - closeTime).Abs();
-
-                if (delta == TimeSpan.Zero)
-                {
-                    // exact match found
-                    return barSize.Multiply(count);
-                }
-
-                choices[i] = new {barSize, count, delta};
-            }
-
-            // no exact match, return the one with the least error
-            var choiceWithLeastError = choices.OrderBy(c => c.delta).First();
-            return choiceWithLeastError.barSize.Multiply(choiceWithLeastError.count);
-        }
-
+        
         /// <summary>Returns a string that represents the current object.</summary>
         /// <returns>A string that represents the current object.</returns>
         /// <filterpriority>2</filterpriority>
@@ -677,8 +627,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
             public void SetPeriodAndCloseTime(Insight insight, SecurityExchangeHours exchangeHours)
             {
-                insight.Period = Resolution.ToTimeSpan().Multiply(BarCount);
                 insight.CloseTimeUtc = ComputeCloseTime(exchangeHours, insight.GeneratedTimeUtc, Resolution, BarCount);
+                insight.Period = insight.CloseTimeUtc - insight.GeneratedTimeUtc;
             }
         }
 
@@ -696,13 +646,19 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
             public void SetPeriodAndCloseTime(Insight insight, SecurityExchangeHours exchangeHours)
             {
-                insight.CloseTimeUtc = CloseTimeLocal.ConvertToUtc(exchangeHours.TimeZone);
+                // Prevent close time to be defined to a date/time in closed market
+                var closeTimeLocal = exchangeHours.IsOpen(CloseTimeLocal, false)
+                    ? CloseTimeLocal
+                    : exchangeHours.GetNextMarketOpen(CloseTimeLocal, false);
+
+                insight.CloseTimeUtc = closeTimeLocal.ConvertToUtc(exchangeHours.TimeZone);
+
                 if (insight.GeneratedTimeUtc > insight.CloseTimeUtc)
                 {
-                    throw new ArgumentOutOfRangeException("closeTimeLocal", Messages.Insight.InvalidCloseTimeLocal);
+                    throw new ArgumentOutOfRangeException("closeTimeLocal", $"Insight closeTimeLocal must not be in the past.");
                 }
 
-                insight.Period = ComputePeriod(exchangeHours, insight.GeneratedTimeUtc, insight.CloseTimeUtc);
+                insight.Period = insight.CloseTimeUtc - insight.GeneratedTimeUtc;
             }
         }
 
