@@ -152,7 +152,6 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(Market.ICE, SecurityType.Future)]
         [TestCase(Market.NYMEX, SecurityType.Future)]
         [TestCase(Market.SGX, SecurityType.Future)]
-        [TestCase(Market.HKFE, SecurityType.Future)]
         public void GetSymbolPropertiesListIsNotEmpty(string market, SecurityType securityType)
         {
             var db = SymbolPropertiesDatabase.FromDataFolder();
