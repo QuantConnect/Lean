@@ -1008,7 +1008,7 @@ namespace QuantConnect.Lean.Engine.Results
                 charts.Add(kvp.Key, newChart);
                 foreach (var series in chart.Series.Values)
                 {
-                    var newSeries = new Series(series.Name, series.SeriesType, series.Unit, series.Color);
+                    var newSeries = series.Clone(empty: true);
                     newSeries.Values.AddRange(series.Values.Where(chartPoint => chartPoint.x >= unixDateStart && chartPoint.x <= unixDateStop));
                     newChart.AddSeries(newSeries);
                 }
