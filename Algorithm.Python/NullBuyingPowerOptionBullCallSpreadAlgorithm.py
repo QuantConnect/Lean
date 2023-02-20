@@ -60,3 +60,8 @@ class NullBuyingPowerOptionBullCallSpreadAlgorithm(QCAlgorithm):
             for ticket in tickets:
                 if ticket.Status != OrderStatus.Filled:
                     raise Exception(f"There should be no restriction on buying {ticket.Quantity} of {ticket.Symbol} with BuyingPowerModel.Null")
+
+
+    def OnEndOfAlgorithm(self) -> None:
+        if self.Portfolio.TotalMarginUsed != 0:
+            raise Exception("The TotalMarginUsed should be zero to avoid margin calls.")

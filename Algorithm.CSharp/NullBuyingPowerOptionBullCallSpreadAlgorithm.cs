@@ -84,6 +84,14 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        public override void OnEndOfAlgorithm()
+        {
+            if (Portfolio.TotalMarginUsed != 0)
+            {
+                throw new Exception("The TotalMarginUsed should be zero to avoid margin calls.");
+            }
+        }
+
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
@@ -129,7 +137,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$500.00"},
-            {"Estimated Strategy Capacity", "$1000.00"},
+            {"Estimated Strategy Capacity", "$36000.00"},
             {"Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},

@@ -21,6 +21,16 @@ namespace QuantConnect.Securities
     public class NullBuyingPowerModel : BuyingPowerModel
     {
         /// <summary>
+        /// Gets the margin currently allocated to the specified holding
+        /// </summary>
+        /// <param name="parameters">An object containing the security</param>
+        /// <returns>The maintenance margin required for the provided holdings quantity/cost/value</returns>
+        public override MaintenanceMargin GetMaintenanceMargin(MaintenanceMarginParameters parameters)
+        {
+            return new MaintenanceMargin(decimal.Zero);
+        }
+
+        /// <summary>
         /// Check if there is sufficient buying power to execute this order.
         /// </summary>
         /// <param name="parameters">An object containing the portfolio, the security and the order</param>
