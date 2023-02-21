@@ -137,6 +137,7 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
         '''Contains data specific to a symbol required by this model'''
         def __init__(self, symbol, lookback, period):
             self.symbol = symbol
+            self.lookback = lookback
             self.roc = RateOfChange(f'{symbol}.ROC({lookback})', lookback)
             self.roc.Updated += self.OnRateOfChangeUpdated
             self.window = RollingWindow[IndicatorDataPoint](period)
@@ -161,7 +162,7 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
         @property
         def Return(self):
             return pd.Series(
-                data = [(1 + float(x.Value))**252 - 1 for x in self.window],
+                data = [(1 + float(x.Value))**self.lookback - 1 for x in self.window],
                 index = [x.EndTime for x in self.window])
 
         @property
@@ -169,4 +170,4 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
             return self.window.IsReady
 
         def __str__(self, **kwargs):
-            return '{}: {:.2%}'.format(self.roc.Name, (1 + self.window[0])**252 - 1)
+            return '{}: {:.2%}'.format(self.roc.Name, (1 + self.window[0])**self.lookback - 1)
