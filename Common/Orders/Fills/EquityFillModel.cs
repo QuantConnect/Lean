@@ -350,37 +350,64 @@ namespace QuantConnect.Orders.Fills
             {
                 return fill;
             }
-            //Get the range of prices in the last bar:
-            var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
-            var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+
+            // Get the range of prices in the last bar:
+            var tradeHigh = 0m;
+            var tradeLow = 0m;
+            var endTimeUtc = DateTime.MinValue;
+
+            var subscribedTypes = GetSubscribedTypes(asset);
+
+            if (subscribedTypes.Contains(typeof(Tick)))
+            {
+                var trade = asset.Cache.GetAll<Tick>().LastOrDefault(x => x.TickType == TickType.Trade && x.Price > 0);
+
+                if (trade != null)
+                {
+                    tradeHigh = trade.Price;
+                    tradeLow = trade.Price;
+                    endTimeUtc = trade.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+                }
+            }
+            else if (subscribedTypes.Contains(typeof(TradeBar)))
+            {
+                var tradeBar = asset.Cache.GetData<TradeBar>();
+
+                if (tradeBar != null)
+                {
+                    tradeHigh = tradeBar.High;
+                    tradeLow = tradeBar.Low;
+                    endTimeUtc = tradeBar.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+                }
+            }
 
             // do not fill on stale data
-            if (pricesEndTime <= order.Time) return fill;
+            if (endTimeUtc <= order.Time) return fill;
 
             //-> Valid Live/Model Order:
             switch (order.Direction)
             {
                 case OrderDirection.Buy:
                     //Buy limit seeks lowest price
-                    if (prices.Low < order.LimitPrice)
+                    if (tradeLow < order.LimitPrice)
                     {
                         //Set order fill:
                         fill.Status = OrderStatus.Filled;
                         // fill at the worse price this bar or the limit price, this allows far out of the money limits
                         // to be executed properly
-                        fill.FillPrice = Math.Min(prices.High, order.LimitPrice);
+                        fill.FillPrice = Math.Min(tradeHigh, order.LimitPrice);
                         // assume the order completely filled
                         fill.FillQuantity = order.Quantity;
                     }
                     break;
                 case OrderDirection.Sell:
                     //Sell limit seeks highest price possible
-                    if (prices.High > order.LimitPrice)
+                    if (tradeHigh > order.LimitPrice)
                     {
                         fill.Status = OrderStatus.Filled;
                         // fill at the worse price this bar or the limit price, this allows far out of the money limits
                         // to be executed properly
-                        fill.FillPrice = Math.Max(prices.Low, order.LimitPrice);
+                        fill.FillPrice = Math.Max(tradeLow, order.LimitPrice);
                         // assume the order completely filled
                         fill.FillQuantity = order.Quantity;
                     }
