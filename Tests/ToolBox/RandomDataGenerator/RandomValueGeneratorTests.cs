@@ -80,5 +80,65 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                 randomValueGenerator.NextDate(min, max, DayOfWeek.Monday)
             );
         }
+
+        [Test]
+        public void NextPrice_ReturnsZeroForOptionsZeroReferencePrice()
+        {
+            var price = randomValueGenerator.NextPrice(SecurityType.Option, Market.USA, 0m, 1m);
+            Assert.AreEqual(0m, price);
+        }
+
+        [Test]
+        public void NextPrice_ThrowsIfReferencePriceIsInvalid([Values] SecurityType securityType)
+        {
+            // Negative reference price
+            Assert.Throws<ArgumentException>(() =>
+                randomValueGenerator.NextPrice(securityType, null, -1m, 1m)
+            );
+
+            // Zero reference price
+            if (securityType != SecurityType.Option)
+            {
+                Assert.Throws<ArgumentException>(() =>
+                    randomValueGenerator.NextPrice(securityType, null, 0m, 1m)
+                );
+            }
+        }
+
+        [TestCase(0)]
+        [TestCase(-1)]
+        public void NextPrice_ThrowsIfMaximumPercentDeviationIsInvalid(decimal maximumPercentDeviation)
+        {
+            Assert.Throws<ArgumentException>(() =>
+                randomValueGenerator.NextPrice(SecurityType.Equity, null, 100m, maximumPercentDeviation)
+            );
+        }
+
+        [Test]
+        public void NextPrice_ReturnsSamePriceIfFailsToGetAValidOne()
+        {
+            // Default min price variation for crypto is 0.01
+            var maximumPercentDeviation = 0.45m;
+            var referencePrice = 0.1m; // too close to the minimum price variation
+
+            var price = randomValueGenerator.NextPrice(SecurityType.Crypto, Market.GDAX, referencePrice, maximumPercentDeviation);
+
+            Assert.AreEqual(referencePrice, price);
+        }
+
+        [Test]
+        public void NextPrice_PricesIsUpdatedEvenIfMaxPercentageDeviationIsLessThanMinPriceVariation()
+        {
+            // Default min price variation for crypto is 0.01
+            var maximumPercentDeviation = 0.45m;
+            var referencePrice = 2m;
+
+            // The maximum price variation is 0.45% of 2, which is 0.009, less than the minimum price variation of 0.01.
+            // The generated price will be rounded back to 2m, but this should be properly handled.
+
+            var price = randomValueGenerator.NextPrice(SecurityType.Crypto, Market.GDAX, referencePrice, maximumPercentDeviation);
+
+            Assert.AreNotEqual(referencePrice, price);
+        }
     }
 }
