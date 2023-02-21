@@ -19,6 +19,7 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Brokerages
 {
@@ -27,6 +28,14 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class FTXBrokerageModel : DefaultBrokerageModel
     {
+        private readonly HashSet<OrderType> _supportedOrderTypes = new HashSet<OrderType>
+        {
+            OrderType.Market,
+            OrderType.Limit,
+            OrderType.StopMarket,
+            OrderType.StopLimit
+        };
+
         private const decimal _defaultLeverage = 3m;
 
         /// <summary>
@@ -100,6 +109,15 @@ namespace QuantConnect.Brokerages
             }
 
             message = null;
+
+            // validate order type
+            if (!_supportedOrderTypes.Contains(order.Type))
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportedOrderTypes));
+
+                return false;
+            }
 
             if (order.Type is OrderType.StopMarket or OrderType.StopLimit)
             {

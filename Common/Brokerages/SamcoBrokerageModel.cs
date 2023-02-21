@@ -22,7 +22,6 @@ using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Brokerages
 {
@@ -31,11 +30,18 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class SamcoBrokerageModel : DefaultBrokerageModel
     {
-        private readonly Type[] _supportedTimeInForces =
+        private readonly HashSet<Type> _supportedTimeInForces = new()
         {
             typeof(GoodTilCanceledTimeInForce),
             typeof(DayTimeInForce),
             typeof(GoodTilDateTimeInForce)
+        };
+
+        private readonly HashSet<OrderType> _supportedOrderTypes = new()
+        {
+            OrderType.Market,
+            OrderType.Limit,
+            OrderType.StopMarket
         };
 
         private const decimal _maxLeverage = 5m;
@@ -112,6 +118,15 @@ namespace QuantConnect.Brokerages
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.DefaultBrokerageModel.UnsupportedTimeInForce(this, order));
+
+                return false;
+            }
+
+            // validate order type
+            if (!_supportedOrderTypes.Contains(order.Type))
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportedOrderTypes));
 
                 return false;
             }

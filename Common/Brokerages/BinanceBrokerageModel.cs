@@ -156,7 +156,7 @@ namespace QuantConnect.Brokerages
                     return false;
                 default:
                     message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                        Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order));
+                        Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, new [] { OrderType.StopMarket, OrderType.StopLimit, OrderType.Market, OrderType.Limit }));
                     return false;
             }
 

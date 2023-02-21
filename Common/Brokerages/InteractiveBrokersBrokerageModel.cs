@@ -55,6 +55,21 @@ namespace QuantConnect.Brokerages
             typeof(GoodTilDateTimeInForce)
         };
 
+        private readonly HashSet<OrderType> _supportedOrderTypes = new HashSet<OrderType>
+        {
+            OrderType.Market,
+            OrderType.MarketOnOpen,
+            OrderType.MarketOnClose,
+            OrderType.Limit,
+            OrderType.StopMarket,
+            OrderType.StopLimit,
+            OrderType.LimitIfTouched,
+            OrderType.ComboMarket,
+            OrderType.ComboLimit,
+            OrderType.ComboLegLimit,
+            OrderType.OptionExercise
+        };
+
         /// <summary>
         /// Initializes a new instance of the <see cref="InteractiveBrokersBrokerageModel"/> class
         /// </summary>
@@ -105,6 +120,15 @@ namespace QuantConnect.Brokerages
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
             message = null;
+
+            // validate order type
+            if (!_supportedOrderTypes.Contains(order.Type))
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportedOrderTypes));
+
+                return false;
+            }
 
             // validate security type
             if (security.Type != SecurityType.Equity &&
