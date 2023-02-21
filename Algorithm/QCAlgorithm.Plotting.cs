@@ -208,7 +208,7 @@ namespace QuantConnect.Algorithm
                 }
 
                 //If we don't have the series, create it:
-                thisChart.AddSeries(new Series(series, SeriesType.Line, 0, "$"));
+                thisChart.AddSeries(new Series(series));
             }
 
             if (LiveMode && IsWarmingUp)
