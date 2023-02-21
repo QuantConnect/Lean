@@ -148,7 +148,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
             if (maximumPercentDeviation <= 0)
             {
-                throw new ArgumentException("The provided maximum percent deviation must be a postive number");
+                throw new ArgumentException("The provided maximum percent deviation must be a positive number");
             }
 
             // convert from percent space to decimal space
