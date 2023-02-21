@@ -21,6 +21,7 @@ using QuantConnect.Securities;
 using QuantConnect.Orders;
 
 using static QuantConnect.StringExtensions;
+using System.Collections.Generic;
 
 namespace QuantConnect
 {
@@ -62,9 +63,9 @@ namespace QuantConnect
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string UnsupportedOrderType(IBrokerageModel brokerageModel, Orders.Order order)
+            public static string UnsupportedOrderType(IBrokerageModel brokerageModel, Orders.Order order, IEnumerable<OrderType> supportedOrderTypes)
             {
-                return Invariant($"The {brokerageModel.GetType().Name} does not support {order.Type} order type.");
+                return Invariant($"The {brokerageModel.GetType().Name} does not support {order.Type} order type. Only supports [{string.Join(',', supportedOrderTypes)}]");
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -270,9 +271,6 @@ namespace QuantConnect
         public static class TradierBrokerageModel
         {
             public static string UnsupportedSecurityType = "This model only supports equities and options.";
-
-            public static string UnsupportedOrderType =
-                "Tradier brokerage only supports Market orders. MarketOnOpen and MarketOnClose orders not supported.";
 
             public static string ExtendedMarketHoursTradingNotSupported =
                 "Tradier does not support extended market hours trading. Your order will be processed at market open.";

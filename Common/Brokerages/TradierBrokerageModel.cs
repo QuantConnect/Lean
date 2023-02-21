@@ -14,7 +14,6 @@
 */
 
 using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
@@ -68,7 +67,7 @@ namespace QuantConnect.Brokerages
             if (!_supportedOrderTypes.Contains(order.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.TradierBrokerageModel.UnsupportedOrderType);
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportedOrderTypes));
 
                 return false;
             }
@@ -78,14 +77,6 @@ namespace QuantConnect.Brokerages
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.TradierBrokerageModel.UnsupportedSecurityType);
-
-                return false;
-            }
-
-            if (order.Type == OrderType.MarketOnOpen || order.Type == OrderType.MarketOnClose)
-            {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.TradierBrokerageModel.UnsupportedOrderType);
 
                 return false;
             }

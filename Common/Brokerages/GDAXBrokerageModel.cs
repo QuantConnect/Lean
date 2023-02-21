@@ -19,6 +19,7 @@ using QuantConnect.Securities;
 using QuantConnect.Orders.Fees;
 using System.Linq;
 using QuantConnect.Benchmarks;
+using System.Collections.Generic;
 
 namespace QuantConnect.Brokerages
 {
@@ -32,6 +33,14 @@ namespace QuantConnect.Brokerages
 
         // https://blog.coinbase.com/coinbase-pro-market-structure-update-fbd9d49f43d7
         private readonly DateTime _stopMarketOrderSupportEndDate = new DateTime(2019, 3, 23, 1, 0, 0);
+
+        private readonly HashSet<OrderType> _supportedOrderTypes = new()
+        {
+            OrderType.Limit,
+            OrderType.Market,
+            OrderType.StopMarket,
+            OrderType.StopLimit
+        };
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GDAXBrokerageModel"/> class
@@ -121,10 +130,10 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (order.Type != OrderType.Limit && order.Type != OrderType.Market && order.Type != OrderType.StopMarket && order.Type != OrderType.StopLimit)
+            if (!_supportedOrderTypes.Contains(order.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order));
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportedOrderTypes));
 
                 return false;
             }

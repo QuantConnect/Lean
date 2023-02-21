@@ -33,6 +33,15 @@ namespace QuantConnect.Brokerages
         private readonly List<string> _onlyFiatsAvailableMargin = new() {"BTC", "USDT", "USDC"};
         private readonly List<string> _ethAvailableMargin = new() {"REP", "XTZ", "ADA", "EOS", "TRX", "LINK" };
 
+        private readonly HashSet<OrderType> _supportedOrderTypes = new()
+        {
+            OrderType.Limit,
+            OrderType.Market,
+            OrderType.StopMarket,
+            OrderType.StopLimit,
+            OrderType.LimitIfTouched
+        };
+
         /// <summary>
         /// Gets a map of the default markets to be used for each security type
         /// </summary>
@@ -96,10 +105,10 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (order.Type == OrderType.MarketOnClose || order.Type == OrderType.MarketOnOpen || order.Type == OrderType.OptionExercise)
+            if (!_supportedOrderTypes.Contains(order.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order));
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportedOrderTypes));
 
                 return false;
             }

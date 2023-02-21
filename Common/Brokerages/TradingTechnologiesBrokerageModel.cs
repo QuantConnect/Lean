@@ -44,6 +44,14 @@ namespace QuantConnect.Brokerages
             typeof(DayTimeInForce)
         };
 
+        private readonly HashSet<OrderType> _supportedOrderTypes = new()
+        {
+            OrderType.Limit,
+            OrderType.Market,
+            OrderType.StopMarket,
+            OrderType.StopLimit
+        };
+
         /// <summary>
         /// Initializes a new instance of the <see cref="TradingTechnologiesBrokerageModel"/> class
         /// </summary>
@@ -105,10 +113,10 @@ namespace QuantConnect.Brokerages
             }
 
             // validate order type
-            if (order.Type != OrderType.Limit && order.Type != OrderType.Market && order.Type != OrderType.StopMarket && order.Type != OrderType.StopLimit)
+            if (!_supportedOrderTypes.Contains(order.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order));
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportedOrderTypes));
 
                 return false;
             }

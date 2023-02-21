@@ -37,7 +37,7 @@ namespace QuantConnect.Brokerages
             typeof(DayTimeInForce)
         };
 
-        private readonly OrderType[] _supportedOrderTypes =
+        private readonly HashSet<OrderType> _supportedOrderTypes = new()
         {
             OrderType.Limit,
             OrderType.Market,
@@ -119,7 +119,7 @@ namespace QuantConnect.Brokerages
             if (!_supportedOrderTypes.Contains(order.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order));
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportedOrderTypes));
 
                 return false;
             }
