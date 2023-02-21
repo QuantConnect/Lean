@@ -66,7 +66,8 @@ namespace QuantConnect.Brokerages
             OrderType.LimitIfTouched,
             OrderType.ComboMarket,
             OrderType.ComboLimit,
-            OrderType.ComboLegLimit
+            OrderType.ComboLegLimit,
+            OrderType.OptionExercise
         };
 
         /// <summary>
