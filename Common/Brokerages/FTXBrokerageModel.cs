@@ -28,7 +28,7 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class FTXBrokerageModel : DefaultBrokerageModel
     {
-        private readonly OrderType[] _supportedOrderTypes =
+        private readonly HashSet<OrderType> _supportedOrderTypes = new HashSet<OrderType>
         {
             OrderType.Market,
             OrderType.Limit,

@@ -37,7 +37,7 @@ namespace QuantConnect.Brokerages
             typeof(GoodTilDateTimeInForce)
         };
 
-        private readonly OrderType[] _supportedOrderTypes =
+        private readonly HashSet<OrderType> _supportedOrderTypes = new HashSet<OrderType>
         {
             OrderType.Limit,
             OrderType.Market,

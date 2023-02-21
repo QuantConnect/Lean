@@ -29,7 +29,7 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class TradierBrokerageModel : DefaultBrokerageModel
     {
-        private readonly OrderType[] _supportedOrderTypes =
+        private readonly HashSet<OrderType> _supportedOrderTypes = new HashSet<OrderType>
         {
             OrderType.Limit,
             OrderType.Market,
