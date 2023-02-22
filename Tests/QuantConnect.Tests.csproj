@@ -42,13 +42,13 @@
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="16.9.4" />
     <PackageReference Include="Moq" Version="4.16.1" />
     <PackageReference Include="NetMQ" Version="4.0.1.6" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="NodaTime" Version="3.0.5" />
     <PackageReference Include="NUnit" Version="3.13.3" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.2.1">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="protobuf-net" Version="3.0.29" />
+    <PackageReference Include="protobuf-net" Version="3.2.0" />
     <PackageReference Include="RestSharp" Version="106.12.0" />
   </ItemGroup>
   <ItemGroup>

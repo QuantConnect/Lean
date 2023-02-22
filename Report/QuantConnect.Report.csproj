@@ -44,7 +44,7 @@
     <PackageReference Include="QuantConnect.pythonnet" Version="2.0.17" />
     <PackageReference Include="Deedle" Version="2.1.0" />
     <PackageReference Include="MathNet.Numerics" Version="4.15.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="NodaTime" Version="3.0.5" />
   </ItemGroup>
   <ItemGroup>
