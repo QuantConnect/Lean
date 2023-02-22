@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using QuantConnect.Securities.Option;
 using static QuantConnect.StringExtensions;
 using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Orders.TimeInForces;
 
 namespace QuantConnect.Algorithm
 {
@@ -320,8 +321,15 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket MarketOnOpenOrder(Symbol symbol, decimal quantity, string tag = "", IOrderProperties orderProperties = null)
         {
+            var properties = orderProperties ?? DefaultOrderProperties?.Clone();
+            if (properties.TimeInForce as GoodTilDateTimeInForce != null)
+            {
+                // Good-Til-Date(GTD) Time-In-Force is not supported for MOO orders
+                properties.TimeInForce = TimeInForce.GoodTilCanceled;
+            }
+
             var security = Securities[symbol];
-            var request = CreateSubmitOrderRequest(OrderType.MarketOnOpen, security, quantity, tag, orderProperties ?? DefaultOrderProperties?.Clone());
+            var request = CreateSubmitOrderRequest(OrderType.MarketOnOpen, security, quantity, tag, properties);
 
             return SubmitOrderRequest(request);
         }

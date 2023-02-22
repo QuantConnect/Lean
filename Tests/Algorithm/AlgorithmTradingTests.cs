@@ -21,14 +21,12 @@ using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using QuantConnect.Brokerages;
 using Moq;
-using QuantConnect.Data.Shortable;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
-using QuantConnect.Orders.Fills;
 using System.Linq;
 
 namespace QuantConnect.Tests.Algorithm
@@ -1452,6 +1450,18 @@ namespace QuantConnect.Tests.Algorithm
 
             var ticket = algo.MarketOnOpenOrder(es20h20.Symbol, 1);
             Assert.That(ticket, Has.Property("Status").EqualTo(OrderStatus.Invalid));
+        }
+
+        [Test]
+        public void GoodTilDateTimeInForceNotSupportedForMarketOnOpenOrders()
+        {
+            var algorithm = GetAlgorithm(out var msft, 1, 0);
+            Update(msft, 25);
+
+            var ticket = algorithm.MarketOnOpenOrder(Symbols.MSFT, 1);
+
+            Assert.AreEqual(OrderStatus.New, ticket.Status);
+            Assert.AreEqual(TimeInForce.GoodTilCanceled, ticket.SubmitRequest.OrderProperties.TimeInForce);
         }
 
         [Test]
