@@ -119,7 +119,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             // Solve problem
             var x0 = Vector.Create(size, 1.0 / size);
             bool success = solver.Minimize(Vector.Copy(x0));
-            return success ? solver.Solution : x0;
+            return success ? solver.Solution.Divide(solver.Solution.Abs().Sum()) : x0;
         }
     }
 }
