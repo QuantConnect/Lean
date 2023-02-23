@@ -156,7 +156,6 @@ while count <= 10:
                 if (Debugger.IsAttached)
                 {
                     Log.Trace("DebuggerHelper.Initialize(): debugger is already attached, triggering initial break.");
-                    Debugger.Break();
                 }
                 else
                 {
