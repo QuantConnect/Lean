@@ -391,25 +391,24 @@ namespace QuantConnect.Orders.Fills
                     //Buy limit seeks lowest price
                     if (tradeLow < order.LimitPrice)
                     {
-                        //Set order fill:
-                        fill.Status = OrderStatus.Filled;
-                        // fill at the worse price this bar or the limit price, this allows far out of the money limits
-                        // to be executed properly
-                        fill.FillPrice = Math.Min(tradeHigh, order.LimitPrice);
+                        // Fills with the limit price
+                        fill.FillPrice = order.LimitPrice;
                         // assume the order completely filled
+                        // TODO: Add separate DepthLimited fill partial order quantities based on tick quantity / bar.Volume available.
                         fill.FillQuantity = order.Quantity;
+                        fill.Status = OrderStatus.Filled;
                     }
                     break;
                 case OrderDirection.Sell:
                     //Sell limit seeks highest price possible
                     if (tradeHigh > order.LimitPrice)
                     {
-                        fill.Status = OrderStatus.Filled;
-                        // fill at the worse price this bar or the limit price, this allows far out of the money limits
-                        // to be executed properly
-                        fill.FillPrice = Math.Max(tradeLow, order.LimitPrice);
-                        // assume the order completely filled
+                        // Fills with the limit price
+                        fill.FillPrice = order.LimitPrice;
+                        // Assume the order completely filled
+                        // TODO: Add separate DepthLimited fill partial order quantities based on tick quantity / bar.Volume available.
                         fill.FillQuantity = order.Quantity;
+                        fill.Status = OrderStatus.Filled;
                     }
                     break;
             }
