@@ -322,16 +322,25 @@ namespace QuantConnect.Algorithm
         public OrderTicket MarketOnOpenOrder(Symbol symbol, decimal quantity, string tag = "", IOrderProperties orderProperties = null)
         {
             var properties = orderProperties ?? DefaultOrderProperties?.Clone();
-            if (properties.TimeInForce as GoodTilDateTimeInForce != null)
-            {
-                // Good-Til-Date(GTD) Time-In-Force is not supported for MOO orders
-                properties.TimeInForce = TimeInForce.GoodTilCanceled;
-            }
+            InvalidateGoodTilDateTimeInForce(properties);
 
             var security = Securities[symbol];
             var request = CreateSubmitOrderRequest(OrderType.MarketOnOpen, security, quantity, tag, properties);
 
             return SubmitOrderRequest(request);
+        }
+
+        /// <summary>
+        /// Resets the time-in-force to the default <see cref="TimeInForce.GoodTilCanceled" /> if the given one is a <see cref="GoodTilDateTimeInForce"/>.
+        /// This is required for MOO and MOC orders, for which GTD is not supported.
+        /// </summary>
+        private static void InvalidateGoodTilDateTimeInForce(IOrderProperties orderProperties)
+        {
+            if (orderProperties.TimeInForce as GoodTilDateTimeInForce != null)
+            {
+                // Good-Til-Date(GTD) Time-In-Force is not supported for MOO and MOC orders
+                orderProperties.TimeInForce = TimeInForce.GoodTilCanceled;
+            }
         }
 
         /// <summary>
@@ -373,8 +382,11 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket MarketOnCloseOrder(Symbol symbol, decimal quantity, string tag = "", IOrderProperties orderProperties = null)
         {
+            var properties = orderProperties ?? DefaultOrderProperties?.Clone();
+            InvalidateGoodTilDateTimeInForce(properties);
+
             var security = Securities[symbol];
-            var request = CreateSubmitOrderRequest(OrderType.MarketOnClose, security, quantity, tag, orderProperties ?? DefaultOrderProperties?.Clone());
+            var request = CreateSubmitOrderRequest(OrderType.MarketOnClose, security, quantity, tag, properties);
 
             return SubmitOrderRequest(request);
         }
