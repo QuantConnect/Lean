@@ -360,12 +360,12 @@ namespace QuantConnect.Orders.Fills
 
             if (subscribedTypes.Contains(typeof(Tick)))
             {
-                var trade = asset.Cache.GetAll<Tick>().LastOrDefault(x => x.TickType == TickType.Trade && x.Price > 0);
+                var trades = asset.Cache.GetAll<Tick>().Where(x => x.TickType == TickType.Trade && x.Price > 0);
 
-                if (trade != null)
+                foreach (var trade in trades)
                 {
-                    tradeHigh = trade.Price;
-                    tradeLow = trade.Price;
+                    tradeHigh = Math.Max(tradeHigh, trade.Price);
+                    tradeLow = tradeLow == 0 ? trade.Price : Math.Min(tradeLow, trade.Price);
                     endTimeUtc = trade.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
                 }
             }
