@@ -41,8 +41,11 @@ namespace QuantConnect.Algorithm.CSharp
                 .Select(ticker => QuantConnect.Symbol.Create(ticker, SecurityType.Equity, Market.USA))
                 .ToList();
 
+            // Manually add SPY and AIG when the algorithm starts
             SetUniverseSelection(new ManualUniverseSelectionModel(symbols.Take(2)));
 
+            // At midnight, add all securities every day except on the last data
+            // With this procedure, the Alpha Model will experience multiple universe changes
             AddUniverseSelection(new ScheduledUniverseSelectionModel(
                 DateRules.EveryDay(), TimeRules.Midnight,
                 dt => dt < EndDate.AddDays(-1) ? symbols : Enumerable.Empty<Symbol>()));

@@ -150,7 +150,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             }
         }
 
-        private class PairData
+        private class PairData : IDisposable
         {
             private enum State
             {
@@ -224,6 +224,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 _predictionInterval = period;
             }
 
+            /// <summary>
+            /// On disposal, remove the consolidators from the subscription manager
+            /// </summary>
             public void Dispose()
             {
                 _algorithm.SubscriptionManager.RemoveConsolidator(_asset1, _identityConsolidator1);

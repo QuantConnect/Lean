@@ -31,8 +31,11 @@ class PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm(QCAlgorithm):
         symbols = [Symbol.Create(ticker, SecurityType.Equity, Market.USA)
             for ticker in ["SPY", "AIG", "BAC", "IBM"]]
 
+        # Manually add SPY and AIG when the algorithm starts
         self.SetUniverseSelection(ManualUniverseSelectionModel(symbols[:2]))
 
+        # At midnight, add all securities every day except on the last data
+        # With this procedure, the Alpha Model will experience multiple universe changes
         self.AddUniverseSelection(ScheduledUniverseSelectionModel(
             self.DateRules.EveryDay(), self.TimeRules.Midnight,
             lambda dt: symbols if dt.day <= (self.EndDate - timedelta(1)).day else []))

@@ -156,8 +156,11 @@ class BasePairsTradingAlphaModel(AlphaModel):
             self.predictionInterval = predictionInterval
 
         def dispose(self):
-           self.algorithm.SubscriptionManager.RemoveConsolidator(self.asset1, self.identityConsolidator1)
-           self.algorithm.SubscriptionManager.RemoveConsolidator(self.asset2, self.identityConsolidator2)
+            '''
+            On disposal, remove the consolidators from the subscription manager
+            '''
+            self.algorithm.SubscriptionManager.RemoveConsolidator(self.asset1, self.identityConsolidator1)
+            self.algorithm.SubscriptionManager.RemoveConsolidator(self.asset2, self.identityConsolidator2)
 
         def GetInsightGroup(self):
             '''Gets the insights group for the pair
