@@ -31,6 +31,7 @@ namespace QuantConnect.Algorithm
         private int _maxOrders = 10000;
         private bool _isMarketOnOpenOrderWarningSent;
         private bool _isMarketOnOpenOrderRestrictedForFuturesWarningSent;
+        private bool _isGtdTfiForMooAndMocOrdersValidationWarningSent;
 
         /// <summary>
         /// Transaction Manager - Process transaction fills and order management.
@@ -328,19 +329,6 @@ namespace QuantConnect.Algorithm
             var request = CreateSubmitOrderRequest(OrderType.MarketOnOpen, security, quantity, tag, properties);
 
             return SubmitOrderRequest(request);
-        }
-
-        /// <summary>
-        /// Resets the time-in-force to the default <see cref="TimeInForce.GoodTilCanceled" /> if the given one is a <see cref="GoodTilDateTimeInForce"/>.
-        /// This is required for MOO and MOC orders, for which GTD is not supported.
-        /// </summary>
-        private static void InvalidateGoodTilDateTimeInForce(IOrderProperties orderProperties)
-        {
-            if (orderProperties.TimeInForce as GoodTilDateTimeInForce != null)
-            {
-                // Good-Til-Date(GTD) Time-In-Force is not supported for MOO and MOC orders
-                orderProperties.TimeInForce = TimeInForce.GoodTilCanceled;
-            }
         }
 
         /// <summary>
@@ -1393,6 +1381,26 @@ namespace QuantConnect.Algorithm
                     "The combo order quantities should be reduced " +
                     $"from {quantity}x({string.Join(", ", legs.Select(leg => $"{leg.Quantity} {leg.Symbol}"))}) " +
                     $"to {quantity * greatestsCommonDivisor}x({string.Join(", ", legs.Select(leg => $"{leg.Quantity / greatestsCommonDivisor} {leg.Symbol}"))}).");
+            }
+        }
+
+        /// <summary>
+        /// Resets the time-in-force to the default <see cref="TimeInForce.GoodTilCanceled" /> if the given one is a <see cref="GoodTilDateTimeInForce"/>.
+        /// This is required for MOO and MOC orders, for which GTD is not supported.
+        /// </summary>
+        private void InvalidateGoodTilDateTimeInForce(IOrderProperties orderProperties)
+        {
+            if (orderProperties.TimeInForce as GoodTilDateTimeInForce != null)
+            {
+                // Good-Til-Date(GTD) Time-In-Force is not supported for MOO and MOC orders
+                orderProperties.TimeInForce = TimeInForce.GoodTilCanceled;
+
+                if (!_isGtdTfiForMooAndMocOrdersValidationWarningSent)
+                {
+                    Debug("Warning: Good-Til-Date Time-In-Force is not supported for MOO and MOC orders. " +
+                        "The time-in-force will be reset to Good-Til-Canceled (GTC).");
+                    _isGtdTfiForMooAndMocOrdersValidationWarningSent = true;
+                }
             }
         }
     }
