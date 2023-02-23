@@ -57,7 +57,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             // this fills worst case scenario, so it's at the limit price
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
-            Assert.AreEqual(Math.Min(order.LimitPrice, equity.High), fill.FillPrice);
+            Assert.AreEqual(order.LimitPrice, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
         }
 
@@ -89,7 +89,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             // this fills worst case scenario, so it's at the limit price
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
-            Assert.AreEqual(Math.Max(order.LimitPrice, equity.Low), fill.FillPrice);
+            Assert.AreEqual(order.LimitPrice, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
         }
 
@@ -147,16 +147,6 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
-
-            // For the buy limit fill, we expect the minimum between the maximum trade price and the limit price
-            // For the sell limit fill, we expect the maximum between the minimum trade price and the limit price
-            var expected = Math.Sign(orderQuantity) > 0
-                ? Math.Min(trades.Max(x => x.Value), limitPrice)
-                : Math.Max(trades.Min(x => x.Value), limitPrice);
-            Assert.AreEqual(expected, fill.FillPrice);
-
-            // Since we defined that the minimum and maximum will overshoot the fill price,
-            // we expect to fill at the fill price (worst-case scenario)
             Assert.AreEqual(limitPrice, fill.FillPrice);
         }
 
@@ -260,6 +250,57 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
+        }
+
+        [TestCase(100, 290.50)]
+        [TestCase(-100, 291.50)]
+        public void LimitOrderFillsAtLimitPriceWithFavorableGap(decimal orderQuantity, decimal limitPrice)
+        {
+            // See https://github.com/QuantConnect/Lean/issues/963
+
+            var fillModel = new EquityFillModel();
+            var configTradeBar = CreateTradeBarConfig(Symbols.SPY);
+            var equity = CreateEquity(configTradeBar);
+
+            var time = new DateTime(2018, 9, 24, 9, 30, 0);
+            var timeKeeper = new TimeKeeper(time.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork);
+            equity.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+
+            // The order will not fill with these prices
+            equity.SetMarketPrice(new TradeBar(time, Symbols.SPY, 291m, 291m, 291m, 291m, 12345));
+
+            var order = new LimitOrder(Symbols.SPY, orderQuantity, limitPrice, time.ConvertToUtc(TimeZones.NewYork));
+
+            var fill = fillModel.Fill(new FillModelParameters(
+                equity,
+                order,
+                new MockSubscriptionDataConfigProvider(configTradeBar),
+                Time.OneHour,
+                null)).Single();
+
+            // Do not fill on stale data
+            Assert.AreEqual(0, fill.FillQuantity);
+            Assert.AreEqual(0, fill.FillPrice);
+            Assert.AreEqual(OrderStatus.None, fill.Status);
+
+            time += TimeSpan.FromMinutes(2);
+            timeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+
+            // The Gap TradeBar has all prices below/above the limit price 
+            var gapTradeBar = Math.Sign(orderQuantity) switch
+            { 
+                1 => new TradeBar(time, Symbols.SPY, limitPrice - 1, limitPrice - 1, limitPrice - 2, limitPrice - 1, 12345),
+                -1 => new TradeBar(time, Symbols.SPY, limitPrice + 1, limitPrice + 2, limitPrice + 1, limitPrice + 1, 12345),
+            };
+
+            equity.SetMarketPrice(gapTradeBar);
+
+            fill = fillModel.LimitFill(equity, order);
+
+            // this fills worst case scenario, so it's at the limit price
+            Assert.AreEqual(order.Quantity, fill.FillQuantity);
+            Assert.AreEqual(limitPrice, fill.FillPrice);
+            Assert.AreEqual(OrderStatus.Filled, fill.Status);
         }
 
         [TestCase(100, 290.50)]
