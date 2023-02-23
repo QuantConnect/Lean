@@ -21,14 +21,12 @@ using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using QuantConnect.Brokerages;
 using Moq;
-using QuantConnect.Data.Shortable;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
-using QuantConnect.Orders.Fills;
 using System.Linq;
 
 namespace QuantConnect.Tests.Algorithm
@@ -1452,6 +1450,34 @@ namespace QuantConnect.Tests.Algorithm
 
             var ticket = algo.MarketOnOpenOrder(es20h20.Symbol, 1);
             Assert.That(ticket, Has.Property("Status").EqualTo(OrderStatus.Invalid));
+        }
+
+        [TestCase(OrderType.MarketOnOpen)]
+        [TestCase(OrderType.MarketOnClose)]
+        public void GoodTilDateTimeInForceNotSupportedForMOOAndMOCOrders(OrderType orderType)
+        {
+            var algorithm = GetAlgorithm(out var msft, 1, 0);
+            Update(msft, 25);
+
+            var orderProperties = new OrderProperties() { TimeInForce = TimeInForce.GoodTilDate(algorithm.Time.AddDays(1)) };
+
+            OrderTicket ticket;
+            switch (orderType)
+            {
+                case OrderType.MarketOnOpen:
+                    ticket = algorithm.MarketOnOpenOrder(msft.Symbol, 1, orderProperties: orderProperties);
+                    break;
+                case OrderType.MarketOnClose:
+                    ticket = algorithm.MarketOnCloseOrder(msft.Symbol, 1, orderProperties: orderProperties);
+                    break;
+                default:
+                    Assert.Fail("Unexpected order type");
+                    return;
+            }
+
+
+            Assert.AreEqual(OrderStatus.New, ticket.Status);
+            Assert.AreEqual(TimeInForce.GoodTilCanceled, ticket.SubmitRequest.OrderProperties.TimeInForce);
         }
 
         [Test]
