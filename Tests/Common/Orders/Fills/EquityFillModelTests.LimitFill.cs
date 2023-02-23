@@ -14,20 +14,14 @@
 */
 
 using System;
-using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
-using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fills;
-using QuantConnect.Securities;
-using QuantConnect.Securities.Forex;
 using QuantConnect.Tests.Common.Data;
-using QuantConnect.Tests.Common.Securities;
-using QuantConnect.Securities.Equity;
-using System.Linq;
 
 namespace QuantConnect.Tests.Common.Orders.Fills
 {
@@ -136,15 +130,34 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             time += TimeSpan.FromMinutes(2);
             timeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
 
-            var price = limitPrice - 0.1m * Math.Sign(orderQuantity);
-            tradeTick = new Tick { TickType = TickType.Trade, Time = time, Value = price }; 
-            equity.SetMarketPrice(tradeTick);
+            // Create a series of price where the last value will not fill
+            // and the fill model need to use the minimum/maximum instead
+            var trades = new[] { 0m, -0.1m, 0m, 0.1m, 0m }
+                .Select(delta => new Tick 
+                    { 
+                        TickType = TickType.Trade,
+                        Time = time, 
+                        Value = limitPrice - delta * Math.Sign(orderQuantity)
+                    })
+                .ToList();
+
+            equity.Update(trades, typeof(Tick));
 
             fill = fillModel.LimitFill(equity, order);
 
-            Assert.AreEqual(order.Quantity, fill.FillQuantity);
-            Assert.AreEqual(price, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
+            Assert.AreEqual(order.Quantity, fill.FillQuantity);
+
+            // For the buy limit fill, we expect the minimum between the maximum trade price and the limit price
+            // For the sell limit fill, we expect the maximum between the minimum trade price and the limit price
+            var expected = Math.Sign(orderQuantity) > 0
+                ? Math.Min(trades.Max(x => x.Value), limitPrice)
+                : Math.Max(trades.Min(x => x.Value), limitPrice);
+            Assert.AreEqual(expected, fill.FillPrice);
+
+            // Since we defined that the minimum and maximum will overshoot the fill price,
+            // we expect to fill at the fill price (worst-case scenario)
+            Assert.AreEqual(limitPrice, fill.FillPrice);
         }
 
         [TestCase(100, 290.50)]
