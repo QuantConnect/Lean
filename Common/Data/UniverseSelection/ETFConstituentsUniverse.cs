@@ -26,7 +26,7 @@ namespace QuantConnect.Data.UniverseSelection
     public class ETFConstituentsUniverse : ConstituentsUniverse<ETFConstituentData>
     {
         private const string _etfConstituentsUniverseIdentifier = "qc-universe-etf-constituents";
-        
+
         /// <summary>
         /// Creates a new universe for the constituents of the ETF provided as <paramref name="symbol"/>
         /// </summary>
@@ -44,7 +44,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="symbol">The ETF to load constituents for</param>
         /// <param name="universeSettings">Universe settings</param>
         /// <param name="constituentsFilter">The filter function used to filter out ETF constituents from the universe</param>
-        public ETFConstituentsUniverse(Symbol symbol, UniverseSettings universeSettings, PyObject constituentsFilter = null)
+        public ETFConstituentsUniverse(Symbol symbol, UniverseSettings universeSettings, PyObject constituentsFilter)
             : this(symbol, universeSettings, constituentsFilter.ConvertPythonUniverseFilterFunction<ETFConstituentData>())
         {
         }
@@ -58,7 +58,7 @@ namespace QuantConnect.Data.UniverseSelection
         {
             var guid = Guid.NewGuid().ToString();
             var universeTicker = _etfConstituentsUniverseIdentifier + '-' + guid;
-            
+
             return new Symbol(
                 SecurityIdentifier.GenerateConstituentIdentifier(
                     universeTicker,
