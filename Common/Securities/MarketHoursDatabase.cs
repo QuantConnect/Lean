@@ -63,9 +63,9 @@ namespace QuantConnect.Securities
         /// Initializes a new instance of the <see cref="MarketHoursDatabase"/> class
         /// </summary>
         /// <param name="exchangeHours">The full listing of exchange hours by key</param>
-        public MarketHoursDatabase(IReadOnlyDictionary<SecurityDatabaseKey, Entry> exchangeHours)
+        public MarketHoursDatabase(Dictionary<SecurityDatabaseKey, Entry> exchangeHours)
         {
-            _entries = exchangeHours.ToDictionary();
+            _entries = exchangeHours;
         }
 
         /// <summary>

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,10 +14,10 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -165,34 +165,49 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(TimeZones.EasternStandard, marketHoursDatabase.GetDataTimeZone(Market.FXCM, null, SecurityType.Forex));
         }
 
-        [TestCase("GC", Market.COMEX)]
-        [TestCase("SI", Market.COMEX)]
-        [TestCase("HG", Market.COMEX)]
-        [TestCase("ES", Market.CME)]
-        [TestCase("NQ", Market.CME)]
-        [TestCase("CL", Market.NYMEX)]
-        [TestCase("NG", Market.NYMEX)]
-        [TestCase("ZB", Market.CBOT)]
-        [TestCase("ZC", Market.CBOT)]
-        [TestCase("ZS", Market.CBOT)]
-        [TestCase("ZT", Market.CBOT)]
-        [TestCase("ZW", Market.CBOT)]
-        public void MissingFuturesOptionsMarketHoursResolvesToFuturesMarketHours(string ticker, string market)
+        [TestCase("SPX", SecurityType.Index, Market.USA)]
+        [TestCase("SPXW", SecurityType.Index, Market.USA)]
+        [TestCase("AAPL", SecurityType.Equity, Market.USA)]
+        [TestCase("SPY", SecurityType.Equity, Market.USA)]
+
+        [TestCase("GC", SecurityType.Future, Market.COMEX)]
+        [TestCase("SI", SecurityType.Future, Market.COMEX)]
+        [TestCase("HG", SecurityType.Future, Market.COMEX)]
+        [TestCase("ES", SecurityType.Future, Market.CME)]
+        [TestCase("NQ", SecurityType.Future, Market.CME)]
+        [TestCase("CL", SecurityType.Future, Market.NYMEX)]
+        [TestCase("NG", SecurityType.Future, Market.NYMEX)]
+        [TestCase("ZB", SecurityType.Future, Market.CBOT)]
+        [TestCase("ZC", SecurityType.Future, Market.CBOT)]
+        [TestCase("ZS", SecurityType.Future, Market.CBOT)]
+        [TestCase("ZT", SecurityType.Future, Market.CBOT)]
+        [TestCase("ZW", SecurityType.Future, Market.CBOT)]
+        public void MissingOptionsEntriesResolveToUnderlyingMarketHours(string optionTicker, SecurityType securityType, string market)
         {
             var provider = MarketHoursDatabase.FromDataFolder();
-            var future = Symbol.Create(ticker, SecurityType.Future, market);
+            var underlyingTIcker = OptionSymbol.MapToUnderlying(optionTicker, securityType);
+            var underlying = Symbol.Create(underlyingTIcker, securityType, market);
             var option = Symbol.CreateOption(
-                future,
+                underlying,
                 market,
-                default(OptionStyle),
-                default(OptionRight),
-                default(decimal),
+                default,
+                default,
+                default,
                 SecurityIdentifier.DefaultDate);
 
-            var futureEntry = provider.GetEntry(market, future, SecurityType.Future);
-            var optionEntry = provider.GetEntry(market, option, SecurityType.FutureOption);
+            var underlyingEntry = provider.GetEntry(market, underlying, underlying.SecurityType);
+            var optionEntry = provider.GetEntry(market, option, option.SecurityType);
 
-            Assert.AreEqual(futureEntry, optionEntry);
+            if (securityType == SecurityType.Future)
+            {
+                Assert.AreEqual(underlyingEntry, optionEntry);
+            }
+            else
+            {
+                Assert.AreEqual(underlyingEntry.ExchangeHours.Holidays, optionEntry.ExchangeHours.Holidays);
+                Assert.AreEqual(underlyingEntry.ExchangeHours.LateOpens, optionEntry.ExchangeHours.LateOpens);
+                Assert.AreEqual(underlyingEntry.ExchangeHours.EarlyCloses, optionEntry.ExchangeHours.EarlyCloses);
+            }
         }
 
         [TestCase("GC", Market.COMEX, "OG")]

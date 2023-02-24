@@ -71,15 +71,15 @@ namespace QuantConnect.Securities.Option
         /// Maps the option ticker to it's underlying
         /// </summary>
         /// <param name="optionTicker">The option ticker to map</param>
-        /// <param name="securityType">The security type of the option</param>
+        /// <param name="securityType">The security type of the option or underlying</param>
         /// <returns>The underlying ticker</returns>
         public static string MapToUnderlying(string optionTicker, SecurityType securityType)
         {
-            if(securityType == SecurityType.FutureOption)
+            if(securityType == SecurityType.FutureOption || securityType == SecurityType.Future)
             {
                 return FuturesOptionsSymbolMappings.MapFromOption(optionTicker);
             }
-            else if (securityType == SecurityType.IndexOption)
+            else if (securityType == SecurityType.IndexOption || securityType == SecurityType.Index)
             {
                 return IndexOptionSymbol.MapToUnderlying(optionTicker);
             }
