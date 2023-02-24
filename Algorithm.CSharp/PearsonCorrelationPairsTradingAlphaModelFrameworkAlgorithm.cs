@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -20,6 +21,7 @@ using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -35,16 +37,33 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 07);
             SetEndDate(2013, 10, 11);
 
-            SetUniverseSelection(new ManualUniverseSelectionModel(
-                QuantConnect.Symbol.Create("AIG", SecurityType.Equity, Market.USA),
-                QuantConnect.Symbol.Create("BAC", SecurityType.Equity, Market.USA),
-                QuantConnect.Symbol.Create("IBM", SecurityType.Equity, Market.USA),
-                QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)));
+            var symbols = new[] { "SPY", "AIG", "BAC", "IBM" }
+                .Select(ticker => QuantConnect.Symbol.Create(ticker, SecurityType.Equity, Market.USA))
+                .ToList();
+
+            // Manually add SPY and AIG when the algorithm starts
+            SetUniverseSelection(new ManualUniverseSelectionModel(symbols.Take(2)));
+
+            // At midnight, add all securities every day except on the last data
+            // With this procedure, the Alpha Model will experience multiple universe changes
+            AddUniverseSelection(new ScheduledUniverseSelectionModel(
+                DateRules.EveryDay(), TimeRules.Midnight,
+                dt => dt < EndDate.AddDays(-1) ? symbols : Enumerable.Empty<Symbol>()));
 
             SetAlpha(new PearsonCorrelationPairsTradingAlphaModel(252, Resolution.Daily));
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
             SetExecution(new ImmediateExecutionModel());
             SetRiskManagement(new NullRiskManagementModel());
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            // We have removed all securities from the universe. The Alpha Model should remove the consolidator
+            var consolidatorCount = SubscriptionManager.Subscriptions.Sum(s => s.Consolidators.Count);
+            if (consolidatorCount > 0)
+            {
+                throw new Exception($"The number of consolidator is should be zero. Actual: {consolidatorCount}");
+            }
         }
 
         /// <summary>
@@ -60,7 +79,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 15643;
+        public long DataPoints => 14089;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -73,33 +92,33 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "6"},
-            {"Average Win", "0.82%"},
-            {"Average Loss", "-0.39%"},
-            {"Compounding Annual Return", "47.234%"},
-            {"Drawdown", "0.700%"},
-            {"Expectancy", "0.548"},
-            {"Net Profit", "0.496%"},
-            {"Sharpe Ratio", "10.749"},
-            {"Probabilistic Sharpe Ratio", "86.164%"},
+            {"Average Win", "0.99%"},
+            {"Average Loss", "-0.84%"},
+            {"Compounding Annual Return", "24.021%"},
+            {"Drawdown", "0.800%"},
+            {"Expectancy", "0.089"},
+            {"Net Profit", "0.295%"},
+            {"Sharpe Ratio", "4.364"},
+            {"Probabilistic Sharpe Ratio", "61.706%"},
             {"Loss Rate", "50%"},
             {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "2.10"},
-            {"Alpha", "0.235"},
-            {"Beta", "0.066"},
-            {"Annual Standard Deviation", "0.034"},
-            {"Annual Variance", "0.001"},
-            {"Information Ratio", "-7.696"},
-            {"Tracking Error", "0.21"},
-            {"Treynor Ratio", "5.536"},
-            {"Total Fees", "$25.78"},
-            {"Estimated Strategy Capacity", "$1900000.00"},
+            {"Profit-Loss Ratio", "1.18"},
+            {"Alpha", "0.087"},
+            {"Beta", "0.06"},
+            {"Annual Standard Deviation", "0.047"},
+            {"Annual Variance", "0.002"},
+            {"Information Ratio", "-8.305"},
+            {"Tracking Error", "0.214"},
+            {"Treynor Ratio", "3.438"},
+            {"Total Fees", "$31.60"},
+            {"Estimated Strategy Capacity", "$3200000.00"},
             {"Lowest Capacity Asset", "AIG R735QTJ8XC9X"},
-            {"Fitness Score", "0.752"},
+            {"Fitness Score", "0.804"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "147.522"},
-            {"Portfolio Turnover", "0.753"},
+            {"Return Over Maximum Drawdown", "76.481"},
+            {"Portfolio Turnover", "0.804"},
             {"Total Insights Generated", "4"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -113,7 +132,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "b68340c2b8ff6803f585623f720de18a"}
+            {"OrderListHash", "52fd3420623ae793b7c9f7e4846e8874"}
         };
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Securities;
@@ -102,6 +103,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
                 foreach (var key in keys)
                 {
+                    var pair = _pairs[key];
+                    pair.Dispose();
                     _pairs.Remove(key);
                 }
             }
@@ -147,7 +150,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             }
         }
 
-        private class PairData
+        private class PairData : IDisposable
         {
             private enum State
             {
@@ -158,8 +161,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
             private State _state = State.FlatRatio;
 
+            private readonly QCAlgorithm _algorithm;
             private readonly Symbol _asset1;
             private readonly Symbol _asset2;
+
+            private readonly IDataConsolidator _identityConsolidator1;
+            private readonly IDataConsolidator _identityConsolidator2;
 
             private readonly IndicatorBase<IndicatorDataPoint> _asset1Price;
             private readonly IndicatorBase<IndicatorDataPoint> _asset2Price;
@@ -179,11 +186,31 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             /// <param name="threshold">The percent [0, 100] deviation of the ratio from the mean before emitting an insight</param>
             public PairData(QCAlgorithm algorithm, Symbol asset1, Symbol asset2, TimeSpan period, decimal threshold)
             {
+                _algorithm = algorithm;
                 _asset1 = asset1;
                 _asset2 = asset2;
 
-                _asset1Price = algorithm.Identity(asset1);
-                _asset2Price = algorithm.Identity(asset2);
+                // Created the Identity indicator for a given Symbol and
+                // the consolidator it is registered to. The consolidator reference 
+                // will be used to remove it from SubscriptionManager
+                (Identity, IDataConsolidator) CreateIdentityIndicator(Symbol symbol)
+                {
+                    var resolution = algorithm.SubscriptionManager
+                        .SubscriptionDataConfigService
+                        .GetSubscriptionDataConfigs(symbol)
+                        .Min(x => x.Resolution);
+
+                    var name = algorithm.CreateIndicatorName(symbol, "close", resolution);
+                    var identity = new Identity(name);
+
+                    var consolidator = algorithm.ResolveConsolidator(symbol, resolution);
+                    algorithm.RegisterIndicator(symbol, identity, consolidator);
+
+                    return (identity, consolidator);
+                }
+
+                (_asset1Price, _identityConsolidator1) = CreateIdentityIndicator(asset1);
+                (_asset2Price, _identityConsolidator2) = CreateIdentityIndicator(asset2);
 
                 _ratio = _asset1Price.Over(_asset2Price);
                 _mean = new ExponentialMovingAverage(500).Of(_ratio);
@@ -195,6 +222,15 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 _lowerThreshold = _mean.Times(lower, "LowerThreshold");
 
                 _predictionInterval = period;
+            }
+
+            /// <summary>
+            /// On disposal, remove the consolidators from the subscription manager
+            /// </summary>
+            public void Dispose()
+            {
+                _algorithm.SubscriptionManager.RemoveConsolidator(_asset1, _identityConsolidator1);
+                _algorithm.SubscriptionManager.RemoveConsolidator(_asset2, _identityConsolidator2);
             }
 
             /// <summary>
