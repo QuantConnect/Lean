@@ -96,12 +96,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 29609;
+        public long DataPoints => 29579;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 42688;
+        public int AlgorithmHistoryDataPoints => 42660;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
