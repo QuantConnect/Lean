@@ -60,9 +60,9 @@ namespace QuantConnect.Algorithm
         /// <returns>New ETF constituents Universe</returns>
         public Universe ETF(
             string etfTicker,
-            string market = null,
-            UniverseSettings universeSettings = null,
-            Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>> universeFilterFunc = null)
+            string market,
+            UniverseSettings universeSettings,
+            Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>> universeFilterFunc)
         {
             market ??= _algorithm.BrokerageModel.DefaultMarkets.TryGetValue(SecurityType.Equity, out var defaultMarket)
                 ? defaultMarket
@@ -84,12 +84,37 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="etfTicker">Ticker of the ETF to get constituents for</param>
         /// <param name="market">Market of the ETF</param>
+        /// <param name="universeFilterFunc">Function to filter universe results</param>
+        /// <returns>New ETF constituents Universe</returns>
+        public Universe ETF(string etfTicker, string market, Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>> universeFilterFunc)
+        {
+            return ETF(etfTicker, market, null, universeFilterFunc);
+        }
+
+        /// <summary>
+        /// Creates a universe for the constituents of the provided <paramref name="etfTicker"/>
+        /// </summary>
+        /// <param name="etfTicker">Ticker of the ETF to get constituents for</param>
+        /// <param name="universeFilterFunc">Function to filter universe results</param>
+        /// <returns>New ETF constituents Universe</returns>
+        public Universe ETF(string etfTicker, Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>> universeFilterFunc)
+        {
+            return ETF(etfTicker, null, null, universeFilterFunc);
+        }
+
+        /// <summary>
+        /// Creates a universe for the constituents of the provided <paramref name="etfTicker"/>
+        /// </summary>
+        /// <param name="etfTicker">Ticker of the ETF to get constituents for</param>
         /// <param name="universeSettings">Universe settings</param>
         /// <param name="universeFilterFunc">Function to filter universe results</param>
         /// <returns>New ETF constituents Universe</returns>
-        public Universe ETF(string etfTicker, string market, UniverseSettings universeSettings, PyObject universeFilterFunc)
+        public Universe ETF(
+            string etfTicker,
+            UniverseSettings universeSettings,
+            Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>> universeFilterFunc)
         {
-            return ETF(etfTicker, market, universeSettings, universeFilterFunc.ConvertPythonUniverseFilterFunction<ETFConstituentData>());
+            return ETF(etfTicker, null, universeSettings, universeFilterFunc);
         }
 
         /// <summary>
@@ -97,22 +122,16 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="etfTicker">Ticker of the ETF to get constituents for</param>
         /// <param name="market">Market of the ETF</param>
+        /// <param name="universeSettings">Universe settings</param>
         /// <param name="universeFilterFunc">Function to filter universe results</param>
         /// <returns>New ETF constituents Universe</returns>
-        public Universe ETF(string etfTicker, string market, PyObject universeFilterFunc)
+        public Universe ETF(
+            string etfTicker,
+            string market = null,
+            UniverseSettings universeSettings = null,
+            PyObject universeFilterFunc = null)
         {
-            return ETF(etfTicker, market, null, universeFilterFunc.ConvertPythonUniverseFilterFunction<ETFConstituentData>());
-        }
-
-        /// <summary>
-        /// Creates a universe for the constituents of the provided <paramref name="etfTicker"/>
-        /// </summary>
-        /// <param name="etfTicker">Ticker of the ETF to get constituents for</param>
-        /// <param name="universeFilterFunc">Function to filter universe results</param>
-        /// <returns>New ETF constituents Universe</returns>
-        public Universe ETF(string etfTicker, PyObject universeFilterFunc)
-        {
-            return ETF(etfTicker, null, null, universeFilterFunc.ConvertPythonUniverseFilterFunction<ETFConstituentData>());
+            return ETF(etfTicker, market, universeSettings, universeFilterFunc?.ConvertPythonUniverseFilterFunction<ETFConstituentData>());
         }
 
         /// <summary>
@@ -122,10 +141,8 @@ namespace QuantConnect.Algorithm
         /// <param name="universeSettings">Universe settings</param>
         /// <param name="universeFilterFunc">Function to filter universe results</param>
         /// <returns>New ETF constituents Universe</returns>
-        public Universe ETF(
-            Symbol symbol,
-            UniverseSettings universeSettings = null,
-            Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>> universeFilterFunc = null)
+        public Universe ETF(Symbol symbol, UniverseSettings universeSettings,
+            Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>> universeFilterFunc)
         {
             return new ETFConstituentsUniverse(symbol, universeSettings ?? _algorithm.UniverseSettings, universeFilterFunc);
         }
@@ -134,23 +151,24 @@ namespace QuantConnect.Algorithm
         /// Creates a universe for the constituents of the provided ETF <paramref name="symbol"/>
         /// </summary>
         /// <param name="symbol">ETF Symbol to get constituents for</param>
-        /// <param name="universeSettings">Universe settings</param>
         /// <param name="universeFilterFunc">Function to filter universe results</param>
         /// <returns>New ETF constituents Universe</returns>
-        public Universe ETF(Symbol symbol, UniverseSettings universeSettings, PyObject universeFilterFunc)
+        public Universe ETF(Symbol symbol, Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>> universeFilterFunc)
         {
-            return ETF(symbol, universeSettings, universeFilterFunc.ConvertPythonUniverseFilterFunction<ETFConstituentData>());
+            return ETF(symbol, null, universeFilterFunc);
         }
 
         /// <summary>
         /// Creates a universe for the constituents of the provided ETF <paramref name="symbol"/>
         /// </summary>
         /// <param name="symbol">ETF Symbol to get constituents for</param>
+        /// <param name="universeSettings">Universe settings</param>
         /// <param name="universeFilterFunc">Function to filter universe results</param>
         /// <returns>New ETF constituents Universe</returns>
-        public Universe ETF(Symbol symbol, PyObject universeFilterFunc)
+        public Universe ETF(Symbol symbol, UniverseSettings universeSettings = null, PyObject universeFilterFunc = null)
         {
-            return ETF(symbol, null, universeFilterFunc.ConvertPythonUniverseFilterFunction<ETFConstituentData>());
+            return ETF(symbol, universeSettings ?? _algorithm.UniverseSettings,
+                universeFilterFunc?.ConvertPythonUniverseFilterFunction<ETFConstituentData>());
         }
 
         /// <summary>
@@ -161,11 +179,8 @@ namespace QuantConnect.Algorithm
         /// <param name="universeSettings">Universe settings</param>
         /// <param name="universeFilterFunc">Function to filter universe results</param>
         /// <returns>New index constituents Universe</returns>
-        public Universe Index(
-            string indexTicker,
-            string market = null,
-            UniverseSettings universeSettings = null,
-            Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>> universeFilterFunc = null)
+        public Universe Index(string indexTicker, string market, UniverseSettings universeSettings,
+            Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>> universeFilterFunc)
         {
             market ??= _algorithm.BrokerageModel.DefaultMarkets.TryGetValue(SecurityType.Index, out var defaultMarket)
                 ? defaultMarket
@@ -185,9 +200,20 @@ namespace QuantConnect.Algorithm
         /// <param name="universeSettings">Universe settings</param>
         /// <param name="universeFilterFunc">Function to filter universe results</param>
         /// <returns>New index constituents Universe</returns>
-        public Universe Index(string indexTicker, string market, UniverseSettings universeSettings, PyObject universeFilterFunc)
+        public Universe Index(string indexTicker, string market, Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>> universeFilterFunc)
         {
-            return Index(indexTicker, market, universeSettings, universeFilterFunc.ConvertPythonUniverseFilterFunction<ETFConstituentData>());
+            return Index(indexTicker, market, null, universeFilterFunc);
+        }
+
+        /// <summary>
+        /// Creates a universe for the constituents of the provided <paramref name="indexTicker"/>
+        /// </summary>
+        /// <param name="indexTicker">Ticker of the index to get constituents for</param>
+        /// <param name="universeFilterFunc">Function to filter universe results</param>
+        /// <returns>New index constituents Universe</returns>
+        public Universe Index(string indexTicker, Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>> universeFilterFunc)
+        {
+            return Index(indexTicker, null, null, universeFilterFunc);
         }
 
         /// <summary>
@@ -198,20 +224,51 @@ namespace QuantConnect.Algorithm
         /// <param name="universeSettings">Universe settings</param>
         /// <param name="universeFilterFunc">Function to filter universe results</param>
         /// <returns>New index constituents Universe</returns>
-        public Universe Index(string indexTicker, string market, PyObject universeFilterFunc)
+        public Universe Index(string indexTicker, UniverseSettings universeSettings,
+            Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>> universeFilterFunc)
         {
-            return Index(indexTicker, market, null, universeFilterFunc.ConvertPythonUniverseFilterFunction<ETFConstituentData>());
+            return Index(indexTicker, null, universeSettings, universeFilterFunc);
         }
 
         /// <summary>
         /// Creates a universe for the constituents of the provided <paramref name="indexTicker"/>
         /// </summary>
         /// <param name="indexTicker">Ticker of the index to get constituents for</param>
+        /// <param name="market">Market of the index</param>
+        /// <param name="universeSettings">Universe settings</param>
         /// <param name="universeFilterFunc">Function to filter universe results</param>
         /// <returns>New index constituents Universe</returns>
-        public Universe Index(string indexTicker, PyObject universeFilterFunc)
+        public Universe Index(
+            string indexTicker,
+            string market = null,
+            UniverseSettings universeSettings = null,
+            PyObject universeFilterFunc = null)
         {
-            return Index(indexTicker, null, null, universeFilterFunc.ConvertPythonUniverseFilterFunction<ETFConstituentData>());
+            return Index(indexTicker, market, universeSettings, universeFilterFunc?.ConvertPythonUniverseFilterFunction<ETFConstituentData>());
+        }
+
+        /// <summary>
+        /// Creates a universe for the constituents of the provided <paramref name="indexSymbol"/>
+        /// </summary>
+        /// <param name="indexSymbol">Index Symbol to get constituents for</param>
+        /// <param name="universeSettings">Universe settings</param>
+        /// <param name="universeFilterFunc">Function to filter universe results</param>
+        /// <returns>New index constituents Universe</returns>
+        public Universe Index(Symbol indexSymbol, UniverseSettings universeSettings,
+            Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>> universeFilterFunc)
+        {
+            return new ETFConstituentsUniverse(indexSymbol, universeSettings, universeFilterFunc);
+        }
+
+        /// <summary>
+        /// Creates a universe for the constituents of the provided <paramref name="indexSymbol"/>
+        /// </summary>
+        /// <param name="indexSymbol">Index Symbol to get constituents for</param>
+        /// <param name="universeFilterFunc">Function to filter universe results</param>
+        /// <returns>New index constituents Universe</returns>
+        public Universe Index(Symbol indexSymbol, Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>> universeFilterFunc)
+        {
+            return Index(indexSymbol, null, universeFilterFunc);
         }
 
         /// <summary>
@@ -224,32 +281,10 @@ namespace QuantConnect.Algorithm
         public Universe Index(
             Symbol indexSymbol,
             UniverseSettings universeSettings = null,
-            Func<IEnumerable<ETFConstituentData>, IEnumerable<Symbol>> universeFilterFunc = null)
+            PyObject universeFilterFunc = null)
         {
-            return new ETFConstituentsUniverse(indexSymbol, universeSettings ?? _algorithm.UniverseSettings, universeFilterFunc);
-        }
-
-        /// <summary>
-        /// Creates a universe for the constituents of the provided <paramref name="indexSymbol"/>
-        /// </summary>
-        /// <param name="indexSymbol">Index Symbol to get constituents for</param>
-        /// <param name="universeSettings">Universe settings</param>
-        /// <param name="universeFilterFunc">Function to filter universe results</param>
-        /// <returns>New index constituents Universe</returns>
-        public Universe Index(Symbol indexSymbol, UniverseSettings universeSettings, PyObject universeFilterFunc)
-        {
-            return Index(indexSymbol, universeSettings, universeFilterFunc.ConvertPythonUniverseFilterFunction<ETFConstituentData>());
-        }
-
-        /// <summary>
-        /// Creates a universe for the constituents of the provided <paramref name="indexSymbol"/>
-        /// </summary>
-        /// <param name="indexSymbol">Index Symbol to get constituents for</param>
-        /// <param name="universeFilterFunc">Function to filter universe results</param>
-        /// <returns>New index constituents Universe</returns>
-        public Universe Index(Symbol indexSymbol, PyObject universeFilterFunc)
-        {
-            return Index(indexSymbol, null, universeFilterFunc.ConvertPythonUniverseFilterFunction<ETFConstituentData>());
+            return Index(indexSymbol, universeSettings ?? _algorithm.UniverseSettings,
+                universeFilterFunc?.ConvertPythonUniverseFilterFunction<ETFConstituentData>());
         }
 
         /// <summary>
