@@ -30,6 +30,18 @@ namespace QuantConnect
         public static Exchange UNKNOWN { get; } = new (string.Empty, string.Empty, "UNKNOWN", string.Empty);
 
         /// <summary>
+        /// The Members Exchange (MEMX) is an independently owned, technology-driven stock exchange
+        /// </summary>
+        public static Exchange MEMX { get; }
+            = new("MEMX", "MM", "The Long-Term Stock Exchange", QuantConnect.Market.USA, SecurityType.Equity);
+
+        /// <summary>
+        /// Long-Term Stock Exchange
+        /// </summary>
+        public static Exchange LTSE { get; }
+            = new("LTSE", "L", "The Long-Term Stock Exchange", QuantConnect.Market.USA, SecurityType.Equity);
+
+        /// <summary>
         /// National Association of Securities Dealers Automated Quotation.
         /// </summary>
         public static Exchange NASDAQ { get; }
@@ -144,7 +156,7 @@ namespace QuantConnect
         /// </summary>
         /// <remarks>Now NASDAQ OMX BX</remarks>
         public static Exchange BOSTON { get; }
-            = new("BOSTON", "B", "The Boston Stock Exchange", QuantConnect.Market.USA, SecurityType.Equity);
+            = new("BOSTON", "BB", "The Boston Stock Exchange", QuantConnect.Market.USA, SecurityType.Equity);
 
         /// <summary>
         /// The American Stock Exchange
@@ -157,13 +169,13 @@ namespace QuantConnect
         /// Bombay Stock Exchange
         /// </summary>
         public static Exchange BSE { get; }
-            = new("BSE", string.Empty, "Bombay Stock Exchange", QuantConnect.Market.India, SecurityType.Equity);
+            = new("BSE", "BSE", "Bombay Stock Exchange", QuantConnect.Market.India, SecurityType.Equity);
 
         /// <summary>
         /// National Stock Exchange of India
         /// </summary>
         public static Exchange NSE { get; }
-            = new("NSE", string.Empty, "National Stock Exchange of India", QuantConnect.Market.India, SecurityType.Equity);
+            = new("NSE", "NSE", "National Stock Exchange of India", QuantConnect.Market.India, SecurityType.Equity);
 
         /// <summary>
         /// The American Options Exchange
@@ -189,6 +201,18 @@ namespace QuantConnect
         /// </summary>
         public static Exchange MIAX { get; }
             = new("MIAX", "M", "Miami International Securities Options Exchange", QuantConnect.Market.USA, SecurityType.Option);
+
+        /// <summary>
+        /// MIAX Pearl Option and Equity exchange. Offers a Price-Time allocation and Maker-Taker fee structure
+        /// </summary>
+        public static Exchange MIAX_PEARL { get; }
+            = new("MIAX_PEARL", "MP", "MIAX PEARL", QuantConnect.Market.USA, SecurityType.Option, SecurityType.Equity);
+
+        /// <summary>
+        /// Serves as a counterpart to MIAX Options and MIAX Pearl by providing Pro-Rata allocation like MIAX Options and a Maker-Taker fee structure like MIAX Pearl
+        /// </summary>
+        public static Exchange MIAX_EMERALD { get; }
+            = new("MIAX_EMERALD", "ME", "MIAX EMERALD", QuantConnect.Market.USA, SecurityType.Option);
 
         /// <summary>
         /// International Securities Options Exchange GEMINI
