@@ -837,6 +837,7 @@ namespace QuantConnect
                     case "BATS Y":
                     case "BATS_Y":
                         return Exchange.BATS_Y;
+                    case "BB":
                     case "BOSTON":
                         return Exchange.BOSTON;
                     case "BSE":
@@ -847,6 +848,16 @@ namespace QuantConnect
                         return Exchange.SMART;
                     case "OTCX":
                         return Exchange.OTCX;
+                    case "MP":
+                    case "MIAX PEARL":
+                    case "MIAX_PEARL":
+                        return Exchange.MIAX_PEARL;
+                    case "L":
+                    case "LTSE":
+                        return Exchange.LTSE;
+                    case "MM":
+                    case "MEMX":
+                        return Exchange.MEMX;
                 }
             }
             else if (securityType == SecurityType.Option)
@@ -856,8 +867,17 @@ namespace QuantConnect
                     case "A":
                     case "AMEX":
                         return Exchange.AMEX_Options;
+                    case "M":
                     case "MIAX":
                         return Exchange.MIAX;
+                    case "ME":
+                    case "MIAX EMERALD":
+                    case "MIAX_EMERALD":
+                        return Exchange.MIAX_EMERALD;
+                    case "MP":
+                    case "MIAX PEARL":
+                    case "MIAX_PEARL":
+                        return Exchange.MIAX_PEARL;
                     case "I":
                     case "ISE":
                         return Exchange.ISE;
