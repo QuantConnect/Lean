@@ -1146,12 +1146,18 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(TradingAndOrders)]
         public void SetHoldings(List<PortfolioTarget> targets, bool liquidateExistingHoldings = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            foreach (var portfolioTarget in targets
+            //If they triggered a liquidate
+            if (liquidateExistingHoldings)
+            {
+                LiquidateExistingHoldings(null, tag, orderProperties);
+            }
+
+            foreach (var portfolioTarget in targets 
                 // we need to create targets with quantities for OrderTargetsByMarginImpact
                 .Select(target => new PortfolioTarget(target.Symbol, CalculateOrderQuantity(target.Symbol, target.Quantity)))
                 .OrderTargetsByMarginImpact(this, targetIsDelta:true))
             {
-                SetHoldingsImpl(portfolioTarget.Symbol, portfolioTarget.Quantity, liquidateExistingHoldings, tag, orderProperties);
+                SetHoldingsImpl(portfolioTarget.Symbol, portfolioTarget.Quantity, false, tag, orderProperties);
             }
         }
 
@@ -1226,17 +1232,7 @@ namespace QuantConnect.Algorithm
             //If they triggered a liquidate
             if (liquidateExistingHoldings)
             {
-                foreach (var kvp in Portfolio)
-                {
-                    var holdingSymbol = kvp.Key;
-                    var holdings = kvp.Value;
-                    if (holdingSymbol != symbol && holdings.AbsoluteQuantity > 0)
-                    {
-                        //Go through all existing holdings [synchronously], market order the inverse quantity:
-                        var liquidationQuantity = CalculateOrderQuantity(holdingSymbol, 0m);
-                        Order(holdingSymbol, liquidationQuantity, false, tag, orderProperties);
-                    }
-                }
+                LiquidateExistingHoldings(symbol, tag, orderProperties);
             }
 
             //Calculate total unfilled quantity for open market orders
@@ -1265,6 +1261,27 @@ namespace QuantConnect.Algorithm
                 else
                 {
                     MarketOnOpenOrder(symbol, quantity, tag, orderProperties);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Liquidate existing holdings, except for the target Symbol.
+        /// </summary>
+        /// <param name="symbol">Symbol indexer</param>
+        /// <param name="tag">Tag the order with a short string.</param>
+        /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
+        private void LiquidateExistingHoldings(Symbol symbol, string tag = "", IOrderProperties orderProperties = null)
+        {
+            foreach (var kvp in Portfolio)
+            {
+                var holdingSymbol = kvp.Key;
+                var holdings = kvp.Value;
+                if (holdingSymbol != symbol && holdings.AbsoluteQuantity > 0)
+                {
+                    //Go through all existing holdings [synchronously], market order the inverse quantity:
+                    var liquidationQuantity = CalculateOrderQuantity(holdingSymbol, 0m);
+                    Order(holdingSymbol, liquidationQuantity, false, tag, orderProperties);
                 }
             }
         }
