@@ -1149,7 +1149,7 @@ namespace QuantConnect.Algorithm
             //If they triggered a liquidate
             if (liquidateExistingHoldings)
             {
-                LiquidateExistingHoldings(null, tag, orderProperties);
+                LiquidateExistingHoldings(targets.Select(x => x.Symbol).ToHashSet(), tag, orderProperties);
             }
 
             foreach (var portfolioTarget in targets 
@@ -1232,7 +1232,7 @@ namespace QuantConnect.Algorithm
             //If they triggered a liquidate
             if (liquidateExistingHoldings)
             {
-                LiquidateExistingHoldings(symbol, tag, orderProperties);
+                LiquidateExistingHoldings(new HashSet<Symbol> { symbol }, tag, orderProperties);
             }
 
             //Calculate total unfilled quantity for open market orders
@@ -1266,18 +1266,18 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Liquidate existing holdings, except for the target Symbol.
+        /// Liquidate existing holdings, except for the target list of Symbol.
         /// </summary>
-        /// <param name="symbol">Symbol indexer</param>
+        /// <param name="symbols">List of Symbol indexer</param>
         /// <param name="tag">Tag the order with a short string.</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
-        private void LiquidateExistingHoldings(Symbol symbol, string tag = "", IOrderProperties orderProperties = null)
+        private void LiquidateExistingHoldings(HashSet<Symbol> symbols, string tag = "", IOrderProperties orderProperties = null)
         {
             foreach (var kvp in Portfolio)
             {
                 var holdingSymbol = kvp.Key;
                 var holdings = kvp.Value;
-                if (holdingSymbol != symbol && holdings.AbsoluteQuantity > 0)
+                if (!symbols.Contains(holdingSymbol) && holdings.AbsoluteQuantity > 0)
                 {
                     //Go through all existing holdings [synchronously], market order the inverse quantity:
                     var liquidationQuantity = CalculateOrderQuantity(holdingSymbol, 0m);
