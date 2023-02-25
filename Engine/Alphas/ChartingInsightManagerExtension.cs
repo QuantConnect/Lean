@@ -126,8 +126,9 @@ namespace QuantConnect.Lean.Engine.Alphas
                     if (_statisticsManager.RollingAverageIsReady)
                     {
                         // sample the rolling averaged population scores
-                        foreach (var scoreType in InsightManager.ScoreTypes)
+                        for (int i = 0; i < InsightManager.ScoreTypes.Count; i++)
                         {
+                            var scoreType = InsightManager.ScoreTypes[i];
                             var score = 100 * _statisticsManager.Statistics.RollingAveragedPopulationScore.GetScore(scoreType);
                             _insightScoreSeriesByScoreType[scoreType].AddPoint(frontierTimeUtc, score.SafeDecimalCast());
                         }

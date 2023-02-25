@@ -46,13 +46,25 @@ namespace QuantConnect.Securities.Positions
         /// <param name="buyingPowerModel">The group's buying power model</param>
         /// <param name="security">The security</param>
         public PositionGroupKey(IPositionGroupBuyingPowerModel buyingPowerModel, Security security)
+            : this(buyingPowerModel, security.Symbol, security.SymbolProperties.LotSize)
         {
-            IsDefaultGroup = buyingPowerModel.GetType() == typeof(SecurityPositionGroupBuyingPowerModel);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PositionGroupKey"/> class
+        /// </summary>
+        /// <param name="buyingPowerModel">The group's buying power model</param>
+        /// <param name="symbol">The position symbol</param>
+        /// <param name="unitQuantity">The position unit quantity</param>
+        /// <param name="isDefault">True if this is the default group</param>
+        public PositionGroupKey(IPositionGroupBuyingPowerModel buyingPowerModel, Symbol symbol, decimal unitQuantity, bool? isDefault = null)
+        {
             BuyingPowerModel = buyingPowerModel;
             UnitQuantities = new[]
             {
-                Tuple.Create(security.Symbol, security.SymbolProperties.LotSize)
+                Tuple.Create(symbol, unitQuantity)
             };
+            IsDefaultGroup = isDefault ?? BuyingPowerModel.GetType() == typeof(SecurityPositionGroupBuyingPowerModel);
         }
 
         /// <summary>

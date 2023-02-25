@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -135,8 +135,9 @@ namespace QuantConnect.Lean.Engine.Alphas
             // increment analysis completed counter
             Statistics.TotalInsightsAnalysisCompleted += 1;
 
-            foreach (var scoreType in InsightManager.ScoreTypes)
+            for (int i = 0; i < InsightManager.ScoreTypes.Count; i++)
             {
+                var scoreType = InsightManager.ScoreTypes[i];
                 if (!context.ShouldAnalyze(scoreType))
                 {
                     continue;

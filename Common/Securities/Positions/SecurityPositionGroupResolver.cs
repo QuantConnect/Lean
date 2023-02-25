@@ -43,7 +43,7 @@ namespace QuantConnect.Securities.Positions
         /// <param name="currentPositions">The currently grouped positions</param>
         /// <param name="group">The grouped positions when this resolver is able to, otherwise null</param>
         /// <returns>True if this resolver can group the specified positions, otherwise false</returns>
-        public bool TryGroup(IReadOnlyCollection<IPosition> newPositions, PositionGroupCollection currentPositions, out IPositionGroup group)
+        public bool TryGroup(IReadOnlyList<IPosition> newPositions, PositionGroupCollection currentPositions, out IPositionGroup group)
         {
             // we can only create default groupings containing a single security
             if (newPositions.Count != 1)
@@ -52,8 +52,9 @@ namespace QuantConnect.Securities.Positions
                 return false;
             }
 
-            var key = new PositionGroupKey(_buyingPowerModel, newPositions);
-            group = new PositionGroup(key, newPositions.ToDictionary(p => p.Symbol));
+            var position = newPositions[0];
+            var key = new PositionGroupKey(_buyingPowerModel, position.Symbol, position.UnitQuantity, isDefault: true);
+            group = new PositionGroup(key, new Dictionary<Symbol, IPosition> { { position.Symbol, position } });
             return true;
         }
 

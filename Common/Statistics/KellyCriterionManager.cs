@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -31,14 +31,14 @@ namespace QuantConnect.Statistics
     {
         private bool _requiresRecalculation;
         private double _average;
-        private readonly Normal _normalDistribution = new Normal();
+        private readonly Normal _normalDistribution = new();
         /// <summary>
         /// We keep both the value and the corresponding time in separate collections for performance
         /// this way we can directly calculate the Mean() and Variance() on the values collection
         /// with no need to select or create another temporary collection
         /// </summary>
-        private readonly List<double> _insightValues = new List<double>();
-        private readonly List<DateTime> _insightTime = new List<DateTime>();
+        private readonly Queue<double> _insightValues = new();
+        private readonly Queue<DateTime> _insightTime = new();
 
         /// <summary>
         /// Score of the strategy's insights predictive power
@@ -65,21 +65,25 @@ namespace QuantConnect.Statistics
             _average = (_insightValues.Count * _average + (double)newValue)
                     / (_insightValues.Count + 1);
 
-            _insightValues.Add((double)newValue);
-            _insightTime.Add(time);
+            _insightValues.Enqueue((double)newValue);
+            _insightTime.Enqueue(time);
 
             // clean up values older than a year
-            var firstTime = _insightTime[0];
-            while ((time - firstTime) >= Time.OneYear)
+            var firstTime = _insightTime.Peek();
+            while ((time - firstTime) >= Time.OneYear
+                // we need to set a hard limit in case the algorithm is producing too many insight that will degrade performance
+                || _insightValues.Count > 10000)
             {
-                // calculate new average, removing a value
-                _average = (_insightValues.Count * _average - _insightValues[0])
-                           / (_insightValues.Count - 1);
+                var insightValuesCount = _insightValues.Count;
+                var firstInsightValues = _insightValues.Dequeue();
 
-                _insightValues.RemoveAt(0);
-                _insightTime.RemoveAt(0);
+                // calculate new average, removing a value
+                _average = (insightValuesCount * _average - firstInsightValues)
+                           / (insightValuesCount - 1);
+
+                _insightTime.Dequeue();
                 // there will always be at least 1 item, the one we just added
-                firstTime = _insightTime[0];
+                firstTime = _insightTime.Peek();
             }
         }
 

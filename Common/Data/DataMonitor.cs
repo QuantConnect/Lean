@@ -81,9 +81,19 @@ namespace QuantConnect.Data
                 return;
             }
 
-            var path = StripDataFolder(e.Path);
-            var isUniverseData = path.Contains("coarse", StringComparison.OrdinalIgnoreCase) ||
-                path.Contains("universe", StringComparison.OrdinalIgnoreCase);
+            var isUniverseData = e.Path.Contains("coarse", StringComparison.OrdinalIgnoreCase) ||
+                e.Path.Contains("universe", StringComparison.OrdinalIgnoreCase);
+
+            // normalize removing the data folder, use span to avoid a copy
+            ReadOnlySpan<char> path;
+            if (e.Path.StartsWith(Globals.DataFolder, StringComparison.OrdinalIgnoreCase))
+            {
+                path = e.Path.AsSpan(Globals.DataFolder.Length);
+            }
+            else
+            {
+                path = e.Path.AsSpan();
+            }
 
             if (e.Succeded)
             {
@@ -135,16 +145,6 @@ namespace QuantConnect.Data
         public void Dispose()
         {
             Exit();
-        }
-
-        protected virtual string StripDataFolder(string path)
-        {
-            if (path.StartsWith(Globals.DataFolder, StringComparison.OrdinalIgnoreCase))
-            {
-                return path.Substring(Globals.DataFolder.Length);
-            }
-
-            return path;
         }
 
         /// <summary>
@@ -253,7 +253,7 @@ namespace QuantConnect.Data
             return TextWriter.Synchronized(writer);
         }
 
-        private static void WriteLineToFile(TextWriter writer, string line, string filename)
+        private static void WriteLineToFile(TextWriter writer, ReadOnlySpan<char> line, string filename)
         {
             try
             {

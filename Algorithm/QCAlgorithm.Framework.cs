@@ -24,6 +24,7 @@ using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm
@@ -449,7 +450,9 @@ namespace QuantConnect.Algorithm
             List<Insight> validInsights = null;
             for (var i = 0; i < insights.Length; i++)
             {
-                if (Securities[insights[i].Symbol].IsDelisted)
+                var insight = insights[i];
+                var security = Securities[insight.Symbol];
+                if (security.IsDelisted)
                 {
                     if (!_isEmitDelistedInsightWarningSent)
                     {
@@ -460,7 +463,7 @@ namespace QuantConnect.Algorithm
                     // If this is our first invalid insight, create the list and fill it with previous values
                     if (validInsights == null)
                     {
-                        validInsights = new List<Insight>() {};
+                        validInsights = new List<Insight>(insights.Length);
                         for (var j = 0; j < i; j++)
                         {
                             validInsights.Add(insights[j]);
@@ -470,34 +473,21 @@ namespace QuantConnect.Algorithm
                 else
                 {
                     // Initialize the insight fields
-                    insights[i] = InitializeInsightFields(insights[i]);
+                    insight.GeneratedTimeUtc = UtcTime;
+                    insight.ReferenceValue = _securityValuesProvider.GetValues(insight.Symbol).Get(insight.Type);
+                    insight.SourceModel = string.IsNullOrEmpty(insight.SourceModel) ? Alpha.GetModelName() : insight.SourceModel;
+
+                    insight.SetPeriodAndCloseTime(security.Exchange.Hours);
 
                     // If we already had an invalid insight, this will have been initialized storing the valid ones.
                     if (validInsights != null)
                     {
-                        validInsights.Add(insights[i]);
+                        validInsights.Add(insight);
                     }
                 }
             }
 
             return validInsights == null ? insights : validInsights.ToArray();
-
-        }
-
-        /// <summary>
-        /// Helper class used to set values not required to be set by alpha models
-        /// </summary>
-        /// <param name="insight">The <see cref="Insight"/> to set the values for</param>
-        /// <returns>The same <see cref="Insight"/> instance with the values set</returns>
-        private Insight InitializeInsightFields(Insight insight)
-        {
-            insight.GeneratedTimeUtc = UtcTime;
-            insight.ReferenceValue = _securityValuesProvider.GetValues(insight.Symbol).Get(insight.Type);
-            insight.SourceModel = string.IsNullOrEmpty(insight.SourceModel) ? Alpha.GetModelName() : insight.SourceModel;
-
-            var exchangeHours = MarketHoursDatabase.GetExchangeHours(insight.Symbol.ID.Market, insight.Symbol, insight.Symbol.SecurityType);
-            insight.SetPeriodAndCloseTime(exchangeHours);
-            return insight;
         }
     }
 }

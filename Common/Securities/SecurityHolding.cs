@@ -16,7 +16,6 @@
 using System;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
-using static QuantConnect.StringExtensions;
 using QuantConnect.Algorithm.Framework.Portfolio;
 
 namespace QuantConnect.Securities
@@ -251,7 +250,7 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return (AbsoluteQuantity > 0);
+                return Quantity != 0;
             }
         }
 

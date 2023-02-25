@@ -14,11 +14,10 @@
 */
 
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Logging;
 using QuantConnect.Util;
+using QuantConnect.Logging;
+using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
 {
@@ -41,7 +40,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         /// <summary>
         /// Gets all insight score types
         /// </summary>
-        public static readonly IReadOnlyCollection<InsightScoreType> ScoreTypes = Enum.GetValues(typeof(InsightScoreType)).Cast<InsightScoreType>().ToArray();
+        internal static readonly List<InsightScoreType> ScoreTypes = Enum.GetValues(typeof(InsightScoreType)).Cast<InsightScoreType>().ToList();
 
         private readonly double _extraAnalysisPeriodRatio;
         private readonly List<IInsightManagerExtension> _extensions;
@@ -50,7 +49,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         private readonly object _lock;
         private readonly HashSet<InsightAnalysisContext> _updatedInsightContexts;
         private readonly HashSet<InsightAnalysisContext> _openInsightContexts;
-        private readonly ConcurrentDictionary<Guid, InsightAnalysisContext> _closedInsightContexts;
+        private readonly Dictionary<Guid, InsightAnalysisContext> _closedInsightContexts;
 
         /// <summary>
         /// Enumerable of insights still under analysis
@@ -69,7 +68,16 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         /// <summary>
         /// Enumerable of insights who's analysis has been completed
         /// </summary>
-        public IEnumerable<Insight> ClosedInsights => _closedInsightContexts.Select(kvp => kvp.Value.Insight);
+        public IEnumerable<Insight> ClosedInsights
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return _closedInsightContexts.Select(kvp => kvp.Value.Insight).ToList();
+                }
+            }
+        }
 
         /// <summary>
         /// Enumerable of all internally maintained insights
@@ -109,7 +117,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
             _lock = new object();
             _openInsightContexts = new HashSet<InsightAnalysisContext>();
             _updatedInsightContexts = new HashSet<InsightAnalysisContext>();
-            _closedInsightContexts = new ConcurrentDictionary<Guid, InsightAnalysisContext>();
+            _closedInsightContexts = new Dictionary<Guid, InsightAnalysisContext>();
         }
 
         /// <summary>
@@ -182,10 +190,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         /// <param name="insightIds">The insights ids to be removed</param>
         public void RemoveInsights(IEnumerable<Guid> insightIds)
         {
-            foreach (var id in insightIds)
+            lock (_lock)
             {
-                InsightAnalysisContext context;
-                _closedInsightContexts.TryRemove(id, out context);
+                foreach (var id in insightIds)
+                {
+                    _closedInsightContexts.Remove(id, out _);
+                }
             }
         }
 
@@ -223,8 +233,10 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
 
                 // update scores for each score type
                 var currentTimeUtc = context.CurrentValues.TimeUtc;
-                foreach (var scoreType in ScoreTypes)
+                for (int i = 0; i < ScoreTypes.Count; i++)
                 {
+                    var scoreType = ScoreTypes[i];
+
                     if (!context.ShouldAnalyze(scoreType))
                     {
                         // not all insights can receive every score type, for example, insight.Magnitude==null, not point in doing magnitude scoring
