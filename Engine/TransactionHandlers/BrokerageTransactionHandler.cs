@@ -355,7 +355,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     Log.Error("BrokerageTransactionHandler.Update(): Cannot update a pending submit order with status " + order.Status);
                     request.SetResponse(OrderResponse.InvalidNewStatus(request, order));
                 }
-                else if (order.Status.IsClosed())
+                else if (order.Status.IsClosed() && !request.IsAllowedForClosedOrder())
                 {
                     // can't update a completed order
                     Log.Error("BrokerageTransactionHandler.Update(): Cannot update closed order with status " + order.Status);
@@ -867,7 +867,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return OrderResponse.InvalidNewStatus(request, order);
             }
 
-            if (order.Status.IsClosed())
+            if (order.Status.IsClosed() && !request.IsAllowedForClosedOrder())
             {
                 return OrderResponse.InvalidStatus(request, order);
             }

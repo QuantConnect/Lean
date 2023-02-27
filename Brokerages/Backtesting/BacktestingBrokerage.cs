@@ -176,12 +176,16 @@ namespace QuantConnect.Brokerages.Backtesting
                 Order pending;
                 if (!_pending.TryGetValue(order.Id, out pending))
                 {
-                    // can't update something that isn't there
-                    return false;
+                    // the order is neither pending nor closed, can't update what's not there.
+                    // also, return if found. Closed orders tag updates don't require an order event.
+                    return Algorithm.Transactions.GetOrderById(order.Id) != null;
+                }
+                else
+                {
+                    SetPendingOrder(order);
                 }
 
                 _needsScan = true;
-                SetPendingOrder(order);
             }
 
             AddBrokerageOrderId(order);

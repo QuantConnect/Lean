@@ -76,5 +76,15 @@ namespace QuantConnect.Orders
         {
             return Messages.UpdateOrderRequest.ToString(this);
         }
+
+        /// <summary>
+        /// Checks whether the update request is allowed for a closed order.
+        /// Only tag updates are allowed on closed orders.
+        /// </summary>
+        /// <returns>True if the update request is allowed for a closed order</returns>
+        public bool IsAllowedForClosedOrder()
+        {
+            return !Quantity.HasValue && !LimitPrice.HasValue && !StopPrice.HasValue && !TriggerPrice.HasValue;
+        }
     }
 }
