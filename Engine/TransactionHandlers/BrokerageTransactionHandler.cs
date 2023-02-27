@@ -355,7 +355,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     Log.Error("BrokerageTransactionHandler.Update(): Cannot update a pending submit order with status " + order.Status);
                     request.SetResponse(OrderResponse.InvalidNewStatus(request, order));
                 }
-                else if (order.Status.IsClosed())
+                else if (order.Status.IsClosed() && !request.IsAllowedForClosedOrder())
                 {
                     // can't update a completed order
                     Log.Error("BrokerageTransactionHandler.Update(): Cannot update closed order with status " + order.Status);
@@ -867,9 +867,16 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return OrderResponse.InvalidNewStatus(request, order);
             }
 
+            var isClosedOrderUpdate = false;
+
             if (order.Status.IsClosed())
             {
-                return OrderResponse.InvalidStatus(request, order);
+                if (!request.IsAllowedForClosedOrder())
+                {
+                    return OrderResponse.InvalidStatus(request, order);
+                }
+
+                isClosedOrderUpdate = true;
             }
 
             // rounds off the order towards 0 to the nearest multiple of lot size
@@ -899,14 +906,21 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             ticket.SetOrder(order);
 
             bool orderUpdated;
-            try
+            if (isClosedOrderUpdate)
             {
-                orderUpdated = _brokerage.UpdateOrder(order);
+                orderUpdated = true;
             }
-            catch (Exception err)
+            else
             {
-                Log.Error(err);
-                orderUpdated = false;
+                try
+                {
+                    orderUpdated = _brokerage.UpdateOrder(order);
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err);
+                    orderUpdated = false;
+                }
             }
 
             if (!orderUpdated)
