@@ -867,9 +867,16 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return OrderResponse.InvalidNewStatus(request, order);
             }
 
-            if (order.Status.IsClosed() && !request.IsAllowedForClosedOrder())
+            var isClosedOrderUpdate = false;
+
+            if (order.Status.IsClosed())
             {
-                return OrderResponse.InvalidStatus(request, order);
+                if (!request.IsAllowedForClosedOrder())
+                {
+                    return OrderResponse.InvalidStatus(request, order);
+                }
+
+                isClosedOrderUpdate = true;
             }
 
             // rounds off the order towards 0 to the nearest multiple of lot size
@@ -899,14 +906,21 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             ticket.SetOrder(order);
 
             bool orderUpdated;
-            try
+            if (isClosedOrderUpdate)
             {
-                orderUpdated = _brokerage.UpdateOrder(order);
+                orderUpdated = true;
             }
-            catch (Exception err)
+            else
             {
-                Log.Error(err);
-                orderUpdated = false;
+                try
+                {
+                    orderUpdated = _brokerage.UpdateOrder(order);
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err);
+                    orderUpdated = false;
+                }
             }
 
             if (!orderUpdated)

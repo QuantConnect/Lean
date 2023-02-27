@@ -621,12 +621,51 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             broker.Scan();
             Assert.AreEqual(orderTicket.Status, OrderStatus.Filled);
 
-            var updateRequest = new UpdateOrderRequest(DateTime.Now, orderTicket.OrderId, new UpdateOrderFields());
+            var updateRequest = new UpdateOrderRequest(DateTime.Now, orderTicket.OrderId, new UpdateOrderFields() { Quantity = 100 });
             transactionHandler.Process(updateRequest);
             Assert.AreEqual(updateRequest.Status, OrderRequestStatus.Error);
             Assert.IsTrue(updateRequest.Response.IsError);
             Assert.AreEqual(updateRequest.Response.ErrorCode, OrderResponseErrorCode.InvalidOrderStatus);
             Assert.AreEqual(orderTicket.Status, OrderStatus.Filled);
+
+            Assert.AreEqual(_algorithm.OrderEvents.Count, 2);
+            Assert.AreEqual(_algorithm.OrderEvents.Count(orderEvent => orderEvent.Status == OrderStatus.Submitted), 1);
+            Assert.AreEqual(_algorithm.OrderEvents.Count(orderEvent => orderEvent.Status == OrderStatus.Filled), 1);
+        }
+
+        [Test]
+        public void TagUpdateOrderRequestShouldSucceedForFilledOrder()
+        {
+            // Initializes the transaction handler
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            var broker = new BacktestingBrokerage(_algorithm);
+            transactionHandler.Initialize(_algorithm, broker, new BacktestingResultHandler());
+
+            // Creates a limit order
+            var security = _algorithm.Securities[_symbol];
+            var price = 1.12m;
+            security.SetMarketPrice(new Tick(DateTime.Now, security.Symbol, price, price, price));
+            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 1000, 0, 1.11m, DateTime.Now, "");
+
+            // Mock the the order processor
+            var orderProcessorMock = new Mock<IOrderProcessor>();
+            orderProcessorMock.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns(new OrderTicket(_algorithm.Transactions, orderRequest));
+            _algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
+
+            // Submit and process a limit order
+            var orderTicket = transactionHandler.Process(orderRequest);
+            transactionHandler.HandleOrderRequest(orderRequest);
+            Assert.IsTrue(orderRequest.Response.IsProcessed);
+            Assert.IsTrue(orderRequest.Response.IsSuccess);
+            Assert.AreEqual(orderTicket.Status, OrderStatus.Submitted);
+
+            broker.Scan();
+            Assert.AreEqual(orderTicket.Status, OrderStatus.Filled);
+
+            var updateRequest = new UpdateOrderRequest(DateTime.Now, orderTicket.OrderId, new UpdateOrderFields() { Tag = "New tag" });
+            transactionHandler.Process(updateRequest);
+            Assert.AreEqual(updateRequest.Status, OrderRequestStatus.Processing);
+            Assert.IsTrue(updateRequest.Response.IsSuccess);
 
             Assert.AreEqual(_algorithm.OrderEvents.Count, 2);
             Assert.AreEqual(_algorithm.OrderEvents.Count(orderEvent => orderEvent.Status == OrderStatus.Submitted), 1);
