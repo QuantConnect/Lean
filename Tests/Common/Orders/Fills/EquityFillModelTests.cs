@@ -1241,6 +1241,22 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             return new SubscriptionDataConfig(typeof(TradeBar), symbol, resolution, TimeZones.NewYork, TimeZones.NewYork, true, extendedHours, false);
         }
 
+        private FillModelParameters GetFillModelParameters(Symbol symbol, Order order)
+        {
+            var configTradeBar = CreateTradeBarConfig(Symbols.SPY);
+            var configQuoteBar = new SubscriptionDataConfig(configTradeBar, typeof(QuoteBar));
+            var configProvider = new MockSubscriptionDataConfigProvider(configQuoteBar);
+            configProvider.SubscriptionDataConfigs.Add(configTradeBar);
+            var security = CreateEquity(configTradeBar);
+
+            return new FillModelParameters(
+                security,
+                order,
+                configProvider,
+                Time.OneHour,
+                null);
+        }
+
         private class TestFillModel : EquityFillModel
         {
             public void SetParameters(FillModelParameters parameters)
