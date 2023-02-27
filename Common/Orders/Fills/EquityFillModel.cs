@@ -37,17 +37,6 @@ namespace QuantConnect.Orders.Fills
         /// <param name="asset">Security asset we're filling</param>
         /// <param name="order">Order packet to model</param>
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
-        /// <remarks>
-        ///     There is no good way to model limit orders with OHLC because we never know whether the market has
-        ///     gapped past our fill price. We have to make the assumption of a fluid, high volume market.
-        ///
-        ///     With Limit if Touched orders, whether or not a trigger is surpassed is determined by the high (low)
-        ///     of the previous tradebar when making a sell (buy) request. Following the behaviour of
-        ///     <see cref="StopLimitFill"/>, current quote information is used when determining fill parameters
-        ///     (e.g., price, quantity) as the tradebar containing the incoming data is not yet consolidated.
-        ///     This conservative approach, however, can lead to trades not occuring as would be expected when
-        ///     compared to future consolidated data.
-        /// </remarks>
         public override OrderEvent LimitIfTouchedFill(Security asset, LimitIfTouchedOrder order)
         {
             //Default order event to return.
@@ -103,36 +92,32 @@ namespace QuantConnect.Orders.Fills
             switch (order.Direction)
             {
                 case OrderDirection.Buy:
-                    //-> 1.2 Buy: If Price below Trigger, Buy:
+                    // Buy: If price below trigger, starts to behave as a limit fill
                     if (tradeLow <= order.TriggerPrice || order.TriggerTouched)
                     {
                         order.TriggerTouched = true;
-                        var askCurrent = GetBestEffortAskPrice(asset, order.Time, out var fillMessage);
 
-                        if (askCurrent <= order.LimitPrice)
+                        if (tradeLow < order.LimitPrice)
                         {
                             fill.Status = OrderStatus.Filled;
                             fill.FillPrice = order.LimitPrice;
                             fill.FillQuantity = order.Quantity;
-                            fill.Message = fillMessage;
                         }
                     }
 
                     break;
 
                 case OrderDirection.Sell:
-                    //-> 1.2 Sell: If Price above Trigger, Sell:
+                    // Sell: If price above trigger, starts to behave as a limit fill
                     if (tradeHigh >= order.TriggerPrice || order.TriggerTouched)
                     {
                         order.TriggerTouched = true;
-                        var bidCurrent = GetBestEffortBidPrice(asset, order.Time, out var fillMessage);
 
-                        if (bidCurrent >= order.LimitPrice)
+                        if (tradeHigh > order.LimitPrice)
                         {
                             fill.Status = OrderStatus.Filled;
                             fill.FillPrice = order.LimitPrice;
                             fill.FillQuantity = order.Quantity;
-                            fill.Message = fillMessage;
                         }
                     }
 
