@@ -59,6 +59,12 @@ RUN wget -O Miniforge3.sh https://github.com/conda-forge/miniforge/releases/late
     pip install --upgrade --no-cache-dir pip==22.2.2 && \
     conda install -y python=3.8.13 && conda install -y -c conda-forge pip=22.2.2 && conda clean -y --all
 
+# Install Julia
+RUN wget https://julialang-s3.julialang.org/bin/linux/aarch64/1.8/julia-1.8.5-linux-aarch64.tar.gz && \
+    tar zxvf julia-1.8.5-linux-aarch64.tar.gz && \
+    rm julia-1.8.5-linux-aarch64.tar.gz
+ENV PATH="/julia-1.8.5/bin:${PATH}"
+
 # Avoid pip install read timeouts
 ENV PIP_DEFAULT_TIMEOUT=120
 
@@ -168,14 +174,28 @@ RUN pip install --no-cache-dir      \
     bokeh==2.4.3                    \
     river==0.13.0                   \
     stumpy==1.11.1                  \
-    pyvinecopulib==0.6.2
+    pyvinecopulib==0.6.2            \
+    ijson==3.2.0.post0              \
+    julia==0.6.0                    \
+    jupyter-resource-usage==0.7.2   \
+    injector==0.20.1                \
+    openpyxl==3.1.1                 \
+    xlrd==2.0.1                     \
+    mljar-supervised==0.11.5        \
+    dm-tree==0.1.8                  \
+    lz4==4.3.2                      \
+    ortools==9.5.2237               \
+    river==0.15.0                   \
+    py_vollib==1.0.1
+
+# Install spacy models
+RUN python -m spacy download en_core_web_md && python -m spacy download en_core_web_sm
 
 RUN conda install -y -c conda-forge \
     openmpi=4.1.4 && conda clean -y --all
 
-RUN python -m nltk.downloader -d /usr/share/nltk_data punkt && \
-    python -m nltk.downloader -d /usr/share/nltk_data vader_lexicon && \
-    python -m nltk.downloader -d /usr/share/nltk_data stopwords
+# Install all nltk data
+RUN python -m nltk.downloader -d /usr/share/nltk_data all
 
 # Install ppscore
 RUN wget https://cdn.quantconnect.com/ppscore/ppscore-master-ce93fa3.zip && \
