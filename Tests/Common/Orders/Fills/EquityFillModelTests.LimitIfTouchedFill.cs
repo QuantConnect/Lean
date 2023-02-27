@@ -87,18 +87,27 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(OrderStatus.None, fill.Status);
 
             // Time jump => limit reached, security bought
-            // |---> First, ensure that price data are not used to fill
-            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 100m, 100m, 99m, 99m, 100));
+            // |---> First, ensure that price data only triggers the order
+            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 101m, 101m, 100.5m, 101m, 100));
             fill = model.LimitIfTouchedFill(security, order);
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
+            Assert.True(order.TriggerTouched);
 
-            // |---> Lastly, ensure that quote data used to fill
+            // |---> Second, ensure that quote data is not used to fill
             security.SetMarketPrice(new QuoteBar(Noon, Symbols.SPY,
                     new Bar(100m, 100m, 100m, 100m), 100, // Bid bar
                     new Bar(100m, 100m, 100m, 100m), 100) // Ask bar
             );
+            fill = model.LimitIfTouchedFill(security, order);
+            Assert.AreEqual(0, fill.FillQuantity);
+            Assert.AreEqual(0, fill.FillPrice);
+            Assert.AreEqual(OrderStatus.None, fill.Status);
+            Assert.True(order.TriggerTouched);
+
+            // |---> Last, ensure that trade data used to fill
+            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 101m, 101m, 99m, 99m, 100));
             fill = model.LimitIfTouchedFill(security, order);
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
             Assert.AreEqual(order.LimitPrice, fill.FillPrice);
@@ -162,18 +171,27 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(OrderStatus.None, fill.Status);
 
             // Time jump => limit reached, security bought
-            // |---> First, ensure that price data are not used to fill
+            // |---> First, ensure that price data only triggers the order
             security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 100m, 100m, 99m, 99m, 100));
             fill = model.LimitIfTouchedFill(security, order);
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
+            Assert.True(order.TriggerTouched);
 
-            // |---> Lastly, ensure that quote data used to fill
+            // |---> Second, ensure that quote data is not used to fill
             security.SetMarketPrice(new QuoteBar(Noon, Symbols.SPY,
                     new Bar(105m, 105m, 105m, 105m), 100, // Bid bar
                     new Bar(105m, 105m, 105m, 105m), 100) // Ask bar
             );
+            fill = model.LimitIfTouchedFill(security, order);
+            Assert.AreEqual(0, fill.FillQuantity);
+            Assert.AreEqual(0, fill.FillPrice);
+            Assert.AreEqual(OrderStatus.None, fill.Status);
+            Assert.True(order.TriggerTouched);
+            
+            // |---> Last, ensure that trade data used to fill
+            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 106m, 106m, 99m, 99m, 100));
             fill = model.LimitIfTouchedFill(security, order);
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
             Assert.AreEqual(order.LimitPrice, fill.FillPrice);
@@ -217,14 +235,14 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             time += TimeSpan.FromMinutes(2);
             timeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
 
-            // Create a series of price where the last value will not fill
+            // Create a series of price where the last value will not trigger
             // and the fill model need to use the minimum/maximum instead
-            var trades = new[] { 0m, -0.1m, 0m, 0.1m, -0.1m }
+            var trades = new[] { 0m, -0.05m, 0m, 0.05m, -0.1m }
                 .Select(delta => new Tick 
                     { 
                         TickType = TickType.Trade,
                         Time = time, 
-                        Value = limitPrice - delta * Math.Sign(orderQuantity)
+                        Value = triggerPrice - delta * Math.Sign(orderQuantity)
                     })
                 .ToList();
 
@@ -238,6 +256,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(OrderStatus.None, fill.Status);
             Assert.True(order.TriggerTouched);
 
+            // Do not fill with quote data
             equity.SetMarketPrice(new Tick
             {
                 TickType = TickType.Quote,
@@ -247,7 +266,20 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             });
 
             fill = fillModel.LimitIfTouchedFill(equity, order);
+            Assert.AreEqual(0, fill.FillQuantity);
+            Assert.AreEqual(0, fill.FillPrice);
+            Assert.AreEqual(OrderStatus.None, fill.Status);
+            Assert.True(order.TriggerTouched);
 
+            // Fill with trade data
+            equity.SetMarketPrice(new Tick
+            {
+                TickType = TickType.Trade,
+                Time = time,
+                Value = limitPrice - 0.1m * Math.Sign(orderQuantity)
+            });
+
+            fill = fillModel.LimitIfTouchedFill(equity, order);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
             Assert.AreEqual(limitPrice, fill.FillPrice);
