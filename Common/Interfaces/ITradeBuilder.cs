@@ -51,7 +51,7 @@ namespace QuantConnect.Interfaces
         void SetMarketPrice(Symbol symbol, decimal price);
 
         /// <summary>
-        /// Applies to the trade builder
+        /// Applies a split to the trade builder
         /// </summary>
         /// <param name="split">The split to be applied</param>
         /// <param name="liveMode">True if live mode, false for backtest</param>

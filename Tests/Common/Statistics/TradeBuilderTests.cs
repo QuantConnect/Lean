@@ -415,15 +415,16 @@ namespace QuantConnect.Tests.Common.Statistics
             {
                 Assert.AreEqual(2, builder.ClosedTrades.Count);
 
+                // This first trade was closed before the split
                 var trade1 = builder.ClosedTrades[0];
 
                 Assert.AreEqual(Symbols.SPY, trade1.Symbol);
                 Assert.AreEqual(time, trade1.EntryTime);
-                Assert.AreEqual(AdjustPriceToSplit(1.07m, split), trade1.EntryPrice);
+                Assert.AreEqual(1.07m, trade1.EntryPrice);
                 Assert.AreEqual(TradeDirection.Long, trade1.Direction);
-                Assert.AreEqual(AdjustQuantityToSplit(1000, split), trade1.Quantity);
+                Assert.AreEqual(1000, trade1.Quantity);
                 Assert.AreEqual(time.AddMinutes(10), trade1.ExitTime);
-                Assert.AreEqual(AdjustPriceToSplit(1.08m, split), trade1.ExitPrice);
+                Assert.AreEqual(1.08m, trade1.ExitPrice);
                 Assert.AreEqual(10, trade1.ProfitLoss);
                 Assert.AreEqual(2, trade1.TotalFees);
                 Assert.AreEqual(0, trade1.MAE);
@@ -516,15 +517,16 @@ namespace QuantConnect.Tests.Common.Statistics
             {
                 Assert.AreEqual(2, builder.ClosedTrades.Count);
 
+                // This first trade was closed before the split
                 var trade1 = builder.ClosedTrades[0];
 
                 Assert.AreEqual(Symbols.SPY, trade1.Symbol);
                 Assert.AreEqual(time, trade1.EntryTime);
-                Assert.AreEqual(AdjustPriceToSplit(1.07m, split), trade1.EntryPrice);
+                Assert.AreEqual(1.07m, trade1.EntryPrice);
                 Assert.AreEqual(TradeDirection.Short, trade1.Direction);
-                Assert.AreEqual(AdjustQuantityToSplit(1000, split), trade1.Quantity);
+                Assert.AreEqual(1000, trade1.Quantity);
                 Assert.AreEqual(time.AddMinutes(10), trade1.ExitTime);
-                Assert.AreEqual(AdjustPriceToSplit(1.08m, split), trade1.ExitPrice);
+                Assert.AreEqual(1.08m, trade1.ExitPrice);
                 Assert.AreEqual(-10, trade1.ProfitLoss);
                 Assert.AreEqual(2, trade1.TotalFees);
                 Assert.AreEqual(-10, trade1.MAE);
@@ -597,15 +599,16 @@ namespace QuantConnect.Tests.Common.Statistics
 
             Assert.AreEqual(2, builder.ClosedTrades.Count);
 
+            // This first trade was closed before the split
             var trade1 = builder.ClosedTrades[0];
 
             Assert.AreEqual(Symbols.SPY, trade1.Symbol);
             Assert.AreEqual(time, trade1.EntryTime);
-            Assert.AreEqual(AdjustPriceToSplit(1.07m, split), trade1.EntryPrice);
+            Assert.AreEqual(1.07m, trade1.EntryPrice);
             Assert.AreEqual(TradeDirection.Long, trade1.Direction);
-            Assert.AreEqual(AdjustQuantityToSplit(1000, split), trade1.Quantity);
+            Assert.AreEqual(1000, trade1.Quantity);
             Assert.AreEqual(time.AddMinutes(10), trade1.ExitTime);
-            Assert.AreEqual(AdjustPriceToSplit(1.08m, split), trade1.ExitPrice);
+            Assert.AreEqual(1.08m, trade1.ExitPrice);
             Assert.AreEqual(10, trade1.ProfitLoss);
             Assert.AreEqual(2, trade1.TotalFees);
             Assert.AreEqual(0, trade1.MAE);
@@ -677,15 +680,16 @@ namespace QuantConnect.Tests.Common.Statistics
 
             Assert.AreEqual(2, builder.ClosedTrades.Count);
 
+            // This first trade was closed before the split
             var trade1 = builder.ClosedTrades[0];
 
             Assert.AreEqual(Symbols.SPY, trade1.Symbol);
             Assert.AreEqual(time, trade1.EntryTime);
-            Assert.AreEqual(AdjustPriceToSplit(1.07m, split), trade1.EntryPrice);
+            Assert.AreEqual(1.07m, trade1.EntryPrice);
             Assert.AreEqual(TradeDirection.Short, trade1.Direction);
-            Assert.AreEqual(AdjustQuantityToSplit(1000, split), trade1.Quantity);
+            Assert.AreEqual(1000, trade1.Quantity);
             Assert.AreEqual(time.AddMinutes(10), trade1.ExitTime);
-            Assert.AreEqual(AdjustPriceToSplit(1.08m, split), trade1.ExitPrice);
+            Assert.AreEqual(1.08m, trade1.ExitPrice);
             Assert.AreEqual(-10, trade1.ProfitLoss);
             Assert.AreEqual(2, trade1.TotalFees);
             Assert.AreEqual(-10, trade1.MAE);

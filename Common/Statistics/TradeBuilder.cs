@@ -129,24 +129,18 @@ namespace QuantConnect.Statistics
         /// <param name="dataNormalizationMode">The <see cref="DataNormalizationMode"/> for this security</param>
         public void ApplySplit(Split split, bool liveMode, DataNormalizationMode dataNormalizationMode)
         {
-            // only apply splits to equities
-            if (split.Symbol.SecurityType != SecurityType.Equity)
+            // only apply splits to equities, in live or raw data mode, and for open positions
+            if (split.Symbol.SecurityType != SecurityType.Equity ||
+                (!liveMode && dataNormalizationMode != DataNormalizationMode.Raw) ||
+                !_positions.TryGetValue(split.Symbol, out var position))
             {
                 return;
             }
 
-            // only apply splits in live or raw data mode
-            if (!liveMode && dataNormalizationMode != DataNormalizationMode.Raw)
-            {
-                return;
-            }
-
-            // only apply splits to open positions
-            var position = _positions[split.Symbol];
             position.MinPrice *= split.SplitFactor;
             position.MaxPrice *= split.SplitFactor;
 
-            foreach (var trade in position.PendingTrades.Concat(ClosedTrades))
+            foreach (var trade in position.PendingTrades)
             {
                 trade.Quantity /= split.SplitFactor;
                 trade.EntryPrice *= split.SplitFactor;
