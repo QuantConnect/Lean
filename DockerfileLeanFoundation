@@ -12,9 +12,6 @@ MAINTAINER QuantConnect <contact@quantconnect.com>
 # Use baseimage-docker's init system.
 CMD ["/sbin/my_init"]
 
-# Have to add env TZ=UTC. See https://github.com/dotnet/coreclr/issues/602
-RUN env TZ=UTC
-
 # Install OS Packages:
 # Misc tools for running Python.NET and IB inside a headless container.
 RUN apt-get update && apt-get -y install wget curl unzip \
@@ -28,7 +25,7 @@ RUN apt-get update && apt-get -y install wget curl unzip \
 
 # Install IB Gateway: Installs to /root/ibgateway
 RUN mkdir -p /root/ibgateway && \
-    wget https://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64.v10.20.1f.sh && \
+    wget -q https://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64.v10.20.1f.sh && \
     chmod 777 ibgateway-latest-standalone-linux-x64.v10.20.1f.sh && \
     ./ibgateway-latest-standalone-linux-x64.v10.20.1f.sh -q -dir /root/ibgateway && \
     rm ibgateway-latest-standalone-linux-x64.v10.20.1f.sh
@@ -44,11 +41,11 @@ ENV PYTHONNET_PYDLL="/opt/miniconda3/lib/libpython3.8.so"
 # Install miniconda
 ENV CONDA="Miniconda3-py38_23.1.0-1-Linux-x86_64.sh"
 ENV PATH="/opt/miniconda3/bin:${PATH}"
-RUN wget https://repo.anaconda.com/miniconda/${CONDA} && \
+RUN wget -q https://cdn.quantconnect.com/miniconda/${CONDA} && \
     bash ${CONDA} -b -p /opt/miniconda3 && rm -rf ${CONDA}
 
 # Install Julia
-RUN wget https://julialang-s3.julialang.org/bin/linux/x64/1.8/julia-1.8.5-linux-x86_64.tar.gz && \
+RUN wget -q https://julialang-s3.julialang.org/bin/linux/x64/1.8/julia-1.8.5-linux-x86_64.tar.gz && \
     tar zxvf julia-1.8.5-linux-x86_64.tar.gz && \
     rm julia-1.8.5-linux-x86_64.tar.gz
 ENV PATH="/julia-1.8.5/bin:${PATH}"
@@ -158,7 +155,7 @@ RUN pip install --no-cache-dir      \
     nbeats-pytorch==1.8.0           \
     torch==1.13.1                   \
     torchvision==0.14.1             \
-    ax-platform==0.2.7.2            \
+    ax-platform==0.2.8              \
     alphalens-reloaded==0.4.3       \
     pyfolio-reloaded==0.9.5         \
     altair==4.2.2                   \
@@ -231,11 +228,20 @@ RUN pip install --no-cache-dir      \
     pymannkendall==1.4.3            \
     Pyomo==6.5.0                    \
     gpflow==2.7.0                   \
-    jupyter-dash==0.4.2
+    jupyter-dash==0.4.2             \
+    pyarrow==11.0.0                 \
+    dwave-ocean-sdk==6.1.1          \
+    chardet==5.1.0
+
+# Install dwave tool
+RUN dwave install --all -y
+
+# Install 'ipopt' solver for 'Pyomo'
+RUN conda install -c conda-forge ipopt==3.14.11 \
+    && conda clean -y --all
 
 # After 'jupyter-dash' we need to rebuild jupyter lab install which required nodejs
 RUN conda install -c conda-forge nodejs==18.13.0 \
-    && npm install tabulator-tables --save \
     && jupyter lab build \
     && conda clean -y --all
 
@@ -259,30 +265,30 @@ RUN TORCH=$(python -c "import torch; print(torch.__version__)") && \
 RUN python -m nltk.downloader -d /usr/share/nltk_data all
 
 # Install ppscore
-RUN wget https://cdn.quantconnect.com/ppscore/ppscore-master-ce93fa3.zip && \
+RUN wget -q https://cdn.quantconnect.com/ppscore/ppscore-master-ce93fa3.zip && \
     unzip -q ppscore-master-ce93fa3.zip && cd ppscore-master && \
     pip install . && cd .. && rm -rf ppscore-master && rm ppscore-master-ce93fa3.zip
 
 # Install DX Analytics
-RUN wget https://cdn.quantconnect.com/dx/dx-master-69922c0.zip && \
+RUN wget -q https://cdn.quantconnect.com/dx/dx-master-69922c0.zip && \
     unzip -q dx-master-69922c0.zip && cd dx-master && \
     pip install . && cd .. && rm -rf dx-master && rm dx-master-69922c0.zip
 
 # Install Pyrb
-RUN wget https://cdn.quantconnect.com/pyrb/pyrb-master-250054e.zip && \
+RUN wget -q https://cdn.quantconnect.com/pyrb/pyrb-master-250054e.zip && \
     unzip -q pyrb-master-250054e.zip && cd pyrb-master && \
     pip install . && cd .. && rm -rf pyrb-master && rm pyrb-master-250054e.zip
 
 # Install SSM
-RUN wget https://cdn.quantconnect.com/ssm/ssm-master-646e188.zip && \
+RUN wget -q https://cdn.quantconnect.com/ssm/ssm-master-646e188.zip && \
     unzip -q ssm-master-646e188.zip && cd ssm-master && \
     pip install . && cd .. && rm -rf ssm-master && rm ssm-master-646e188.zip
 
 # Install TA-lib for python
-RUN wget https://cdn.quantconnect.com/ta-lib/ta-lib-0.4.0-src.tar.gz && \
+RUN wget -q https://cdn.quantconnect.com/ta-lib/ta-lib-0.4.0-src.tar.gz && \
     tar -zxvf ta-lib-0.4.0-src.tar.gz && cd ta-lib && \
     ./configure --prefix=/usr && make && make install && \
-    wget https://cdn.quantconnect.com/ta-lib/TA_Lib-0.4.18.zip && \
+    wget -q https://cdn.quantconnect.com/ta-lib/TA_Lib-0.4.18.zip && \
     unzip -q TA_Lib-0.4.18.zip && cd ta-lib-TA_Lib-0.4.18 && \
     python setup.py install && cd ../.. && rm -rf ta-lib && rm ta-lib-0.4.0-src.tar.gz
 
@@ -299,12 +305,13 @@ RUN python -m venv /Foundation-Pomegranate --system-site-packages && . /Foundati
 RUN python -m venv /Foundation-Tensorforce && . /Foundation-Tensorforce/bin/activate \
     && pip install --no-cache-dir       \
     tensorflow==2.6.0                   \
+    protobuf==3.20.3                    \
     keras==2.6.0                        \
     tensorforce==0.6.5                  \
     gym==0.21                           \
     jupyterlab==3.4.4                   \
     clr-loader==0.1.6                   \
-    stable-baselines3==1.6.0            \
+    stable-baselines3==1.7.0            \
     alphapy==2.5.0                      \
     && python -m ipykernel install --name=Foundation-Tensorforce \
     && deactivate
@@ -316,5 +323,5 @@ RUN apt-get update && apt install -y xvfb wkhtmltopdf && \
     apt-get clean && apt-get autoclean && apt-get autoremove --purge -y && rm -rf /var/lib/apt/lists/*
 
 # Install fonts for matplotlib
-RUN wget https://cdn.quantconnect.com/fonts/foundation.zip && unzip -q foundation.zip && rm foundation.zip \
+RUN wget -q https://cdn.quantconnect.com/fonts/foundation.zip && unzip -q foundation.zip && rm foundation.zip \
     && mv "lean fonts/"* /usr/share/fonts/truetype/ && rm -rf "lean fonts/" "__MACOSX/"

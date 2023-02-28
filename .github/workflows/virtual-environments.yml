@@ -33,8 +33,8 @@ jobs:
       - name: Run Python Package Tests
         run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests"
 
-      - name: Run Pomegranate Python Package Test
-        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.PomegranateTest"
+      - name: Run Pomegranate & Tigramite Python Package Test
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.PomegranateTest|Tigramite"
 
       - name: Run Tensorforce Python Package Test
         run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.TensorforceTests"
@@ -45,17 +45,23 @@ jobs:
       - name: Run AxPlatform Python Package Test
         run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.AxPlatformTest"
 
-      - name: Run NeuralTangents Python Package Test
-        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.NeuralTangentsTest"
-
       - name: Run NBeats Python Package Test
         run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.NBeatsTest"
 
-      - name: Run Tensorly Python Package Test
+      - name: Run TensorlyTest Python Package Test
         run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.TensorlyTest"
 
-      - name: Run Ignite Python Package Test
-        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.IgniteTest"
+      - name: Run TensorflowProbability, NeuralTangents, Ignite Python Package Test
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.TensorflowProbabilityTest|TensorflowTest|NeuralTangentsTest|IgniteTest"
 
       - name: Run Hvplot Python Package Test
         run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.HvplotTest"
+
+      - name: Run Hvplot Python Package Test
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.StellargraphTest"
+
+      - name: Run Keras Python Package Test
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.KerasTest"
+
+      - name: Run Keras Python Package Test
+        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.ScikerasTest"

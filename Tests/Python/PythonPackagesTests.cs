@@ -241,7 +241,7 @@ def RunTest():
     df.sort(""fruits"")");
         }
 
-        [Test]
+        [Test, Explicit("Hangs if run along side the rest")]
         public void TensorflowProbabilityTest()
         {
             AssertCode(
@@ -402,7 +402,19 @@ def RunTest():
 import ignite
 
 def RunTest():
-    assert(ignite.__version__ == '0.4.10')"
+    assert(ignite.__version__ == '0.4.11')"
+            );
+        }
+
+        [Test, Explicit("Hangs if run along side the rest")]
+        public void StellargraphTest()
+        {
+            AssertCode(
+                $@"
+import stellargraph
+
+def RunTest():
+    assert(stellargraph.__version__ == '1.2.1')"
             );
         }
 
@@ -689,7 +701,7 @@ def RunTest():
             );
         }
 
-        [Test]
+        [Test, Explicit("Hangs if run along side the rest")]
         public void KerasTest()
         {
             AssertCode(
@@ -756,7 +768,7 @@ def RunTest():
     environment.close()");
         }
 
-        [Test]
+        [Test, Explicit("Hangs if run along side the rest")]
         public void TensorflowTest()
         {
             AssertCode(
@@ -828,13 +840,13 @@ def RunTest():
     ql.Settings.instance().evaluationDate = todaysDate
     spotDates = [ql.Date(15, 1, 2015), ql.Date(15, 7, 2015), ql.Date(15, 1, 2016)]
     spotRates = [0.0, 0.005, 0.007]
-    dayCount = ql.Thirty360()
-    calendar = ql.UnitedStates()
+    dayCount = ql.Thirty360(ql.Thirty360.BondBasis)
+    calendar = ql.UnitedStates(ql.UnitedStates.NYSE)
     interpolation = ql.Linear()
     compounding = ql.Compounded
     compoundingFrequency = ql.Annual
     spotCurve = ql.ZeroCurve(spotDates, spotRates, dayCount, calendar, interpolation,
-                             compounding, compoundingFrequency)
+                                compounding, compoundingFrequency)
     return ql.YieldTermStructureHandle(spotCurve)"
             );
         }
@@ -990,6 +1002,433 @@ def RunTest():
 
     return stepwise_fit.summary()"
             );
+        }
+
+        [Test]
+        public void DmTree()
+        {
+            AssertCode(
+                @"
+import tree
+
+def RunTest():
+    structure = [[1], [[[2, 3]]], [4]]
+    tree.flatten(structure)");
+        }
+
+        [Test]
+        public void Ortools()
+        {
+            AssertCode(
+                @"
+from ortools.linear_solver import pywraplp
+from ortools.init import pywrapinit
+
+def RunTest():
+	# Create the linear solver with the GLOP backend.
+	solver = pywraplp.Solver.CreateSolver('GLOP')
+
+	# Create the variables x and y.
+	x = solver.NumVar(0, 1, 'x')
+	y = solver.NumVar(0, 2, 'y')
+
+	print('Number of variables =', solver.NumVariables())");
+        }
+
+        [Test]
+        public void Neuralprophet()
+        {
+            AssertCode(
+                @"
+from neuralprophet import NeuralProphet
+
+def RunTest():
+    m = NeuralProphet()");
+        }
+
+        [Test]
+        public void TensorflowAddons()
+        {
+            AssertCode(
+                @"
+import tensorflow as tf
+import tensorflow_addons as tfa
+
+def RunTest():
+    train,test = tf.keras.datasets.mnist.load_data()
+    x_train, y_train = train
+    x_train = x_train[..., tf.newaxis] / 255.0");
+        }
+
+        [Test]
+        public void Yellowbrick()
+        {
+            AssertCode(
+                @"
+from yellowbrick.features import ParallelCoordinates
+from sklearn.datasets import make_classification
+
+def RunTest():
+    X, y = make_classification(n_samples=5000, n_features=2, n_informative=2,
+                               n_redundant=0, n_repeated=0, n_classes=3,
+                               n_clusters_per_class=1,
+                               weights=[0.01, 0.05, 0.94],
+                               class_sep=0.8, random_state=0)
+    visualizer = ParallelCoordinates()
+    visualizer.fit_transform(X, y)
+    visualizer.show()");
+        }
+
+        [Test]
+        public void Livelossplot()
+        {
+            AssertCode(
+                @"
+from sklearn import datasets
+from sklearn.model_selection import train_test_split
+
+import torch
+from torch import nn, optim
+from torch.utils.data import TensorDataset, DataLoader
+
+import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
+
+from livelossplot import PlotLosses
+from livelossplot.outputs import matplotlib_subplots
+
+def RunTest():
+	# try with make_moons
+	X, y = datasets.make_circles(noise=0.2, factor=0.5, random_state=1)
+	X_train, X_test, y_train, y_test = \
+		train_test_split(X, y, test_size=.4, random_state=42)
+
+	# plot them
+	cm_bright = ListedColormap(['#FF0000', '#0000FF'])
+	plt.scatter(X_train[:, 0], X_train[:, 1], c=y_train, cmap=cm_bright)
+	plt.scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap=cm_bright, alpha=0.3)");
+        }
+
+        [Test]
+        public void Gymnasium()
+        {
+            AssertCode(
+                @"
+import gymnasium as gym
+
+def RunTest():
+    env = gym.make(""CartPole-v1"")
+
+    observation, info = env.reset(seed=42)
+    action = env.action_space.sample()
+    observation, reward, terminated, truncated, info = env.step(action)
+
+    env.close()");
+        }
+
+        [Test]
+        public void Interpret()
+        {
+            AssertCode(
+                @"
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from interpret.glassbox import ExplainableBoostingClassifier
+
+def RunTest():
+    df = pd.read_csv(
+        ""https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data"",
+        header=None)
+    df.columns = [
+        ""Age"", ""WorkClass"", ""fnlwgt"", ""Education"", ""EducationNum"",
+        ""MaritalStatus"", ""Occupation"", ""Relationship"", ""Race"", ""Gender"",
+        ""CapitalGain"", ""CapitalLoss"", ""HoursPerWeek"", ""NativeCountry"", ""Income""
+    ]
+    train_cols = df.columns[0:-1]
+    label = df.columns[-1]
+    X = df[train_cols]
+    y = df[label]
+
+    seed = 1
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=seed)
+
+    ebm = ExplainableBoostingClassifier(random_state=seed)
+    ebm.fit(X_train, y_train)");
+        }
+
+        [Test]
+        public void Doubleml()
+        {
+            AssertCode(
+                @"
+import numpy as np
+from doubleml.datasets import make_plr_CCDDHNR2018
+
+def RunTest():
+    np.random.seed(1234)
+
+    n_rep = 1000
+    n_obs = 500
+    n_vars = 20
+    alpha = 0.5
+    data = list()
+
+    for i_rep in range(n_rep):
+        (x, y, d) = make_plr_CCDDHNR2018(alpha=alpha, n_obs=n_obs, dim_x=n_vars, return_type='array')
+        data.append((x, y, d))");
+        }
+
+        [Test]
+        public void ImbalancedLearn()
+        {
+            AssertCode(
+                @"
+from sklearn.datasets import make_classification
+from imblearn.over_sampling import RandomOverSampler
+from collections import Counter
+
+def RunTest():
+    X, y = make_classification(n_samples=5000, n_features=2, n_informative=2,
+                                n_redundant=0, n_repeated=0, n_classes=3,
+                                n_clusters_per_class=1,
+                                weights=[0.01, 0.05, 0.94],
+                                class_sep=0.8, random_state=0)
+
+    ros = RandomOverSampler(random_state=0)
+
+    X_resampled, y_resampled = ros.fit_resample(X, y)
+
+    print(sorted(Counter(y_resampled).items()))");
+        }
+
+        [Test, Explicit("Has issues when run along side the other tests")]
+        public void ScikerasTest()
+        {
+            AssertCode(
+                @"
+import numpy as np
+from sklearn.datasets import make_classification
+from tensorflow import keras
+from scikeras.wrappers import KerasClassifier
+
+def RunTest():
+    X, y = make_classification(1000, 20, n_informative=10, random_state=0)
+    X = X.astype(np.float32)
+    y = y.astype(np.int64)
+
+    def get_model(hidden_layer_dim, meta):
+        # note that meta is a special argument that will be
+        # handed a dict containing input metadata
+        n_features_in_ = meta[""n_features_in_""]
+        X_shape_ = meta[""X_shape_""]
+        n_classes_ = meta[""n_classes_""]
+
+        model = keras.models.Sequential()
+        model.add(keras.layers.Dense(n_features_in_, input_shape=X_shape_[1:]))
+        model.add(keras.layers.Activation(""relu""))
+        model.add(keras.layers.Dense(hidden_layer_dim))
+        model.add(keras.layers.Activation(""relu""))
+        model.add(keras.layers.Dense(n_classes_))
+        model.add(keras.layers.Activation(""softmax""))
+        return model
+
+    clf = KerasClassifier(
+        get_model,
+        loss=""sparse_categorical_crossentropy"",
+        hidden_layer_dim=100,
+    )
+
+    clf.fit(X, y)
+    y_proba = clf.predict_proba(X)");
+        }
+
+        [Test]
+        public void Lazypredict()
+        {
+            AssertCode(
+                @"
+from lazypredict.Supervised import LazyClassifier
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+
+def RunTest():
+    data = load_breast_cancer()
+    X = data.data
+    y= data.target
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y,test_size=.5,random_state =123)
+
+    clf = LazyClassifier(verbose=0,ignore_warnings=True, custom_metric=None)
+    models,predictions = clf.fit(X_train, X_test, y_train, y_test)");
+        }
+
+        [Test]
+        public void Fracdiff()
+        {
+            AssertCode(
+                @"
+import numpy as np
+from fracdiff import fdiff
+
+def RunTest():
+    a = np.array([1, 2, 4, 7, 0])
+    fdiff(a, 0.5)
+    # array([ 1.       ,  1.5      ,  2.875    ,  4.6875   , -4.1640625])
+    np.array_equal(fdiff(a, n=1), np.diff(a, n=1))
+    # True");
+        }
+
+        [Test]
+        public void Darts()
+        {
+            AssertCode(
+                @"
+from darts.datasets import ETTh2Dataset
+from darts.ad import KMeansScorer
+
+def RunTest():
+    series = ETTh2Dataset().load()[:10000][[""MUFL"", ""LULL""]]
+    train, val = series.split_before(0.6)
+    scorer = KMeansScorer(k=2, window=5)
+    scorer.fit(train)
+    anom_score = scorer.score(val)");
+        }
+
+        [Test]
+        public void Fastparquet()
+        {
+            AssertCode(
+                @"
+from fastparquet import write
+import pandas as pd
+
+def RunTest():
+    d = {'date': [ '20220901', '20220902' ], 'open': [ 1, 2 ], 'close': [ 1, 2 ],'high': [ 1, 2], 'low': [ 1, 2 ], 'volume': [ 1, 2 ] }
+    df = pd.DataFrame(data=d)
+    write('outfile.parq', df)");
+        }
+
+        [Test]
+        public void Dimod()
+        {
+            AssertCode(
+                @"
+import dimod
+
+def RunTest():
+    bqm = dimod.BinaryQuadraticModel({0: -1, 1: 1}, {(0, 1): 2}, 0.0, dimod.BINARY)
+
+    sampleset = dimod.ExactSolver().sample(bqm)
+    return sampleset");
+        }
+
+        [Test]
+        public void DwaveSamplers()
+        {
+            AssertCode(
+                @"
+from dwave.samplers import PlanarGraphSolver
+
+def RunTest():
+    solver = PlanarGraphSolver()");
+        }
+
+        [Test]
+        public void Statemachine()
+        {
+            AssertCode(
+                @"
+from statemachine import StateMachine, State
+
+def RunTest():
+    class StateObject(StateMachine):
+        aState = State(""A"", initial = True)
+        bState = State(""B"")
+
+        transitionA = aState.to(bState)
+        transitionB = bState.to(aState)
+
+    instance = StateObject()");
+        }
+
+        [Test]
+        public void pymannkendall()
+        {
+            AssertCode(
+                @"
+import numpy as np
+import pymannkendall as mk
+
+def RunTest():
+    # Data generation for analysis
+    data = np.random.rand(360,1)
+
+    result = mk.original_test(data)
+    return result");
+        }
+
+        [Test]
+        public void Pyomo()
+        {
+            AssertCode(
+                @"
+from pyomo.environ import *
+
+def RunTest():
+	V = 40     # liters
+	kA = 0.5   # 1/min
+	kB = 0.1   # l/min
+	CAf = 2.0  # moles/liter
+
+	# create a model instance
+	model = ConcreteModel()
+
+	# create x and y variables in the model
+	model.q = Var()
+
+	# add a model objective
+	model.objective = Objective(expr = model.q*V*kA*CAf/(model.q + V*kB)/(model.q + V*kA), sense=maximize)
+
+	# compute a solution using ipopt for nonlinear optimization
+	results = SolverFactory('ipopt').solve(model)
+
+	# print solutions
+	qmax = model.q()
+	CBmax = model.objective()
+	print('\nFlowrate at maximum CB = ', qmax, 'liters per minute.')
+	print('\nMaximum CB =', CBmax, 'moles per liter.')
+	print('\nProductivity = ', qmax*CBmax, 'moles per minute.')");
+        }
+
+        [Test]
+        public void Gpflow()
+        {
+            AssertCode(
+                @"
+import gpflow
+import numpy as np
+import matplotlib
+
+def RunTest():
+    X = np.array(
+        [
+            [0.865], [0.666], [0.804], [0.771], [0.147], [0.866], [0.007], [0.026],
+            [0.171], [0.889], [0.243], [0.028],
+        ]
+    )
+    Y = np.array(
+        [
+            [1.57], [3.48], [3.12], [3.91], [3.07], [1.35], [3.80], [3.82], [3.49],
+            [1.30], [4.00], [3.82],
+        ]
+    )
+
+    model = gpflow.models.GPR((X, Y), kernel=gpflow.kernels.SquaredExponential())
+    opt = gpflow.optimizers.Scipy()
+    opt.minimize(model.training_loss, model.trainable_variables)
+
+    Xnew = np.array([[0.5]])
+    model.predict_f(Xnew)");
         }
 
         [Test, Explicit("Installed in specific environment. Requires older gym")]
@@ -1365,9 +1804,10 @@ def RunTest():
             );
         }
 
-        [Test]
+        [Test, Explicit("Installed in specific environment. Requires older dependencies")]
         public void Tigramite()
         {
+            PythonInitializer.ActivatePythonVirtualEnvironment("/Foundation-Pomegranate");
             AssertCode(@"
 import numpy as np
 from tigramite.pcmci import PCMCI
@@ -1529,38 +1969,37 @@ def RunTest():
         /// </summary>
         /// <param name="module">The module we are testing</param>
         /// <param name="version">The module version</param>
-        [TestCase("pulp", "2.6.0", "VERSION")]
-        [TestCase("pymc", "4.1.4", "__version__")]
+        [TestCase("pulp", "2.7.0", "VERSION")]
+        [TestCase("pymc", "5.0.2", "__version__")]
         [TestCase("pypfopt", "pypfopt", "__name__")]
         [TestCase("wrapt", "1.14.1", "__version__")]
-        [TestCase("tslearn", "0.5.2", "__version__")]
+        [TestCase("tslearn", "0.5.3.2", "__version__")]
         [TestCase("tweepy", "4.10.0", "__version__")]
-        [TestCase("pywt", "1.3.0", "__version__")]
+        [TestCase("pywt", "1.4.1", "__version__")]
         [TestCase("umap", "0.5.3", "__version__")]
-        [TestCase("dtw", "1.2.2", "__version__")]
-        [TestCase("mplfinance", "0.12.9b1", "__version__")]
+        [TestCase("dtw", "1.3.0", "__version__")]
+        [TestCase("mplfinance", "0.12.9b7", "__version__")]
         [TestCase("cufflinks", "0.17.3", "__version__")]
-        [TestCase("ipywidgets", "8.0.0rc1", "__version__")]
-        [TestCase("astropy", "5.1", "__version__")]
-        [TestCase("gluonts", "0.7.7", "__version__")]
+        [TestCase("ipywidgets", "8.0.4", "__version__")]
+        [TestCase("astropy", "5.2.1", "__version__")]
+        [TestCase("gluonts", "0.12.3", "__version__")]
         [TestCase("gplearn", "0.4.2", "__version__")]
-        [TestCase("h2o", "3.36.1.4", "__version__")]
-        [TestCase("featuretools", "0.18.1", "__version__")]
-        [TestCase("pennylane", "0.25.1", "version()")]
+        [TestCase("h2o", "3.40.0.1", "__version__")]
+        [TestCase("featuretools", "0.23.1", "__version__")]
+        [TestCase("pennylane", "0.29.0", "version()")]
         [TestCase("pyfolio", "0.9.2", "__version__")]
-        [TestCase("altair", "4.2.0", "__version__")]
-        [TestCase("stellargraph", "1.2.1", "__version__")]
-        [TestCase("modin", "0.15.3", "__version__")]
+        [TestCase("altair", "4.2.2", "__version__")]
+        [TestCase("modin", "0.18.1", "__version__")]
         [TestCase("persim", "0.3.1", "__version__")]
-        [TestCase("pydmd", "0.4.0.post2209", "__version__")]
+        [TestCase("pydmd", "0.4.0.post2301", "__version__")]
         [TestCase("pandas_ta", "0.3.14b0", "__version__")]
         [TestCase("finrl", "finrl", "__package__")]
         [TestCase("tensortrade", "1.0.3", "__version__")]
         [TestCase("quantstats", "0.0.59", "__version__")]
-        [TestCase("autokeras", "1.0.20", "__version__")]
-        [TestCase("panel", "0.14.0", "__version__")]
+        [TestCase("autokeras", "1.1.0", "__version__")]
+        [TestCase("panel", "0.14.3", "__version__")]
         [TestCase("pyheat", "pyheat", "__name__")]
-        [TestCase("tensorflow_decision_forests", "1.0.1", "__version__")]
+        [TestCase("tensorflow_decision_forests", "1.2.0", "__version__")]
         public void ModuleVersionTest(string module, string value, string attribute)
         {
             AssertCode(
