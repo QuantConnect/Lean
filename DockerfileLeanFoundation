@@ -5,7 +5,7 @@
 #
 
 # Use base system for cleaning up wayward processes
-FROM phusion/baseimage:focal-1.0.0
+FROM phusion/baseimage:jammy-1.0.0
 
 MAINTAINER QuantConnect <contact@quantconnect.com>
 
@@ -17,14 +17,13 @@ RUN env TZ=UTC
 
 # Install OS Packages:
 # Misc tools for running Python.NET and IB inside a headless container.
-RUN add-apt-repository ppa:ubuntu-toolchain-r/test \
-   && echo deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/ >> /etc/apt/sources.list \
-   && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
-   && add-apt-repository ppa:apt-fast/stable && apt-get update && apt-get -y install apt-fast \
-   && apt-fast install -y git bzip2 curl unzip wget python3-pip python-opengl zlib1g-dev \
+RUN apt-get update && apt-get -y install wget curl unzip \
+   && wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc \
+   && echo deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/ >> /etc/apt/sources.list \
+   && apt-get install -y git bzip2 zlib1g-dev \
    xvfb libxrender1 libxtst6 libxi6 libglib2.0-dev libopenmpi-dev libstdc++6 openmpi-bin \
    pandoc libcurl4-openssl-dev libgtk2.0.0 r-base \
-   && apt-fast clean && apt-get remove -y apt-fast && apt-get clean && apt-get autoclean && apt-get autoremove --purge -y \
+   && apt-get clean && apt-get autoclean && apt-get autoremove --purge -y \
    && rm -rf /var/lib/apt/lists/*
 
 # Install IB Gateway: Installs to /root/ibgateway
@@ -35,26 +34,18 @@ RUN mkdir -p /root/ibgateway && \
     rm ibgateway-latest-standalone-linux-x64.v10.20.1f.sh
 
 # Install dotnet 6 sdk & runtime
-RUN wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
-    dpkg -i packages-microsoft-prod.deb && \
-    apt-get update; \
-    apt-get install -y apt-transport-https && \
-    apt-get update && \
+RUN apt-get update && \
     apt-get install -y dotnet-sdk-6.0 && \
-    rm packages-microsoft-prod.deb && \
     apt-get clean && apt-get autoclean && apt-get autoremove --purge -y && rm -rf /var/lib/apt/lists/*
 
 # Set PythonDLL variable for PythonNet
 ENV PYTHONNET_PYDLL="/opt/miniconda3/lib/libpython3.8.so"
 
 # Install miniconda
-ENV CONDA="Miniconda3-4.5.12-Linux-x86_64.sh"
+ENV CONDA="Miniconda3-py38_23.1.0-1-Linux-x86_64.sh"
 ENV PATH="/opt/miniconda3/bin:${PATH}"
-RUN wget https://cdn.quantconnect.com/miniconda/${CONDA} && \
-    bash ${CONDA} -b -p /opt/miniconda3 && rm -rf ${CONDA} && \
-    conda install -y conda=4.10.3 && \
-    pip install --upgrade --no-cache-dir pip==22.2.2 && \
-    conda install -y python=3.8.13 && conda install -y -c conda-forge pip=22.2.2 && conda clean -y --all
+RUN wget https://repo.anaconda.com/miniconda/${CONDA} && \
+    bash ${CONDA} -b -p /opt/miniconda3 && rm -rf ${CONDA}
 
 # Install Julia
 RUN wget https://julialang-s3.julialang.org/bin/linux/x64/1.8/julia-1.8.5-linux-x86_64.tar.gz && \
@@ -130,8 +121,9 @@ RUN pip install --no-cache-dir      \
     jax==0.4.4                      \
     jaxlib==0.4.4                   \
     keras-rl==0.4.2                 \
-    pennylane==0.28.0               \
-    PennyLane-Lightning==0.28.2     \
+    pennylane==0.29.0               \
+    PennyLane-Lightning==0.29.0     \
+    pennylane-qiskit==0.29.0        \
     qiskit==0.41.1                  \
     neural-tangents==0.6.2          \
     mplfinance==0.12.9b7            \
@@ -216,7 +208,7 @@ RUN pip install --no-cache-dir      \
     lz4==4.3.2                      \
     ortools==9.4.1874               \
     py_vollib==1.0.1                \
-    neuralprophet[live]==0.5.1      \
+    neuralprophet[live]==0.5.0      \
     tensorflow-addons==0.19.0       \
     thundergbm==0.3.17              \
     yellowbrick==1.5                \
@@ -238,7 +230,14 @@ RUN pip install --no-cache-dir      \
     python-statemachine==1.0.3      \
     pymannkendall==1.4.3            \
     Pyomo==6.5.0                    \
-    gpflow==2.7.0
+    gpflow==2.7.0                   \
+    jupyter-dash==0.4.2
+
+# After 'jupyter-dash' we need to rebuild jupyter lab install which required nodejs
+RUN conda install -c conda-forge nodejs==18.13.0 \
+    && npm install tabulator-tables --save \
+    && jupyter lab build \
+    && conda clean -y --all
 
 # We install need to install separately else fails to find numpy
 RUN pip install --no-cache-dir Riskfolio-Lib==4.0.3
