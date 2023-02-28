@@ -37,6 +37,25 @@ namespace QuantConnect.Orders.Fills
         /// <param name="asset">Security asset we're filling</param>
         /// <param name="order">Order packet to model</param>
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        /// <remarks>
+        ///     There are four types of Limit-if-touched (LIT) orders:
+        ///     1. Marketable limit price
+        ///       a. Buy  LIT order: set the trigger price below the current market price and set the limit price above the trigger price.
+        ///       b. Sell LIT order: set the trigger price above the current market price and set the limit price below the trigger price.
+        ///     2. Unmarketable limit price
+        ///       a. Buy  LIT order: set the trigger price below the current market price and set the limit price below the trigger price.
+        ///       b. Sell LIT order: set the trigger price above the current market price and set the limit price above the trigger price.
+        /// 
+        ///     Therefore, the trigger price can be lower or higher than the limit price, and it's uncertain
+        ///     whether the trigger price is attained or penetrated before the limit price with bar information.
+        ///     Consequently, when the trigger price is touched for the first time, the closing price (quote) will test the limit price.
+        ///
+        ///     This fill model handles the LIT fill as follows:
+        ///     1. If the trigger price is attained or penetrated, the order flag TriggerTouched is set to true.
+        ///     2. On the first touch, the limit order is filled if the closing price penetrates the limit price.
+        ///     3. When new trade information arrives, the LIT order is handled as a limit order:
+        ///        the limit order is filled if the high/low penetrated the limit price.
+        /// </remarks>
         public override OrderEvent LimitIfTouchedFill(Security asset, LimitIfTouchedOrder order)
         {
             //Default order event to return.
@@ -85,16 +104,26 @@ namespace QuantConnect.Orders.Fills
                 }
             }
 
-            // do not fill on stale data
+            // Do not trigger or fill on stale data.
             if (endTimeUtc <= order.Time) return fill;
+            
+            var fillMessage = string.Empty;
 
-            //Check if the limit if touched order was filled:
+            // Check if the limit if touched order was triggered and/or filled:
             switch (order.Direction)
             {
                 case OrderDirection.Buy:
-                    // Buy: If price below trigger, starts to behave as a limit fill
+                    // The user-specified trigger price is attained or penetrated:
+                    // If price above the trigger price, starts to behave as a limit fill
                     if (tradeLow <= order.TriggerPrice || order.TriggerTouched)
                     {
+                        // If it is the first trigger event, use the closing price as the low
+                        // since we don't know if the trigger happened before the limit
+                        if (!order.TriggerTouched)
+                        {
+                            tradeLow = GetBestEffortAskPrice(asset, order.Time, out fillMessage);
+                        }
+
                         order.TriggerTouched = true;
 
                         if (tradeLow < order.LimitPrice)
@@ -108,9 +137,17 @@ namespace QuantConnect.Orders.Fills
                     break;
 
                 case OrderDirection.Sell:
-                    // Sell: If price above trigger, starts to behave as a limit fill
+                    // The user-specified trigger price is attained or penetrated:
+                    // If price below the trigger price, starts to behave as a limit fill
                     if (tradeHigh >= order.TriggerPrice || order.TriggerTouched)
                     {
+                        // If it is the first trigger event, use the closing price as the high
+                        // since we don't know if the trigger happened before the limit
+                        if (!order.TriggerTouched)
+                        {
+                            tradeHigh = GetBestEffortBidPrice(asset, order.Time, out fillMessage);
+                        }
+
                         order.TriggerTouched = true;
 
                         if (tradeHigh > order.LimitPrice)
@@ -123,6 +160,8 @@ namespace QuantConnect.Orders.Fills
 
                     break;
             }
+
+            fill.Message = fillMessage;
             return fill;
         }
 
