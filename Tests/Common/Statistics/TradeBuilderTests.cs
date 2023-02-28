@@ -34,7 +34,8 @@ namespace QuantConnect.Tests.Common.Statistics
         public void AllInAllOutLong(
             [Values] FillGroupingMethod groupingMethod,
             [Values] FillMatchingMethod matchingMethod,
-            [Values] bool withSplit)
+            // 0 for no split
+            [Values(0, 0.5, 0.333)] double splitFactor)
         {
             // Buy 1k, Sell 1k
 
@@ -53,10 +54,10 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbols.SPY, 1.10m);
 
             Split split = null;
-            if (withSplit)
+            if (splitFactor != 0)
             {
                 // apply a 2:1 split
-                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, 0.5m, SplitType.SplitOccurred);
+                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, (decimal)splitFactor, SplitType.SplitOccurred);
                 builder.ApplySplit(split, false, DataNormalizationMode.Raw);
             }
 
@@ -89,7 +90,8 @@ namespace QuantConnect.Tests.Common.Statistics
         public void AllInAllOutShort(
             [Values] FillGroupingMethod groupingMethod,
             [Values] FillMatchingMethod matchingMethod,
-            [Values] bool withSplit)
+            // 0 for no split
+            [Values(0, 0.5, 0.333)] double splitFactor)
         {
             // Sell 1k, Buy 1k
 
@@ -108,10 +110,10 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbols.SPY, 1.10m);
 
             Split split = null;
-            if (withSplit)
+            if (splitFactor != 0)
             {
                 // apply a 2:1 split
-                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, 0.5m, SplitType.SplitOccurred);
+                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, (decimal)splitFactor, SplitType.SplitOccurred);
                 builder.ApplySplit(split, false, DataNormalizationMode.Raw);
             }
 
@@ -144,7 +146,8 @@ namespace QuantConnect.Tests.Common.Statistics
         public void ScaleInAllOutLong(
             [Values] FillGroupingMethod groupingMethod,
             [Values] FillMatchingMethod matchingMethod,
-            [Values] bool withSplit)
+            // 0 for no split
+            [Values(0, 0.5, 0.333)] double splitFactor)
         {
             // Buy 1k, Buy 1k, Sell 2k
 
@@ -173,10 +176,10 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbols.SPY, 1.10m);
 
             Split split = null;
-            if (withSplit)
+            if (splitFactor != 0)
             {
                 // apply a 2:1 split
-                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, 0.5m, SplitType.SplitOccurred);
+                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, (decimal)splitFactor, SplitType.SplitOccurred);
                 builder.ApplySplit(split, false, DataNormalizationMode.Raw);
             }
 
@@ -244,7 +247,8 @@ namespace QuantConnect.Tests.Common.Statistics
         public void ScaleInAllOutShort(
             [Values] FillGroupingMethod groupingMethod,
             [Values] FillMatchingMethod matchingMethod,
-            [Values] bool withSplit)
+            // 0 for no split
+            [Values(0, 0.5, 0.333)] double splitFactor)
         {
             // Sell 1k, Sell 1k, Buy 2k
 
@@ -273,10 +277,10 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbols.SPY, 1.10m);
 
             Split split = null;
-            if (withSplit)
+            if (splitFactor != 0)
             {
                 // apply a 2:1 split
-                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, 0.5m, SplitType.SplitOccurred);
+                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, (decimal)splitFactor, SplitType.SplitOccurred);
                 builder.ApplySplit(split, false, DataNormalizationMode.Raw);
             }
 
@@ -344,7 +348,8 @@ namespace QuantConnect.Tests.Common.Statistics
         public void AllInScaleOutLong(
             [Values] FillGroupingMethod groupingMethod,
             [Values] FillMatchingMethod matchingMethod,
-            [Values] bool withSplit)
+            // 0 for no split
+            [Values(0, 0.5, 0.333)] double splitFactor)
         {
             // Buy 2k, Sell 1k, Sell 1k
 
@@ -373,10 +378,10 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbols.SPY, 1.10m);
 
             Split split = null;
-            if (withSplit)
+            if (splitFactor != 0)
             {
                 // apply a 2:1 split
-                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, 0.5m, SplitType.SplitOccurred);
+                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, (decimal)splitFactor, SplitType.SplitOccurred);
                 builder.ApplySplit(split, false, DataNormalizationMode.Raw);
             }
 
@@ -444,7 +449,8 @@ namespace QuantConnect.Tests.Common.Statistics
         public void AllInScaleOutShort(
             [Values] FillGroupingMethod groupingMethod,
             [Values] FillMatchingMethod matchingMethod,
-            [Values] bool withSplit)
+            // 0 for no split
+            [Values(0, 0.5, 0.333)] double splitFactor)
         {
             // Sell 2k, Buy 1k, Buy 1k
 
@@ -473,10 +479,10 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbols.SPY, 1.10m);
 
             Split split = null;
-            if (withSplit)
+            if (splitFactor != 0)
             {
                 // apply a 2:1 split
-                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, 0.5m, SplitType.SplitOccurred);
+                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, (decimal)splitFactor, SplitType.SplitOccurred);
                 builder.ApplySplit(split, false, DataNormalizationMode.Raw);
             }
 
@@ -544,7 +550,8 @@ namespace QuantConnect.Tests.Common.Statistics
         public void ReversalLongToShort(
             [Values] FillGroupingMethod groupingMethod,
             [Values] FillMatchingMethod matchingMethod,
-            [Values] bool withSplit)
+            // 0 for no split
+            [Values(0, 0.5, 0.333)] double splitFactor)
         {
             // Buy 1k, Sell 2k, Buy 1k
 
@@ -573,10 +580,10 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbols.SPY, 1.10m);
 
             Split split = null;
-            if (withSplit)
+            if (splitFactor != 0)
             {
                 // apply a 2:1 split
-                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, 0.5m, SplitType.SplitOccurred);
+                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, (decimal)splitFactor, SplitType.SplitOccurred);
                 builder.ApplySplit(split, false, DataNormalizationMode.Raw);
             }
 
@@ -623,7 +630,8 @@ namespace QuantConnect.Tests.Common.Statistics
         public void ReversalShortToLong(
             [Values] FillGroupingMethod groupingMethod,
             [Values] FillMatchingMethod matchingMethod,
-            [Values] bool withSplit)
+            // 0 for no split
+            [Values(0, 0.5, 0.333)] double splitFactor)
         {
             // Sell 1k, Buy 2k, Sell 1k
 
@@ -652,10 +660,10 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbols.SPY, 1.10m);
 
             Split split = null;
-            if (withSplit)
+            if (splitFactor != 0)
             {
                 // apply a 2:1 split
-                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, 0.5m, SplitType.SplitOccurred);
+                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, (decimal)splitFactor, SplitType.SplitOccurred);
                 builder.ApplySplit(split, false, DataNormalizationMode.Raw);
             }
 
@@ -702,7 +710,8 @@ namespace QuantConnect.Tests.Common.Statistics
         public void ScaleInScaleOut1Long(
             [Values] FillGroupingMethod groupingMethod,
             [Values] FillMatchingMethod matchingMethod,
-            [Values] bool withSplit)
+            // 0 for no split
+            [Values(0, 0.5, 0.333)] double splitFactor)
         {
             // Buy 1k, Buy 1k, Sell 1k, Buy 1k, Sell 2k
 
@@ -731,10 +740,10 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbols.SPY, 1.10m);
 
             Split split = null;
-            if (withSplit)
+            if (splitFactor != 0)
             {
                 // apply a 2:1 split
-                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, 0.5m, SplitType.SplitOccurred);
+                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, (decimal)splitFactor, SplitType.SplitOccurred);
                 builder.ApplySplit(split, false, DataNormalizationMode.Raw);
             }
 
@@ -900,7 +909,8 @@ namespace QuantConnect.Tests.Common.Statistics
         public void ScaleInScaleOut1Short(
             [Values] FillGroupingMethod groupingMethod,
             [Values] FillMatchingMethod matchingMethod,
-            [Values] bool withSplit)
+            // 0 for no split
+            [Values(0, 0.5, 0.333)] double splitFactor)
         {
             // Sell 1k, Sell 1k, Buy 1k, Sell 1k, Buy 2k
 
@@ -929,10 +939,10 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbols.SPY, 1.10m);
 
             Split split = null;
-            if (withSplit)
+            if (splitFactor != 0)
             {
                 // apply a 2:1 split
-                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, 0.5m, SplitType.SplitOccurred);
+                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, (decimal)splitFactor, SplitType.SplitOccurred);
                 builder.ApplySplit(split, false, DataNormalizationMode.Raw);
             }
 
@@ -1090,7 +1100,8 @@ namespace QuantConnect.Tests.Common.Statistics
         public void ScaleInScaleOut2Long(
             [Values] FillGroupingMethod groupingMethod,
             [Values] FillMatchingMethod matchingMethod,
-            [Values] bool withSplit)
+            // 0 for no split
+            [Values(0, 0.5, 0.333)] double splitFactor)
         {
             // Buy 1k, Buy 2k, Sell 1k, Buy 1k, Sell 3k
 
@@ -1113,10 +1124,10 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbols.SPY, 1.10m);
 
             Split split = null;
-            if (withSplit)
+            if (splitFactor != 0)
             {
                 // apply a 2:1 split
-                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, 0.5m, SplitType.SplitOccurred);
+                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, (decimal)splitFactor, SplitType.SplitOccurred);
                 builder.ApplySplit(split, false, DataNormalizationMode.Raw);
             }
 
@@ -1321,7 +1332,8 @@ namespace QuantConnect.Tests.Common.Statistics
         public void ScaleInScaleOut2Short(
             [Values] FillGroupingMethod groupingMethod,
             [Values] FillMatchingMethod matchingMethod,
-            [Values] bool withSplit)
+            // 0 for no split
+            [Values(0, 0.5, 0.333)] double splitFactor)
         {
             // Sell 1k, Sell 2k, Buy 1k, Sell 1k, Buy 3k
 
@@ -1350,10 +1362,10 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbols.SPY, 1.10m);
 
             Split split = null;
-            if (withSplit)
+            if (splitFactor != 0)
             {
                 // apply a 2:1 split
-                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, 0.5m, SplitType.SplitOccurred);
+                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, (decimal)splitFactor, SplitType.SplitOccurred);
                 builder.ApplySplit(split, false, DataNormalizationMode.Raw);
             }
 
@@ -1567,7 +1579,8 @@ namespace QuantConnect.Tests.Common.Statistics
         public void ScaleInScaleOut3Long(
             [Values] FillGroupingMethod groupingMethod,
             [Values] FillMatchingMethod matchingMethod,
-            [Values] bool withSplit)
+            // 0 for no split
+            [Values(0, 0.5, 0.333)] double splitFactor)
         {
             // Buy 1k, Buy 1k, Buy 1k, Sell 2k, Buy 1k, Sell 2k
 
@@ -1590,10 +1603,10 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbols.SPY, 1.10m);
 
             Split split = null;
-            if (withSplit)
+            if (splitFactor != 0)
             {
                 // apply a 2:1 split
-                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, 0.5m, SplitType.SplitOccurred);
+                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, (decimal)splitFactor, SplitType.SplitOccurred);
                 builder.ApplySplit(split, false, DataNormalizationMode.Raw);
             }
 
@@ -1761,7 +1774,8 @@ namespace QuantConnect.Tests.Common.Statistics
         public void ScaleInScaleOut3Short(
             [Values] FillGroupingMethod groupingMethod,
             [Values] FillMatchingMethod matchingMethod,
-            [Values] bool withSplit)
+            // 0 for no split
+            [Values(0, 0.5, 0.333)] double splitFactor)
         {
             // Sell 1k, Sell 1k, Sell 1k, Buy 2k, Sell 1k, Buy 2k
 
@@ -1790,10 +1804,10 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbols.SPY, 1.10m);
 
             Split split = null;
-            if (withSplit)
+            if (splitFactor != 0)
             {
                 // apply a 2:1 split
-                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, 0.5m, SplitType.SplitOccurred);
+                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, (decimal)splitFactor, SplitType.SplitOccurred);
                 builder.ApplySplit(split, false, DataNormalizationMode.Raw);
             }
 
@@ -1973,7 +1987,8 @@ namespace QuantConnect.Tests.Common.Statistics
         public void ScaleInScaleOut4Long(
             [Values] FillGroupingMethod groupingMethod,
             [Values] FillMatchingMethod matchingMethod,
-            [Values] bool withSplit)
+            // 0 for no split
+            [Values(0, 0.5, 0.333)] double splitFactor)
         {
             // Buy 1k, Buy 1k, Sell 1.5k, Sell 0.5k
 
@@ -2002,10 +2017,10 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbols.SPY, 1.10m);
 
             Split split = null;
-            if (withSplit)
+            if (splitFactor != 0)
             {
                 // apply a 2:1 split
-                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, 0.5m, SplitType.SplitOccurred);
+                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, (decimal)splitFactor, SplitType.SplitOccurred);
                 builder.ApplySplit(split, false, DataNormalizationMode.Raw);
             }
 
@@ -2153,7 +2168,8 @@ namespace QuantConnect.Tests.Common.Statistics
         public void ScaleInScaleOut4Short(
             [Values] FillGroupingMethod groupingMethod,
             [Values] FillMatchingMethod matchingMethod,
-            [Values] bool withSplit)
+            // 0 for no split
+            [Values(0, 0.5, 0.333)] double splitFactor)
         {
             // Sell 1k, Sell 1k, Buy 1.5k, Buy 0.5k
 
@@ -2182,10 +2198,10 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbols.SPY, 1.10m);
 
             Split split = null;
-            if (withSplit)
+            if (splitFactor != 0)
             {
                 // apply a 2:1 split
-                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, 0.5m, SplitType.SplitOccurred);
+                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, (decimal)splitFactor, SplitType.SplitOccurred);
                 builder.ApplySplit(split, false, DataNormalizationMode.Raw);
             }
 
@@ -2333,7 +2349,8 @@ namespace QuantConnect.Tests.Common.Statistics
         public void AllInAllOutLongWithMultiplier(
             [Values] FillGroupingMethod groupingMethod,
             [Values] FillMatchingMethod matchingMethod,
-            [Values] bool withSplit)
+            // 0 for no split
+            [Values(0, 0.5, 0.333)] double splitFactor)
         {
             var multiplier = 10;
 
@@ -2354,10 +2371,10 @@ namespace QuantConnect.Tests.Common.Statistics
             builder.SetMarketPrice(Symbols.SPY, 1.10m);
 
             Split split = null;
-            if (withSplit)
+            if (splitFactor != 0)
             {
                 // apply a 2:1 split
-                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, 0.5m, SplitType.SplitOccurred);
+                split = new Split(Symbols.SPY, time.AddMinutes(5), 1.10m, (decimal)splitFactor, SplitType.SplitOccurred);
                 builder.ApplySplit(split, false, DataNormalizationMode.Raw);
             }
 
