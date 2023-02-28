@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,6 +14,7 @@
 */
 
 using System.Collections.Generic;
+using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Statistics;
 
@@ -48,6 +49,14 @@ namespace QuantConnect.Interfaces
         /// <param name="symbol"></param>
         /// <param name="price"></param>
         void SetMarketPrice(Symbol symbol, decimal price);
+
+        /// <summary>
+        /// Applies to the trade builder
+        /// </summary>
+        /// <param name="split">The split to be applied</param>
+        /// <param name="liveMode">True if live mode, false for backtest</param>
+        /// <param name="dataNormalizationMode">The <see cref="DataNormalizationMode"/> for this security</param>
+        void ApplySplit(Split split, bool liveMode, DataNormalizationMode dataNormalizationMode);
 
         /// <summary>
         /// Processes a new fill, eventually creating new trades

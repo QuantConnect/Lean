@@ -484,7 +484,7 @@ namespace QuantConnect.Lean.Engine
                     algorithm.SetRuntimeError(err, "Dividends/Splits/Delistings");
                     return;
                 }
-                
+
                 // Only track pending delistings in non-live mode.
                 if (!algorithm.LiveMode)
                 {
@@ -781,6 +781,9 @@ namespace QuantConnect.Lean.Engine
 
                     // apply the split event to the portfolio
                     algorithm.Portfolio.ApplySplit(split, liveMode, mode);
+
+                    // apply the split event to the trade builder
+                    algorithm.TradeBuilder.ApplySplit(split, liveMode, mode);
 
                     if (liveMode && security != null)
                     {
