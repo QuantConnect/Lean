@@ -40,10 +40,13 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 102m, 102m, 102m, 102m, 100));
 
+            // Prices above the trigger price: no trigger, no fill
             var fill = model.Fill(parameters).Single();
+
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
+            Assert.False(order.TriggerTouched);
 
             // Time jump => trigger touched but not limit
             security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 101m, 101m, 100.5m, 101m, 100));
@@ -51,15 +54,12 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new Bar(101m, 101m, 100.5m, 101m), 100, // Bid bar
                 new Bar(101m, 101m, 100.5m, 101m), 100) // Ask bar
             );
-
-            Assert.AreEqual(0, fill.FillQuantity);
-            Assert.AreEqual(0, fill.FillPrice);
-            Assert.AreEqual(OrderStatus.None, fill.Status);
-
+            
             fill = model.Fill(parameters).Single();
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
+            Assert.True(order.TriggerTouched);
 
             // Time jump => limit reached, security bought
             // |---> First, ensure that price data only triggers the order
@@ -81,8 +81,19 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(OrderStatus.None, fill.Status);
             Assert.True(order.TriggerTouched);
 
+            // |---> Third, ensure that fill forward data is not used to fill
+            // Fill forward data is not cached (SetMarketPrice)
+            var tradeBar = new TradeBar(Noon, Symbols.SPY, 101m, 101m, 99m, 99m, 100);
+            var fillForwardedTradeBar = tradeBar.Clone(true);
+            security.SetMarketPrice(fillForwardedTradeBar);
+            fill = model.LimitIfTouchedFill(security, order);
+            Assert.AreEqual(0, fill.FillQuantity);
+            Assert.AreEqual(0, fill.FillPrice);
+            Assert.AreEqual(OrderStatus.None, fill.Status);
+            Assert.True(order.TriggerTouched);
+
             // |---> Last, ensure that trade data used to fill
-            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 101m, 101m, 99m, 99m, 100));
+            security.SetMarketPrice(tradeBar);
             fill = model.LimitIfTouchedFill(security, order);
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
             Assert.AreEqual(order.LimitPrice, fill.FillPrice);
@@ -101,11 +112,13 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 100m, 100m, 90m, 90m, 100));
 
+            // Prices above the trigger price: no trigger, no fill
             var fill = model.Fill(parameters).Single();
 
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
+            Assert.False(order.TriggerTouched);
 
             // Time jump => trigger touched but not limit
             security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 102m, 103m, 102m, 102m, 100));
@@ -113,16 +126,13 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new Bar(101m, 102m, 100m, 100m), 100, // Bid bar
                 new Bar(103m, 104m, 102m, 102m), 100) // Ask bar
             );
-
-            Assert.AreEqual(0, fill.FillQuantity);
-            Assert.AreEqual(0, fill.FillPrice);
-            Assert.AreEqual(OrderStatus.None, fill.Status);
-
+            
             fill = model.Fill(parameters).Single();
 
             Assert.AreEqual(0, fill.FillQuantity);
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
+            Assert.True(order.TriggerTouched);
 
             // Time jump => limit reached, security bought
             // |---> First, ensure that price data only triggers the order
@@ -143,9 +153,20 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
             Assert.True(order.TriggerTouched);
-            
+
+            // |---> Third, ensure that fill forward data is not used to fill
+            // Fill forward data is not cached (SetMarketPrice)
+            var tradeBar = new TradeBar(Noon, Symbols.SPY, 106m, 106m, 99m, 99m, 100);
+            var fillForwardedTradeBar = tradeBar.Clone(true);
+            security.SetMarketPrice(fillForwardedTradeBar);
+            fill = model.LimitIfTouchedFill(security, order);
+            Assert.AreEqual(0, fill.FillQuantity);
+            Assert.AreEqual(0, fill.FillPrice);
+            Assert.AreEqual(OrderStatus.None, fill.Status);
+            Assert.True(order.TriggerTouched);
+
             // |---> Last, ensure that trade data used to fill
-            security.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 106m, 106m, 99m, 99m, 100));
+            security.SetMarketPrice(tradeBar);
             fill = model.LimitIfTouchedFill(security, order);
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
             Assert.AreEqual(order.LimitPrice, fill.FillPrice);
@@ -293,6 +314,56 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.False(order.TriggerTouched);
         }
 
+        [TestCase(100, 290.55, 290.50)]
+        [TestCase(-100, 291.45, 291.50)]
+        public void LimitIfTouchedOrderFillsUsingQuoteBarIfTriggersAndFillsInTheSameBar(decimal orderQuantity, decimal triggerPrice, decimal limitPrice)
+        {
+            var time = new DateTime(2018, 9, 24, 9, 30, 0);
+            var timeKeeper = new TimeKeeper(time.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork);
+
+            var fillModel = new EquityFillModel();
+            var order = new LimitIfTouchedOrder(Symbols.SPY, orderQuantity, triggerPrice, limitPrice, time.ConvertToUtc(TimeZones.NewYork));
+            
+            var parameters = GetFillModelParameters(Symbols.SPY, order);
+            var equity = parameters.Security;
+            equity.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+
+            // The order will not fill with these prices
+            var tradeBar = new TradeBar(time, Symbols.SPY, 291m, 291m, 291m, 291m, 12345);
+            equity.SetMarketPrice(tradeBar);
+
+            time += TimeSpan.FromMinutes(1);
+            timeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+
+            var fill = fillModel.Fill(parameters).Single();
+
+            // Do not fill on stale data
+            Assert.AreEqual(0, fill.FillQuantity);
+            Assert.AreEqual(0, fill.FillPrice);
+            Assert.AreEqual(OrderStatus.None, fill.Status);
+            Assert.False(order.TriggerTouched);
+
+            time += TimeSpan.FromMinutes(2);
+            timeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+
+            // The trade bar will trigger the limit order
+            tradeBar = new TradeBar(time, Symbols.SPY, 290m, 292m, 289m, 291m, 12345);
+            equity.SetMarketPrice(tradeBar);
+
+            var quoteBar = new QuoteBar(time, Symbols.SPY,
+                new Bar(290m, 292m, 289m, 292m), 12345,
+                new Bar(290m, 292m, 289m, 289m), 12345);
+            equity.SetMarketPrice(quoteBar);
+
+            fill = fillModel.LimitIfTouchedFill(equity, order);
+
+            // LimitIfTouched orders don't trigger with QuoteBar:
+            Assert.AreEqual(orderQuantity, fill.FillQuantity);
+            Assert.AreEqual(limitPrice, fill.FillPrice);
+            Assert.AreEqual(OrderStatus.Filled, fill.Status);
+            Assert.True(order.TriggerTouched);
+        }
+
         [TestCase(100, 290.50, 290.50)]
         [TestCase(-100, 291.50, 291.50)]
         public void LimitIfTouchedOrderDoesNotFillUsingTickTypeQuote(decimal orderQuantity, decimal triggerPrice, decimal limitPrice)
@@ -341,6 +412,57 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
             Assert.False(order.TriggerTouched);
+        }
+
+        [TestCase(100, 290.50, 290.50)]
+        [TestCase(-100, 291.50, 291.50)]
+        public void LimitIfTouchedOrderFillsUsingTickTypeQuoteIfTriggersAndFillsInTheSameBar(decimal orderQuantity, decimal triggerPrice, decimal limitPrice)
+        {
+            var fillModel = new EquityFillModel();
+
+            var configTick = CreateTickConfig(Symbols.SPY);
+            var equity = CreateEquity(configTick);
+
+            var time = new DateTime(2018, 9, 24, 9, 30, 0);
+            var timeKeeper = new TimeKeeper(time.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork);
+            equity.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+
+            // The order will not fill with this price
+            var tradeTick = new Tick { TickType = TickType.Trade, Time = time, Value = 291m };
+            equity.SetMarketPrice(tradeTick);
+
+            time += TimeSpan.FromMinutes(1);
+            timeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+
+            var order = new LimitIfTouchedOrder(Symbols.SPY, orderQuantity, triggerPrice, limitPrice, time.ConvertToUtc(TimeZones.NewYork));
+
+            var fill = fillModel.Fill(new FillModelParameters(
+                equity,
+                order,
+                new MockSubscriptionDataConfigProvider(configTick),
+                Time.OneHour,
+                null)).Single();
+
+            // Do not fill on stale data
+            Assert.AreEqual(0, fill.FillQuantity);
+            Assert.AreEqual(0, fill.FillPrice);
+            Assert.AreEqual(OrderStatus.None, fill.Status);
+
+            time += TimeSpan.FromMinutes(2);
+            timeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+
+            var price = limitPrice - 0.1m * Math.Sign(orderQuantity);
+            var quoteTick = new Tick { TickType = TickType.Quote, Time = time, BidPrice = price, AskPrice = price, Value = price };
+            tradeTick = new Tick { TickType = TickType.Trade, Time = time, Value = triggerPrice };
+            equity.Update(new[] { tradeTick, quoteTick }, typeof(Tick));
+
+            fill = fillModel.LimitIfTouchedFill(equity, order);
+
+            // LimitIfTouched orders don't trigger with TickType.Quote:
+            Assert.AreEqual(orderQuantity, fill.FillQuantity);
+            Assert.AreEqual(limitPrice, fill.FillPrice);
+            Assert.AreEqual(OrderStatus.Filled, fill.Status);
+            Assert.True(order.TriggerTouched);
         }
 
         [TestCase(100, 290.55, 290.50)]
