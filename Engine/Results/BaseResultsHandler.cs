@@ -166,7 +166,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// The algorithm instance
         /// </summary>
-        protected IAlgorithm Algorithm { get; set; }
+        protected virtual IAlgorithm Algorithm { get; set; }
 
         /// <summary>
         /// Gets or sets the current alpha runtime statistics
@@ -569,7 +569,7 @@ namespace QuantConnect.Lean.Engine.Results
             // only process those that we hold stock in.
             var shortHoldings = new Dictionary<SecurityType, decimal>();
             var longHoldings = new Dictionary<SecurityType, decimal>();
-            foreach (var holding in Algorithm.Portfolio.Values.Where(x => x.HoldStock))
+            foreach (var holding in Algorithm.Portfolio.Values)
             {
                 // Ensure we have a value for this security type in both our dictionaries
                 if (!longHoldings.ContainsKey(holding.Symbol.SecurityType))
@@ -578,15 +578,21 @@ namespace QuantConnect.Lean.Engine.Results
                     shortHoldings.Add(holding.Symbol.SecurityType, 0);
                 }
 
-                // Long Position
-                if (holding.HoldingsValue > 0)
+                var holdingsValue = holding.HoldingsValue;
+                if (holdingsValue == 0)
                 {
-                    longHoldings[holding.Symbol.SecurityType] += holding.HoldingsValue;
+                    continue;
+                }
+
+                // Long Position
+                if (holdingsValue > 0)
+                {
+                    longHoldings[holding.Symbol.SecurityType] += holdingsValue;
                 }
                 // Short Position
                 else
                 {
-                    shortHoldings[holding.Symbol.SecurityType] += holding.HoldingsValue;
+                    shortHoldings[holding.Symbol.SecurityType] += holdingsValue;
                 }
             }
 
@@ -701,7 +707,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Will generate the statistics results and update the provided runtime statistics
         /// </summary>
-        protected StatisticsResults GenerateStatisticsResults(Dictionary<string, Chart> charts, 
+        protected StatisticsResults GenerateStatisticsResults(Dictionary<string, Chart> charts,
             SortedDictionary<DateTime, decimal> profitLoss = null, CapacityEstimate estimatedStrategyCapacity = null)
         {
             var statisticsResults = new StatisticsResults();
