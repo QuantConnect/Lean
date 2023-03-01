@@ -15,11 +15,9 @@ CMD ["/sbin/my_init"]
 # Install OS Packages:
 # Misc tools for running Python.NET and IB inside a headless container.
 RUN apt-get update && apt-get -y install wget curl unzip \
-   && wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc \
-   && echo deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/ >> /etc/apt/sources.list \
    && apt-get install -y git bzip2 zlib1g-dev \
    xvfb libxrender1 libxtst6 libxi6 libglib2.0-dev libopenmpi-dev libstdc++6 openmpi-bin \
-   pandoc libcurl4-openssl-dev libgtk2.0.0 r-base \
+   pandoc libcurl4-openssl-dev libgtk2.0.0 \
    && apt-get clean && apt-get autoclean && apt-get autoremove --purge -y \
    && rm -rf /var/lib/apt/lists/*
 
