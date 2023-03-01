@@ -228,7 +228,6 @@ RUN pip install --no-cache-dir      \
     pymannkendall==1.4.3            \
     Pyomo==6.5.0                    \
     gpflow==2.7.0                   \
-    jupyter-dash==0.4.2             \
     pyarrow==11.0.0                 \
     dwave-ocean-sdk==6.1.1          \
     chardet==5.1.0
@@ -238,11 +237,6 @@ RUN dwave install --all -y
 
 # Install 'ipopt' solver for 'Pyomo'
 RUN conda install -c conda-forge ipopt==3.14.11 \
-    && conda clean -y --all
-
-# After 'jupyter-dash' we need to rebuild jupyter lab install which required nodejs
-RUN conda install -c conda-forge nodejs==18.13.0 \
-    && jupyter lab build \
     && conda clean -y --all
 
 # We install need to install separately else fails to find numpy
