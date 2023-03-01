@@ -42,12 +42,6 @@ ENV PATH="/opt/miniconda3/bin:${PATH}"
 RUN wget -q https://cdn.quantconnect.com/miniconda/${CONDA} && \
     bash ${CONDA} -b -p /opt/miniconda3 && rm -rf ${CONDA}
 
-# Install Julia
-RUN wget -q https://julialang-s3.julialang.org/bin/linux/x64/1.8/julia-1.8.5-linux-x86_64.tar.gz && \
-    tar zxvf julia-1.8.5-linux-x86_64.tar.gz && \
-    rm julia-1.8.5-linux-x86_64.tar.gz
-ENV PATH="/julia-1.8.5/bin:${PATH}"
-
 # Avoid pip install read timeouts
 ENV PIP_DEFAULT_TIMEOUT=120
 
@@ -193,7 +187,6 @@ RUN pip install --no-cache-dir      \
     stumpy==1.11.1                  \
     pyvinecopulib==0.6.3            \
     ijson==3.2.0.post0              \
-    julia==0.6.0                    \
     jupyter-resource-usage==0.7.2   \
     injector==0.20.1                \
     openpyxl==3.1.1                 \
@@ -317,6 +310,3 @@ RUN apt-get update && apt install -y xvfb wkhtmltopdf && \
 # Install fonts for matplotlib
 RUN wget -q https://cdn.quantconnect.com/fonts/foundation.zip && unzip -q foundation.zip && rm foundation.zip \
     && mv "lean fonts/"* /usr/share/fonts/truetype/ && rm -rf "lean fonts/" "__MACOSX/"
-
-# Install Julia so it's ready for usage
-RUN python -m julia.sysimage sys.so

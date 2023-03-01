@@ -1023,19 +1023,6 @@ def RunTest():
         }
 
         [Test]
-        public void Julia()
-        {
-            AssertCode(
-                @"
-from julia import Julia
-jl = Julia(sysimage=""/sys.so"")
-from julia import Base
-
-def RunTest():
-    Base.sind(90)");
-        }
-
-        [Test]
         public void MljarSupervised()
         {
             AssertCode(
