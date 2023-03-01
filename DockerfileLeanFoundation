@@ -325,3 +325,6 @@ RUN apt-get update && apt install -y xvfb wkhtmltopdf && \
 # Install fonts for matplotlib
 RUN wget -q https://cdn.quantconnect.com/fonts/foundation.zip && unzip -q foundation.zip && rm foundation.zip \
     && mv "lean fonts/"* /usr/share/fonts/truetype/ && rm -rf "lean fonts/" "__MACOSX/"
+
+# Install Julia so it's ready for usage
+RUN python -m julia.sysimage sys.so

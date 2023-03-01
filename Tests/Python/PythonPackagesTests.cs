@@ -1005,6 +1005,61 @@ def RunTest():
         }
 
         [Test]
+        public void Ijson()
+        {
+            AssertCode(
+                @"
+import io
+import ijson
+
+def RunTest():
+    parse_events = ijson.parse(io.BytesIO(b'[""skip"", {""a"": 1}, {""b"": 2}, {""c"": 3}]'))
+    while True:
+        prefix, event, value = next(parse_events)
+        if value == ""skip"":
+            break
+    for obj in ijson.items(parse_events, 'item'):
+        print(obj)");
+        }
+
+        [Test]
+        public void Julia()
+        {
+            AssertCode(
+                @"
+from julia import Julia
+jl = Julia(sysimage=""/sys.so"")
+from julia import Base
+
+def RunTest():
+    Base.sind(90)");
+        }
+
+        [Test]
+        public void MljarSupervised()
+        {
+            AssertCode(
+                @"
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from supervised.automl import AutoML
+
+def RunTest():
+    df = pd.read_csv(
+        ""https://raw.githubusercontent.com/pplonski/datasets-for-start/master/adult/data.csv"",
+        skipinitialspace=True,
+    )
+    X_train, X_test, y_train, y_test = train_test_split(
+        df[df.columns[:-1]], df[""income""], test_size=0.25
+    )
+
+    automl = AutoML()
+    automl.fit(X_train, y_train)
+
+    predictions = automl.predict(X_test)");
+        }
+
+        [Test]
         public void DmTree()
         {
             AssertCode(
