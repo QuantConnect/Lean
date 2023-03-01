@@ -36,9 +36,6 @@ jobs:
       - name: Run Pomegranate & Tigramite Python Package Test
         run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.PomegranateTest|Tigramite"
 
-      - name: Run Tensorforce Python Package Test
-        run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.TensorforceTests"
-
       - name: Run StableBaselines Python Package Test
         run: dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.StableBaselinesTest"
 

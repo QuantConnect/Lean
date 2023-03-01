@@ -17,7 +17,7 @@ CMD ["/sbin/my_init"]
 RUN apt-get update && apt-get -y install wget curl unzip \
    && apt-get install -y git bzip2 zlib1g-dev \
    xvfb libxrender1 libxtst6 libxi6 libglib2.0-dev libopenmpi-dev libstdc++6 openmpi-bin \
-   pandoc libcurl4-openssl-dev libgtk2.0.0 \
+   pandoc libcurl4-openssl-dev libgtk2.0.0 build-essential \
    && apt-get clean && apt-get autoclean && apt-get autoremove --purge -y \
    && rm -rf /var/lib/apt/lists/*
 
@@ -91,7 +91,7 @@ RUN pip install --no-cache-dir      \
     copulas==0.8.0                  \
     creme==0.6.1                    \
     cufflinks==0.17.3               \
-    gym==0.26.2                     \
+    gym==0.21                       \
     ipywidgets==8.0.4               \
     deap==1.3.3                     \
     cvxpy==1.3.0                    \
@@ -127,7 +127,6 @@ RUN pip install --no-cache-dir      \
     sktime==0.16.1                  \
     hyperopt==0.2.7                 \
     bayesian-optimization==1.4.2    \
-    rpy2==3.5.9                     \
     pingouin==0.5.3                 \
     quantecon==0.6.0                \
     matplotlib==3.7.0               \
@@ -147,7 +146,7 @@ RUN pip install --no-cache-dir      \
     nbeats-pytorch==1.8.0           \
     torch==1.13.1                   \
     torchvision==0.14.1             \
-    ax-platform==0.2.8              \
+    ax-platform==0.3.0              \
     alphalens-reloaded==0.4.3       \
     pyfolio-reloaded==0.9.5         \
     altair==4.2.2                   \
@@ -221,7 +220,8 @@ RUN pip install --no-cache-dir      \
     gpflow==2.7.0                   \
     pyarrow==11.0.0                 \
     dwave-ocean-sdk==6.1.1          \
-    chardet==5.1.0
+    chardet==5.1.0                  \
+    stable-baselines3==1.7.0
 
 # Install dwave tool
 RUN dwave install --all -y
@@ -246,8 +246,11 @@ RUN TORCH=$(python -c "import torch; print(torch.__version__)") && \
     pip install --no-cache-dir -f https://pytorch-geometric.com/whl/torch-${TORCH}+${CUDA}.html \
     torch-scatter==2.1.0 torch-sparse==0.6.16 torch-cluster==1.6.0 torch-spline-conv==1.2.1 torch-geometric==2.2.0
 
-# Install all nltk data
-RUN python -m nltk.downloader -d /usr/share/nltk_data all
+# Install nltk data
+RUN python -m nltk.downloader -d /usr/share/nltk_data punkt && \
+    python -m nltk.downloader -d /usr/share/nltk_data vader_lexicon && \
+    python -m nltk.downloader -d /usr/share/nltk_data stopwords && \
+    python -m nltk.downloader -d /usr/share/nltk_data wordnet
 
 # Install ppscore
 RUN wget -q https://cdn.quantconnect.com/ppscore/ppscore-master-ce93fa3.zip && \
@@ -284,21 +287,6 @@ RUN python -m venv /Foundation-Pomegranate --system-site-packages && . /Foundati
     mxnet==1.9.1                        \
     tigramite==5.1.0.3                  \
     && python -m ipykernel install --name=Foundation-Pomegranate \
-    && deactivate
-
-# Due to conflicts install 'tensorforce' virtual environment package with older tensorflow
-RUN python -m venv /Foundation-Tensorforce && . /Foundation-Tensorforce/bin/activate \
-    && pip install --no-cache-dir       \
-    tensorflow==2.6.0                   \
-    protobuf==3.20.3                    \
-    keras==2.6.0                        \
-    tensorforce==0.6.5                  \
-    gym==0.21                           \
-    jupyterlab==3.4.4                   \
-    clr-loader==0.1.6                   \
-    stable-baselines3==1.7.0            \
-    alphapy==2.5.0                      \
-    && python -m ipykernel install --name=Foundation-Tensorforce \
     && deactivate
 
 RUN echo "{\"argv\":[\"python\",\"-m\",\"ipykernel_launcher\",\"-f\",\"{connection_file}\"],\"display_name\":\"Foundation-Py-Default\",\"language\":\"python\",\"metadata\":{\"debugger\":true}}" > /opt/miniconda3/share/jupyter/kernels/python3/kernel.json
