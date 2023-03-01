@@ -18,6 +18,7 @@ from scipy.optimize import minimize
 ### Provides an implementation of a portfolio optimizer that calculate the optimal weights 
 ### with the weight range from -1 to 1 and minimize the portfolio variance with a target return of 2%
 ### </summary>
+### <remarks>The budged constrain is scaled down/up to ensure that the sum of the absolute value of the weights is 1.</remarks>
 class MinimumVariancePortfolioOptimizer:
     '''Provides an implementation of a portfolio optimizer that calculate the optimal weights 
     with the weight range from -1 to 1 and minimize the portfolio variance with a target return of 2%'''
@@ -63,7 +64,11 @@ class MinimumVariancePortfolioOptimizer:
                        constraints = constraints,                                 # Constraints definition
                        method='trust-constr')   # Optimization method:  trust-region algorithm for constrained optimization
 
-        return opt['x'] if opt['success'] else x0
+        if not opt['success']: return x0
+
+        # Scale the solution to ensure that the sum of the absolute weights is 1
+        sum_of_absolute_weights = np.sum(np.abs(opt['x']))
+        return opt['x'] / sum_of_absolute_weights
 
     def portfolio_variance(self, weights, covariance):
         '''Computes the portfolio variance

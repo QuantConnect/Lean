@@ -24,6 +24,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// Provides an implementation of a minimum variance portfolio optimizer that calculate the optimal weights
     /// with the weight range from -1 to 1 and minimize the portfolio variance with a target return of 2%
     /// </summary>
+    /// <remarks>The budged constrain is scaled down/up to ensure that the sum of the absolute value of the weights is 1.</remarks>
     public class MinimumVariancePortfolioOptimizer : IPortfolioOptimizer
     {
         private double _lower;
@@ -119,7 +120,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             // Solve problem
             var x0 = Vector.Create(size, 1.0 / size);
             bool success = solver.Minimize(Vector.Copy(x0));
-            return success ? solver.Solution : x0;
+            if (!success) return x0;
+
+            // Scale the solution to ensure that the sum of the absolute weights is 1
+            var sumOfAbsoluteWeights = solver.Solution.Abs().Sum();
+            return solver.Solution.Divide(sumOfAbsoluteWeights);
         }
     }
 }
