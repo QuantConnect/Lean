@@ -63,7 +63,11 @@ class MinimumVariancePortfolioOptimizer:
                        constraints = constraints,                                 # Constraints definition
                        method='trust-constr')   # Optimization method:  trust-region algorithm for constrained optimization
 
-        return opt['x'] / np.sum(abs(opt['x'])) if opt['success'] else x0
+        if not opt['success']: return x0
+
+        # Scale the solution to ensure that the sum of the absolute weights is 1
+        sum_of_absolute_weights = np.sum(np.abs(opt['x']))
+        return opt['x'] / sum_of_absolute_weights
 
     def portfolio_variance(self, weights, covariance):
         '''Computes the portfolio variance

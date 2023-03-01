@@ -119,7 +119,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             // Solve problem
             var x0 = Vector.Create(size, 1.0 / size);
             bool success = solver.Minimize(Vector.Copy(x0));
-            return success ? solver.Solution.Divide(solver.Solution.Abs().Sum()) : x0;
+            if (!success) return x0;
+
+            // Scale the solution to ensure that the sum of the absolute weights is 1
+            var sumOfAbsoluteWeights = solver.Solution.Abs().Sum();
+            return solver.Solution.Divide(sumOfAbsoluteWeights);
         }
     }
 }
