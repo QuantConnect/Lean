@@ -248,13 +248,25 @@ namespace QuantConnect.Orders.Fills
         /// <param name="asset">Security asset we're filling</param>
         /// <param name="order">Order packet to model</param>
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
-        /// <seealso cref="StopMarketFill(Security, StopMarketOrder)"/>
+        /// <seealso cref="StopMarketFill(Security, StopMarketOrder)"/> and <seealso cref="LimitIfTouchedFill(Security, LimitIfTouchedOrder)"/>
         /// <remarks>
-        ///     There is no good way to model limit orders with OHLC because we never know whether the market has
-        ///     gapped past our fill price. We have to make the assumption of a fluid, high volume market.
+        ///     There are four types of Stop-limit orders:
+        ///     1. Marketable limit price
+        ///       a. Buy  stop-limit order: set the stop price above the current market price and set the limit price above the stop price.
+        ///       b. Sell stop-limit order: set the stop price below the current market price and set the limit price below the stop price.
+        ///     2. Unmarketable limit price
+        ///       a. Buy  stop-limit order: set the stop price above the current market price and set the limit price below the stop price.
+        ///       b. Sell stop-limit order: set the stop price below the current market price and set the limit price above the stop price.
+        /// 
+        ///     Therefore, the stop price can be lower or higher than the limit price, and it's uncertain
+        ///     whether the stop price is attained or penetrated before the limit price with bar information.
+        ///     Consequently, when the stop price is touched for the first time, the closing price (quote) will test the limit price.
         ///
-        ///     Stop limit orders we also can't be sure of the order of the H - L values for the limit fill. The assumption
-        ///     was made the limit fill will be done with closing price of the bar after the stop has been triggered..
+        ///     This fill model handles the stop-limit fill as follows:
+        ///     1. If the stop price is attained or penetrated, the order flag StopTriggered is set to true.
+        ///     2. On the first touch, the limit order is filled if the closing price penetrates the limit price.
+        ///     3. When new trade information arrives, the stop-limit order is handled as a limit order:
+        ///        the limit order is filled if the high/low penetrates the limit price.
         /// </remarks>
         public override OrderEvent StopLimitFill(Security asset, StopLimitOrder order)
         {
@@ -265,7 +277,7 @@ namespace QuantConnect.Orders.Fills
             //If its cancelled don't need anymore checks:
             if (order.Status == OrderStatus.Canceled) return fill;
 
-            // make sure the exchange is open before filling -- allow pre/post market fills to occur
+            // Fill only if open or extended
             if (!IsExchangeOpen(
                 asset,
                 Parameters.ConfigProvider
@@ -275,53 +287,92 @@ namespace QuantConnect.Orders.Fills
                 return fill;
             }
 
-            //Get the range of prices in the last bar:
-            var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
-            var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+            // Get the range of prices in the last bar:
+            var tradeHigh = 0m;
+            var tradeLow = 0m;
+            var endTimeUtc = DateTime.MinValue;
 
-            // do not fill on stale data
-            if (pricesEndTime <= order.Time) return fill;
+            var subscribedTypes = GetSubscribedTypes(asset);
 
-            //Check if the Stop Order was filled: opposite to a limit order
+            if (subscribedTypes.Contains(typeof(Tick)))
+            {
+                var trades = asset.Cache.GetAll<Tick>().Where(x => x.TickType == TickType.Trade && x.Price > 0);
+
+                foreach (var trade in trades)
+                {
+                    tradeHigh = Math.Max(tradeHigh, trade.Price);
+                    tradeLow = tradeLow == 0 ? trade.Price : Math.Min(tradeLow, trade.Price);
+                    endTimeUtc = trade.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+                }
+            }
+            else if (subscribedTypes.Contains(typeof(TradeBar)))
+            {
+                var tradeBar = asset.Cache.GetData<TradeBar>();
+
+                if (tradeBar != null)
+                {
+                    tradeHigh = tradeBar.High;
+                    tradeLow = tradeBar.Low;
+                    endTimeUtc = tradeBar.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+                }
+            }
+
+            // Do not trigger or fill on stale data.
+            if (endTimeUtc <= order.Time) return fill;
+
+            var fillMessage = string.Empty;
+
+            //Check if the stop limit order was triggered and/or filled:
             switch (order.Direction)
             {
                 case OrderDirection.Buy:
-                    //-> 1.2 Buy Stop: If Price Above Setpoint, Buy:
-                    if (prices.High > order.StopPrice || order.StopTriggered)
+                    // The user-specified stop trigger price is attained or penetrated:
+                    // If price above the stop price, starts to behave as a limit fill
+                    if (tradeHigh >= order.StopPrice || order.StopTriggered)
                     {
-                        order.StopTriggered = true;
+                        // If it is the first trigger event, use the closing price as the low
+                        // since we don't know if the trade high happened before the trade low
+                        if (!order.StopTriggered)
+                        {
+                            tradeLow = GetBestEffortAskPrice(asset, order.Time, out fillMessage);
+                        }
 
-                        // Fill the limit order, using closing price of bar:
-                        // Note > Can't use minimum price, because no way to be sure minimum wasn't before the stop triggered.
-                        if (prices.Current < order.LimitPrice)
+                        order.StopTriggered = true;
+                        
+                        if (tradeLow < order.LimitPrice)
                         {
                             fill.Status = OrderStatus.Filled;
-                            fill.FillPrice = Math.Min(prices.High, order.LimitPrice);
-                            // assume the order completely filled
+                            fill.FillPrice = order.LimitPrice;
                             fill.FillQuantity = order.Quantity;
                         }
                     }
                     break;
 
                 case OrderDirection.Sell:
-                    //-> 1.1 Sell Stop: If Price below setpoint, Sell:
-                    if (prices.Low < order.StopPrice || order.StopTriggered)
+                    // The user-specified stop trigger price is attained or penetrated:
+                    // If price below the stop price, starts to behave as a limit fill
+                    if (tradeLow <= order.StopPrice || order.StopTriggered)
                     {
+                        // If it is the first trigger event, use the closing price as the high
+                        // since we don't know if the trade low happened before the trade high
+                        if (!order.StopTriggered)
+                        {
+                            tradeHigh = GetBestEffortBidPrice(asset, order.Time, out fillMessage);
+                        }
+
                         order.StopTriggered = true;
 
-                        // Fill the limit order, using minimum price of the bar
-                        // Note > Can't use minimum price, because no way to be sure minimum wasn't before the stop triggered.
-                        if (prices.Current > order.LimitPrice)
+                        if (tradeHigh > order.LimitPrice)
                         {
                             fill.Status = OrderStatus.Filled;
-                            fill.FillPrice = Math.Max(prices.Low, order.LimitPrice);
-                            // assume the order completely filled
+                            fill.FillPrice = order.LimitPrice;
                             fill.FillQuantity = order.Quantity;
                         }
                     }
                     break;
             }
 
+            fill.Message = fillMessage;
             return fill;
         }
 
