@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
@@ -67,6 +68,11 @@ namespace QuantConnect.Indicators
             ADRatio.Update(input);
             ADVRatio.Update(input);
 
+            if (ADVRatio == 0)
+            {
+                return 0;
+            }
+
             return _arms.Current.Value;
         }
 
@@ -85,21 +91,39 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Add Tracking stock issue
         /// </summary>
-        /// <param name="symbol">the tracking stock issue</param>
-        public void AddStock(Symbol symbol)
+        /// <param name="asset">the tracking stock issue</param>
+        public void Add(Symbol asset)
         {
-            ADRatio.AddStock(symbol);
-            ADVRatio.AddStock(symbol);
+            ADRatio.Add(asset);
+            ADVRatio.Add(asset);
+        }
+
+        /// <summary>
+        /// Deprecated
+        /// </summary>
+        [Obsolete("Please use Add(asset)")]
+        public void AddStock(Symbol asset)
+        {
+            Add(asset);
         }
 
         /// <summary>
         /// Remove Tracking stock issue
         /// </summary>
-        /// <param name="symbol">the tracking stock issue</param>
-        public void RemoveStock(Symbol symbol)
+        /// <param name="asset">the tracking stock issue</param>
+        public void Remove(Symbol asset)
         {
-            ADRatio.RemoveStock(symbol);
-            ADVRatio.RemoveStock(symbol);
+            ADRatio.Remove(asset);
+            ADVRatio.Remove(asset);
+        }
+
+        /// <summary>
+        /// Deprecated
+        /// </summary>
+        [Obsolete("Please use Remove(asset)")]
+        public void RemoveStock(Symbol asset)
+        {
+            Remove(asset);
         }
     }
 }

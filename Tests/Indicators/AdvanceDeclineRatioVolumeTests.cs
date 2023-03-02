@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -25,9 +25,9 @@ namespace QuantConnect.Tests.Indicators
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
             var advr = new AdvanceDeclineVolumeRatio("test_name");
-            advr.AddStock(Symbols.AAPL);
-            advr.AddStock(Symbols.IBM);
-            advr.AddStock(Symbols.GOOG);
+            advr.Add(Symbols.AAPL);
+            advr.Add(Symbols.IBM);
+            advr.Add(Symbols.GOOG);
             return advr;
         }
 
@@ -50,7 +50,7 @@ namespace QuantConnect.Tests.Indicators
 
             Assert.AreEqual(2m, advr.Current.Value);
             advr.Reset();
-            advr.RemoveStock(Symbols.AAPL);
+            advr.Remove(Symbols.AAPL);
 
             advr.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 1, Volume = 100, Time = reference.AddMinutes(1) });
             advr.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 1, Volume = 100, Time = reference.AddMinutes(1) });
@@ -70,7 +70,7 @@ namespace QuantConnect.Tests.Indicators
         public virtual void IgnorePeriodIfAnyStockMissed()
         {
             var adr = (AdvanceDeclineVolumeRatio)CreateIndicator();
-            adr.AddStock(Symbols.MSFT);
+            adr.Add(Symbols.MSFT);
             var reference = System.DateTime.Today;
 
             adr.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 1, Volume = 100, Time = reference.AddMinutes(1) });
