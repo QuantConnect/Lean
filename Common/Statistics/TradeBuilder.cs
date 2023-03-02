@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Util;
@@ -118,6 +119,52 @@ namespace QuantConnect.Statistics
                 position.MaxPrice = price;
             else if (price < position.MinPrice)
                 position.MinPrice = price;
+        }
+
+        /// <summary>
+        /// Applies a split to the trade builder
+        /// </summary>
+        /// <param name="split">The split to be applied</param>
+        /// <param name="liveMode">True if live mode, false for backtest</param>
+        /// <param name="dataNormalizationMode">The <see cref="DataNormalizationMode"/> for this security</param>
+        public void ApplySplit(Split split, bool liveMode, DataNormalizationMode dataNormalizationMode)
+        {
+            // only apply splits to equities, in live or raw data mode, and for open positions
+            if (split.Symbol.SecurityType != SecurityType.Equity ||
+                (!liveMode && dataNormalizationMode != DataNormalizationMode.Raw) ||
+                !_positions.TryGetValue(split.Symbol, out var position))
+            {
+                return;
+            }
+
+            position.MinPrice *= split.SplitFactor;
+            position.MaxPrice *= split.SplitFactor;
+
+            foreach (var trade in position.PendingTrades)
+            {
+                trade.Quantity /= split.SplitFactor;
+                trade.EntryPrice *= split.SplitFactor;
+                trade.ExitPrice *= split.SplitFactor;
+            }
+
+            foreach (var pendingFill in position.PendingFills)
+            {
+                pendingFill.FillQuantity /= split.SplitFactor;
+                pendingFill.FillPrice *= split.SplitFactor;
+
+                if (pendingFill.LimitPrice.HasValue)
+                {
+                    pendingFill.LimitPrice *= split.SplitFactor;
+                }
+                if (pendingFill.StopPrice.HasValue)
+                {
+                    pendingFill.StopPrice *= split.SplitFactor;
+                }
+                if (pendingFill.TriggerPrice.HasValue)
+                {
+                    pendingFill.TriggerPrice *= split.SplitFactor;
+                }
+            }
         }
 
         /// <summary>
