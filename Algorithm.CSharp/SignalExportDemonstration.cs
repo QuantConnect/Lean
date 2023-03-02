@@ -16,12 +16,10 @@ namespace QuantConnect.Algorithm.CSharp
             { "SPY", (decimal)(0.2) }, { "ES", (decimal)(0.8)}};
 
         List<PortfolioTarget> targetList = new List<PortfolioTarget>();
-        QCAlgorithm _algorithm;
-
+        SignalExportManager manager;
 
         public override void Initialize()
         {
-            _algorithm = this;
             UniverseSettings.Resolution = Resolution.Minute;
 
             SetStartDate(2013, 10, 07);  //Set Start Date
@@ -33,6 +31,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             var es = AddFuture("ES");
             targetList.Add(new PortfolioTarget(es.Symbol, (decimal)(0.8)));
+
+            manager = new SignalExportManager(new Collective2SignalExport("fnmzppYk0HO8YTrMRCPA2MBa3mLna6frsMjAJab1SyA5lpfbhY", 143679411, Portfolio));
+            manager.SetTargetPortfolio(targetList);
         }
 
 
@@ -45,10 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnData(Slice slice)
         {
             Debug("EVENT: OnData **************************************************");
-            Collective2SignalExport manager = new Collective2SignalExport("fnmzppYk0HO8YTrMRCPA2MBa3mLna6frsMjAJab1SyA5lpfbhY", 143679411, Portfolio);
-
-
-            manager.Send(targetList);
+            manager.ExportSignals();
         }
 
 
