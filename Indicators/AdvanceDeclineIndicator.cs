@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -29,36 +29,57 @@ namespace QuantConnect.Indicators
     {
         private IDictionary<SecurityIdentifier, TradeBar> _previousPeriod = new Dictionary<SecurityIdentifier, TradeBar>();
         private IDictionary<SecurityIdentifier, TradeBar> _currentPeriod = new Dictionary<SecurityIdentifier, TradeBar>();
-        private readonly Func<IEnumerable<TradeBar>, decimal> _computeValue;
+        private readonly Func<IEnumerable<TradeBar>, decimal> _computeSubValue;
+        private readonly Func<decimal, decimal, decimal> _computeMainValue;
         private DateTime? _currentPeriodTime = null;
         
         /// <summary>
         /// Initializes a new instance of the <see cref="AdvanceDeclineRatio"/> class
         /// </summary>
-        public AdvanceDeclineIndicator(string name, Func<IEnumerable<TradeBar>, decimal> compute) : base(name)
+        public AdvanceDeclineIndicator(string name, Func<IEnumerable<TradeBar>, decimal> computeSub, Func<decimal, decimal, decimal> computeMain)
+            : base(name)
         {
-            _computeValue = compute;
+            _computeSubValue = computeSub;
+            _computeMainValue = computeMain;
         }
 
         /// <summary>
-        /// Add tracking stock issue
+        /// Add tracking asset issue
         /// </summary>
-        /// <param name="symbol">tracking stock issue</param>
-        public void AddStock(Symbol symbol)
+        /// <param name="asset">tracking asset issue</param>
+        public virtual void Add(Symbol asset)
         {
-            if (!_currentPeriod.ContainsKey(symbol.ID))
+            if (!_currentPeriod.ContainsKey(asset.ID))
             {
-                _currentPeriod.Add(symbol.ID, null);
+                _currentPeriod.Add(asset.ID, null);
             }
         }
 
         /// <summary>
-        /// Remove tracking stock issue
+        /// Deprecated
         /// </summary>
-        /// <param name="symbol">tracking stock issue</param>
-        public void RemoveStock(Symbol symbol)
+        [Obsolete("Please use Add(asset)")]
+        public void AddStock(Symbol asset)
         {
-            _currentPeriod.Remove(symbol.ID);
+            Add(asset);
+        }
+
+        /// <summary>
+        /// Remove tracking asset issue
+        /// </summary>
+        /// <param name="asset">tracking asset issue</param>
+        public virtual void Remove(Symbol asset)
+        {
+            _currentPeriod.Remove(asset.ID);
+        }
+
+        /// <summary>
+        /// Deprecated
+        /// </summary>
+        [Obsolete("Please use Remove(asset)")]
+        public void RemoveStock(Symbol asset)
+        {
+            Remove(asset);
         }
 
         /// <summary>
@@ -98,12 +119,7 @@ namespace QuantConnect.Indicators
                 }
             }
 
-            if (!dclStocks.Any())
-            {
-                return 0;
-            }
-
-            return _computeValue(advStocks) / _computeValue(dclStocks);
+            return _computeMainValue(_computeSubValue(advStocks), _computeSubValue(dclStocks));
         }
 
         /// <summary>

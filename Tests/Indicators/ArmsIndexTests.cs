@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -26,9 +26,9 @@ namespace QuantConnect.Tests.Indicators
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
             var indicator = new ArmsIndex("test_name");
-            indicator.AddStock(Symbols.AAPL);
-            indicator.AddStock(Symbols.IBM);
-            indicator.AddStock(Symbols.GOOG);
+            indicator.Add(Symbols.AAPL);
+            indicator.Add(Symbols.IBM);
+            indicator.Add(Symbols.GOOG);
             return indicator;
         }
 
@@ -51,7 +51,7 @@ namespace QuantConnect.Tests.Indicators
 
             Assert.AreEqual(1m, trin.Current.Value);
             trin.Reset();
-            trin.RemoveStock(Symbols.IBM);
+            trin.Remove(Symbols.IBM);
 
             trin.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 1, Volume = 100, Time = reference.AddMinutes(1) });
             trin.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 1, Volume = 100, Time = reference.AddMinutes(1) });
@@ -71,7 +71,7 @@ namespace QuantConnect.Tests.Indicators
         public virtual void IgnorePeriodIfAnyStockMissed()
         {
             var adr = (ArmsIndex)CreateIndicator();
-            adr.AddStock(Symbols.MSFT);
+            adr.Add(Symbols.MSFT);
             var reference = System.DateTime.Today;
 
             adr.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 1, Volume = 100, Time = reference.AddMinutes(1) });
