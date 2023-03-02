@@ -161,7 +161,7 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
         @property
         def Return(self):
             return pd.Series(
-                data = [(1 + float(x.Value))**252 - 1 for x in self.window],
+                data = [float(x.Value) for x in self.window],
                 index = [x.EndTime for x in self.window])
 
         @property

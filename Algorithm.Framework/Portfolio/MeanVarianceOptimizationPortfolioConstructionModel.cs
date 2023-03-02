@@ -246,11 +246,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             // Get symbols' returns
             var returns = _symbolDataDict.FormReturnsMatrix(symbols);
 
-            // Calculate rate of returns
-            var rreturns = returns.Apply(e => Math.Pow(1.0 + e, 252.0) - 1.0);
-
             // The optimization method processes the data frame
-            var w = _optimizer.Optimize(rreturns);
+            var w = _optimizer.Optimize(returns);
 
             // process results
             if (w.Length > 0)
