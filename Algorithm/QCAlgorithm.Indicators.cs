@@ -1463,7 +1463,7 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>The RollingSharpeRatio indicator for the requested symbol over the specified period</returns>
         [DocumentationAttribute(Indicators)]
-        public SharpeRatio SR(Symbol symbol, int sharpePeriod, decimal riskFreeRate = 0.0m, Resolution ? resolution = null, Func<IBaseData, decimal> selector = null)
+        public SharpeRatio SR(Symbol symbol, int sharpePeriod, decimal riskFreeRate = 0.0m, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
             var name = CreateIndicatorName(symbol, $"SR({sharpePeriod},{riskFreeRate})", resolution);
             var sharpeRatio = new SharpeRatio(name, sharpePeriod, riskFreeRate);
@@ -2796,6 +2796,20 @@ namespace QuantConnect.Algorithm
 
             // no matter what we can always consolidate based on the time-value pair of BaseData
             return new BaseDataConsolidator(calendar);
+        }
+
+        /// <summary>
+        ///     This is a window that allows for list access semantics,
+        ///     where this[0] refers to the most recent item in the
+        ///     window and this[Count-1] refers to the last item in the window
+        /// </summary>
+        /// <typeparam name="T">The type of data in the window</typeparam>
+        [DocumentationAttribute(Indicators)]
+        public static RollingWindow<dynamic> RW<T>(int size)
+        {
+            var window = new RollingWindow<dynamic>(size);
+
+            return window;
         }
 
         /// <summary>
