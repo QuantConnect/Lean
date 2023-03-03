@@ -49,6 +49,7 @@ using QuantConnect.Algorithm.Selection;
 using QuantConnect.Storage;
 using Index = QuantConnect.Securities.Index.Index;
 using QuantConnect.Securities.CryptoFuture;
+using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
 
 namespace QuantConnect.Algorithm
 {
@@ -158,6 +159,7 @@ namespace QuantConnect.Algorithm
             Securities = new SecurityManager(_timeKeeper);
             Transactions = new SecurityTransactionManager(this, Securities);
             Portfolio = new SecurityPortfolioManager(Securities, Transactions, DefaultOrderProperties);
+            SignalExportManager = new SignalExportManager();
             BrokerageModel = new DefaultBrokerageModel();
             Notify = new NotificationManager(false); // Notification manager defaults to disabled.
 
@@ -253,6 +255,17 @@ namespace QuantConnect.Algorithm
         /// </summary>
         [DocumentationAttribute(HandlingData)]
         public SubscriptionManager SubscriptionManager
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// SignalExportManager - Allows sending export signals to different 3rd party API's. So far it only allows to send signals
+        /// to Collective2, CrunchDAO and Numerai API's
+        /// </summary>
+        [DocumentationAttribute(SecuritiesAndPortfolio)]
+        public SignalExportManager SignalExportManager
         {
             get;
             set;

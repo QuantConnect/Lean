@@ -32,7 +32,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <summary>
         /// List of signal export providers
         /// </summary>
-        private readonly List<ISignalExportTarget> _signalExports;
+        private List<ISignalExportTarget> _signalExports;
 
         /// <summary>
         /// List of target security holdings to be sent to certain signal export provider
@@ -40,10 +40,23 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         private List<PortfolioTarget> _targets;
 
         /// <summary>
-        /// Initializes the list of signal export providers
+        /// Adds one or more signal export providers if argument is different than null
         /// </summary>
         /// <param name="signalExports">List of signal export providers</param>
         public SignalExportManager(params ISignalExportTarget[] signalExports)
+        {
+            if (signalExports.Length != 0)
+            {
+                SetSignalExportProviders(signalExports);
+            }
+        }
+
+        /// <summary>
+        /// Sets one or more signal export providers. It should be used when it has not been
+        /// defined before a list of signal export providers
+        /// </summary>
+        /// <param name="signalExports"></param>
+        public void SetSignalExportProviders(params ISignalExportTarget[] signalExports)
         {
             _signalExports = new List<ISignalExportTarget>(signalExports);
         }
@@ -52,7 +65,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// Adds one or more new signal exports providers
         /// </summary>
         /// <param name="signalExports">One or more signal export provider</param>
-        public void Add(params ISignalExportTarget[] signalExports)
+        public void AddSignalExportProviders(params ISignalExportTarget[] signalExports)
         {
             _signalExports.AddRange(signalExports);
         }
