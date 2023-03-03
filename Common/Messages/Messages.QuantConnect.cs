@@ -35,14 +35,6 @@ namespace QuantConnect
         /// </summary>
         public static class AlphaRuntimeStatistics
         {
-            public static string FitnessScoreKey = "Fitness Score";
-
-            public static string KellyCriterionEstimateKey = "Kelly Criterion Estimate";
-
-            public static string KellyCriterionProbabilityValueKey = "Kelly Criterion Probability Value";
-
-            public static string SortinoRatioKey = "Sortino Ratio";
-
             public static string ReturnOverMaximumDrawdownKey = "Return Over Maximum Drawdown";
 
             public static string PortfolioTurnoverKey = "Portfolio Turnover";
@@ -58,20 +50,6 @@ namespace QuantConnect
             public static string ShortInsightCountKey = "Short Insight Count";
 
             public static string LongShortRatioKey = "Long/Short Ratio";
-
-            public static string EstimatedMonthlyAlphaValueKey = "Estimated Monthly Alpha Value";
-
-            public static string TotalAccumulatedEstimatedAlphaValueKey = "Total Accumulated Estimated Alpha Value";
-
-            public static string MeanPopulationEstimatedInsightValueKey = "Mean Population Estimated Insight Value";
-
-            public static string MeanPopulationDirectionKey = "Mean Population Direction";
-
-            public static string MeanPopulationMagnitudeKey = "Mean Population Magnitude";
-
-            public static string RollingAveragedPopulationDirectionKey = "Rolling Averaged Population Direction";
-
-            public static string RollingAveragedPopulationMagnitudeKey = "Rolling Averaged Population Magnitude";
         }
 
         /// <summary>

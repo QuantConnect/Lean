@@ -89,10 +89,6 @@ namespace QuantConnect.DataLibrary.Tests
             {"Total Fees", "$42.65"},
             {"Estimated Strategy Capacity", "$720000000.00"},
             {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Fitness Score", "0.019"},
-            {"Kelly Criterion Estimate", "-12.671"},
-            {"Kelly Criterion Probability Value", "0.88"},
-            {"Sortino Ratio", "0.252"},
             {"Return Over Maximum Drawdown", "0.73"},
             {"Portfolio Turnover", "0.034"},
             {"Total Insights Generated", "54"},
@@ -101,13 +97,6 @@ namespace QuantConnect.DataLibrary.Tests
             {"Long Insight Count", "54"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$-3742968"},
-            {"Total Accumulated Estimated Alpha Value", "$-4761887"},
-            {"Mean Population Estimated Insight Value", "$-91574.75"},
-            {"Mean Population Direction", "32.6923%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "38.5572%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
             {"OrderListHash", "f0d4972dbf679730bf8c8de2674d4975"}
         };
 

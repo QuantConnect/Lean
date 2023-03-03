@@ -103,10 +103,6 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Fees", "€14.92"},
             {"Estimated Strategy Capacity", "€85000.00"},
             {"Lowest Capacity Asset", "BTCEUR XJ"},
-            {"Fitness Score", "0.258"},
-            {"Kelly Criterion Estimate", "0"},
-            {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "79228162514264337593543950335"},
             {"Return Over Maximum Drawdown", "-27.228"},
             {"Portfolio Turnover", "0.516"},
             {"Total Insights Generated", "1"},
@@ -115,13 +111,6 @@ namespace QuantConnect.Algorithm.CSharp
             {"Long Insight Count", "1"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "€-7.1039"},
-            {"Total Accumulated Estimated Alpha Value", "€-0.2762628"},
-            {"Mean Population Estimated Insight Value", "€-0.2762628"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
             {"OrderListHash", "21ac8e4179b36d9658f0080868c0e552"}
         };
     }

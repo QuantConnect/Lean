@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using MathNet.Numerics.Statistics;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 
@@ -33,14 +32,8 @@ namespace QuantConnect.Statistics
     {
         private DateTime _startUtcTime;
         private IAlgorithm _algorithm;
-        private decimal _riskFreeRate;
         private bool _disabled;
         private decimal _startingPortfolioValue;
-
-        // sortino ratio
-        private List<double> _negativeDailyDeltaPortfolioValue;
-        private double _profitLossDownsideDeviation;
-        private decimal _previousPortfolioValue;
 
         // return over max drawdown
         private decimal _maxPortfolioValue;
@@ -56,7 +49,7 @@ namespace QuantConnect.Statistics
         public void Initialize(IAlgorithm algorithm)
         {
             _algorithm = algorithm;
-            _maxPortfolioValue = _previousPortfolioValue = _startingPortfolioValue = algorithm.Portfolio.TotalPortfolioValue;
+            _maxPortfolioValue = _startingPortfolioValue = algorithm.Portfolio.TotalPortfolioValue;
             _startUtcTime = _algorithm.UtcTime;
 
             // just in case...
@@ -67,27 +60,14 @@ namespace QuantConnect.Statistics
                     " algorithms starting portfolio value is 0.");
             }
 
-            _negativeDailyDeltaPortfolioValue = new List<double>();
             _dailyPortfolioTurnovers = new List<decimal>();
-            _riskFreeRate = PortfolioStatistics.GetRiskFreeRate();
         }
-
-        /// <summary>
-        /// Score of the strategy's performance, and suitability for the Alpha Stream Market
-        /// </summary>
-        public decimal FitnessScore { get; private set; }
 
         /// <summary>
         /// Measurement of the strategies trading activity with respect to the portfolio value.
         /// Calculated as the sales volume with respect to the average total portfolio value.
         /// </summary>
         public decimal PortfolioTurnover { get; private set; }
-
-        /// <summary>
-        /// Gives a relative picture of the strategy volatility.
-        /// It is calculated by taking a portfolio's annualized rate of return and subtracting the risk free rate of return.
-        /// </summary>
-        public decimal SortinoRatio { get; private set; }
 
         /// <summary>
         /// Provides a risk adjusted way to factor in the returns and drawdown of the strategy.
@@ -118,15 +98,8 @@ namespace QuantConnect.Statistics
 
                     var portfolioAnnualizedReturn = Statistics.CompoundingAnnualPerformance(_startingPortfolioValue, currentPortfolioValue, annualFactor);
 
-                    var scaledSortinoRatio = GetScaledSortinoRatio(currentPortfolioValue, portfolioAnnualizedReturn);
-
-                    var scaledReturnOverMaxDrawdown = GetScaledReturnOverMaxDrawdown(currentPortfolioValue, portfolioAnnualizedReturn);
-
-                    var scaledPortfolioTurnover = GetScaledPortfolioTurnover(currentPortfolioValue);
-
-                    var rawFitnessScore = scaledPortfolioTurnover * (scaledReturnOverMaxDrawdown + scaledSortinoRatio);
-
-                    FitnessScore = ScaleToRange(rawFitnessScore, maximumValue: 20, minimumValue: 0);
+                    SetScaledReturnOverMaxDrawdown(currentPortfolioValue, portfolioAnnualizedReturn);
+                    SetScaledPortfolioTurnover(currentPortfolioValue);
                 }
             }
             catch (Exception exception)
@@ -135,36 +108,7 @@ namespace QuantConnect.Statistics
             }
         }
 
-        private decimal GetScaledSortinoRatio(decimal currentPortfolioValue, decimal portfolioAnnualizedReturn)
-        {
-            var portfolioValueDelta = (double) ((currentPortfolioValue - _previousPortfolioValue) / _previousPortfolioValue);
-            _previousPortfolioValue = currentPortfolioValue;
-            if (portfolioValueDelta < 0)
-            {
-                _negativeDailyDeltaPortfolioValue.Add(portfolioValueDelta);
-                _profitLossDownsideDeviation = _negativeDailyDeltaPortfolioValue.StandardDeviation();
-                // annualize the result:
-                _profitLossDownsideDeviation = _profitLossDownsideDeviation * Math.Sqrt(252);
-            }
-
-            SortinoRatio = decimal.MaxValue;
-            // we need at least 2 samples to calculate the _profitLossDownsideDeviation
-            if (_negativeDailyDeltaPortfolioValue.Count > 1)
-            {
-                if (_profitLossDownsideDeviation == 0)
-                {
-                    SortinoRatio = (portfolioAnnualizedReturn - _riskFreeRate) > 0 ? decimal.MaxValue : decimal.MinValue;
-                }
-                else
-                {
-                    SortinoRatio = ((double) (portfolioAnnualizedReturn - _riskFreeRate) / _profitLossDownsideDeviation).SafeDecimalCast();
-                }
-            }
-
-            return SigmoidalScale(SortinoRatio);
-        }
-
-        private decimal GetScaledReturnOverMaxDrawdown(decimal currentPortfolioValue, decimal portfolioAnnualizedReturn)
+        private void SetScaledReturnOverMaxDrawdown(decimal currentPortfolioValue, decimal portfolioAnnualizedReturn)
         {
             if (currentPortfolioValue > _maxPortfolioValue)
             {
@@ -180,11 +124,9 @@ namespace QuantConnect.Statistics
             {
                 ReturnOverMaxDrawdown = portfolioAnnualizedReturn / Math.Abs(_maxDrawdown);
             }
-
-            return SigmoidalScale(ReturnOverMaxDrawdown);
         }
 
-        private decimal GetScaledPortfolioTurnover(decimal currentPortfolioValue)
+        private void SetScaledPortfolioTurnover(decimal currentPortfolioValue)
         {
             var currentTotalSaleVolume = _algorithm.Portfolio.TotalSaleVolume;
 
@@ -193,32 +135,6 @@ namespace QuantConnect.Statistics
 
             _dailyPortfolioTurnovers.Add(todayPortfolioTurnOver);
             PortfolioTurnover = _dailyPortfolioTurnovers.Average();
-
-            // from 0 to 1 max
-            return PortfolioTurnover > 1 ? 1 : PortfolioTurnover;
-        }
-
-        /// <summary>
-        /// Adjusts the input value to a range of 0 to 10 based on a sigmoidal scale
-        /// </summary>
-        public static decimal SigmoidalScale(decimal valueToScale)
-        {
-            if (valueToScale == decimal.MaxValue)
-            {
-                return 10;
-            }
-            else if(valueToScale == decimal.MinValue)
-            {
-                return 0;
-            }
-            return 5 * valueToScale / (decimal)Math.Sqrt(10 + Math.Pow((double)valueToScale, 2)) + 5;
-        }
-
-        private decimal ScaleToRange(decimal valueToScale,
-            decimal maximumValue,
-            decimal minimumValue)
-        {
-            return (valueToScale - minimumValue) / (maximumValue - minimumValue);
         }
     }
 }

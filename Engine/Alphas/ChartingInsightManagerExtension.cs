@@ -15,11 +15,10 @@
 */
 
 using System;
+using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
-using QuantConnect.Interfaces;
-using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine.Alphas
 {
@@ -33,11 +32,9 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// </summary>
         public const string AlphaAssets = "Alpha Assets";
         private readonly bool _liveMode;
-        private readonly StatisticsInsightManagerExtension _statisticsManager;
 
         private const int BacktestChartSamples = 1000;
         private DateTime _lastInsightCountSampleDateUtc;
-        private DateTime _nextChartSampleAlgorithmTimeUtc;
         private int _dailyInsightCount;
 
         // Keep track, we only want to add the charts if the algorithm is producing insights
@@ -50,9 +47,6 @@ namespace QuantConnect.Lean.Engine.Alphas
 
         private readonly Chart _totalInsightCountChart = new Chart("Insight Count");
         private readonly Series _totalInsightCountSeries = new Series("Count", SeriesType.Bar, "#");
-
-        private readonly Chart _insightScoreChart = new Chart("Alpha");
-        private readonly Dictionary<InsightScoreType, Series> _insightScoreSeriesByScoreType = new Dictionary<InsightScoreType, Series>();
 
         /// <summary>
         /// Gets or sets the interval at which alpha charts are updated. This is in realtion to algorithm time.
@@ -68,16 +62,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         public ChartingInsightManagerExtension(IAlgorithm algorithm, StatisticsInsightManagerExtension statisticsManager)
         {
             _algorithm = algorithm;
-            _statisticsManager = statisticsManager;
             _liveMode = algorithm.LiveMode;
-
-            // Add our series for average scores over sample period to our "Alpha" chart
-            foreach (var scoreType in InsightManager.ScoreTypes)
-            {
-                var series = new Series($"{scoreType} Score", SeriesType.Line, "%");
-                _insightScoreSeriesByScoreType[scoreType] = series;
-                _insightScoreChart.AddSeries(series);
-            }
 
             // Add a series for insight count over sample period to the "Insight Count" chart
             _totalInsightCountChart.AddSeries(_totalInsightCountSeries);
@@ -95,7 +80,6 @@ namespace QuantConnect.Lean.Engine.Alphas
             // algorithms that don't use the framework.
             if (!_chartsAdded && _dailyInsightCount > 0)
             {
-                _algorithm.AddChart(_insightScoreChart);
                 _algorithm.AddChart(_totalInsightCountChart);
                 _algorithm.AddChart(_totalInsightCountPerSymbolChart);
 
@@ -115,29 +99,6 @@ namespace QuantConnect.Lean.Engine.Alphas
 
                 // Resetting our storage
                 _dailyInsightCount = 0;
-            }
-
-            // sample average population scores
-            if (frontierTimeUtc >= _nextChartSampleAlgorithmTimeUtc)
-            {
-                try
-                {
-                    // verify these scores have been computed before taking the first sample
-                    if (_statisticsManager.RollingAverageIsReady)
-                    {
-                        // sample the rolling averaged population scores
-                        foreach (var scoreType in InsightManager.ScoreTypes)
-                        {
-                            var score = 100 * _statisticsManager.Statistics.RollingAveragedPopulationScore.GetScore(scoreType);
-                            _insightScoreSeriesByScoreType[scoreType].AddPoint(frontierTimeUtc, score.SafeDecimalCast());
-                        }
-                        _nextChartSampleAlgorithmTimeUtc = frontierTimeUtc + SampleInterval;
-                    }
-                }
-                catch (Exception err)
-                {
-                    Log.Error(err);
-                }
             }
         }
 
@@ -166,7 +127,6 @@ namespace QuantConnect.Lean.Engine.Alphas
                 SampleInterval = TimeSpan.FromTicks(backtestPeriod.Ticks / BacktestChartSamples);
             }
 
-            _nextChartSampleAlgorithmTimeUtc = algorithmUtcTime + SampleInterval;
             _lastInsightCountSampleDateUtc = algorithmUtcTime.RoundDown(Time.OneDay);
         }
 

@@ -60,7 +60,7 @@ namespace QuantConnect.Tests
         {
             AlgorithmManager algorithmManager = null;
             var statistics = new Dictionary<string, string>();
-            var alphaStatistics = new AlphaRuntimeStatistics(new TestAccountCurrencyProvider());
+            var alphaStatistics = new AlphaRuntimeStatistics();
             BacktestingResultHandler results = null;
 
             Composer.Instance.Reset();
@@ -218,14 +218,9 @@ namespace QuantConnect.Tests
 
             if (expectedAlphaStatistics != null)
             {
-                AssertAlphaStatistics(expectedAlphaStatistics, alphaStatistics, s => s.MeanPopulationScore.Direction);
-                AssertAlphaStatistics(expectedAlphaStatistics, alphaStatistics, s => s.MeanPopulationScore.Magnitude);
-                AssertAlphaStatistics(expectedAlphaStatistics, alphaStatistics, s => s.RollingAveragedPopulationScore.Direction);
-                AssertAlphaStatistics(expectedAlphaStatistics, alphaStatistics, s => s.RollingAveragedPopulationScore.Magnitude);
                 AssertAlphaStatistics(expectedAlphaStatistics, alphaStatistics, s => s.LongShortRatio);
                 AssertAlphaStatistics(expectedAlphaStatistics, alphaStatistics, s => s.TotalInsightsClosed);
                 AssertAlphaStatistics(expectedAlphaStatistics, alphaStatistics, s => s.TotalInsightsGenerated);
-                AssertAlphaStatistics(expectedAlphaStatistics, alphaStatistics, s => s.TotalAccumulatedEstimatedAlphaValue);
                 AssertAlphaStatistics(expectedAlphaStatistics, alphaStatistics, s => s.TotalInsightsAnalysisCompleted);
             }
 

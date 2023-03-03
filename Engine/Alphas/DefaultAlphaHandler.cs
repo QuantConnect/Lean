@@ -111,7 +111,7 @@ namespace QuantConnect.Lean.Engine.Alphas
 
             InsightManager = CreateInsightManager();
 
-            var statistics = new StatisticsInsightManagerExtension(algorithm);
+            var statistics = new StatisticsInsightManagerExtension();
             RuntimeStatistics = statistics.Statistics;
             InsightManager.AddExtension(statistics);
 
@@ -190,9 +190,7 @@ namespace QuantConnect.Lean.Engine.Alphas
                 _lastFitnessScoreCalculation = Algorithm.UtcTime.Date;
                 _fitnessScore.UpdateScores();
 
-                RuntimeStatistics.FitnessScore = _fitnessScore.FitnessScore;
                 RuntimeStatistics.PortfolioTurnover = _fitnessScore.PortfolioTurnover;
-                RuntimeStatistics.SortinoRatio = _fitnessScore.SortinoRatio;
                 RuntimeStatistics.ReturnOverMaxDrawdown = _fitnessScore.ReturnOverMaxDrawdown;
             }
         }
