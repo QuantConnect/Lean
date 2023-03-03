@@ -1,4 +1,4 @@
-﻿
+
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
@@ -97,6 +97,17 @@ namespace QuantConnect.Securities
             {
                 lock (_sync)
                 {
+                    // Update all the window values applying the last price factor
+                    if (LastFactor.HasValue)
+                    {
+                        for (var i = 0; i < _window.Count; i++)
+                        {
+                            _window[i] *= (double)LastFactor.Value;
+                        }
+
+                        LastFactor = null;
+                    }
+
                     _needsUpdate = true;
                     // we purposefully use security.Price for consistency in our reporting
                     // some streams of data will have trade/quote data, so if we just use

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -17,6 +17,7 @@ using System;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 using System.Collections.Generic;
+using QuantConnect.Data.Market;
 using System.Linq;
 
 namespace QuantConnect.Securities
@@ -26,11 +27,10 @@ namespace QuantConnect.Securities
     /// to compute its value
     /// </summary>
     /// <typeparam name="T">The indicator's input type</typeparam>
-    public class IndicatorVolatilityModel<T> : IVolatilityModel
-        where T : BaseData
+    public class IndicatorVolatilityModel : IVolatilityModel
     {
-        private readonly IIndicator<T> _indicator;
-        private readonly Action<Security, BaseData, IIndicator<T>> _indicatorUpdate;
+        private readonly IIndicator _indicator;
+        private readonly Action<Security, BaseData, IIndicator> _indicatorUpdate;
 
         /// <summary>
         /// Gets the volatility of the security as a percentage
@@ -47,7 +47,7 @@ namespace QuantConnect.Securities
         /// into the consolidator system.
         /// </summary>
         /// <param name="indicator">The auto-updating indicator</param>
-        public IndicatorVolatilityModel(IIndicator<T> indicator)
+        public IndicatorVolatilityModel(IIndicator indicator)
         {
             _indicator = indicator;
         }
@@ -60,7 +60,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="indicator">The auto-updating indicator</param>
         /// <param name="indicatorUpdate">Function delegate used to update the indicator on each call to <see cref="Update"/></param>
-        public IndicatorVolatilityModel(IIndicator<T> indicator, Action<Security, BaseData, IIndicator<T>> indicatorUpdate)
+        public IndicatorVolatilityModel(IIndicator indicator, Action<Security, BaseData, IIndicator> indicatorUpdate)
         {
             _indicator = indicator;
             _indicatorUpdate = indicatorUpdate;
@@ -89,6 +89,26 @@ namespace QuantConnect.Securities
         public IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime)
         {
             return Enumerable.Empty<HistoryRequest>();
+        }
+
+        /// <summary>
+        /// Applies a dividend to the model
+        /// </summary>
+        /// <param name="dividend">The dividend to be applied</param>
+        /// <param name="liveMode">True if live mode, false for backtest</param>
+        /// <param name="dataNormalizationMode">The <see cref="DataNormalizationMode"/> for the security</param>
+        public void ApplyDividend(Dividend dividend, bool liveMode, DataNormalizationMode dataNormalizationMode)
+        {
+        }
+
+        /// <summary>
+        /// Applies a split to the model
+        /// </summary>
+        /// <param name="split">The split to be applied</param>
+        /// <param name="liveMode">True if live mode, false for backtest</param>
+        /// <param name="dataNormalizationMode">The <see cref="DataNormalizationMode"/> for the security</param>
+        public void ApplySplit(Split split, bool liveMode, DataNormalizationMode dataNormalizationMode)
+        {
         }
     }
 }

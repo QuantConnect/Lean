@@ -770,6 +770,9 @@ namespace QuantConnect.Lean.Engine
                     // apply the split event to the trade builder
                     algorithm.TradeBuilder.ApplySplit(split, liveMode, mode);
 
+                    // apply the dividend event to the security volatility model
+                    security?.VolatilityModel.ApplySplit(split, liveMode, mode);
+
                     if (liveMode && security != null)
                     {
                         Log.Trace($"AlgorithmManager.Run(): {algorithm.Time}: Post-Split for {split}. Security Price: {security.Price} Holdings: {security.Holdings.Quantity}");
@@ -824,6 +827,9 @@ namespace QuantConnect.Lean.Engine
 
                 // apply the dividend event to the portfolio
                 algorithm.Portfolio.ApplyDividend(dividend, liveMode, mode);
+
+                // apply the dividend event to the security volatility model
+                security?.VolatilityModel.ApplyDividend(dividend, liveMode, mode);
 
                 if (liveMode && security != null)
                 {

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,6 +15,7 @@
 
 using System;
 using System.Linq;
+using MathNet.Numerics.Statistics;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -32,23 +33,9 @@ namespace QuantConnect.Tests.Common.Securities
         {
             const int periods = 3;
             var periodSpan = Time.OneMinute;
-            var reference = new DateTime(2016, 04, 06, 12, 0, 0);
-            var referenceUtc = reference.ConvertToUtc(TimeZones.NewYork);
-            var timeKeeper = new TimeKeeper(referenceUtc);
-            var config = new SubscriptionDataConfig(typeof (TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, false, false);
-            var security = new Security(
-                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                config,
-                new Cash(Currencies.USD, 0, 0),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache()
-            );
-            security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
-
             var model = new RelativeStandardDeviationVolatilityModel(periodSpan, periods);
-            security.VolatilityModel = model;
+            var reference = new DateTime(2016, 04, 06, 12, 0, 0);
+            var security = GetSecurity(reference, model);
 
             var first = new IndicatorDataPoint(reference, 1);
             security.SetMarketPrice(first);
@@ -75,23 +62,9 @@ namespace QuantConnect.Tests.Common.Securities
         {
             const int periods = 3;
             var periodSpan = Time.OneMinute;
-            var reference = new DateTime(2016, 04, 06, 12, 0, 0);
-            var referenceUtc = reference.ConvertToUtc(TimeZones.NewYork);
-            var timeKeeper = new TimeKeeper(referenceUtc);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, false, false);
-            var security = new Security(
-                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                config,
-                new Cash(Currencies.USD, 0, 0),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache()
-            );
-            security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
-
             var model = new RelativeStandardDeviationVolatilityModel(periodSpan, periods);
-            security.VolatilityModel = model;
+            var reference = new DateTime(2016, 04, 06, 12, 0, 0);
+            var security = GetSecurity(reference, model);
 
             var first = new IndicatorDataPoint(reference, 1);
             security.SetMarketPrice(first);
@@ -116,23 +89,13 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void GetHistoryRequirementsWorks()
         {
-            var reference = new DateTime(2016, 04, 06, 12, 0, 0);
-            var referenceUtc = reference.ConvertToUtc(TimeZones.NewYork);
-            var timeKeeper = new TimeKeeper(referenceUtc);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, false, false);
-            var security = new Security(
-                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                config,
-                new Cash(Currencies.USD, 0, 0),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache()
-            );
-            security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
-
             var model = new RelativeStandardDeviationVolatilityModel(TimeSpan.FromDays(2), 4);
+            var reference = new DateTime(2016, 04, 06, 12, 0, 0);
+            var security = GetSecurity(reference, model);
+
+            var config = security.Subscriptions.First();
             model.SetSubscriptionDataConfigProvider(new MockSubscriptionDataConfigProvider(config));
+
             var result = model.GetHistoryRequirements(security, DateTime.UtcNow).First();
 
             Assert.AreEqual(config.DataNormalizationMode, result.DataNormalizationMode);
@@ -147,22 +110,11 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void GetHistoryRequirementsWorksForTwoDifferentSubscriptions()
         {
-            var reference = new DateTime(2016, 04, 06, 12, 0, 0);
-            var referenceUtc = reference.ConvertToUtc(TimeZones.NewYork);
-            var timeKeeper = new TimeKeeper(referenceUtc);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, false, false);
-            var security = new Security(
-                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                config,
-                new Cash(Currencies.USD, 0, 0),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache()
-            );
-            security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
-
             var model = new RelativeStandardDeviationVolatilityModel(TimeSpan.FromDays(2), 4);
+            var reference = new DateTime(2016, 04, 06, 12, 0, 0);
+            var security = GetSecurity(reference, model);
+
+            var config = security.Subscriptions.First();
             var mock = new MockSubscriptionDataConfigProvider(config);
             mock.SubscriptionDataConfigs.Add(
                 new SubscriptionDataConfig(
@@ -185,6 +137,102 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(true, result.IsCustomData);
             Assert.AreEqual(true, result.FillForwardResolution != null);
             Assert.AreEqual(true, result.IncludeExtendedMarketHours);
+        }
+
+        [Test]
+        public void HandlesPriceDiscontinuityDueToSplit()
+        {
+            const int periods = 3;
+            var periodSpan = Time.OneMinute;
+            var model = new RelativeStandardDeviationVolatilityModel(periodSpan, periods);
+            var reference = new DateTime(2016, 04, 06, 12, 0, 0);
+
+            var security = GetSecurity(reference, model);
+
+            security.SetMarketPrice(new IndicatorDataPoint(reference, 1));
+            security.SetMarketPrice(new IndicatorDataPoint(reference.AddMinutes(1), 2));
+            security.SetMarketPrice(new IndicatorDataPoint(reference.AddMinutes(1.01), 1000));
+            security.SetMarketPrice(new IndicatorDataPoint(reference.AddMinutes(2), 3m));
+
+            var split = new Split(security.Symbol, reference.AddMinutes(2.5), 3m, 10m, SplitType.SplitOccurred);
+            model.ApplySplit(split, false, DataNormalizationMode.Raw);
+            security.SetMarketPrice(new IndicatorDataPoint(reference.AddMinutes(3), 30m));
+
+            var prices = new[] { 20.0, 30.0, 30.0 };
+            var expected = prices.StandardDeviation().SafeDecimalCast() / Math.Abs(prices.Mean().SafeDecimalCast());
+            Assert.AreEqual(expected, model.Volatility);
+        }
+
+        [Test]
+        public void HandlesPriceDiscontinuityDueToDividend()
+        {
+            const int periods = 3;
+            var periodSpan = Time.OneMinute;
+            var model = new RelativeStandardDeviationVolatilityModel(periodSpan, periods);
+            var reference = new DateTime(2016, 04, 06, 12, 0, 0);
+
+            var security = GetSecurity(reference, model);
+
+            security.SetMarketPrice(new IndicatorDataPoint(reference, 1));
+            security.SetMarketPrice(new IndicatorDataPoint(reference.AddMinutes(1), 2));
+            security.SetMarketPrice(new IndicatorDataPoint(reference.AddMinutes(1.01), 1000));
+            security.SetMarketPrice(new IndicatorDataPoint(reference.AddMinutes(2), 3m));
+
+            var dividend = new Dividend(security.Symbol, reference.AddMinutes(2.5), .031m, 3.1m);
+            model.ApplyDividend(dividend, false, DataNormalizationMode.Raw);
+            security.SetMarketPrice(new IndicatorDataPoint(reference.AddMinutes(3), 3m));
+
+            var prices = new[] { 2 * .99, 3 * .99, 3.0 };
+            var expected = prices.StandardDeviation().SafeDecimalCast() / Math.Abs(prices.Mean().SafeDecimalCast());
+            Assert.AreEqual(expected, model.Volatility);
+        }
+
+        [Test]
+        public void HandlesPriceDiscontinuityDueToSplitAndDividend()
+        {
+            const int periods = 3;
+            var periodSpan = Time.OneMinute;
+            var model = new RelativeStandardDeviationVolatilityModel(periodSpan, periods);
+            var reference = new DateTime(2016, 04, 06, 12, 0, 0);
+
+            var security = GetSecurity(reference, model);
+
+            security.SetMarketPrice(new IndicatorDataPoint(reference, 1));
+            security.SetMarketPrice(new IndicatorDataPoint(reference.AddMinutes(1), 2));
+            security.SetMarketPrice(new IndicatorDataPoint(reference.AddMinutes(1.01), 1000));
+            security.SetMarketPrice(new IndicatorDataPoint(reference.AddMinutes(2), 3m));
+
+            var split = new Split(security.Symbol, reference.AddMinutes(2.5), 3m, 10m, SplitType.SplitOccurred);
+            model.ApplySplit(split, false, DataNormalizationMode.Raw);
+            var dividend = new Dividend(security.Symbol, reference.AddMinutes(2.5), .031m, 3.1m);
+            model.ApplyDividend(dividend, false, DataNormalizationMode.Raw);
+            security.SetMarketPrice(new IndicatorDataPoint(reference.AddMinutes(3), 30m));
+
+            const double factor = 9.9; // Split 10 and Dividend 0.99
+            var prices = new[] { 2 * factor, 3 * factor, 30.0 };
+            var expected = prices.StandardDeviation().SafeDecimalCast() / Math.Abs(prices.Mean().SafeDecimalCast());
+            Assert.AreEqual(expected, model.Volatility);
+        }
+
+        private static Security GetSecurity(DateTime reference, IVolatilityModel model)
+        {
+            var referenceUtc = reference.ConvertToUtc(TimeZones.NewYork);
+            var timeKeeper = new TimeKeeper(referenceUtc);
+            var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, false, false);
+            var security = new Security(
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                config,
+                new Cash(Currencies.USD, 0, 0),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
+            security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+
+            security.VolatilityModel = model;
+
+            return security;
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -18,6 +18,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Securities.Volatility;
+using QuantConnect.Interfaces;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Securities
 {
@@ -26,7 +28,7 @@ namespace QuantConnect.Securities
     /// </summary>
     /// <remarks>Please use<see cref="BaseVolatilityModel"/> as the base class for
     /// any implementations of<see cref="IVolatilityModel"/></remarks>
-    public interface IVolatilityModel
+    public interface IVolatilityModel : ISplitAwareModel
     {
         /// <summary>
         /// Gets the volatility of the security as a percentage
@@ -68,6 +70,14 @@ namespace QuantConnect.Securities
             public void Update(Security security, BaseData data) { }
 
             public IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime) { return Enumerable.Empty<HistoryRequest>(); }
+
+            public void ApplyDividend(Dividend dividend, bool liveMode, DataNormalizationMode dataNormalizationMode)
+            {
+            }
+
+            public void ApplySplit(Split split, bool liveMode, DataNormalizationMode dataNormalizationMode)
+            {
+            }
         }
     }
 }

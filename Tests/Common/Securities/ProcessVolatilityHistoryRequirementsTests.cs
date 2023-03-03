@@ -52,7 +52,7 @@ namespace QuantConnect.Tests.Common.Securities
     internal class TestVolatilityModel : BaseVolatilityModel
     {
         public List<BaseData> dataUpdate = new List<BaseData>();
-        public override decimal Volatility { get; }
+        public override decimal Volatility { get; protected set; }
         public override void Update(Security security, BaseData data)
         {
             dataUpdate.Add(data);

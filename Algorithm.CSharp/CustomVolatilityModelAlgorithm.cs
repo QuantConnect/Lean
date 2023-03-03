@@ -19,11 +19,12 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Volatility;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Example of custom volatility model 
+    /// Example of custom volatility model
     /// </summary>
     /// <meta name="tag" content="using quantconnect" />
     /// <meta name="tag" content="indicators" />
@@ -49,16 +50,16 @@ namespace QuantConnect.Algorithm.CSharp
         }
     }
 
-    public class CustomVolatilityModel : IVolatilityModel
+    public class CustomVolatilityModel : BaseVolatilityModel
     {
         private DateTime _lastUpdate = DateTime.MinValue;
         private decimal _lastPrice = 0m;
         private bool _needsUpdate = false;
         private TimeSpan _periodSpan = TimeSpan.FromDays(1);
         private RollingWindow<decimal> _window;
-        
-        // Volatility is a mandatory fleid
-        public decimal Volatility { get; set; } = 0m;
+
+        // Volatility is a mandatory field
+        public override decimal Volatility { get; protected set; } = 0m;
         public CustomVolatilityModel(int periods)
         {
             _window = new RollingWindow<decimal>(periods);
@@ -66,7 +67,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         // Updates this model using the new price information in the specified security instance
         // Update is a mandatory method
-        public void Update(Security security, BaseData data)
+        public override void Update(Security security, BaseData data)
         {
             var timeSinceLastUpdate = data.EndTime - _lastUpdate;
             if (timeSinceLastUpdate >= _periodSpan && data.Price > 0m)
@@ -91,15 +92,15 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 _needsUpdate = false;
                 var mean = _window.Average();
-                var std = Math.Sqrt((double)_window.Sum(x => (x - mean)*(x - mean)) / _window.Count()); 
+                var std = Math.Sqrt((double)_window.Sum(x => (x - mean)*(x - mean)) / _window.Count());
                 Volatility = Convert.ToDecimal(std * Math.Sqrt(252d));
             }
         }
 
         // Returns history requirements for the volatility model expressed in the form of history request
         // GetHistoryRequirements is a mandatory method
-        public IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime)
-        // For simplicity's sake, we will not set a history requirement 
+        public override IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime)
+        // For simplicity's sake, we will not set a history requirement
         {
             return Enumerable.Empty<HistoryRequest>();
         }

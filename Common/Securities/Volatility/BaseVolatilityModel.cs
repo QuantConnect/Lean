@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -28,6 +28,8 @@ namespace QuantConnect.Securities.Volatility
     /// </summary>
     public class BaseVolatilityModel : IVolatilityModel
     {
+        private decimal? _lastFactor;
+
         /// <summary>
         /// Provides access to registered <see cref="SubscriptionDataConfig"/>
         /// </summary>
@@ -36,7 +38,28 @@ namespace QuantConnect.Securities.Volatility
         /// <summary>
         /// Gets the volatility of the security as a percentage
         /// </summary>
-        public virtual decimal Volatility { get; }
+        public virtual decimal Volatility { get; protected set; }
+
+        /// <summary>
+        /// Latest price factor to be applied
+        /// </summary>
+        protected decimal? LastFactor
+        {
+            get
+            {
+                return _lastFactor;
+            }
+            set
+            {
+                if (!_lastFactor.HasValue || !value.HasValue)
+                {
+                    _lastFactor = value;
+                    return;
+                }
+
+                _lastFactor *= value;
+            }
+        }
 
         /// <summary>
         /// Sets the <see cref="ISubscriptionDataConfigProvider"/> instance to use.
@@ -82,7 +105,7 @@ namespace QuantConnect.Securities.Volatility
         /// <returns>Enumerable of history requests</returns>
         /// <exception cref="InvalidOperationException">The <see cref="SubscriptionDataConfigProvider"/> has not been set</exception>
         public IEnumerable<HistoryRequest> GetHistoryRequirements(
-            Security security, 
+            Security security,
             DateTime utcTime,
             Resolution? resolution,
             int barCount)
@@ -100,14 +123,14 @@ namespace QuantConnect.Securities.Volatility
                 .OrderBy(c => c.TickType)
                 .ToList();
             var configuration = configurations.First();
-            
+
             var bar = configuration.Type.GetBaseDataInstance();
             bar.Symbol = security.Symbol;
-            
+
             var historyResolution = resolution ?? bar.SupportedResolutions().Max();
 
             var periodSpan = historyResolution.ToTimeSpan();
-            
+
             // hour resolution does no have extended market hours data
             var extendedMarketHours = periodSpan != Time.OneHour && configurations.IsExtendedMarketHours();
             var localStartTime = Time.GetStartTimeForTradeBars(
@@ -131,9 +154,43 @@ namespace QuantConnect.Securities.Volatility
                                    historyResolution,
                                    extendedMarketHours,
                                    configurations.IsCustomData(),
-                                   configurations.DataNormalizationMode(),
+                                   DataNormalizationMode.Adjusted,
                                    LeanData.GetCommonTickTypeForCommonDataTypes(configuration.Type, security.Type))
             };
+        }
+
+        /// <summary>
+        /// Applies a dividend to the model
+        /// </summary>
+        /// <param name="dividend">The dividend to be applied</param>
+        /// <param name="liveMode">True if live mode, false for backtest</param>
+        /// <param name="dataNormalizationMode">The <see cref="DataNormalizationMode"/> for the security</param>
+        public virtual void ApplyDividend(Dividend dividend, bool liveMode, DataNormalizationMode dataNormalizationMode)
+        {
+            // only apply splits in live or raw/split adjusted data mode
+            if (!liveMode && !(dataNormalizationMode == DataNormalizationMode.Raw || dataNormalizationMode == DataNormalizationMode.SplitAdjusted))
+            {
+                return;
+            }
+
+            LastFactor = 1 - dividend.Distribution / dividend.ReferencePrice;
+        }
+
+        /// <summary>
+        /// Applies a split to the model
+        /// </summary>
+        /// <param name="split">The split to be applied</param>
+        /// <param name="liveMode">True if live mode, false for backtest</param>
+        /// <param name="dataNormalizationMode">The <see cref="DataNormalizationMode"/> for the security</param>
+        public virtual void ApplySplit(Split split, bool liveMode, DataNormalizationMode dataNormalizationMode)
+        {
+            // only apply splits in live or raw data mode
+            if (!liveMode && dataNormalizationMode != DataNormalizationMode.Raw)
+            {
+                return;
+            }
+
+            LastFactor = split.SplitFactor;
         }
     }
 }

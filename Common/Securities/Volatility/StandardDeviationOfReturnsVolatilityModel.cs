@@ -14,14 +14,13 @@
 */
 
 using System;
+using System.Collections.Generic;
+
 using MathNet.Numerics.Statistics;
+
 using QuantConnect.Data;
 using QuantConnect.Indicators;
-using QuantConnect.Data.Market;
-using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Securities.Volatility;
-using QuantConnect.Util;
 
 namespace QuantConnect.Securities
 {
@@ -137,6 +136,13 @@ namespace QuantConnect.Securities
             {
                 lock (_sync)
                 {
+                    // Update the last price applying the last price factor
+                    if (LastFactor.HasValue)
+                    {
+                        _lastPrice *= LastFactor.Value;
+                        LastFactor = null;
+                    }
+
                     if (_lastPrice > 0.0m)
                     {
                         _needsUpdate = true;
@@ -157,7 +163,7 @@ namespace QuantConnect.Securities
         /// <returns>History request object list, or empty if no requirements</returns>
         public override IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime)
         {
-            return base.GetHistoryRequirements(
+            return GetHistoryRequirements(
                 security,
                 utcTime,
                 _resolution,

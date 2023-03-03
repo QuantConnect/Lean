@@ -605,6 +605,14 @@ namespace QuantConnect.Tests.Common
             public void Update(Security security, BaseData data)
             {
             }
+
+            public void ApplyDividend(QuantConnect.Data.Market.Dividend dividend, bool liveMode, DataNormalizationMode dataNormalizationMode)
+            {
+            }
+
+            public void ApplySplit(Split split, bool liveMode, DataNormalizationMode dataNormalizationMode)
+            {
+            }
         }
 
         class TestOptionPriceModel : QLOptionPriceModel
@@ -614,7 +622,7 @@ namespace QuantConnect.Tests.Common
             {
             }
 
-            public double TestImpliedVolEstimator(double price, double initialGuess, double timeTillExpiry, double riskFreeDiscount, 
+            public double TestImpliedVolEstimator(double price, double initialGuess, double timeTillExpiry, double riskFreeDiscount,
                                                   double forwardPrice, PlainVanillaPayoff payoff, out BlackCalculator black)
             {
                 return base.ImpliedVolatilityEstimation(price, initialGuess, timeTillExpiry, riskFreeDiscount, forwardPrice, payoff, out black);
