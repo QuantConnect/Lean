@@ -37,7 +37,6 @@
   </Target>
   <ItemGroup>
     <PackageReference Include="DynamicInterop" Version="0.9.1" />
-    <PackageReference Include="R.NET" Version="1.9.0" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
