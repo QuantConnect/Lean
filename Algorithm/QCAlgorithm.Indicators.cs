@@ -2799,11 +2799,9 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        ///     This is a window that allows for list access semantics,
-        ///     where this[0] refers to the most recent item in the
-        ///     window and this[Count-1] refers to the last item in the window
+        ///     Initializes a new instance of the RollwingWindow class with the specified window size.
         /// </summary>
-        /// <typeparam name="T">The type of data in the window</typeparam>
+        /// <param name="size">The number of items to hold in the window</param>
         [DocumentationAttribute(Indicators)]
         public static RollingWindow<dynamic> RW<T>(int size)
         {
