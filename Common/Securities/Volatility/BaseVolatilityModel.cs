@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
@@ -28,38 +29,18 @@ namespace QuantConnect.Securities.Volatility
     /// </summary>
     public class BaseVolatilityModel : IVolatilityModel
     {
-        private decimal? _lastFactor;
+        private List<Dividend> _dividends = new();
+        private List<Split> _splits = new();
 
         /// <summary>
         /// Provides access to registered <see cref="SubscriptionDataConfig"/>
         /// </summary>
-        protected ISubscriptionDataConfigProvider SubscriptionDataConfigProvider;
+        protected ISubscriptionDataConfigProvider SubscriptionDataConfigProvider { get; set; }
 
         /// <summary>
         /// Gets the volatility of the security as a percentage
         /// </summary>
         public virtual decimal Volatility { get; protected set; }
-
-        /// <summary>
-        /// Latest price factor to be applied
-        /// </summary>
-        protected decimal? LastFactor
-        {
-            get
-            {
-                return _lastFactor;
-            }
-            set
-            {
-                if (!_lastFactor.HasValue || !value.HasValue)
-                {
-                    _lastFactor = value;
-                    return;
-                }
-
-                _lastFactor *= value;
-            }
-        }
 
         /// <summary>
         /// Sets the <see cref="ISubscriptionDataConfigProvider"/> instance to use.
@@ -173,7 +154,7 @@ namespace QuantConnect.Securities.Volatility
                 return;
             }
 
-            LastFactor = 1 - dividend.Distribution / dividend.ReferencePrice;
+            _dividends.Add(dividend);
         }
 
         /// <summary>
@@ -190,7 +171,55 @@ namespace QuantConnect.Securities.Volatility
                 return;
             }
 
-            LastFactor = split.SplitFactor;
+            _splits.Add(split);
+        }
+
+        /// <summary>
+        /// Resets and warms up the model using historical data
+        /// </summary>
+        /// <param name="historyProvider">History provider to use to get historical data</param>
+        /// <param name="security">The security of the request</param>
+        /// <param name="utcTime">The date/time of the request</param>
+        /// <param name="timeZone">The algorithm time zone</param>
+        public void WarmUp(IHistoryProvider historyProvider, Security security, DateTime utcTime, DateTimeZone timeZone)
+        {
+            // Reset
+            Reset();
+
+            // Warm up
+            var historyRequests = GetHistoryRequirements(security, utcTime).ToList();
+            if (historyRequests == null)
+            {
+                return;
+            }
+
+            var history = historyProvider.GetHistory(historyRequests, timeZone);
+            var data = history.Get(historyRequests[0].DataType, security.Symbol).Cast<BaseData>().ToList();
+            if (data.Count == 0)
+            {
+                return;
+            }
+
+            var firstTime = data[0].Time;
+            // We don't need dividends and splits before the first history slice
+            _dividends.RemoveAll(x => x.Time < firstTime);
+            _splits.RemoveAll(x => x.Time < firstTime);
+
+            var factor = _dividends.Aggregate(1m, (current, dividend) => current * (1 - dividend.Distribution / dividend.ReferencePrice)) *
+                _splits.Aggregate(1m, (current, split) => current * split.SplitFactor);
+
+            foreach (BaseData dataPoint in data)
+            {
+                Update(security, factor == 1 ? dataPoint : dataPoint.Normalize(factor, DataNormalizationMode.Adjusted, 0));
+            }
+        }
+
+        /// <summary>
+        /// Resets the model to its initial state
+        /// </summary>
+        public virtual void Reset()
+        {
+            Volatility = 0;
         }
     }
 }

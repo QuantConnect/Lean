@@ -14,10 +14,12 @@
 */
 
 using Moq;
+using NodaTime;
 using NUnit.Framework;
 using QLNet;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Option;
@@ -611,6 +613,14 @@ namespace QuantConnect.Tests.Common
             }
 
             public void ApplySplit(Split split, bool liveMode, DataNormalizationMode dataNormalizationMode)
+            {
+            }
+
+            public void WarmUp(IHistoryProvider historyProvider, Security security, DateTime utcTime, DateTimeZone timeZone)
+            {
+            }
+
+            public void Reset()
             {
             }
         }

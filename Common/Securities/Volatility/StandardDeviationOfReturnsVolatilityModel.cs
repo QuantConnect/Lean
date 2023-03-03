@@ -136,13 +136,6 @@ namespace QuantConnect.Securities
             {
                 lock (_sync)
                 {
-                    // Update the last price applying the last price factor
-                    if (LastFactor.HasValue)
-                    {
-                        _lastPrice *= LastFactor.Value;
-                        LastFactor = null;
-                    }
-
                     if (_lastPrice > 0.0m)
                     {
                         _needsUpdate = true;
@@ -168,6 +161,19 @@ namespace QuantConnect.Securities
                 utcTime,
                 _resolution,
                 _window.Size + 1);
+        }
+
+        /// <summary>
+        /// Resets the model to its initial state
+        /// </summary>
+        public override void Reset()
+        {
+            base.Reset();
+            _needsUpdate = false;
+            _volatility = 0m;
+            _lastUpdate = DateTime.MinValue;
+            _lastPrice = 0m;
+            _window.Reset();
         }
 
         private static int PeriodsInResolution(Resolution resolution)

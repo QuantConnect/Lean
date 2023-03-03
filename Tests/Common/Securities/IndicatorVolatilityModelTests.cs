@@ -15,7 +15,6 @@
 
 using System;
 using System.Linq;
-using MathNet.Numerics.Statistics;
 using NUnit.Framework;
 
 using QuantConnect.Data;

@@ -19,6 +19,8 @@ using QuantConnect.Indicators;
 using System.Collections.Generic;
 using QuantConnect.Data.Market;
 using System.Linq;
+using QuantConnect.Interfaces;
+using NodaTime;
 
 namespace QuantConnect.Securities
 {
@@ -108,6 +110,24 @@ namespace QuantConnect.Securities
         /// <param name="liveMode">True if live mode, false for backtest</param>
         /// <param name="dataNormalizationMode">The <see cref="DataNormalizationMode"/> for the security</param>
         public void ApplySplit(Split split, bool liveMode, DataNormalizationMode dataNormalizationMode)
+        {
+        }
+
+        /// <summary>
+        /// Resets and warms up the model using historical data
+        /// </summary>
+        /// <param name="historyProvider">History provider to use to get historical data</param>
+        /// <param name="security">The security of the request</param>
+        /// <param name="utcTime">The date/time of the request</param>
+        /// <param name="timeZone">The algorithm time zone</param>
+        public void WarmUp(IHistoryProvider historyProvider, Security security, DateTime utcTime, DateTimeZone timeZone)
+        {
+        }
+
+        /// <summary>
+        /// Resets the model to its initial state
+        /// </summary>
+        public void Reset()
         {
         }
     }

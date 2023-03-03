@@ -20,6 +20,7 @@ using System.Linq;
 using QuantConnect.Securities.Volatility;
 using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
+using NodaTime;
 
 namespace QuantConnect.Securities
 {
@@ -50,6 +51,20 @@ namespace QuantConnect.Securities
         /// <param name="utcTime">The date/time of the request</param>
         /// <returns>History request object list, or empty if no requirements</returns>
         IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime);
+
+        /// <summary>
+        /// Resets and warms up the model using historical data
+        /// </summary>
+        /// <param name="historyProvider">History provider to use to get historical data</param>
+        /// <param name="security">The security of the request</param>
+        /// <param name="utcTime">The date/time of the request</param>
+        /// <param name="timeZone">The algorithm time zone</param>
+        void WarmUp(IHistoryProvider historyProvider, Security security, DateTime utcTime, DateTimeZone timeZone);
+
+        /// <summary>
+        /// Resets the model to its initial state
+        /// </summary>
+        void Reset();
     }
 
     /// <summary>
@@ -76,6 +91,14 @@ namespace QuantConnect.Securities
             }
 
             public void ApplySplit(Split split, bool liveMode, DataNormalizationMode dataNormalizationMode)
+            {
+            }
+
+            public void WarmUp(IHistoryProvider historyProvider, Security security, DateTime utcTime, DateTimeZone timeZone)
+            {
+            }
+
+            public void Reset()
             {
             }
         }

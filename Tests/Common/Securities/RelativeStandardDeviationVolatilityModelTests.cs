@@ -14,12 +14,16 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using MathNet.Numerics.Statistics;
+using NodaTime;
 using NUnit.Framework;
+
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Common.Data;
 
@@ -149,14 +153,29 @@ namespace QuantConnect.Tests.Common.Securities
 
             var security = GetSecurity(reference, model);
 
-            security.SetMarketPrice(new IndicatorDataPoint(reference, 1));
-            security.SetMarketPrice(new IndicatorDataPoint(reference.AddMinutes(1), 2));
-            security.SetMarketPrice(new IndicatorDataPoint(reference.AddMinutes(1.01), 1000));
-            security.SetMarketPrice(new IndicatorDataPoint(reference.AddMinutes(2), 3m));
+            var config = security.Subscriptions.First();
+            model.SetSubscriptionDataConfigProvider(new MockSubscriptionDataConfigProvider(config));
 
-            var split = new Split(security.Symbol, reference.AddMinutes(2.5), 3m, 10m, SplitType.SplitOccurred);
+            var bars = new List<TradeBar>()
+            {
+                new TradeBar(reference, security.Symbol, 1, 1, 1, 1, 1),
+                new TradeBar(reference.AddMinutes(1), security.Symbol, 2, 2, 2, 2, 2),
+                new TradeBar(reference.AddMinutes(2), security.Symbol, 3, 3, 3, 3, 3),
+                // after the split
+                new TradeBar(reference.AddMinutes(3), security.Symbol, 30, 30, 30, 30, 30),
+            };
+
+            security.SetMarketPrice(bars[0]);
+            security.SetMarketPrice(bars[1]);
+            security.SetMarketPrice(new TradeBar(reference.AddMinutes(1.01), security.Symbol, 1000, 1000, 1000, 1000, 1000));
+            security.SetMarketPrice(bars[2]);
+
+            var lastBarBeforeSplit = bars.SkipLast(1).Last();
+            var split = new Split(security.Symbol, lastBarBeforeSplit.EndTime.AddMinutes(-0.5), lastBarBeforeSplit.Price, 10m, SplitType.SplitOccurred);
             model.ApplySplit(split, false, DataNormalizationMode.Raw);
-            security.SetMarketPrice(new IndicatorDataPoint(reference.AddMinutes(3), 30m));
+            model.WarmUp(new TestHistoryProvider(bars), security, split.Time, DateTimeZone.Utc);
+
+            security.SetMarketPrice(bars.Last());
 
             var prices = new[] { 20.0, 30.0, 30.0 };
             var expected = prices.StandardDeviation().SafeDecimalCast() / Math.Abs(prices.Mean().SafeDecimalCast());
@@ -173,14 +192,29 @@ namespace QuantConnect.Tests.Common.Securities
 
             var security = GetSecurity(reference, model);
 
-            security.SetMarketPrice(new IndicatorDataPoint(reference, 1));
-            security.SetMarketPrice(new IndicatorDataPoint(reference.AddMinutes(1), 2));
-            security.SetMarketPrice(new IndicatorDataPoint(reference.AddMinutes(1.01), 1000));
-            security.SetMarketPrice(new IndicatorDataPoint(reference.AddMinutes(2), 3m));
+            var config = security.Subscriptions.First();
+            model.SetSubscriptionDataConfigProvider(new MockSubscriptionDataConfigProvider(config));
 
-            var dividend = new Dividend(security.Symbol, reference.AddMinutes(2.5), .031m, 3.1m);
+            var bars = new List<TradeBar>()
+            {
+                new TradeBar(reference, security.Symbol, 1, 1, 1, 1, 1),
+                new TradeBar(reference.AddMinutes(1), security.Symbol, 2, 2, 2, 2, 2),
+                new TradeBar(reference.AddMinutes(2), security.Symbol, 3, 3, 3, 3, 3),
+                // after the dividend
+                new TradeBar(reference.AddMinutes(3), security.Symbol, 3, 3, 3, 3, 3),
+            };
+
+            security.SetMarketPrice(bars[0]);
+            security.SetMarketPrice(bars[1]);
+            security.SetMarketPrice(new TradeBar(reference.AddMinutes(1.01), security.Symbol, 1000, 1000, 1000, 1000, 1000));
+            security.SetMarketPrice(bars[2]);
+
+            var lastBarBeforeSplit = bars.SkipLast(1).Last();
+            var dividend = new Dividend(security.Symbol, lastBarBeforeSplit.EndTime.AddMinutes(-0.5), .031m, 3.1m);
             model.ApplyDividend(dividend, false, DataNormalizationMode.Raw);
-            security.SetMarketPrice(new IndicatorDataPoint(reference.AddMinutes(3), 3m));
+            model.WarmUp(new TestHistoryProvider(bars), security, dividend.Time, DateTimeZone.Utc);
+
+            security.SetMarketPrice(bars.Last());
 
             var prices = new[] { 2 * .99, 3 * .99, 3.0 };
             var expected = prices.StandardDeviation().SafeDecimalCast() / Math.Abs(prices.Mean().SafeDecimalCast());
@@ -197,16 +231,34 @@ namespace QuantConnect.Tests.Common.Securities
 
             var security = GetSecurity(reference, model);
 
-            security.SetMarketPrice(new IndicatorDataPoint(reference, 1));
-            security.SetMarketPrice(new IndicatorDataPoint(reference.AddMinutes(1), 2));
-            security.SetMarketPrice(new IndicatorDataPoint(reference.AddMinutes(1.01), 1000));
-            security.SetMarketPrice(new IndicatorDataPoint(reference.AddMinutes(2), 3m));
+            var config = security.Subscriptions.First();
+            model.SetSubscriptionDataConfigProvider(new MockSubscriptionDataConfigProvider(config));
 
-            var split = new Split(security.Symbol, reference.AddMinutes(2.5), 3m, 10m, SplitType.SplitOccurred);
+            var bars = new List<TradeBar>()
+            {
+                new TradeBar(reference, security.Symbol, 1, 1, 1, 1, 1),
+                new TradeBar(reference.AddMinutes(1), security.Symbol, 2, 2, 2, 2, 2),
+                new TradeBar(reference.AddMinutes(2), security.Symbol, 3, 3, 3, 3, 3),
+                // after the dividend
+                new TradeBar(reference.AddMinutes(3), security.Symbol, 30, 30, 30, 30, 30),
+            };
+
+            security.SetMarketPrice(bars[0]);
+            security.SetMarketPrice(bars[1]);
+            security.SetMarketPrice(new TradeBar(reference.AddMinutes(1.01), security.Symbol, 1000, 1000, 1000, 1000, 1000));
+            security.SetMarketPrice(bars[2]);
+
+            var lastBarBeforeSplit = bars.SkipLast(1).Last();
+
+            var split = new Split(security.Symbol, lastBarBeforeSplit.EndTime.AddMinutes(-0.6), lastBarBeforeSplit.Price, 10m, SplitType.SplitOccurred);
             model.ApplySplit(split, false, DataNormalizationMode.Raw);
-            var dividend = new Dividend(security.Symbol, reference.AddMinutes(2.5), .031m, 3.1m);
+
+            var dividend = new Dividend(security.Symbol, lastBarBeforeSplit.EndTime.AddMinutes(-0.3), .031m, 3.1m);
             model.ApplyDividend(dividend, false, DataNormalizationMode.Raw);
-            security.SetMarketPrice(new IndicatorDataPoint(reference.AddMinutes(3), 30m));
+
+            model.WarmUp(new TestHistoryProvider(bars), security, dividend.Time, DateTimeZone.Utc);
+
+            security.SetMarketPrice(bars.Last());
 
             const double factor = 9.9; // Split 10 and Dividend 0.99
             var prices = new[] { 2 * factor, 3 * factor, 30.0 };
@@ -233,6 +285,38 @@ namespace QuantConnect.Tests.Common.Securities
             security.VolatilityModel = model;
 
             return security;
+        }
+
+        private class TestHistoryProvider : IHistoryProvider
+        {
+            private List<TradeBar> _data;
+
+            public int DataPointCount => throw new NotImplementedException();
+
+            public event EventHandler<InvalidConfigurationDetectedEventArgs> InvalidConfigurationDetected;
+            public event EventHandler<NumericalPrecisionLimitedEventArgs> NumericalPrecisionLimited;
+            public event EventHandler<DownloadFailedEventArgs> DownloadFailed;
+            public event EventHandler<ReaderErrorDetectedEventArgs> ReaderErrorDetected;
+            public event EventHandler<StartDateLimitedEventArgs> StartDateLimited;
+
+            public TestHistoryProvider(IEnumerable<TradeBar> bars)
+            {
+                _data = bars.ToList();
+            }
+
+            public IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
+            {
+                var startTime = requests.Min(x => x.StartTimeUtc);
+                var endTime = requests.Max(x => x.EndTimeUtc);
+                return _data
+                    .Where(bar => bar.Time >= startTime && bar.Time < endTime)
+                    .Select(bar => new Slice(bar.Time, new[] { bar }, bar.Time.ConvertToUtc(requests.First().DataTimeZone)));
+            }
+
+            public void Initialize(HistoryProviderInitializeParameters parameters)
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }

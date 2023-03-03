@@ -707,19 +707,9 @@ namespace QuantConnect.Lean.Engine
                         algorithm.SubscriptionManager.SubscriptionDataConfigService);
                     // end
 
-                    var historyReq = security.VolatilityModel.GetHistoryRequirements(security, algorithm.UtcTime);
-
-                    if (historyReq != null && algorithm.HistoryProvider != null)
+                    if (algorithm.HistoryProvider != null)
                     {
-                        var history = algorithm.HistoryProvider.GetHistory(historyReq, algorithm.TimeZone);
-                        if (history != null)
-                        {
-                            foreach (var slice in history)
-                            {
-                                if (slice.Bars.ContainsKey(security.Symbol))
-                                    security.VolatilityModel.Update(security, slice.Bars[security.Symbol]);
-                            }
-                        }
+                        security.VolatilityModel.WarmUp(algorithm.HistoryProvider, security, algorithm.UtcTime, algorithm.TimeZone);
                     }
                 }
             }
@@ -772,6 +762,7 @@ namespace QuantConnect.Lean.Engine
 
                     // apply the dividend event to the security volatility model
                     security?.VolatilityModel.ApplySplit(split, liveMode, mode);
+                    security?.VolatilityModel.WarmUp(algorithm.HistoryProvider, security, algorithm.UtcTime, algorithm.TimeZone);
 
                     if (liveMode && security != null)
                     {
@@ -830,6 +821,7 @@ namespace QuantConnect.Lean.Engine
 
                 // apply the dividend event to the security volatility model
                 security?.VolatilityModel.ApplyDividend(dividend, liveMode, mode);
+                security?.VolatilityModel.WarmUp(algorithm.HistoryProvider, security, algorithm.UtcTime, algorithm.TimeZone);
 
                 if (liveMode && security != null)
                 {

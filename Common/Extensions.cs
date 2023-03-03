@@ -3306,6 +3306,37 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// De-normalize prices based on configuration
+        /// </summary>
+        /// <param name="data">Data to be normalized</param>
+        /// <param name="factor">Price scale</param>
+        /// <param name="normalizationMode">The price scaling normalization mode</param>
+        /// <param name="sumOfDividends">The current dividend sum</param>
+        /// <returns>The provided data point adjusted</returns>
+        public static BaseData Denormalize(this BaseData data, decimal factor, DataNormalizationMode normalizationMode, decimal sumOfDividends)
+        {
+            switch (normalizationMode)
+            {
+                case DataNormalizationMode.Adjusted:
+                case DataNormalizationMode.SplitAdjusted:
+                    return data?.Scale(OverFactor, 1/factor, factor, decimal.Zero);
+                case DataNormalizationMode.TotalReturn:
+                    return data.Scale(OverFactor, 1/factor, factor, sumOfDividends);
+
+                case DataNormalizationMode.BackwardsRatio:
+                    return data.Scale(OverFactor, 1, factor, decimal.Zero);
+                case DataNormalizationMode.BackwardsPanamaCanal:
+                    return data.Scale(SubtractFactor, 1, factor, decimal.Zero);
+                case DataNormalizationMode.ForwardPanamaCanal:
+                    return data.Scale(SubtractFactor, 1, factor, decimal.Zero);
+
+                case DataNormalizationMode.Raw:
+                default:
+                    return data;
+            }
+        }
+
+        /// <summary>
         /// Applies a times factor. We define this so we don't need to create it constantly
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -3315,12 +3346,31 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Applies a division factor, as the opposite action of <see cref="TimesFactor(decimal, decimal, decimal)"/>.
+        /// We define this so we don't need to create it constantly
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static decimal OverFactor(decimal target, decimal factor, decimal sumOfDividends)
+        {
+            return (target - sumOfDividends) / factor;
+        }
+
+        /// <summary>
         /// Applies an addition factor. We define this so we don't need to create it constantly
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static decimal AdditionFactor(decimal target, decimal factor, decimal _)
         {
             return target + factor;
+        }
+
+        /// <summary>
+        /// Applies a subtraction factor. We define this so we don't need to create it constantly
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static decimal SubtractFactor(decimal target, decimal factor, decimal _)
+        {
+            return target - factor;
         }
 
         /// <summary>
