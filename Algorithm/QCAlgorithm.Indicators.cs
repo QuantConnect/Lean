@@ -2081,7 +2081,7 @@ namespace QuantConnect.Algorithm
                 InitializeIndicator(symbol, msi, resolution, selector);
             }
 
-            return mo;
+            return msi;
         }
 
         /// <summary>
