@@ -251,7 +251,7 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return (AbsoluteQuantity > 0);
+                return Quantity != 0;
             }
         }
 

@@ -14,13 +14,12 @@
 */
 
 using System;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Linq;
 using QuantConnect.Data;
+using System.Collections;
 using QuantConnect.Interfaces;
+using System.Collections.Generic;
+using System.Collections.Specialized;
 
 namespace QuantConnect.Securities
 {
@@ -38,7 +37,9 @@ namespace QuantConnect.Securities
         private readonly ITimeKeeper _timeKeeper;
 
         //Internal dictionary implementation:
-        private readonly ConcurrentDictionary<Symbol, Security> _securityManager;
+        private readonly Dictionary<Symbol, Security> _securityManager;
+        // let's keep ah thread safe enumerator created which we reset and recreate if required
+        private  List<KeyValuePair<Symbol, Security>> _enumerator;
         private SecurityService _securityService;
 
         /// <summary>
@@ -56,7 +57,7 @@ namespace QuantConnect.Securities
         public SecurityManager(ITimeKeeper timeKeeper)
         {
             _timeKeeper = timeKeeper;
-            _securityManager = new ConcurrentDictionary<Symbol, Security>();
+            _securityManager = new();
         }
 
         /// <summary>
@@ -68,7 +69,13 @@ namespace QuantConnect.Securities
         /// <seealso cref="Add(Security)"/>
         public void Add(Symbol symbol, Security security)
         {
-            if (_securityManager.TryAdd(symbol, security))
+            bool changed;
+            lock (_securityManager)
+            {
+                changed = _securityManager.TryAdd(symbol, security);
+            }
+
+            if (changed)
             {
                 security.SetLocalTimeKeeper(_timeKeeper.GetLocalTimeKeeper(security.Exchange.TimeZone));
                 OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, security));
@@ -100,7 +107,11 @@ namespace QuantConnect.Securities
         /// <remarks>IDictionary implementation</remarks>
         public override void Clear()
         {
-            _securityManager.Clear();
+            lock (_securityManager)
+            {
+                _enumerator = null;
+                _securityManager.Clear();
+            }
         }
 
         /// <summary>
@@ -111,7 +122,10 @@ namespace QuantConnect.Securities
         /// <returns>Bool true if contains this key-value pair</returns>
         public bool Contains(KeyValuePair<Symbol, Security> pair)
         {
-            return _securityManager.Contains(pair);
+            lock (_securityManager)
+            {
+                return _securityManager.Contains(pair);
+            }
         }
 
         /// <summary>
@@ -122,7 +136,10 @@ namespace QuantConnect.Securities
         /// <returns>Bool true if contains this symbol pair</returns>
         public bool ContainsKey(Symbol symbol)
         {
-            return _securityManager.ContainsKey(symbol);
+            lock (_securityManager)
+            {
+                return _securityManager.ContainsKey(symbol);
+            }
         }
 
         /// <summary>
@@ -133,14 +150,26 @@ namespace QuantConnect.Securities
         /// <remarks>IDictionary implementation</remarks>
         public void CopyTo(KeyValuePair<Symbol, Security>[] array, int number)
         {
-            ((IDictionary<Symbol, Security>)_securityManager).CopyTo(array, number);
+            lock (_securityManager)
+            {
+                ((IDictionary<Symbol, Security>)_securityManager).CopyTo(array, number);
+            }
         }
 
         /// <summary>
         /// Count of the number of securities in the collection.
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
-        public int Count => _securityManager.Skip(0).Count();
+        public int Count
+        {
+            get
+            {
+                lock (_securityManager)
+                {
+                    return _securityManager.Count;
+                }
+            }
+        }
 
         /// <summary>
         /// Flag indicating if the internal array is read only.
@@ -170,7 +199,12 @@ namespace QuantConnect.Securities
         public override bool Remove(Symbol symbol)
         {
             Security security;
-            if (_securityManager.TryRemove(symbol, out security))
+            lock (_securityManager)
+            {
+                _securityManager.Remove(symbol, out security);
+            }
+
+            if (security != null)
             {
                 OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, security));
                 return true;
@@ -182,7 +216,16 @@ namespace QuantConnect.Securities
         /// List of the symbol-keys in the collection of securities.
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
-        public ICollection<Symbol> Keys => _securityManager.Select(x => x.Key).ToList();
+        public ICollection<Symbol> Keys
+        {
+            get
+            {
+                lock (_securityManager)
+                {
+                    return _securityManager.Select(kvp => kvp.Key).ToList();
+                }
+            }
+        }
 
         /// <summary>
         /// Try and get this security object with matching symbol and return true on success.
@@ -193,7 +236,10 @@ namespace QuantConnect.Securities
         /// <returns>True on successfully locating the security object</returns>
         public override bool TryGetValue(Symbol symbol, out Security security)
         {
-            return _securityManager.TryGetValue(symbol, out security);
+            lock (_securityManager)
+            {
+                return _securityManager.TryGetValue(symbol, out security);
+            }
         }
 
         /// <summary>
@@ -202,7 +248,7 @@ namespace QuantConnect.Securities
         /// <returns>
         /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the Symbol objects of the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
         /// </returns>
-        protected override IEnumerable<Symbol> GetKeys => _securityManager.Select(pair => pair.Key);
+        protected override IEnumerable<Symbol> GetKeys => Keys;
 
         /// <summary>
         /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
@@ -210,13 +256,22 @@ namespace QuantConnect.Securities
         /// <returns>
         /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
         /// </returns>
-        protected override IEnumerable<Security> GetValues => _securityManager.Select(pair => pair.Value);
+        protected override IEnumerable<Security> GetValues => Values;
 
         /// <summary>
         /// Get a list of the security objects for this collection.
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
-        public ICollection<Security> Values => _securityManager.Select(x => x.Value).ToList();
+        public ICollection<Security> Values
+        {
+            get
+            {
+                lock (_securityManager)
+                {
+                    return _securityManager.Select(kvp => kvp.Value).ToList();
+                }
+            }
+        }
 
         /// <summary>
         /// Get the enumerator for this security collection.
@@ -225,7 +280,7 @@ namespace QuantConnect.Securities
         /// <returns>Enumerable key value pair</returns>
         IEnumerator<KeyValuePair<Symbol, Security>> IEnumerable<KeyValuePair<Symbol, Security>>.GetEnumerator()
         {
-            return _securityManager.GetEnumerator();
+            return GetEnumeratorImplementation();
         }
 
         /// <summary>
@@ -235,7 +290,19 @@ namespace QuantConnect.Securities
         /// <returns>Enumerator.</returns>
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return _securityManager.GetEnumerator();
+            return GetEnumeratorImplementation();
+        }
+
+        private List<KeyValuePair<Symbol, Security>>.Enumerator GetEnumeratorImplementation()
+        {
+            if (_enumerator == null)
+            {
+                lock (_securityManager)
+                {
+                    _enumerator = _securityManager.ToList();
+                }
+            }
+            return _enumerator.GetEnumerator();
         }
 
         /// <summary>
@@ -249,18 +316,24 @@ namespace QuantConnect.Securities
             get
             {
                 Security security;
-                if (!_securityManager.TryGetValue(symbol, out security))
+                lock (_securityManager)
                 {
-                    throw new KeyNotFoundException(Messages.SecurityManager.SymbolNotFoundInSecurities(symbol));
+                    if (!_securityManager.TryGetValue(symbol, out security))
+                    {
+                        throw new KeyNotFoundException(Messages.SecurityManager.SymbolNotFoundInSecurities(symbol));
+                    }
                 }
                 return security;
             }
             set
             {
                 Security existing;
-                if (_securityManager.TryGetValue(symbol, out existing) && existing != value)
+                lock (_securityManager)
                 {
-                    throw new ArgumentException(Messages.SecurityManager.UnableToOverwriteSecurity(symbol));
+                    if (_securityManager.TryGetValue(symbol, out existing) && existing != value)
+                    {
+                        throw new ArgumentException(Messages.SecurityManager.UnableToOverwriteSecurity(symbol));
+                    }
                 }
 
                 // no security exists for the specified symbol key, add it now
@@ -277,6 +350,7 @@ namespace QuantConnect.Securities
         /// <param name="changedEventArgs">Event arguments for the <see cref="CollectionChanged"/> event</param>
         protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs changedEventArgs)
         {
+            _enumerator = null;
             CollectionChanged?.Invoke(this, changedEventArgs);
         }
 
