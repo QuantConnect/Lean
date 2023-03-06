@@ -71,7 +71,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         }
 
         /// <summary>
-        /// Sets the portfolio targets from the given portfolio current holdings
+        /// Sets the portfolio targets from the given portfolio current holdings and sends them
+        /// to the signal exports providers set
         /// </summary>
         /// <param name="portfolio">Portfolio containing the current holdings</param>
         /// <exception cref="ArgumentException">If the portfolio is null it will throw an exception</exception>
@@ -81,15 +82,23 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             {
                 throw new ArgumentException("Portfolio was null");
             }
+
+            var targets = new PortfolioTarget[portfolio.Values.Count];
+            var index = 0;
+
             foreach (var holding in portfolio.Values)
             {
                 var holdingPercent = holding.HoldingsValue / portfolio.TotalPortfolioValue;
-                _targets.Add(new PortfolioTarget(holding.Symbol, (decimal)holdingPercent));
+                targets[index] = new PortfolioTarget(holding.Symbol, (decimal)holdingPercent);
+                ++index;
             }
+
+            SetTargetPortfolio(targets);
         }
 
         /// <summary>
-        /// Sets the portfolio targets with the given entries
+        /// Sets the portfolio targets with the given entries and sends them
+        /// to the signal exports providers set
         /// </summary>
         /// <param name="portfolioTargets">One or more portfolio targets to be sent to the defined signal export providers</param>
         /// <exception cref="ArgumentException">It will throw an exception if there's no portfolio target in the parameters</exception>
@@ -100,32 +109,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 throw new ArgumentException("No portfolio target given");
             }
 
-            _targets.AddRange(portfolioTargets);
-        }
-
-        /// <summary>
-        /// Sets the portfolio targets with the given list
-        /// </summary>
-        /// <param name="portfolioTargets">List of portfolio targets to be sent to the defined signal export providers</param>
-        /// <exception cref="ArgumentException">It will throw an exception if there's no portfolio target in the parameters</exception>
-        public void SetTargetPortfolio(List<PortfolioTarget> portfolioTargets)
-        {
-            if (portfolioTargets == null)
-            {
-                throw new ArgumentException("No portfolio target given");
-            }
-
-            _targets = portfolioTargets;
-        }
-
-        /// <summary>
-        /// Sends the defined portfolio targets to the signal exports providers set
-        /// </summary>
-        public void ExportSignals()
-        {
+            var targets = new List<PortfolioTarget>(portfolioTargets);
             foreach (var signalExport in _signalExports)
             {
-                signalExport.Send(_targets);
+                signalExport.Send(targets);
             }
         }
     }
