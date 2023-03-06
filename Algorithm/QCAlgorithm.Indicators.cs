@@ -2047,6 +2047,44 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new McClellan Summation Index indicator
+        /// </summary>
+        /// <param name="symbols">The symbols whose McClellan Summation Index we want</param>
+        /// <param name="fastPeriod">Fast period EMA of advance decline difference</param>
+        /// <param name="slowPeriod">Slow period EMA of advance decline difference</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The McClellan Summation Index indicator for the requested symbol over the specified period</returns>
+        [DocumentationAttribute(Indicators)]
+        public McClellanSummationIndex MSI(IEnumerable<Symbol> symbols, int fastPeriod = 19, int slowPeriod = 39, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            return MSI(symbols.ToArray(), fastPeriod, slowPeriod, resolution, selector);
+        }
+
+        /// <summary>
+        /// Creates a new McClellan Summation Index indicator
+        /// </summary>
+        /// <param name="symbols">The symbols whose McClellan Summation Index we want</param>
+        /// <param name="fastPeriod">Fast period EMA of advance decline difference</param>
+        /// <param name="slowPeriod">Slow period EMA of advance decline difference</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The McClellan Summation Index indicator for the requested symbol over the specified period</returns>
+        [DocumentationAttribute(Indicators)]
+        public McClellanSummationIndex MSI(Symbol[] symbols, int fastPeriod = 19, int slowPeriod = 39, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(QuantConnect.Symbol.None, "MSI", resolution ?? GetSubscription(symbols.First()).Resolution);
+            var msi = new McClellanSummationIndex(name, fastPeriod, slowPeriod);
+            foreach (var symbol in symbols)
+            {
+                msi.Add(symbol);
+                InitializeIndicator(symbol, msi, resolution, selector);
+            }
+
+            return mo;
+        }
+
+        /// <summary>
         /// Creates a new name for an indicator created with the convenience functions (SMA, EMA, ect...)
         /// </summary>
         /// <param name="symbol">The symbol this indicator is registered to</param>
