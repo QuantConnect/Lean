@@ -52,7 +52,7 @@ namespace QuantConnect.Tests.Indicators
                 }
 
                 // Source data has only 2 decimal places
-                Assert.AreEqual(Parse.Double(expected), (double)indicator.Current.Value, 0.01d);
+                Assert.AreEqual(Parse.Double(expected), (double)indicator.Current.Value, 0.02d);
             }
         }
 

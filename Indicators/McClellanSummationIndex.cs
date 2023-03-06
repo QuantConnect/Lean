@@ -24,7 +24,7 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class McClellanSummationIndex : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
-        private decimal _mcClellanSummationIndex = 0;
+        protected IndicatorDataPoint _mcClellanSummationIndex = new();
         protected readonly McClellanOscillator _mcClellanOscillator;
 
         /// <summary>
@@ -46,8 +46,14 @@ namespace QuantConnect.Indicators
         public McClellanSummationIndex(string name, int fastPeriod = 19, int slowPeriod = 39) : base(name)
         {
             _mcClellanOscillator = new McClellanOscillator(fastPeriod, slowPeriod);
-            _mcClellanOscillator.Updated += (_, updated) => {
-                _mcClellanSummationIndex += updated.Value;
+            _mcClellanOscillator.Updated += (_, updated) =>
+            {
+                // Avoid double updating for the first point
+                if (updated.EndTime != _mcClellanSummationIndex.Time)
+                {
+                    _mcClellanSummationIndex.Time = updated.EndTime;
+                    _mcClellanSummationIndex.Value += updated.Value;
+                }
             };
         }
 
@@ -63,7 +69,7 @@ namespace QuantConnect.Indicators
         {
             _mcClellanOscillator.Update(input);
 
-            return _mcClellanSummationIndex;
+            return _mcClellanSummationIndex + _mcClellanOscillator.Current.Value;
         }
 
         /// <summary>
