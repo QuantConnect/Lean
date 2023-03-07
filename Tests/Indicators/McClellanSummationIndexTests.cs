@@ -110,8 +110,8 @@ namespace QuantConnect.Tests.Indicators
 
             // Set to the first EMA values to account for past A/D Difference values that we don't have access
             Reset();
-            _mcClellanSummationIndex.Time = new DateTime(2022, 6, 30);
-            _mcClellanSummationIndex.Value = -606.25m;
+            Summation.Time = new DateTime(2022, 6, 30);
+            Summation.Value = -606.25m;
             McClellanOscillator.EMAFast.Update(new DateTime(2022, 6, 30), -209.85m);
             McClellanOscillator.EMASlow.Update(new DateTime(2022, 6, 30), -186.41m);
         }

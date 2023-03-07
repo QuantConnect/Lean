@@ -2035,7 +2035,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Indicators)]
         public McClellanOscillator MOSC(Symbol[] symbols, int fastPeriod = 19, int slowPeriod = 39, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
         {
-            var name = CreateIndicatorName(QuantConnect.Symbol.None, "MO", resolution ?? GetSubscription(symbols.First()).Resolution);
+            var name = CreateIndicatorName(QuantConnect.Symbol.None, $"MO({fastPeriod},{slowPeriod})", resolution ?? GetSubscription(symbols.First()).Resolution);
             var mosc = new McClellanOscillator(name, fastPeriod, slowPeriod);
             foreach (var symbol in symbols)
             {
@@ -2073,7 +2073,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Indicators)]
         public McClellanSummationIndex MSI(Symbol[] symbols, int fastPeriod = 19, int slowPeriod = 39, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
         {
-            var name = CreateIndicatorName(QuantConnect.Symbol.None, "MSI", resolution ?? GetSubscription(symbols.First()).Resolution);
+            var name = CreateIndicatorName(QuantConnect.Symbol.None, $"MSI({fastPeriod},{slowPeriod})", resolution ?? GetSubscription(symbols.First()).Resolution);
             var msi = new McClellanSummationIndex(name, fastPeriod, slowPeriod);
             foreach (var symbol in symbols)
             {

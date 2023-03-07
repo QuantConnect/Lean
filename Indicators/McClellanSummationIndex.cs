@@ -24,12 +24,16 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class McClellanSummationIndex : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
-        protected IndicatorDataPoint _mcClellanSummationIndex = new();
+        /// <summary>
+        /// The McClellan Summation Index value
+        /// </summary>
+        /// <remarks>Protected for testing</remarks>
+        protected IndicatorDataPoint Summation { get; }
 
         /// <summary>
         /// The McClellan Oscillator is a market breadth indicator which was developed by Sherman and Marian McClellan. It is based on the difference between the number of advancing and declining periods.
         /// </summary>
-        public McClellanOscillator McClellanOscillator;
+        public McClellanOscillator McClellanOscillator { get; }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -49,20 +53,28 @@ namespace QuantConnect.Indicators
         /// </summary>
         public McClellanSummationIndex(string name, int fastPeriod = 19, int slowPeriod = 39) : base(name)
         {
+            Summation = new();
             McClellanOscillator = new McClellanOscillator(fastPeriod, slowPeriod);
             McClellanOscillator.Updated += (_, updated) =>
             {
                 // Update only when new indicator data point was consolidated
-                if (updated.EndTime != _mcClellanSummationIndex.Time)
+                if (updated.EndTime != Summation.Time)
                 {
-                    _mcClellanSummationIndex.Time = updated.EndTime;
-                    _mcClellanSummationIndex.Value += updated.Value;
+                    Summation.Time = updated.EndTime;
+                    Summation.Value += updated.Value;
                 }
             };
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="McClellanSummationIndex"/> class
+        /// <param name="fastPeriod">The fast period of EMA of advance decline difference</param>
+        /// <param name="slowPeriod">The slow period of EMA of advance decline difference</param>
+        /// </summary>
         public McClellanSummationIndex(int fastPeriod = 19, int slowPeriod = 39)
-            : this("McClellanSummationIndex", fastPeriod, slowPeriod) { }
+            : this("McClellanSummationIndex", fastPeriod, slowPeriod)
+        {
+        }
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
@@ -73,7 +85,7 @@ namespace QuantConnect.Indicators
         {
             McClellanOscillator.Update(input);
 
-            return _mcClellanSummationIndex + McClellanOscillator.Current.Value;
+            return Summation + McClellanOscillator.Current.Value;
         }
 
         /// <summary>
