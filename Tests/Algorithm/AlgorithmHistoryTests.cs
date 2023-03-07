@@ -1491,6 +1491,69 @@ def getOpenInterestHistory(algorithm, symbol, start, end):
             Assert.AreEqual(tickCountInSliceHistoryCall, tickCountInTickHistoryCall);
         }
 
+        [Test]
+        public void PricesAreProperlyAdjustedForScaledRawHistoryRequest()
+        {
+            var start = new DateTime(2000, 01, 01);
+            var end = new DateTime(2016, 01, 01);
+            var algorithm = GetAlgorithm(end.AddDays(1));
+            var aaplSymbol = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+
+            var rawHistory = algorithm.History(new[] { aaplSymbol }, start, end, Resolution.Daily, dataNormalizationMode: DataNormalizationMode.Raw).ToList();
+            var scaledRawHistory = algorithm.History(new[] { aaplSymbol }, start, end, Resolution.Daily, dataNormalizationMode: DataNormalizationMode.ScaledRaw).ToList();
+
+            Assert.IsNotEmpty(rawHistory);
+            Assert.AreEqual(rawHistory.Count, scaledRawHistory.Count);
+
+            var factorFile = _factorFileProvider.Get(aaplSymbol);
+            var factorDates = new List<DateTime>();
+            var factors = new List<decimal>();
+            var prevFactor = 0m;
+            for (var date = start; date <= end; date = date.AddDays(1))
+            {
+                var factor = factorFile.GetPriceFactor(date, DataNormalizationMode.ScaledRaw);
+                if (factor != prevFactor)
+                {
+                    factorDates.Add(date.AddDays(-1));
+                    factors.Add(factor);
+                    prevFactor = factor;
+                }
+            }
+            var lastFactorDate = factorDates[factorDates.Count - 1];
+            var lastFactor = factors[factors.Count - 1];
+            factorDates.RemoveAt(0);
+            var currentFactorIndex = 0;
+
+            for (var i = 0; i < rawHistory.Count; i++)
+            {
+                var rawBar = rawHistory[i].Bars[aaplSymbol];
+                var scaledRawBar = scaledRawHistory[i].Bars[aaplSymbol];
+
+                if (currentFactorIndex < factorDates.Count && rawBar.Time > factorDates[currentFactorIndex])
+                {
+                    currentFactorIndex++;
+                }
+
+                if (rawBar.Time <= lastFactorDate)
+                {
+                    Assert.AreNotEqual(rawBar.Price, scaledRawBar.Price,
+                        $@"Raw price {rawBar.Price} should have been different than scaled raw price {scaledRawBar.Price} at {
+                            rawBar.Time} (before and at the last factor date {lastFactorDate})");
+                }
+                else
+                {
+                    // after the last split/dividend, the factor is 1 because prices are adjusted to the prices after the last factor
+                    Assert.AreEqual(1m, factors[currentFactorIndex] / lastFactor);
+                    Assert.AreEqual(rawBar.Price, scaledRawBar.Price,
+                        $@"Raw price {rawBar.Price} should have been equal to the scaled raw price {scaledRawBar.Price} at {
+                            rawBar.Time} (after the last factor date {lastFactorDate})");
+                }
+
+                var expectedScaledRawPrice = rawBar.Price * factors[currentFactorIndex] / lastFactor;
+                Assert.Less(Math.Abs(expectedScaledRawPrice - scaledRawBar.Price), 1e-25m, $"Date: {rawBar.Time}");
+            }
+        }
+
         private QCAlgorithm GetAlgorithm(DateTime dateTime)
         {
             var algorithm = new QCAlgorithm();

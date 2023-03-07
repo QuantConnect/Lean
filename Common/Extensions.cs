@@ -3288,6 +3288,7 @@ namespace QuantConnect
             {
                 case DataNormalizationMode.Adjusted:
                 case DataNormalizationMode.SplitAdjusted:
+                case DataNormalizationMode.ScaledRaw:
                     return data?.Scale(TimesFactor, 1 / factor, factor, decimal.Zero);
                 case DataNormalizationMode.TotalReturn:
                     return data.Scale(TimesFactor, 1 / factor, factor, sumOfDividends);
@@ -3298,9 +3299,6 @@ namespace QuantConnect
                     return data.Scale(AdditionFactor, 1, factor, decimal.Zero);
                 case DataNormalizationMode.ForwardPanamaCanal:
                     return data.Scale(AdditionFactor, 1, factor, decimal.Zero);
-
-                case DataNormalizationMode.ScaledRaw:
-                    return data?.Scale(TimesFactor, 1 / factor, 1 / factor, decimal.Zero);
 
                 case DataNormalizationMode.Raw:
                 default:

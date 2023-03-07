@@ -16,12 +16,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
+
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
-using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
-using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 {
@@ -42,6 +40,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="tradableDayNotifier">Tradable dates provider</param>
         /// <param name="mapFileProvider">The <see cref="MapFile"/> provider to use</param>
         /// <param name="startTime">Start date for the data request</param>
+        /// <param name="endTime">End date for the data request.
+        /// This will be used for <see cref="DataNormalizationMode.ScaledRaw"/> data normalization mode to adjust prices to the given end date</param>
         /// <param name="enablePriceScaling">Applies price factor</param>
         /// <returns>The new auxiliary data enumerator</returns>
         public static IEnumerator<BaseData> CreateEnumerators(
@@ -51,6 +51,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             ITradableDatesNotifier tradableDayNotifier,
             IMapFileProvider mapFileProvider,
             DateTime startTime,
+            DateTime? endTime = null,
             bool enablePriceScaling = true)
         {
 
@@ -85,7 +86,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 dataEnumerator = new PriceScaleFactorEnumerator(
                     rawDataEnumerator,
                     config,
-                    factorFileProvider);
+                    factorFileProvider,
+                    endDate: endTime);
             }
 
             return new SynchronizingBaseDataEnumerator(dataEnumerator, enumerator);

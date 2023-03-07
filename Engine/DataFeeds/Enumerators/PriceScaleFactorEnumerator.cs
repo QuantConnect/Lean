@@ -61,6 +61,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="factorFileProvider">The <see cref="IFactorFileProvider"/> instance to use</param>
         /// <param name="liveMode">True, is this is a live mode data stream</param>
         /// <param name="endDate">The enumerator end date</param>
+        /// <remarks>
+        /// For <see cref="DataNormalizationMode.ScaledRaw"/> normalization mode,
+        /// the prices are scaled to the prices on the <paramref name="endDate"/>
+        /// </remarks>
         public PriceScaleFactorEnumerator(
             IEnumerator<BaseData> rawDataEnumerator,
             SubscriptionDataConfig config,

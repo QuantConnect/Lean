@@ -279,7 +279,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 Assert.AreEqual(expectedFactor / endDateFactor, config.PriceScaleFactor);
 
                 var tradeBar = enumerator.Current as TradeBar;
-                var expectedValue = price / config.PriceScaleFactor;
+                var expectedValue = price * config.PriceScaleFactor;
                 Assert.AreEqual(expectedValue, tradeBar.Price);
                 Assert.AreEqual(expectedValue, tradeBar.Open);
                 Assert.AreEqual(expectedValue, tradeBar.Close);
