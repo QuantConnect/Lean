@@ -114,7 +114,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Long Insight Count", "0"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
-            {"OrderListHash", "91e6afbb270fb141af81c177c7fb8ecb"}
+            {"OrderListHash", "1ec025ef7aa0d11969f2b01304009bd0"}
         };
     }
 }
