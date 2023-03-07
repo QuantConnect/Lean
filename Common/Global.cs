@@ -691,7 +691,11 @@ namespace QuantConnect
         /// Eliminates price jumps between two consecutive contracts, multiplying the prices by their ratio. The last contract has the true price. Factor 1. (6)
         /// </summary>
         /// <remarks>Last contract is the true one, factor 1</remarks>
-        BackwardsRatio
+        BackwardsRatio,
+        /// <summary>
+        /// Splits and dividends are adjusted into the prices in a given date. Only for internal usage. (7)
+        /// </summary>
+        ScaledRaw,
     }
 
     /// <summary>

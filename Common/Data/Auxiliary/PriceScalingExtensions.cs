@@ -1,4 +1,4 @@
-﻿/*
+/*
 * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 *
@@ -33,13 +33,15 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="normalizationMode">The price normalization mode requested</param>
         /// <param name="contractOffset">The contract offset, useful for continuous contracts</param>
         /// <param name="dataMappingMode">The data mapping mode used, useful for continuous contracts</param>
+        /// <param name="endDateTime">The reference end date for scaling prices. Default is today (latest factor entry)</param>
         /// <returns>The price scale to use</returns>
         public static decimal GetPriceScale(
             this IFactorProvider factorFile,
             DateTime dateTime,
             DataNormalizationMode normalizationMode,
             uint contractOffset = 0,
-            DataMappingMode? dataMappingMode = null
+            DataMappingMode? dataMappingMode = null,
+            DateTime? endDateTime = null
             )
         {
             if (factorFile == null)
@@ -51,7 +53,13 @@ namespace QuantConnect.Data.Auxiliary
                 return 1;
             }
 
-            return factorFile.GetPriceFactor(dateTime, normalizationMode, dataMappingMode, contractOffset);
+            var endDateTimeFactor = 1m;
+            if (normalizationMode == DataNormalizationMode.ScaledRaw && endDateTime != null)
+            {
+                endDateTimeFactor = factorFile.GetPriceScale(endDateTime.Value, normalizationMode, contractOffset, dataMappingMode);
+            }
+
+            return factorFile.GetPriceFactor(dateTime, normalizationMode, dataMappingMode, contractOffset) / endDateTimeFactor;
         }
 
         /// <summary>

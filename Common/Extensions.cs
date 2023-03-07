@@ -3288,9 +3288,9 @@ namespace QuantConnect
             {
                 case DataNormalizationMode.Adjusted:
                 case DataNormalizationMode.SplitAdjusted:
-                    return data?.Scale(TimesFactor, 1/factor, factor, decimal.Zero);
+                    return data?.Scale(TimesFactor, 1 / factor, factor, decimal.Zero);
                 case DataNormalizationMode.TotalReturn:
-                    return data.Scale(TimesFactor, 1/factor, factor, sumOfDividends);
+                    return data.Scale(TimesFactor, 1 / factor, factor, sumOfDividends);
 
                 case DataNormalizationMode.BackwardsRatio:
                     return data.Scale(TimesFactor, 1, factor, decimal.Zero);
@@ -3299,36 +3299,8 @@ namespace QuantConnect
                 case DataNormalizationMode.ForwardPanamaCanal:
                     return data.Scale(AdditionFactor, 1, factor, decimal.Zero);
 
-                case DataNormalizationMode.Raw:
-                default:
-                    return data;
-            }
-        }
-
-        /// <summary>
-        /// De-normalize prices based on configuration
-        /// </summary>
-        /// <param name="data">Data to be normalized</param>
-        /// <param name="factor">Price scale</param>
-        /// <param name="normalizationMode">The price scaling normalization mode</param>
-        /// <param name="sumOfDividends">The current dividend sum</param>
-        /// <returns>The provided data point adjusted</returns>
-        public static BaseData Denormalize(this BaseData data, decimal factor, DataNormalizationMode normalizationMode, decimal sumOfDividends)
-        {
-            switch (normalizationMode)
-            {
-                case DataNormalizationMode.Adjusted:
-                case DataNormalizationMode.SplitAdjusted:
-                    return data?.Scale(OverFactor, 1/factor, factor, decimal.Zero);
-                case DataNormalizationMode.TotalReturn:
-                    return data.Scale(OverFactor, 1/factor, factor, sumOfDividends);
-
-                case DataNormalizationMode.BackwardsRatio:
-                    return data.Scale(OverFactor, 1, factor, decimal.Zero);
-                case DataNormalizationMode.BackwardsPanamaCanal:
-                    return data.Scale(SubtractFactor, 1, factor, decimal.Zero);
-                case DataNormalizationMode.ForwardPanamaCanal:
-                    return data.Scale(SubtractFactor, 1, factor, decimal.Zero);
+                case DataNormalizationMode.ScaledRaw:
+                    return data?.Scale(TimesFactor, 1 / factor, 1 / factor, decimal.Zero);
 
                 case DataNormalizationMode.Raw:
                 default:
@@ -3362,15 +3334,6 @@ namespace QuantConnect
         private static decimal AdditionFactor(decimal target, decimal factor, decimal _)
         {
             return target + factor;
-        }
-
-        /// <summary>
-        /// Applies a subtraction factor. We define this so we don't need to create it constantly
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static decimal SubtractFactor(decimal target, decimal factor, decimal _)
-        {
-            return target - factor;
         }
 
         /// <summary>
