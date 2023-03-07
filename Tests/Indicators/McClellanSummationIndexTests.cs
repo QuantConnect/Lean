@@ -112,8 +112,8 @@ namespace QuantConnect.Tests.Indicators
             Reset();
             _mcClellanSummationIndex.Time = new DateTime(2022, 6, 30);
             _mcClellanSummationIndex.Value = -606.25m;
-            _mcClellanOscillator.EMAFast.Update(new DateTime(2022, 6, 30), -209.85m);
-            _mcClellanOscillator.EMASlow.Update(new DateTime(2022, 6, 30), -186.41m);
+            McClellanOscillator.EMAFast.Update(new DateTime(2022, 6, 30), -209.85m);
+            McClellanOscillator.EMASlow.Update(new DateTime(2022, 6, 30), -186.41m);
         }
 
         public void TestUpdate(IndicatorDataPoint input)
