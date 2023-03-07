@@ -218,21 +218,21 @@ namespace QuantConnect.Orders.Fills
 
             // Get the range of prices in the last bar:
             var tradeOpen = 0m;
-            var tradeHigh = 0m;
-            var tradeLow = 0m;
+            var tradeHigh = decimal.MinValue;
+            var tradeLow = decimal.MaxValue;
             var endTimeUtc = DateTime.MinValue;
 
             var subscribedTypes = GetSubscribedTypes(asset);
 
             if (subscribedTypes.Contains(typeof(Tick)))
             {
-                var trades = asset.Cache.GetAll<Tick>().Where(x => x.TickType == TickType.Trade && x.Price > 0);
+                var trades = asset.Cache.GetAll<Tick>().Where(x => x.TickType == TickType.Trade);
 
                 foreach (var trade in trades)
                 {
                     tradeOpen = tradeOpen == 0 ? trade.Price : tradeOpen;
                     tradeHigh = Math.Max(tradeHigh, trade.Price);
-                    tradeLow = tradeLow == 0 ? trade.Price : Math.Min(tradeLow, trade.Price);
+                    tradeLow = Math.Min(tradeLow, trade.Price);
                     endTimeUtc = trade.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
                 }
             }

@@ -137,7 +137,7 @@ namespace QuantConnect
             public static string FilledWithOpenDueToUnfavorableGap(Securities.Security security, decimal open, DateTime endTimeUtc)
             {
                 var endTime = endTimeUtc.ConvertFromUtc(security.Exchange.TimeZone).ToStringInvariant();
-                return Invariant($@"Warning: Due to an unfavorable gap at {endTime} {security.Exchange.TimeZone}, order filled using the open price ({open})");
+                return Invariant($@"Due to an unfavorable gap at {endTime} {security.Exchange.TimeZone}, order filled using the open price ({open})");
             }
         }
     }
