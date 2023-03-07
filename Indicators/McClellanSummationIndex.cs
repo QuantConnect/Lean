@@ -25,17 +25,21 @@ namespace QuantConnect.Indicators
     public class McClellanSummationIndex : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
         protected IndicatorDataPoint _mcClellanSummationIndex = new();
-        protected readonly McClellanOscillator _mcClellanOscillator;
+
+        /// <summary>
+        /// The McClellan Oscillator is a market breadth indicator which was developed by Sherman and Marian McClellan. It is based on the difference between the number of advancing and declining periods.
+        /// </summary>
+        public McClellanOscillator McClellanOscillator;
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _mcClellanOscillator.IsReady;
+        public override bool IsReady => McClellanOscillator.IsReady;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
-        public int WarmUpPeriod => _mcClellanOscillator.WarmUpPeriod;
+        public int WarmUpPeriod => McClellanOscillator.WarmUpPeriod;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="McClellanSummationIndex"/> class
@@ -45,8 +49,8 @@ namespace QuantConnect.Indicators
         /// </summary>
         public McClellanSummationIndex(string name, int fastPeriod = 19, int slowPeriod = 39) : base(name)
         {
-            _mcClellanOscillator = new McClellanOscillator(fastPeriod, slowPeriod);
-            _mcClellanOscillator.Updated += (_, updated) =>
+            McClellanOscillator = new McClellanOscillator(fastPeriod, slowPeriod);
+            McClellanOscillator.Updated += (_, updated) =>
             {
                 // Update only when new indicator data point was consolidated
                 if (updated.EndTime != _mcClellanSummationIndex.Time)
@@ -67,9 +71,9 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
-            _mcClellanOscillator.Update(input);
+            McClellanOscillator.Update(input);
 
-            return _mcClellanSummationIndex + _mcClellanOscillator.Current.Value;
+            return _mcClellanSummationIndex + McClellanOscillator.Current.Value;
         }
 
         /// <summary>
@@ -77,7 +81,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
-            _mcClellanOscillator.Reset();
+            McClellanOscillator.Reset();
             base.Reset();
         }
 
@@ -87,7 +91,7 @@ namespace QuantConnect.Indicators
         /// <param name="asset">the tracking asset issue</param>
         public void Add(Symbol asset)
         {
-            _mcClellanOscillator.Add(asset);
+            McClellanOscillator.Add(asset);
         }
 
         /// <summary>
@@ -96,7 +100,7 @@ namespace QuantConnect.Indicators
         /// <param name="asset">the tracking asset issue</param>
         public void Remove(Symbol asset)
         {
-            _mcClellanOscillator.Remove(asset);
+            McClellanOscillator.Remove(asset);
         }
     }
 }
