@@ -26,9 +26,9 @@ namespace QuantConnect.Tests.Indicators
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
             var adr = new AdvanceDeclineRatio("test_name");
-            adr.AddStock(Symbols.AAPL);
-            adr.AddStock(Symbols.IBM);
-            adr.AddStock(Symbols.GOOG);
+            adr.Add(Symbols.AAPL);
+            adr.Add(Symbols.IBM);
+            adr.Add(Symbols.GOOG);
             return adr;
         }
 
@@ -51,7 +51,7 @@ namespace QuantConnect.Tests.Indicators
 
             Assert.AreEqual(2m, adr.Current.Value);
             adr.Reset();
-            adr.RemoveStock(Symbols.GOOG);
+            adr.Remove(Symbols.GOOG);
 
             adr.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 1, Volume = 100, Time = reference.AddMinutes(1) });
             adr.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 1, Volume = 100, Time = reference.AddMinutes(1) });
@@ -71,7 +71,7 @@ namespace QuantConnect.Tests.Indicators
         public virtual void IgnorePeriodIfAnyStockMissed()
         {
             var adr = (AdvanceDeclineRatio)CreateIndicator();
-            adr.AddStock(Symbols.MSFT);
+            adr.Add(Symbols.MSFT);
             var reference = System.DateTime.Today;
 
             adr.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 1, Time = reference.AddMinutes(1) });

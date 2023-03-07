@@ -5,7 +5,7 @@
 #
 
 # Use base system for cleaning up wayward processes
-FROM phusion/baseimage:jammy-1.0.0
+FROM phusion/baseimage:focal-1.0.0
 
 MAINTAINER QuantConnect <contact@quantconnect.com>
 
@@ -29,8 +29,13 @@ RUN mkdir -p /root/ibgateway && \
     rm ibgateway-latest-standalone-linux-x64.v10.20.1f.sh
 
 # Install dotnet 6 sdk & runtime
-RUN apt-get update && \
+RUN wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
+    dpkg -i packages-microsoft-prod.deb && \
+    apt-get update; \
+    apt-get install -y apt-transport-https && \
+    apt-get update && \
     apt-get install -y dotnet-sdk-6.0 && \
+    rm packages-microsoft-prod.deb && \
     apt-get clean && apt-get autoclean && apt-get autoremove --purge -y && rm -rf /var/lib/apt/lists/*
 
 # Set PythonDLL variable for PythonNet
@@ -184,7 +189,7 @@ RUN pip install --no-cache-dir      \
     tensorflow-decision-forests==1.2.0 \
     river==0.14.0                   \
     stumpy==1.11.1                  \
-    pyvinecopulib==0.6.3            \
+    pyvinecopulib==0.6.2            \
     ijson==3.2.0.post0              \
     jupyter-resource-usage==0.7.2   \
     injector==0.20.1                \

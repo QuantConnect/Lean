@@ -15,11 +15,10 @@
 */
 
 using System;
-using System.Collections.Generic;
 using Newtonsoft.Json;
-using QuantConnect.Algorithm.Framework.Alphas;
-using QuantConnect.Interfaces;
 using QuantConnect.Util;
+using System.Collections.Generic;
+using QuantConnect.Algorithm.Framework.Alphas;
 
 namespace QuantConnect
 {
@@ -28,25 +27,8 @@ namespace QuantConnect
     /// </summary>
     public class AlphaRuntimeStatistics
     {
-        private DateTime _startDate;
-        private double _daysCompleted;
-        // this is only used when deserializing to this type since it represents a computed property dependent on internal state
-        private decimal _overrideEstimatedMonthlyAlphaValue;
-        private readonly IAccountCurrencyProvider _accountCurrencyProvider;
-        private decimal _fitnessScore;
-        private decimal _kellyCriterionEstimate;
-        private decimal _kellyCriterionProbabilityValue;
         private decimal _portfolioTurnover;
         private decimal _returnOverMaxDrawdown;
-        private decimal _sortinoRatio;
-
-        /// <summary>
-        /// Creates a new instance
-        /// </summary>
-        public AlphaRuntimeStatistics(IAccountCurrencyProvider accountCurrencyProvider)
-        {
-            _accountCurrencyProvider = accountCurrencyProvider;
-        }
 
         /// <summary>
         /// Default constructor
@@ -55,16 +37,6 @@ namespace QuantConnect
         public AlphaRuntimeStatistics()
         {
         }
-
-        /// <summary>
-        /// Gets the mean scores for the entire population of insights
-        /// </summary>
-        public InsightScore MeanPopulationScore { get; } = new InsightScore();
-
-        /// <summary>
-        /// Gets the 100 insight ema of insight scores
-        /// </summary>
-        public InsightScore RollingAveragedPopulationScore { get; } = new InsightScore();
 
         /// <summary>
         /// Gets the total number of insights with an up direction
@@ -82,66 +54,6 @@ namespace QuantConnect
         /// The ratio of <see cref="InsightDirection.Up"/> over <see cref="InsightDirection.Down"/>
         /// </summary>
         public decimal LongShortRatio => ShortCount == 0 ? 1m : LongCount / (decimal) ShortCount;
-
-        /// <summary>
-        /// The total accumulated estimated value of trading all insights
-        /// </summary>
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore), JsonConverter(typeof(StringDecimalJsonConverter), true)]
-        public decimal TotalAccumulatedEstimatedAlphaValue { get; set; }
-
-        /// <summary>
-        /// Score of the strategy's insights predictive power
-        /// </summary>
-        /// <remarks>See https://www.quantconnect.com/forum/discussion/6194/insight-scoring-metric/p1.
-        /// For performance we only truncate when the value is gotten</remarks>
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore), JsonConverter(typeof(StringDecimalJsonConverter), true)]
-        public decimal KellyCriterionEstimate
-        {
-            get
-            {
-                return _kellyCriterionEstimate.TruncateTo3DecimalPlaces();
-            }
-            set
-            {
-                _kellyCriterionEstimate = value;
-            }
-        }
-
-        /// <summary>
-        /// The p-value or probability value of the <see cref="KellyCriterionEstimate"/>
-        /// </summary>
-        /// <remarks>See https://www.quantconnect.com/forum/discussion/6194/insight-scoring-metric/p1.
-        /// For performance we only truncate when the value is gotten</remarks>
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore), JsonConverter(typeof(StringDecimalJsonConverter), true)]
-        public decimal KellyCriterionProbabilityValue
-        {
-            get
-            {
-                return _kellyCriterionProbabilityValue.TruncateTo3DecimalPlaces();
-            }
-            set
-            {
-                _kellyCriterionProbabilityValue = value;
-            }
-        }
-
-        /// <summary>
-        /// Score of the strategy's performance, and suitability for the Alpha Stream Market
-        /// </summary>
-        /// <remarks>See https://www.quantconnect.com/research/3bc40ecee68d36a9424fbd1b338eb227.
-        /// For performance we only truncate when the value is gotten</remarks>
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore), JsonConverter(typeof(StringDecimalJsonConverter), true)]
-        public decimal FitnessScore
-        {
-            get
-            {
-                return _fitnessScore.TruncateTo3DecimalPlaces();
-            }
-            set
-            {
-                _fitnessScore = value;
-            }
-        }
 
         /// <summary>
         /// Measurement of the strategies trading activity with respect to the portfolio value.
@@ -180,41 +92,6 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Gives a relative picture of the strategy volatility.
-        /// It is calculated by taking a portfolio's annualized rate of return and subtracting the risk free rate of return.
-        /// </summary>
-        /// <remarks>For performance we only truncate when the value is gotten</remarks>
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore), JsonConverter(typeof(StringDecimalJsonConverter), true)]
-        public decimal SortinoRatio
-        {
-            get
-            {
-                return _sortinoRatio.TruncateTo3DecimalPlaces();
-            }
-            set
-            {
-                _sortinoRatio = value;
-            }
-        }
-
-        /// <summary>
-        /// Suggested Value of the Alpha On A Monthly Basis For Licensing
-        /// </summary>
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore), JsonConverter(typeof(StringDecimalJsonConverter), true)]
-        public decimal EstimatedMonthlyAlphaValue
-        {
-            get
-            {
-                if (_daysCompleted == 0)
-                {
-                    return _overrideEstimatedMonthlyAlphaValue;
-                }
-                return (TotalAccumulatedEstimatedAlphaValue / (decimal) _daysCompleted) * 30;
-            }
-            private set { _overrideEstimatedMonthlyAlphaValue = value; }
-        }
-
-        /// <summary>
         /// The total number of insight signals generated by the algorithm
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
@@ -233,36 +110,12 @@ namespace QuantConnect
         public long TotalInsightsAnalysisCompleted { get; set; }
 
         /// <summary>
-        /// Gets the mean estimated insight value
-        /// </summary>
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore), JsonConverter(typeof(StringDecimalJsonConverter), true)]
-        public decimal MeanPopulationEstimatedInsightValue => TotalInsightsClosed > 0 ? TotalAccumulatedEstimatedAlphaValue / TotalInsightsClosed : 0;
-
-        /// <summary>
         /// Creates a dictionary containing the statistics
         /// </summary>
         public Dictionary<string, string> ToDictionary()
         {
-            var accountCurrencySymbol = Currencies.GetCurrencySymbol(_accountCurrencyProvider?.AccountCurrency ?? Currencies.USD);
-
             return new Dictionary<string, string>
             {
-                {
-                    Messages.AlphaRuntimeStatistics.FitnessScoreKey,
-                    Invariant(FitnessScore)
-                },
-                {
-                    Messages.AlphaRuntimeStatistics.KellyCriterionEstimateKey,
-                    Invariant(KellyCriterionEstimate)
-                },
-                {
-                    Messages.AlphaRuntimeStatistics.KellyCriterionProbabilityValueKey,
-                    Invariant(KellyCriterionProbabilityValue)
-                },
-                {
-                    Messages.AlphaRuntimeStatistics.SortinoRatioKey,
-                    Invariant(SortinoRatio)
-                },
                 {
                     Messages.AlphaRuntimeStatistics.ReturnOverMaximumDrawdownKey,
                     Invariant(ReturnOverMaxDrawdown)
@@ -295,53 +148,7 @@ namespace QuantConnect
                     Messages.AlphaRuntimeStatistics.LongShortRatioKey,
                     $"{Invariant(Math.Round(100*LongShortRatio, 2))}%"
                 },
-                {
-                    Messages.AlphaRuntimeStatistics.EstimatedMonthlyAlphaValueKey,
-                    $"{accountCurrencySymbol}{Invariant(EstimatedMonthlyAlphaValue.SmartRounding())}"
-                },
-                {
-                    Messages.AlphaRuntimeStatistics.TotalAccumulatedEstimatedAlphaValueKey,
-                    $"{accountCurrencySymbol}{Invariant(TotalAccumulatedEstimatedAlphaValue.SmartRounding())}"
-                },
-                {
-                    Messages.AlphaRuntimeStatistics.MeanPopulationEstimatedInsightValueKey,
-                    $"{accountCurrencySymbol}{Invariant(MeanPopulationEstimatedInsightValue.SmartRounding())}"
-                },
-                {
-                    Messages.AlphaRuntimeStatistics.MeanPopulationDirectionKey,
-                    $"{Invariant(Math.Round(100 * MeanPopulationScore.Direction, 4))}%"
-                },
-                {
-                    Messages.AlphaRuntimeStatistics.MeanPopulationMagnitudeKey,
-                    $"{Invariant(Math.Round(100 * MeanPopulationScore.Magnitude, 4))}%"
-                },
-                {
-                    Messages.AlphaRuntimeStatistics.RollingAveragedPopulationDirectionKey,
-                    $"{Invariant(Math.Round(100 * RollingAveragedPopulationScore.Direction, 4))}%"
-                },
-                {
-                    Messages.AlphaRuntimeStatistics.RollingAveragedPopulationMagnitudeKey,
-                    $"{Invariant(Math.Round(100 * RollingAveragedPopulationScore.Magnitude, 4))}%"
-                },
             };
-        }
-
-        /// <summary>
-        /// Set the current date of the backtest
-        /// </summary>
-        /// <param name="now"></param>
-        public void SetDate(DateTime now)
-        {
-            _daysCompleted = (now - _startDate).TotalDays;
-        }
-
-        /// <summary>
-        /// Set the date range of the statistics
-        /// </summary>
-        /// <param name="algorithmStartDate"></param>
-        public void SetStartDate(DateTime algorithmStartDate)
-        {
-            _startDate = algorithmStartDate;
         }
 
         private static string Invariant(IConvertible obj)

@@ -228,10 +228,6 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Fees", "$48.52"},
             {"Estimated Strategy Capacity", "$3300000.00"},
             {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
-            {"Fitness Score", "0.998"},
-            {"Kelly Criterion Estimate", "-0.975"},
-            {"Kelly Criterion Probability Value", "1"},
-            {"Sortino Ratio", "34.524"},
             {"Return Over Maximum Drawdown", "97.671"},
             {"Portfolio Turnover", "1.034"},
             {"Total Insights Generated", "53"},
@@ -240,13 +236,6 @@ namespace QuantConnect.Algorithm.CSharp
             {"Long Insight Count", "53"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$-10490010"},
-            {"Total Accumulated Estimated Alpha Value", "$-11437020"},
-            {"Mean Population Estimated Insight Value", "$-219942.7"},
-            {"Mean Population Direction", "55.7692%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "53.4734%"},
-            {"Rolling Averaged Population Magnitude", "0%"},
             {"OrderListHash", "2f06d6262bc18da24bbef48d18db010b"}
         };
     }
