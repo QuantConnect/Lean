@@ -62,7 +62,7 @@ class MinimumVariancePortfolioOptimizer:
                        x0,                                                        # Initial guess
                        bounds = self.get_boundary_conditions(size),               # Bounds for variables
                        constraints = constraints,                                 # Constraints definition
-                       method='trust-constr')   # Optimization method:  trust-region algorithm for constrained optimization
+                       method='SLSQP')     # Optimization method:  Sequential Least Squares Programming (SLSQP)
 
         if not opt['success']: return x0
 

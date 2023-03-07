@@ -161,7 +161,7 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
         @property
         def Return(self):
             return pd.Series(
-                data = [float(x.Value) for x in self.window],
+                data = [x.Value for x in self.window],
                 index = [x.EndTime for x in self.window])
 
         @property
@@ -169,4 +169,4 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
             return self.window.IsReady
 
         def __str__(self, **kwargs):
-            return '{}: {:.2%}'.format(self.roc.Name, (1 + self.window[0])**252 - 1)
+            return '{}: {:.2%}'.format(self.roc.Name, self.window[0])
