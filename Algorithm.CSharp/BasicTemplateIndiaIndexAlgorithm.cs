@@ -143,14 +143,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Fees", "₹36.00"},
             {"Estimated Strategy Capacity", "₹74000.00"},
             {"Lowest Capacity Asset", "JUNIORBEES UL"},
-            {"Return Over Maximum Drawdown", "-123.624"},
-            {"Portfolio Turnover", "0"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
+            {"Portfolio Turnover", "0.04%"},
             {"OrderListHash", "4637f26543287548b28a3c296db055d3"}
         };
     }

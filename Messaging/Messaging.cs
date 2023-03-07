@@ -97,14 +97,6 @@ namespace QuantConnect.Messaging
 
                     if (result.Progress == 1)
                     {
-                        // inject alpha statistics into backtesting result statistics
-                        // this is primarily so we can easily regression test these values
-                        var alphaStatistics = result.Results.AlphaRuntimeStatistics?.ToDictionary() ?? Enumerable.Empty<KeyValuePair<string, string>>();
-                        foreach (var kvp in alphaStatistics)
-                        {
-                            result.Results.Statistics.Add(kvp);
-                        }
-
                         var orderHash = result.Results.Orders.GetHash();
                         result.Results.Statistics.Add("OrderListHash", orderHash);
 

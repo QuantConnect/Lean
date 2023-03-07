@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
@@ -39,16 +38,10 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         /// <param name="dateTimeUtc">The utc date time the sinals were generated</param>
         /// <param name="insights">The generated insights</param>
-        /// <param name="clone">Keep a clone of the generated insights</param>
-        public GeneratedInsightsCollection(DateTime dateTimeUtc,
-            IEnumerable<Insight> insights,
-            bool clone = true)
+        public GeneratedInsightsCollection(DateTime dateTimeUtc, List<Insight> insights)
         {
             DateTimeUtc = dateTimeUtc;
-
-            // for performance only call 'ToArray' if not empty enumerable (which is static)
-            Insights = insights == Enumerable.Empty<Insight>()
-                ? new List<Insight>() : insights.Select(insight => clone ? insight.Clone() : insight).ToList();
+            Insights = insights;
         }
     }
 }

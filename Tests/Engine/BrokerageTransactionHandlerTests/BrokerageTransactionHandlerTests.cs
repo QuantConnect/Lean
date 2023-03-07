@@ -1318,7 +1318,6 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
                 parameter.Statistics,
-                parameter.AlphaStatistics,
                 parameter.Language,
                 parameter.ExpectedFinalStatus,
                 setupHandler: "TestIncrementalOrderIdSetupHandler");

@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Engine.Alphas
     public class DefaultAlphaHandlerTests
     {
         private DefaultAlphaHandlerTestable _defaultAlphaHandler;
-        private Mock<IInsightManager> _insightManager;
+        private Mock<InsightManager> _insightManager;
         private const string AlgorithmId = "MyAlgorithm";
         private const string InsightFileName = "alpha-results.json";
         private const string ResultsDestinationFolderKey = "results-destination-folder";
@@ -43,7 +43,7 @@ namespace QuantConnect.Tests.Engine.Alphas
         [SetUp]
         public void SetUp()
         {
-            _insightManager = new Mock<IInsightManager>();
+            _insightManager = new Mock<InsightManager>();
             _defaultAlphaHandler = new DefaultAlphaHandlerTestable(_insightManager.Object, AlgorithmId);
         }
 
@@ -59,12 +59,12 @@ namespace QuantConnect.Tests.Engine.Alphas
         public void TestStoreInsightsWithDifferentDirectories(bool useDefaultDirectory, string alternateDirectory)
         {
             // Arrange
-            var insights = new []
+            var insights = new List<Insight>
             {
                 Insight.Price(Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME), DateTime.Now.AddMinutes(1), InsightDirection.Down),
                 Insight.Price(Symbol.Create(Futures.Metals.Gold, SecurityType.Future, Market.COMEX), DateTime.Now.AddMinutes(5), InsightDirection.Up)
             };
-            _insightManager.Setup(x => x.AllInsights).Returns(insights);
+            _insightManager.Setup(x => x.GetInsights(null)).Returns(insights);
             
             var topDirectory = useDefaultDirectory
                 ? Directory.GetCurrentDirectory()
@@ -107,16 +107,16 @@ namespace QuantConnect.Tests.Engine.Alphas
         
         private class DefaultAlphaHandlerTestable : DefaultAlphaHandler
         {
-            private readonly IInsightManager _insightManager;
+            private readonly InsightManager _insightManager;
             private readonly string _algorithmId;
 
-            public DefaultAlphaHandlerTestable(IInsightManager insightManager, string algorithmId)
+            public DefaultAlphaHandlerTestable(InsightManager insightManager, string algorithmId)
             {
                 _insightManager = insightManager;
                 _algorithmId = algorithmId;
             }
 
-            protected override IInsightManager InsightManager => _insightManager;
+            protected override InsightManager InsightManager => _insightManager;
             protected override string AlgorithmId => _algorithmId;
 
             public void ExecuteStoreInsights()

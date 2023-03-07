@@ -71,7 +71,6 @@ namespace QuantConnect.Tests.Common.Packets
 
             AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
                 parameter.Statistics,
-                parameter.AlphaStatistics,
                 parameter.Language,
                 parameter.ExpectedFinalStatus,
                 startDate: new DateTime(2008, 10, 10),
@@ -107,7 +106,6 @@ namespace QuantConnect.Tests.Common.Packets
 
             AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
                 parameter.Statistics,
-                parameter.AlphaStatistics,
                 parameter.Language,
                 parameter.ExpectedFinalStatus,
                 startDate: new DateTime(2014, 03, 24),
@@ -201,7 +199,6 @@ namespace QuantConnect.Tests.Common.Packets
 
             AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
                 parameter.Statistics,
-                parameter.AlphaStatistics,
                 parameter.Language,
                 parameter.ExpectedFinalStatus,
                 initialCash: 1000000); // 1M vs 100K that is set in BasicTemplateDailyAlgorithm (10x)
@@ -238,7 +235,6 @@ namespace QuantConnect.Tests.Common.Packets
 
             AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
                 parameter.Statistics,
-                parameter.AlphaStatistics,
                 parameter.Language,
                 parameter.ExpectedFinalStatus,
                 initialCash: 1000000, // 1M vs 100K that is set in BasicTemplateDailyAlgorithm (10x)

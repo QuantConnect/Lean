@@ -14,272 +14,131 @@
 */
 
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Logging;
+using System.Threading;
 using QuantConnect.Util;
+using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
 {
     /// <summary>
-    /// Encapsulates the storage and on-line scoring of insights.
+    /// Encapsulates the storage of insights.
     /// </summary>
-    /// <remarks>
-    /// This type assumes a forward progression of time, and as such, methods invoked will
-    /// return data that is current as of the last update time.
-    /// This type is designed to be invoked from two separate threads. That does not mean this type
-    /// is thread-safe in the general sense, but given a particular invocation pattern. The goal is
-    /// to allow the algorithm thread to continue while scoring of the insights happens on a separate
-    /// thread. Insights are added on the algorithm thread via AddInsights and scoring updates are pushed
-    /// on the insight thrad via UpdateScores. This means that the various collections (open, closed, updated)
-    /// are potentially at different frontiers. In fact, it is the common case where the openInsightContexts
-    /// collection is ahead of everything else.
-    /// </remarks>
-    public class InsightManager : IInsightManager, IDisposable
+    public class InsightManager : IInsightManager
     {
-        /// <summary>
-        /// Gets all insight score types
-        /// </summary>
-        public static readonly IReadOnlyCollection<InsightScoreType> ScoreTypes = Enum.GetValues(typeof(InsightScoreType)).Cast<InsightScoreType>().ToArray();
-
-        private readonly double _extraAnalysisPeriodRatio;
-        private readonly List<IInsightManagerExtension> _extensions;
-        private readonly IInsightScoreFunctionProvider _scoreFunctionProvider;
-
-        private readonly object _lock;
-        private readonly HashSet<InsightAnalysisContext> _updatedInsightContexts;
-        private readonly HashSet<InsightAnalysisContext> _openInsightContexts;
-        private readonly ConcurrentDictionary<Guid, InsightAnalysisContext> _closedInsightContexts;
+        private int _insightCount;
+        private readonly object _lock = new ();
 
         /// <summary>
-        /// Enumerable of insights still under analysis
+        /// This dictionary holds all insights.
         /// </summary>
-        public IEnumerable<Insight> OpenInsights
-        {
-            get
-            {
-                lock (_lock)
-                {
-                    return _openInsightContexts.Select(context => context.Insight).ToList();
-                }
-            }
-        }
+        private readonly Dictionary<Guid, Insight> _completeInsights = new();
 
         /// <summary>
-        /// Enumerable of insights who's analysis has been completed
+        /// This dictionary holds all open insights.
         /// </summary>
-        public IEnumerable<Insight> ClosedInsights => _closedInsightContexts.Select(kvp => kvp.Value.Insight);
+        private readonly Dictionary<Guid, Insight> _openInsights = new();
 
         /// <summary>
-        /// Enumerable of all internally maintained insights
+        /// Gets the current number of insights that have been processed
         /// </summary>
-        public IEnumerable<Insight> AllInsights => OpenInsights.Concat(ClosedInsights);
+        public int InsightCount => _insightCount;
 
         /// <summary>
-        /// Gets the unique set of symbols from analysis contexts that will
+        /// Returns all non expired insights
         /// </summary>
-        /// <param name="frontierTimeUtc"></param>
-        /// <returns></returns>
-        public IEnumerable<InsightAnalysisContext> ContextsOpenAt(DateTime frontierTimeUtc)
+        public List<Insight> GetOpenInsights(Func<Insight, bool> filter = null)
         {
             lock (_lock)
             {
-                return _openInsightContexts.Where(context => context.AnalysisEndTimeUtc <= frontierTimeUtc).ToList();
+                var result = _openInsights.Select(kvp => kvp.Value);
+                if (filter != null)
+                {
+                    result = result.Where(filter);
+                }
+                return result.ToList();
             }
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="InsightManager"/> class
+        /// Returns all expired insights
         /// </summary>
-        /// <param name="scoreFunctionProvider">Provides scoring functions by insight type/score type</param>
-        /// <param name="extraAnalysisPeriodRatio">Ratio of the insight period to keep the analysis open</param>
-        /// <param name="extensions">Extensions used to perform tasks at certain events</param>
-        public InsightManager(IInsightScoreFunctionProvider scoreFunctionProvider, double extraAnalysisPeriodRatio, params IInsightManagerExtension[] extensions)
-        {
-            if (extraAnalysisPeriodRatio < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(extraAnalysisPeriodRatio), Messages.InsightManager.InvalidExtraAnalysisPeriodRatio);
-            }
-
-            _scoreFunctionProvider = scoreFunctionProvider;
-            _extraAnalysisPeriodRatio = extraAnalysisPeriodRatio;
-            _extensions = extensions?.ToList() ?? new List<IInsightManagerExtension>();
-
-            _lock = new object();
-            _openInsightContexts = new HashSet<InsightAnalysisContext>();
-            _updatedInsightContexts = new HashSet<InsightAnalysisContext>();
-            _closedInsightContexts = new ConcurrentDictionary<Guid, InsightAnalysisContext>();
-        }
-
-        /// <summary>
-        /// Add an extension to this manager
-        /// </summary>
-        /// <param name="extension">The extension to be added</param>
-        public void AddExtension(IInsightManagerExtension extension)
-        {
-            _extensions.Add(extension);
-        }
-
-        /// <summary>
-        /// Initializes any extensions for the specified backtesting range
-        /// </summary>
-        /// <param name="start">The start date of the backtest (current time in live mode)</param>
-        /// <param name="end">The end date of the backtest (<see cref="Time.EndOfTime"/> in live mode)</param>
-        /// <param name="current">The algorithm's current utc time</param>
-        public void InitializeExtensionsForRange(DateTime start, DateTime end, DateTime current)
-        {
-            foreach (var extension in _extensions)
-            {
-                extension.InitializeForRange(start, end, current);
-            }
-        }
-
-        /// <summary>
-        /// Steps the manager forward in time, accepting new state information and potentialy newly generated insights
-        /// </summary>
-        /// <param name="frontierTimeUtc">The frontier time of the insight analysis</param>
-        /// <param name="securityValuesCollection">Snap shot of the securities at the frontier time</param>
-        /// <param name="generatedInsights">Any insight generated by the algorithm at the frontier time</param>
-        public void Step(DateTime frontierTimeUtc, ReadOnlySecurityValuesCollection securityValuesCollection, GeneratedInsightsCollection generatedInsights)
+        public virtual List<Insight> GetInsights(Func<Insight, bool> filter = null)
         {
             lock (_lock)
             {
-                if (generatedInsights != null && generatedInsights.Insights.Count > 0)
+                var result = _completeInsights.Select(kvp => kvp.Value);
+                if (filter != null)
                 {
-                    foreach (var insight in generatedInsights.Insights)
-                    {
-                        // save initial security values and deterine analysis period
-                        var initialValues = securityValuesCollection[insight.Symbol];
-                        var analysisPeriod = insight.Period + TimeSpan.FromTicks((long)(_extraAnalysisPeriodRatio * insight.Period.Ticks));
-
-                        // set this as an open analysis context
-                        var context = new InsightAnalysisContext(insight, initialValues, analysisPeriod);
-                        _openInsightContexts.Add(context);
-
-                        if (context.InitialValues.Price == 0)
-                        {
-                            Log.Error(Messages.InsightManager.ZeroInitialPriceValue(frontierTimeUtc, insight));
-                        }
-
-                        // let everyone know we've received an insight
-                        _extensions.ForEach(e => e.OnInsightGenerated(context));
-                    }
+                    result = result.Where(filter);
                 }
-
-                UpdateScores(securityValuesCollection);
-
-                foreach (var extension in _extensions)
-                {
-                    extension.Step(frontierTimeUtc);
-                }
+                return result.ToList();
             }
         }
 
         /// <summary>
-        /// Removes insights from the manager with the specified ids
+        /// Adds a collection of insights
         /// </summary>
-        /// <param name="insightIds">The insights ids to be removed</param>
-        public void RemoveInsights(IEnumerable<Guid> insightIds)
-        {
-            foreach (var id in insightIds)
-            {
-                InsightAnalysisContext context;
-                _closedInsightContexts.TryRemove(id, out context);
-            }
-        }
-
-        /// <summary>
-        /// Gets all insight analysis contexts that have been updated since this method's last invocation.
-        /// Contexts are marked as not updated during the enumeration, so in order to remove a context from
-        /// the updated set, the enumerable must be enumerated.
-        /// </summary>
-        /// <returns></returns>
-        public IEnumerable<InsightAnalysisContext> GetUpdatedContexts()
+        /// <param name="newInsights">The insight instances to add</param>
+        public void AddInsights(IEnumerable<Insight> newInsights)
         {
             lock (_lock)
             {
-                var copy = _updatedInsightContexts.ToList();
-                _updatedInsightContexts.Clear();
-                return copy;
+                foreach (var insight in newInsights)
+                {
+                    Interlocked.Increment(ref _insightCount);
+
+                    // we suppose they are not expired
+                    _openInsights[insight.Id] = insight;
+                    _completeInsights[insight.Id] = insight;
+                }
             }
         }
 
         /// <summary>
-        /// Updates all open insight scores
+        /// Process a new time step handling expired insights
         /// </summary>
-        private void UpdateScores(ReadOnlySecurityValuesCollection securityValuesCollection)
+        /// <param name="utcNow">The current utc time</param>
+        public void Step(DateTime utcNow)
         {
-            // for performance be lazy to initialize collection
-            List<InsightAnalysisContext> removals = null;
-
-            foreach (var context in _openInsightContexts)
+            List<Insight> _toRemove = null;
+            lock (_lock)
             {
-                // was this insight period closed before we update the times?
-                var previouslyClosed = context.InsightPeriodClosed;
-
-                // update the security values: price/volatility
-                context.SetCurrentValues(securityValuesCollection[context.Symbol]);
-
-                // update scores for each score type
-                var currentTimeUtc = context.CurrentValues.TimeUtc;
-                foreach (var scoreType in ScoreTypes)
+                foreach (var insight in _openInsights.Values)
                 {
-                    if (!context.ShouldAnalyze(scoreType))
+                    if (insight.IsExpired(utcNow))
                     {
-                        // not all insights can receive every score type, for example, insight.Magnitude==null, not point in doing magnitude scoring
-                        continue;
+                        insight.Score.Finalize(utcNow);
+
+                        _toRemove ??= new();
+                        // keep track
+                        _toRemove.Add(insight);
                     }
-
-                    // resolve and evaluate the scoring function, storing the result in the context
-                    var function = _scoreFunctionProvider.GetScoreFunction(context.Insight.Type, scoreType);
-                    var score = function.Evaluate(context, scoreType);
-                    context.Score.SetScore(scoreType, score, currentTimeUtc);
                 }
 
-                // it wasn't closed and now it is closed, fire the event.
-                if (!previouslyClosed && context.InsightPeriodClosed)
+                if(_toRemove != null )
                 {
-                    _extensions.ForEach(e => e.OnInsightClosed(context));
-                }
-
-                // if this score has been finalized, remove it from the open set
-                if (currentTimeUtc >= context.AnalysisEndTimeUtc)
-                {
-                    context.Score.Finalize(currentTimeUtc);
-
-                    // set the last value used for scoring
-                    context.Insight.ReferenceValueFinal = context.CurrentValues.Get(context.Insight.Type);
-
-                    _extensions.ForEach(e => e.OnInsightAnalysisCompleted(context));
-
-                    var id = context.Insight.Id;
-                    _closedInsightContexts[id] = context;
-
-                    if (removals == null)
+                    // remove from open
+                    foreach (var insight in _toRemove)
                     {
-                        removals = new List<InsightAnalysisContext>();
+                        _openInsights.Remove(insight.Id);
                     }
-                    removals.Add(context);
                 }
-
-                // mark the context as having been updated
-                _updatedInsightContexts.Add(context);
-            }
-
-            if (removals != null)
-            {
-                _openInsightContexts.RemoveWhere(removals.Contains);
             }
         }
 
-        /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
-        /// <filterpriority>2</filterpriority>
-        public void Dispose()
+        /// <summary>
+        /// Removes insights from the manager
+        /// </summary>
+        /// <param name="insightsToRemove">The insights to be removed</param>
+        public void RemoveInsights(IEnumerable<Insight> insightsToRemove)
         {
-            foreach (var ext in _extensions)
+            lock (_lock)
             {
-                (ext as IDisposable)?.DisposeSafely();
+                foreach (var insight in insightsToRemove)
+                {
+                    _completeInsights.Remove(insight.Id);
+                }
             }
         }
     }

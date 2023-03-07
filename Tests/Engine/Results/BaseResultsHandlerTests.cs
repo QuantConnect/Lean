@@ -100,6 +100,7 @@ namespace QuantConnect.Tests.Engine.Results
             protectedMockResultHandler.Setup("SampleDrawdown", ItExpr.IsAny<DateTime>(), ItExpr.IsAny<decimal>());
             protectedMockResultHandler.Setup("SampleSalesVolume", ItExpr.IsAny<DateTime>());
             protectedMockResultHandler.Setup("SampleCapacity", ItExpr.IsAny<DateTime>());
+            protectedMockResultHandler.Setup("SamplePortfolioTurnover", ItExpr.IsAny<DateTime>(), ItExpr.IsAny<decimal>());
 
             var sampleInvocations = new List<SampleParams>();
             protectedMockResultHandler

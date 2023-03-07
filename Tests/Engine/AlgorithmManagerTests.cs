@@ -81,7 +81,6 @@ namespace QuantConnect.Tests.Engine
 
             AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
                 parameter.Statistics,
-                parameter.AlphaStatistics,
                 parameter.Language,
                 parameter.ExpectedFinalStatus,
                 algorithmLocation: "QuantConnect.Tests.dll");
@@ -148,7 +147,6 @@ namespace QuantConnect.Tests.Engine
         public class NullAlphaHandler : IAlphaHandler
         {
             public bool IsActive { get; }
-            public AlphaRuntimeStatistics RuntimeStatistics { get; }
             public void Initialize(AlgorithmNodePacket job, IAlgorithm algorithm, IMessagingHandler messagingHandler, IApi api, ITransactionHandler transactionHandler)
             {
             }
@@ -253,10 +251,6 @@ namespace QuantConnect.Tests.Engine
             }
 
             public void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue)
-            {
-            }
-
-            public void SetAlphaRuntimeStatistics(AlphaRuntimeStatistics statistics)
             {
             }
 

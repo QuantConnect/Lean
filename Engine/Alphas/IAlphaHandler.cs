@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -31,11 +31,6 @@ namespace QuantConnect.Lean.Engine.Alpha
         /// Gets a flag indicating if this handler's thread is still running and processing messages
         /// </summary>
         bool IsActive { get; }
-
-        /// <summary>
-        /// Gets the current alpha runtime statistics
-        /// </summary>
-        AlphaRuntimeStatistics RuntimeStatistics { get; }
 
         /// <summary>
         /// Initializes this alpha handler to accept insights from the specified algorithm

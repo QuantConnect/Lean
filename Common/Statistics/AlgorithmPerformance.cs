@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -46,17 +46,19 @@ namespace QuantConnect.Statistics
         /// <param name="equity">The list of daily equity values</param>
         /// <param name="listPerformance">The list of algorithm performance values</param>
         /// <param name="listBenchmark">The list of benchmark values</param>
+        /// <param name="portfolioTurnover">The algorithm portfolio turnover</param>
         /// <param name="startingCapital">The algorithm starting capital</param>
         public AlgorithmPerformance(
             List<Trade> trades,
             SortedDictionary<DateTime, decimal> profitLoss,
             SortedDictionary<DateTime, decimal> equity,
             List<double> listPerformance,
-            List<double> listBenchmark, 
+            List<double> listBenchmark,
+            decimal portfolioTurnover,
             decimal startingCapital)
         {
             TradeStatistics = new TradeStatistics(trades);
-            PortfolioStatistics = new PortfolioStatistics(profitLoss, equity, listPerformance, listBenchmark, startingCapital);
+            PortfolioStatistics = new PortfolioStatistics(profitLoss, equity, listPerformance, listBenchmark, portfolioTurnover, startingCapital);
             ClosedTrades = trades;
         }
 

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -146,6 +146,11 @@ namespace QuantConnect.Statistics
         [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal TreynorRatio { get; set; }
 
+        /// <summary>
+        /// The average Portfolio Turnover
+        /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
+        public decimal PortfolioTurnover { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PortfolioStatistics"/> class
@@ -154,6 +159,7 @@ namespace QuantConnect.Statistics
         /// <param name="equity">The list of daily equity values</param>
         /// <param name="listPerformance">The list of algorithm performance values</param>
         /// <param name="listBenchmark">The list of benchmark values</param>
+        /// <param name="portfolioTurnover">The algorithm portfolio turnover</param>
         /// <param name="startingCapital">The algorithm starting capital</param>
         /// <param name="tradingDaysPerYear">The number of trading days per year</param>
         public PortfolioStatistics(
@@ -161,6 +167,7 @@ namespace QuantConnect.Statistics
             SortedDictionary<DateTime, decimal> equity,
             List<double> listPerformance,
             List<double> listBenchmark,
+            decimal portfolioTurnover,
             decimal startingCapital,
             int tradingDaysPerYear = 252)
         {
@@ -171,6 +178,8 @@ namespace QuantConnect.Statistics
             {
                 return;
             }
+
+            PortfolioTurnover = portfolioTurnover;
 
             var runningCapital = startingCapital;
             var totalProfit = 0m;

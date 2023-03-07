@@ -87,12 +87,6 @@ namespace QuantConnect.Api
         public AlgorithmPerformance TotalPerformance { get; set; }
 
         /// <summary>
-        /// Contains population averages scores over the life of the algorithm
-        /// </summary>
-        [JsonProperty(PropertyName = "alphaRuntimeStatistics", NullValueHandling = NullValueHandling.Ignore)]
-        public AlphaRuntimeStatistics AlphaRuntimeStatistics { get; set; }
-
-        /// <summary>
         /// Charts updates for the live algorithm since the last result packet
         /// </summary>
         [JsonProperty(PropertyName = "charts", NullValueHandling = NullValueHandling.Ignore)]

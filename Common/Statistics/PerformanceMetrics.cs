@@ -42,5 +42,6 @@ namespace QuantConnect.Statistics
         public const string TreynorRatio = "Treynor Ratio";
         public const string WinRate = "Win Rate";
         public const string LowestCapacityAsset = "Lowest Capacity Asset";
+        public const string PortfolioTurnover = "Portfolio Turnover";
     }
 }

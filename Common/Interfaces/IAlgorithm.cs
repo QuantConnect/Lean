@@ -29,6 +29,7 @@ using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
 using QuantConnect.Storage;
+using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 
 namespace QuantConnect.Interfaces
 {
@@ -326,6 +327,22 @@ namespace QuantConnect.Interfaces
         /// Gets the future chain provider, used to get the list of future contracts for an underlying symbol
         /// </summary>
         IFutureChainProvider FutureChainProvider
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Gets the insight manager
+        /// </summary>
+        IInsightManager InsightManager
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Gets the insight evaluator
+        /// </summary>
+        IInsightEvaluator InsightEvaluator
         {
             get;
         }
@@ -681,6 +698,12 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="handler">The message handler to use</param>
         void SetBrokerageMessageHandler(IBrokerageMessageHandler handler);
+
+        /// <summary>
+        /// Set the insight manager
+        /// </summary>
+        /// <param name="insightManager">Insight manager</param>
+        void SetInsightManager(IInsightManager insightManager);
 
         /// <summary>
         /// Set the historical data provider

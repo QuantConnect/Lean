@@ -143,14 +143,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$4100000.00"},
             {"Lowest Capacity Asset", "SPXW XKX6S2GM9PGU|SPX 31"},
-            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
-            {"Portfolio Turnover", "0.001"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
+            {"Portfolio Turnover", "0.09%"},
             {"OrderListHash", "4adb43a8298b9192e0f45d2ef1e5d370"}
         };
     }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,21 +13,19 @@
  * limitations under the License.
 */
 
-using QuantConnect.Algorithm.Framework.Alphas.Analysis.Functions;
+using System;
+using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 
-namespace QuantConnect.Algorithm.Framework.Alphas.Analysis.Providers
+namespace QuantConnect.Algorithm.Framework.Alphas
 {
     /// <summary>
-    /// Default implementation of <see cref="IInsightScoreFunctionProvider"/> always returns the <see cref="BinaryInsightScoreFunction"/>
+    /// Abstraction in charge of scoring insights
     /// </summary>
-    public class DefaultInsightScoreFunctionProvider : IInsightScoreFunctionProvider
+    public interface IInsightEvaluator
     {
-        private static readonly BinaryInsightScoreFunction Function = new BinaryInsightScoreFunction();
-
-        /// <inheritdoc />
-        public IInsightScoreFunction GetScoreFunction(InsightType insightType, InsightScoreType scoreType)
-        {
-            return Function;
-        }
+        /// <summary>
+        /// Method to evaluate and score insights for each time step
+        /// </summary>
+        void Score(IInsightManager insightManager, DateTime utcTime);
     }
 }

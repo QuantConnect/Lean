@@ -550,9 +550,6 @@ namespace QuantConnect.Lean.Engine
                 // are processed so that insights closed because of new order based insights get updated
                 alphas.ProcessSynchronousEvents();
 
-                // send the alpha statistics to the result handler for storage/transmit with the result packets
-                results.SetAlphaRuntimeStatistics(alphas.RuntimeStatistics);
-
                 // Process any required events of the results handler such as sampling assets, equity, or stock prices.
                 results.ProcessSynchronousEvents();
 
@@ -578,9 +575,6 @@ namespace QuantConnect.Lean.Engine
 
             // final processing now that the algorithm has completed
             alphas.ProcessSynchronousEvents();
-
-            // send the final alpha statistics to the result handler for storage/transmit with the result packets
-            results.SetAlphaRuntimeStatistics(alphas.RuntimeStatistics);
 
             // Process any required events of the results handler such as sampling assets, equity, or stock prices.
             results.ProcessSynchronousEvents(forceProcess: true);

@@ -40,7 +40,6 @@ using System.Collections.Concurrent;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Crypto;
 using QuantConnect.Algorithm.Framework.Alphas;
-using QuantConnect.Algorithm.Framework.Alphas.Analysis.Providers;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
@@ -190,15 +189,14 @@ namespace QuantConnect.Algorithm
             FutureChainProvider = new EmptyFutureChainProvider();
             _historyRequestFactory = new HistoryRequestFactory(this);
 
-            // Framework
-            _securityValuesProvider = new AlgorithmSecurityValuesProvider(this);
-
             // set model defaults, universe selection set via PostInitialize
             SetAlpha(new NullAlphaModel());
             SetPortfolioConstruction(new NullPortfolioConstructionModel());
             SetExecution(new ImmediateExecutionModel());
             SetRiskManagement(new NullRiskManagementModel());
             SetUniverseSelection(new NullUniverseSelectionModel());
+
+            InsightEvaluator = new NullInsightEvaluator();
         }
 
         /// <summary>
@@ -2773,7 +2771,7 @@ namespace QuantConnect.Algorithm
         /// <param name="insights">The collection of insights generaed at the current time step</param>
         /// <param name="clone">Will emit a clone of the generated insights</param>
         [DocumentationAttribute(AlgorithmFramework)]
-        private void OnInsightsGenerated(Insight[] insights, bool clone = true)
+        private void OnInsightsGenerated(Insight[] insights)
         {
             // debug printing of generated insights
             if (DebugMode)
@@ -2781,7 +2779,7 @@ namespace QuantConnect.Algorithm
                 Log($"{Time}: ALPHA: {string.Join(" | ", insights.Select(i => i.ToString()).OrderBy(i => i))}");
             }
 
-            InsightsGenerated?.Invoke(this, new GeneratedInsightsCollection(UtcTime, insights, clone: clone));
+            InsightsGenerated?.Invoke(this, new GeneratedInsightsCollection(UtcTime, insights.ToList()));
         }
 
         /// <summary>

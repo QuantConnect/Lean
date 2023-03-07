@@ -34,6 +34,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using QuantConnect.Storage;
+using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 
 namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 {
@@ -444,6 +445,16 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// Gets the account currency
         /// </summary>
         public string AccountCurrency => _baseAlgorithm.AccountCurrency;
+
+        /// <summary>
+        /// Gets the insight manager
+        /// </summary>
+        public IInsightManager InsightManager => _baseAlgorithm.InsightManager;
+
+        /// <summary>
+        /// Gets the insight evaluator
+        /// </summary>
+        public IInsightEvaluator InsightEvaluator => _baseAlgorithm.InsightEvaluator;
 
         /// <summary>
         /// Set a required SecurityType-symbol and resolution for algorithm
@@ -942,6 +953,12 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
             // notify the algorithm
             OnWarmupFinished();
         }
+
+        /// <summary>
+        /// Set the insight manager
+        /// </summary>
+        /// <param name="insightManager">Insight manager</param>
+        public void SetInsightManager(IInsightManager insightManager) => _baseAlgorithm.SetInsightManager(insightManager);
 
         /// <summary>
         /// Set the historical data provider

@@ -16,7 +16,6 @@
 
 using System;
 using Newtonsoft.Json;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
@@ -75,7 +74,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="type">The score type to be set, Direction/Magnitude</param>
         /// <param name="value">The new value for the score</param>
         /// <param name="algorithmUtcTime">The algorithm's utc time at which time the new score was computed</param>
-        internal void SetScore(InsightScoreType type, double value, DateTime algorithmUtcTime)
+        public void SetScore(InsightScoreType type, double value, DateTime algorithmUtcTime)
         {
             if (IsFinalScore) return;
 
@@ -100,7 +99,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// Marks the score as finalized, preventing any further updates.
         /// </summary>
         /// <param name="algorithmUtcTime">The algorithm's utc time at which time these scores were finalized</param>
-        internal void Finalize(DateTime algorithmUtcTime)
+        public void Finalize(DateTime algorithmUtcTime)
         {
             IsFinalScore = true;
             UpdatedTimeUtc = algorithmUtcTime;

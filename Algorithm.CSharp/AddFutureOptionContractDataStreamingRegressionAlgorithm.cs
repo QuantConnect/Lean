@@ -198,14 +198,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Fees", "$8.60"},
             {"Estimated Strategy Capacity", "$22000000.00"},
             {"Lowest Capacity Asset", "ES XFH59UK0MYO1"},
-            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
-            {"Portfolio Turnover", "2.035"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
+            {"Portfolio Turnover", "122.11%"},
             {"OrderListHash", "e7021bd385f366771ae00abd3a46a22e"}
         };
     }

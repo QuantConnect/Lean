@@ -26,11 +26,6 @@ namespace QuantConnect.Packets
     public class BaseResultParameters
     {
         /// <summary>
-        /// Contains population averages scores over the life of the algorithm
-        /// </summary>
-        public AlphaRuntimeStatistics AlphaRuntimeStatistics { get; set; }
-
-        /// <summary>
         /// Trade profit and loss information since the last algorithm result packet
         /// </summary>
         public IDictionary<DateTime, decimal> ProfitLoss { get; set; }

@@ -25,6 +25,24 @@ namespace QuantConnect.Algorithm
     public partial class QCAlgorithm
     {
         /// <summary>
+        /// Sets the insight evaluator to use
+        /// </summary>
+        /// <param name="insightEvaluator">Model that scores insights</param>
+        [DocumentationAttribute(AlgorithmFramework)]
+        public void SetInsightEvaluator(PyObject insightEvaluator)
+        {
+            IInsightEvaluator model;
+            if (insightEvaluator.TryConvert(out model))
+            {
+                SetInsightEvaluator(model);
+            }
+            else
+            {
+                InsightEvaluator = new InsightEvaluatorPythonWrapper(insightEvaluator);
+            }
+        }
+
+        /// <summary>
         /// Sets the alpha model
         /// </summary>
         /// <param name="alpha">Model that generates alpha</param>

@@ -423,8 +423,7 @@ namespace QuantConnect.Lean.Engine.Results
                     statistics: statistics.Summary,
                     runtimeStatistics: runtimeStatistics,
                     orderEvents: null, // we stored order events separately
-                    serverStatistics: serverStatistics,
-                    alphaRuntimeStatistics: AlphaRuntimeStatistics));
+                    serverStatistics: serverStatistics));
 
                 SaveResults($"{AlgorithmId}.json", result);
                 Log.Debug("LiveTradingResultHandler.Update(): status update end.");
@@ -489,8 +488,7 @@ namespace QuantConnect.Lean.Engine.Results
                 {
                     Statistics = deltaStatistics,
                     RuntimeStatistics = runtimeStatistics,
-                    ServerStatistics = serverStatistics,
-                    AlphaRuntimeStatistics = AlphaRuntimeStatistics
+                    ServerStatistics = serverStatistics
                 })
             };
 
@@ -675,17 +673,13 @@ namespace QuantConnect.Lean.Engine.Results
                         Charts.AddOrUpdate(update.Name, chart);
                     }
 
-                    // for alpha assets chart, we always create a new series instance (step on previous value)
-                    var forceNewSeries = update.Name == ChartingInsightManagerExtension.AlphaAssets;
-
                     //Add these samples to this chart.
                     foreach (var series in update.Series.Values)
                     {
                         if (series.Values.Count > 0)
                         {
                             var thisSeries = chart.TryAddAndGetSeries(series.Name, series.SeriesType, series.Index,
-                                series.Unit, series.Color, series.ScatterMarkerSymbol,
-                                forceNewSeries);
+                                series.Unit, series.Color, series.ScatterMarkerSymbol, false);
                             if (series.SeriesType == SeriesType.Pie)
                             {
                                 var dataPoint = series.ConsolidateChartPoints();
@@ -877,8 +871,6 @@ namespace QuantConnect.Lean.Engine.Results
                         // lets null the orders events so that they aren't stored again and generate a giant file
                         live.Results.OrderEvents = null;
                     }
-
-                    live.Results.AlphaRuntimeStatistics = AlphaRuntimeStatistics;
 
                     // we need to down sample
                     var start = DateTime.UtcNow.Date;
