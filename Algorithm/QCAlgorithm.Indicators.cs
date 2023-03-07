@@ -1995,17 +1995,17 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
         /// <returns>The Advance/Decline Difference indicator for the requested symbol over the specified period</returns>
         [DocumentationAttribute(Indicators)]
-        public AdvanceDeclineDifference ADD(IEnumerable<Symbol> symbols, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        public AdvanceDeclineDifference ADDIFF(IEnumerable<Symbol> symbols, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
         {
             var name = CreateIndicatorName(QuantConnect.Symbol.None, "A/D Difference", resolution ?? GetSubscription(symbols.First()).Resolution);
-            var add = new AdvanceDeclineDifference(name);
+            var adDiff = new AdvanceDeclineDifference(name);
             foreach (var symbol in symbols)
             {
-                add.Add(symbol);
-                InitializeIndicator(symbol, add, resolution, selector);
+                adDiff.Add(symbol);
+                InitializeIndicator(symbol, adDiff, resolution, selector);
             }
 
-            return add;
+            return adDiff;
         }
 
         /// <summary>
@@ -2018,9 +2018,9 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
         /// <returns>The McClellan Oscillator indicator for the requested symbol over the specified period</returns>
         [DocumentationAttribute(Indicators)]
-        public McClellanOscillator MO(IEnumerable<Symbol> symbols, int fastPeriod = 19, int slowPeriod = 39, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        public McClellanOscillator MOSC(IEnumerable<Symbol> symbols, int fastPeriod = 19, int slowPeriod = 39, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
         {
-            return MO(symbols.ToArray(), fastPeriod, slowPeriod, resolution, selector);
+            return MOSC(symbols.ToArray(), fastPeriod, slowPeriod, resolution, selector);
         }
 
         /// <summary>
@@ -2033,17 +2033,17 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
         /// <returns>The McClellan Oscillator indicator for the requested symbol over the specified period</returns>
         [DocumentationAttribute(Indicators)]
-        public McClellanOscillator MO(Symbol[] symbols, int fastPeriod = 19, int slowPeriod = 39, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        public McClellanOscillator MOSC(Symbol[] symbols, int fastPeriod = 19, int slowPeriod = 39, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
         {
             var name = CreateIndicatorName(QuantConnect.Symbol.None, "MO", resolution ?? GetSubscription(symbols.First()).Resolution);
-            var mo = new McClellanOscillator(name, fastPeriod, slowPeriod);
+            var mosc = new McClellanOscillator(name, fastPeriod, slowPeriod);
             foreach (var symbol in symbols)
             {
-                mo.Add(symbol);
-                InitializeIndicator(symbol, mo, resolution, selector);
+                mosc.Add(symbol);
+                InitializeIndicator(symbol, mosc, resolution, selector);
             }
 
-            return mo;
+            return mosc;
         }
 
         /// <summary>

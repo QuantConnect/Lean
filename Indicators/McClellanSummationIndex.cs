@@ -48,7 +48,7 @@ namespace QuantConnect.Indicators
             _mcClellanOscillator = new McClellanOscillator(fastPeriod, slowPeriod);
             _mcClellanOscillator.Updated += (_, updated) =>
             {
-                // Avoid double updating for the first point
+                // Update only when new indicator data point was consolidated
                 if (updated.EndTime != _mcClellanSummationIndex.Time)
                 {
                     _mcClellanSummationIndex.Time = updated.EndTime;
