@@ -158,6 +158,9 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
             item = IndicatorDataPoint(self.symbol, time, value)
             self.window.Add(item)
 
+        # Get symbols' returns, we use simple return according to
+        # Meucci, Attilio, Quant Nugget 2: Linear vs. Compounded Returns – Common Pitfalls in Portfolio Management (May 1, 2010). 
+        # GARP Risk Professional, pp. 49-51, April 2010 , Available at SSRN: https://ssrn.com/abstract=1586656
         @property
         def Return(self):
             return pd.Series(
