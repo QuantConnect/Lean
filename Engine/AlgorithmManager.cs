@@ -696,22 +696,7 @@ namespace QuantConnect.Lean.Engine
             foreach (var kvp in algorithm.Securities)
             {
                 var security = kvp.Value;
-
-                if (security.VolatilityModel != VolatilityModel.Null)
-                {
-                    // start: this is a work around to maintain retro compatibility
-                    // did not want to add IVolatilityModel.SetSubscriptionDataConfigProvider
-                    // to prevent breaking existing user models.
-                    var baseType = security.VolatilityModel as BaseVolatilityModel;
-                    baseType?.SetSubscriptionDataConfigProvider(
-                        algorithm.SubscriptionManager.SubscriptionDataConfigService);
-                    // end
-
-                    if (algorithm.HistoryProvider != null)
-                    {
-                        security.VolatilityModel.WarmUp(algorithm.HistoryProvider, security, algorithm.UtcTime, algorithm.TimeZone);
-                    }
-                }
+                WarmUpVolatilityModel(algorithm, security);
             }
 
             Log.Trace("ProcessVolatilityHistoryRequirements(): finished.");
@@ -761,8 +746,7 @@ namespace QuantConnect.Lean.Engine
                     algorithm.TradeBuilder.ApplySplit(split, liveMode, mode);
 
                     // apply the dividend event to the security volatility model
-                    security?.VolatilityModel.ApplySplit(split, liveMode, mode);
-                    security?.VolatilityModel.WarmUp(algorithm.HistoryProvider, security, algorithm.UtcTime, algorithm.TimeZone);
+                    WarmUpVolatilityModel(algorithm, security);
 
                     if (liveMode && security != null)
                     {
@@ -820,8 +804,7 @@ namespace QuantConnect.Lean.Engine
                 algorithm.Portfolio.ApplyDividend(dividend, liveMode, mode);
 
                 // apply the dividend event to the security volatility model
-                security?.VolatilityModel.ApplyDividend(dividend, liveMode, mode);
-                security?.VolatilityModel.WarmUp(algorithm.HistoryProvider, security, algorithm.UtcTime, algorithm.TimeZone);
+                WarmUpVolatilityModel(algorithm, security);
 
                 if (liveMode && security != null)
                 {
@@ -962,6 +945,44 @@ namespace QuantConnect.Lean.Engine
 
                 // remove the warning from out list
                 splitWarnings.RemoveAt(i);
+            }
+        }
+
+        /// <summary>
+        /// Resets and warms up the security's volatility model.
+        /// This can happen either on initialization or after a split or dividend is processed.
+        /// </summary>
+        private static void WarmUpVolatilityModel(IAlgorithm algorithm, Security security)
+        {
+            if (security == null || security.VolatilityModel == VolatilityModel.Null || algorithm.HistoryProvider == null)
+            {
+                return;
+            }
+
+            var volatilityModel = security.VolatilityModel;
+
+            // start: this is a work around to maintain retro compatibility
+            // did not want to add IVolatilityModel.SetSubscriptionDataConfigProvider
+            // to prevent breaking existing user models.
+            var baseTypeModel = volatilityModel as BaseVolatilityModel;
+            baseTypeModel?.SetSubscriptionDataConfigProvider(
+                algorithm.SubscriptionManager.SubscriptionDataConfigService);
+            // end
+
+            // Reset
+            volatilityModel.Reset();
+
+            // Warm up
+            var historyRequests = volatilityModel.GetHistoryRequirements(security, algorithm.UtcTime).ToList();
+            if (historyRequests.Count == 0)
+            {
+                return;
+            }
+
+            var history = algorithm.HistoryProvider.GetHistory(historyRequests, algorithm.TimeZone);
+            foreach (BaseData data in history.Get(historyRequests[0].DataType, security.Symbol))
+            {
+                volatilityModel.Update(security, data);
             }
         }
 

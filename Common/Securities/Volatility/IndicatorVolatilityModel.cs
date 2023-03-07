@@ -94,37 +94,6 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Applies a dividend to the model
-        /// </summary>
-        /// <param name="dividend">The dividend to be applied</param>
-        /// <param name="liveMode">True if live mode, false for backtest</param>
-        /// <param name="dataNormalizationMode">The <see cref="DataNormalizationMode"/> for the security</param>
-        public void ApplyDividend(Dividend dividend, bool liveMode, DataNormalizationMode dataNormalizationMode)
-        {
-        }
-
-        /// <summary>
-        /// Applies a split to the model
-        /// </summary>
-        /// <param name="split">The split to be applied</param>
-        /// <param name="liveMode">True if live mode, false for backtest</param>
-        /// <param name="dataNormalizationMode">The <see cref="DataNormalizationMode"/> for the security</param>
-        public void ApplySplit(Split split, bool liveMode, DataNormalizationMode dataNormalizationMode)
-        {
-        }
-
-        /// <summary>
-        /// Resets and warms up the model using historical data
-        /// </summary>
-        /// <param name="historyProvider">History provider to use to get historical data</param>
-        /// <param name="security">The security of the request</param>
-        /// <param name="utcTime">The date/time of the request</param>
-        /// <param name="timeZone">The algorithm time zone</param>
-        public void WarmUp(IHistoryProvider historyProvider, Security security, DateTime utcTime, DateTimeZone timeZone)
-        {
-        }
-
-        /// <summary>
         /// Resets the model to its initial state
         /// </summary>
         public void Reset()

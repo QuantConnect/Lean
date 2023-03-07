@@ -608,18 +608,6 @@ namespace QuantConnect.Tests.Common
             {
             }
 
-            public void ApplyDividend(QuantConnect.Data.Market.Dividend dividend, bool liveMode, DataNormalizationMode dataNormalizationMode)
-            {
-            }
-
-            public void ApplySplit(Split split, bool liveMode, DataNormalizationMode dataNormalizationMode)
-            {
-            }
-
-            public void WarmUp(IHistoryProvider historyProvider, Security security, DateTime utcTime, DateTimeZone timeZone)
-            {
-            }
-
             public void Reset()
             {
             }

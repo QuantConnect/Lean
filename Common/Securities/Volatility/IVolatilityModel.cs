@@ -29,7 +29,7 @@ namespace QuantConnect.Securities
     /// </summary>
     /// <remarks>Please use<see cref="BaseVolatilityModel"/> as the base class for
     /// any implementations of<see cref="IVolatilityModel"/></remarks>
-    public interface IVolatilityModel : ISplitAwareModel
+    public interface IVolatilityModel
     {
         /// <summary>
         /// Gets the volatility of the security as a percentage
@@ -51,15 +51,6 @@ namespace QuantConnect.Securities
         /// <param name="utcTime">The date/time of the request</param>
         /// <returns>History request object list, or empty if no requirements</returns>
         IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime);
-
-        /// <summary>
-        /// Resets and warms up the model using historical data
-        /// </summary>
-        /// <param name="historyProvider">History provider to use to get historical data</param>
-        /// <param name="security">The security of the request</param>
-        /// <param name="utcTime">The date/time of the request</param>
-        /// <param name="timeZone">The algorithm time zone</param>
-        void WarmUp(IHistoryProvider historyProvider, Security security, DateTime utcTime, DateTimeZone timeZone);
 
         /// <summary>
         /// Resets the model to its initial state
@@ -85,18 +76,6 @@ namespace QuantConnect.Securities
             public void Update(Security security, BaseData data) { }
 
             public IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime) { return Enumerable.Empty<HistoryRequest>(); }
-
-            public void ApplyDividend(Dividend dividend, bool liveMode, DataNormalizationMode dataNormalizationMode)
-            {
-            }
-
-            public void ApplySplit(Split split, bool liveMode, DataNormalizationMode dataNormalizationMode)
-            {
-            }
-
-            public void WarmUp(IHistoryProvider historyProvider, Security security, DateTime utcTime, DateTimeZone timeZone)
-            {
-            }
 
             public void Reset()
             {

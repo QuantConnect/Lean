@@ -15,13 +15,10 @@
 
 using Python.Runtime;
 using QuantConnect.Data;
-using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities.Volatility;
-using QuantConnect.Data.Market;
-using static QuantConnect.Messages;
 
 namespace QuantConnect.Python
 {
@@ -107,34 +104,6 @@ namespace QuantConnect.Python
                 {
                     _model.SetSubscriptionDataConfigProvider(subscriptionDataConfigProvider);
                 }
-            }
-        }
-
-        /// <summary>
-        /// Applies a dividend to the model
-        /// </summary>
-        /// <param name="dividend">The dividend to be applied</param>
-        /// <param name="liveMode">True if live mode, false for backtest</param>
-        /// <param name="dataNormalizationMode">The <see cref="DataNormalizationMode"/> for the security</param>
-        public override void ApplyDividend(Dividend dividend, bool liveMode, DataNormalizationMode dataNormalizationMode)
-        {
-            using (Py.GIL())
-            {
-                _model.ApplyDividend(dividend, liveMode, dataNormalizationMode);
-            }
-        }
-
-        /// <summary>
-        /// Applies a split to the model
-        /// </summary>
-        /// <param name="split">The split to be applied</param>
-        /// <param name="liveMode">True if live mode, false for backtest</param>
-        /// <param name="dataNormalizationMode">The <see cref="DataNormalizationMode"/> for the security</param>
-        public override void ApplySplit(Split split, bool liveMode, DataNormalizationMode dataNormalizationMode)
-        {
-            using (Py.GIL())
-            {
-                _model.ApplySplit(split, liveMode, dataNormalizationMode);
             }
         }
     }

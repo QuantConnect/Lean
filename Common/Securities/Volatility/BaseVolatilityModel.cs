@@ -135,83 +135,9 @@ namespace QuantConnect.Securities.Volatility
                                    historyResolution,
                                    extendedMarketHours,
                                    configurations.IsCustomData(),
-                                   DataNormalizationMode.Adjusted,
+                                   DataNormalizationMode.ScaledRaw,
                                    LeanData.GetCommonTickTypeForCommonDataTypes(configuration.Type, security.Type))
             };
-        }
-
-        /// <summary>
-        /// Applies a dividend to the model
-        /// </summary>
-        /// <param name="dividend">The dividend to be applied</param>
-        /// <param name="liveMode">True if live mode, false for backtest</param>
-        /// <param name="dataNormalizationMode">The <see cref="DataNormalizationMode"/> for the security</param>
-        public virtual void ApplyDividend(Dividend dividend, bool liveMode, DataNormalizationMode dataNormalizationMode)
-        {
-            // only apply splits in live or raw/split adjusted data mode
-            if (!liveMode && !(dataNormalizationMode == DataNormalizationMode.Raw || dataNormalizationMode == DataNormalizationMode.SplitAdjusted))
-            {
-                return;
-            }
-
-            _dividends.Add(dividend);
-        }
-
-        /// <summary>
-        /// Applies a split to the model
-        /// </summary>
-        /// <param name="split">The split to be applied</param>
-        /// <param name="liveMode">True if live mode, false for backtest</param>
-        /// <param name="dataNormalizationMode">The <see cref="DataNormalizationMode"/> for the security</param>
-        public virtual void ApplySplit(Split split, bool liveMode, DataNormalizationMode dataNormalizationMode)
-        {
-            // only apply splits in live or raw data mode
-            if (!liveMode && dataNormalizationMode != DataNormalizationMode.Raw)
-            {
-                return;
-            }
-
-            _splits.Add(split);
-        }
-
-        /// <summary>
-        /// Resets and warms up the model using historical data
-        /// </summary>
-        /// <param name="historyProvider">History provider to use to get historical data</param>
-        /// <param name="security">The security of the request</param>
-        /// <param name="utcTime">The date/time of the request</param>
-        /// <param name="timeZone">The algorithm time zone</param>
-        public void WarmUp(IHistoryProvider historyProvider, Security security, DateTime utcTime, DateTimeZone timeZone)
-        {
-            // Reset
-            Reset();
-
-            // Warm up
-            var historyRequests = GetHistoryRequirements(security, utcTime).ToList();
-            if (historyRequests == null)
-            {
-                return;
-            }
-
-            var history = historyProvider.GetHistory(historyRequests, timeZone);
-            var data = history.Get(historyRequests[0].DataType, security.Symbol).Cast<BaseData>().ToList();
-            if (data.Count == 0)
-            {
-                return;
-            }
-
-            var firstTime = data[0].Time;
-            // We don't need dividends and splits before the first history slice
-            _dividends.RemoveAll(x => x.Time < firstTime);
-            _splits.RemoveAll(x => x.Time < firstTime);
-
-            var factor = _dividends.Aggregate(1m, (current, dividend) => current * (1 - dividend.Distribution / dividend.ReferencePrice)) *
-                _splits.Aggregate(1m, (current, split) => current * split.SplitFactor);
-
-            foreach (BaseData dataPoint in data)
-            {
-                Update(security, factor == 1 ? dataPoint : dataPoint.Normalize(factor, DataNormalizationMode.Adjusted, 0));
-            }
         }
 
         /// <summary>
