@@ -1938,7 +1938,7 @@ namespace QuantConnect.Algorithm
             var trin = new ArmsIndex(name);
             foreach (var symbol in symbols)
             {
-                trin.AddStock(symbol);
+                trin.Add(symbol);
                 InitializeIndicator(symbol, trin, resolution, selector);
             }
 
@@ -1959,7 +1959,7 @@ namespace QuantConnect.Algorithm
             var adr = new AdvanceDeclineRatio(name);
             foreach (var symbol in symbols)
             {
-                adr.AddStock(symbol);
+                adr.Add(symbol);
                 InitializeIndicator(symbol, adr, resolution, selector);
             }
 
@@ -1980,11 +1980,108 @@ namespace QuantConnect.Algorithm
             var advr = new AdvanceDeclineVolumeRatio(name);
             foreach (var symbol in symbols)
             {
-                advr.AddStock(symbol);
+                advr.Add(symbol);
                 InitializeIndicator(symbol, advr, resolution, selector);
             }
 
             return advr;
+        }
+
+        /// <summary>
+        /// Creates a new Advance/Decline Difference indicator
+        /// </summary>
+        /// <param name="symbols">The symbols whose A/D Difference we want</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The Advance/Decline Difference indicator for the requested symbol over the specified period</returns>
+        [DocumentationAttribute(Indicators)]
+        public AdvanceDeclineDifference ADDIFF(IEnumerable<Symbol> symbols, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(QuantConnect.Symbol.None, "A/D Difference", resolution ?? GetSubscription(symbols.First()).Resolution);
+            var adDiff = new AdvanceDeclineDifference(name);
+            foreach (var symbol in symbols)
+            {
+                adDiff.Add(symbol);
+                InitializeIndicator(symbol, adDiff, resolution, selector);
+            }
+
+            return adDiff;
+        }
+
+        /// <summary>
+        /// Creates a new McClellan Oscillator indicator
+        /// </summary>
+        /// <param name="symbols">The symbols whose McClellan Oscillator we want</param>
+        /// <param name="fastPeriod">Fast period EMA of advance decline difference</param>
+        /// <param name="slowPeriod">Slow period EMA of advance decline difference</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The McClellan Oscillator indicator for the requested symbol over the specified period</returns>
+        [DocumentationAttribute(Indicators)]
+        public McClellanOscillator MOSC(IEnumerable<Symbol> symbols, int fastPeriod = 19, int slowPeriod = 39, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            return MOSC(symbols.ToArray(), fastPeriod, slowPeriod, resolution, selector);
+        }
+
+        /// <summary>
+        /// Creates a new McClellan Oscillator indicator
+        /// </summary>
+        /// <param name="symbols">The symbols whose McClellan Oscillator we want</param>
+        /// <param name="fastPeriod">Fast period EMA of advance decline difference</param>
+        /// <param name="slowPeriod">Slow period EMA of advance decline difference</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The McClellan Oscillator indicator for the requested symbol over the specified period</returns>
+        [DocumentationAttribute(Indicators)]
+        public McClellanOscillator MOSC(Symbol[] symbols, int fastPeriod = 19, int slowPeriod = 39, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(QuantConnect.Symbol.None, $"MO({fastPeriod},{slowPeriod})", resolution ?? GetSubscription(symbols.First()).Resolution);
+            var mosc = new McClellanOscillator(name, fastPeriod, slowPeriod);
+            foreach (var symbol in symbols)
+            {
+                mosc.Add(symbol);
+                InitializeIndicator(symbol, mosc, resolution, selector);
+            }
+
+            return mosc;
+        }
+
+        /// <summary>
+        /// Creates a new McClellan Summation Index indicator
+        /// </summary>
+        /// <param name="symbols">The symbols whose McClellan Summation Index we want</param>
+        /// <param name="fastPeriod">Fast period EMA of advance decline difference</param>
+        /// <param name="slowPeriod">Slow period EMA of advance decline difference</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The McClellan Summation Index indicator for the requested symbol over the specified period</returns>
+        [DocumentationAttribute(Indicators)]
+        public McClellanSummationIndex MSI(IEnumerable<Symbol> symbols, int fastPeriod = 19, int slowPeriod = 39, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            return MSI(symbols.ToArray(), fastPeriod, slowPeriod, resolution, selector);
+        }
+
+        /// <summary>
+        /// Creates a new McClellan Summation Index indicator
+        /// </summary>
+        /// <param name="symbols">The symbols whose McClellan Summation Index we want</param>
+        /// <param name="fastPeriod">Fast period EMA of advance decline difference</param>
+        /// <param name="slowPeriod">Slow period EMA of advance decline difference</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The McClellan Summation Index indicator for the requested symbol over the specified period</returns>
+        [DocumentationAttribute(Indicators)]
+        public McClellanSummationIndex MSI(Symbol[] symbols, int fastPeriod = 19, int slowPeriod = 39, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(QuantConnect.Symbol.None, $"MSI({fastPeriod},{slowPeriod})", resolution ?? GetSubscription(symbols.First()).Resolution);
+            var msi = new McClellanSummationIndex(name, fastPeriod, slowPeriod);
+            foreach (var symbol in symbols)
+            {
+                msi.Add(symbol);
+                InitializeIndicator(symbol, msi, resolution, selector);
+            }
+
+            return msi;
         }
 
         /// <summary>
