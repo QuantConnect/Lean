@@ -67,45 +67,18 @@ namespace QuantConnect.Orders.Fills
                 return fill;
             }
 
-            // Get the range of prices in the last bar:
-            var tradeHigh = 0m;
-            var tradeLow = 0m;
-            var endTimeUtc = DateTime.MinValue;
+            // Get the trade bar that closes after the order time
+            var tradeBar = GetBestEffortTradeBar(asset, order.Time);
 
-            var subscribedTypes = GetSubscribedTypes(asset);
-
-            if (subscribedTypes.Contains(typeof(Tick)))
-            {
-                var trade = asset.Cache.GetAll<Tick>().LastOrDefault(x => x.TickType == TickType.Trade && x.Price > 0);
-
-                if (trade != null)
-                {
-                    tradeHigh = trade.Price;
-                    tradeLow = trade.Price;
-                    endTimeUtc = trade.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
-                }
-            }
-            else if (subscribedTypes.Contains(typeof(TradeBar)))
-            {
-                var tradeBar = asset.Cache.GetData<TradeBar>();
-
-                if (tradeBar != null)
-                {
-                    tradeHigh = tradeBar.High;
-                    tradeLow = tradeBar.Low;
-                    endTimeUtc = tradeBar.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
-                }
-            }
-
-            // do not fill on stale data
-            if (endTimeUtc <= order.Time) return fill;
+            // Do not fill on stale data
+            if (tradeBar == null) return fill;
 
             //Check if the limit if touched order was filled:
             switch (order.Direction)
             {
                 case OrderDirection.Buy:
                     //-> 1.2 Buy: If Price below Trigger, Buy:
-                    if (tradeLow <= order.TriggerPrice || order.TriggerTouched)
+                    if (tradeBar.Low <= order.TriggerPrice || order.TriggerTouched)
                     {
                         order.TriggerTouched = true;
                         var askCurrent = GetBestEffortAskPrice(asset, order.Time, out var fillMessage);
@@ -123,7 +96,7 @@ namespace QuantConnect.Orders.Fills
 
                 case OrderDirection.Sell:
                     //-> 1.2 Sell: If Price above Trigger, Sell:
-                    if (tradeHigh >= order.TriggerPrice || order.TriggerTouched)
+                    if (tradeBar.High >= order.TriggerPrice || order.TriggerTouched)
                     {
                         order.TriggerTouched = true;
                         var bidCurrent = GetBestEffortBidPrice(asset, order.Time, out var fillMessage);
@@ -216,46 +189,16 @@ namespace QuantConnect.Orders.Fills
             // Make sure the exchange is open/normal market hours before filling
             if (!IsExchangeOpen(asset, false)) return fill;
 
-            // Get the range of prices in the last bar:
-            var tradeOpen = 0m;
-            var tradeHigh = decimal.MinValue;
-            var tradeLow = decimal.MaxValue;
-            var endTimeUtc = DateTime.MinValue;
-
-            var subscribedTypes = GetSubscribedTypes(asset);
-
-            if (subscribedTypes.Contains(typeof(Tick)))
-            {
-                var trades = asset.Cache.GetAll<Tick>().Where(x => x.TickType == TickType.Trade);
-
-                foreach (var trade in trades)
-                {
-                    tradeOpen = tradeOpen == 0 ? trade.Price : tradeOpen;
-                    tradeHigh = Math.Max(tradeHigh, trade.Price);
-                    tradeLow = Math.Min(tradeLow, trade.Price);
-                    endTimeUtc = trade.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
-                }
-            }
-            else if (subscribedTypes.Contains(typeof(TradeBar)))
-            {
-                var tradeBar = asset.Cache.GetData<TradeBar>();
-
-                if (tradeBar != null)
-                {
-                    tradeOpen = tradeBar.Open;
-                    tradeHigh = tradeBar.High;
-                    tradeLow = tradeBar.Low;
-                    endTimeUtc = tradeBar.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
-                }
-            }
+            // Get the trade bar that closes after the order time
+            var tradeBar = GetBestEffortTradeBar(asset, order.Time);
 
             // Do not fill on stale data
-            if (endTimeUtc <= order.Time) return fill;
-            
+            if (tradeBar == null) return fill;
+
             switch (order.Direction)
             {
                 case OrderDirection.Sell:
-                    if (tradeLow <= order.StopPrice)
+                    if (tradeBar.Low <= order.StopPrice)
                     {
                         fill.Status = OrderStatus.Filled;
                         fill.FillQuantity = order.Quantity;
@@ -263,10 +206,10 @@ namespace QuantConnect.Orders.Fills
                         var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
 
                         // Unfavorable gap case: if the bar opens below the stop price, fill at open price
-                        if (tradeOpen <= order.StopPrice)
+                        if (tradeBar.Open <= order.StopPrice)
                         {
-                            fill.FillPrice = tradeOpen - slip;
-                            fill.Message = Messages.EquityFillModel.FilledWithOpenDueToUnfavorableGap(asset, tradeOpen, endTimeUtc);
+                            fill.FillPrice = tradeBar.Open - slip;
+                            fill.Message = Messages.EquityFillModel.FilledWithOpenDueToUnfavorableGap(asset, tradeBar);
                             return fill;
                         }
 
@@ -275,7 +218,7 @@ namespace QuantConnect.Orders.Fills
                     break;
 
                 case OrderDirection.Buy:
-                    if (tradeHigh >= order.StopPrice)
+                    if (tradeBar.High >= order.StopPrice)
                     {
                         fill.Status = OrderStatus.Filled;
                         fill.FillQuantity = order.Quantity;
@@ -283,10 +226,10 @@ namespace QuantConnect.Orders.Fills
                         var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
 
                         // Unfavorable gap case: if the bar opens above the stop price, fill at open price
-                        if (tradeOpen >= order.StopPrice)
+                        if (tradeBar.Open >= order.StopPrice)
                         {
-                            fill.FillPrice = tradeOpen + slip;
-                            fill.Message = Messages.EquityFillModel.FilledWithOpenDueToUnfavorableGap(asset, tradeOpen, endTimeUtc);
+                            fill.FillPrice = tradeBar.Open + slip;
+                            fill.Message = Messages.EquityFillModel.FilledWithOpenDueToUnfavorableGap(asset, tradeBar);
                             return fill;
                         }
 
@@ -407,45 +350,18 @@ namespace QuantConnect.Orders.Fills
                 return fill;
             }
 
-            // Get the range of prices in the last bar:
-            var tradeHigh = 0m;
-            var tradeLow = 0m;
-            var endTimeUtc = DateTime.MinValue;
+            // Get the trade bar that closes after the order time
+            var tradeBar = GetBestEffortTradeBar(asset, order.Time);
 
-            var subscribedTypes = GetSubscribedTypes(asset);
-
-            if (subscribedTypes.Contains(typeof(Tick)))
-            {
-                var trades = asset.Cache.GetAll<Tick>().Where(x => x.TickType == TickType.Trade && x.Price > 0);
-
-                foreach (var trade in trades)
-                {
-                    tradeHigh = Math.Max(tradeHigh, trade.Price);
-                    tradeLow = tradeLow == 0 ? trade.Price : Math.Min(tradeLow, trade.Price);
-                    endTimeUtc = trade.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
-                }
-            }
-            else if (subscribedTypes.Contains(typeof(TradeBar)))
-            {
-                var tradeBar = asset.Cache.GetData<TradeBar>();
-
-                if (tradeBar != null)
-                {
-                    tradeHigh = tradeBar.High;
-                    tradeLow = tradeBar.Low;
-                    endTimeUtc = tradeBar.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
-                }
-            }
-
-            // do not fill on stale data
-            if (endTimeUtc <= order.Time) return fill;
+            // Do not fill on stale data
+            if (tradeBar == null) return fill;
 
             //-> Valid Live/Model Order:
             switch (order.Direction)
             {
                 case OrderDirection.Buy:
                     //Buy limit seeks lowest price
-                    if (tradeLow < order.LimitPrice)
+                    if (tradeBar.Low < order.LimitPrice)
                     {
                         // Fills with the limit price
                         fill.FillPrice = order.LimitPrice;
@@ -457,7 +373,7 @@ namespace QuantConnect.Orders.Fills
                     break;
                 case OrderDirection.Sell:
                     //Sell limit seeks highest price possible
-                    if (tradeHigh > order.LimitPrice)
+                    if (tradeBar.High > order.LimitPrice)
                     {
                         // Fills with the limit price
                         fill.FillPrice = order.LimitPrice;
@@ -503,14 +419,14 @@ namespace QuantConnect.Orders.Fills
                 var openingPrints = (uint) (TradeConditionFlags.Regular | TradeConditionFlags.OpeningPrints);
 
                 var trades = asset.Cache.GetAll<Tick>()
-                    .Where(x => x.TickType == TickType.Trade && x.Price > 0 && asset.Exchange.DateTimeIsOpen(x.Time))
+                    .Where(x => x.TickType == TickType.Trade && asset.Exchange.DateTimeIsOpen(x.Time))
                     .OrderBy(x => x.EndTime).ToList();
 
                 // Get the first valid (non-zero) tick of trade type from an open market
                 var tick = trades
                     .Where(x => !string.IsNullOrWhiteSpace(x.SaleCondition))
                     .FirstOrDefault(x =>
-                        x.TickType == TickType.Trade && x.Price > 0 && x.ExchangeCode == primaryExchangeCode &&
+                        x.TickType == TickType.Trade && x.ExchangeCode == primaryExchangeCode &&
                         (x.ParsedSaleCondition == officialOpen || x.ParsedSaleCondition == openingPrints) &&
                         asset.Exchange.DateTimeIsOpen(x.Time));
 
@@ -645,7 +561,7 @@ namespace QuantConnect.Orders.Fills
                 var closingPrints = (uint)(TradeConditionFlags.Regular | TradeConditionFlags.ClosingPrints);
 
                 var trades = asset.Cache.GetAll<Tick>()
-                    .Where(x => x.TickType == TickType.Trade && x.Price > 0)
+                    .Where(x => x.TickType == TickType.Trade)
                     .OrderBy(x => x.EndTime).ToList();
 
                 // Get the last valid (non-zero) tick of trade type from an close market
@@ -811,7 +727,7 @@ namespace QuantConnect.Orders.Fills
 
             if (isTickSubscribed)
             {
-                var trade = ticks.LastOrDefault(x => x.TickType == TickType.Trade && x.Price > 0);
+                var trade = ticks.LastOrDefault(x => x.TickType == TickType.Trade);
                 if (trade != null && (baseData == null || trade.EndTime > baseData.EndTime))
                 {
                     message = Messages.EquityFillModel.FilledWithTradeTickData(asset, trade);
@@ -910,7 +826,7 @@ namespace QuantConnect.Orders.Fills
 
             if (isTickSubscribed)
             {
-                var trade = ticks.LastOrDefault(x => x.TickType == TickType.Trade && x.Price > 0);
+                var trade = ticks.LastOrDefault(x => x.TickType == TickType.Trade);
                 if (trade != null && (baseData == null || trade.EndTime > baseData.EndTime))
                 {
                     message = Messages.EquityFillModel.FilledWithTradeTickData(asset, trade);
@@ -948,6 +864,70 @@ namespace QuantConnect.Orders.Fills
             }
 
             throw new InvalidOperationException(Messages.FillModel.NoMarketDataToGetBidPriceForFilling(asset, subscribedTypes));
+        }
+
+        /// <summary>
+        /// Get current trade bar for subscribed data
+        /// This method will try to get the most recent trade bar after the order time,
+        /// so it will try to get tick trades first to create a trade bar, then trade bar.
+        /// </summary>
+        /// <param name="asset">Security which has subscribed data types</param>
+        /// <param name="orderTime">Time the order was submitted</param>
+        /// <returns>
+        /// A TradeBar object with the most recent trade information after the order close.
+        /// If there is no trade information or it is older than the order, returns null.
+        /// </returns>
+        private TradeBar GetBestEffortTradeBar(Security asset, DateTime orderTime)
+        {
+            TradeBar bestEffortTradeBar = null;
+            
+            var subscribedTypes = GetSubscribedTypes(asset);
+
+            if (subscribedTypes.Contains(typeof(Tick)))
+            {
+                var tradeOpen = 0m;
+                var tradeHigh = decimal.MinValue;
+                var tradeLow = decimal.MaxValue;
+                var tradeClose = 0m;
+                var tradeVolume = 0m;
+                var startTimeUtc = DateTime.MinValue;
+                var endTimeUtc = DateTime.MinValue;
+
+                var trades = asset.Cache.GetAll<Tick>().Where(x => x.TickType == TickType.Trade).ToList();
+                if (trades.Any())
+                {
+                    foreach (var trade in trades)
+                    {
+                        if (tradeOpen == 0)
+                        {
+                            tradeOpen = trade.Price;
+                            startTimeUtc = trade.Time;
+                        }
+
+                        tradeHigh = Math.Max(tradeHigh, trade.Price);
+                        tradeLow = Math.Min(tradeLow, trade.Price);
+                        tradeClose = trade.Price;
+                        tradeVolume += trade.Quantity;
+                        endTimeUtc = trade.EndTime;
+                    }
+
+                    bestEffortTradeBar = new TradeBar(startTimeUtc, asset.Symbol,
+                        tradeOpen, tradeHigh, tradeLow, tradeClose, tradeVolume, endTimeUtc - startTimeUtc);
+                }
+            }
+            else if (subscribedTypes.Contains(typeof(TradeBar)))
+            {
+                bestEffortTradeBar = asset.Cache.GetData<TradeBar>();
+            }
+
+            // Do not accept trade information older than the order
+            if (bestEffortTradeBar == null ||
+                bestEffortTradeBar.EndTime.ConvertToUtc(asset.Exchange.TimeZone) <= orderTime)
+            {
+                return null;
+            }
+
+            return bestEffortTradeBar;
         }
 
         /// <summary>
