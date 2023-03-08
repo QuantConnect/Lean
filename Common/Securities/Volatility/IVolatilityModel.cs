@@ -18,9 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Securities.Volatility;
-using QuantConnect.Interfaces;
-using QuantConnect.Data.Market;
-using NodaTime;
 
 namespace QuantConnect.Securities
 {

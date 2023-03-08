@@ -137,7 +137,8 @@ namespace QuantConnect.Tests.Common.Securities
             model.SetSubscriptionDataConfigProvider(new MockSubscriptionDataConfigProvider(config));
             var result = model.GetHistoryRequirements(security, DateTime.UtcNow).First();
 
-            Assert.AreEqual(config.DataNormalizationMode, result.DataNormalizationMode);
+            // History is requested for DataNormalizationMode.ScaledRaw for BaseVolatilityModel
+            Assert.AreEqual(DataNormalizationMode.ScaledRaw, result.DataNormalizationMode);
             Assert.AreEqual(config.Symbol, result.Symbol);
             Assert.AreEqual(config.DataTimeZone, result.DataTimeZone);
             Assert.AreEqual(config.IsCustomData, result.IsCustomData);
@@ -182,7 +183,8 @@ namespace QuantConnect.Tests.Common.Securities
             model.SetSubscriptionDataConfigProvider(mock);
             var result = model.GetHistoryRequirements(security, DateTime.UtcNow).First();
 
-            Assert.AreEqual(config.DataNormalizationMode, result.DataNormalizationMode);
+            // History is requested for DataNormalizationMode.ScaledRaw for BaseVolatilityModel
+            Assert.AreEqual(DataNormalizationMode.ScaledRaw, result.DataNormalizationMode);
             Assert.AreEqual(config.Symbol, result.Symbol);
             Assert.AreEqual(config.DataTimeZone, result.DataTimeZone);
             Assert.AreEqual(true, result.IsCustomData);

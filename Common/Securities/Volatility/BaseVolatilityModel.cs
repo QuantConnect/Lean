@@ -16,9 +16,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NodaTime;
+
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Util;
 

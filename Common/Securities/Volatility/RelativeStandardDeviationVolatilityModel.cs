@@ -80,7 +80,7 @@ namespace QuantConnect.Securities
             if (periods < 2) throw new ArgumentOutOfRangeException("periods", "'periods' must be greater than or equal to 2.");
             _periodSpan = periodSpan;
             _window = new RollingWindow<double>(periods);
-            _lastUpdate = DateTime.MinValue + TimeSpan.FromMilliseconds(periodSpan.TotalMilliseconds * periods);
+            _lastUpdate = GetLastUpdateInitialValue(periodSpan, periods);
         }
 
         /// <summary>
@@ -97,9 +97,6 @@ namespace QuantConnect.Securities
                 lock (_sync)
                 {
                     _needsUpdate = true;
-                    // we purposefully use security.Price for consistency in our reporting
-                    // some streams of data will have trade/quote data, so if we just use
-                    // data.Value we could be mixing and matching data streams
                     _window.Add((double)data.Price);
                 }
                 _lastUpdate = data.EndTime;
@@ -142,8 +139,13 @@ namespace QuantConnect.Securities
             base.Reset();
             _needsUpdate = false;
             _volatility = 0m;
-            _lastUpdate = DateTime.MinValue;
+            _lastUpdate = GetLastUpdateInitialValue(_periodSpan, _window.Size);
             _window.Reset();
+        }
+
+        private static DateTime GetLastUpdateInitialValue(TimeSpan periodSpan, int periods)
+        {
+            return DateTime.MinValue + TimeSpan.FromMilliseconds(periodSpan.TotalMilliseconds * periods);
         }
     }
 }

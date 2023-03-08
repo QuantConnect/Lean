@@ -281,8 +281,9 @@ namespace QuantConnect.Tests.Algorithm
 
         private static Action<QCAlgorithm>[] AddSecurityWithScaleRawNormalizationModeCalls() => new[]
         {
+            (QCAlgorithm algorithm) => { algorithm.AddSecurity(Symbols.AAPL, dataNormalizationMode: DataNormalizationMode.ScaledRaw); },
             (QCAlgorithm algorithm) => { algorithm.AddEquity("AAPL", dataNormalizationMode: DataNormalizationMode.ScaledRaw); },
-            (QCAlgorithm algorithm) => { algorithm.AddSecurity(Symbols.AAPL, dataNormalizationMode: DataNormalizationMode.ScaledRaw); }
+            (QCAlgorithm algorithm) => { algorithm.AddFuture("AAPL", dataNormalizationMode: DataNormalizationMode.ScaledRaw); },
         };
     }
 }

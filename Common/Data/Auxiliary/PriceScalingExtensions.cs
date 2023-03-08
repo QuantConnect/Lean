@@ -33,11 +33,15 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="normalizationMode">The price normalization mode requested</param>
         /// <param name="contractOffset">The contract offset, useful for continuous contracts</param>
         /// <param name="dataMappingMode">The data mapping mode used, useful for continuous contracts</param>
-        /// <param name="endDateTime">The reference end date for scaling prices. Default is today (latest factor entry)</param>
+        /// <param name="endDateTime">The reference end date for scaling prices.</param>
         /// <returns>The price scale to use</returns>
         /// <exception cref="ArgumentException">
         /// If <paramref name="normalizationMode"/> is <see cref="DataNormalizationMode.ScaledRaw"/> and <paramref name="endDateTime"/> is null
         /// </exception>
+        /// <remarks>
+        /// For <see cref="DataNormalizationMode.ScaledRaw"/> normalization mode,
+        /// the prices are scaled to the prices on the <paramref name="endDateTime"/>
+        /// </remarks>
         public static decimal GetPriceScale(
             this IFactorProvider factorFile,
             DateTime dateTime,

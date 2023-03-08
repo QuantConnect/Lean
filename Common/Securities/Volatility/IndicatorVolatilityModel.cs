@@ -17,10 +17,7 @@ using System;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 using System.Collections.Generic;
-using QuantConnect.Data.Market;
 using System.Linq;
-using QuantConnect.Interfaces;
-using NodaTime;
 
 namespace QuantConnect.Securities
 {

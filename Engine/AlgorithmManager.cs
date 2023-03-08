@@ -974,15 +974,13 @@ namespace QuantConnect.Lean.Engine
 
             // Warm up
             var historyRequests = volatilityModel.GetHistoryRequirements(security, algorithm.UtcTime).ToList();
-            if (historyRequests.Count == 0)
-            {
-                return;
-            }
-
             var history = algorithm.HistoryProvider.GetHistory(historyRequests, algorithm.TimeZone);
-            foreach (BaseData data in history.Get(historyRequests[0].DataType, security.Symbol))
+            foreach (var slice in history)
             {
-                volatilityModel.Update(security, data);
+                foreach (var request in historyRequests)
+                {
+                    volatilityModel.Update(security, slice.Get(request.DataType)[security.Symbol]);
+                }
             }
         }
 

@@ -19,7 +19,6 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Volatility;
 
 namespace QuantConnect.Algorithm.CSharp
 {
