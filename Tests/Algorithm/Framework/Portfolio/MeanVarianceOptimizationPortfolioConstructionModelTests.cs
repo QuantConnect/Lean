@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using Python.Runtime;
@@ -21,9 +22,7 @@ using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Packets;
@@ -62,38 +61,19 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new DataPermissionManager()));
         }
 
-        [TestCase(Language.CSharp, PortfolioBias.Long)]
-        [TestCase(Language.Python, PortfolioBias.Long)]
-        [TestCase(Language.CSharp, PortfolioBias.Short)]
-        [TestCase(Language.Python, PortfolioBias.Short)]
-        public void PortfolioBiasIsRespected(Language language, PortfolioBias bias)
+        [TestCase(Language.CSharp, PortfolioBias.Long, 0.1, -0.1)]
+        [TestCase(Language.Python, PortfolioBias.Long, 0.1, -0.1)]
+        [TestCase(Language.CSharp, PortfolioBias.Short, -0.1, 0.1)]
+        [TestCase(Language.Python, PortfolioBias.Short, -0.1, 0.1)]
+        [TestCase(Language.CSharp, PortfolioBias.Long, -0.1, 0.1)]
+        [TestCase(Language.Python, PortfolioBias.Long, -0.1, 0.1)]
+        [TestCase(Language.CSharp, PortfolioBias.Short, 0.1, -0.1)]
+        [TestCase(Language.Python, PortfolioBias.Short, 0.1, -0.1)]
+        public void PortfolioBiasIsRespected(Language language, PortfolioBias bias, double magnitude1, double magnitude2)
         {
-            SetPortfolioConstruction(language, bias);
-
-            var appl = _algorithm.AddEquity("AAPL");
-            var bac = _algorithm.AddEquity("BAC");
-            var spy = _algorithm.AddEquity("SPY");
-            var ibm = _algorithm.AddEquity("IBM");
-            var aig = _algorithm.AddEquity("AIG");
-            var qqq = _algorithm.AddEquity("QQQ");
-
-            foreach (var equity in new[] { qqq, aig, ibm, spy, bac, appl })
-            {
-                equity.SetMarketPrice(new Tick(_nowUtc, equity.Symbol, 30, 30));
-            }
-
-            var insights = new[]
-            {
-                new Insight(_nowUtc, appl.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Up, -0.1d, null),
-                new Insight(_nowUtc, spy.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Down, -0.1d, null),
-                new Insight(_nowUtc, ibm.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Down, 0d, null),
-                new Insight(_nowUtc, aig.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Down, -0.1d, null),
-                new Insight(_nowUtc, qqq.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Up, -0.1d, null),
-                new Insight(_nowUtc, bac.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Down, -0.1d, null)
-            };
-            _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, SecurityChangesTests.AddedNonInternal(appl, spy, ibm, aig, qqq, bac));
-
-            foreach (var target in _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights))
+            var targets = GeneratePortfolioTargets(language, InsightDirection.Up, InsightDirection.Down, magnitude1, magnitude2, bias);
+            
+            foreach (var target in targets)
             {
                 QuantConnect.Logging.Log.Trace($"{target.Symbol}: {target.Quantity}");
                 if (target.Quantity == 0)
@@ -102,6 +82,70 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 }
                 Assert.AreEqual(Math.Sign((int)bias), Math.Sign(target.Quantity));
             }
+        }
+
+        [TestCase(Language.CSharp, InsightDirection.Up, InsightDirection.Up, 0, 0, 4155, 2493)]
+        [TestCase(Language.Python, InsightDirection.Up, InsightDirection.Up, 0, 0, 4155, 2493)]
+        [TestCase(Language.CSharp, InsightDirection.Up, InsightDirection.Down, 0.1, 0.05, 4155, 2493)]
+        [TestCase(Language.Python, InsightDirection.Up, InsightDirection.Down, 0.1, 0.05, 4155, 2493)]
+        [TestCase(Language.CSharp, InsightDirection.Up, InsightDirection.Up, 0.1, 0, 4155, 2493)]
+        [TestCase(Language.Python, InsightDirection.Up, InsightDirection.Up, 0.1, 0, 4155, 2493)]
+        [TestCase(Language.CSharp, InsightDirection.Up, InsightDirection.Down, 0, 0.1, 4155, 2493)]
+        [TestCase(Language.Python, InsightDirection.Up, InsightDirection.Down, 0, 0.1, 4155, 2493)]
+        public void CorrectWeightings(Language language,
+                                      InsightDirection direction1,
+                                      InsightDirection direction2,
+                                      double? magnitude1,
+                                      double? magnitude2,
+                                      decimal expectedQty1,
+                                      decimal expectedQty2)
+        {
+            var targets = GeneratePortfolioTargets(language, direction1, direction2, magnitude1, magnitude2);
+            var quantities = targets.ToDictionary(target => {
+                QuantConnect.Logging.Log.Trace($"{target.Symbol}: {target.Quantity}");
+                return target.Symbol.Value;
+            },
+            target => target.Quantity);
+
+            Assert.AreEqual(expectedQty1, quantities["AAPL"]);
+            Assert.AreEqual(expectedQty2, quantities.ContainsKey("SPY") ? quantities["SPY"] : 0);
+        }
+
+        [Test]
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void DoesNotReturnTargetsIfNoInsightMagnitude(Language language)
+        {
+            SetPortfolioConstruction(language, PortfolioBias.LongShort);
+
+            var appl = _algorithm.AddEquity("AAPL");
+
+            var insights = new[]
+            {
+                new Insight(_nowUtc, appl.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Up, null, null)
+            };
+
+            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights).ToList();
+            Assert.AreEqual(0, actualTargets.Count);
+        }
+
+        [TestCase(Language.CSharp, InsightDirection.Up, InsightDirection.Up, 0.1, 0.1)]
+        [TestCase(Language.Python, InsightDirection.Up, InsightDirection.Up, 0.1, 0.1)]
+        [TestCase(Language.CSharp, InsightDirection.Up, InsightDirection.Up, 0.1, -0.1)]
+        [TestCase(Language.Python, InsightDirection.Up, InsightDirection.Up, 0.1, -0.1)]
+        [TestCase(Language.CSharp, InsightDirection.Up, InsightDirection.Up, 0.1, 0)]
+        [TestCase(Language.Python, InsightDirection.Up, InsightDirection.Up, 0.1, 0)]
+        [TestCase(Language.CSharp, InsightDirection.Up, InsightDirection.Down, 0.1, 0.1)]
+        [TestCase(Language.Python, InsightDirection.Up, InsightDirection.Down, 0.1, 0.1)]
+        public void ObeyBudgetConstraint(Language language,
+                                         InsightDirection direction1,
+                                         InsightDirection direction2,
+                                         double? magnitude1,
+                                         double? magnitude2)
+        {
+            var targets = GeneratePortfolioTargets(language, direction1, direction2, magnitude1, magnitude2);
+            var totalCost = targets.Sum(x => Math.Abs(x.Quantity) * 10);    // Set market price at $10 in the helper method
+            Assert.LessOrEqual(totalCost, _algorithm.Portfolio.TotalPortfolioValue);
         }
 
         protected void SetPortfolioConstruction(Language language, PortfolioBias bias)
@@ -132,6 +176,31 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                     .Invoke(((int)resolution).ToPython(), ((int)bias).ToPython(), 1.ToPython(), 63.ToPython(), ((int)Resolution.Daily).ToPython(), 0.0001.ToPython());
                 return new PortfolioConstructionModelPythonWrapper(instance);
             }
+        }
+
+        private IEnumerable<IPortfolioTarget> GeneratePortfolioTargets(Language language, InsightDirection direction1, InsightDirection direction2, 
+                                                                       double? magnitude1, double? magnitude2, PortfolioBias bias = PortfolioBias.LongShort)
+        {
+            SetPortfolioConstruction(language, bias);
+
+            var aapl = _algorithm.AddEquity("AAPL");
+            var spy = _algorithm.AddEquity("SPY");
+
+            aapl.SetMarketPrice(new Tick(_nowUtc, aapl.Symbol, 10, 10));
+            spy.SetMarketPrice(new Tick(_nowUtc, spy.Symbol, 10, 10));
+            aapl.SetMarketPrice(new Tick(_nowUtc.AddDays(1), aapl.Symbol, 8, 8));
+            spy.SetMarketPrice(new Tick(_nowUtc.AddDays(1), spy.Symbol, 15, 15));
+            aapl.SetMarketPrice(new Tick(_nowUtc.AddDays(2), aapl.Symbol, 12, 12));
+            spy.SetMarketPrice(new Tick(_nowUtc.AddDays(2), spy.Symbol, 20, 20));
+
+            var insights = new[]
+            {
+                new Insight(_nowUtc, aapl.Symbol, TimeSpan.FromDays(1), InsightType.Price, direction1, magnitude1, null),
+                new Insight(_nowUtc, spy.Symbol, TimeSpan.FromDays(1), InsightType.Price, direction2, magnitude2, null),
+            };
+            _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, SecurityChangesTests.AddedNonInternal(aapl, spy));
+
+            return _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights);
         }
     }
 }

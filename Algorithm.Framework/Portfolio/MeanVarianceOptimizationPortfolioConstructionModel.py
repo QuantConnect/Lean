@@ -68,7 +68,7 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
 
         symbolData = self.symbolDataBySymbol.get(insight.Symbol)
         if insight.Magnitude is None:
-            self.algorithm.SetRunTimeError(ArgumentNullException('MeanVarianceOptimizationPortfolioConstructionModel does not accept \'None\' as Insight.Magnitude. Please checkout the selected Alpha Model specifications.'))
+            self.Algorithm.SetRunTimeError(ArgumentNullException('MeanVarianceOptimizationPortfolioConstructionModel does not accept \'None\' as Insight.Magnitude. Please checkout the selected Alpha Model specifications.'))
             return False
         symbolData.Add(self.Algorithm.Time, insight.Magnitude)
 
