@@ -13,14 +13,8 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using QuantConnect.Algorithm.Framework.Portfolio;
-using System.Threading.Tasks;
-using System.Collections.ObjectModel;
-using QuantConnect.Data.Market;
+using System.Collections.Generic;
 
 namespace QuantConnect.Interfaces
 {

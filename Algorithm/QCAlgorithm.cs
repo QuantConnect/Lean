@@ -159,7 +159,7 @@ namespace QuantConnect.Algorithm
             Securities = new SecurityManager(_timeKeeper);
             Transactions = new SecurityTransactionManager(this, Securities);
             Portfolio = new SecurityPortfolioManager(Securities, Transactions, DefaultOrderProperties);
-            SignalExportManager = new SignalExportManager();
+            SignalExport = new SignalExportManager();
             BrokerageModel = new DefaultBrokerageModel();
             Notify = new NotificationManager(false); // Notification manager defaults to disabled.
 
@@ -260,11 +260,11 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// SignalExportManager - Allows sending export signals to different 3rd party API's. So far it only allows to send signals
+        /// SignalExport - Allows sending export signals to different 3rd party API's. So far it only allows to send signals
         /// to Collective2, CrunchDAO and Numerai API's
         /// </summary>
         [DocumentationAttribute(SecuritiesAndPortfolio)]
-        public SignalExportManager SignalExportManager
+        public SignalExportManager SignalExport
         {
             get;
             set;
