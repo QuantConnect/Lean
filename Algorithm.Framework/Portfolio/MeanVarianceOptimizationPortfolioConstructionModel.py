@@ -68,7 +68,7 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
 
         symbolData = self.symbolDataBySymbol.get(insight.Symbol)
         if insight.Magnitude is None:
-            self.algorithm.SetRunTimeError(ArgumentNullException('MeanVarianceOptimizationPortfolioConstructionModel does not accept \'None\' as Insight.Magnitude. Please checkout the selected Alpha Model specifications.'))
+            self.Algorithm.SetRunTimeError(ArgumentNullException('MeanVarianceOptimizationPortfolioConstructionModel does not accept \'None\' as Insight.Magnitude. Please checkout the selected Alpha Model specifications.'))
             return False
         symbolData.Add(self.Algorithm.Time, insight.Magnitude)
 
@@ -158,10 +158,13 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
             item = IndicatorDataPoint(self.symbol, time, value)
             self.window.Add(item)
 
+        # Get symbols' returns, we use simple return according to
+        # Meucci, Attilio, Quant Nugget 2: Linear vs. Compounded Returns – Common Pitfalls in Portfolio Management (May 1, 2010). 
+        # GARP Risk Professional, pp. 49-51, April 2010 , Available at SSRN: https://ssrn.com/abstract=1586656
         @property
         def Return(self):
             return pd.Series(
-                data = [(1 + float(x.Value))**252 - 1 for x in self.window],
+                data = [x.Value for x in self.window],
                 index = [x.EndTime for x in self.window])
 
         @property
@@ -169,4 +172,4 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
             return self.window.IsReady
 
         def __str__(self, **kwargs):
-            return '{}: {:.2%}'.format(self.roc.Name, (1 + self.window[0])**252 - 1)
+            return '{}: {:.2%}'.format(self.roc.Name, self.window[0])
