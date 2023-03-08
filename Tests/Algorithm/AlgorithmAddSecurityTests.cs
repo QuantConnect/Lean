@@ -216,6 +216,13 @@ namespace QuantConnect.Tests.Algorithm
             }
         }
 
+        [TestCaseSource(nameof(AddSecurityWithScaleRawNormalizationModeCalls))]
+        public void ScaledRawNormalizationModeIsNotAllowed(Action<QCAlgorithm> call)
+        {
+            var exception = Assert.Throws<ArgumentException>(() => call(_algo));
+            Assert.That(exception.ParamName, Is.EqualTo("dataNormalizationMode"));
+        }
+
         private static TestCaseData[] TestAddSecurityWithSymbol
         {
             get
@@ -255,7 +262,8 @@ namespace QuantConnect.Tests.Algorithm
 
         private static DataNormalizationMode[] GetDataNormalizationModes()
         {
-            return (DataNormalizationMode[])Enum.GetValues(typeof(DataNormalizationMode));
+            return ((DataNormalizationMode[])Enum.GetValues(typeof(DataNormalizationMode)))
+                .Where(x => x != DataNormalizationMode.ScaledRaw).ToArray();
         }
 
         private static Func<QCAlgorithm, Security>[] FuturesTestCases
@@ -270,5 +278,11 @@ namespace QuantConnect.Tests.Algorithm
                 };
             }
         }
+
+        private static Action<QCAlgorithm>[] AddSecurityWithScaleRawNormalizationModeCalls() => new[]
+        {
+            (QCAlgorithm algorithm) => { algorithm.AddEquity("AAPL", dataNormalizationMode: DataNormalizationMode.ScaledRaw); },
+            (QCAlgorithm algorithm) => { algorithm.AddSecurity(Symbols.AAPL, dataNormalizationMode: DataNormalizationMode.ScaledRaw); }
+        };
     }
 }

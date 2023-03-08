@@ -23,6 +23,8 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public class UniverseSettings
     {
+        private DataNormalizationMode _dataNormalizationMode;
+
         /// <summary>
         /// The resolution to be used
         /// </summary>
@@ -55,7 +57,18 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Defines how universe data is normalized before being send into the algorithm
         /// </summary>
-        public DataNormalizationMode DataNormalizationMode;
+        public DataNormalizationMode DataNormalizationMode
+        {
+            get { return _dataNormalizationMode; }
+            set
+            {
+                if (value == DataNormalizationMode.ScaledRaw)
+                {
+                    throw new ArgumentException($"{nameof(DataNormalizationMode.ScaledRaw)} only intended for internal usage and history requests.");
+                }
+                _dataNormalizationMode = value;
+            }
+        }
 
         /// <summary>
         /// Defines how universe data is mapped together

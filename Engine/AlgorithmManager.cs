@@ -730,7 +730,7 @@ namespace QuantConnect.Lean.Engine
                     }
 
                     Security security = null;
-                    if (liveMode && algorithm.Securities.TryGetValue(split.Symbol, out security))
+                    if (algorithm.Securities.TryGetValue(split.Symbol, out security) && liveMode)
                     {
                         Log.Trace($"AlgorithmManager.Run(): {algorithm.Time}: Pre-Split for {split}. Security Price: {security.Price} Holdings: {security.Holdings.Quantity}");
                     }
@@ -746,7 +746,6 @@ namespace QuantConnect.Lean.Engine
                     algorithm.TradeBuilder.ApplySplit(split, liveMode, mode);
 
                     // apply the dividend event to the security volatility model
-                    Log.Trace($"Applying split to {security?.Symbol} at {algorithm.Time}");
                     WarmUpVolatilityModel(algorithm, security);
 
                     if (liveMode && security != null)
@@ -790,7 +789,7 @@ namespace QuantConnect.Lean.Engine
                 }
 
                 Security security = null;
-                if (liveMode && algorithm.Securities.TryGetValue(dividend.Symbol, out security))
+                if (algorithm.Securities.TryGetValue(dividend.Symbol, out security) && liveMode)
                 {
                     Log.Trace($"AlgorithmManager.Run(): {algorithm.Time}: Pre-Dividend: {dividend}. " +
                         $"Security Holdings: {security.Holdings.Quantity} Account Currency Holdings: " +
@@ -805,7 +804,6 @@ namespace QuantConnect.Lean.Engine
                 algorithm.Portfolio.ApplyDividend(dividend, liveMode, mode);
 
                 // apply the dividend event to the security volatility model
-                Log.Trace($"Applying dividend to {security?.Symbol} at {algorithm.Time}");
                 WarmUpVolatilityModel(algorithm, security);
 
                 if (liveMode && security != null)
@@ -982,9 +980,7 @@ namespace QuantConnect.Lean.Engine
             }
 
             var history = algorithm.HistoryProvider.GetHistory(historyRequests, algorithm.TimeZone);
-            var h = history.Get(historyRequests[0].DataType, security.Symbol).ToList();
-            Log.Trace($"Updating volatility model with {h.Count} history slices");
-            foreach (BaseData data in h)
+            foreach (BaseData data in history.Get(historyRequests[0].DataType, security.Symbol))
             {
                 volatilityModel.Update(security, data);
             }

@@ -50,7 +50,7 @@ namespace QuantConnect.Algorithm.CSharp
         }
     }
 
-    public class CustomVolatilityModel : BaseVolatilityModel
+    public class CustomVolatilityModel : IVolatilityModel
     {
         private DateTime _lastUpdate = DateTime.MinValue;
         private decimal _lastPrice = 0m;
@@ -59,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
         private RollingWindow<decimal> _window;
 
         // Volatility is a mandatory field
-        public override decimal Volatility { get; protected set; } = 0m;
+        public decimal Volatility { get; set; } = 0m;
         public CustomVolatilityModel(int periods)
         {
             _window = new RollingWindow<decimal>(periods);
@@ -67,7 +67,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         // Updates this model using the new price information in the specified security instance
         // Update is a mandatory method
-        public override void Update(Security security, BaseData data)
+        public void Update(Security security, BaseData data)
         {
             var timeSinceLastUpdate = data.EndTime - _lastUpdate;
             if (timeSinceLastUpdate >= _periodSpan && data.Price > 0m)
@@ -99,10 +99,15 @@ namespace QuantConnect.Algorithm.CSharp
 
         // Returns history requirements for the volatility model expressed in the form of history request
         // GetHistoryRequirements is a mandatory method
-        public override IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime)
+        public IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime)
         // For simplicity's sake, we will not set a history requirement
         {
             return Enumerable.Empty<HistoryRequest>();
+        }
+
+        public void Reset()
+        {
+            throw new NotImplementedException();
         }
     }
 }

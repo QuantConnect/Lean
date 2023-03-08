@@ -40,7 +40,7 @@ namespace QuantConnect.Securities.Volatility
         /// <summary>
         /// Gets the volatility of the security as a percentage
         /// </summary>
-        public virtual decimal Volatility { get; protected set; }
+        public virtual decimal Volatility { get; }
 
         /// <summary>
         /// Sets the <see cref="ISubscriptionDataConfigProvider"/> instance to use.
@@ -145,7 +145,6 @@ namespace QuantConnect.Securities.Volatility
         /// </summary>
         public virtual void Reset()
         {
-            Volatility = 0;
         }
     }
 }
