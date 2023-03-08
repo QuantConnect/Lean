@@ -66,7 +66,7 @@ namespace QuantConnect.Data.Auxiliary
                 }
 
                 // For ScaledRaw, we need to get the price scale at the end date to adjust prices to that date instead of "today"
-                endDateTimeFactor = factorFile.GetPriceScale(endDateTime.Value, normalizationMode, contractOffset, dataMappingMode);
+                endDateTimeFactor = factorFile.GetPriceFactor(endDateTime.Value, normalizationMode, dataMappingMode, contractOffset);
             }
 
             return factorFile.GetPriceFactor(dateTime, normalizationMode, dataMappingMode, contractOffset) / endDateTimeFactor;
