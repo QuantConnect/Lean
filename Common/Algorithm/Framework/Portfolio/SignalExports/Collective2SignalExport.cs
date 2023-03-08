@@ -13,23 +13,14 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Security.Policy;
-using System.Text.Json;
-using System.Threading.Tasks;
-using System.Net.Http;
-using QuantConnect.Algorithm.Framework.Portfolio;
+using Newtonsoft.Json;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
-using static System.Net.WebRequestMethods;
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
 using System.Text;
-using System.IO;
-using Newtonsoft.Json;
-using System.Globalization;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 {
@@ -51,7 +42,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <summary>
         /// Collective2 API endpoint
         /// </summary>
-        private readonly string _destination;
+        private readonly Uri _destination;
 
         /// <summary>
         /// User's portfolio
@@ -77,11 +68,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             _systemId = systemId;
             if (platformId == null)
             {
-                _destination = "https://api.collective2.com/world/apiv3/setDesiredPositions";
+                _destination = new Uri("https://api.collective2.com/world/apiv3/setDesiredPositions");
             } 
             else
             {
-                _destination = $"https://api.collective2.com/world/{platformId}/setDesiredPositions";
+                _destination = new Uri($"https://api.collective2.com/world/{platformId}/setDesiredPositions");
             }
 
             _portfolio = portfolio;
@@ -99,7 +90,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         {
             if (holdings.Count == 0)
             {
-                throw new ArgumentException("PortfolioTarget is empty");
+                throw new ArgumentException("Portfolio target list is empty");
             }
 
             var positions = ConvertHoldingsToCollective2(holdings);
@@ -115,7 +106,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <param name="holdings">A list of holdings from the portfolio 
         /// expected to be sent to Collective2 API</param>
         /// <returns>A list of Collective2 positions</returns>
-        private List<Collective2Position> ConvertHoldingsToCollective2(List<PortfolioTarget> holdings)
+        protected List<Collective2Position> ConvertHoldingsToCollective2(List<PortfolioTarget> holdings)
         {
             var positions = new List<Collective2Position>();
             foreach (var target in holdings)
@@ -159,6 +150,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <returns>Number of shares hold of the given position/returns>
         private int ConvertPercentageToQuantity(PortfolioTarget target)
         {
+            // TODO:  We use PortfolioTarget.Percent to calculate it really
             var assetValue = target.Quantity * _portfolio.TotalPortfolioValue;
             var numberShares = (int)(assetValue * _portfolio[target.Symbol].Price);
 
@@ -185,8 +177,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             };
 
             var jsonMessage = JsonConvert.SerializeObject(payload);
-            Log.Trace("---------- Collective2 JSON Message ----------");
-            Log.Trace(jsonMessage);
             return jsonMessage;
         }
 
@@ -198,24 +188,21 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         private async void SendPositions(string message)
         {
             var httpMessage = new StringContent(message, Encoding.UTF8, "application/json");
-            using HttpResponseMessage response = await _client.PostAsync(_destination, httpMessage);
+            using HttpResponseMessage response = await _client.PostAsync(_destination, httpMessage).ConfigureAwait(true);
 
-            if (response.IsSuccessStatusCode)
-            {
-                var responseBody = await response.Content.ReadAsStringAsync();
-                Log.Trace($"Success POST request. Message retrieved: {responseBody}");
-            }
-            else
+            if (!response.IsSuccessStatusCode)
             {
                 Log.Trace($"HttpRequestException: {response.StatusCode}");
             }
+
+            httpMessage.Dispose();
         }
 
         /// <summary>
         /// Stores position's needed information to be serialized in JSON format
         /// and then sent to Collective2 API
         /// </summary>
-        private class Collective2Position
+        public class Collective2Position
         {
             /// <summary>
             /// Position symbol

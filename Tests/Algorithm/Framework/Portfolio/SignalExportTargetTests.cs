@@ -13,29 +13,96 @@
  * limitations under the License.
 */
 
-using System.Linq;
-using Moq;
 using NUnit.Framework;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
-using System.Collections.Generic;
-using QuantConnect.Data.Market;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Securities;
-using QuantConnect.Tests.Engine;
-using QuantConnect.Tests.Common.Securities;
-using QuantConnect.Tests.Engine.DataFeeds;
-using static QuantConnect.Tests.Algorithm.Framework.Portfolio.PortfolioConstructionModelTests;
-using NodaTime;
-using QuantConnect.Tests.Common.Data.UniverseSelection;
 using System;
-using QuantConnect.Interfaces;
+using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 {
     [TestFixture]
     public class Collective2SignalExportTests
     {
+        [Test]
+        public void ConvertsPortfolioTargetsToCollective2Appropiately()
+        {
+            var reference = new DateTime(2016, 02, 16, 11, 53, 30);
+            var symbols = new List<Symbol>()
+            {
+                Symbols.SPY,
+                Symbols.EURUSD,
+                Symbols.ES_Future_Chain,
+                Symbols.SPY_Option_Chain
+            };
+
+            var securities = new List<Security>();
+            var timeKeeper = new TimeKeeper(reference);
+            var securityManager = new SecurityManager(timeKeeper);
+
+            foreach (var symbol in symbols)
+            {
+                var security = CreateSecurity(reference, symbol);
+                securities.Add(security);
+                securityManager.Add(security);
+            }
+
+            var transactionManager = new SecurityTransactionManager(null, securityManager);
+            var portfolio = new SecurityPortfolioManager(securityManager, transactionManager);
+            portfolio.SetCash(50000);
+
+            var targetList = new List<PortfolioTarget>()
+            {
+                new PortfolioTarget(Symbols.SPY, (decimal)0.2),
+                new PortfolioTarget(Symbols.EURUSD, (decimal)0.3),
+                new PortfolioTarget(Symbols.ES_Future_Chain, (decimal)0.2),
+                new PortfolioTarget(Symbols.SPY_Option_Chain, (decimal)0.3)
+            };
+
+            var manager = new Collective2SignalExportTestHandler("", 0, portfolio);
+            var transformedList = manager.ConvertHoldingsToCollective2TestHandler(targetList);
+            var expectedTransformedList = new List<Collective2SignalExport.Collective2Position>()
+            {
+                new Collective2SignalExport.Collective2Position
+                {
+                    symbol = "SPY R735QTJ8XC9X",
+                    typeofsymbol = "stock",
+                    quant = 1000000
+                },
+
+                new Collective2SignalExport.Collective2Position
+                {
+                    symbol = "EURUSD 8G",
+                    typeofsymbol = "forex",
+                    quant = 1500000
+                },
+
+                new Collective2SignalExport.Collective2Position
+                {
+                    symbol = "ES 1S1",
+                    typeofsymbol = "future",
+                    quant = 1000000
+                },
+
+                new Collective2SignalExport.Collective2Position
+                {
+                    symbol = "SPY 2U|SPY R735QTJ8XC9X",
+                    typeofsymbol = "option",
+                    quant = 1500000
+                }
+            };
+
+            for (var index = 0; index < expectedTransformedList.Count; index++)
+            {
+                Assert.AreEqual(expectedTransformedList[index].symbol, transformedList[index].symbol);
+                Assert.AreEqual(expectedTransformedList[index].typeofsymbol, transformedList[index].typeofsymbol);
+                Assert.AreEqual(expectedTransformedList[index].quant, transformedList[index].quant);
+            }
+        }
+
         [Test]
         public void SendsTargetsToCollective2Appropiately()
         {
@@ -71,18 +138,17 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new PortfolioTarget(Symbols.SPY_Option_Chain, (decimal)0.3)
             };
 
-            Collective2SignalExport manager = new Collective2SignalExport("fnmzppYk0HO8YTrMRCPA2MBa3mLna6frsMjAJab1SyA5lpfbhY", 143679411, portfolio);
+            var manager = new Collective2SignalExport("", 0, portfolio);
 
             var message = manager.Send(targetList);
 
-            var expectedMessage = @"{""positions"":[{""symbol"":""SPY R735QTJ8XC9X"",""typeofsymbol"":""stock"",""quant"":1000000},{""symbol"":""EURUSD 8G"",""typeofsymbol"":""forex"",""quant"":1500000},{""symbol"":""ES 1S1"",""typeofsymbol"":""future"",""quant"":1000000},{""symbol"":""SPY 2U|SPY R735QTJ8XC9X"",""typeofsymbol"":""option"",""quant"":1500000}],""systemid"":143679411,""apikey"":""fnmzppYk0HO8YTrMRCPA2MBa3mLna6frsMjAJab1SyA5lpfbhY""}";
+            var expectedMessage = @"{""positions"":[{""symbol"":""SPY R735QTJ8XC9X"",""typeofsymbol"":""stock"",""quant"":1000000},{""symbol"":""EURUSD 8G"",""typeofsymbol"":""forex"",""quant"":1500000},{""symbol"":""ES 1S1"",""typeofsymbol"":""future"",""quant"":1000000},{""symbol"":""SPY 2U|SPY R735QTJ8XC9X"",""typeofsymbol"":""option"",""quant"":1500000}],""systemid"":0,""apikey"":""""}";
 
             Assert.AreEqual(expectedMessage, message);
         }
 
         private Security CreateSecurity(DateTime reference,
-            Symbol symbol,
-            string accountCurrency = "USD")
+            Symbol symbol)
         {
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
@@ -98,9 +164,29 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             return security;
         }
 
+        /// <summary>
+        /// Creates a TradebarConfiguration for the given symbol
+        /// </summary>
+        /// <param name="symbol">Symbol for which we want to create a TradeBarConfiguration</param>
+        /// <returns>A new TradebarConfiguration for the given symbol</returns>
         private static SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol)
         {
             return new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+        }
+
+        /// <summary>
+        /// Handler class to test Collective2SignalExport
+        /// </summary>
+        private class Collective2SignalExportTestHandler : Collective2SignalExport
+        {
+            public Collective2SignalExportTestHandler(string apiKey, int systemId, SecurityPortfolioManager portfolio, string platformId = null) : base(apiKey, systemId, portfolio, platformId)
+            {
+            }
+
+            public List<Collective2Position> ConvertHoldingsToCollective2TestHandler(List<PortfolioTarget> holdings)
+            {
+                return base.ConvertHoldingsToCollective2(holdings);
+            }
         }
     }
 }

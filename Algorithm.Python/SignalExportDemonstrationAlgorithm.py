@@ -14,30 +14,54 @@
 from AlgorithmImports import *
 
 ### <summary>
-### This algorithm sends current portfolio targets to different 3rd party API's.
+### This algorithm sends current portfolio targets to different 3rd party API's every time
+### the portfolio changes.
 ### </summary>
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="using quantconnect" />
 ### <meta name="tag" content="securities and portfolio" />
 class SignalExportDemonstrationAlgorithm(QCAlgorithm):
-    ''' This algorithm sends current portfolio targets to different 3rd party API's. '''
 
     def Initialize(self):
-        ''' Initialize the date and resolution to then add two securities '''
-        self.UniverseSettings.Resolution = Resolution.Minute
+        ''' Initialize the date and add two securities '''
 
-        self.SetStartDate(2013, 10, 7)
-        self.SetEndDate(2013, 10, 7)
-        self.SetCash(50000)
-
-        self.Collective2Apikey = "" # Replace this value with your Collective2 API key
-        self.Collective2SystemId = 1 # Replace this value with your Collective2 system ID
+        self.SetStartDate(2013, 10, 7)   #Set Start Date
+        self.SetEndDate(2013, 10, 11)    #Set End Date
+        self.SetCash(100000)             #Set Strategy Cash
         self.spy = self.AddEquity("SPY").Symbol
-        self.es = self.AddFuture("ES").Symbol
+        self.aig = self.AddEquity("AIG").Symbol
 
-    ''' When the data is ready, set the targets and the signal export providers '''
-    def OnData(self, slice):
-        self.SignalExportManager.SetSignalExportProviders(Collective2SignalExport(self.Collective2Apikey, self.Collective2SystemId, self.Portfolio))
-        self.SignalExportManager.SetTargetPortfolio(PortfolioTarget(self.spy, 0.2), PortfolioTarget(self.es, 0.8))
+        # Receive parameters from the Job
+        fast_period = 100
+        slow_period = 200
+
+        self.fast = self.EMA("SPY", fast_period)
+        self.slow = self.EMA("SPY", slow_period)
+
+        # Set the signal export providers
+        self.collective2Apikey = "" # Replace this value with your Collective2 API key
+        self.collective2SystemId = 1 # Replace this value with your Collective2 system ID
+        self.SignalExport.AddSignalExportProviders(Collective2SignalExport(self.collective2Apikey, self.collective2SystemId, self.Portfolio))
+
+    def OnData(self, data):
+        '''Remove one security and set holdings to the another one when the EMA's cross, then send a signal to the 3rd party API's defined'''
+
+        # wait for our indicators to ready
+        if not self.fast.IsReady or not self.slow.IsReady:
+            return
+
+        fast = self.fast.Current.Value
+        slow = self.slow.Current.Value
+
+        '''This is not actually checking whether the EMA's are crossing between themselves'''
+        if fast > slow * 1.001:
+            self.SetHoldings("SPY", 1)
+            self.Liquidate("AIG")
+            self.SignalExport.SetTargetPortfolio(self.Portfolio)
+        elif fast < slow * 0.999:
+            self.Liquidate("SPY")
+            self.SetHoldings("AIG", 1)
+            self.SignalExport.SetTargetPortfolio(self.Portfolio)
+            
 
 

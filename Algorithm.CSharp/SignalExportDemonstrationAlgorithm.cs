@@ -13,55 +13,77 @@
  * limitations under the License.
 */
 
-using QuantConnect.Algorithm.CSharp.Benchmarks;
-using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
 using QuantConnect.Data;
+using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This algorithm sends current portfolio targets to different 3rd party API's.
+    /// This algorithm sends current portfolio targets to different 3rd party API's
+    /// every time the portfolio changes.
     /// </summary>
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="using quantconnect" />
     /// <meta name="tag" content="securities and portfolio" />
     public class SignalExportDemonstrationAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol spy;
-        private Symbol es;
-        private const string Collective2ApiKey = ""; // Replace this value with your Colletive2 API key
-        private const int Collective2SystemId = 1; // Replace this value with your system ID
+        private const string _collective2ApiKey = ""; // Replace this value with your Colletive2 API key
+        private const int _collective2SystemId = 1; // Replace this value with your system ID
+
+        private Symbol _spy;
+        private Symbol _aig;
+
+        public int FastPeriod = 100;
+        public int SlowPeriod = 200;
+
+        public ExponentialMovingAverage Fast;
+        public ExponentialMovingAverage Slow;
 
         /// <summary>
-        /// Initialize the date and resolution to then add two securities
+        /// Initialize the date and add two securities
         /// </summary>
         public override void Initialize()
         {
-            UniverseSettings.Resolution = Resolution.Minute;
+            SetStartDate(2013, 10, 07);
+            SetEndDate(2013, 10, 11);
+            SetCash(100 * 1000);
 
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 07);    //Set End Date
-            SetCash(50000);             //Set Strategy Cash
+            _spy = AddSecurity(SecurityType.Equity, "SPY").Symbol;
+            _aig = AddSecurity(SecurityType.Equity, "AIG").Symbol;
 
-            spy = AddEquity("SPY").Symbol;
-            es = AddFuture("ES").Symbol;
+            Fast = EMA("SPY", FastPeriod);
+            Slow = EMA("SPY", SlowPeriod);
+
+            // Set the signal export providers
+            SignalExport.AddSignalExportProviders(new Collective2SignalExport(_collective2ApiKey, _collective2SystemId, Portfolio));
         }
 
         /// <summary>
-        /// When the data is ready, set the targets and the signal export providers
+        /// Remove one security and set holdings to the another one when the EMA's cross,
+        /// then send a signal to the 3rd party API's defined
         /// </summary>
-        /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
+        /// <param name="slice"></param>
         public override void OnData(Slice slice)
         {
-            SignalExportManager.SetSignalExportProviders(new Collective2SignalExport(Collective2ApiKey, Collective2SystemId, Portfolio));
-            SignalExportManager.SetTargetPortfolio(new PortfolioTarget(spy, (decimal)0.2), new PortfolioTarget(es, (decimal)0.8));
+            // wait for our indicators to ready
+            if (!Fast.IsReady || !Slow.IsReady) return;
+
+            // This is not actually checking whether the EMA's are crossing between themselves
+            if (Fast > Slow * 1.001m)
+            {
+                SetHoldings("SPY", 1);
+                Liquidate("AIG");
+                SignalExport.SetTargetPortfolio(Portfolio);
+            }
+            else if (Fast < Slow * 0.999m)
+            {
+                Liquidate("SPY");
+                SetHoldings("AIG", 1);
+                SignalExport.SetTargetPortfolio(Portfolio);
+            }
         }
 
         /// <summary>
@@ -77,7 +99,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 5755;
+        public long DataPoints => 7843;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -89,34 +111,34 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "0"},
+            {"Total Trades", "3"},
             {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
+            {"Average Loss", "-0.21%"},
+            {"Compounding Annual Return", "210.122%"},
+            {"Drawdown", "3.700%"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "1.458%"},
+            {"Sharpe Ratio", "4.625"},
+            {"Probabilistic Sharpe Ratio", "57.701%"},
+            {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Fitness Score", "0"},
+            {"Alpha", "-1.473"},
+            {"Beta", "1.551"},
+            {"Annual Standard Deviation", "0.346"},
+            {"Annual Variance", "0.12"},
+            {"Information Ratio", "-3.022"},
+            {"Tracking Error", "0.126"},
+            {"Treynor Ratio", "1.033"},
+            {"Total Fees", "$27.62"},
+            {"Estimated Strategy Capacity", "$1800000.00"},
+            {"Lowest Capacity Asset", "AIG R735QTJ8XC9X"},
+            {"Fitness Score", "0.748"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "0"},
-            {"Return Over Maximum Drawdown", "0"},
-            {"Portfolio Turnover", "0"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "27.139"},
+            {"Portfolio Turnover", "0.749"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -130,7 +152,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
+            {"OrderListHash", "cf7be0604d18ec938013f0c596f20950"}
         };
     }
 }

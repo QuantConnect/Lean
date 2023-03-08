@@ -13,13 +13,10 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 {
@@ -35,11 +32,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         private List<ISignalExportTarget> _signalExports;
 
         /// <summary>
-        /// List of target security holdings to be sent to certain signal export provider
-        /// </summary>
-        private List<PortfolioTarget> _targets;
-
-        /// <summary>
         /// Adds one or more signal export providers if argument is different than null
         /// </summary>
         /// <param name="signalExports">List of signal export providers</param>
@@ -47,18 +39,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         {
             if (signalExports.Length != 0)
             {
-                SetSignalExportProviders(signalExports);
+                AddSignalExportProviders(signalExports);
             }
-        }
-
-        /// <summary>
-        /// Sets one or more signal export providers. It should be used when it has not been
-        /// defined before a list of signal export providers
-        /// </summary>
-        /// <param name="signalExports"></param>
-        public void SetSignalExportProviders(params ISignalExportTarget[] signalExports)
-        {
-            _signalExports = new List<ISignalExportTarget>(signalExports);
         }
 
         /// <summary>
@@ -67,6 +49,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <param name="signalExports">One or more signal export provider</param>
         public void AddSignalExportProviders(params ISignalExportTarget[] signalExports)
         {
+            if (_signalExports == null)
+            {
+                _signalExports = new List<ISignalExportTarget>();
+            }
+
             _signalExports.AddRange(signalExports);
         }
 
@@ -88,6 +75,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
             foreach (var holding in portfolio.Values)
             {
+                if (portfolio.TotalPortfolioValue == 0)
+                {
+                    throw new ArgumentException("Total portfolio value was 0");
+                }
+
                 var holdingPercent = holding.HoldingsValue / portfolio.TotalPortfolioValue;
                 targets[index] = new PortfolioTarget(holding.Symbol, (decimal)holdingPercent);
                 ++index;
