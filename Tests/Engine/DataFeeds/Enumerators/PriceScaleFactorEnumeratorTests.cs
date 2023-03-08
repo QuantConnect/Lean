@@ -248,7 +248,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         }
 
         [Test]
-        public void PricesAreProperlyAdjustedForLookAheadScaledRawDataNormalizationMode2()
+        public void PricesAreProperlyAdjustedForLookAheadScaledRawDataNormalizationMode()
         {
             var factorFileEntries = new[]
             {

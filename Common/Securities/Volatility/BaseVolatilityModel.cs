@@ -29,9 +29,6 @@ namespace QuantConnect.Securities.Volatility
     /// </summary>
     public class BaseVolatilityModel : IVolatilityModel
     {
-        private List<Dividend> _dividends = new();
-        private List<Split> _splits = new();
-
         /// <summary>
         /// Provides access to registered <see cref="SubscriptionDataConfig"/>
         /// </summary>

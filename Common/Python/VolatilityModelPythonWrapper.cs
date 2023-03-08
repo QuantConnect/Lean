@@ -15,6 +15,7 @@
 
 using Python.Runtime;
 using QuantConnect.Data;
+using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using QuantConnect.Interfaces;
@@ -69,7 +70,7 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="security">The security to calculate volatility for</param>
         /// <param name="data">The new data used to update the model</param>
-        public override void Update(Securities.Security security, BaseData data)
+        public override void Update(Security security, BaseData data)
         {
             using (Py.GIL())
             {
@@ -83,7 +84,7 @@ namespace QuantConnect.Python
         /// <param name="security">The security of the request</param>
         /// <param name="utcTime">The date/time of the request</param>
         /// <returns>History request object list, or empty if no requirements</returns>
-        public override IEnumerable<HistoryRequest> GetHistoryRequirements(Securities.Security security, DateTime utcTime)
+        public override IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime)
         {
             using (Py.GIL())
             {

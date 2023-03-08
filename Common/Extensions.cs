@@ -3316,16 +3316,6 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Applies a division factor, as the opposite action of <see cref="TimesFactor(decimal, decimal, decimal)"/>.
-        /// We define this so we don't need to create it constantly
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static decimal OverFactor(decimal target, decimal factor, decimal sumOfDividends)
-        {
-            return (target - sumOfDividends) / factor;
-        }
-
-        /// <summary>
         /// Applies an addition factor. We define this so we don't need to create it constantly
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

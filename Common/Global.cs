@@ -693,7 +693,7 @@ namespace QuantConnect
         /// <remarks>Last contract is the true one, factor 1</remarks>
         BackwardsRatio,
         /// <summary>
-        /// Splits and dividends are adjusted into the prices in a given date. Only for internal usage. (7)
+        /// Splits and dividends are adjusted into the prices in a given date. Only for internal usage and history requests. (7)
         /// </summary>
         ScaledRaw,
     }

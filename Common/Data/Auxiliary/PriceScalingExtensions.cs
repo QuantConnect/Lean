@@ -35,6 +35,9 @@ namespace QuantConnect.Data.Auxiliary
         /// <param name="dataMappingMode">The data mapping mode used, useful for continuous contracts</param>
         /// <param name="endDateTime">The reference end date for scaling prices. Default is today (latest factor entry)</param>
         /// <returns>The price scale to use</returns>
+        /// <exception cref="ArgumentException">
+        /// If <paramref name="normalizationMode"/> is <see cref="DataNormalizationMode.ScaledRaw"/> and <paramref name="endDateTime"/> is null
+        /// </exception>
         public static decimal GetPriceScale(
             this IFactorProvider factorFile,
             DateTime dateTime,
@@ -54,8 +57,14 @@ namespace QuantConnect.Data.Auxiliary
             }
 
             var endDateTimeFactor = 1m;
-            if (normalizationMode == DataNormalizationMode.ScaledRaw && endDateTime != null)
+            if (normalizationMode == DataNormalizationMode.ScaledRaw)
             {
+                if (endDateTime == null)
+                {
+                    throw new ArgumentException(
+                        $"{nameof(DataNormalizationMode.ScaledRaw)} normalization mode requires an end date for price scaling.");
+                }
+
                 // For ScaledRaw, we need to get the price scale at the end date to adjust prices to that date instead of "today"
                 endDateTimeFactor = factorFile.GetPriceScale(endDateTime.Value, normalizationMode, contractOffset, dataMappingMode);
             }
