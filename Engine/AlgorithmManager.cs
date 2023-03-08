@@ -745,7 +745,7 @@ namespace QuantConnect.Lean.Engine
                     // apply the split event to the trade builder
                     algorithm.TradeBuilder.ApplySplit(split, liveMode, mode);
 
-                    // apply the dividend event to the security volatility model
+                    // apply the split event to the security volatility model
                     WarmUpVolatilityModel(algorithm, security);
 
                     if (liveMode && security != null)
