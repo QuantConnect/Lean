@@ -558,12 +558,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "8"},
             {"Average Win", "0%"},
             {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "92.027%"},
+            {"Compounding Annual Return", "92.073%"},
             {"Drawdown", "0.100%"},
             {"Expectancy", "-1"},
             {"Net Profit", "0.838%"},
-            {"Sharpe Ratio", "12.96"},
-            {"Probabilistic Sharpe Ratio", "99.089%"},
+            {"Sharpe Ratio", "12.969"},
+            {"Probabilistic Sharpe Ratio", "99.104%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
@@ -571,13 +571,13 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0.229"},
             {"Annual Standard Deviation", "0.054"},
             {"Annual Variance", "0.003"},
-            {"Information Ratio", "-7.418"},
+            {"Information Ratio", "-7.415"},
             {"Tracking Error", "0.172"},
-            {"Treynor Ratio", "3.066"},
+            {"Treynor Ratio", "3.069"},
             {"Total Fees", "$8.00"},
             {"Estimated Strategy Capacity", "$48000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Return Over Maximum Drawdown", "1183.499"},
+            {"Return Over Maximum Drawdown", "1191.657"},
             {"Portfolio Turnover", "0.093"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
@@ -585,7 +585,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Long Insight Count", "0"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
-            {"OrderListHash", "3f7c620ad37d096af1af0ca341fbbe48"}
+            {"OrderListHash", "77f92a9299871d8aba2a232a0537e16c"}
         };
     }
 }

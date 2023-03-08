@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QLNet;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
@@ -183,58 +184,113 @@ namespace QuantConnect.Orders.Fills
         }
 
         /// <summary>
-        /// Default stop fill model implementation in base class security. (Stop Market Order Type)
+        /// Stop fill model implementation for Equity.
         /// </summary>
         /// <param name="asset">Security asset we're filling</param>
         /// <param name="order">Order packet to model</param>
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        /// <remarks>
+        /// A Stop order is an instruction to submit a buy or sell market order
+        /// if and when the user-specified stop trigger price is attained or penetrated.
+        ///
+        /// A Sell Stop order is always placed below the current market price.
+        /// We assume a fluid/continuous, high volume market. Therefore, it is filled at the stop trigger price
+        /// if the current low price of trades is less than or equal to this price.
+        ///
+        /// A Buy Stop order is always placed above the current market price.
+        /// We assume a fluid, high volume market. Therefore, it is filled at the stop trigger price
+        /// if the current high price of trades is greater or equal than this price.
+        ///
+        /// The continuous market assumption is not valid if the market opens with an unfavorable gap.
+        /// In this case, a new bar opens below/above the stop trigger price, and the order is filled with the opening price.
         /// <seealso cref="MarketFill(Security, MarketOrder)"/>
         public override OrderEvent StopMarketFill(Security asset, StopMarketOrder order)
         {
-            //Default order event to return.
+            // Default order event to return.
             var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
             var fill = new OrderEvent(order, utcTime, OrderFee.Zero);
 
-            //If its cancelled don't need anymore checks:
+            // If cancelled, don't need anymore checks:
             if (order.Status == OrderStatus.Canceled) return fill;
 
-            // make sure the exchange is open/normal market hours before filling
+            // Make sure the exchange is open/normal market hours before filling
             if (!IsExchangeOpen(asset, false)) return fill;
 
-            //Get the range of prices in the last bar:
-            var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
-            var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+            // Get the range of prices in the last bar:
+            var tradeOpen = 0m;
+            var tradeHigh = decimal.MinValue;
+            var tradeLow = decimal.MaxValue;
+            var endTimeUtc = DateTime.MinValue;
 
-            // do not fill on stale data
-            if (pricesEndTime <= order.Time) return fill;
+            var subscribedTypes = GetSubscribedTypes(asset);
 
-            //Calculate the model slippage: e.g. 0.01c
-            var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
+            if (subscribedTypes.Contains(typeof(Tick)))
+            {
+                var trades = asset.Cache.GetAll<Tick>().Where(x => x.TickType == TickType.Trade);
 
-            //Check if the Stop Order was filled: opposite to a limit order
+                foreach (var trade in trades)
+                {
+                    tradeOpen = tradeOpen == 0 ? trade.Price : tradeOpen;
+                    tradeHigh = Math.Max(tradeHigh, trade.Price);
+                    tradeLow = Math.Min(tradeLow, trade.Price);
+                    endTimeUtc = trade.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+                }
+            }
+            else if (subscribedTypes.Contains(typeof(TradeBar)))
+            {
+                var tradeBar = asset.Cache.GetData<TradeBar>();
+
+                if (tradeBar != null)
+                {
+                    tradeOpen = tradeBar.Open;
+                    tradeHigh = tradeBar.High;
+                    tradeLow = tradeBar.Low;
+                    endTimeUtc = tradeBar.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
+                }
+            }
+
+            // Do not fill on stale data
+            if (endTimeUtc <= order.Time) return fill;
+            
             switch (order.Direction)
             {
                 case OrderDirection.Sell:
-                    //-> 1.1 Sell Stop: If Price below setpoint, Sell:
-                    if (prices.Low < order.StopPrice)
+                    if (tradeLow <= order.StopPrice)
                     {
                         fill.Status = OrderStatus.Filled;
-                        // Assuming worse case scenario fill - fill at lowest of the stop & asset price.
-                        fill.FillPrice = Math.Min(order.StopPrice, prices.Current - slip);
-                        // assume the order completely filled
                         fill.FillQuantity = order.Quantity;
+
+                        var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
+
+                        // Unfavorable gap case: if the bar opens below the stop price, fill at open price
+                        if (tradeOpen <= order.StopPrice)
+                        {
+                            fill.FillPrice = tradeOpen - slip;
+                            fill.Message = Messages.EquityFillModel.FilledWithOpenDueToUnfavorableGap(asset, tradeOpen, endTimeUtc);
+                            return fill;
+                        }
+
+                        fill.FillPrice = order.StopPrice - slip;
                     }
                     break;
 
                 case OrderDirection.Buy:
-                    //-> 1.2 Buy Stop: If Price Above Setpoint, Buy:
-                    if (prices.High > order.StopPrice)
+                    if (tradeHigh >= order.StopPrice)
                     {
                         fill.Status = OrderStatus.Filled;
-                        // Assuming worse case scenario fill - fill at highest of the stop & asset price.
-                        fill.FillPrice = Math.Max(order.StopPrice, prices.Current + slip);
-                        // assume the order completely filled
                         fill.FillQuantity = order.Quantity;
+
+                        var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
+
+                        // Unfavorable gap case: if the bar opens above the stop price, fill at open price
+                        if (tradeOpen >= order.StopPrice)
+                        {
+                            fill.FillPrice = tradeOpen + slip;
+                            fill.Message = Messages.EquityFillModel.FilledWithOpenDueToUnfavorableGap(asset, tradeOpen, endTimeUtc);
+                            return fill;
+                        }
+
+                        fill.FillPrice = order.StopPrice + slip;
                     }
                     break;
             }
