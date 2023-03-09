@@ -44,21 +44,21 @@ namespace QuantConnect.Statistics
         /// <param name="trades">The list of closed trades</param>
         /// <param name="profitLoss">Trade record of profits and losses</param>
         /// <param name="equity">The list of daily equity values</param>
+        /// <param name="portfolioTurnover">The algorithm portfolio turnover</param>
         /// <param name="listPerformance">The list of algorithm performance values</param>
         /// <param name="listBenchmark">The list of benchmark values</param>
-        /// <param name="portfolioTurnover">The algorithm portfolio turnover</param>
         /// <param name="startingCapital">The algorithm starting capital</param>
         public AlgorithmPerformance(
             List<Trade> trades,
             SortedDictionary<DateTime, decimal> profitLoss,
             SortedDictionary<DateTime, decimal> equity,
+            SortedDictionary<DateTime, decimal> portfolioTurnover,
             List<double> listPerformance,
             List<double> listBenchmark,
-            decimal portfolioTurnover,
             decimal startingCapital)
         {
             TradeStatistics = new TradeStatistics(trades);
-            PortfolioStatistics = new PortfolioStatistics(profitLoss, equity, listPerformance, listBenchmark, portfolioTurnover, startingCapital);
+            PortfolioStatistics = new PortfolioStatistics(profitLoss, equity, portfolioTurnover, listPerformance, listBenchmark, startingCapital);
             ClosedTrades = trades;
         }
 

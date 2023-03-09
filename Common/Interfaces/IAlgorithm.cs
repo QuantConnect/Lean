@@ -14,21 +14,21 @@
 */
 
 using System;
-using System.Collections.Generic;
 using NodaTime;
+using QuantConnect.Data;
+using QuantConnect.Orders;
+using QuantConnect.Storage;
 using QuantConnect.Benchmarks;
 using QuantConnect.Brokerages;
-using QuantConnect.Data;
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Notifications;
-using QuantConnect.Orders;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
+using QuantConnect.Notifications;
+using System.Collections.Generic;
 using System.Collections.Concurrent;
-using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
-using QuantConnect.Storage;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 
 namespace QuantConnect.Interfaces
@@ -334,15 +334,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Gets the insight manager
         /// </summary>
-        IInsightManager InsightManager
-        {
-            get;
-        }
-
-        /// <summary>
-        /// Gets the insight evaluator
-        /// </summary>
-        IInsightEvaluator InsightEvaluator
+        InsightManager Insights
         {
             get;
         }
@@ -698,12 +690,6 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="handler">The message handler to use</param>
         void SetBrokerageMessageHandler(IBrokerageMessageHandler handler);
-
-        /// <summary>
-        /// Set the insight manager
-        /// </summary>
-        /// <param name="insightManager">Insight manager</param>
-        void SetInsightManager(IInsightManager insightManager);
 
         /// <summary>
         /// Set the historical data provider

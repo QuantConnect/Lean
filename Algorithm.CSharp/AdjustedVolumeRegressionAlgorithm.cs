@@ -190,7 +190,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Fees", "$21.60"},
             {"Estimated Strategy Capacity", "$42000000.00"},
             {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0%"},
+            {"Portfolio Turnover", "99.56%"},
             {"OrderListHash", "18e41dded4f8cee548ee02b03ffb0814"}
         };
     }

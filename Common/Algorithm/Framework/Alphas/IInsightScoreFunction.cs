@@ -21,11 +21,11 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// <summary>
     /// Abstraction in charge of scoring insights
     /// </summary>
-    public interface IInsightEvaluator
+    public interface IInsightScoreFunction
     {
         /// <summary>
         /// Method to evaluate and score insights for each time step
         /// </summary>
-        void Score(IInsightManager insightManager, DateTime utcTime);
+        void Score(InsightManager insightManager, DateTime utcTime);
     }
 }

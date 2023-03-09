@@ -14,7 +14,7 @@
 from AlgorithmImports import *
 
 ### <summary>
-### Regression algorithm showing how to define a custom insight evaluator
+### Regression algorithm showing how to define a custom insight scoring function and using the insight manager
 ### </summary>
 class InsightScoringRegressionAlgorithm(QCAlgorithm):
     '''Regression algorithm showing how to define a custom insight evaluator'''
@@ -33,12 +33,12 @@ class InsightScoringRegressionAlgorithm(QCAlgorithm):
         self.SetRiskManagement(MaximumDrawdownPercentPerSecurity(0.01))
         
         # we specify a custom insight evaluator
-        self.SetInsightEvaluator(CustomInsightEvaluatorPy(self.Securities))
+        self.Insights.SetInsightScoreFunction(CustomInsightScoreFunction(self.Securities))
 
     def OnEndOfAlgorithm(self):
-        allInsights = self.InsightManager.GetInsights()
+        allInsights = self.Insights.GetInsights(lambda insight: True)
 
-        if len(allInsights) != 100:
+        if len(allInsights) != 100 or len(self.Insights.GetInsights()) != 100:
             raise ValueError(f'Unexpected insight count found {allInsights.Count}')
 
         if sum(1 for insight in allInsights if insight.Score.Magnitude == 0 or insight.Score.Direction == 0) < 5:
@@ -47,14 +47,14 @@ class InsightScoringRegressionAlgorithm(QCAlgorithm):
         if sum(1 for insight in allInsights if insight.Score.IsFinalScore) < 99:
             raise ValueError(f'Insights not finalized!')
 
-class CustomInsightEvaluatorPy():
+class CustomInsightScoreFunction():
 
     def __init__(self, securities):
         self._securities = securities
         self._openInsights = {}
 
     def Score(self, insightManager, utcTime):
-        openInsights = insightManager.GetOpenInsights()
+        openInsights = insightManager.GetActiveInsights(utcTime)
 
         for insight in openInsights:
             self._openInsights[insight.Id] = insight
@@ -70,6 +70,7 @@ class CustomInsightEvaluatorPy():
             openInsight.EstimatedValue = score * 100
 
             if openInsight.IsExpired(utcTime):
+                openInsight.Score.Finalize(utcTime)
                 toRemove.append(openInsight)
 
         # clean up

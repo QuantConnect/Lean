@@ -48,6 +48,7 @@ using QuantConnect.Algorithm.Selection;
 using QuantConnect.Storage;
 using Index = QuantConnect.Securities.Index.Index;
 using QuantConnect.Securities.CryptoFuture;
+using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 
 namespace QuantConnect.Algorithm
 {
@@ -196,7 +197,7 @@ namespace QuantConnect.Algorithm
             SetRiskManagement(new NullRiskManagementModel());
             SetUniverseSelection(new NullUniverseSelectionModel());
 
-            InsightEvaluator = new NullInsightEvaluator();
+            Insights = new InsightManager();
         }
 
         /// <summary>
@@ -2779,7 +2780,9 @@ namespace QuantConnect.Algorithm
                 Log($"{Time}: ALPHA: {string.Join(" | ", insights.Select(i => i.ToString()).OrderBy(i => i))}");
             }
 
-            InsightsGenerated?.Invoke(this, new GeneratedInsightsCollection(UtcTime, insights.ToList()));
+            Insights.AddRange(insights);
+
+            InsightsGenerated?.Invoke(this, new GeneratedInsightsCollection(UtcTime, insights));
         }
 
         /// <summary>

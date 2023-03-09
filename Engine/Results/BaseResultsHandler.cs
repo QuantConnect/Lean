@@ -23,6 +23,7 @@ using System.Threading;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
@@ -38,7 +39,8 @@ namespace QuantConnect.Lean.Engine.Results
     /// </summary>
     public abstract class BaseResultsHandler
     {
-        private decimal _previousSalesVolume;
+        private RollingWindow<decimal> _previousSalesVolume;
+        private DateTime _previousPortfolioTurnoverSample;
         private bool _packetDroppedWarning;
         // used for resetting out/error upon completion
         private static readonly TextWriter StandardOut = Console.Out;
@@ -234,6 +236,8 @@ namespace QuantConnect.Lean.Engine.Results
                 ["RuntimeError"] = String.Empty,
                 ["StackTrace"] = String.Empty
             };
+            _previousSalesVolume = new (2);
+            _previousSalesVolume.Add(0);
         }
 
         /// <summary>
@@ -285,6 +289,33 @@ namespace QuantConnect.Lean.Engine.Results
             var data = JsonConvert.SerializeObject(orderEvents, Formatting.None, OrderEventJsonConverter);
 
             File.WriteAllText(path, data);
+        }
+
+        /// <summary>
+        /// Save insight results to persistent storage
+        /// </summary>
+        /// <remarks>Method called by the storing timer and on exit</remarks>
+        protected virtual void StoreInsights()
+        {
+            if (Algorithm?.Insights == null)
+            {
+                // could be null if we are not initialized and exit is called
+                return;
+            }
+            // default save all results to disk and don't remove any from memory
+            // this will result in one file with all of the insights/results in it
+            var allInsights = Algorithm.Insights.GetInsights();
+            if (allInsights.Count > 0)
+            {
+                var alphaResultsPath = GetResultsPath(Path.Combine(AlgorithmId, "alpha-results.json"));
+                var directory = Directory.GetParent(alphaResultsPath);
+                if (!directory.Exists)
+                {
+                    directory.Create();
+                }
+                var orderedInsights = allInsights.OrderBy(insight => insight.GeneratedTimeUtc);
+                File.WriteAllText(alphaResultsPath, JsonConvert.SerializeObject(orderedInsights, Formatting.Indented));
+            }
         }
 
         /// <summary>
@@ -548,8 +579,21 @@ namespace QuantConnect.Lean.Engine.Results
                 }
                 var currentTotalSaleVolume = Algorithm.Portfolio.TotalSaleVolume;
 
-                var todayPortfolioTurnOver = (currentTotalSaleVolume - _previousSalesVolume) / currentPortfolioValue;
-                _previousSalesVolume = currentTotalSaleVolume;
+                decimal todayPortfolioTurnOver;
+                if (_previousPortfolioTurnoverSample == time)
+                {
+                    // we are sampling the same time twice, this can happen if we sample at the start of the portfolio loop
+                    // and the algorithm happen to end at the same time and we trigger the final sample to take into account that last loop
+                    // this new sample will overwrite the previous, so we resample using T-2 sales volume
+                    todayPortfolioTurnOver = (currentTotalSaleVolume - _previousSalesVolume[1]) / currentPortfolioValue;
+                }
+                else
+                {
+                    todayPortfolioTurnOver = (currentTotalSaleVolume - _previousSalesVolume[0]) / currentPortfolioValue;
+                }
+
+                _previousSalesVolume.Add(currentTotalSaleVolume);
+                _previousPortfolioTurnoverSample = time;
 
                 Sample(PortfolioTurnoverKey, PortfolioTurnoverKey, 0, SeriesType.Line, time, todayPortfolioTurnOver, "%");
             }

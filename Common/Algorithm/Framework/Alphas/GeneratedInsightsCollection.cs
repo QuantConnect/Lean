@@ -31,14 +31,14 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <summary>
         /// The generated insights
         /// </summary>
-        public List<Insight> Insights { get; }
+        public Insight[] Insights { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GeneratedInsightsCollection"/> class
         /// </summary>
         /// <param name="dateTimeUtc">The utc date time the sinals were generated</param>
         /// <param name="insights">The generated insights</param>
-        public GeneratedInsightsCollection(DateTime dateTimeUtc, List<Insight> insights)
+        public GeneratedInsightsCollection(DateTime dateTimeUtc, Insight[] insights)
         {
             DateTimeUtc = dateTimeUtc;
             Insights = insights;

@@ -57,13 +57,7 @@ namespace QuantConnect.Algorithm
         /// Gets the insight manager
         /// </summary>
         [DocumentationAttribute(AlgorithmFramework)]
-        public IInsightManager InsightManager { get; private set; }
-
-        /// <summary>
-        /// Gets the insight evaluator
-        /// </summary>
-        [DocumentationAttribute(AlgorithmFramework)]
-        public IInsightEvaluator InsightEvaluator { get; private set; }
+        public InsightManager Insights { get; private set; }
 
         /// <summary>
         /// Gets or sets the portfolio construction model
@@ -164,6 +158,9 @@ namespace QuantConnect.Algorithm
                     UniverseManager.Add(ukvp);
                 }
             }
+
+            // update scores
+            Insights.Step(UtcTime);
 
             // we only want to run universe selection if there's no data available in the slice
             if (!slice.HasData)
@@ -319,27 +316,6 @@ namespace QuantConnect.Algorithm
             {
                 UniverseSelection = universeSelection;
             }
-        }
-
-        /// <summary>
-        /// Sets the insight evaluator to use
-        /// </summary>
-        /// <param name="insightEvaluator">Model that scores insights</param>
-        [DocumentationAttribute(AlgorithmFramework)]
-        public void SetInsightEvaluator(IInsightEvaluator insightEvaluator)
-        {
-            InsightEvaluator = insightEvaluator;
-        }
-
-
-        /// <summary>
-        /// Set the insight manager
-        /// </summary>
-        /// <param name="insightManager">Insight manager</param>
-        [DocumentationAttribute(AlgorithmFramework)]
-        public void SetInsightManager(IInsightManager insightManager)
-        {
-            InsightManager = insightManager;
         }
 
         /// <summary>

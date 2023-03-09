@@ -28,7 +28,7 @@ using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm showing how to define a custom insight evaluator
+    /// Regression algorithm showing how to define a custom insight scoring function and using the insight manager
     /// </summary>
     public class InsightScoringRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
@@ -46,15 +46,15 @@ namespace QuantConnect.Algorithm.CSharp
             SetExecution(new ImmediateExecutionModel());
             SetRiskManagement(new MaximumDrawdownPercentPerSecurity(0.01m));
 
-            // we specify a custom insight evaluator
-            SetInsightEvaluator(new CustomInsightEvaluator(Securities));
+            // we specify a custom insight score function
+            Insights.SetInsightScoreFunction(new CustomInsightScoreFunction(Securities));
         }
 
         public override void OnEndOfAlgorithm()
         {
-            var allInsights = InsightManager.GetInsights();
+            var allInsights = Insights.GetInsights(insight => true);
 
-            if(allInsights.Count != 100)
+            if(allInsights.Count != 100 || Insights.GetInsights().Count != 100)
             {
                 throw new Exception($"Unexpected insight count found {allInsights.Count}");
             }
@@ -70,19 +70,19 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        private class CustomInsightEvaluator : IInsightEvaluator
+        private class CustomInsightScoreFunction : IInsightScoreFunction
         {
             private readonly Dictionary<Guid, Insight> _openInsights = new();
             private SecurityManager _securities;
 
-            public CustomInsightEvaluator(SecurityManager securities)
+            public CustomInsightScoreFunction(SecurityManager securities)
             {
                 _securities = securities;
             }
 
-            public void Score(IInsightManager insightManager, DateTime utcTime)
+            public void Score(InsightManager insightManager, DateTime utcTime)
             {
-                var openInsights = insightManager.GetOpenInsights();
+                var openInsights = insightManager.GetActiveInsights(utcTime);
 
                 foreach (var insight in openInsights)
                 {
@@ -104,6 +104,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (openInsight.IsExpired(utcTime))
                     {
+                        openInsight.Score.Finalize(utcTime);
                         toRemove.Add(openInsight);
                     }
                 }

@@ -103,13 +103,7 @@ namespace QuantConnect.Statistics
             // NOTE: Day 0 refers to sample taken at 12AM on StartDate, performance[0] always = 0, benchmark[0] is benchmark value preceding start date.
             var benchmark = ChartPointToDictionary(pointsBenchmark, fromDate, toDate);
             var performance = ChartPointToDictionary(pointsPerformance, fromDate, toDate);
-
-            var portfolioTurnoverPoints = ChartPointToDictionary(pointsPortfolioTurnover, fromDate, toDate);
-            var portfolioTurnover = 0m;
-            if (portfolioTurnoverPoints.Count > 0)
-            {
-                portfolioTurnover = portfolioTurnoverPoints.Select(kvp => kvp.Value).Average();
-            }
+            var portfolioTurnover = ChartPointToDictionary(pointsPortfolioTurnover, fromDate, toDate);
 
             // Ensure our series are aligned
             if (benchmark.Count != performance.Count)
@@ -128,7 +122,7 @@ namespace QuantConnect.Statistics
 
             var runningCapital = equity.Count == periodEquity.Count ? startingCapital : periodEquity.Values.FirstOrDefault();
 
-            return new AlgorithmPerformance(periodTrades, periodProfitLoss, periodEquity, listPerformance, listBenchmark, portfolioTurnover, runningCapital);
+            return new AlgorithmPerformance(periodTrades, periodProfitLoss, periodEquity, portfolioTurnover, listPerformance, listBenchmark, runningCapital);
         }
 
         /// <summary>

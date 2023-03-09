@@ -14,6 +14,7 @@
  *
 */
 
+using System.Linq;
 using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
@@ -51,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
             SetExecution(new VolumeWeightedAveragePriceExecutionModel());
 
-            InsightsGenerated += (algorithm, data) => Log($"{Time}: {string.Join(" | ", data.Insights)}");
+            InsightsGenerated += (algorithm, data) => Log($"{Time}: {string.Join(" | ", data.Insights.Select(insight => insight))}");
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)

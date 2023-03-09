@@ -157,20 +157,25 @@ namespace QuantConnect.Statistics
         /// </summary>
         /// <param name="profitLoss">Trade record of profits and losses</param>
         /// <param name="equity">The list of daily equity values</param>
+        /// <param name="portfolioTurnover">The algorithm portfolio turnover</param>
         /// <param name="listPerformance">The list of algorithm performance values</param>
         /// <param name="listBenchmark">The list of benchmark values</param>
-        /// <param name="portfolioTurnover">The algorithm portfolio turnover</param>
         /// <param name="startingCapital">The algorithm starting capital</param>
         /// <param name="tradingDaysPerYear">The number of trading days per year</param>
         public PortfolioStatistics(
             SortedDictionary<DateTime, decimal> profitLoss,
             SortedDictionary<DateTime, decimal> equity,
+            SortedDictionary<DateTime, decimal> portfolioTurnover,
             List<double> listPerformance,
             List<double> listBenchmark,
-            decimal portfolioTurnover,
             decimal startingCapital,
             int tradingDaysPerYear = 252)
         {
+            if (portfolioTurnover.Count > 0)
+            {
+                PortfolioTurnover = portfolioTurnover.Select(kvp => kvp.Value).Average();
+            }
+
             if (startingCapital == 0
                 // minimum amount of samples to calculate variance
                 || listBenchmark.Count < 2
@@ -178,8 +183,6 @@ namespace QuantConnect.Statistics
             {
                 return;
             }
-
-            PortfolioTurnover = portfolioTurnover;
 
             var runningCapital = startingCapital;
             var totalProfit = 0m;

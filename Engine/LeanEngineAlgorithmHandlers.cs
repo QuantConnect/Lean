@@ -20,7 +20,6 @@ using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.Alpha;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.RealTime;
 using QuantConnect.Lean.Engine.Results;
@@ -82,11 +81,6 @@ namespace QuantConnect.Lean.Engine
         public IDataCacheProvider DataCacheProvider { get; }
 
         /// <summary>
-        /// Gets the alpha handler used to process algorithm generated insights
-        /// </summary>
-        public IAlphaHandler Alphas { get; }
-
-        /// <summary>
         /// Gets the object store used for persistence
         /// </summary>
         public IObjectStore ObjectStore { get; }
@@ -112,7 +106,6 @@ namespace QuantConnect.Lean.Engine
         /// <param name="mapFileProvider">The map file provider used to retrieve map files for the data feed</param>
         /// <param name="factorFileProvider">Map file provider used as a map file source for the data feed</param>
         /// <param name="dataProvider">file provider used to retrieve security data if it is not on the file system</param>
-        /// <param name="alphas">The alpha handler used to process generated insights</param>
         /// <param name="objectStore">The object store used for persistence</param>
         /// <param name="dataPermissionsManager">The data permission manager to use</param>
         /// <param name="liveMode">True for live mode, false otherwise</param>
@@ -125,7 +118,6 @@ namespace QuantConnect.Lean.Engine
             IMapFileProvider mapFileProvider,
             IFactorFileProvider factorFileProvider,
             IDataProvider dataProvider,
-            IAlphaHandler alphas,
             IObjectStore objectStore,
             IDataPermissionManager dataPermissionsManager,
             bool liveMode,
@@ -164,10 +156,6 @@ namespace QuantConnect.Lean.Engine
             {
                 throw new ArgumentNullException(nameof(dataProvider));
             }
-            if (alphas == null)
-            {
-                throw new ArgumentNullException(nameof(alphas));
-            }
             if (objectStore == null)
             {
                 throw new ArgumentNullException(nameof(objectStore));
@@ -185,7 +173,6 @@ namespace QuantConnect.Lean.Engine
             MapFileProvider = mapFileProvider;
             FactorFileProvider = factorFileProvider;
             DataProvider = dataProvider;
-            Alphas = alphas;
             ObjectStore = objectStore;
             DataPermissionsManager = dataPermissionsManager;
             DataCacheProvider = new ZipDataCacheProvider(DataProvider, isDataEphemeral: liveMode);
@@ -227,7 +214,6 @@ namespace QuantConnect.Lean.Engine
                 composer.GetExportedValueByTypeName<IMapFileProvider>(mapFileProviderTypeName),
                 composer.GetExportedValueByTypeName<IFactorFileProvider>(factorFileProviderTypeName),
                 composer.GetExportedValueByTypeName<IDataProvider>(dataProviderTypeName),
-                composer.GetExportedValueByTypeName<IAlphaHandler>(alphaHandlerTypeName),
                 composer.GetExportedValueByTypeName<IObjectStore>(objectStoreTypeName),
                 composer.GetExportedValueByTypeName<IDataPermissionManager>(dataPermissionManager),
                 Config.GetBool("live-mode"),
