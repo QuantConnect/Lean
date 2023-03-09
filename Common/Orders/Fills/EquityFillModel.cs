@@ -325,11 +325,32 @@ namespace QuantConnect.Orders.Fills
         }
 
         /// <summary>
-        /// Default limit order fill model in the base security class.
+        /// Limit fill model implementation for Equity.
         /// </summary>
         /// <param name="asset">Security asset we're filling</param>
         /// <param name="order">Order packet to model</param>
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        /// <remarks>
+        /// A Limit order is an order to buy or sell at a specified price or better.
+        /// The Limit order ensures that if the order fills, it will not fill at a price less favorable than your limit price,
+        /// but it does not guarantee a fill.
+        ///
+        /// A Buy Limit order is always placed above the current market price.
+        /// We assume a fluid/continuous, high volume market. Therefore, it is filled at the limit price
+        /// if the current low price of trades is less than this price.
+        ///
+        /// A Sell Limit order is always placed below the current market price.
+        /// We assume a fluid, high volume market. Therefore, it is filled at the limit price
+        /// if the current high price of trades is greater than this price.
+        ///
+        /// This model does not trigger the limit order when the limit is attained (equals to).
+        /// Since the order may not be filled in reality if it is not the top of the order book
+        /// (first come, first served), we assume our order is the last in the book with its limit price,
+        /// thus it will be filled when the limit price is penetrated.
+        ///
+        /// The continuous market assumption is not valid if the market opens with a favorable gap.
+        /// If the buy/sell limit order is placed below/above the current market price,
+        /// the order is filled with the opening price.
         /// <seealso cref="StopMarketFill(Security, StopMarketOrder)"/>
         /// <seealso cref="MarketFill(Security, MarketOrder)"/>
         public override OrderEvent LimitFill(Security asset, LimitOrder order)
@@ -360,27 +381,41 @@ namespace QuantConnect.Orders.Fills
             switch (order.Direction)
             {
                 case OrderDirection.Buy:
-                    //Buy limit seeks lowest price
                     if (tradeBar.Low < order.LimitPrice)
                     {
-                        // Fills with the limit price
-                        fill.FillPrice = order.LimitPrice;
                         // assume the order completely filled
                         // TODO: Add separate DepthLimited fill partial order quantities based on tick quantity / bar.Volume available.
                         fill.FillQuantity = order.Quantity;
                         fill.Status = OrderStatus.Filled;
+
+                        fill.FillPrice = order.LimitPrice;
+
+                        // Favorable gap case: if the bar opens below the limit price, fill at open price
+                        if (tradeBar.Open < order.LimitPrice)
+                        {
+                            fill.FillPrice = tradeBar.Open;
+                            fill.Message = Messages.EquityFillModel.FilledWithOpenDueToFavorableGap(asset, tradeBar);
+                            return fill;
+                        }
                     }
                     break;
                 case OrderDirection.Sell:
-                    //Sell limit seeks highest price possible
                     if (tradeBar.High > order.LimitPrice)
                     {
-                        // Fills with the limit price
-                        fill.FillPrice = order.LimitPrice;
                         // Assume the order completely filled
                         // TODO: Add separate DepthLimited fill partial order quantities based on tick quantity / bar.Volume available.
                         fill.FillQuantity = order.Quantity;
                         fill.Status = OrderStatus.Filled;
+
+                        fill.FillPrice = order.LimitPrice;
+
+                        // Favorable gap case: if the bar opens above the limit price, fill at open price
+                        if (tradeBar.Open > order.LimitPrice)
+                        {
+                            fill.FillPrice = tradeBar.Open;
+                            fill.Message = Messages.EquityFillModel.FilledWithOpenDueToFavorableGap(asset, tradeBar);
+                            return fill;
+                        }
                     }
                     break;
             }
