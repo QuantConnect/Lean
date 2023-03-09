@@ -89,12 +89,5 @@ namespace QuantConnect.Securities
         {
             return Enumerable.Empty<HistoryRequest>();
         }
-
-        /// <summary>
-        /// Resets the model to its initial state
-        /// </summary>
-        public void Reset()
-        {
-        }
     }
 }

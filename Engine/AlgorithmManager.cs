@@ -949,7 +949,7 @@ namespace QuantConnect.Lean.Engine
         }
 
         /// <summary>
-        /// Resets and warms up the security's volatility model.
+        /// Warms up the security's volatility model.
         /// This can happen either on initialization or after a split or dividend is processed.
         /// </summary>
         private static void WarmUpVolatilityModel(IAlgorithm algorithm, Security security)
@@ -968,9 +968,6 @@ namespace QuantConnect.Lean.Engine
             baseTypeModel?.SetSubscriptionDataConfigProvider(
                 algorithm.SubscriptionManager.SubscriptionDataConfigService);
             // end
-
-            // Reset
-            volatilityModel.Reset();
 
             // Warm up
             var historyRequests = volatilityModel.GetHistoryRequirements(security, algorithm.UtcTime).ToList();

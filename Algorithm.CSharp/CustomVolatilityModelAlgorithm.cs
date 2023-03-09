@@ -103,10 +103,5 @@ namespace QuantConnect.Algorithm.CSharp
         {
             return Enumerable.Empty<HistoryRequest>();
         }
-
-        public void Reset()
-        {
-            throw new NotImplementedException();
-        }
     }
 }

@@ -13,15 +13,14 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using QuantConnect.Data;
+
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
+    /// Algorithm asserting that the <see cref="DataNormalizationMode.ScaledRaw"/> data normalization mode is not allowed for adding subscriptions.
     /// </summary>
     public class ScaledRawDataNormalizationModeNotAllowedSecuritiesAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {

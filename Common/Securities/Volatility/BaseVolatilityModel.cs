@@ -64,10 +64,7 @@ namespace QuantConnect.Securities.Volatility
         /// <param name="security">The security of the request</param>
         /// <param name="utcTime">The date/time of the request</param>
         /// <returns>History request object list, or empty if no requirements</returns>
-        public virtual IEnumerable<HistoryRequest> GetHistoryRequirements(
-            Security security,
-            DateTime utcTime
-            )
+        public virtual IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime)
         {
             return Enumerable.Empty<HistoryRequest>();
         }
@@ -137,13 +134,6 @@ namespace QuantConnect.Securities.Volatility
                                    dataNormalizationMode,
                                    LeanData.GetCommonTickTypeForCommonDataTypes(configuration.Type, security.Type))
             };
-        }
-
-        /// <summary>
-        /// Resets the model to its initial state
-        /// </summary>
-        public virtual void Reset()
-        {
         }
     }
 }

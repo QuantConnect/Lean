@@ -156,6 +156,9 @@ namespace QuantConnect.Securities
         /// <returns>History request object list, or empty if no requirements</returns>
         public override IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime)
         {
+            // Let's reset the model since it will get warmed up again using these history requirements
+            Reset();
+
             return GetHistoryRequirements(
                 security,
                 utcTime,
@@ -166,9 +169,8 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Resets the model to its initial state
         /// </summary>
-        public override void Reset()
+        private void Reset()
         {
-            base.Reset();
             _needsUpdate = false;
             _volatility = 0m;
             _lastUpdate = DateTime.MinValue;

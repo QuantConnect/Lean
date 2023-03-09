@@ -119,6 +119,9 @@ namespace QuantConnect.Securities
                 );
             }
 
+            // Let's reset the model since it will get warmed up again using these history requirements
+            Reset();
+
             var configurations = SubscriptionDataConfigProvider
                 .GetSubscriptionDataConfigs(security.Symbol)
                 .OrderBy(c => c.TickType)
@@ -134,9 +137,8 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Resets the model to its initial state
         /// </summary>
-        public override void Reset()
+        private void Reset()
         {
-            base.Reset();
             _needsUpdate = false;
             _volatility = 0m;
             _lastUpdate = GetLastUpdateInitialValue(_periodSpan, _window.Size);

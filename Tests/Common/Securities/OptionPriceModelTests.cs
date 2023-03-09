@@ -605,10 +605,6 @@ namespace QuantConnect.Tests.Common
             public void Update(Security security, BaseData data)
             {
             }
-
-            public void Reset()
-            {
-            }
         }
 
         class TestOptionPriceModel : QLOptionPriceModel

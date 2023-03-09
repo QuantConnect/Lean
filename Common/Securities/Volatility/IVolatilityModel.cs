@@ -48,11 +48,6 @@ namespace QuantConnect.Securities
         /// <param name="utcTime">The date/time of the request</param>
         /// <returns>History request object list, or empty if no requirements</returns>
         IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime);
-
-        /// <summary>
-        /// Resets the model to its initial state
-        /// </summary>
-        void Reset();
     }
 
     /// <summary>
@@ -73,10 +68,6 @@ namespace QuantConnect.Securities
             public void Update(Security security, BaseData data) { }
 
             public IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime) { return Enumerable.Empty<HistoryRequest>(); }
-
-            public void Reset()
-            {
-            }
         }
     }
 }
