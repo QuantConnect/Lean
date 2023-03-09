@@ -15,82 +15,70 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Util;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Algorithm asserting that the <see cref="DataNormalizationMode.ScaledRaw"/> data normalization mode is allowed history requests and
-    /// that prices are adjusted to the last factor before the history end date.
+    ///
     /// </summary>
-    public class ScaledRawHistoryAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class VolatilityModelsWithRawDataAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _aapl;
 
-        private DateTime _lastSplitOrDividendDate;
+        private int _splitsCount;
+        private int _dividendsCount;
 
         public override void Initialize()
         {
-            SetStartDate(2013, 1, 1);
+            SetStartDate(2014, 1, 1);
             SetEndDate(2014, 12, 31);
             SetCash(100000);
-            SetBenchmark(x => 0);
 
-            _aapl = AddEquity("AAPL", Resolution.Daily).Symbol;
+            var equity = AddEquity("AAPL", Resolution.Daily, dataNormalizationMode: DataNormalizationMode.Raw);
+            equity.SetVolatilityModel(new StandardDeviationOfReturnsVolatilityModel(7));
+
+            _aapl = equity.Symbol;
         }
 
         public override void OnData(Slice slice)
         {
             if (slice.Splits.ContainsKey(_aapl))
             {
-                _lastSplitOrDividendDate = slice.Splits[_aapl].Time;
+                _splitsCount++;
             }
 
             if (slice.Dividends.ContainsKey(_aapl))
             {
-                _lastSplitOrDividendDate = slice.Dividends[_aapl].Time;
+                _dividendsCount++;
+            }
+        }
+
+        public override void OnEndOfDay(Symbol symbol)
+        {
+            if (symbol != _aapl)
+            {
+                return;
+            }
+
+            // This is expected only in this case, 0.6 is not a magical number of any kind.
+            // Just making sure we don't get big jumps on volatility
+            if (Securities[_aapl].VolatilityModel.Volatility > 0.6m)
+            {
+                throw new Exception(
+                    "Expected volatility to stay less than 0.6 (not big jumps due to price discontinuities on splits and dividends), " +
+                    $"but got {Securities[_aapl].VolatilityModel.Volatility}");
             }
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (_lastSplitOrDividendDate == DateTime.MinValue)
+            if (_splitsCount == 0 || _dividendsCount == 0)
             {
-                throw new Exception("No split or dividend was found in the algorithm.");
-            }
-
-            var start = Time.AddMonths(-18);
-            var end = Time;
-            var rawHistory = History(new[] { _aapl }, start, end, dataNormalizationMode: DataNormalizationMode.Raw).ToList();
-            var scaledRawHistory = History(new[] { _aapl }, start, end, dataNormalizationMode: DataNormalizationMode.ScaledRaw).ToList();
-
-            if (rawHistory.Count == 0 || scaledRawHistory.Count != rawHistory.Count)
-            {
-                throw new Exception($@"Expected history results to not be empty and have the same count. Raw: {rawHistory.Count
-                    }, ScaledRaw: {scaledRawHistory.Count}");
-            }
-
-            for (var i = 0; i < rawHistory.Count; i++)
-            {
-                var rawBar = rawHistory[i].Bars[_aapl];
-                var scaledRawBar = scaledRawHistory[i].Bars[_aapl];
-
-                if (rawBar.Time < _lastSplitOrDividendDate)
-                {
-                    if (rawBar.Open == scaledRawBar.Open || rawBar.High == scaledRawBar.High || rawBar.Low == scaledRawBar.Low || rawBar.Close == scaledRawBar.Close)
-                    {
-                        throw new Exception($@"Expected history results to be different at {rawBar.Time
-                            } before the last split or dividend date {_lastSplitOrDividendDate}");
-                    }
-                }
-                else if (rawBar.Open != scaledRawBar.Open || rawBar.High != scaledRawBar.High || rawBar.Low != scaledRawBar.Low || rawBar.Close != scaledRawBar.Close)
-                {
-                    throw new Exception($@"Expected history results to be the same at {rawBar.Time} after the last split or dividend date {_lastSplitOrDividendDate}");
-                }
+                throw new Exception($"Expected to receive at least one split and one dividend, but got {_splitsCount} splits and {_dividendsCount} dividends");
             }
         }
 
@@ -107,12 +95,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 516;
+        public long DataPoints => 2022;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 760;
+        public int AlgorithmHistoryDataPoints => 40;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -135,8 +123,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
+            {"Information Ratio", "-1.025"},
+            {"Tracking Error", "0.094"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
