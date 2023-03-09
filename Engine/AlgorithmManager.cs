@@ -740,7 +740,7 @@ namespace QuantConnect.Lean.Engine
                         .DataNormalizationMode();
 
                     // apply the split event to the portfolio
-                    algorithm.Portfolio.ApplySplit(split, liveMode, mode);
+                    algorithm.Portfolio.ApplySplit(split, security, liveMode, mode);
 
                     // apply the split event to the trade builder
                     algorithm.TradeBuilder.ApplySplit(split, liveMode, mode);

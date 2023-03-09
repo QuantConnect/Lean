@@ -127,19 +127,6 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(manualMode, security.DataNormalizationMode);
         }
 
-        [Test]
-        public void UniverseSettingsDoesNotAllowScaledRawDataNormalizationMode()
-        {
-            var tuple = GetAlgorithmAndDataManager();
-            var algorithm = tuple.Item1;
-
-            Assert.Throws<ArgumentException>(() =>
-            {
-                algorithm.UniverseSettings.DataNormalizationMode = DataNormalizationMode.ScaledRaw;
-            });
-
-        }
-
         private Tuple<QCAlgorithm, DataManager> GetAlgorithmAndDataManager()
         {
             var algorithm = new QCAlgorithm();
