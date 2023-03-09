@@ -134,10 +134,9 @@ namespace QuantConnect
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string FilledWithOpenDueToUnfavorableGap(Securities.Security security, decimal open, DateTime endTimeUtc)
+            public static string FilledWithOpenDueToUnfavorableGap(Securities.Security security, TradeBar tradeBar)
             {
-                var endTime = endTimeUtc.ConvertFromUtc(security.Exchange.TimeZone).ToStringInvariant();
-                return Invariant($@"Due to an unfavorable gap at {endTime} {security.Exchange.TimeZone}, order filled using the open price ({open})");
+                return Invariant($@"Due to an unfavorable gap at {tradeBar.EndTime.ToStringInvariant()} {security.Exchange.TimeZone}, order filled using the open price ({tradeBar.Open})");
             }
         }
     }

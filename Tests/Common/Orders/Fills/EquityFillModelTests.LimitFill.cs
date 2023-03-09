@@ -37,7 +37,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var equity = CreateEquity(configTradeBar);
 
             equity.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
-            equity.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 102m));
+            equity.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 102m, 102m, 102m, 102m, 100));
 
             var fill = model.Fill(new FillModelParameters(
                 equity,
@@ -69,7 +69,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var configTradeBar = CreateTradeBarConfig(Symbols.SPY);
             var equity = CreateEquity(configTradeBar);
             equity.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
-            equity.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101m));
+            equity.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 101m, 101m, 101m, 101m, 100));
 
             var fill = model.Fill(new FillModelParameters(
                 equity,
