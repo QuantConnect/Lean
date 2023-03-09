@@ -15,22 +15,30 @@
 
 using System;
 using System.Collections.Generic;
-
+using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Algorithm asserting that the volatility models don't have big jumps due to price discontinuities on splits and dividends when using raw data
+    /// Algorithm illustrating the usage of the <see cref="IndicatorVolatilityModel"/> and
+    /// how to handle splits and dividends to avoid price discontinuities
     /// </summary>
-    public class VolatilityModelsWithRawDataAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class IndicatorVolatilityModelAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private const int _indicatorPeriods = 7;
+
         private Symbol _aapl;
 
-        private int _splitsCount;
-        private int _dividendsCount;
+        private IIndicator _indicator;
+
+        private int _splitsAndDividendsCount;
+
+        private bool _volatilityChecked;
 
         public override void Initialize()
         {
@@ -39,47 +47,86 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
 
             var equity = AddEquity("AAPL", Resolution.Daily, dataNormalizationMode: DataNormalizationMode.Raw);
-            equity.SetVolatilityModel(new StandardDeviationOfReturnsVolatilityModel(7));
-
             _aapl = equity.Symbol;
+
+            var std = new StandardDeviation(_indicatorPeriods);
+            var mean = new SimpleMovingAverage(_indicatorPeriods);
+            _indicator = std.Over(mean);
+            equity.SetVolatilityModel(new IndicatorVolatilityModel(_indicator, (_, data, _) =>
+            {
+                if (data.Price > 0)
+                {
+                    std.Update(data.Time, data.Price);
+                    mean.Update(data.Time, data.Price);
+                }
+            }));
         }
 
         public override void OnData(Slice slice)
         {
-            if (slice.Splits.ContainsKey(_aapl))
+            if (slice.Splits.ContainsKey(_aapl) || slice.Dividends.ContainsKey(_aapl))
             {
-                _splitsCount++;
-            }
+                _splitsAndDividendsCount++;
 
-            if (slice.Dividends.ContainsKey(_aapl))
-            {
-                _dividendsCount++;
+                // On a split or dividend event, we need to reset and warm the indicator up as Lean does to BaseVolatilityModel's
+                // to avoid big jumps in volatility due to price discontinuities
+                _indicator.Reset();
+                var equity = Securities[_aapl];
+                var volatilityModel = equity.VolatilityModel as IndicatorVolatilityModel;
+                var historyRequests = volatilityModel.GetHistoryRequirements(
+                    equity, UtcTime, equity.Resolution, _indicatorPeriods + 1).ToList();
+                var history = History(historyRequests);
+                foreach (var historySlice in history)
+                {
+                    foreach (var request in historyRequests)
+                    {
+                        if (historySlice.TryGet(request.DataType, _aapl, out var data))
+                        {
+                            volatilityModel.Update(equity, data);
+                        }
+                    }
+                }
             }
         }
 
         public override void OnEndOfDay(Symbol symbol)
         {
-            if (symbol != _aapl)
+            if (symbol != _aapl || !_indicator.IsReady)
             {
                 return;
             }
 
-            // This is expected only in this case, 0.6 is not a magical number of any kind.
+            _volatilityChecked = true;
+
+            // This is expected only in this case, 0.05 is not a magical number of any kind.
             // Just making sure we don't get big jumps on volatility
-            if (Securities[_aapl].VolatilityModel.Volatility > 0.6m)
+            var volatility = Securities[_aapl].VolatilityModel.Volatility;
+            if (volatility <= 0 || volatility > 0.05m)
             {
                 throw new Exception(
-                    "Expected volatility to stay less than 0.6 (not big jumps due to price discontinuities on splits and dividends), " +
-                    $"but got {Securities[_aapl].VolatilityModel.Volatility}");
+                    "Expected volatility to stay less than 0.05 (not big jumps due to price discontinuities on splits and dividends), " +
+                    $"but got {volatility}");
             }
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (_splitsCount == 0 || _dividendsCount == 0)
+            if (_splitsAndDividendsCount == 0)
             {
-                throw new Exception($"Expected to receive at least one split and one dividend, but got {_splitsCount} splits and {_dividendsCount} dividends");
+                throw new Exception("Expected to get at least one split or dividend event");
             }
+
+            if (!_volatilityChecked)
+            {
+                throw new Exception("Expected to check volatility at least once");
+            }
+        }
+
+        private IIndicator UpdateIndicator(Security security, TradeBar bar)
+        {
+            _indicator.Update(bar);
+
+            return _indicator;
         }
 
         /// <summary>
@@ -100,7 +147,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 40;
+        public int AlgorithmHistoryDataPoints => 48;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm

@@ -648,7 +648,7 @@ namespace QuantConnect.Lean.Engine
             if (algorithm.LiveMode)
             {
                 warmupEndTicks = DateTime.UtcNow.Ticks;
-                ProcessVolatilityHistoryRequirements(algorithm);
+                ProcessVolatilityHistoryRequirements(algorithm, _liveMode);
             }
 
             foreach (var timeSlice in synchronizer.StreamData(cancellationToken))
@@ -689,14 +689,15 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         /// <remarks>Implemented as static to facilitate testing</remarks>
         /// <param name="algorithm">The algorithm instance</param>
-        public static void ProcessVolatilityHistoryRequirements(IAlgorithm algorithm)
+        /// <param name="liveMode">Whether the algorithm is in live mode</param>
+        public static void ProcessVolatilityHistoryRequirements(IAlgorithm algorithm, bool liveMode = false)
         {
             Log.Trace("ProcessVolatilityHistoryRequirements(): Updating volatility models with historical data...");
 
             foreach (var kvp in algorithm.Securities)
             {
                 var security = kvp.Value;
-                WarmUpVolatilityModel(algorithm, security);
+                WarmUpVolatilityModel(algorithm, security, liveMode);
             }
 
             Log.Trace("ProcessVolatilityHistoryRequirements(): finished.");
@@ -952,7 +953,7 @@ namespace QuantConnect.Lean.Engine
         /// Warms up the security's volatility model.
         /// This can happen either on initialization or after a split or dividend is processed.
         /// </summary>
-        private static void WarmUpVolatilityModel(IAlgorithm algorithm, Security security)
+        private static void WarmUpVolatilityModel(IAlgorithm algorithm, Security security, bool liveMode)
         {
             if (security == null || security.VolatilityModel == VolatilityModel.Null || algorithm.HistoryProvider == null)
             {
@@ -971,15 +972,22 @@ namespace QuantConnect.Lean.Engine
 
             // Warm up
             var historyRequests = volatilityModel.GetHistoryRequirements(security, algorithm.UtcTime).ToList();
+            if (liveMode)
+            {
+                foreach (var request in historyRequests)
+                {
+                    request.DataNormalizationMode = DataNormalizationMode.ScaledRaw;
+                }
+            }
+
             var history = algorithm.HistoryProvider.GetHistory(historyRequests, algorithm.TimeZone);
             foreach (var slice in history)
             {
                 foreach (var request in historyRequests)
                 {
-                    var data = slice.Get(request.DataType);
-                    if (data.ContainsKey(security.Symbol))
+                    if (slice.TryGet(request.DataType, security.Symbol, out var data))
                     {
-                        volatilityModel.Update(security, data[security.Symbol]);
+                        volatilityModel.Update(security, data);
                     }
                 }
             }
@@ -993,7 +1001,7 @@ namespace QuantConnect.Lean.Engine
         {
             if (security.Type == SecurityType.Equity && (liveMode || dataNormalizationMode == DataNormalizationMode.Raw))
             {
-                WarmUpVolatilityModel(algorithm, security);
+                WarmUpVolatilityModel(algorithm, security, liveMode);
             }
         }
 

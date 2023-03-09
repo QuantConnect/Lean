@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using QuantConnect.Data.Custom.IconicTypes;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Python;
 
@@ -332,7 +333,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Gets the <see cref="DataDictionary{T}"/> for all data of the specified type
         /// </summary>
-        /// <typeparam name="T">The type of data we want, for example, <see cref="TradeBar"/> or <see cref="UnlinkedData"/>, ect...</typeparam>
+        /// <typeparam name="T">The type of data we want, for example, <see cref="TradeBar"/> or <see cref="UnlinkedData"/>, etc...</typeparam>
         /// <returns>The <see cref="DataDictionary{T}"/> containing the data of the specified type</returns>
         public DataDictionary<T> Get<T>()
             where T : IBaseData
@@ -348,6 +349,47 @@ namespace QuantConnect.Data
         public dynamic Get(Type type)
         {
             return GetImpl(type, this);
+        }
+
+        /// <summary>
+        /// Tries to get the data for the specified symbol and type
+        /// </summary>
+        /// <typeparam name="T">The type of data we want, for example, <see cref="TradeBar"/> or <see cref="UnlinkedData"/>, etc...</typeparam>
+        /// <param name="symbol">The symbol data is sought for</param>
+        /// <param name="data">The found data</param>
+        /// <returns>True if data was found for the specified type and symbol</returns>
+        public bool TryGet<T>(Symbol symbol, out T data)
+            where T : IBaseData
+        {
+            data = default(T);
+            var typeData = GetImpl(typeof(T), this) as DataDictionary<T>;
+            if (typeData.ContainsKey(symbol))
+            {
+                data = typeData[symbol];
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Tries to get the data for the specified symbol and type
+        /// </summary>
+        /// <param name="type">The type of data we seek</param>
+        /// <param name="symbol">The symbol data is sought for</param>
+        /// <param name="data">The found data</param>
+        /// <returns>True if data was found for the specified type and symbol</returns>
+        public bool TryGet(Type type, Symbol symbol, out dynamic data)
+        {
+            data = null;
+            var typeData = GetImpl(type, this);
+            if (typeData.ContainsKey(symbol))
+            {
+                data = typeData[symbol];
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
