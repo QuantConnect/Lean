@@ -46,13 +46,13 @@ namespace QuantConnect.Algorithm.CSharp
             SetExecution(new ImmediateExecutionModel());
             SetRiskManagement(new MaximumDrawdownPercentPerSecurity(0.01m));
 
-            // we specify a custom insight evaluator
-            SetInsightEvaluator(new CustomInsightEvaluator(Securities));
+            // we specify a custom insight score function
+            Insights.SetInsightScoreFunction(new CustomInsightScoreFunction(Securities));
         }
 
         public override void OnEndOfAlgorithm()
         {
-            var allInsights = InsightManager.GetInsights();
+            var allInsights = Insights.GetInsights();
 
             if(allInsights.Count != 100)
             {
@@ -70,19 +70,19 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        private class CustomInsightEvaluator : IInsightEvaluator
+        private class CustomInsightScoreFunction : IInsightScoreFunction
         {
             private readonly Dictionary<Guid, Insight> _openInsights = new();
             private SecurityManager _securities;
 
-            public CustomInsightEvaluator(SecurityManager securities)
+            public CustomInsightScoreFunction(SecurityManager securities)
             {
                 _securities = securities;
             }
 
-            public void Score(IInsightManager insightManager, DateTime utcTime)
+            public void Score(InsightManager insightManager, DateTime utcTime)
             {
-                var openInsights = insightManager.GetOpenInsights();
+                var openInsights = insightManager.GetActiveInsights(utcTime);
 
                 foreach (var insight in openInsights)
                 {
@@ -104,6 +104,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (openInsight.IsExpired(utcTime))
                     {
+                        openInsight.Score.Finalize(utcTime);
                         toRemove.Add(openInsight);
                     }
                 }

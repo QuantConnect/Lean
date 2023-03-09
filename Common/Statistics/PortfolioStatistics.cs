@@ -171,6 +171,8 @@ namespace QuantConnect.Statistics
             decimal startingCapital,
             int tradingDaysPerYear = 252)
         {
+            PortfolioTurnover = portfolioTurnover;
+
             if (startingCapital == 0
                 // minimum amount of samples to calculate variance
                 || listBenchmark.Count < 2
@@ -178,8 +180,6 @@ namespace QuantConnect.Statistics
             {
                 return;
             }
-
-            PortfolioTurnover = portfolioTurnover;
 
             var runningCapital = startingCapital;
             var totalProfit = 0m;

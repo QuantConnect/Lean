@@ -33,7 +33,7 @@ class InsightScoringRegressionAlgorithm(QCAlgorithm):
         self.SetRiskManagement(MaximumDrawdownPercentPerSecurity(0.01))
         
         # we specify a custom insight evaluator
-        self.SetInsightEvaluator(CustomInsightEvaluatorPy(self.Securities))
+        self.Insights.SetInsightScoreFunction(CustomInsightScoreFunction(self.Securities))
 
     def OnEndOfAlgorithm(self):
         allInsights = self.InsightManager.GetInsights()
@@ -47,7 +47,7 @@ class InsightScoringRegressionAlgorithm(QCAlgorithm):
         if sum(1 for insight in allInsights if insight.Score.IsFinalScore) < 99:
             raise ValueError(f'Insights not finalized!')
 
-class CustomInsightEvaluatorPy():
+class CustomInsightScoreFunction():
 
     def __init__(self, securities):
         self._securities = securities
@@ -70,6 +70,7 @@ class CustomInsightEvaluatorPy():
             openInsight.EstimatedValue = score * 100
 
             if openInsight.IsExpired(utcTime):
+                openInsight.Score.Finalize(utcTime)
                 toRemove.append(openInsight)
 
         # clean up

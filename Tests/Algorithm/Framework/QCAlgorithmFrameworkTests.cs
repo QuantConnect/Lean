@@ -42,7 +42,7 @@ namespace QuantConnect.Tests.Algorithm.Framework
             {
                 eventFired = true;
                 var insights = data.Insights;
-                Assert.AreEqual(1, insights.Count);
+                Assert.AreEqual(1, insights.Length);
                 Assert.IsTrue(insights.All(insight => insight.GeneratedTimeUtc != default(DateTime)));
                 Assert.IsTrue(insights.All(insight => insight.CloseTimeUtc != default(DateTime)));
             };

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,7 +15,6 @@
 
 using System;
 using System.Linq;
-using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 
@@ -42,72 +41,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             });
             
             Assert.DoesNotThrow(() => insightCollection.OrderBy(x => x.CloseTimeUtc).ToList());
-        }
-
-        [Test]
-        public static void InsightCollectionCopyTo()
-        {
-            var aapl = Symbol.Create("AAPL", SecurityType.Equity, "usa");
-            var insightCollection = new InsightCollection();
-
-            insightCollection.Add(new Insight(aapl, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Up)
-            {
-                GeneratedTimeUtc = new DateTime(2019, 1, 1),
-                CloseTimeUtc = new DateTime(2019, 1, 1),
-            });
-            insightCollection.Add(new Insight(aapl, new TimeSpan(1, 0, 0, 0), InsightType.Volatility, InsightDirection.Up)
-            {
-                GeneratedTimeUtc = new DateTime(2019, 1, 2),
-                CloseTimeUtc = new DateTime(2019, 1, 2),
-            });
-
-            var insights = new Insight[7] {
-                new Insight(aapl, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Up)
-                {
-                    GeneratedTimeUtc = new DateTime(2019, 1, 5),
-                    CloseTimeUtc = new DateTime(2019, 1, 5),
-                },
-                new Insight(aapl, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Flat)
-                {
-                    GeneratedTimeUtc = new DateTime(2019, 1, 6),
-                    CloseTimeUtc = new DateTime(2019, 1, 6),
-                },
-                new Insight(aapl, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Down)
-                {
-                    GeneratedTimeUtc = new DateTime(2019, 1, 7),
-                    CloseTimeUtc = new DateTime(2019, 1, 7),
-                },
-                new Insight(aapl, new TimeSpan(1, 0, 0, 0), InsightType.Volatility, InsightDirection.Up)
-                {
-                    GeneratedTimeUtc = new DateTime(2019, 1, 8),
-                    CloseTimeUtc = new DateTime(2019, 1, 8),
-                },
-                new Insight(aapl, new TimeSpan(1, 0, 0, 0), InsightType.Volatility, InsightDirection.Down)
-                {
-                    GeneratedTimeUtc = new DateTime(2019, 1, 9),
-                    CloseTimeUtc = new DateTime(2019, 1, 9),
-                }, 
-                null,
-                null
-            };
-
-            insightCollection.CopyTo(insights, 5);
-
-            var orderedInsights = insights.OrderBy(x => x.CloseTimeUtc).ToList();
-            var orderedInsightsDe = JsonConvert.DeserializeObject<InsightCollection>(_expectedResultCopyTo);
-
-            var equals = orderedInsights.Zip(orderedInsightsDe, (i, de) =>
-            {
-                return i.CloseTimeUtc == de.CloseTimeUtc &&
-                    i.GeneratedTimeUtc == de.GeneratedTimeUtc &&
-                    i.Symbol.Value == de.Symbol.Value &&
-                    i.Type == de.Type &&
-                    i.ReferenceValue == de.ReferenceValue &&
-                    i.Direction == de.Direction &&
-                    i.Period == de.Period;
-            });
-
-            Assert.IsTrue(equals.All((x) => x));
         }
     }
 }

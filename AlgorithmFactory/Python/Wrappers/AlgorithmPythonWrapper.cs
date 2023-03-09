@@ -449,12 +449,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <summary>
         /// Gets the insight manager
         /// </summary>
-        public IInsightManager InsightManager => _baseAlgorithm.InsightManager;
-
-        /// <summary>
-        /// Gets the insight evaluator
-        /// </summary>
-        public IInsightEvaluator InsightEvaluator => _baseAlgorithm.InsightEvaluator;
+        public InsightManager Insights => _baseAlgorithm.Insights;
 
         /// <summary>
         /// Set a required SecurityType-symbol and resolution for algorithm
@@ -953,12 +948,6 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
             // notify the algorithm
             OnWarmupFinished();
         }
-
-        /// <summary>
-        /// Set the insight manager
-        /// </summary>
-        /// <param name="insightManager">Insight manager</param>
-        public void SetInsightManager(IInsightManager insightManager) => _baseAlgorithm.SetInsightManager(insightManager);
 
         /// <summary>
         /// Set the historical data provider

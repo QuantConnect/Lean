@@ -120,9 +120,6 @@ namespace QuantConnect.Lean.Engine
                     // Set algorithm in ILeanManager
                     SystemHandlers.LeanManager.SetAlgorithm(algorithm);
 
-                    // initialize the alphas handler with the algorithm instance
-                    AlgorithmHandlers.Alphas.Initialize(job, algorithm, SystemHandlers.Notify, SystemHandlers.Api, AlgorithmHandlers.Transactions);
-
                     // initialize the object store
                     AlgorithmHandlers.ObjectStore.Initialize(job.UserId, job.ProjectId, job.UserToken, job.Controls);
 
@@ -227,9 +224,6 @@ namespace QuantConnect.Lean.Engine
                     // set this again now that we've actually added securities
                     AlgorithmHandlers.Results.SetAlgorithm(algorithm, AlgorithmHandlers.Setup.StartingPortfolioValue);
 
-                    // alpha handler needs start/end dates to determine sample step sizes
-                    AlgorithmHandlers.Alphas.OnAfterAlgorithmInitialized(algorithm);
-
                     //If there are any reasons it failed, pass these back to the IDE.
                     if (!initializeComplete || AlgorithmHandlers.Setup.Errors.Count > 0)
                     {
@@ -276,7 +270,6 @@ namespace QuantConnect.Lean.Engine
                     $"         RealTime:             {AlgorithmHandlers.RealTime.GetType().FullName}{Environment.NewLine}" +
                     $"         Results:              {AlgorithmHandlers.Results.GetType().FullName}{Environment.NewLine}" +
                     $"         Transactions:         {AlgorithmHandlers.Transactions.GetType().FullName}{Environment.NewLine}" +
-                    $"         Alpha:                {AlgorithmHandlers.Alphas.GetType().FullName}{Environment.NewLine}" +
                     $"         Object Store:         {AlgorithmHandlers.ObjectStore.GetType().FullName}{Environment.NewLine}" +
                     $"         History Provider:     {historyProviderName}{Environment.NewLine}" +
                     $"         Brokerage:            {brokerage?.GetType().FullName}{Environment.NewLine}" +
@@ -335,7 +328,7 @@ namespace QuantConnect.Lean.Engine
                                 // -> Using this Data Feed,
                                 // -> Send Orders to this TransactionHandler,
                                 // -> Send Results to ResultHandler.
-                                algorithmManager.Run(job, algorithm, synchronizer, AlgorithmHandlers.Transactions, AlgorithmHandlers.Results, AlgorithmHandlers.RealTime, SystemHandlers.LeanManager, AlgorithmHandlers.Alphas, isolator.CancellationToken);
+                                algorithmManager.Run(job, algorithm, synchronizer, AlgorithmHandlers.Transactions, AlgorithmHandlers.Results, AlgorithmHandlers.RealTime, SystemHandlers.LeanManager, isolator.CancellationToken);
                             }
                             catch (Exception err)
                             {
@@ -400,7 +393,6 @@ namespace QuantConnect.Lean.Engine
                 synchronizer.DisposeSafely();
                 // Close data feed, alphas. Could be running even if algorithm initialization failed
                 AlgorithmHandlers.DataFeed.Exit();
-                AlgorithmHandlers.Alphas.Exit();
 
                 //Close result handler:
                 AlgorithmHandlers.Results.Exit();
@@ -411,8 +403,7 @@ namespace QuantConnect.Lean.Engine
                 while ((AlgorithmHandlers.Results.IsActive
                     || (AlgorithmHandlers.Transactions != null && AlgorithmHandlers.Transactions.IsActive)
                     || (AlgorithmHandlers.DataFeed != null && AlgorithmHandlers.DataFeed.IsActive)
-                    || (AlgorithmHandlers.RealTime != null && AlgorithmHandlers.RealTime.IsActive)
-                    || (AlgorithmHandlers.Alphas != null && AlgorithmHandlers.Alphas.IsActive))
+                    || (AlgorithmHandlers.RealTime != null && AlgorithmHandlers.RealTime.IsActive))
                     && millisecondTotalWait < 30*1000)
                 {
                     Thread.Sleep(millisecondInterval);

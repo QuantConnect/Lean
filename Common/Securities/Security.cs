@@ -477,7 +477,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Read only property that checks if we currently own stock in the company.
         /// </summary>
-        public virtual bool HoldStock => Holdings.AbsoluteQuantity > 0;
+        public virtual bool HoldStock => Holdings.HoldStock;
 
         /// <summary>
         /// Alias for HoldStock - Do we have any of this security

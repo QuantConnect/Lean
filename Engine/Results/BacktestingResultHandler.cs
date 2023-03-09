@@ -365,6 +365,8 @@ namespace QuantConnect.Lean.Engine.Results
                 result.DateFinished = DateTime.Now;
                 result.Progress = 1;
 
+                StoreInsights();
+
                 //Place result into storage.
                 StoreResult(result);
 
@@ -545,7 +547,9 @@ namespace QuantConnect.Lean.Engine.Results
                 }
 
                 //Add our value:
-                if (series.Values.Count == 0 || time > Time.UnixTimeStampToDateTime(series.Values[series.Values.Count - 1].x))
+                if (series.Values.Count == 0 || time > Time.UnixTimeStampToDateTime(series.Values[series.Values.Count - 1].x)
+                    // always sample portfolio turnover and use latest value
+                    || chartName == PortfolioTurnoverKey)
                 {
                     series.AddPoint(time, value);
                 }

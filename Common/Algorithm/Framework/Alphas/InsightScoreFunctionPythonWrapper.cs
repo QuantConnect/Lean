@@ -22,7 +22,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// <summary>
     /// A python implementation insight evaluator wrapper
     /// </summary>
-    public class InsightEvaluatorPythonWrapper : IInsightEvaluator
+    public class InsightScoreFunctionPythonWrapper : IInsightScoreFunction
     {
         private readonly dynamic _model;
 
@@ -30,7 +30,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// Creates a new python wrapper instance
         /// </summary>
         /// <param name="insightEvaluator">The python instance to wrap</param>
-        public InsightEvaluatorPythonWrapper(PyObject insightEvaluator)
+        public InsightScoreFunctionPythonWrapper(PyObject insightEvaluator)
         {
             _model = insightEvaluator;
         }
@@ -38,7 +38,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <summary>
         /// Method to evaluate and score insights for each time step
         /// </summary>
-        public void Score(IInsightManager insightManager, DateTime utcTime)
+        public void Score(InsightManager insightManager, DateTime utcTime)
         {
             using (Py.GIL())
             {

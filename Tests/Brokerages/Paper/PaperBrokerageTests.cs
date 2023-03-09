@@ -134,7 +134,6 @@ namespace QuantConnect.Tests.Brokerages.Paper
                 results,
                 realTime,
                 new AlgorithmManagerTests.NullLeanManager(),
-                new AlgorithmManagerTests.NullAlphaHandler(),
                 new CancellationToken()
             );
 

@@ -14,131 +14,49 @@
 */
 
 using System;
-using System.Linq;
-using System.Threading;
-using QuantConnect.Util;
-using System.Collections.Generic;
+using Python.Runtime;
 
 namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
 {
     /// <summary>
     /// Encapsulates the storage of insights.
     /// </summary>
-    public class InsightManager : IInsightManager
+    public class InsightManager : InsightCollection
     {
-        private int _insightCount;
-        private readonly object _lock = new ();
+        private IInsightScoreFunction _insightScoreFunction;
 
         /// <summary>
-        /// This dictionary holds all insights.
-        /// </summary>
-        private readonly Dictionary<Guid, Insight> _completeInsights = new();
-
-        /// <summary>
-        /// This dictionary holds all open insights.
-        /// </summary>
-        private readonly Dictionary<Guid, Insight> _openInsights = new();
-
-        /// <summary>
-        /// Gets the current number of insights that have been processed
-        /// </summary>
-        public int InsightCount => _insightCount;
-
-        /// <summary>
-        /// Returns all non expired insights
-        /// </summary>
-        public List<Insight> GetOpenInsights(Func<Insight, bool> filter = null)
-        {
-            lock (_lock)
-            {
-                var result = _openInsights.Select(kvp => kvp.Value);
-                if (filter != null)
-                {
-                    result = result.Where(filter);
-                }
-                return result.ToList();
-            }
-        }
-
-        /// <summary>
-        /// Returns all expired insights
-        /// </summary>
-        public virtual List<Insight> GetInsights(Func<Insight, bool> filter = null)
-        {
-            lock (_lock)
-            {
-                var result = _completeInsights.Select(kvp => kvp.Value);
-                if (filter != null)
-                {
-                    result = result.Where(filter);
-                }
-                return result.ToList();
-            }
-        }
-
-        /// <summary>
-        /// Adds a collection of insights
-        /// </summary>
-        /// <param name="newInsights">The insight instances to add</param>
-        public void AddInsights(IEnumerable<Insight> newInsights)
-        {
-            lock (_lock)
-            {
-                foreach (var insight in newInsights)
-                {
-                    Interlocked.Increment(ref _insightCount);
-
-                    // we suppose they are not expired
-                    _openInsights[insight.Id] = insight;
-                    _completeInsights[insight.Id] = insight;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Process a new time step handling expired insights
+        /// Process a new time step handling insights scoring
         /// </summary>
         /// <param name="utcNow">The current utc time</param>
         public void Step(DateTime utcNow)
         {
-            List<Insight> _toRemove = null;
-            lock (_lock)
-            {
-                foreach (var insight in _openInsights.Values)
-                {
-                    if (insight.IsExpired(utcNow))
-                    {
-                        insight.Score.Finalize(utcNow);
-
-                        _toRemove ??= new();
-                        // keep track
-                        _toRemove.Add(insight);
-                    }
-                }
-
-                if(_toRemove != null )
-                {
-                    // remove from open
-                    foreach (var insight in _toRemove)
-                    {
-                        _openInsights.Remove(insight.Id);
-                    }
-                }
-            }
+            _insightScoreFunction?.Score(this, utcNow);
         }
 
         /// <summary>
-        /// Removes insights from the manager
+        /// Sets the insight score function to use
         /// </summary>
-        /// <param name="insightsToRemove">The insights to be removed</param>
-        public void RemoveInsights(IEnumerable<Insight> insightsToRemove)
+        /// <param name="insightScoreFunction">Model that scores insights</param>
+        public void SetInsightScoreFunction(IInsightScoreFunction insightScoreFunction)
         {
-            lock (_lock)
+            _insightScoreFunction = insightScoreFunction;
+        }
+
+        /// <summary>
+        /// Sets the insight score function to use
+        /// </summary>
+        /// <param name="insightScoreFunction">Model that scores insights</param>
+        public void SetInsightScoreFunction(PyObject insightScoreFunction)
+        {
+            IInsightScoreFunction model;
+            if (insightScoreFunction.TryConvert(out model))
             {
-                foreach (var insight in insightsToRemove)
-                {
-                    _completeInsights.Remove(insight.Id);
-                }
+                SetInsightScoreFunction(model);
+            }
+            else
+            {
+                _insightScoreFunction = new InsightScoreFunctionPythonWrapper(insightScoreFunction);
             }
         }
     }
