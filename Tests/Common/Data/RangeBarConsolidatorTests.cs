@@ -84,6 +84,8 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(5, bar.Close);
             Assert.AreEqual(3, bar.Low);
             Assert.AreEqual(5, bar.High);
+
+            consolidator.Dispose();
         }
 
         [Test]
