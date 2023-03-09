@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,8 +15,10 @@
 */
 
 using System;
+using System.Collections.Generic;
 using NodaTime;
 using NUnit.Framework;
+using NUnit.Framework.Internal;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -27,6 +29,7 @@ using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Equity;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -139,7 +142,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new DateTime(2019, 1, 1));
 
             dataFeed.Subscription = new Subscription(request,
-                new EnqueueableEnumerator<SubscriptionData>(), 
+                new EnqueueableEnumerator<SubscriptionData>(),
                 null);
 
             Assert.IsTrue(dataManager.AddSubscription(request));
@@ -215,6 +218,60 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             dataManager.RemoveAllSubscriptions();
         }
 
+        [Test]
+        public void ScaledRawNormalizationModeIsNotAllowed()
+        {
+            var dataPermissionManager = new DataPermissionManager();
+            var dataFeed = new TestDataFeed();
+            var dataManager = new DataManager(dataFeed,
+                new UniverseSelection(_algorithm,
+                    _securityService,
+                    dataPermissionManager,
+                    new DefaultDataProvider()),
+                _algorithm,
+                _algorithm.TimeKeeper,
+                MarketHoursDatabase.AlwaysOpen,
+                false,
+                new RegisteredSecurityDataTypesProvider(),
+                dataPermissionManager);
+
+            var config = new SubscriptionDataConfig(typeof(TradeBar),
+                Symbols.SPY,
+                Resolution.Daily,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false,
+                dataNormalizationMode: DataNormalizationMode.ScaledRaw);
+
+            using var universe = new TestUniverse(
+                config,
+                new UniverseSettings(Resolution.Daily, 1, false, false, TimeSpan.FromDays(365)));
+            var security = new Equity(
+                config.Symbol,
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                new Cash(Currencies.USD, 1, 1),
+                SymbolProperties.GetDefault(Currencies.USD),
+                new IdentityCurrencyConverter(Currencies.USD),
+                new RegisteredSecurityDataTypesProvider(),
+                new SecurityCache());
+
+            var subscriptionRequest = new SubscriptionRequest(
+                false,
+                universe,
+                security,
+                config,
+                new DateTime(2014, 10, 10),
+                new DateTime(2015, 10, 10));
+
+            var exception = Assert.Throws<InvalidOperationException>(() =>
+            {
+                dataManager.AddSubscription(subscriptionRequest);
+            });
+            Assert.That(exception.Message, Does.Contain(nameof(DataNormalizationMode.ScaledRaw)));
+        }
+
         private class TestDataFeed : IDataFeed
         {
             public Subscription Subscription { get; set; }
@@ -239,6 +296,21 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             public void Exit()
             {
+            }
+        }
+
+        private class TestUniverse : Universe
+        {
+            public TestUniverse(SubscriptionDataConfig config, UniverseSettings universeSettings)
+                : base(config)
+            {
+                UniverseSettings = universeSettings;
+            }
+
+            public override UniverseSettings UniverseSettings { get; }
+            public override IEnumerable<Symbol> SelectSymbols(DateTime utcTime, BaseDataCollection data)
+            {
+                throw new NotImplementedException();
             }
         }
     }

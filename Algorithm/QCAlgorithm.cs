@@ -1694,8 +1694,6 @@ namespace QuantConnect.Algorithm
                 return AddOptionContract(symbol, resolution, fillDataForward, leverage, extendedMarketHours);
             }
 
-            CheckSecurityDataNormalizationMode(dataNormalizationMode);
-
             var isFilteredSubscription = !isCanonical;
             List<SubscriptionDataConfig> configs;
             // we pass dataNormalizationMode to SubscriptionManager.SubscriptionDataConfigService.Add conditionally,
@@ -2651,8 +2649,6 @@ namespace QuantConnect.Algorithm
                 }
             }
 
-            CheckSecurityDataNormalizationMode(normalizationMode);
-
             Symbol symbol;
             if (!SymbolCache.TryGetSymbol(ticker, out symbol) ||
                 symbol.ID.Market != market ||
@@ -2667,17 +2663,6 @@ namespace QuantConnect.Algorithm
             var security = Securities.CreateSecurity(symbol, configs, leverage);
 
             return (T) AddToUserDefinedUniverse(security, configs);
-        }
-
-        private void CheckSecurityDataNormalizationMode(DataNormalizationMode? dataNormalizationMode)
-        {
-            if (dataNormalizationMode.HasValue && dataNormalizationMode == DataNormalizationMode.ScaledRaw)
-            {
-                throw new ArgumentException(
-                    $"{DataNormalizationMode.ScaledRaw} normalization mode is not supported for AddSecurity. " +
-                    "This is only intended for internal usage and history requests.",
-                    nameof(dataNormalizationMode));
-            }
         }
 
         /// <summary>

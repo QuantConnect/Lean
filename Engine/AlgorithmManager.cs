@@ -746,7 +746,7 @@ namespace QuantConnect.Lean.Engine
                     algorithm.TradeBuilder.ApplySplit(split, liveMode, mode);
 
                     // apply the split event to the security volatility model
-                    WarmUpVolatilityModel(algorithm, security);
+                    ApplySplitOrDividendToVolatilityModel(algorithm, security, liveMode, mode);
 
                     if (liveMode && security != null)
                     {
@@ -804,7 +804,7 @@ namespace QuantConnect.Lean.Engine
                 algorithm.Portfolio.ApplyDividend(dividend, liveMode, mode);
 
                 // apply the dividend event to the security volatility model
-                WarmUpVolatilityModel(algorithm, security);
+                ApplySplitOrDividendToVolatilityModel(algorithm, security, liveMode, mode);
 
                 if (liveMode && security != null)
                 {
@@ -979,8 +979,24 @@ namespace QuantConnect.Lean.Engine
             {
                 foreach (var request in historyRequests)
                 {
-                    volatilityModel.Update(security, slice.Get(request.DataType)[security.Symbol]);
+                    var data = slice.Get(request.DataType);
+                    if (data.ContainsKey(security.Symbol))
+                    {
+                        volatilityModel.Update(security, data[security.Symbol]);
+                    }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Warms up the security's volatility model in the case of a split or dividend to avoid discontinuities when data is raw or in live mode
+        /// </summary>
+        private static void ApplySplitOrDividendToVolatilityModel(IAlgorithm algorithm, Security security, bool liveMode,
+            DataNormalizationMode dataNormalizationMode)
+        {
+            if (security.Type == SecurityType.Equity && (liveMode || dataNormalizationMode == DataNormalizationMode.Raw))
+            {
+                WarmUpVolatilityModel(algorithm, security);
             }
         }
 

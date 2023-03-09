@@ -185,6 +185,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return subscription.Configuration.IsInternalFeed;
             }
 
+            if (request.Configuration.DataNormalizationMode == DataNormalizationMode.ScaledRaw)
+            {
+                throw new InvalidOperationException($"{DataNormalizationMode.ScaledRaw} normalization mode only intended for history requests.");
+            }
+
             if (request.Configuration.SecurityType == SecurityType.IndexOption && request.Configuration.Resolution == Resolution.Daily)
             {
                 throw new InvalidOperationException($"{Resolution.Daily} resolution is currently not supported for {SecurityType.IndexOption}, please use {Resolution.Hour} instead");
