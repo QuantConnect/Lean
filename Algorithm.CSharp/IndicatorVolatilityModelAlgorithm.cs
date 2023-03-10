@@ -75,6 +75,14 @@ namespace QuantConnect.Algorithm.CSharp
                 var volatilityModel = equity.VolatilityModel as IndicatorVolatilityModel;
                 var historyRequests = volatilityModel.GetHistoryRequirements(
                     equity, UtcTime, equity.Resolution, _indicatorPeriods + 1).ToList();
+
+                // Since data is raw (or if we were to be in live mode), we need to warm up the volatility model with scaled raw data
+                // to avoid jumps in volatility values due to price discontinuities on splits and dividends
+                foreach (var request in historyRequests)
+                {
+                    request.DataNormalizationMode = DataNormalizationMode.ScaledRaw;
+                }
+
                 var history = History(historyRequests);
                 foreach (var historySlice in history)
                 {

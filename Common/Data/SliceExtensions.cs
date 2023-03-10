@@ -18,13 +18,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.Consolidators;
+using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Market;
 using QuantConnect.Util;
 
 namespace QuantConnect.Data
 {
     /// <summary>
-    /// Provides extension methods to slice enumerables
+    /// Provides extension methods to slices and slice enumerables
     /// </summary>
     public static class SliceExtensions
     {
@@ -178,6 +179,49 @@ namespace QuantConnect.Data
                     else yield return field(item);
                 }
             }
+        }
+
+        /// <summary>
+        /// Tries to get the data for the specified symbol and type
+        /// </summary>
+        /// <typeparam name="T">The type of data we want, for example, <see cref="TradeBar"/> or <see cref="UnlinkedData"/>, etc...</typeparam>
+        /// <param name="slice">The slice</param>
+        /// <param name="symbol">The symbol data is sought for</param>
+        /// <param name="data">The found data</param>
+        /// <returns>True if data was found for the specified type and symbol</returns>
+        public static bool TryGet<T>(this Slice slice, Symbol symbol, out T data)
+            where T : IBaseData
+        {
+            data = default(T);
+            var typeData = slice.Get(typeof(T)) as DataDictionary<T>;
+            if (typeData.ContainsKey(symbol))
+            {
+                data = typeData[symbol];
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Tries to get the data for the specified symbol and type
+        /// </summary>
+        /// <param name="slice">The slice</param>
+        /// <param name="type">The type of data we seek</param>
+        /// <param name="symbol">The symbol data is sought for</param>
+        /// <param name="data">The found data</param>
+        /// <returns>True if data was found for the specified type and symbol</returns>
+        public static bool TryGet(this Slice slice, Type type, Symbol symbol, out dynamic data)
+        {
+            data = null;
+            var typeData = slice.Get(type);
+            if (typeData.ContainsKey(symbol))
+            {
+                data = typeData[symbol];
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>

@@ -352,47 +352,6 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Tries to get the data for the specified symbol and type
-        /// </summary>
-        /// <typeparam name="T">The type of data we want, for example, <see cref="TradeBar"/> or <see cref="UnlinkedData"/>, etc...</typeparam>
-        /// <param name="symbol">The symbol data is sought for</param>
-        /// <param name="data">The found data</param>
-        /// <returns>True if data was found for the specified type and symbol</returns>
-        public bool TryGet<T>(Symbol symbol, out T data)
-            where T : IBaseData
-        {
-            data = default(T);
-            var typeData = GetImpl(typeof(T), this) as DataDictionary<T>;
-            if (typeData.ContainsKey(symbol))
-            {
-                data = typeData[symbol];
-                return true;
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Tries to get the data for the specified symbol and type
-        /// </summary>
-        /// <param name="type">The type of data we seek</param>
-        /// <param name="symbol">The symbol data is sought for</param>
-        /// <param name="data">The found data</param>
-        /// <returns>True if data was found for the specified type and symbol</returns>
-        public bool TryGet(Type type, Symbol symbol, out dynamic data)
-        {
-            data = null;
-            var typeData = GetImpl(type, this);
-            if (typeData.ContainsKey(symbol))
-            {
-                data = typeData[symbol];
-                return true;
-            }
-
-            return false;
-        }
-
-        /// <summary>
         /// Gets the data of the specified type.
         /// </summary>
         /// <remarks>Supports both C# and Python use cases</remarks>

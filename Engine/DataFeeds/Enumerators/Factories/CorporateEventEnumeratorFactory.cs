@@ -53,7 +53,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             ITradableDatesNotifier tradableDayNotifier,
             IMapFileProvider mapFileProvider,
             DateTime startTime,
-            DateTime? endTime = null,
+            DateTime endTime,
             bool enablePriceScaling = true)
         {
 

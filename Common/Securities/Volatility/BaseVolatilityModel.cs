@@ -115,9 +115,6 @@ namespace QuantConnect.Securities.Volatility
                 extendedMarketHours,
                 configuration.DataTimeZone);
             var utcStartTime = localStartTime.ConvertToUtc(security.Exchange.TimeZone);
-            var dataNormalizationMode = configuration.DataNormalizationMode == DataNormalizationMode.Raw
-                ? DataNormalizationMode.ScaledRaw
-                : configuration.DataNormalizationMode;
 
             return new[]
             {
@@ -131,7 +128,7 @@ namespace QuantConnect.Securities.Volatility
                                    historyResolution,
                                    extendedMarketHours,
                                    configurations.IsCustomData(),
-                                   dataNormalizationMode,
+                                   configuration.DataNormalizationMode,
                                    LeanData.GetCommonTickTypeForCommonDataTypes(configuration.Type, security.Type))
             };
         }
