@@ -16,6 +16,7 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
+using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework.Alphas;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Alphas
@@ -23,24 +24,136 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
     [TestFixture]
     public class InsightCollectionTests
     {
-        private static string _expectedResultCopyTo = "[{\"id\":\"6d077d17f22943009b04919cdc2b897f\",\"generated-time\":1546300800.0,\"close-time\":1546300800.0,\"symbol\":\"AAPL R735QTJ8XC9X\",\"ticker\":\"AAPL\",\"type\":\"price\",\"reference\":0.0,\"direction\":\"up\",\"period\":86400.0},{\"id\":\"47f61ba2ff9c4c859ce06f29124d9f7f\",\"generated-time\":1546387200.0,\"close-time\":1546387200.0,\"symbol\":\"AAPL R735QTJ8XC9X\",\"ticker\":\"AAPL\",\"type\":\"volatility\",\"reference\":0.0,\"direction\":\"up\",\"period\":86400.0},{\"id\":\"ae689c34697b496e9ffcda2adc395b17\",\"generated-time\":1546646400.0,\"close-time\":1546646400.0,\"symbol\":\"AAPL R735QTJ8XC9X\",\"ticker\":\"AAPL\",\"type\":\"price\",\"reference\":0.0,\"direction\":\"up\",\"period\":86400.0},{\"id\":\"f06d2464d1f94361bcd000c18c7d2554\",\"generated-time\":1546732800.0,\"close-time\":1546732800.0,\"symbol\":\"AAPL R735QTJ8XC9X\",\"ticker\":\"AAPL\",\"type\":\"price\",\"reference\":0.0,\"direction\":\"flat\",\"period\":86400.0},{\"id\":\"d47f22e06e58434c9f71f71dd4691673\",\"generated-time\":1546819200.0,\"close-time\":1546819200.0,\"symbol\":\"AAPL R735QTJ8XC9X\",\"ticker\":\"AAPL\",\"type\":\"price\",\"reference\":0.0,\"direction\":\"down\",\"period\":86400.0},{\"id\":\"9a37bd59a37847599bd48cfe209e2887\",\"generated-time\":1546905600.0,\"close-time\":1546905600.0,\"symbol\":\"AAPL R735QTJ8XC9X\",\"ticker\":\"AAPL\",\"type\":\"volatility\",\"reference\":0.0,\"direction\":\"up\",\"period\":86400.0},{\"id\":\"66f1c3a7b3504b039834cecdc003a1ba\",\"generated-time\":1546992000.0,\"close-time\":1546992000.0,\"symbol\":\"AAPL R735QTJ8XC9X\",\"ticker\":\"AAPL\",\"type\":\"volatility\",\"reference\":0.0,\"direction\":\"down\",\"period\":86400.0}]";
-        
         [Test]
-        public static void InsightCollectionShouldBeAbleToBeConvertedToListWithoutStackOverflow()
+        public void InsightCollectionShouldBeAbleToBeConvertedToListWithoutStackOverflow()
         {
-            var aapl = Symbol.Create("AAPL", SecurityType.Equity, "usa");
-            var insightCollection = new InsightCollection();
+            var insightCollection = new InsightCollection
+            {
+                new Insight(Symbols.AAPL, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Up)
+                {
+                    CloseTimeUtc = new DateTime(2019, 1, 1),
+                },
+                new Insight(Symbols.AAPL, new TimeSpan(1, 0, 0, 0), InsightType.Volatility, InsightDirection.Up)
+                {
+                    CloseTimeUtc = new DateTime(2019, 1, 2),
+                }
+            };
 
-            insightCollection.Add(new Insight(aapl, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Up)
-            {
-                CloseTimeUtc = new DateTime(2019, 1, 1),
-            });
-            insightCollection.Add(new Insight(aapl, new TimeSpan(1, 0, 0, 0), InsightType.Volatility, InsightDirection.Up)
-            {
-                CloseTimeUtc = new DateTime(2019, 1, 2),
-            });
-            
             Assert.DoesNotThrow(() => insightCollection.OrderBy(x => x.CloseTimeUtc).ToList());
+        }
+
+        [Test]
+        public void Addition()
+        {
+            var collection = new InsightCollection();
+            var insight = new Insight(Symbols.AAPL, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Up) { CloseTimeUtc = new DateTime(2019, 1, 1) };
+            collection.Add(insight);
+
+            var beforeExpiration = insight.CloseTimeUtc.AddDays(-1);
+
+            Assert.AreEqual(1, collection.Count);
+            Assert.IsTrue(collection.ContainsKey(Symbols.AAPL));
+            Assert.IsTrue(collection.Contains(insight));
+            Assert.IsTrue(collection.TryGetValue(Symbols.AAPL, out var insightInCollection));
+            Assert.IsTrue(collection.HasActiveInsights(Symbols.AAPL, beforeExpiration));
+            Assert.AreEqual(insight, insightInCollection.Single());
+            Assert.AreEqual(insight, collection[Symbols.AAPL].Single());
+            Assert.AreEqual(insight, collection.Single());
+            Assert.AreEqual(insight, collection.GetActiveInsights(beforeExpiration).Single());
+            Assert.AreEqual(insight, collection.GetInsights().Single());
+        }
+
+        [Test]
+        public void GetInsights()
+        {
+            var collection = new InsightCollection();
+            var insight = new Insight(Symbols.AAPL, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Up) { CloseTimeUtc = new DateTime(2019, 1, 1) };
+            collection.Add(insight);
+            var insight2 = new Insight(Symbols.SPY, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Up) { CloseTimeUtc = new DateTime(2019, 1, 2) };
+            collection.Add(insight2);
+
+            Assert.AreEqual(2, collection.Count);
+
+            collection.RemoveInsights(x => x == insight);
+            Assert.AreEqual(1, collection.GetInsights().Count);
+            Assert.AreEqual(1, collection.Count);
+        }
+
+        [Test]
+        public void Removal()
+        {
+            var collection = new InsightCollection();
+            var insight = new Insight(Symbols.AAPL, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Up) { CloseTimeUtc = new DateTime(2019, 1, 1) };
+            collection.Add(insight);
+
+            Assert.AreEqual(1, collection.Count);
+            Assert.IsTrue(collection.Remove(insight));
+            Assert.AreEqual(0, collection.Count);
+
+            collection.Add(insight);
+            Assert.AreEqual(1, collection.Count);
+            collection.RemoveInsights(x => x == insight);
+            Assert.AreEqual(0, collection.GetInsights().Count);
+            Assert.AreEqual(0, collection.Count);
+        }
+
+        [Test]
+        public void ExpiredRemoval()
+        {
+            var collection = new InsightCollection();
+            var insight = new Insight(Symbols.AAPL, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Up) { CloseTimeUtc = new DateTime(2019, 1, 1) };
+            collection.Add(insight);
+
+            var beforeExpiration = insight.CloseTimeUtc.AddDays(-1);
+            var afterExpiration = insight.CloseTimeUtc.AddDays(1);
+
+            Assert.AreEqual(1, collection.Count);
+            Assert.AreEqual(0, collection.RemoveExpiredInsights(beforeExpiration).Count);
+            Assert.AreEqual(insight, collection.RemoveExpiredInsights(afterExpiration).Single());
+        }
+
+        [Test]
+        public void IndexAccess()
+        {
+            var collection = new InsightCollection();
+            var insight = new Insight(Symbols.AAPL, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Up) { CloseTimeUtc = new DateTime(2019, 1, 1) };
+            var insight2 = new Insight(Symbols.AAPL, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Up) { CloseTimeUtc = new DateTime(2019, 1, 2) };
+
+            collection[Symbols.AAPL] = null;
+            Assert.AreEqual(0, collection.Count);
+            collection[Symbols.AAPL] = new() { insight, insight2 };
+
+            Assert.AreEqual(2, collection.Count);
+
+            collection[Symbols.AAPL] = null;
+            Assert.AreEqual(0, collection.Count);
+        }
+
+        [Test]
+        public void AddRange()
+        {
+            var collection = new InsightCollection();
+            var insight = new Insight(Symbols.AAPL, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Up) { CloseTimeUtc = new DateTime(2019, 1, 1) };
+            var insight2 = new Insight(Symbols.AAPL, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Up) { CloseTimeUtc = new DateTime(2019, 1, 2) };
+            var insight3 = new Insight(Symbols.SPY, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Up) { CloseTimeUtc = new DateTime(2019, 1, 2) };
+
+            collection.AddRange(new List<Insight> { insight, insight2, insight3 });
+            Assert.AreEqual(3, collection.Count);
+        }
+
+        [Test]
+        public void ClearSymbols()
+        {
+            var collection = new InsightCollection();
+            var insight = new Insight(Symbols.AAPL, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Up) { CloseTimeUtc = new DateTime(2019, 1, 1) };
+            var insight2 = new Insight(Symbols.AAPL, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Up) { CloseTimeUtc = new DateTime(2019, 1, 2) };
+            var insight3 = new Insight(Symbols.SPY, new TimeSpan(1, 0, 0, 0), InsightType.Price, InsightDirection.Up) { CloseTimeUtc = new DateTime(2019, 1, 2) };
+            collection.AddRange(new List<Insight> { insight, insight2, insight3 });
+
+            collection.Clear(new[] { Symbols.AAPL });
+            Assert.AreEqual(1, collection.Count);
+            Assert.IsTrue(collection.ContainsKey(Symbols.SPY));
+            Assert.IsFalse(collection.ContainsKey(Symbols.AAPL));
         }
     }
 }

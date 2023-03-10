@@ -140,7 +140,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             {
                 lock(_insights)
                 {
-                    return _insights[symbol].ToList();
+                    return _insights[symbol]?.ToList();
                 }
             }
             set
@@ -149,7 +149,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 {
                     if (_insights.TryGetValue(symbol, out var existingInsights))
                     {
-                        _openInsightCount -= existingInsights.Count;
+                        _openInsightCount -= existingInsights?.Count ?? 0;
                     }
 
                     if (value != null)
@@ -313,6 +313,27 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             lock (_insights)
             {
                 _insightsComplete.RemoveAll(insight => filter(insight));
+
+                // for consistentcy remove from open insights just in case
+                List<Insight> insightsToRemove = null;
+                foreach (var insights in _insights.Values)
+                {
+                    foreach (var insight in insights)
+                    {
+                        if (filter(insight))
+                        {
+                            insightsToRemove ??= new ();
+                            insightsToRemove.Add(insight);
+                        }
+                    }
+                }
+                if(insightsToRemove != null)
+                {
+                    foreach (var insight in insightsToRemove)
+                    {
+                        Remove(insight);
+                    }
+                }
             }
         }
 
