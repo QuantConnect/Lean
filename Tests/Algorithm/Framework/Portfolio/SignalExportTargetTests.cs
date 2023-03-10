@@ -25,12 +25,11 @@ using System.Collections.Generic;
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 {
     [TestFixture]
-    public class Collective2SignalExportTests
+    public class SignalExportTargetTests
     {
         [Test]
         public void ConvertsPortfolioTargetsToCollective2Appropiately()
         {
-            var reference = new DateTime(2016, 02, 16, 11, 53, 30);
             var symbols = new List<Symbol>()
             {
                 Symbols.SPY,
@@ -39,21 +38,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 Symbols.SPY_Option_Chain
             };
 
-            var securities = new List<Security>();
-            var timeKeeper = new TimeKeeper(reference);
-            var securityManager = new SecurityManager(timeKeeper);
-
-            foreach (var symbol in symbols)
-            {
-                var security = CreateSecurity(reference, symbol);
-                securities.Add(security);
-                securityManager.Add(security);
-            }
-
-            var transactionManager = new SecurityTransactionManager(null, securityManager);
-            var portfolio = new SecurityPortfolioManager(securityManager, transactionManager);
-            portfolio.SetCash(50000);
-
             var targetList = new List<PortfolioTarget>()
             {
                 new PortfolioTarget(Symbols.SPY, (decimal)0.2),
@@ -61,6 +45,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new PortfolioTarget(Symbols.ES_Future_Chain, (decimal)0.2),
                 new PortfolioTarget(Symbols.SPY_Option_Chain, (decimal)0.3)
             };
+
+            var securityManager = CreateSecurityManager(symbols);
+            var transactionManager = new SecurityTransactionManager(null, securityManager);
+            var portfolio = new SecurityPortfolioManager(securityManager, transactionManager);
+            portfolio.SetCash(50000);
 
             var manager = new Collective2SignalExportTestHandler("", 0, portfolio);
             var transformedList = manager.ConvertHoldingsToCollective2TestHandler(targetList);
@@ -106,7 +95,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [Test]
         public void SendsTargetsToCollective2Appropiately()
         {
-            var reference = new DateTime(2016, 02, 16, 11, 53, 30);
             var symbols = new List<Symbol>()
             {
                 Symbols.SPY,
@@ -115,21 +103,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 Symbols.SPY_Option_Chain
             };
 
-            var securities = new List<Security>();
-            var timeKeeper = new TimeKeeper(reference);
-            var securityManager = new SecurityManager(timeKeeper);
-
-            foreach (var symbol in symbols)
-            {
-                var security = CreateSecurity(reference, symbol);
-                securities.Add(security);
-                securityManager.Add(security);
-            }
-
-            var transactionManager = new SecurityTransactionManager(null, securityManager);
-            var portfolio = new SecurityPortfolioManager(securityManager, transactionManager);
-            portfolio.SetCash(50000);
-
             var targetList = new List<PortfolioTarget>()
             {
                 new PortfolioTarget(Symbols.SPY, (decimal)0.2),
@@ -137,6 +110,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new PortfolioTarget(Symbols.ES_Future_Chain, (decimal)0.2),
                 new PortfolioTarget(Symbols.SPY_Option_Chain, (decimal)0.3)
             };
+
+            var securityManager = CreateSecurityManager(symbols);
+            var transactionManager = new SecurityTransactionManager(null, securityManager);
+            var portfolio = new SecurityPortfolioManager(securityManager, transactionManager);
+            portfolio.SetCash(50000);
 
             var manager = new Collective2SignalExport("", 0, portfolio);
 
@@ -147,8 +125,46 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             Assert.AreEqual(expectedMessage, message);
         }
 
-        private Security CreateSecurity(DateTime reference,
-            Symbol symbol)
+        [Test]
+        public void ConvertsPortfolioTargetsToCrunchDAOAppropiately()
+        {
+            var symbols = new List<Symbol>()
+            {
+                Symbols.SPY,
+                Symbols.SPX
+            };
+
+            var targetList = new List<PortfolioTarget>()
+            {
+                new PortfolioTarget(Symbols.SPY, (decimal)0.2),
+                new PortfolioTarget(Symbols.SPX, (decimal)0.8)
+            };
+
+            var securityManager = CreateSecurityManager(symbols);
+            var manager = new CrunchDAOSignalExport("", "", securityManager);
+
+            var message = manager.Send(targetList);
+            var expectedMessage = "ticker,date,signal\nSPY R735QTJ8XC9X,2016-02-16,0.2\nSPX 31,2016-02-16,0.8\n";
+
+            Assert.AreEqual(expectedMessage, message);
+        }
+
+        private static SecurityManager CreateSecurityManager(List<Symbol> symbols)
+        {
+            var reference = new DateTime(2016, 02, 16, 11, 53, 30);
+            var timeKeeper = new TimeKeeper(reference);
+            var securityManager = new SecurityManager(timeKeeper);
+
+            foreach (var symbol in symbols)
+            {
+                var security = CreateSecurity(symbol);
+                securityManager.Add(security);
+            }
+
+            return securityManager;
+        }
+
+        private static Security CreateSecurity(Symbol symbol)
         {
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
@@ -186,6 +202,21 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             public List<Collective2Position> ConvertHoldingsToCollective2TestHandler(List<PortfolioTarget> holdings)
             {
                 return base.ConvertHoldingsToCollective2(holdings);
+            }
+        }
+
+        /// <summary>
+        /// Handler class to test CrunchDAOSignalExport
+        /// </summary>
+        private class CrunchDAOSignalExportTestHandler : CrunchDAOSignalExport
+        {
+            public CrunchDAOSignalExportTestHandler(string apiKey, string model, SecurityManager securities, string submissionName = "", string comment = "") : base(apiKey, model, securities, submissionName, comment)
+            {
+            }
+
+            public string ConvertToCSVFormatTestHandler(List<PortfolioTarget> holdings)
+            {
+                return base.ConvertToCSVFormat(holdings);
             }
         }
     }

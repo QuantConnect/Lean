@@ -33,8 +33,8 @@ namespace QuantConnect.Algorithm.CSharp
         private const string _collective2ApiKey = ""; // Replace this value with your Colletive2 API key
         private const int _collective2SystemId = 1; // Replace this value with your system ID
 
-        private Symbol _spy;
-        private Symbol _aig;
+        private const string _crunchDAOApiKey = ""; // Replace this values with your CrunchDAO API key
+        private const string _crunchDAOModel = ""; // Replace this value with your model's name
 
         public int FastPeriod = 100;
         public int SlowPeriod = 200;
@@ -51,14 +51,15 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 11);
             SetCash(100 * 1000);
 
-            _spy = AddSecurity(SecurityType.Equity, "SPY").Symbol;
-            _aig = AddSecurity(SecurityType.Equity, "AIG").Symbol;
+            AddSecurity(SecurityType.Equity, "SPY");
+            AddSecurity(SecurityType.Equity, "AIG");
 
             Fast = EMA("SPY", FastPeriod);
             Slow = EMA("SPY", SlowPeriod);
 
             // Set the signal export providers
             SignalExport.AddSignalExportProviders(new Collective2SignalExport(_collective2ApiKey, _collective2SystemId, Portfolio));
+            SignalExport.AddSignalExportProviders(new CrunchDAOSignalExport(_crunchDAOApiKey, _crunchDAOModel, Securities));
         }
 
         /// <summary>
