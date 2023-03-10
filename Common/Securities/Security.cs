@@ -624,7 +624,7 @@ namespace QuantConnect.Securities
             if (data == null) return;
             Cache.AddData(data);
 
-            UpdateConsumersMarketPrice(data);
+            UpdateMarketPrice(data);
         }
 
         /// <summary>
@@ -639,7 +639,7 @@ namespace QuantConnect.Securities
         {
             Cache.AddDataList(data, dataType, containsFillForwardData);
 
-            UpdateConsumersMarketPrice(data[data.Count - 1]);
+            UpdateMarketPrice(data[data.Count - 1]);
         }
 
         /// <summary>
@@ -902,13 +902,7 @@ namespace QuantConnect.Securities
         /// <param name="data">Data to pull price from</param>
         protected virtual void UpdateConsumersMarketPrice(BaseData data)
         {
-            if (data is OpenInterest ||
-                // don't update the price for auxiliary types, they don't carry security price information
-                data.DataType == MarketDataType.Auxiliary ||
-                data.Price == 0m)
-            {
-                return;
-            }
+            if (data is OpenInterest || data.Price == 0m) return;
             Holdings.UpdateMarketPrice(Price);
             VolatilityModel.Update(this, data);
         }
@@ -922,6 +916,17 @@ namespace QuantConnect.Securities
             IsFillDataForward = _subscriptionsBag.Any(x => x.FillDataForward);
             IsExtendedMarketHours = _subscriptionsBag.Any(x => x.ExtendedMarketHours);
             RefreshDataNormalizationModeProperty();
+        }
+
+        /// <summary>
+        /// Updates consumers market price. It will do nothing if the passed data type is auxiliary.
+        /// </summary>
+        private void UpdateMarketPrice(BaseData data)
+        {
+            if (data.DataType != MarketDataType.Auxiliary)
+            {
+                UpdateConsumersMarketPrice(data);
+            }
         }
     }
 }
