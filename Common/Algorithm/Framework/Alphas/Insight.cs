@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Newtonsoft.Json;
 using QuantConnect.Algorithm.Framework.Alphas.Serialization;
 using QuantConnect.Interfaces;
@@ -119,7 +118,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <summary>
         /// Gets the estimated value of this insight in the account currency
         /// </summary>
-        public decimal EstimatedValue { get; protected internal set; }
+        public decimal EstimatedValue { get; set; }
 
         /// <summary>
         /// Determines whether or not this insight is considered expired at the specified <paramref name="utcTime"/>

@@ -92,14 +92,7 @@ namespace QuantConnect.DataLibrary.Tests
             {"Total Fees", "$130.72"},
             {"Estimated Strategy Capacity", "$370000000.00"},
             {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Return Over Maximum Drawdown", "1.618"},
-            {"Portfolio Turnover", "0.21"},
-            {"Total Insights Generated", "248"},
-            {"Total Insights Closed", "244"},
-            {"Total Insights Analysis Completed", "244"},
-            {"Long Insight Count", "248"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
+            {"Portfolio Turnover", "17.55%"},
             {"OrderListHash", "b6dca94ebb3d821f72457389a7cac298"}
         };
     }

@@ -56,7 +56,6 @@ namespace QuantConnect.Tests
             var algorithmManager = AlgorithmRunner.RunLocalBacktest(
                 parameters.Algorithm,
                 parameters.Statistics,
-                parameters.AlphaStatistics,
                 parameters.Language,
                 parameters.ExpectedFinalStatus
             ).AlgorithmManager;
@@ -121,7 +120,6 @@ namespace QuantConnect.Tests
         {
             public readonly string Algorithm;
             public readonly Dictionary<string, string> Statistics;
-            public readonly AlphaRuntimeStatistics AlphaStatistics;
             public readonly Language Language;
             public readonly AlgorithmStatus ExpectedFinalStatus;
             public readonly long DataPoints;

@@ -54,7 +54,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var result = AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
                 parameter.Statistics,
-                parameter.AlphaStatistics,
                 parameter.Language,
                 parameter.ExpectedFinalStatus);
 
@@ -73,7 +72,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var result = AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
                 parameter.Statistics,
-                parameter.AlphaStatistics,
                 parameter.Language,
                 parameter.ExpectedFinalStatus,
                 setupHandler: "TestInvalidConfigurationSetupHandler");

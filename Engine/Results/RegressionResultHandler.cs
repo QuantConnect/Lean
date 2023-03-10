@@ -173,40 +173,6 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Perform daily logging of the alpha runtime statistics
-        /// </summary>
-        public override void SetAlphaRuntimeStatistics(AlphaRuntimeStatistics statistics)
-        {
-            try
-            {
-                if (HighFidelityLogging || _lastAlphaRuntimeStatisticsDate != Algorithm.Time.Date)
-                {
-                    lock (_sync)
-                    {
-                        _lastAlphaRuntimeStatisticsDate = Algorithm.Time.Date;
-
-                        foreach (var kvp in statistics.ToDictionary())
-                        {
-                            string value;
-                            if (!_currentAlphaRuntimeStatistics.TryGetValue(kvp.Key, out value) || value != kvp.Value)
-                            {
-                                // only log new or updated values
-                                _currentAlphaRuntimeStatistics[kvp.Key] = kvp.Value;
-                                WriteLine($"AlphaRuntimeStatistics: {kvp.Key}: {kvp.Value}");
-                            }
-                        }
-                    }
-                }
-
-                base.SetAlphaRuntimeStatistics(statistics);
-            }
-            catch (Exception exception)
-            {
-                Log.Error(exception);
-            }
-        }
-
-        /// <summary>
         /// Send list of security asset types the algortihm uses to browser.
         /// </summary>
         public override void SecurityType(List<SecurityType> types)

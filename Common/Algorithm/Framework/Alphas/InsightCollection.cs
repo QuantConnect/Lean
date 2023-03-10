@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,10 +14,10 @@
 */
 
 using System;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
+using Python.Runtime;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
@@ -25,31 +25,43 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// Provides a collection for managing insights. This type provides collection access semantics
     /// as well as dictionary access semantics through TryGetValue, ContainsKey, and this[symbol]
     /// </summary>
-    public class InsightCollection : ICollection<Insight>
+    public class InsightCollection : IEnumerable<Insight>
     {
-        // for performance lets keep the next insight expiration time
-        private DateTime? _nextExpiryTime;
-        private readonly ConcurrentDictionary<Symbol, List<Insight>> _insights = new ConcurrentDictionary<Symbol, List<Insight>>();
+        private int _openInsightCount;
+        private readonly List<Insight> _insightsComplete = new();
+        private readonly Dictionary<Symbol, List<Insight>> _insights = new();
 
-        /// <summary>Gets the number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1" />.</summary>
-        /// <returns>The number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1" />.</returns>
-        public int Count => _insights.Aggregate(0, (i, kvp) => i + kvp.Value.Count);
-
-        /// <summary>Gets a value indicating whether the <see cref="T:System.Collections.Generic.ICollection`1" /> is read-only.</summary>
-        /// <returns>true if the <see cref="T:System.Collections.Generic.ICollection`1" /> is read-only; otherwise, false.</returns>
-        public bool IsReadOnly => false;
+        /// <summary>
+        /// The open insight count
+        /// </summary>
+        public int Count
+        {
+            get
+            {
+                lock (_insights)
+                {
+                    return _openInsightCount;
+                }
+            }
+        }
 
         /// <summary>Adds an item to the <see cref="T:System.Collections.Generic.ICollection`1" />.</summary>
         /// <param name="item">The object to add to the <see cref="T:System.Collections.Generic.ICollection`1" />.</param>
         /// <exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1" /> is read-only.</exception>
         public void Add(Insight item)
         {
-            _nextExpiryTime = null;
-            _insights.AddOrUpdate(item.Symbol, s => new List<Insight> {item}, (s, list) =>
+            lock (_insights)
             {
-                list.Add(item);
-                return list;
-            });
+                _openInsightCount++;
+
+                _insightsComplete.Add(item);
+
+                if (!_insights.TryGetValue(item.Symbol, out var existingInsights))
+                {
+                    _insights[item.Symbol] = existingInsights = new();
+                }
+                existingInsights.Add(item);
+            }
         }
 
         /// <summary>
@@ -64,26 +76,16 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             }
         }
 
-        /// <summary>Removes all items from the <see cref="T:System.Collections.Generic.ICollection`1" />.</summary>
-        /// <exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1" /> is read-only. </exception>
-        public void Clear()
-        {
-            _nextExpiryTime = null;
-            _insights.Clear();
-        }
-
         /// <summary>Determines whether the <see cref="T:System.Collections.Generic.ICollection`1" /> contains a specific value.</summary>
         /// <returns>true if <paramref name="item" /> is found in the <see cref="T:System.Collections.Generic.ICollection`1" />; otherwise, false.</returns>
         /// <param name="item">The object to locate in the <see cref="T:System.Collections.Generic.ICollection`1" />.</param>
         public bool Contains(Insight item)
         {
-            List<Insight> symbolInsights;
-            if (_insights.TryGetValue(item.Symbol, out symbolInsights))
+            lock(_insights)
             {
-                return symbolInsights.Contains(item);
+                return _insights.TryGetValue(item.Symbol, out var symbolInsights)
+                    && symbolInsights.Contains(item);
             }
-
-            return false;
         }
 
         /// <summary>
@@ -93,22 +95,11 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <returns>True if there are insights for the symbol in this collection</returns>
         public bool ContainsKey(Symbol symbol)
         {
-            List<Insight> insights;
-            return _insights.TryGetValue(symbol, out insights) && insights.Count > 0;
-        }
-
-        /// <summary>Copies the elements of the <see cref="T:System.Collections.Generic.ICollection`1" /> to an <see cref="T:System.Array" />, starting at a particular <see cref="T:System.Array" /> index.</summary>
-        /// <param name="array">The one-dimensional <see cref="T:System.Array" /> that is the destination of the elements copied from <see cref="T:System.Collections.Generic.ICollection`1" />. The <see cref="T:System.Array" /> must have zero-based indexing.</param>
-        /// <param name="arrayIndex">The zero-based index in <paramref name="array" /> at which copying begins.</param>
-        /// <exception cref="T:System.ArgumentNullException">
-        /// <paramref name="array" /> is null.</exception>
-        /// <exception cref="T:System.ArgumentOutOfRangeException">
-        /// <paramref name="arrayIndex" /> is less than 0.</exception>
-        /// <exception cref="T:System.ArgumentException">The number of elements in the source <see cref="T:System.Collections.Generic.ICollection`1" /> is greater than the available space from <paramref name="arrayIndex" /> to the end of the destination <paramref name="array" />.</exception>
-        public void CopyTo(Insight[] array, int arrayIndex)
-        {
-            // Avoid calling `ToList` on insights to avoid potential infinite loop (issue #3168)
-            Array.Copy(_insights.SelectMany(kvp => kvp.Value).ToArray(), 0, array, arrayIndex, Count);
+            lock (_insights)
+            {
+                return _insights.TryGetValue(symbol, out var symbolInsights)
+                    && symbolInsights.Count > 0;
+            }
         }
 
         /// <summary>Removes the first occurrence of a specific object from the <see cref="T:System.Collections.Generic.ICollection`1" />.</summary>
@@ -117,20 +108,21 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1" /> is read-only.</exception>
         public bool Remove(Insight item)
         {
-            List<Insight> symbolInsights;
-            if (_insights.TryGetValue(item.Symbol, out symbolInsights))
+            lock (_insights)
             {
-                _nextExpiryTime = null;
-
-                if (symbolInsights.Remove(item))
+                if (_insights.TryGetValue(item.Symbol, out var symbolInsights))
                 {
-                    // remove empty list from dictionary
-                    if (symbolInsights.Count == 0)
+                    if (symbolInsights.Remove(item))
                     {
-                        _insights.TryRemove(item.Symbol, out symbolInsights);
-                    }
+                        _openInsightCount--;
 
-                    return true;
+                        // remove empty list from dictionary
+                        if (symbolInsights.Count == 0)
+                        {
+                            _insights.Remove(item.Symbol);
+                        }
+                        return true;
+                    }
                 }
             }
 
@@ -144,8 +136,29 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <returns>List of insights for the symbol</returns>
         public List<Insight> this[Symbol symbol]
         {
-            get { return _insights[symbol]; }
-            set { _insights[symbol] = value; }
+            get
+            {
+                lock(_insights)
+                {
+                    return _insights[symbol]?.ToList();
+                }
+            }
+            set
+            {
+                lock (_insights)
+                {
+                    if (_insights.TryGetValue(symbol, out var existingInsights))
+                    {
+                        _openInsightCount -= existingInsights?.Count ?? 0;
+                    }
+
+                    if (value != null)
+                    {
+                        _openInsightCount += value.Count;
+                    }
+                    _insights[symbol] = value;
+                }
+            }
         }
 
         /// <summary>
@@ -156,7 +169,16 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <returns>True if insights for the specified symbol were found, false otherwise</returns>
         public bool TryGetValue(Symbol symbol, out List<Insight> insights)
         {
-            return _insights.TryGetValue(symbol, out insights);
+            lock (_insights)
+            {
+                var result = _insights.TryGetValue(symbol, out insights);
+                if (result)
+                {
+                    // for thread safety we need to return a copy of the collection
+                    insights = insights.ToList();
+                }
+                return result;
+            }
         }
 
         /// <summary>Returns an enumerator that iterates through the collection.</summary>
@@ -164,7 +186,10 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <filterpriority>1</filterpriority>
         public IEnumerator<Insight> GetEnumerator()
         {
-            return _insights.SelectMany(kvp => kvp.Value).GetEnumerator();
+            lock (_insights)
+            {
+                return _insights.SelectMany(kvp => kvp.Value).ToList().GetEnumerator();
+            }
         }
 
         /// <summary>Returns an enumerator that iterates through a collection.</summary>
@@ -181,11 +206,15 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="symbols">List of symbols that will be removed</param>
         public void Clear(Symbol[] symbols)
         {
-            _nextExpiryTime = null;
-            foreach (var symbol in symbols)
+            lock (_insights)
             {
-                List<Insight> insights;
-                _insights.TryRemove(symbol, out insights);
+                foreach (var symbol in symbols)
+                {
+                    if (_insights.Remove(symbol, out var existingInsights))
+                    {
+                        _openInsightCount -= existingInsights.Count;
+                    }
+                }
             }
         }
 
@@ -194,18 +223,16 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         public DateTime? GetNextExpiryTime()
         {
-            if (Count == 0)
+            lock(_insights)
             {
-                return null;
-            }
+                if (_openInsightCount == 0)
+                {
+                    return null;
+                }
 
-            if (_nextExpiryTime != null)
-            {
-                return _nextExpiryTime;
+                // we can't store expiration time because it can change
+                return _insights.Min(x => x.Value.Min(i => i.CloseTimeUtc));
             }
-
-            _nextExpiryTime = _insights.Min(x => x.Value.Min(i => i.CloseTimeUtc));
-            return _nextExpiryTime;
         }
 
         /// <summary>
@@ -215,17 +242,20 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         public ICollection<Insight> GetActiveInsights(DateTime utcTime)
         {
             var activeInsights = new List<Insight>();
-            foreach (var kvp in _insights)
+            lock (_insights)
             {
-                foreach (var insight in kvp.Value)
+                foreach (var kvp in _insights)
                 {
-                    if (insight.IsActive(utcTime))
+                    foreach (var insight in kvp.Value)
                     {
-                        activeInsights.Add(insight);
+                        if (insight.IsActive(utcTime))
+                        {
+                            activeInsights.Add(insight);
+                        }
                     }
                 }
+                return activeInsights;
             }
-            return activeInsights;
         }
 
         /// <summary>
@@ -236,10 +266,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <returns></returns>
         public bool HasActiveInsights(Symbol symbol, DateTime utcTime)
         {
-            List<Insight> insights;
-            if (TryGetValue(symbol, out insights))
+            lock (_insights)
             {
-                return insights.Any(i => i.IsActive(utcTime));
+                if(_insights.TryGetValue(symbol, out var existingInsights))
+                {
+                    return existingInsights.Any(i => i.IsActive(utcTime));
+                }
             }
             return false;
         }
@@ -252,21 +284,95 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         public ICollection<Insight> RemoveExpiredInsights(DateTime utcTime)
         {
             var removedInsights = new List<Insight>();
-            foreach (var kvp in _insights)
+            lock (_insights)
             {
-                foreach (var insight in kvp.Value)
+                foreach (var kvp in _insights)
                 {
-                    if (insight.IsExpired(utcTime))
+                    foreach (var insight in kvp.Value)
                     {
-                        removedInsights.Add(insight);
+                        if (insight.IsExpired(utcTime))
+                        {
+                            removedInsights.Add(insight);
+                        }
+                    }
+                }
+                foreach (var insight in removedInsights)
+                {
+                    Remove(insight);
+                }
+            }
+            return removedInsights;
+        }
+
+        /// <summary>
+        /// Will remove insights from the complete insight collection
+        /// </summary>
+        /// <param name="filter">The function that will determine which insight to remove</param>
+        public void RemoveInsights(Func<Insight, bool> filter)
+        {
+            lock (_insights)
+            {
+                _insightsComplete.RemoveAll(insight => filter(insight));
+
+                // for consistentcy remove from open insights just in case
+                List<Insight> insightsToRemove = null;
+                foreach (var insights in _insights.Values)
+                {
+                    foreach (var insight in insights)
+                    {
+                        if (filter(insight))
+                        {
+                            insightsToRemove ??= new ();
+                            insightsToRemove.Add(insight);
+                        }
+                    }
+                }
+                if(insightsToRemove != null)
+                {
+                    foreach (var insight in insightsToRemove)
+                    {
+                        Remove(insight);
                     }
                 }
             }
-            foreach (var insight in removedInsights)
+        }
+
+        /// <summary>
+        /// Will return insights from the complete insight collection
+        /// </summary>
+        /// <param name="filter">The function that will determine which insight to return</param>
+        /// <returns>A new list containing the selected insights</returns>
+        public List<Insight> GetInsights(Func<Insight, bool> filter = null)
+        {
+            lock (_insights)
             {
-                Remove(insight);
+                if(filter == null)
+                {
+                    return _insightsComplete.ToList();
+                }
+                return _insightsComplete.Where(filter).ToList();
             }
-            return removedInsights;
+        }
+
+        /// <summary>
+        /// Will return insights from the complete insight collection
+        /// </summary>
+        /// <param name="filter">The function that will determine which insight to return</param>
+        /// <returns>A new list containing the selected insights</returns>
+        public List<Insight> GetInsights(PyObject filter)
+        {
+            Func<Insight, bool> convertedFilter;
+            if (filter.TryConvertToDelegate(out convertedFilter))
+            {
+                return GetInsights(convertedFilter);
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    throw new ArgumentException($"InsightCollection.GetInsights: {filter.Repr()} is not a valid argument.");
+                }
+            }
         }
     }
 }

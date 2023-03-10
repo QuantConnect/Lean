@@ -75,14 +75,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Fees", "₮45.62"},
             {"Estimated Strategy Capacity", "₮12000000.00"},
             {"Lowest Capacity Asset", "BTCUSDT 18N"},
-            {"Return Over Maximum Drawdown", "26.189"},
-            {"Portfolio Turnover", "0.208"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
+            {"Portfolio Turnover", "22.80%"},
             {"OrderListHash", "7417649395922ff3791471b4f3b5c021"}
         };
     }

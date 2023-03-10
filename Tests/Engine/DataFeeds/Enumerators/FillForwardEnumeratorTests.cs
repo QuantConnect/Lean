@@ -1176,7 +1176,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
                 parameter.Statistics,
-                parameter.AlphaStatistics,
                 parameter.Language,
                 parameter.ExpectedFinalStatus,
                 setupHandler: "FillForwardTestSetupHandler");
@@ -1949,7 +1948,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
                 parameter.Statistics,
-                parameter.AlphaStatistics,
                 parameter.Language,
                 parameter.ExpectedFinalStatus,
                 setupHandler: "FillForwardDaylightMovementTestSetupHandler");

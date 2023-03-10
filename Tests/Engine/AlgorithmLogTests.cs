@@ -35,7 +35,6 @@ namespace QuantConnect.Tests.Engine
 
             AlgorithmRunner.RunLocalBacktest(parameters.Algorithm,
                 parameters.Statistics,
-                parameters.AlphaStatistics,
                 parameters.Language,
                 parameters.ExpectedFinalStatus,
                 algorithmLocation: "QuantConnect.Tests.dll");

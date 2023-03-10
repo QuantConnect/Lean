@@ -80,7 +80,6 @@ namespace QuantConnect.Tests.Algorithm
 
             AlgorithmRunner.RunLocalBacktest(nameof(TestWarmupAlgorithm),
                 new Dictionary<string, string> { { "Total Trades", "1" } },
-                null,
                 Language.CSharp,
                 AlgorithmStatus.Completed,
                 setupHandler: "TestSetupHandler");

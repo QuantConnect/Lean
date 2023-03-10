@@ -25,7 +25,6 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.Alpha;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.RealTime;
 using QuantConnect.Lean.Engine.Results;
@@ -112,10 +111,9 @@ namespace QuantConnect.Lean.Engine
         /// <param name="results">Result handler object</param>
         /// <param name="realtime">Realtime processing object</param>
         /// <param name="leanManager">ILeanManager implementation that is updated periodically with the IAlgorithm instance</param>
-        /// <param name="alphas">Alpha handler used to process algorithm generated insights</param>
         /// <param name="token">Cancellation token</param>
         /// <remarks>Modify with caution</remarks>
-        public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, ISynchronizer synchronizer, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, IAlphaHandler alphas, CancellationToken token)
+        public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, ISynchronizer synchronizer, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, CancellationToken token)
         {
             //Initialize:
             DataPoints = 0;
@@ -546,13 +544,6 @@ namespace QuantConnect.Lean.Engine
                 // Manually trigger the event handler to prevent thread switch.
                 transactions.ProcessSynchronousEvents();
 
-                // sample alpha charts now that we've updated time/price information and after transactions
-                // are processed so that insights closed because of new order based insights get updated
-                alphas.ProcessSynchronousEvents();
-
-                // send the alpha statistics to the result handler for storage/transmit with the result packets
-                results.SetAlphaRuntimeStatistics(alphas.RuntimeStatistics);
-
                 // Process any required events of the results handler such as sampling assets, equity, or stock prices.
                 results.ProcessSynchronousEvents();
 
@@ -575,12 +566,6 @@ namespace QuantConnect.Lean.Engine
                 algorithm.SetRuntimeError(err, "OnEndOfAlgorithm");
                 return;
             }
-
-            // final processing now that the algorithm has completed
-            alphas.ProcessSynchronousEvents();
-
-            // send the final alpha statistics to the result handler for storage/transmit with the result packets
-            results.SetAlphaRuntimeStatistics(alphas.RuntimeStatistics);
 
             // Process any required events of the results handler such as sampling assets, equity, or stock prices.
             results.ProcessSynchronousEvents(forceProcess: true);

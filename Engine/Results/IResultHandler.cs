@@ -125,12 +125,6 @@ namespace QuantConnect.Lean.Engine.Results
         void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue);
 
         /// <summary>
-        /// Sets the current alpha runtime statistics
-        /// </summary>
-        /// <param name="statistics">The current alpha runtime statistics</param>
-        void SetAlphaRuntimeStatistics(AlphaRuntimeStatistics statistics);
-
-        /// <summary>
         /// Send a algorithm status update to the user of the algorithms running state.
         /// </summary>
         /// <param name="status">Status enum of the algorithm.</param>

@@ -47,7 +47,6 @@ namespace QuantConnect.Packets
             Dictionary<string, AlgorithmPerformance> rollingWindow,
             List<OrderEvent> orderEvents,
             AlgorithmPerformance totalPerformance = null,
-            AlphaRuntimeStatistics alphaRuntimeStatistics = null,
             AlgorithmConfiguration algorithmConfiguration = null,
             IDictionary<string, string> state = null)
         {
@@ -59,7 +58,6 @@ namespace QuantConnect.Packets
             RollingWindow = rollingWindow;
             OrderEvents = orderEvents;
             TotalPerformance = totalPerformance;
-            AlphaRuntimeStatistics = alphaRuntimeStatistics;
             AlgorithmConfiguration = algorithmConfiguration;
             State = state;
         }

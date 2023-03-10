@@ -29,7 +29,6 @@ using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine;
-using QuantConnect.Lean.Engine.Alpha;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.RealTime;
 using QuantConnect.Lean.Engine.Results;
@@ -81,7 +80,6 @@ namespace QuantConnect.Tests.Engine
 
             AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
                 parameter.Statistics,
-                parameter.AlphaStatistics,
                 parameter.Language,
                 parameter.ExpectedFinalStatus,
                 algorithmLocation: "QuantConnect.Tests.dll");
@@ -121,7 +119,6 @@ namespace QuantConnect.Tests.Engine
             var results = new BacktestingResultHandler();
             var realtime = new BacktestingRealTimeHandler();
             var leanManager = new NullLeanManager();
-            var alphas = new NullAlphaHandler();
             var token = new CancellationToken();
             var nullSynchronizer = new NullSynchronizer(algorithm);
 
@@ -135,7 +132,7 @@ namespace QuantConnect.Tests.Engine
 
             Log.Trace("Starting algorithm manager loop to process " + nullSynchronizer.Count + " time slices");
             var sw = Stopwatch.StartNew();
-            algorithmManager.Run(job, algorithm, nullSynchronizer, transactions, results, realtime, leanManager, alphas, token);
+            algorithmManager.Run(job, algorithm, nullSynchronizer, transactions, results, realtime, leanManager, token);
             sw.Stop();
 
             realtime.Exit();
@@ -143,31 +140,6 @@ namespace QuantConnect.Tests.Engine
             var thousands = nullSynchronizer.Count / 1000d;
             var seconds = sw.Elapsed.TotalSeconds;
             Log.Trace("COUNT: " + nullSynchronizer.Count + "  KPS: " + thousands/seconds);
-        }
-
-        public class NullAlphaHandler : IAlphaHandler
-        {
-            public bool IsActive { get; }
-            public AlphaRuntimeStatistics RuntimeStatistics { get; }
-            public void Initialize(AlgorithmNodePacket job, IAlgorithm algorithm, IMessagingHandler messagingHandler, IApi api, ITransactionHandler transactionHandler)
-            {
-            }
-
-            public void OnAfterAlgorithmInitialized(IAlgorithm algorithm)
-            {
-            }
-
-            public void ProcessSynchronousEvents()
-            {
-            }
-
-            public void Run()
-            {
-            }
-
-            public void Exit()
-            {
-            }
         }
 
         public class NullLeanManager : ILeanManager
@@ -253,10 +225,6 @@ namespace QuantConnect.Tests.Engine
             }
 
             public void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue)
-            {
-            }
-
-            public void SetAlphaRuntimeStatistics(AlphaRuntimeStatistics statistics)
             {
             }
 

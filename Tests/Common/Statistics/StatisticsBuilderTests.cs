@@ -66,6 +66,7 @@ namespace QuantConnect.Tests.Common.Statistics
                     testEquityPoints,
                     misalignedTestPerformancePoints,
                     testBenchmarkPoints,
+                    new List<ChartPoint>(),
                     100000m,
                     0m,
                     1,

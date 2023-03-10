@@ -34,6 +34,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using QuantConnect.Storage;
+using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 
 namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 {
@@ -444,6 +445,11 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// Gets the account currency
         /// </summary>
         public string AccountCurrency => _baseAlgorithm.AccountCurrency;
+
+        /// <summary>
+        /// Gets the insight manager
+        /// </summary>
+        public InsightManager Insights => _baseAlgorithm.Insights;
 
         /// <summary>
         /// Set a required SecurityType-symbol and resolution for algorithm

@@ -55,7 +55,6 @@ namespace QuantConnect.Tests.Algorithm
 
             var results = AlgorithmRunner.RunLocalBacktest(nameof(TestBenchmarkAlgorithm),
                 new Dictionary<string, string> { { "Total Trades", "0" } },
-                null,
                 Language.CSharp,
                 AlgorithmStatus.Completed,
                 setupHandler: "BenchmarkTestSetupHandler");

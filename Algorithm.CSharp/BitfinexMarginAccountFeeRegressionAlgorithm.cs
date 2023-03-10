@@ -74,14 +74,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Fees", "$1.13"},
             {"Estimated Strategy Capacity", "$640000.00"},
             {"Lowest Capacity Asset", "BTCUSD E3"},
-            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
-            {"Portfolio Turnover", "0.002"},
-            {"Total Insights Generated", "0"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "0"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
+            {"Portfolio Turnover", "0.28%"},
             {"OrderListHash", "7f892f0c42d8826ff770ee602fe207a2"}
         };
     }

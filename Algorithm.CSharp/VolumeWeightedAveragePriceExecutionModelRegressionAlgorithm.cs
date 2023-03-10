@@ -14,6 +14,7 @@
  *
 */
 
+using System.Linq;
 using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
@@ -51,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
             SetExecution(new VolumeWeightedAveragePriceExecutionModel());
 
-            InsightsGenerated += (algorithm, data) => Log($"{Time}: {string.Join(" | ", data.Insights)}");
+            InsightsGenerated += (algorithm, data) => Log($"{Time}: {string.Join(" | ", data.Insights.Select(insight => insight))}");
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
@@ -106,14 +107,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Fees", "$399.15"},
             {"Estimated Strategy Capacity", "$470000.00"},
             {"Lowest Capacity Asset", "AIG R735QTJ8XC9X"},
-            {"Return Over Maximum Drawdown", "482.497"},
-            {"Portfolio Turnover", "0.938"},
-            {"Total Insights Generated", "5"},
-            {"Total Insights Closed", "3"},
-            {"Total Insights Analysis Completed", "3"},
-            {"Long Insight Count", "3"},
-            {"Short Insight Count", "2"},
-            {"Long/Short Ratio", "150.0%"},
+            {"Portfolio Turnover", "130.79%"},
             {"OrderListHash", "d661c77833be41c963b94944b00889ff"}
         };
     }
