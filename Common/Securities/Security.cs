@@ -902,7 +902,7 @@ namespace QuantConnect.Securities
         /// <param name="data">Data to pull price from</param>
         protected virtual void UpdateConsumersMarketPrice(BaseData data)
         {
-            if (data is OpenInterest || data.Price == 0m) return;
+            if (data is OpenInterest || data.DataType == MarketDataType.Auxiliary || data.Price == 0m) return;
             Holdings.UpdateMarketPrice(Price);
             VolatilityModel.Update(this, data);
         }
