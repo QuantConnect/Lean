@@ -558,7 +558,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "8"},
             {"Average Win", "0%"},
             {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "92.073%"},
+            {"Compounding Annual Return", "92.087%"},
             {"Drawdown", "0.100%"},
             {"Expectancy", "-1"},
             {"Net Profit", "0.838%"},
@@ -578,7 +578,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$48000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Portfolio Turnover", "7.47%"},
-            {"OrderListHash", "77f92a9299871d8aba2a232a0537e16c"}
+            {"OrderListHash", "8719eaae0ff158d5050de45e4a607685"}
         };
     }
 }
