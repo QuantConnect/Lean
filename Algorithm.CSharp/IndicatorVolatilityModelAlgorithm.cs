@@ -33,6 +33,8 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private const int _indicatorPeriods = 7;
 
+        private const DataNormalizationMode _dataNormalizationMode = DataNormalizationMode.Raw;
+
         private Symbol _aapl;
 
         private IIndicator _indicator;
@@ -47,24 +49,20 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 12, 31);
             SetCash(100000);
 
-            var equity = AddEquity("AAPL", Resolution.Daily, dataNormalizationMode: DataNormalizationMode.Raw);
+            var equity = AddEquity("AAPL", Resolution.Daily, dataNormalizationMode: _dataNormalizationMode);
             _aapl = equity.Symbol;
 
             var std = new StandardDeviation(_indicatorPeriods);
             var mean = new SimpleMovingAverage(_indicatorPeriods);
             _indicator = std.Over(mean);
-            equity.SetVolatilityModel(new IndicatorVolatilityModel(
-                _indicator,
-                (_, data, _) =>
+            equity.SetVolatilityModel(new IndicatorVolatilityModel(_indicator, (_, data, _) =>
+            {
+                if (data.Price > 0)
                 {
-                    if (data.Price > 0)
-                    {
-                        std.Update(data.Time, data.Price);
-                        mean.Update(data.Time, data.Price);
-                    }
-                },
-                equity.Resolution,
-                _indicatorPeriods));
+                    std.Update(data.Time, data.Price);
+                    mean.Update(data.Time, data.Price);
+                }
+            }));
         }
 
         public override void OnData(Slice slice)
@@ -78,10 +76,8 @@ namespace QuantConnect.Algorithm.CSharp
                 _indicator.Reset();
                 var equity = Securities[_aapl];
                 var volatilityModel = equity.VolatilityModel as IndicatorVolatilityModel;
-                var dataNormalizationMode = SubscriptionManager.SubscriptionDataConfigService
-                    .GetSubscriptionDataConfigs(_aapl)
-                    .DataNormalizationMode();
-                volatilityModel.WarmUp(HistoryProvider, SubscriptionManager, equity, UtcTime, TimeZone, LiveMode, dataNormalizationMode);
+                volatilityModel.WarmUp(HistoryProvider, SubscriptionManager, equity, UtcTime, TimeZone, equity.Resolution, _indicatorPeriods,
+                    LiveMode, _dataNormalizationMode);
             }
         }
 
@@ -143,7 +139,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 88;
+        public int AlgorithmHistoryDataPoints => 42;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm

@@ -49,6 +49,62 @@ namespace QuantConnect.Securities.Volatility
             bool liveMode,
             DataNormalizationMode? dataNormalizationMode = null)
         {
+            volatilityModel.WarmUp(
+                historyProvider,
+                subscriptionManager,
+                security,
+                timeZone,
+                liveMode,
+                dataNormalizationMode,
+                () => volatilityModel.GetHistoryRequirements(security, utcTime));
+        }
+
+        /// <summary>
+        /// Warms up the security's volatility model.
+        /// This can happen either on initialization or after a split or dividend is processed.
+        /// </summary>
+        /// <param name="volatilityModel">The volatility model to be warmed up</param>
+        /// <param name="historyProvider">The history provider to use to get historical data</param>
+        /// <param name="subscriptionManager">The subscription manager to use</param>
+        /// <param name="security">The security which volatility model is being warmed up</param>
+        /// <param name="utcTime">The current UTC time</param>
+        /// <param name="timeZone">The algorithm time zone</param>
+        /// <param name="resolution">The data resolution required for the indicator</param>
+        /// <param name="barCount">The bar count required to fully warm the indicator up</param>
+        /// <param name="liveMode">Whether the algorithm is in live mode</param>
+        /// <param name="dataNormalizationMode">The security subscribed data normalization mode</param>
+        public static void WarmUp(
+            this IndicatorVolatilityModel volatilityModel,
+            IHistoryProvider historyProvider,
+            SubscriptionManager subscriptionManager,
+            Security security,
+            DateTime utcTime,
+            DateTimeZone timeZone,
+            Resolution? resolution,
+            int barCount,
+            bool liveMode,
+            DataNormalizationMode? dataNormalizationMode = null)
+        {
+            volatilityModel.WarmUp(
+                historyProvider,
+                subscriptionManager,
+                security,
+                timeZone,
+                liveMode,
+                dataNormalizationMode,
+                () => volatilityModel.GetHistoryRequirements(security, utcTime, resolution, barCount));
+        }
+
+        private static void WarmUp(
+            this IVolatilityModel volatilityModel,
+            IHistoryProvider historyProvider,
+            SubscriptionManager subscriptionManager,
+            Security security,
+            DateTimeZone timeZone,
+            bool liveMode,
+            DataNormalizationMode? dataNormalizationMode,
+            Func<IEnumerable<HistoryRequest>> getHistoryRequirementsFunc)
+        {
             if (historyProvider == null || security == null || volatilityModel == VolatilityModel.Null)
             {
                 return;
@@ -62,7 +118,7 @@ namespace QuantConnect.Securities.Volatility
             // end
 
             // Warm up
-            var historyRequests = volatilityModel.GetHistoryRequirements(security, utcTime).ToList();
+            var historyRequests = getHistoryRequirementsFunc().ToList();
             if (liveMode || (dataNormalizationMode.HasValue && dataNormalizationMode == DataNormalizationMode.Raw))
             {
                 // If we're in live mode or raw mode, we need to warm up the volatility model with scaled raw data
