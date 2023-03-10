@@ -181,8 +181,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         }
 
         /// <summary>
-        /// Sends the desired positions list in JSON format to Collective2 API using a POST request. Then logs
-        /// the message retrieved by the Collective2 API
+        /// Sends the desired positions list in JSON format to Collective2 API using a POST request. It logs
+        /// the message retrieved by the Collective2 API if there was a HttpRequestException
         /// </summary>
         /// <param name="message">A JSON request of the desired positions list with the credentials</param>
         private async void SendPositions(string message)
