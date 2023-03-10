@@ -2500,10 +2500,9 @@ namespace QuantConnect.Algorithm
             IBaseData lastBar = null;
             foreach (var slice in history)
             {
-                var data = slice.Get(consolidatorInputType);
-                if (data.ContainsKey(symbol))
+                if (slice.TryGet(consolidatorInputType, symbol, out var data))
                 {
-                    lastBar = (IBaseData)data[symbol];
+                    lastBar = data;
                     consolidator.Update(lastBar);
                 }
             }

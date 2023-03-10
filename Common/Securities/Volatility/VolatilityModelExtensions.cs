@@ -13,12 +13,14 @@
  * limitations under the License.
 */
 
-using NodaTime;
-using QuantConnect.Data;
-using QuantConnect.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
+using NodaTime;
+
+using QuantConnect.Data;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Securities.Volatility
 {
@@ -93,6 +95,36 @@ namespace QuantConnect.Securities.Volatility
                 liveMode,
                 dataNormalizationMode,
                 () => volatilityModel.GetHistoryRequirements(security, utcTime, resolution, barCount));
+        }
+
+        /// <summary>
+        /// Warms up the security's volatility model.
+        /// This can happen either on initialization or after a split or dividend is processed.
+        /// </summary>
+        /// <param name="volatilityModel">The volatility model to be warmed up</param>
+        /// <param name="algorithm">The algorithm running</param>
+        /// <param name="security">The security which volatility model is being warmed up</param>
+        /// <param name="resolution">The data resolution required for the indicator</param>
+        /// <param name="barCount">The bar count required to fully warm the indicator up</param>
+        /// <param name="dataNormalizationMode">The security subscribed data normalization mode</param>
+        public static void WarmUp(
+            this IndicatorVolatilityModel volatilityModel,
+            IAlgorithm algorithm,
+            Security security,
+            Resolution? resolution,
+            int barCount,
+            DataNormalizationMode? dataNormalizationMode = null)
+        {
+            volatilityModel.WarmUp(
+                algorithm.HistoryProvider,
+                algorithm.SubscriptionManager,
+                security,
+                algorithm.UtcTime,
+                algorithm.TimeZone,
+                resolution,
+                barCount,
+                algorithm.LiveMode,
+                dataNormalizationMode);
         }
 
         private static void WarmUp(

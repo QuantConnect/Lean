@@ -76,8 +76,7 @@ namespace QuantConnect.Algorithm.CSharp
                 _indicator.Reset();
                 var equity = Securities[_aapl];
                 var volatilityModel = equity.VolatilityModel as IndicatorVolatilityModel;
-                volatilityModel.WarmUp(HistoryProvider, SubscriptionManager, equity, UtcTime, TimeZone, equity.Resolution, _indicatorPeriods,
-                    LiveMode, _dataNormalizationMode);
+                volatilityModel.WarmUp(this, equity, equity.Resolution, _indicatorPeriods, _dataNormalizationMode);
             }
         }
 
