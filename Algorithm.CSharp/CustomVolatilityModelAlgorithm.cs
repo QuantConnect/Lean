@@ -92,7 +92,7 @@ namespace QuantConnect.Algorithm.CSharp
                 _needsUpdate = false;
                 var mean = _window.Average();
                 var std = Math.Sqrt((double)_window.Sum(x => (x - mean)*(x - mean)) / _window.Count());
-                Volatility = Convert.ToDecimal(std * Math.Sqrt(252d));
+                Volatility = (std * Math.Sqrt(252d)).SafeDecimalCast();
             }
         }
 
