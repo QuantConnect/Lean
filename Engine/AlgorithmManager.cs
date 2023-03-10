@@ -697,7 +697,8 @@ namespace QuantConnect.Lean.Engine
             foreach (var kvp in algorithm.Securities)
             {
                 var security = kvp.Value;
-                WarmUpVolatilityModel(algorithm, security, liveMode);
+                security.VolatilityModel.WarmUp(algorithm.HistoryProvider, algorithm.SubscriptionManager, security, algorithm.UtcTime,
+                    algorithm.TimeZone, liveMode);
             }
 
             Log.Trace("ProcessVolatilityHistoryRequirements(): finished.");
@@ -950,53 +951,6 @@ namespace QuantConnect.Lean.Engine
         }
 
         /// <summary>
-        /// Warms up the security's volatility model.
-        /// This can happen either on initialization or after a split or dividend is processed.
-        /// </summary>
-        private static void WarmUpVolatilityModel(IAlgorithm algorithm, Security security, bool liveMode,
-            DataNormalizationMode? dataNormalizationMode = null)
-        {
-            if (security == null || security.VolatilityModel == VolatilityModel.Null || algorithm.HistoryProvider == null)
-            {
-                return;
-            }
-
-            var volatilityModel = security.VolatilityModel;
-
-            // start: this is a work around to maintain retro compatibility
-            // did not want to add IVolatilityModel.SetSubscriptionDataConfigProvider
-            // to prevent breaking existing user models.
-            var baseTypeModel = volatilityModel as BaseVolatilityModel;
-            baseTypeModel?.SetSubscriptionDataConfigProvider(
-                algorithm.SubscriptionManager.SubscriptionDataConfigService);
-            // end
-
-            // Warm up
-            var historyRequests = volatilityModel.GetHistoryRequirements(security, algorithm.UtcTime).ToList();
-            if (liveMode || (dataNormalizationMode.HasValue && dataNormalizationMode == DataNormalizationMode.Raw))
-            {
-                // If we're in live mode or raw mode, we need to warm up the volatility model with scaled raw data
-                // to avoid jumps in volatility values due to price discontinuities on splits and dividends
-                foreach (var request in historyRequests)
-                {
-                    request.DataNormalizationMode = DataNormalizationMode.ScaledRaw;
-                }
-            }
-
-            var history = algorithm.HistoryProvider.GetHistory(historyRequests, algorithm.TimeZone);
-            foreach (var slice in history)
-            {
-                foreach (var request in historyRequests)
-                {
-                    if (slice.TryGet(request.DataType, security.Symbol, out var data))
-                    {
-                        volatilityModel.Update(security, data);
-                    }
-                }
-            }
-        }
-
-        /// <summary>
         /// Warms up the security's volatility model in the case of a split or dividend to avoid discontinuities when data is raw or in live mode
         /// </summary>
         private static void ApplySplitOrDividendToVolatilityModel(IAlgorithm algorithm, Security security, bool liveMode,
@@ -1004,7 +958,8 @@ namespace QuantConnect.Lean.Engine
         {
             if (security.Type == SecurityType.Equity && (liveMode || dataNormalizationMode == DataNormalizationMode.Raw))
             {
-                WarmUpVolatilityModel(algorithm, security, liveMode);
+                security?.VolatilityModel.WarmUp(algorithm.HistoryProvider, algorithm.SubscriptionManager, security, algorithm.UtcTime,
+                    algorithm.TimeZone, liveMode, dataNormalizationMode);
             }
         }
 

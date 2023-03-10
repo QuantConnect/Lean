@@ -19,6 +19,7 @@ using QuantConnect.Indicators;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Securities.Volatility;
+using MathNet.Numerics;
 
 namespace QuantConnect.Securities
 {
@@ -31,6 +32,8 @@ namespace QuantConnect.Securities
     {
         private readonly IIndicator _indicator;
         private readonly Action<Security, BaseData, IIndicator> _indicatorUpdate;
+        private readonly Resolution? _resolution;
+        private readonly int _indicatorSize;
 
         /// <summary>
         /// Gets the volatility of the security as a percentage
@@ -59,10 +62,43 @@ namespace QuantConnect.Securities
         /// into the consolidator system.
         /// </summary>
         /// <param name="indicator">The auto-updating indicator</param>
+        /// <param name="resolution">The data resolution for the indicator</param>
+        /// <param name="indicatorSize">The size of the indicator</param>
+        public IndicatorVolatilityModel(IIndicator indicator, Resolution resolution, int? indicatorSize = null)
+        {
+            _indicator = indicator;
+            _resolution = resolution;
+            _indicatorSize = indicatorSize ?? (_indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod ?? 0;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="IVolatilityModel"/> using
+        /// the specified <paramref name="indicator"/>. The <paramref name="indicator"/>
+        /// is assumed to but updated externally from this model, such as being registered
+        /// into the consolidator system.
+        /// </summary>
+        /// <param name="indicator">The auto-updating indicator</param>
         /// <param name="indicatorUpdate">Function delegate used to update the indicator on each call to <see cref="Update"/></param>
         public IndicatorVolatilityModel(IIndicator indicator, Action<Security, BaseData, IIndicator> indicatorUpdate)
         {
             _indicator = indicator;
+            _indicatorUpdate = indicatorUpdate;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="IVolatilityModel"/> using
+        /// the specified <paramref name="indicator"/>. The <paramref name="indicator"/>
+        /// is assumed to but updated externally from this model, such as being registered
+        /// into the consolidator system.
+        /// </summary>
+        /// <param name="indicator">The auto-updating indicator</param>
+        /// <param name="indicatorUpdate">Function delegate used to update the indicator on each call to <see cref="Update"/></param>
+        /// <param name="resolution">The data resolution for the indicator</param>
+        /// <param name="indicatorSize">The size of the indicator</param>
+        public IndicatorVolatilityModel(IIndicator indicator, Action<Security, BaseData, IIndicator> indicatorUpdate,
+            Resolution resolution, int? indicatorSize = null)
+            : this(indicator, resolution, indicatorSize)
+        {
             _indicatorUpdate = indicatorUpdate;
         }
 
@@ -78,6 +114,24 @@ namespace QuantConnect.Securities
             {
                 _indicatorUpdate(security, data, _indicator);
             }
+        }
+
+        /// <summary>
+        /// Returns history requirements for the volatility model expressed in the form of history request
+        /// </summary>
+        /// <param name="security">The security of the request</param>
+        /// <param name="utcTime">The date of the request</param>
+        /// <returns>History request object list, or empty if no requirements</returns>
+        public override IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime)
+        {
+            // Let's reset the indicator since it will get warmed up again using these history requirements
+            _indicator.Reset();
+
+            return GetHistoryRequirements(
+                security,
+                utcTime,
+                _resolution,
+                _indicatorSize + 1);
         }
     }
 }

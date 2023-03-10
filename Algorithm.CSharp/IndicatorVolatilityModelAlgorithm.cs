@@ -15,12 +15,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
+
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Volatility;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -52,14 +53,18 @@ namespace QuantConnect.Algorithm.CSharp
             var std = new StandardDeviation(_indicatorPeriods);
             var mean = new SimpleMovingAverage(_indicatorPeriods);
             _indicator = std.Over(mean);
-            equity.SetVolatilityModel(new IndicatorVolatilityModel(_indicator, (_, data, _) =>
-            {
-                if (data.Price > 0)
+            equity.SetVolatilityModel(new IndicatorVolatilityModel(
+                _indicator,
+                (_, data, _) =>
                 {
-                    std.Update(data.Time, data.Price);
-                    mean.Update(data.Time, data.Price);
-                }
-            }));
+                    if (data.Price > 0)
+                    {
+                        std.Update(data.Time, data.Price);
+                        mean.Update(data.Time, data.Price);
+                    }
+                },
+                equity.Resolution,
+                _indicatorPeriods));
         }
 
         public override void OnData(Slice slice)
@@ -73,27 +78,10 @@ namespace QuantConnect.Algorithm.CSharp
                 _indicator.Reset();
                 var equity = Securities[_aapl];
                 var volatilityModel = equity.VolatilityModel as IndicatorVolatilityModel;
-                var historyRequests = volatilityModel.GetHistoryRequirements(
-                    equity, UtcTime, equity.Resolution, _indicatorPeriods + 1).ToList();
-
-                // Since data is raw (or if we were to be in live mode), we need to warm up the volatility model with scaled raw data
-                // to avoid jumps in volatility values due to price discontinuities on splits and dividends
-                foreach (var request in historyRequests)
-                {
-                    request.DataNormalizationMode = DataNormalizationMode.ScaledRaw;
-                }
-
-                var history = History(historyRequests);
-                foreach (var historySlice in history)
-                {
-                    foreach (var request in historyRequests)
-                    {
-                        if (historySlice.TryGet(request.DataType, _aapl, out var data))
-                        {
-                            volatilityModel.Update(equity, data);
-                        }
-                    }
-                }
+                var dataNormalizationMode = SubscriptionManager.SubscriptionDataConfigService
+                    .GetSubscriptionDataConfigs(_aapl)
+                    .DataNormalizationMode();
+                volatilityModel.WarmUp(HistoryProvider, SubscriptionManager, equity, UtcTime, TimeZone, LiveMode, dataNormalizationMode);
             }
         }
 
@@ -155,7 +143,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 48;
+        public int AlgorithmHistoryDataPoints => 88;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
