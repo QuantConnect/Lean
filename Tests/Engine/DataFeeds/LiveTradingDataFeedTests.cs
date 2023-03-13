@@ -171,8 +171,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     var result = LiveTradingResultHandler.GetHoldings(_algorithm.Securities.Values, _algorithm.SubscriptionManager.SubscriptionDataConfigService);
                     // old future mapped contract is removed
                     Assert.AreEqual(2, result.Count);
-                    Assert.IsTrue(result.TryGetValue(es.Symbol.Value, out var holding));
-                    Assert.IsTrue(result.TryGetValue(es.Mapped.Value, out holding));
+                    Assert.IsTrue(result.TryGetValue(es.Symbol.ID.ToString(), out var holding));
+                    Assert.IsTrue(result.TryGetValue(es.Mapped.ID.ToString(), out holding));
 
                     Assert.AreEqual(0, LiveTradingResultHandler.GetHoldings(_algorithm.Securities.Values, _algorithm.SubscriptionManager.SubscriptionDataConfigService, onlyInvested: true).Count);
 
@@ -225,8 +225,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     var result = LiveTradingResultHandler.GetHoldings(_algorithm.Securities.Values, _algorithm.SubscriptionManager.SubscriptionDataConfigService);
 
                     Assert.AreEqual(2, result.Count);
-                    Assert.IsTrue(result.TryGetValue(es.Symbol.Value, out var holding));
-                    Assert.IsTrue(result.TryGetValue(es.Mapped.Value, out holding));
+                    Assert.IsTrue(result.TryGetValue(es.Symbol.ID.ToString(), out var holding));
+                    Assert.IsTrue(result.TryGetValue(es.Mapped.ID.ToString(), out holding));
 
                     Assert.AreEqual(0, LiveTradingResultHandler.GetHoldings(_algorithm.Securities.Values, _algorithm.SubscriptionManager.SubscriptionDataConfigService, onlyInvested: true).Count);
 

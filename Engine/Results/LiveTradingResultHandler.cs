@@ -1206,14 +1206,9 @@ namespace QuantConnect.Lean.Engine.Results
 
         private static void DictionarySafeAdd<T>(Dictionary<string, T> dictionary, string key, T value, string dictionaryName)
         {
-            if (dictionary.ContainsKey(key))
+            if (!dictionary.TryAdd(key, value))
             {
-                // TODO: GH issue 3609
-                Log.Debug($"LiveTradingResultHandler.DictionarySafeAdd(): dictionary {dictionaryName} already contains key {key}");
-            }
-            else
-            {
-                dictionary.Add(key, value);
+                Log.Error($"LiveTradingResultHandler.DictionarySafeAdd(): dictionary {dictionaryName} already contains key {key}");
             }
         }
 
@@ -1267,7 +1262,7 @@ namespace QuantConnect.Lean.Engine.Results
                     || s.Symbol.SecurityType == QuantConnect.SecurityType.Future && (s.IsTradable || s.Symbol.IsCanonical() && subscriptionDataConfigService.GetSubscriptionDataConfigs(s.Symbol).Any())))
                 .OrderBy(x => x.Symbol.Value))
             {
-                DictionarySafeAdd(holdings, security.Symbol.Value, new Holding(security), "holdings");
+                DictionarySafeAdd(holdings, security.Symbol.ID.ToString(), new Holding(security), "holdings");
             }
 
             return holdings;
