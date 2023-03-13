@@ -24,7 +24,6 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Python;
 using QuantConnect.Securities.Positions;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Securities
 {
@@ -216,11 +215,11 @@ namespace QuantConnect.Securities
         {
             array = new KeyValuePair<Symbol, SecurityHolding>[Securities.Count];
             var i = 0;
-            foreach (var asset in Securities)
+            foreach (var asset in Securities.Values)
             {
                 if (i >= index)
                 {
-                    array[i] = new KeyValuePair<Symbol, SecurityHolding>(asset.Key, asset.Value.Holdings);
+                    array[i] = new KeyValuePair<Symbol, SecurityHolding>(asset.Symbol, asset.Holdings);
                 }
                 i++;
             }
@@ -232,7 +231,7 @@ namespace QuantConnect.Securities
         /// <returns>
         /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the Symbol objects of the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
         /// </returns>
-        protected override IEnumerable<Symbol> GetKeys => Securities.Select(pair => pair.Key);
+        protected override IEnumerable<Symbol> GetKeys => Keys;
 
         /// <summary>
         /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
@@ -262,8 +261,7 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return (from kvp in Securities
-                        select kvp.Value.Holdings).ToList();
+                return GetValues.ToList();
             }
         }
 
@@ -336,9 +334,7 @@ namespace QuantConnect.Securities
         {
             get
             {
-                //Sum of unlevered cost of holdings
-                return (from kvp in Securities
-                        select kvp.Value.Holdings.UnleveredAbsoluteHoldingsCost).Sum();
+                return Securities.Values.Sum(security => security.Holdings.UnleveredAbsoluteHoldingsCost);
             }
         }
 
@@ -348,7 +344,10 @@ namespace QuantConnect.Securities
         /// </summary>
         public decimal TotalAbsoluteHoldingsCost
         {
-            get { return Securities.Aggregate(0m, (d, pair) => d + pair.Value.Holdings.AbsoluteHoldingsCost); }
+            get
+            {
+                return Securities.Values.Sum(security => security.Holdings.AbsoluteHoldingsCost);
+            }
         }
 
         /// <summary>
@@ -359,8 +358,7 @@ namespace QuantConnect.Securities
             get
             {
                 //Sum sum of holdings
-                return (from kvp in Securities
-                        select kvp.Value.Holdings.AbsoluteHoldingsValue).Sum();
+                return Securities.Values.Sum(security => security.Holdings.AbsoluteHoldingsValue);
             }
         }
 
@@ -397,8 +395,7 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return (from kvp in Securities
-                        select kvp.Value.Holdings.UnrealizedProfit).Sum();
+                return Securities.Values.Sum(security => security.Holdings.UnrealizedProfit);
             }
         }
 
@@ -428,9 +425,9 @@ namespace QuantConnect.Securities
                     {
                         decimal totalHoldingsValueWithoutForexCryptoFutureCfd = 0;
                         decimal totalFuturesAndCfdHoldingsValue = 0;
-                        foreach (var kvp in Securities.Where((pair, i) => pair.Value.Holdings.Quantity != 0))
+                        foreach (var security in Securities.Values.Where((x) => x.Holdings.Invested))
                         {
-                            var position = kvp.Value;
+                            var position = security;
                             var securityType = position.Type;
                             // We can't include forex in this calculation since we would be double accounting with respect to the cash book
                             // We also exclude futures and CFD as they are calculated separately because they do not impact the account's cash.
@@ -480,8 +477,7 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return (from kvp in Securities
-                        select kvp.Value.Holdings.TotalFees).Sum();
+                return Securities.Values.Sum(security => security.Holdings.TotalFees);
             }
         }
 
@@ -492,8 +488,7 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return (from kvp in Securities
-                        select kvp.Value.Holdings.Profit).Sum();
+                return Securities.Values.Sum(security => security.Holdings.Profit);
             }
         }
 
@@ -504,8 +499,7 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return (from kvp in Securities
-                    select kvp.Value.Holdings.NetProfit).Sum();
+                return Securities.Values.Sum(security => security.Holdings.NetProfit);
             }
         }
 
@@ -516,8 +510,7 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return (from kvp in Securities
-                        select kvp.Value.Holdings.TotalSaleVolume).Sum();
+                return Securities.Values.Sum(security => security.Holdings.TotalSaleVolume);
             }
         }
 

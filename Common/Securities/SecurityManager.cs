@@ -39,7 +39,9 @@ namespace QuantConnect.Securities
         //Internal dictionary implementation:
         private readonly Dictionary<Symbol, Security> _securityManager;
         // let's keep ah thread safe enumerator created which we reset and recreate if required
-        private  List<KeyValuePair<Symbol, Security>> _enumerator;
+        private List<Symbol> _enumeratorKeys;
+        private List<Security> _enumeratorValues;
+        private List<KeyValuePair<Symbol, Security>> _enumerator;
         private SecurityService _securityService;
 
         /// <summary>
@@ -110,6 +112,8 @@ namespace QuantConnect.Securities
             lock (_securityManager)
             {
                 _enumerator = null;
+                _enumeratorKeys = null;
+                _enumeratorValues = null;
                 _securityManager.Clear();
             }
         }
@@ -220,10 +224,15 @@ namespace QuantConnect.Securities
         {
             get
             {
-                lock (_securityManager)
+                var result = _enumeratorKeys;
+                if (result == null)
                 {
-                    return _securityManager.Select(kvp => kvp.Key).ToList();
+                    lock (_securityManager)
+                    {
+                        _enumeratorKeys = result = _securityManager.Keys.ToList();
+                    }
                 }
+                return result;
             }
         }
 
@@ -266,10 +275,15 @@ namespace QuantConnect.Securities
         {
             get
             {
-                lock (_securityManager)
+                var result = _enumeratorValues;
+                if (result == null)
                 {
-                    return _securityManager.Select(kvp => kvp.Value).ToList();
+                    lock (_securityManager)
+                    {
+                        _enumeratorValues = result = _securityManager.Values.ToList();
+                    }
                 }
+                return result;
             }
         }
 
@@ -295,14 +309,15 @@ namespace QuantConnect.Securities
 
         private List<KeyValuePair<Symbol, Security>>.Enumerator GetEnumeratorImplementation()
         {
-            if (_enumerator == null)
+            var result = _enumerator;
+            if (result == null)
             {
                 lock (_securityManager)
                 {
-                    _enumerator = _securityManager.ToList();
+                    _enumerator = result = _securityManager.ToList();
                 }
             }
-            return _enumerator.GetEnumerator();
+            return result.GetEnumerator();
         }
 
         /// <summary>
@@ -351,6 +366,8 @@ namespace QuantConnect.Securities
         protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs changedEventArgs)
         {
             _enumerator = null;
+            _enumeratorKeys = null;
+            _enumeratorValues = null;
             CollectionChanged?.Invoke(this, changedEventArgs);
         }
 

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -117,7 +117,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>A target percent for each insight</returns>
         protected override Dictionary<Insight, double> DetermineTargetPercent(List<Insight> activeInsights)
         {
-            var result = new Dictionary<Insight, double>();
+            var result = new Dictionary<Insight, double>(activeInsights.Count);
 
             // give equal weighting to each security
             var count = activeInsights.Count(x => x.Direction != InsightDirection.Flat && RespectPortfolioBias(x));

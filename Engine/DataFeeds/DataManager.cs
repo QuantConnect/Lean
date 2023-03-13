@@ -15,7 +15,6 @@
 */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
@@ -42,11 +41,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly bool _liveMode;
         private readonly IRegisteredSecurityDataTypesProvider _registeredTypesProvider;
         private readonly IDataPermissionManager _dataPermissionManager;
+        private List<SubscriptionDataConfig> _subscriptionDataConfigsEnumerator;
 
         /// There is no ConcurrentHashSet collection in .NET,
         /// so we use ConcurrentDictionary with byte value to minimize memory usage
-        private readonly ConcurrentDictionary<SubscriptionDataConfig, SubscriptionDataConfig> _subscriptionManagerSubscriptions
-            = new ConcurrentDictionary<SubscriptionDataConfig, SubscriptionDataConfig>();
+        private readonly Dictionary<SubscriptionDataConfig, SubscriptionDataConfig> _subscriptionManagerSubscriptions = new();
 
         /// <summary>
         /// Event fired when a new subscription is added
@@ -172,9 +171,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>True if the subscription was created and added successfully, false otherwise</returns>
         public bool AddSubscription(SubscriptionRequest request)
         {
-            // guarantee the configuration is present in our config collection
-            // this is related to GH issue 3877: where we added a configuration which we also removed
-            _subscriptionManagerSubscriptions.TryAdd(request.Configuration, request.Configuration);
+            lock (_subscriptionManagerSubscriptions)
+            {
+                // guarantee the configuration is present in our config collection
+                // this is related to GH issue 3877: where we added a configuration which we also removed
+                if(_subscriptionManagerSubscriptions.TryAdd(request.Configuration, request.Configuration))
+                {
+                    _subscriptionDataConfigsEnumerator = null;
+                }
+            }
 
             Subscription subscription;
             if (DataFeedSubscriptions.TryGetValue(request.Configuration, out subscription))
@@ -277,8 +282,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // a universe requested removal of a subscription which wasn't present anymore, this can happen when a subscription ends
                 // it will get removed from the data feed subscription list, but the configuration will remain until the universe removes it
                 // why? the effect I found is that the fill models are using these subscriptions to determine which data they could use
-                SubscriptionDataConfig config;
-                _subscriptionManagerSubscriptions.TryRemove(configuration, out config);
+                lock (_subscriptionManagerSubscriptions)
+                {
+                    if (_subscriptionManagerSubscriptions.Remove(configuration))
+                    {
+                        _subscriptionDataConfigsEnumerator = null;
+                    }
+                }
             }
             return false;
         }
@@ -308,8 +318,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Gets all the current data config subscriptions that are being processed for the SubscriptionManager
         /// </summary>
-        public IEnumerable<SubscriptionDataConfig> SubscriptionManagerSubscriptions =>
-            _subscriptionManagerSubscriptions.Select(x => x.Key);
+        public IEnumerable<SubscriptionDataConfig> SubscriptionManagerSubscriptions
+        {
+            get
+            {
+                lock (_subscriptionManagerSubscriptions)
+                {
+                    if(_subscriptionDataConfigsEnumerator == null)
+                    {
+                        _subscriptionDataConfigsEnumerator = _subscriptionManagerSubscriptions.Values.ToList();
+                    }
+                    return _subscriptionDataConfigsEnumerator;
+                }
+            }
+        }
 
         /// <summary>
         /// Gets existing or adds new <see cref="SubscriptionDataConfig" />
@@ -317,7 +339,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>Returns the SubscriptionDataConfig instance used</returns>
         public SubscriptionDataConfig SubscriptionManagerGetOrAdd(SubscriptionDataConfig newConfig)
         {
-            var config = _subscriptionManagerSubscriptions.GetOrAdd(newConfig, newConfig);
+            SubscriptionDataConfig config;
+            lock (_subscriptionManagerSubscriptions)
+            {
+                if (!_subscriptionManagerSubscriptions.TryGetValue(newConfig, out config))
+                {
+                    _subscriptionManagerSubscriptions[newConfig] = config = newConfig;
+                    _subscriptionDataConfigsEnumerator = null;
+                }
+            }
 
             // if the reference is not the same, means it was already there and we did not add anything new
             if (!ReferenceEquals(config, newConfig))
@@ -336,16 +366,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     // count data subscriptions by symbol, ignoring multiple data types.
                     // this limit was added due to the limits IB places on number of subscriptions
-                    var uniqueCount = SubscriptionManagerSubscriptions
-                        .Where(x => !x.Symbol.IsCanonical())
-                        .DistinctBy(x => x.Symbol.Value)
-                        .Count();
-
-                    if (uniqueCount > _algorithmSettings.DataSubscriptionLimit)
+                    lock (_subscriptionManagerSubscriptions)
                     {
-                        throw new Exception(
-                            $"The maximum number of concurrent market data subscriptions was exceeded ({_algorithmSettings.DataSubscriptionLimit})." +
-                            "Please reduce the number of symbols requested or increase the limit using Settings.DataSubscriptionLimit.");
+                        var uniqueCount = _subscriptionManagerSubscriptions.Keys
+                            .Where(x => !x.Symbol.IsCanonical())
+                            .DistinctBy(x => x.Symbol.Value)
+                            .Count();
+
+                        if (uniqueCount > _algorithmSettings.DataSubscriptionLimit)
+                        {
+                            throw new Exception(
+                                $"The maximum number of concurrent market data subscriptions was exceeded ({_algorithmSettings.DataSubscriptionLimit})." +
+                                "Please reduce the number of symbols requested or increase the limit using Settings.DataSubscriptionLimit.");
+                        }
                     }
                 }
 
@@ -366,7 +399,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // the subscription could of ended but might still be part of the universe
             if (subscription.RemovedFromUniverse.Value)
             {
-                _subscriptionManagerSubscriptions.TryRemove(subscription.Configuration, out var _);
+                lock (_subscriptionManagerSubscriptions)
+                {
+                    if (_subscriptionManagerSubscriptions.Remove(subscription.Configuration))
+                    {
+                        _subscriptionDataConfigsEnumerator = null;
+                    }
+                }
             }
         }
 
@@ -375,7 +414,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public int SubscriptionManagerCount()
         {
-            return _subscriptionManagerSubscriptions.Skip(0).Count();
+            lock (_subscriptionManagerSubscriptions)
+            {
+                return _subscriptionManagerSubscriptions.Count;
+            }
         }
 
         #region ISubscriptionDataConfigService
@@ -563,8 +605,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <remarks>Will not return internal subscriptions by default</remarks>
         public List<SubscriptionDataConfig> GetSubscriptionDataConfigs(Symbol symbol, bool includeInternalConfigs = false)
         {
-            return SubscriptionManagerSubscriptions.Where(x => x.Symbol == symbol
-                                                               && (includeInternalConfigs || !x.IsInternalFeed)).ToList();
+            lock (_subscriptionManagerSubscriptions)
+            {
+                return _subscriptionManagerSubscriptions.Keys.Where(config => (includeInternalConfigs || !config.IsInternalFeed)
+                                                                && config.Symbol.ID == symbol.ID).ToList();
+            }
         }
 
         #endregion
