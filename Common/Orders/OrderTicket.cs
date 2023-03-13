@@ -90,12 +90,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public decimal Quantity
         {
-            get
-            {
-                return _order == null
-                    ? _submitRequest.Quantity * (_submitRequest.GroupOrderManager?.Quantity ?? 1)
-                    : _order.Quantity * (_order.GroupOrderManager?.Quantity ?? 1);
-            }
+            get { return _order == null ? _submitRequest.ComboQuantity : _order.ComboQuantity; }
         }
 
         /// <summary>

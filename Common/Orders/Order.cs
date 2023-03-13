@@ -167,6 +167,13 @@ namespace QuantConnect.Orders
         public decimal AbsoluteQuantity => Math.Abs(Quantity);
 
         /// <summary>
+        /// Get the full quantity for this order.
+        /// If it is a part of a combo order, this will be the quantity multiplied by the combo order's quantity
+        /// </summary>
+        [JsonIgnore]
+        public decimal ComboQuantity => Quantity * (GroupOrderManager?.Quantity ?? 1);
+
+        /// <summary>
         /// Gets the executed value of this order. If the order has not yet filled,
         /// then this will return zero.
         /// </summary>

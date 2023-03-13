@@ -104,6 +104,12 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Get the full quantity for this order request.
+        /// If it is a part of a combo order, this will be the quantity multiplied by the combo order's quantity
+        /// </summary>
+        public decimal ComboQuantity => Quantity * (GroupOrderManager?.Quantity ?? 1);
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="SubmitOrderRequest"/> class.
         /// The <see cref="OrderRequest.OrderId"/> will default to <see cref="OrderResponseErrorCode.UnableToFindOrder"/>
         /// </summary>
