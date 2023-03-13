@@ -1084,7 +1084,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                     // lets always set current Quantity, Limit and Stop prices in the order event so that it's easier for consumers
                     // to know the current state and detect any update
-                    orderEvent.Quantity = order.Quantity;
+                    orderEvent.Quantity = order.Quantity * (order.GroupOrderManager?.Quantity ?? 1);
                     switch (order.Type)
                     {
                         case OrderType.Limit:

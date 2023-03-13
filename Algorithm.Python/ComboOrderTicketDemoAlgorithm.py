@@ -91,7 +91,7 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
 
             currentPrice = sum([leg.Quantity * self.Securities[leg.Symbol].Close for leg in self._orderLegs])
 
-            tickets = self.ComboLimitOrder(self._orderLegs, 2, currentPrice - 2)
+            tickets = self.ComboLimitOrder(self._orderLegs, 2, currentPrice + 1.5)
             self._openLimitOrders.extend(tickets)
 
             # These won't fill, we will test cancel with this
@@ -172,7 +172,7 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
         if orderEvent.Quantity == 0:
             raise Exception("OrderEvent quantity is Not expected to be 0, it should hold the current order Quantity")
 
-        if orderEvent.Quantity != order.Quantity:
+        if orderEvent.Quantity != order.Quantity * order.GroupOrderManager.Quantity:
             raise Exception("OrderEvent quantity should hold the current order Quantity")
 
         if order.Type == OrderType.ComboLegLimit and orderEvent.LimitPrice == 0:
@@ -202,7 +202,8 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
         openOrderTickets = self.Transactions.GetOpenOrderTickets().ToList()
         remainingOpenOrders = self.Transactions.GetOpenOrdersRemainingQuantity()
 
-        # We expect 3 of the limit orders to be canceled
+        # 6 market, 6 limit, 6 leg limit.
+        # Out of the 6 limit orders, 3 are expected to be canceled.
         expectedOrdersCount = 18
         expectedFillsCount = 15
         if len(filledOrders) != expectedFillsCount or len(orderTickets) != expectedOrdersCount:

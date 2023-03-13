@@ -146,11 +146,13 @@ namespace QuantConnect.Orders
         {
             get
             {
-                if (Quantity > 0)
+                var quantity = Quantity * (GroupOrderManager?.Quantity ?? 1);
+
+                if (quantity > 0)
                 {
                     return OrderDirection.Buy;
                 }
-                if (Quantity < 0)
+                if (quantity < 0)
                 {
                     return OrderDirection.Sell;
                 }

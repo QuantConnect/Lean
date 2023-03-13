@@ -128,7 +128,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 var currentPrice = _orderLegs.Sum(leg => leg.Quantity * Securities[leg.Symbol].Close);
 
-                var tickets = ComboLimitOrder(_orderLegs, 2, currentPrice - 2m);
+                var tickets = ComboLimitOrder(_orderLegs, 2, currentPrice + 1.5m);
                 _openLimitOrders.AddRange(tickets);
 
                 // These won't fill, we will test cancel with this
@@ -241,7 +241,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception("OrderEvent quantity is Not expected to be 0, it should hold the current order Quantity");
             }
-            if (orderEvent.Quantity != order.Quantity)
+            if (orderEvent.Quantity != order.Quantity * order.GroupOrderManager.Quantity)
             {
                 throw new Exception("OrderEvent quantity should hold the current order Quantity");
             }
@@ -286,7 +286,8 @@ namespace QuantConnect.Algorithm.CSharp
             var openOrderTickets = Transactions.GetOpenOrderTickets().ToList();
             var remainingOpenOrders = Transactions.GetOpenOrdersRemainingQuantity();
 
-            // We expect 3 of the limit orders to be canceled
+            // 6 market, 6 limit, 6 leg limit.
+            // Out of the 6 limit orders, 3 are expected to be canceled.
             var expectedOrdersCount = 18;
             var expectedFillsCount = 15;
             if (filledOrders.Count != expectedFillsCount || orderTickets.Count != expectedOrdersCount)
@@ -348,7 +349,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$15.00"},
-            {"Estimated Strategy Capacity", "$8000.00"},
+            {"Estimated Strategy Capacity", "$4000.00"},
             {"Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"},
             {"Portfolio Turnover", "59.81%"},
             {"OrderListHash", "06328fbd9bbb25d9ec80b9151a7ceb7b"}

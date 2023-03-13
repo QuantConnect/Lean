@@ -1064,8 +1064,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var groupOrderManager = new GroupOrderManager(0, 2, multiplier * 10, 1m);
 
             var spyLimitPrice = orderDirection == OrderDirection.Buy ? 101.1m : 102m;
-            var spyOrder = new ComboLegLimitOrder(Symbols.SPY, multiplier * 10, spyLimitPrice, Noon, groupOrderManager) { Id = 1 };
-            var aaplLimitPrice = orderDirection == OrderDirection.Buy ? 251.1m : 252.5m;
+            var spyOrder = new ComboLegLimitOrder(Symbols.SPY, 10, spyLimitPrice, Noon, groupOrderManager) { Id = 1 };
+            var aaplLimitPrice = orderDirection == OrderDirection.Buy ? 252.5m : 251.1m;
             var aaplOrder = new ComboLegLimitOrder(Symbols.AAPL, multiplier * 5, aaplLimitPrice, Noon, groupOrderManager) { Id = 2 };
 
             groupOrderManager.OrderIds.Add(spyOrder.Id);
@@ -1088,30 +1088,20 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 { aaplOrder, aapl }
             };
 
-            var spyFill = model.Fill(new FillModelParameters(
+            var fill = model.Fill(new FillModelParameters(
                 spy,
                 spyOrder,
                 new MockSubscriptionDataConfigProvider(spyConfig),
                 Time.OneHour,
                 securitiesForOrders));
 
-            // It won't fill until every order in the group is passed to model.Fill
-            Assert.IsEmpty(spyFill);
-
-            var aaplFill = model.Fill(new FillModelParameters(
-                aapl,
-                aaplOrder,
-                new MockSubscriptionDataConfigProvider(aaplConfig),
-                Time.OneHour,
-                securitiesForOrders));
-
-            // Won't fill either, the limit price condition is not met
-            Assert.IsEmpty(aaplFill);
+            // Won't fill, the limit price condition is not met
+            Assert.IsEmpty(fill);
 
             spy.SetMarketPrice(new TradeBar(Noon, Symbols.SPY, 102m, 103m, 101m, 102.3m, 100));
             aapl.SetMarketPrice(new TradeBar(Noon, Symbols.AAPL, 252m, 253m, 251m, 252.3m, 250));
 
-            var fill = model.Fill(new FillModelParameters(
+            fill = model.Fill(new FillModelParameters(
                 spy,
                 spyOrder,
                 new MockSubscriptionDataConfigProvider(spyConfig),
