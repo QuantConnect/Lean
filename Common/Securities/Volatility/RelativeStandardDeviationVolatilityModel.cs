@@ -1,4 +1,4 @@
-﻿
+
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
@@ -18,7 +18,6 @@ using System;
 using MathNet.Numerics.Statistics;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
-using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Securities.Volatility;
@@ -73,7 +72,7 @@ namespace QuantConnect.Securities
         /// Initializes a new instance of the <see cref="RelativeStandardDeviationVolatilityModel"/> class
         /// </summary>
         /// <param name="periodSpan">The time span representing one 'period' length</param>
-        /// <param name="periods">The nuber of 'period' lengths to wait until updating the value</param>
+        /// <param name="periods">The number of 'period' lengths to wait until updating the value</param>
         public RelativeStandardDeviationVolatilityModel(
             TimeSpan periodSpan,
             int periods)
@@ -81,7 +80,7 @@ namespace QuantConnect.Securities
             if (periods < 2) throw new ArgumentOutOfRangeException("periods", "'periods' must be greater than or equal to 2.");
             _periodSpan = periodSpan;
             _window = new RollingWindow<double>(periods);
-            _lastUpdate = DateTime.MinValue + TimeSpan.FromMilliseconds(periodSpan.TotalMilliseconds * periods);
+            _lastUpdate = GetLastUpdateInitialValue(periodSpan, periods);
         }
 
         /// <summary>
@@ -93,15 +92,12 @@ namespace QuantConnect.Securities
         public override void Update(Security security, BaseData data)
         {
             var timeSinceLastUpdate = data.EndTime - _lastUpdate;
-            if (timeSinceLastUpdate >= _periodSpan && security.Price > 0)
+            if (timeSinceLastUpdate >= _periodSpan && data.Price > 0)
             {
                 lock (_sync)
                 {
                     _needsUpdate = true;
-                    // we purposefully use security.Price for consistency in our reporting
-                    // some streams of data will have trade/quote data, so if we just use
-                    // data.Value we could be mixing and matching data streams
-                    _window.Add((double)security.Price);
+                    _window.Add((double)data.Price);
                 }
                 _lastUpdate = data.EndTime;
             }
@@ -123,6 +119,9 @@ namespace QuantConnect.Securities
                 );
             }
 
+            // Let's reset the model since it will get warmed up again using these history requirements
+            Reset();
+
             var configurations = SubscriptionDataConfigProvider
                 .GetSubscriptionDataConfigs(security.Symbol)
                 .OrderBy(c => c.TickType)
@@ -133,6 +132,22 @@ namespace QuantConnect.Securities
                 utcTime,
                 configurations.GetHighestResolution(),
                 _window.Size + 1);
+        }
+
+        /// <summary>
+        /// Resets the model to its initial state
+        /// </summary>
+        private void Reset()
+        {
+            _needsUpdate = false;
+            _volatility = 0m;
+            _lastUpdate = GetLastUpdateInitialValue(_periodSpan, _window.Size);
+            _window.Reset();
+        }
+
+        private static DateTime GetLastUpdateInitialValue(TimeSpan periodSpan, int periods)
+        {
+            return DateTime.MinValue + TimeSpan.FromMilliseconds(periodSpan.TotalMilliseconds * periods);
         }
     }
 }

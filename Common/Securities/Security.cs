@@ -624,7 +624,7 @@ namespace QuantConnect.Securities
             if (data == null) return;
             Cache.AddData(data);
 
-            UpdateConsumersMarketPrice(data);
+            UpdateMarketPrice(data);
         }
 
         /// <summary>
@@ -639,7 +639,7 @@ namespace QuantConnect.Securities
         {
             Cache.AddDataList(data, dataType, containsFillForwardData);
 
-            UpdateConsumersMarketPrice(data[data.Count - 1]);
+            UpdateMarketPrice(data[data.Count - 1]);
         }
 
         /// <summary>
@@ -916,6 +916,17 @@ namespace QuantConnect.Securities
             IsFillDataForward = _subscriptionsBag.Any(x => x.FillDataForward);
             IsExtendedMarketHours = _subscriptionsBag.Any(x => x.ExtendedMarketHours);
             RefreshDataNormalizationModeProperty();
+        }
+
+        /// <summary>
+        /// Updates consumers market price. It will do nothing if the passed data type is auxiliary.
+        /// </summary>
+        private void UpdateMarketPrice(BaseData data)
+        {
+            if (data.DataType != MarketDataType.Auxiliary)
+            {
+                UpdateConsumersMarketPrice(data);
+            }
         }
     }
 }

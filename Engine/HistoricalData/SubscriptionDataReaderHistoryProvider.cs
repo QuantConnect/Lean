@@ -143,7 +143,8 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 _factorFileProvider,
                 dataReader,
                 _mapFileProvider,
-                request.StartTimeLocal);
+                request.StartTimeLocal,
+                request.EndTimeLocal);
 
             // optionally apply fill forward behavior
             if (request.FillForwardResolution.HasValue)

@@ -230,7 +230,7 @@ namespace QuantConnect.Lean.Engine
                 {
                     if (hasOnDataSymbolChangedEvents)
                     {
-                        methodInvokers[typeof (SymbolChangedEvents)](algorithm, timeSlice.Slice.SymbolChangedEvents);
+                        methodInvokers[typeof(SymbolChangedEvents)](algorithm, timeSlice.Slice.SymbolChangedEvents);
                     }
                     foreach (var symbol in timeSlice.Slice.SymbolChangedEvents.Keys)
                     {
@@ -281,7 +281,7 @@ namespace QuantConnect.Lean.Engine
                             Security security;
                             if (algorithm.Securities.TryGetValue(data.Symbol, out security))
                             {
-                                security.Cache.StoreData(new[] {data}, data.GetType());
+                                security.Cache.StoreData(new[] { data }, data.GetType());
                             }
                         }
                     }
@@ -487,7 +487,7 @@ namespace QuantConnect.Lean.Engine
                 if (!algorithm.LiveMode)
                 {
                     // Keep this up to date even though we don't process delistings here anymore
-                    foreach(var delisting in timeSlice.Slice.Delistings.Values)
+                    foreach (var delisting in timeSlice.Slice.Delistings.Values)
                     {
                         if (delisting.Type == DelistingType.Warning)
                         {
@@ -648,7 +648,7 @@ namespace QuantConnect.Lean.Engine
             if (algorithm.LiveMode)
             {
                 warmupEndTicks = DateTime.UtcNow.Ticks;
-                ProcessVolatilityHistoryRequirements(algorithm);
+                ProcessVolatilityHistoryRequirements(algorithm, _liveMode);
             }
 
             foreach (var timeSlice in synchronizer.StreamData(cancellationToken))
@@ -661,7 +661,7 @@ namespace QuantConnect.Lean.Engine
                         // send some status to the user letting them know we're done history, but still warming up,
                         // catching up to real time data
                         nextWarmupStatusTime = now.AddSeconds(2);
-                        var newPercent = (int) (100*(timeSlice.Time.Ticks - startTimeTicks)/(double) (warmupEndTicks - startTimeTicks));
+                        var newPercent = (int)(100 * (timeSlice.Time.Ticks - startTimeTicks) / (double)(warmupEndTicks - startTimeTicks));
                         // if there isn't any progress don't send the same update many times
                         if (newPercent != warmingUpPercent)
                         {
@@ -689,39 +689,16 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         /// <remarks>Implemented as static to facilitate testing</remarks>
         /// <param name="algorithm">The algorithm instance</param>
-        public static void ProcessVolatilityHistoryRequirements(IAlgorithm algorithm)
+        /// <param name="liveMode">Whether the algorithm is in live mode</param>
+        public static void ProcessVolatilityHistoryRequirements(IAlgorithm algorithm, bool liveMode)
         {
             Log.Trace("ProcessVolatilityHistoryRequirements(): Updating volatility models with historical data...");
 
             foreach (var kvp in algorithm.Securities)
             {
                 var security = kvp.Value;
-
-                if (security.VolatilityModel != VolatilityModel.Null)
-                {
-                    // start: this is a work around to maintain retro compatibility
-                    // did not want to add IVolatilityModel.SetSubscriptionDataConfigProvider
-                    // to prevent breaking existing user models.
-                    var baseType = security.VolatilityModel as BaseVolatilityModel;
-                    baseType?.SetSubscriptionDataConfigProvider(
-                        algorithm.SubscriptionManager.SubscriptionDataConfigService);
-                    // end
-
-                    var historyReq = security.VolatilityModel.GetHistoryRequirements(security, algorithm.UtcTime);
-
-                    if (historyReq != null && algorithm.HistoryProvider != null)
-                    {
-                        var history = algorithm.HistoryProvider.GetHistory(historyReq, algorithm.TimeZone);
-                        if (history != null)
-                        {
-                            foreach (var slice in history)
-                            {
-                                if (slice.Bars.ContainsKey(security.Symbol))
-                                    security.VolatilityModel.Update(security, slice.Bars[security.Symbol]);
-                            }
-                        }
-                    }
-                }
+                security.VolatilityModel.WarmUp(algorithm.HistoryProvider, algorithm.SubscriptionManager, security, algorithm.UtcTime,
+                    algorithm.TimeZone, liveMode);
             }
 
             Log.Trace("ProcessVolatilityHistoryRequirements(): finished.");
@@ -755,7 +732,7 @@ namespace QuantConnect.Lean.Engine
                     }
 
                     Security security = null;
-                    if (liveMode && algorithm.Securities.TryGetValue(split.Symbol, out security))
+                    if (algorithm.Securities.TryGetValue(split.Symbol, out security) && liveMode)
                     {
                         Log.Trace($"AlgorithmManager.Run(): {algorithm.Time}: Pre-Split for {split}. Security Price: {security.Price} Holdings: {security.Holdings.Quantity}");
                     }
@@ -765,10 +742,13 @@ namespace QuantConnect.Lean.Engine
                         .DataNormalizationMode();
 
                     // apply the split event to the portfolio
-                    algorithm.Portfolio.ApplySplit(split, liveMode, mode);
+                    algorithm.Portfolio.ApplySplit(split, security, liveMode, mode);
 
                     // apply the split event to the trade builder
                     algorithm.TradeBuilder.ApplySplit(split, liveMode, mode);
+
+                    // apply the split event to the security volatility model
+                    ApplySplitOrDividendToVolatilityModel(algorithm, security, liveMode, mode);
 
                     if (liveMode && security != null)
                     {
@@ -811,7 +791,7 @@ namespace QuantConnect.Lean.Engine
                 }
 
                 Security security = null;
-                if (liveMode && algorithm.Securities.TryGetValue(dividend.Symbol, out security))
+                if (algorithm.Securities.TryGetValue(dividend.Symbol, out security) && liveMode)
                 {
                     Log.Trace($"AlgorithmManager.Run(): {algorithm.Time}: Pre-Dividend: {dividend}. " +
                         $"Security Holdings: {security.Holdings.Quantity} Account Currency Holdings: " +
@@ -824,6 +804,9 @@ namespace QuantConnect.Lean.Engine
 
                 // apply the dividend event to the portfolio
                 algorithm.Portfolio.ApplyDividend(dividend, liveMode, mode);
+
+                // apply the dividend event to the security volatility model
+                ApplySplitOrDividendToVolatilityModel(algorithm, security, liveMode, mode);
 
                 if (liveMode && security != null)
                 {
@@ -844,7 +827,7 @@ namespace QuantConnect.Lean.Engine
         /// <returns>True if the method existed and was added to the collection</returns>
         private bool AddMethodInvoker<T>(IAlgorithm algorithm, Dictionary<Type, MethodInvoker> methodInvokers, string methodName = "OnData")
         {
-            var newSplitMethodInfo = algorithm.GetType().GetMethod(methodName, new[] {typeof (T)});
+            var newSplitMethodInfo = algorithm.GetType().GetMethod(methodName, new[] { typeof(T) });
             if (newSplitMethodInfo != null)
             {
                 methodInvokers.Add(typeof(T), newSplitMethodInfo.DelegateForCallMethod());
@@ -964,6 +947,19 @@ namespace QuantConnect.Lean.Engine
 
                 // remove the warning from out list
                 splitWarnings.RemoveAt(i);
+            }
+        }
+
+        /// <summary>
+        /// Warms up the security's volatility model in the case of a split or dividend to avoid discontinuities when data is raw or in live mode
+        /// </summary>
+        private static void ApplySplitOrDividendToVolatilityModel(IAlgorithm algorithm, Security security, bool liveMode,
+            DataNormalizationMode dataNormalizationMode)
+        {
+            if (security.Type == SecurityType.Equity && (liveMode || dataNormalizationMode == DataNormalizationMode.Raw))
+            {
+                security?.VolatilityModel.WarmUp(algorithm.HistoryProvider, algorithm.SubscriptionManager, security, algorithm.UtcTime,
+                    algorithm.TimeZone, liveMode, dataNormalizationMode);
             }
         }
 

@@ -2503,6 +2503,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var split = new Split(Symbols.SPY, new DateTime(2000, 01, 01), 100, 0.5m, SplitType.SplitOccurred);
             algorithm.Portfolio.ApplySplit(split,
+                spy,
                 algorithm.LiveMode,
                 algorithm.SubscriptionManager.SubscriptionDataConfigService
                     .GetSubscriptionDataConfigs(spy.Symbol)
@@ -2536,6 +2537,7 @@ namespace QuantConnect.Tests.Common.Securities
             var leftOver = newQuantity - (int)newQuantity;
 
             algorithm.Portfolio.ApplySplit(split,
+                spy,
                 algorithm.LiveMode,
                 algorithm.SubscriptionManager.SubscriptionDataConfigService
                     .GetSubscriptionDataConfigs(spy.Symbol)

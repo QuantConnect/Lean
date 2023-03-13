@@ -734,12 +734,11 @@ namespace QuantConnect.Securities
         /// Applies a split to the portfolio
         /// </summary>
         /// <param name="split">The split to be applied</param>
+        /// <param name="security">The security the split will be applied to</param>
         /// <param name="liveMode">True if live mode, false for backtest</param>
         /// <param name="mode">The <see cref="DataNormalizationMode"/> for this security</param>
-        public void ApplySplit(Split split, bool liveMode, DataNormalizationMode mode)
+        public void ApplySplit(Split split, Security security, bool liveMode, DataNormalizationMode mode)
         {
-            var security = Securities[split.Symbol];
-
             // only apply splits to equities
             if (security.Type != SecurityType.Equity)
             {

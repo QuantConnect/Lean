@@ -614,7 +614,7 @@ namespace QuantConnect.Tests.Common
             {
             }
 
-            public double TestImpliedVolEstimator(double price, double initialGuess, double timeTillExpiry, double riskFreeDiscount, 
+            public double TestImpliedVolEstimator(double price, double initialGuess, double timeTillExpiry, double riskFreeDiscount,
                                                   double forwardPrice, PlainVanillaPayoff payoff, out BlackCalculator black)
             {
                 return base.ImpliedVolatilityEstimation(price, initialGuess, timeTillExpiry, riskFreeDiscount, forwardPrice, payoff, out black);

@@ -3288,9 +3288,10 @@ namespace QuantConnect
             {
                 case DataNormalizationMode.Adjusted:
                 case DataNormalizationMode.SplitAdjusted:
-                    return data?.Scale(TimesFactor, 1/factor, factor, decimal.Zero);
+                case DataNormalizationMode.ScaledRaw:
+                    return data?.Scale(TimesFactor, 1 / factor, factor, decimal.Zero);
                 case DataNormalizationMode.TotalReturn:
-                    return data.Scale(TimesFactor, 1/factor, factor, sumOfDividends);
+                    return data.Scale(TimesFactor, 1 / factor, factor, sumOfDividends);
 
                 case DataNormalizationMode.BackwardsRatio:
                     return data.Scale(TimesFactor, 1, factor, decimal.Zero);

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -16,8 +16,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Util;
 
@@ -31,7 +31,7 @@ namespace QuantConnect.Securities.Volatility
         /// <summary>
         /// Provides access to registered <see cref="SubscriptionDataConfig"/>
         /// </summary>
-        protected ISubscriptionDataConfigProvider SubscriptionDataConfigProvider;
+        protected ISubscriptionDataConfigProvider SubscriptionDataConfigProvider { get; set; }
 
         /// <summary>
         /// Gets the volatility of the security as a percentage
@@ -64,10 +64,7 @@ namespace QuantConnect.Securities.Volatility
         /// <param name="security">The security of the request</param>
         /// <param name="utcTime">The date/time of the request</param>
         /// <returns>History request object list, or empty if no requirements</returns>
-        public virtual IEnumerable<HistoryRequest> GetHistoryRequirements(
-            Security security,
-            DateTime utcTime
-            )
+        public virtual IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime)
         {
             return Enumerable.Empty<HistoryRequest>();
         }
@@ -82,7 +79,7 @@ namespace QuantConnect.Securities.Volatility
         /// <returns>Enumerable of history requests</returns>
         /// <exception cref="InvalidOperationException">The <see cref="SubscriptionDataConfigProvider"/> has not been set</exception>
         public IEnumerable<HistoryRequest> GetHistoryRequirements(
-            Security security, 
+            Security security,
             DateTime utcTime,
             Resolution? resolution,
             int barCount)
@@ -100,14 +97,14 @@ namespace QuantConnect.Securities.Volatility
                 .OrderBy(c => c.TickType)
                 .ToList();
             var configuration = configurations.First();
-            
+
             var bar = configuration.Type.GetBaseDataInstance();
             bar.Symbol = security.Symbol;
-            
+
             var historyResolution = resolution ?? bar.SupportedResolutions().Max();
 
             var periodSpan = historyResolution.ToTimeSpan();
-            
+
             // hour resolution does no have extended market hours data
             var extendedMarketHours = periodSpan != Time.OneHour && configurations.IsExtendedMarketHours();
             var localStartTime = Time.GetStartTimeForTradeBars(
@@ -131,7 +128,7 @@ namespace QuantConnect.Securities.Volatility
                                    historyResolution,
                                    extendedMarketHours,
                                    configurations.IsCustomData(),
-                                   configurations.DataNormalizationMode(),
+                                   configuration.DataNormalizationMode,
                                    LeanData.GetCommonTickTypeForCommonDataTypes(configuration.Type, security.Type))
             };
         }

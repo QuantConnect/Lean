@@ -111,6 +111,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 dataReader,
                 _mapFileProvider,
                 request.StartTimeLocal,
+                request.EndTimeLocal,
                 _enablePriceScaling);
 
             return result;
