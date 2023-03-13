@@ -172,7 +172,7 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
         if orderEvent.Quantity == 0:
             raise Exception("OrderEvent quantity is Not expected to be 0, it should hold the current order Quantity")
 
-        if orderEvent.Quantity != order.Quantity * order.GroupOrderManager.Quantity:
+        if orderEvent.Quantity != order.ComboQuantity:
             raise Exception("OrderEvent quantity should hold the current order Quantity")
 
         if order.Type == OrderType.ComboLegLimit and orderEvent.LimitPrice == 0:

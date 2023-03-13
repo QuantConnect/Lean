@@ -127,7 +127,7 @@ namespace QuantConnect.Orders.Fills
             {
                 var targetOrder = kvp.Key;
                 var security = kvp.Value;
-                var fill = InternalMarketFill(security, targetOrder, targetOrder.Quantity * targetOrder.GroupOrderManager.Quantity);
+                var fill = InternalMarketFill(security, targetOrder, targetOrder.ComboQuantity);
                 if (fill.Status != OrderStatus.Filled)
                 {
                     return new List<OrderEvent>();
@@ -153,7 +153,7 @@ namespace QuantConnect.Orders.Fills
             {
                 var targetOrder = kvp.Key;
                 var security = kvp.Value;
-                var prices = GetPricesCheckingPythonWrapper(security, targetOrder.Direction);
+                var prices = GetPricesCheckingPythonWrapper(security, targetOrder.ComboDirection);
 
                 if (prices.EndTime.ConvertToUtc(security.Exchange.TimeZone) < targetOrder.Time)
                 {
@@ -238,7 +238,7 @@ namespace QuantConnect.Orders.Fills
                 var security = kvp.Value;
 
                 var fill = InternalLimitFill(security, targetOrder, (targetOrder as ComboLegLimitOrder).LimitPrice,
-                    targetOrder.Quantity * order.GroupOrderManager.Quantity);
+                    targetOrder.ComboQuantity);
 
                 if (fill.Status != OrderStatus.Filled)
                 {
@@ -277,7 +277,8 @@ namespace QuantConnect.Orders.Fills
             // make sure the exchange is open/normal market hours before filling
             if (!IsExchangeOpen(asset, false)) return fill;
 
-            var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
+            var orderDirection = order.ComboDirection;
+            var prices = GetPricesCheckingPythonWrapper(asset, orderDirection);
             var pricesEndTimeUtc = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
 
             // if the order is filled on stale (fill-forward) data, set a warning message on the order event
@@ -294,7 +295,7 @@ namespace QuantConnect.Orders.Fills
             var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
 
             //Apply slippage
-            switch (order.Direction)
+            switch (orderDirection)
             {
                 case OrderDirection.Buy:
                     fill.FillPrice += slip;
@@ -583,14 +584,15 @@ namespace QuantConnect.Orders.Fills
                 return fill;
             }
             //Get the range of prices in the last bar:
-            var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
+            var orderDirection = order.ComboDirection;
+            var prices = GetPricesCheckingPythonWrapper(asset, orderDirection);
             var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
 
             // do not fill on stale data
             if (pricesEndTime <= order.Time) return fill;
 
             //-> Valid Live/Model Order:
-            switch (order.Direction)
+            switch (orderDirection)
             {
                 case OrderDirection.Buy:
                     //Buy limit seeks lowest price

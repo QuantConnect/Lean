@@ -241,7 +241,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception("OrderEvent quantity is Not expected to be 0, it should hold the current order Quantity");
             }
-            if (orderEvent.Quantity != order.Quantity * order.GroupOrderManager.Quantity)
+            if (orderEvent.Quantity != order.ComboQuantity)
             {
                 throw new Exception("OrderEvent quantity should hold the current order Quantity");
             }

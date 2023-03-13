@@ -142,29 +142,19 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Order Direction Property based off Quantity.
         /// </summary>
-        public OrderDirection Direction
-        {
-            get
-            {
-                var quantity = Quantity * (GroupOrderManager?.Quantity ?? 1);
-
-                if (quantity > 0)
-                {
-                    return OrderDirection.Buy;
-                }
-                if (quantity < 0)
-                {
-                    return OrderDirection.Sell;
-                }
-                return OrderDirection.Hold;
-            }
-        }
+        public OrderDirection Direction => GetOrderDirection(Quantity);
 
         /// <summary>
         /// Get the absolute quantity for this order
         /// </summary>
         [JsonIgnore]
         public decimal AbsoluteQuantity => Math.Abs(Quantity);
+
+        /// <summary>
+        /// Gets the executed value of this order. If the order has not yet filled,
+        /// then this will return zero.
+        /// </summary>
+        public decimal Value => Quantity * Price;
 
         /// <summary>
         /// Get the full quantity for this order.
@@ -174,10 +164,10 @@ namespace QuantConnect.Orders
         public decimal ComboQuantity => Quantity * (GroupOrderManager?.Quantity ?? 1);
 
         /// <summary>
-        /// Gets the executed value of this order. If the order has not yet filled,
-        /// then this will return zero.
+        /// Order Direction Property based off the ComboQuantity.
         /// </summary>
-        public decimal Value => Quantity * Price;
+        [JsonIgnore]
+        public OrderDirection ComboDirection => GetOrderDirection(ComboQuantity);
 
         /// <summary>
         /// Gets the price data at the time the order was submitted
@@ -502,6 +492,22 @@ namespace QuantConnect.Orders
                 }
             }
             return order;
+        }
+
+        /// <summary>
+        /// Gets an order direction based on the order quantity
+        /// </summary>
+        private static OrderDirection GetOrderDirection(decimal quantity)
+        {
+            if (quantity > 0)
+            {
+                return OrderDirection.Buy;
+            }
+            if (quantity < 0)
+            {
+                return OrderDirection.Sell;
+            }
+            return OrderDirection.Hold;
         }
     }
 }
