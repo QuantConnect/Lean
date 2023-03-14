@@ -113,8 +113,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        /// <remarks>Using -1 to skip regression test, issue to be determined</remarks>
-        public long DataPoints => -1;
+        public long DataPoints => 111963764;
 
         /// <summary>
         /// Data Points count of the algorithm history

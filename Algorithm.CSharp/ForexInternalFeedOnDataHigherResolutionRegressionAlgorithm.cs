@@ -101,7 +101,12 @@ namespace QuantConnect.Algorithm.CSharp
             // EURUSD has only one day of hourly data, because it was added on the first time step instead of during Initialize
             var expectedDataPointsPerSymbol = new Dictionary<string, int>
             {
-                { "EURGBP", 3 },
+                // 1 daily bar 10/7/2013 8:00:00 PM
+                // Hour resolution 'EURUSD added
+                // 1 daily bar '10/8/2013 8:00:00 PM'
+                // we start to FF
+                // +4 fill forwarded bars till '10/9/2013 12:00:00 AM'
+                { "EURGBP", 6},
                 { "EURUSD", 28 }
             };
 
@@ -131,7 +136,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 57;
+        public long DataPoints => 63;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -159,8 +164,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "5.91"},
-            {"Tracking Error", "0.13"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},

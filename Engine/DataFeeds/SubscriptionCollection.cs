@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -31,11 +31,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private readonly ConcurrentDictionary<SubscriptionDataConfig, Subscription> _subscriptions;
         private bool _sortingSubscriptionRequired;
+        private bool _frozen;
         private readonly Ref<TimeSpan> _fillForwardResolution;
 
         // some asset types (options, futures, crypto) have multiple subscriptions for different tick types,
         // we keep a sorted list of subscriptions so we can return them in a deterministic order
         private List<Subscription> _subscriptionsByTickType;
+
+        /// <summary>
+        /// Event fired when the fill forward resolution changes
+        /// </summary>
+        public event EventHandler<FillForwardResolutionChangedEvent> FillForwardResolutionChanged;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SubscriptionCollection"/> class
@@ -140,6 +146,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
+        /// Will disable or enable fill forward resolution updates
+        /// </summary>
+        public void FreezeFillForwardResolution(bool freeze)
+        {
+            _frozen = freeze;
+        }
+
+        /// <summary>
         /// Helper method to validate a configuration to be included in the fill forward calculation
         /// </summary>
         private static bool ValidateFillForwardResolution(SubscriptionDataConfig configuration)
@@ -152,6 +166,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         private void UpdateFillForwardResolution(FillForwardResolutionOperation operation, SubscriptionDataConfig configuration)
         {
+            if(_frozen)
+            {
+                return;
+            }
+
             // Due to performance implications let's be jealous in updating the _fillForwardResolution
             if (ValidateFillForwardResolution(configuration) &&
                 (
@@ -166,11 +185,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var configurations = (operation == FillForwardResolutionOperation.BeforeAdd)
                     ? _subscriptions.Keys.Concat(new[] { configuration }) : _subscriptions.Keys;
 
+                var eventArgs = new FillForwardResolutionChangedEvent { Old = _fillForwardResolution.Value };
                 _fillForwardResolution.Value = configurations.Where(ValidateFillForwardResolution)
                                                              .Select(x => x.Resolution)
                                                              .Distinct()
                                                              .DefaultIfEmpty(Resolution.Minute)
                                                              .Min().ToTimeSpan();
+                if (_fillForwardResolution.Value != eventArgs.Old)
+                {
+                    eventArgs.New = _fillForwardResolution.Value;
+                    // notify consumers if any
+                    FillForwardResolutionChanged?.Invoke(this, eventArgs);
+                }
             }
         }
 
