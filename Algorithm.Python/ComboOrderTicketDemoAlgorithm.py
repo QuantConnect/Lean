@@ -172,7 +172,8 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
         if orderEvent.Quantity == 0:
             raise Exception("OrderEvent quantity is Not expected to be 0, it should hold the current order Quantity")
 
-        if orderEvent.Quantity != order.ComboQuantity:
+         # The order event should hold the individual leg quantity (ratio), not the total order quantity (combo quantity * leg ratio)
+        if orderEvent.Quantity != order.Quantity:
             raise Exception("OrderEvent quantity should hold the current order Quantity")
 
         if order.Type == OrderType.ComboLegLimit and orderEvent.LimitPrice == 0:
@@ -204,11 +205,22 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
 
         # 6 market, 6 limit, 6 leg limit.
         # Out of the 6 limit orders, 3 are expected to be canceled.
+        # Out of the 6 leg limit orders, 3 are expected to be canceled.
         expectedOrdersCount = 18
-        expectedFillsCount = 15
+        expectedFillsCount = 12
         if len(filledOrders) != expectedFillsCount or len(orderTickets) != expectedOrdersCount:
             raise Exception(f"There were expected {expectedFillsCount} filled orders and {expectedOrdersCount} order tickets, but there were {len(filledOrders)} filled orders and {len(orderTickets)} order tickets")
+
+        filledComboMarketOrders = [x for x in filledOrders if x.Type == OrderType.ComboMarket]
+        filledComboLimitOrders = [x for x in filledOrders if x.Type == OrderType.ComboLimit]
+        filledComboLegLimitOrders = [x for x in filledOrders if x.Type == OrderType.ComboLegLimit]
+        if len(filledComboMarketOrders) != 6 or len(filledComboLimitOrders) != 3 or len(filledComboLegLimitOrders) != 3:
+            raise Exception("There were expected 6 filled market orders, 3 filled combo limit orders and 3 filled combo leg limit orders, "
+                            f"but there were {len(filledComboMarketOrders)} filled market orders, {len(filledComboLimitOrders)} filled "
+                            f"combo limit orders and {len(filledComboLegLimitOrders)} filled combo leg limit orders")
+
         if len(openOrders) != 0 or len(openOrderTickets) != 0:
             raise Exception("No open orders or tickets were expected")
+
         if remainingOpenOrders != 0:
             raise Exception("No remaining quantity to be filled from open orders was expected")

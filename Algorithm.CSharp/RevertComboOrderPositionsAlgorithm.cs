@@ -95,13 +95,19 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (orderEvent.Status == OrderStatus.Filled)
             {
+                var expectedQuantity = _orderLegs.Where(leg => leg.Symbol == orderEvent.Symbol).Single().Quantity;
+                if (orderEvent.Quantity != expectedQuantity)
+                {
+                    throw new Exception($"Order event quantity {orderEvent.Quantity} does not match expected quantity {expectedQuantity}");
+                }
+
                 // The multiplier depends on whether this order belongs either to the entry or exit combo order
                 var multiplier = _exitOrderTickets.Count > 0 ? -1 : 1;
-                var expectedQuantity = multiplier * _orderLegs.Where(leg => leg.Symbol == orderEvent.Symbol).Single().Quantity * _comboQuantity;
-                if (orderEvent.Quantity != expectedQuantity || orderEvent.FillQuantity != expectedQuantity)
+                var expectedFillQuantity = multiplier * expectedQuantity * _comboQuantity;
+                if (orderEvent.FillQuantity != expectedFillQuantity)
                 {
-                    throw new Exception($@"Order event fill quantity {orderEvent.FillQuantity} and quantity {orderEvent.Quantity
-                        } do not match expected quantity {expectedQuantity}");
+                    throw new Exception(
+                        $"Order event fill quantity {orderEvent.FillQuantity} does not match expected fill quantity {expectedFillQuantity}");
                 }
             }
         }
@@ -137,18 +143,21 @@ namespace QuantConnect.Algorithm.CSharp
                 var entryOrderTicket = _entryOrderTickets[i];
                 var exitOrderTicket = _exitOrderTickets[i];
 
-                var expectedQuantity = leg.Quantity * _comboQuantity;
+                var expectedQuantity = leg.Quantity;
+                var expectedFilledQuantity = leg.Quantity * _comboQuantity;
 
-                if (entryOrderTicket.Quantity != expectedQuantity || entryOrderTicket.QuantityFilled != expectedQuantity)
+                if (entryOrderTicket.Quantity != expectedQuantity || entryOrderTicket.QuantityFilled != expectedFilledQuantity)
                 {
-                    throw new Exception($@"Entry order quantity is incorrect for leg {i}. Expected {expectedQuantity
-                        } but got {entryOrderTicket.Quantity}");
+                    throw new Exception($@"Entry order ticket quantity {entryOrderTicket.Quantity} or quantity filled {
+                        entryOrderTicket.QuantityFilled} does not match expected quantity {expectedQuantity
+                        } or expected filled quantity {expectedFilledQuantity}");
                 }
 
-                if (exitOrderTicket.Quantity != -expectedQuantity || exitOrderTicket.QuantityFilled != -expectedQuantity)
+                if (exitOrderTicket.Quantity != expectedQuantity || exitOrderTicket.QuantityFilled != -expectedFilledQuantity)
                 {
-                    throw new Exception($@"Exit order quantity is incorrect for leg {i}. Expected {-expectedQuantity
-                        } but got {exitOrderTicket.Quantity}");
+                    throw new Exception($@"Exit order ticket quantity {exitOrderTicket.Quantity} or quantity filled {
+                        exitOrderTicket.QuantityFilled} does not match expected quantity {expectedQuantity
+                        } or expected filled quantity {-expectedFilledQuantity}");
                 }
             }
         }
