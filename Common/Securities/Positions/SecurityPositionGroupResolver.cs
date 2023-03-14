@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace QuantConnect.Securities.Positions
 {

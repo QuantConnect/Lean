@@ -16,7 +16,6 @@
 using System;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
-using static QuantConnect.StringExtensions;
 using QuantConnect.Algorithm.Framework.Portfolio;
 
 namespace QuantConnect.Securities
@@ -32,6 +31,7 @@ namespace QuantConnect.Securities
         public event EventHandler<SecurityHoldingQuantityChangedEventArgs> QuantityChanged;
 
         //Working Variables
+        private bool _invested;
         private decimal _averagePrice;
         private decimal _quantity;
         private decimal _price;
@@ -65,7 +65,7 @@ namespace QuantConnect.Securities
         {
             _security = holding._security;
             _averagePrice = holding._averagePrice;
-            _quantity = holding._quantity;
+            Quantity = holding._quantity;
             _price = holding._price;
             _totalSaleVolume = holding._totalSaleVolume;
             _profit = holding._profit;
@@ -121,6 +121,7 @@ namespace QuantConnect.Securities
             }
             protected set
             {
+                _invested = value != 0;
                 _quantity = value;
             }
         }
@@ -247,26 +248,14 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Boolean flat indicating if we hold any of the security
         /// </summary>
-        public virtual bool HoldStock
-        {
-            get
-            {
-                return Quantity != 0;
-            }
-        }
+        public virtual bool HoldStock => _invested;
 
         /// <summary>
         /// Boolean flat indicating if we hold any of the security
         /// </summary>
         /// <remarks>Alias of HoldStock</remarks>
         /// <seealso cref="HoldStock"/>
-        public virtual bool Invested
-        {
-            get
-            {
-                return HoldStock;
-            }
-        }
+        public virtual bool Invested => _invested;
 
         /// <summary>
         /// The total transaction volume for this security since the algorithm started in units of the account's currency.
@@ -442,7 +431,7 @@ namespace QuantConnect.Securities
             var previousQuantity = _quantity;
             var previousAveragePrice = _averagePrice;
 
-            _quantity = quantity;
+            Quantity = quantity;
             _averagePrice = averagePrice;
 
             OnQuantityChanged(previousAveragePrice, previousQuantity);

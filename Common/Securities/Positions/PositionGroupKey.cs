@@ -16,7 +16,6 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 
 namespace QuantConnect.Securities.Positions
 {
@@ -60,11 +59,22 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         /// <param name="buyingPowerModel">The group's buying power model</param>
         /// <param name="positions">The positions comprising the group</param>
-        public PositionGroupKey(IPositionGroupBuyingPowerModel buyingPowerModel, IEnumerable<IPosition> positions)
+        public PositionGroupKey(IPositionGroupBuyingPowerModel buyingPowerModel, IReadOnlyCollection<IPosition> positions)
         {
             BuyingPowerModel = buyingPowerModel;
-            // these have to be sorted for determinism
-            UnitQuantities = positions.Select(p => Tuple.Create(p.Symbol, p.UnitQuantity)).ToImmutableSortedSet();
+            if(positions.Count == 1)
+            {
+                var position = positions.First();
+                UnitQuantities = new[]
+                {
+                    Tuple.Create(position.Symbol, position.UnitQuantity)
+                };
+            }
+            else
+            {
+                // these have to be sorted for determinism
+                UnitQuantities = positions.OrderBy(x => x.Symbol).Select(p => Tuple.Create(p.Symbol, p.UnitQuantity)).ToList();
+            }
             IsDefaultGroup = UnitQuantities.Count == 1 && BuyingPowerModel.GetType() == typeof(SecurityPositionGroupBuyingPowerModel);
         }
 

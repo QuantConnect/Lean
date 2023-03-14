@@ -14,11 +14,10 @@
 */
 
 using System;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
+using System.Collections;
 using QuantConnect.Interfaces;
+using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -27,17 +26,37 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// </summary>
     public class PortfolioTargetCollection : ICollection<IPortfolioTarget>, IDictionary<Symbol, IPortfolioTarget>
     {
-        private readonly ConcurrentDictionary<Symbol, IPortfolioTarget> _targets = new ConcurrentDictionary<Symbol, IPortfolioTarget>();
+        private List<IPortfolioTarget> _enumerable;
+        private List<KeyValuePair<Symbol, IPortfolioTarget>> _kvpEnumerable;
+        private readonly Dictionary<Symbol, IPortfolioTarget> _targets = new ();
 
         /// <summary>
         /// Gets the number of targets in this collection
         /// </summary>
-        public int Count => _targets.Skip(0).Count();
+        public int Count
+        {
+            get
+            {
+                lock (_targets)
+                {
+                    return _targets.Count;
+                }
+            }
+        }
 
         /// <summary>
         /// True if there is no target in the collection
         /// </summary>
-        public bool IsEmpty => _targets.IsEmpty;
+        public bool IsEmpty
+        {
+            get
+            {
+                lock (_targets)
+                {
+                    return _targets.Count == 0;
+                }
+            }
+        }
 
         /// <summary>
         /// Gets `false`. This collection is not read-only.
@@ -47,13 +66,36 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// Gets the symbol keys for this collection
         /// </summary>
-        public ICollection<Symbol> Keys => _targets.Keys;
+        public ICollection<Symbol> Keys
+        {
+            get
+            {
+                lock (_targets)
+                {
+                    return _targets.Keys.ToList();
+                }
+            }
+        }
 
         /// <summary>
         /// Gets all portfolio targets in this collection
         /// Careful, will return targets for securities that might have no data yet.
         /// </summary>
-        public ICollection<IPortfolioTarget> Values => _targets.Values;
+        public ICollection<IPortfolioTarget> Values
+        {
+            get
+            {
+                var result = _enumerable;
+                if (result == null)
+                {
+                    lock (_targets)
+                    {
+                        result = _enumerable = _targets.Values.ToList();
+                    }
+                }
+                return result;
+            }
+        }
 
         /// <summary>
         /// Adds the specified target to the collection. If a target for the same symbol
@@ -67,7 +109,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 return;
             }
 
-            _targets[target.Symbol] = target;
+            lock (_targets)
+            {
+                _enumerable = null;
+                _kvpEnumerable = null;
+                _targets[target.Symbol] = target;
+            }
         }
 
         /// <summary>
@@ -77,7 +124,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="target">The portfolio target to add</param>
         public void Add(KeyValuePair<Symbol, IPortfolioTarget> target)
         {
-            WithDictionary(d => d.Add(target));
+            Add(target);
         }
 
         /// <summary>
@@ -88,7 +135,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="target">The portfolio target to add</param>
         public void Add(Symbol symbol, IPortfolioTarget target)
         {
-            WithDictionary(d => d.Add(symbol, target));
+            Add(target);
         }
 
         /// <summary>
@@ -98,9 +145,14 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="targets">The portfolio targets to add</param>
         public void AddRange(IEnumerable<IPortfolioTarget> targets)
         {
-            foreach (var item in targets)
+            lock (_targets)
             {
-                _targets[item.Symbol] = item;
+                _enumerable = null;
+                _kvpEnumerable = null;
+                foreach (var item in targets)
+                {
+                    _targets[item.Symbol] = item;
+                }
             }
         }
 
@@ -111,10 +163,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="targets">The portfolio targets to add</param>
         public void AddRange(IPortfolioTarget[] targets)
         {
-            foreach (var item in targets)
-            {
-                _targets[item.Symbol] = item;
-            }
+            AddRange((IEnumerable<IPortfolioTarget>)targets);
         }
 
         /// <summary>
@@ -122,7 +171,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         public void Clear()
         {
-            _targets.Clear();
+            lock (_targets)
+            {
+                _enumerable = null;
+                _kvpEnumerable = null;
+                _targets.Clear();
+            }
         }
 
         /// <summary>
@@ -131,14 +185,14 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         public void ClearFulfilled(IAlgorithm algorithm)
         {
-            foreach (var target in _targets)
+            foreach (var target in this)
             {
-                var security = algorithm.Securities[target.Key];
+                var security = algorithm.Securities[target.Symbol];
                 var holdings = security.Holdings.Quantity;
                 // check to see if we're done with this target
-                if (Math.Abs(target.Value.Quantity - holdings) < security.SymbolProperties.LotSize)
+                if (Math.Abs(target.Quantity - holdings) < security.SymbolProperties.LotSize)
                 {
-                    Remove(target.Key);
+                    Remove(target.Symbol);
                 }
             }
         }
@@ -157,7 +211,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 return false;
             }
 
-            return _targets.ContainsKey(target.Symbol);
+            lock (_targets)
+            {
+                return _targets.ContainsKey(target.Symbol);
+            }
         }
 
         /// <summary>
@@ -167,7 +224,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>True if the pair exists, false otherwise</returns>
         public bool Contains(KeyValuePair<Symbol, IPortfolioTarget> target)
         {
-            return WithDictionary(d => d.Contains(target));
+            return Contains(target);
         }
 
         /// <summary>
@@ -177,7 +234,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>True if the symbol exists in this collection, false otherwise</returns>
         public bool ContainsKey(Symbol symbol)
         {
-            return _targets.ContainsKey(symbol);
+            lock (_targets)
+            {
+                return _targets.ContainsKey(symbol);
+            }
         }
 
         /// <summary>
@@ -187,7 +247,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="arrayIndex">The index in the array to start copying to</param>
         public void CopyTo(IPortfolioTarget[] array, int arrayIndex)
         {
-            _targets.Values.CopyTo(array, arrayIndex);
+            lock (_targets)
+            {
+                _targets.Values.CopyTo(array, arrayIndex);
+            }
         }
 
         /// <summary>
@@ -207,7 +270,16 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>True if the symbol's target was removed, false if it doesn't exist in the collection</returns>
         public bool Remove(Symbol symbol)
         {
-            return WithDictionary(d => d.Remove(symbol));
+            lock (_targets)
+            {
+                if (_targets.Remove(symbol))
+                {
+                    _enumerable = null;
+                    _kvpEnumerable = null;
+                    return true;
+                }
+                return false;
+            }
         }
 
         /// <summary>
@@ -217,7 +289,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>True if the symbol's target was removed, false if it doesn't exist in the collection</returns>
         public bool Remove(KeyValuePair<Symbol, IPortfolioTarget> target)
         {
-            return WithDictionary(d => d.Remove(target));
+            return Remove(target.Value);
         }
 
         /// <summary>
@@ -232,13 +304,16 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 return false;
             }
 
-            IPortfolioTarget existing;
-            if (_targets.TryGetValue(target.Symbol, out existing))
+            lock (_targets)
             {
-                // need to confirm that we're removing the requested target and not a different target w/ the same symbol key
-                if (existing.Equals(target))
+                IPortfolioTarget existing;
+                if (_targets.TryGetValue(target.Symbol, out existing))
                 {
-                    return Remove(target.Symbol);
+                    // need to confirm that we're removing the requested target and not a different target w/ the same symbol key
+                    if (existing.Equals(target))
+                    {
+                        return Remove(target.Symbol);
+                    }
                 }
             }
 
@@ -253,7 +328,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>True if the symbol's target was found, false if it does not exist in this collection</returns>
         public bool TryGetValue(Symbol symbol, out IPortfolioTarget target)
         {
-            return _targets.TryGetValue(symbol, out target);
+            lock (_targets)
+            {
+                return _targets.TryGetValue(symbol, out target);
+            }
         }
 
         /// <summary>
@@ -263,8 +341,22 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>The symbol's portfolio target if it exists in this collection, if not a <see cref="KeyNotFoundException"/> will be thrown.</returns>
         public IPortfolioTarget this[Symbol symbol]
         {
-            get { return _targets[symbol]; }
-            set { _targets[symbol] = value; }
+            get
+            {
+                lock (_targets)
+                {
+                    return _targets[symbol];
+                }
+            }
+            set
+            {
+                lock (_targets)
+                {
+                    _enumerable = null;
+                    _kvpEnumerable = null;
+                    _targets[symbol] = value;
+                }
+            }
         }
 
         /// <summary>
@@ -273,7 +365,15 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>Symbol/target key value pair enumerator</returns>
         IEnumerator<KeyValuePair<Symbol, IPortfolioTarget>> IEnumerable<KeyValuePair<Symbol, IPortfolioTarget>>.GetEnumerator()
         {
-            return _targets.GetEnumerator();
+            var result = _kvpEnumerable;
+            if (result == null)
+            {
+                lock (_targets)
+                {
+                    _kvpEnumerable = result = _targets.ToList();
+                }
+            }
+            return result.GetEnumerator();
         }
 
         /// <summary>
@@ -283,7 +383,15 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>Portfolio targets enumerator</returns>
         public IEnumerator<IPortfolioTarget> GetEnumerator()
         {
-            return _targets.Select(kvp => kvp.Value).GetEnumerator();
+            var result = _enumerable;
+            if (result == null)
+            {
+                lock (_targets)
+                {
+                    _enumerable = result = _targets.Values.ToList();
+                }
+            }
+            return result.GetEnumerator();
         }
 
         /// <summary>
@@ -302,15 +410,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         private void WithDictionary(Action<IDictionary<Symbol, IPortfolioTarget>> action)
         {
-            action(_targets);
-        }
-
-        /// <summary>
-        /// Helper function to easily access explicitly implemented interface methods against concurrent dictionary
-        /// </summary>
-        private T WithDictionary<T>(Func<IDictionary<Symbol, IPortfolioTarget>, T> func)
-        {
-            return func(_targets);
+            lock (_targets)
+            {
+                action(_targets);
+            }
         }
 
         /// <summary>

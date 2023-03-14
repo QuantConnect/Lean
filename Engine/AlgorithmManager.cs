@@ -274,9 +274,9 @@ namespace QuantConnect.Lean.Engine
                 //Update the securities properties with any universe data
                 if (timeSlice.UniverseData.Count > 0)
                 {
-                    foreach (var kvp in timeSlice.UniverseData)
+                    foreach (var dataCollection in timeSlice.UniverseData.Values)
                     {
-                        foreach (var data in kvp.Value.Data)
+                        foreach (var data in dataCollection.Data)
                         {
                             Security security;
                             if (algorithm.Securities.TryGetValue(data.Symbol, out security))
@@ -694,9 +694,8 @@ namespace QuantConnect.Lean.Engine
         {
             Log.Trace("ProcessVolatilityHistoryRequirements(): Updating volatility models with historical data...");
 
-            foreach (var kvp in algorithm.Securities)
+            foreach (var security in algorithm.Securities.Values)
             {
-                var security = kvp.Value;
                 security.VolatilityModel.WarmUp(algorithm.HistoryProvider, algorithm.SubscriptionManager, security, algorithm.UtcTime,
                     algorithm.TimeZone, liveMode);
             }
@@ -908,17 +907,17 @@ namespace QuantConnect.Lean.Engine
                 if (security.LocalTime < latestMarketOnCloseTimeRoundedDownByResolution) continue;
 
                 // fetch all option derivatives of the underlying with holdings (excluding the canonical security)
-                var derivatives = algorithm.Securities.Where(kvp => kvp.Key.HasUnderlying &&
-                    kvp.Key.SecurityType.IsOption() &&
-                    kvp.Key.Underlying == security.Symbol &&
-                    !kvp.Key.Underlying.IsCanonical() &&
-                    kvp.Value.HoldStock
+                var derivatives = algorithm.Securities.Values.Where(potentialDerivate =>
+                    potentialDerivate.Symbol.SecurityType.IsOption() &&
+                    potentialDerivate.Symbol.Underlying == security.Symbol &&
+                    !potentialDerivate.Symbol.Underlying.IsCanonical() &&
+                    potentialDerivate.HoldStock
                 );
 
-                foreach (var kvp in derivatives)
+                foreach (var derivative in derivatives)
                 {
-                    var optionContractSymbol = kvp.Key;
-                    var optionContractSecurity = (Option)kvp.Value;
+                    var optionContractSymbol = derivative.Symbol;
+                    var optionContractSecurity = (Option)derivative;
 
                     if (pendingDelistings.Any(x => x.Symbol == optionContractSymbol
                         && x.Time.Date == optionContractSecurity.LocalTime.Date))
