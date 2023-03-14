@@ -246,7 +246,7 @@ namespace QuantConnect.Orders
             OrderId = order.Id;
             Symbol = order.Symbol;
             Status = order.Status;
-            Direction = order.ComboDirection;
+            Direction = order.GroupDirection;
 
             //Initialize to zero, manually set fill quantity
             FillQuantity = 0;

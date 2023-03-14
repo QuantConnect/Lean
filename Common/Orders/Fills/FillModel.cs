@@ -127,7 +127,7 @@ namespace QuantConnect.Orders.Fills
             {
                 var targetOrder = kvp.Key;
                 var security = kvp.Value;
-                var fill = InternalMarketFill(security, targetOrder, targetOrder.ComboQuantity);
+                var fill = InternalMarketFill(security, targetOrder, targetOrder.GroupQuantity);
                 if (fill.Status != OrderStatus.Filled)
                 {
                     return new List<OrderEvent>();
@@ -153,7 +153,7 @@ namespace QuantConnect.Orders.Fills
             {
                 var targetOrder = kvp.Key;
                 var security = kvp.Value;
-                var prices = GetPricesCheckingPythonWrapper(security, targetOrder.ComboDirection);
+                var prices = GetPricesCheckingPythonWrapper(security, targetOrder.GroupDirection);
 
                 if (prices.EndTime.ConvertToUtc(security.Exchange.TimeZone) < targetOrder.Time)
                 {
@@ -238,7 +238,7 @@ namespace QuantConnect.Orders.Fills
                 var security = kvp.Value;
 
                 var fill = InternalLimitFill(security, targetOrder, (targetOrder as ComboLegLimitOrder).LimitPrice,
-                    targetOrder.ComboQuantity);
+                    targetOrder.GroupQuantity);
 
                 if (fill.Status != OrderStatus.Filled)
                 {
@@ -277,7 +277,7 @@ namespace QuantConnect.Orders.Fills
             // make sure the exchange is open/normal market hours before filling
             if (!IsExchangeOpen(asset, false)) return fill;
 
-            var orderDirection = order.ComboDirection;
+            var orderDirection = order.GroupDirection;
             var prices = GetPricesCheckingPythonWrapper(asset, orderDirection);
             var pricesEndTimeUtc = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
 
@@ -584,7 +584,7 @@ namespace QuantConnect.Orders.Fills
                 return fill;
             }
             //Get the range of prices in the last bar:
-            var orderDirection = order.ComboDirection;
+            var orderDirection = order.GroupDirection;
             var prices = GetPricesCheckingPythonWrapper(asset, orderDirection);
             var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
 

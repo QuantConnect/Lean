@@ -107,7 +107,8 @@ namespace QuantConnect.Orders
         /// Get the full quantity for this order request.
         /// If it is a part of a combo order, this will be the quantity multiplied by the combo order's quantity
         /// </summary>
-        public decimal ComboQuantity => Quantity * (GroupOrderManager?.Quantity ?? 1);
+        /// <remarks>This is needed in order to determine the actual quantity to be filled for each leg of a group/combo order</remarks>
+        public decimal GroupQuantity => Quantity * (GroupOrderManager?.Quantity ?? 1);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SubmitOrderRequest"/> class.
