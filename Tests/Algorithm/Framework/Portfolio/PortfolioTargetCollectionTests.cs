@@ -114,6 +114,20 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         }
 
         [Test]
+        public void RemoveTargetRespectsReference()
+        {
+            var symbol = new Symbol(SecurityIdentifier.GenerateBase(null, _symbol, Market.USA), _symbol);
+            var collection = new PortfolioTargetCollection();
+            var target = new PortfolioTarget(symbol, 1);
+            collection.Add(target);
+            Assert.AreEqual(collection.Count, 1);
+            Assert.IsTrue(collection.Contains(target));
+            // removes by reference even if same symbol
+            Assert.IsFalse(collection.Remove(new PortfolioTarget(symbol, 1)));
+            Assert.AreEqual(collection.Count, 1);
+        }
+
+        [Test]
         public void AddContainsAndRemoveWork()
         {
             var symbol = new Symbol(SecurityIdentifier.GenerateBase(null, _symbol, Market.USA), _symbol);
