@@ -42,6 +42,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             SubscriptionRequest request,
             IEnumerator<BaseData> enumerator)
         {
+            if (enumerator == null)
+            {
+                return GetEndedSubscription(request);
+            }
             var exchangeHours = request.Security.Exchange.Hours;
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Configuration.ExchangeTimeZone, request.StartTimeUtc, request.EndTimeUtc);
             var dataEnumerator = new SubscriptionDataEnumerator(
@@ -69,6 +73,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IFactorFileProvider factorFileProvider,
             bool enablePriceScale)
         {
+            if(enumerator == null)
+            {
+                return GetEndedSubscription(request);
+            }
             var exchangeHours = request.Security.Exchange.Hours;
             var enqueueable = new EnqueueableEnumerator<SubscriptionData>(true);
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Configuration.ExchangeTimeZone, request.StartTimeUtc, request.EndTimeUtc);
@@ -165,6 +173,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             );
 
             return subscription;
+        }
+
+        /// <summary>
+        /// Return an ended subscription so it doesn't blow up at runtime on the data worker, this can happen if there's no tradable date
+        /// </summary>
+        private static Subscription GetEndedSubscription(SubscriptionRequest request)
+        {
+            var result = new Subscription(request, null, null);
+            // set subscription as ended
+            result.Dispose();
+            return result;
         }
     }
 }

@@ -135,6 +135,42 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         throw new NotImplementedException("The specified action is not implemented: " + args.Action);
                 }
             };
+
+            DataFeedSubscriptions = new SubscriptionCollection();
+            if (!_liveMode)
+            {
+                DataFeedSubscriptions.FillForwardResolutionChanged += (object sender, FillForwardResolutionChangedEvent changedEvent) =>
+                {
+                    var requests = DataFeedSubscriptions
+                        // we don't fill forward tick resolution so we don't need to touch their subscriptions
+                        .Where(subscription => subscription.Configuration.FillDataForward && subscription.Configuration.Resolution != Resolution.Tick)
+                        .SelectMany(subscription => subscription.SubscriptionRequests)
+                        .ToList();
+
+                    if(requests.Count > 0)
+                    {
+                        Log.Trace($"DataManager(): Fill forward resolution has changed from {changedEvent.Old} to {changedEvent.New} at utc: {algorithm.UtcTime}. " +
+                            $"Restarting {requests.Count} subscriptions...");
+
+                        // disable reentry while we remove and re add
+                        DataFeedSubscriptions.FreezeFillForwardResolution(true);
+
+                        // remove
+                        foreach (var request in requests)
+                        {
+                            RemoveSubscription(request.Configuration, request.Universe);
+                        }
+
+                        // re add
+                        foreach (var request in requests)
+                        {
+                            AddSubscription(new SubscriptionRequest(request, startTimeUtc: algorithm.UtcTime));
+                        }
+
+                        DataFeedSubscriptions.FreezeFillForwardResolution(false);
+                    }
+                };
+            }
         }
 
         #region IDataFeedSubscriptionManager
@@ -142,7 +178,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Gets the data feed subscription collection
         /// </summary>
-        public SubscriptionCollection DataFeedSubscriptions { get; } = new SubscriptionCollection();
+        public SubscriptionCollection DataFeedSubscriptions { get; }
 
         /// <summary>
         /// Will remove all current <see cref="Subscription"/>
