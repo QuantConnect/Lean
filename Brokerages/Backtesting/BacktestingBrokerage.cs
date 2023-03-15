@@ -348,7 +348,8 @@ namespace QuantConnect.Brokerages.Backtesting
                                     order,
                                     Algorithm.SubscriptionManager.SubscriptionDataConfigService,
                                     Algorithm.Settings.StalePriceTimeSpan,
-                                    securities);
+                                    securities,
+                                    Algorithm.Settings.FillOnStalePrices);
 
                                 // check if the fill should be emitted
                                 var fill = model.Fill(context);

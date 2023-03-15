@@ -96,6 +96,17 @@ namespace QuantConnect
         public TimeSpan StalePriceTimeSpan { get; set; }
 
         /// <summary>
+        /// Gets/sets if orders can fill on stale prices
+        /// </summary>
+        /// <remarks>
+        /// By default, the fill models handle stale prices for all order types, except the market fill,
+        /// since market orders don't depend on the price. Therefore this property defaults to true.
+        /// This property allows users to modify this assumption and force the algorithm to wait for the
+        /// first market data after the market order is placed.
+        /// </remarks>
+        public bool FillOnStalePrices { get; set; }
+
+        /// <summary>
         /// The warmup resolution to use if any
         /// </summary>
         /// <remarks>This allows improving the warmup speed by setting it to a lower resolution than the one added in the algorithm</remarks>
@@ -131,6 +142,7 @@ namespace QuantConnect
             StalePriceTimeSpan = Time.OneHour;
             MaxAbsolutePortfolioTargetPercentage = 1000000000;
             MinAbsolutePortfolioTargetPercentage = 0.0000000001m;
+            FillOnStalePrices = true;
         }
     }
 }

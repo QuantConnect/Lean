@@ -88,6 +88,11 @@ namespace QuantConnect.Interfaces
         TimeSpan StalePriceTimeSpan { get; set; }
 
         /// <summary>
+        /// Gets/sets if orders can fill on stale prices
+        /// </summary>
+        bool FillOnStalePrices { get; set; }
+
+        /// <summary>
         /// The warmup resolution to use if any
         /// </summary>
         /// <remarks>This allows improving the warmup speed by setting it to a lower resolution than the one added in the algorithm</remarks>

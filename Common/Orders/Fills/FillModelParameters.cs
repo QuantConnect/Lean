@@ -53,6 +53,11 @@ namespace QuantConnect.Orders.Fills
         public Dictionary<Order, Security> SecuritiesForOrders { get; }
 
         /// <summary>
+        /// Allow orders to fill on stale prices
+        /// </summary>
+        public bool FillOnStalePrices { get; }
+
+        /// <summary>
         /// Creates a new instance
         /// </summary>
         /// <param name="security">Security asset we're filling</param>
@@ -60,18 +65,21 @@ namespace QuantConnect.Orders.Fills
         /// <param name="configProvider">The <see cref="ISubscriptionDataConfigProvider"/> to use</param>
         /// <param name="stalePriceTimeSpan">The minimum time span elapsed to consider a fill price as stale</param>
         /// <param name="securitiesForOrders">Collection of securities for each order</param>
+        /// <param name="fillOnStalePrices">Allow order to fill on stale prices</param>
         public FillModelParameters(
             Security security,
             Order order,
             ISubscriptionDataConfigProvider configProvider,
             TimeSpan stalePriceTimeSpan,
-            Dictionary<Order, Security> securitiesForOrders)
+            Dictionary<Order, Security> securitiesForOrders,
+            bool fillOnStalePrices = true)
         {
             Security = security;
             Order = order;
             ConfigProvider = configProvider;
             StalePriceTimeSpan = stalePriceTimeSpan;
             SecuritiesForOrders = securitiesForOrders;
+            FillOnStalePrices = fillOnStalePrices;
         }
     }
 }
