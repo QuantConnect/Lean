@@ -201,6 +201,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
             if (RequiresFillForwardData(_fillForwardResolution.Value, _previous, underlyingCurrent, out fillForward))
             {
+                if (_previous.EndTime >= _subscriptionEndTime)
+                {
+                    // we passed the end of subscription, we're finished
+                    return false;
+                }
                 // we require fill forward data because the _enumerator.Current is too far in future
                 _isFillingForward = true;
                 Current = fillForward;
