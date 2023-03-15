@@ -392,6 +392,20 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         public override void Exit()
         {
+            if (!ExitTriggered && Algorithm != null)
+            {
+                var holdings = Algorithm.Portfolio.Values.Where(holding => holding.Invested).Select(holding => $"HOLDINGS:: {holding}").ToList();
+                if(holdings.Count > 0)
+                {
+                    Log.Trace($"{Environment.NewLine}{string.Join(Environment.NewLine, holdings)}");
+                }
+                else
+                {
+                    Log.Trace("HOLDINGS:: none");
+                }
+                Log.Trace($"{Environment.NewLine}{Algorithm.Portfolio.CashBook}");
+            }
+
             base.Exit();
             lock (_sync)
             {
