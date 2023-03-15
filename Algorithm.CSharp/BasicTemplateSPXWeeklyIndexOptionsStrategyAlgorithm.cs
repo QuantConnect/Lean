@@ -109,7 +109,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 35811;
+        public virtual long DataPoints => 35451;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -122,29 +122,29 @@ namespace QuantConnect.Algorithm.CSharp
         public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "4"},
-            {"Average Win", "0.46%"},
+            {"Average Win", "0.12%"},
             {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "41.434%"},
+            {"Compounding Annual Return", "8.975%"},
             {"Drawdown", "0.100%"},
-            {"Expectancy", "115.281"},
-            {"Net Profit", "0.445%"},
+            {"Expectancy", "62.078"},
+            {"Net Profit", "0.110%"},
             {"Sharpe Ratio", "-7.925"},
             {"Probabilistic Sharpe Ratio", "1.216%"},
             {"Loss Rate", "50%"},
             {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "231.56"},
+            {"Profit-Loss Ratio", "125.16"},
             {"Alpha", "-0.012"},
             {"Beta", "0.001"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-103.222"},
+            {"Information Ratio", "-103.223"},
             {"Tracking Error", "0.069"},
             {"Treynor Ratio", "-2.449"},
             {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$4100000.00"},
+            {"Estimated Strategy Capacity", "$1800000.00"},
             {"Lowest Capacity Asset", "SPXW XKX6S2GM9PGU|SPX 31"},
-            {"Portfolio Turnover", "0.09%"},
-            {"OrderListHash", "4adb43a8298b9192e0f45d2ef1e5d370"}
+            {"Portfolio Turnover", "0.03%"},
+            {"OrderListHash", "38db27781e4df93687d0895df9796c7d"}
         };
     }
 }
