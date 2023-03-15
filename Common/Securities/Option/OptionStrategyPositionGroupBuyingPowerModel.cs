@@ -47,7 +47,12 @@ namespace QuantConnect.Securities.Option
         /// <returns>The maintenance margin required for the </returns>
         public override MaintenanceMargin GetMaintenanceMargin(PositionGroupMaintenanceMarginParameters parameters)
         {
-            if (_optionStrategy.Name == OptionStrategyDefinitions.CoveredCall.Name)
+            if (_optionStrategy == null)
+            {
+                // we could be liquidating a position
+                return new MaintenanceMargin(0);
+            }
+            else if(_optionStrategy.Name == OptionStrategyDefinitions.CoveredCall.Name)
             {
                 // MAX[In-the-money amount + Margin(long stock evaluated at min(mark price, strike(short call))), min(stock value, max(call value, long stock margin))]
                 var optionPosition = parameters.PositionGroup.Positions.FirstOrDefault(position => position.Symbol.SecurityType.IsOption());

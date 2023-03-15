@@ -112,14 +112,6 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            Debug(Portfolio.CashBook.ToString());
-            Debug(Portfolio.UnsettledCashBook.ToString());
-
-            foreach (var security in Securities.Values)
-            {
-                Debug(security.Holdings.ToString());
-            }
-
             if (Portfolio.Invested)
             {
                 throw new Exception("Portfolio should not be invested at the end of the algorithm.");
