@@ -142,7 +142,21 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Order Direction Property based off Quantity.
         /// </summary>
-        public OrderDirection Direction => GetOrderDirection(Quantity);
+        public OrderDirection Direction
+        {
+            get
+            {
+                if (Quantity > 0)
+                {
+                    return OrderDirection.Buy;
+                }
+                if (Quantity < 0)
+                {
+                    return OrderDirection.Sell;
+                }
+                return OrderDirection.Hold;
+            }
+        }
 
         /// <summary>
         /// Get the absolute quantity for this order
@@ -155,24 +169,6 @@ namespace QuantConnect.Orders
         /// then this will return zero.
         /// </summary>
         public decimal Value => Quantity * Price;
-
-        /// <summary>
-        /// Get the full quantity for this order.
-        /// If it is a part of a combo order, this will be the quantity multiplied by the combo order's quantity
-        /// </summary>
-        /// <remarks>This is needed in order to determine the actual quantity to be filled for each leg of a group/combo order</remarks>
-        [JsonIgnore]
-        public decimal GroupQuantity => Quantity * (GroupOrderManager?.Quantity ?? 1);
-
-        /// <summary>
-        /// Order Direction Property based off the ComboQuantity.
-        /// </summary>
-        /// <remarks>
-        /// This is needed in order to determine the actual direction of a group/combo order leg,
-        /// like when checking the limit price threshold for a combo leg limit order
-        /// </remarks>
-        [JsonIgnore]
-        public OrderDirection GroupDirection => GetOrderDirection(GroupQuantity);
 
         /// <summary>
         /// Gets the price data at the time the order was submitted
@@ -234,7 +230,7 @@ namespace QuantConnect.Orders
         {
             Time = time;
             PriceCurrency = string.Empty;
-            Quantity = quantity;
+            Quantity = quantity.GetComboOrderLegGroupQuantity(groupOrderManager);
             Symbol = symbol;
             Status = OrderStatus.None;
             Tag = tag;
@@ -267,7 +263,7 @@ namespace QuantConnect.Orders
         public virtual IEnumerable<IPosition> CreatePositions(SecurityManager securities)
         {
             var security = securities[Symbol];
-            yield return new Position(security, Quantity);
+            yield return new Position(security, Quantity.GetComboOrderLegRatio(GroupOrderManager));
         }
 
         /// <summary>
@@ -430,8 +426,9 @@ namespace QuantConnect.Orders
         /// <returns>The <see cref="Order"/> that matches the request</returns>
         public static Order CreateOrder(SubmitOrderRequest request)
         {
-            return CreateOrder(request.OrderId, request.OrderType, request.Symbol, request.Quantity, request.Time,
-                request.Tag, request.OrderProperties, request.LimitPrice, request.StopPrice, request.TriggerPrice, request.GroupOrderManager);
+            return CreateOrder(request.OrderId, request.OrderType, request.Symbol,
+                request.Quantity.GetComboOrderLegRatio(request.GroupOrderManager), request.Time, request.Tag, request.OrderProperties,
+                request.LimitPrice, request.StopPrice, request.TriggerPrice, request.GroupOrderManager);
         }
 
         private static Order CreateOrder(int orderId, OrderType type, Symbol symbol, decimal quantity, DateTime time,
@@ -497,22 +494,6 @@ namespace QuantConnect.Orders
                 }
             }
             return order;
-        }
-
-        /// <summary>
-        /// Gets an order direction based on the order quantity
-        /// </summary>
-        private static OrderDirection GetOrderDirection(decimal quantity)
-        {
-            if (quantity > 0)
-            {
-                return OrderDirection.Buy;
-            }
-            if (quantity < 0)
-            {
-                return OrderDirection.Sell;
-            }
-            return OrderDirection.Hold;
         }
     }
 }

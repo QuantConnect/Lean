@@ -52,15 +52,7 @@ namespace QuantConnect.Orders
             : base(symbol, quantity, limitPrice, time, tag, properties)
         {
             GroupOrderManager = groupOrderManager;
-        }
-
-        /// <summary>
-        /// Gets the order value in units of the security's quote currency
-        /// </summary>
-        /// <param name="security">The security matching this order's symbol</param>
-        protected override decimal GetValueImpl(Security security)
-        {
-            return base.GetValueImpl(security) * GroupOrderManager.Quantity;
+            Quantity = quantity.GetComboOrderLegGroupQuantity(GroupOrderManager);
         }
 
         /// <summary>

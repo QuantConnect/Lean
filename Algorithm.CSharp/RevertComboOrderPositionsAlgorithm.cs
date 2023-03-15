@@ -95,19 +95,17 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (orderEvent.Status == OrderStatus.Filled)
             {
-                var expectedQuantity = _orderLegs.Where(leg => leg.Symbol == orderEvent.Symbol).Single().Quantity;
+                // The multiplier depends on whether this order belongs either to the entry or exit combo order
+                var multiplier = _exitOrderTickets.Count > 0 ? -1 : 1;
+                var expectedQuantity = multiplier * _comboQuantity * _orderLegs.Where(leg => leg.Symbol == orderEvent.Symbol).Single().Quantity;
                 if (orderEvent.Quantity != expectedQuantity)
                 {
                     throw new Exception($"Order event quantity {orderEvent.Quantity} does not match expected quantity {expectedQuantity}");
                 }
-
-                // The multiplier depends on whether this order belongs either to the entry or exit combo order
-                var multiplier = _exitOrderTickets.Count > 0 ? -1 : 1;
-                var expectedFillQuantity = multiplier * expectedQuantity * _comboQuantity;
-                if (orderEvent.FillQuantity != expectedFillQuantity)
+                if (orderEvent.FillQuantity != expectedQuantity)
                 {
                     throw new Exception(
-                        $"Order event fill quantity {orderEvent.FillQuantity} does not match expected fill quantity {expectedFillQuantity}");
+                        $"Order event fill quantity {orderEvent.FillQuantity} does not match expected fill quantity {expectedQuantity}");
                 }
             }
         }
@@ -143,21 +141,20 @@ namespace QuantConnect.Algorithm.CSharp
                 var entryOrderTicket = _entryOrderTickets[i];
                 var exitOrderTicket = _exitOrderTickets[i];
 
-                var expectedQuantity = leg.Quantity;
-                var expectedFilledQuantity = leg.Quantity * _comboQuantity;
-
-                if (entryOrderTicket.Quantity != expectedQuantity || entryOrderTicket.QuantityFilled != expectedFilledQuantity)
+                var expectedEntryQuantity = leg.Quantity * _comboQuantity;
+                if (entryOrderTicket.Quantity != expectedEntryQuantity || entryOrderTicket.QuantityFilled != expectedEntryQuantity)
                 {
-                    throw new Exception($@"Entry order ticket quantity {entryOrderTicket.Quantity} or quantity filled {
-                        entryOrderTicket.QuantityFilled} does not match expected quantity {expectedQuantity
-                        } or expected filled quantity {expectedFilledQuantity}");
+                    throw new Exception($@"Entry order ticket quantity and filled quantity do not match expected quantity for leg {i
+                        }. Expected: {expectedEntryQuantity}. Actual quantity: {entryOrderTicket.Quantity}. Actual filled quantity: {
+                        entryOrderTicket.QuantityFilled}");
                 }
 
-                if (exitOrderTicket.Quantity != expectedQuantity || exitOrderTicket.QuantityFilled != -expectedFilledQuantity)
+                var expectedExitQuantity = -expectedEntryQuantity;
+                if (exitOrderTicket.Quantity != expectedExitQuantity || exitOrderTicket.QuantityFilled != expectedExitQuantity)
                 {
-                    throw new Exception($@"Exit order ticket quantity {exitOrderTicket.Quantity} or quantity filled {
-                        exitOrderTicket.QuantityFilled} does not match expected quantity {expectedQuantity
-                        } or expected filled quantity {-expectedFilledQuantity}");
+                    throw new Exception($@"Exit order ticket quantity and filled quantity do not match expected quantity for leg {i
+                        }. Expected: {expectedExitQuantity}. Actual quantity: {exitOrderTicket.Quantity}. Actual filled quantity: {
+                        exitOrderTicket.QuantityFilled}");
                 }
             }
         }
@@ -215,11 +212,11 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$15.00"},
+            {"Total Fees", "$150.00"},
             {"Estimated Strategy Capacity", "$16000.00"},
             {"Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "2081.24%"},
-            {"OrderListHash", "099957f57519c190497ffa6c339375e8"}
+            {"Portfolio Turnover", "2130.97%"},
+            {"OrderListHash", "29943b56bdfc412d0fb7272b5d6e8ad2"}
         };
     }
 }

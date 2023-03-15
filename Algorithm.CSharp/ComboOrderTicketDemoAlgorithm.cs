@@ -241,10 +241,10 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception("OrderEvent quantity is Not expected to be 0, it should hold the current order Quantity");
             }
-            // The order event should hold the individual leg quantity (ratio), not the total order quantity (combo quantity * leg ratio)
             if (orderEvent.Quantity != order.Quantity)
             {
-                throw new Exception("OrderEvent quantity should hold the current order Quantity");
+                throw new Exception($@"OrderEvent quantity should hold the current order Quantity. Got {orderEvent.Quantity
+                    }, expected {order.Quantity}");
             }
             if (order is ComboLegLimitOrder && orderEvent.LimitPrice == 0)
             {
@@ -289,9 +289,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             // 6 market, 6 limit, 6 leg limit.
             // Out of the 6 limit orders, 3 are expected to be canceled.
-            // Out of the 6 leg limit orders, 3 are expected to be canceled.
             var expectedOrdersCount = 18;
-            var expectedFillsCount = 12;
+            var expectedFillsCount = 15;
             if (filledOrders.Count != expectedFillsCount || orderTickets.Count != expectedOrdersCount)
             {
                 throw new Exception($"There were expected {expectedFillsCount} filled orders and {expectedOrdersCount} order tickets, but there were {filledOrders.Count} filled orders and {orderTickets.Count} order tickets");
@@ -300,10 +299,10 @@ namespace QuantConnect.Algorithm.CSharp
             var filledComboMarketOrders = filledOrders.Where(x => x.Type == OrderType.ComboMarket).ToList();
             var filledComboLimitOrders = filledOrders.Where(x => x.Type == OrderType.ComboLimit).ToList();
             var filledComboLegLimitOrders = filledOrders.Where(x => x.Type == OrderType.ComboLegLimit).ToList();
-            if (filledComboMarketOrders.Count != 6 || filledComboLimitOrders.Count != 3 || filledComboLegLimitOrders.Count != 3)
+            if (filledComboMarketOrders.Count != 6 || filledComboLimitOrders.Count != 3 || filledComboLegLimitOrders.Count != 6)
             {
                 throw new Exception(
-                    "There were expected 6 filled market orders, 3 filled combo limit orders and 3 filled combo leg limit orders, " +
+                    "There were expected 6 filled market orders, 3 filled combo limit orders and 6 filled combo leg limit orders, " +
                     $@"but there were {filledComboMarketOrders.Count} filled market orders, {filledComboLimitOrders.Count
                     } filled combo limit orders and {filledComboLegLimitOrders.Count} filled combo leg limit orders");
             }
@@ -344,7 +343,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "12"},
+            {"Total Trades", "15"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
@@ -363,11 +362,11 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$12.00"},
+            {"Total Fees", "$15.00"},
             {"Estimated Strategy Capacity", "$4000.00"},
             {"Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "47.16%"},
-            {"OrderListHash", "750313b38426341d00975c239e57fda4"}
+            {"Portfolio Turnover", "58.97%"},
+            {"OrderListHash", "19f6e25bdd15d3b0d0126e0019613eae"}
         };
     }
 }

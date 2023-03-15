@@ -100,5 +100,30 @@ namespace QuantConnect.Orders
         {
             return Messages.GroupOrderExtensions.InsufficientBuyingPowerForOrders(securities, hasSufficientBuyingPowerResult);
         }
+
+        /// <summary>
+        /// Gets the combo order leg group quantity, that is, the total number of shares to be bought/sold from this leg,
+        /// from its ratio and the group order quantity
+        /// </summary>
+        /// <param name="legRatio">The leg ratio</param>
+        /// <param name="groupOrderManager">The group order manager</param>
+        /// <returns>The total number of shares to be bought/sold from this leg</returns>
+        public static decimal GetComboOrderLegGroupQuantity(this decimal legRatio, GroupOrderManager groupOrderManager)
+        {
+            return groupOrderManager != null ? legRatio * groupOrderManager.Quantity : legRatio;
+        }
+
+        /// <summary>
+        /// Gets the combo order leg ratio from its group quantity and the group order quantity
+        /// </summary>
+        /// <param name="legGroupQuantity">
+        /// The total number of shares to be bought/sold from this leg, that is, the result of the let ratio times the group quantity
+        /// </param>
+        /// <param name="groupOrderManager">The group order manager</param>
+        /// <returns>The ratio of this combo order leg</returns>
+        public static decimal GetComboOrderLegRatio(this decimal legGroupQuantity, GroupOrderManager groupOrderManager)
+        {
+            return groupOrderManager != null ? legGroupQuantity / groupOrderManager.Quantity : legGroupQuantity;
+        }
     }
 }

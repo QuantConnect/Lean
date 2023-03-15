@@ -940,13 +940,13 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             var spyFillEvent = fill.First();
 
-            Assert.AreEqual(spyOrder.Quantity * groupOrderManager.Quantity, spyFillEvent.FillQuantity);
+            Assert.AreEqual(spyOrder.Quantity, spyFillEvent.FillQuantity);
             Assert.AreEqual(spy.Price, spyFillEvent.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, spyFillEvent.Status);
 
             var aaplFillEvent = fill.Last();
 
-            Assert.AreEqual(aaplOrder.Quantity * groupOrderManager.Quantity, aaplFillEvent.FillQuantity);
+            Assert.AreEqual(aaplOrder.Quantity, aaplFillEvent.FillQuantity);
             Assert.AreEqual(aapl.Price, aaplFillEvent.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, aaplFillEvent.Status);
         }
@@ -989,7 +989,9 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 { aaplLegOrder, aapl }
             };
 
-            var getLegsPrice = (Func<Security, decimal> priceSelector) => priceSelector(spy) * spyLegOrder.Quantity / 100 + priceSelector(aapl) * aaplLegOrder.Quantity / 100;
+            var getLegsPrice = (Func<Security, decimal> priceSelector) =>
+                priceSelector(spy) * spyLegOrder.Quantity.GetComboOrderLegRatio(groupOrderManager) / 100 +
+                priceSelector(aapl) * aaplLegOrder.Quantity.GetComboOrderLegRatio(groupOrderManager) / 100;
 
             // set limit prices that won't fill.
             // combo limit orders fill based on the total price that will be paid/received for the legs
@@ -1041,14 +1043,14 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             var spyFillEvent = fill.First();
 
-            Assert.AreEqual(spyLegOrder.Quantity * groupOrderManager.Quantity, spyFillEvent.FillQuantity);
+            Assert.AreEqual(spyLegOrder.Quantity, spyFillEvent.FillQuantity);
             var expectedSpyFillPrice = orderDirection == OrderDirection.Buy ? spy.Low : spy.High;
             Assert.AreEqual(expectedSpyFillPrice, spyFillEvent.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, spyFillEvent.Status);
 
             var aaplFillEvent = fill.Last();
 
-            Assert.AreEqual(aaplLegOrder.Quantity * groupOrderManager.Quantity, aaplFillEvent.FillQuantity);
+            Assert.AreEqual(aaplLegOrder.Quantity, aaplFillEvent.FillQuantity);
             var expectedAaplFillPrice = orderDirection == OrderDirection.Buy ? aapl.Low : aapl.High;
             Assert.AreEqual(expectedAaplFillPrice, aaplFillEvent.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, aaplFillEvent.Status);
@@ -1112,7 +1114,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             var spyFillEvent = fill.First();
 
-            Assert.AreEqual(spyOrder.Quantity * groupOrderManager.Quantity, spyFillEvent.FillQuantity);
+            Assert.AreEqual(spyOrder.Quantity, spyFillEvent.FillQuantity);
             var expectedSpyFillPrice = orderDirection == OrderDirection.Buy
                 ? Math.Min(spyOrder.LimitPrice, spy.High)
                 : Math.Max(spyOrder.LimitPrice, spy.Low);
@@ -1121,7 +1123,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             var aaplFillEvent = fill.Last();
 
-            Assert.AreEqual(aaplOrder.Quantity * groupOrderManager.Quantity, aaplFillEvent.FillQuantity);
+            Assert.AreEqual(aaplOrder.Quantity, aaplFillEvent.FillQuantity);
             var expectedAaplFillPrice = orderDirection == OrderDirection.Buy
                 ? Math.Min(aaplOrder.LimitPrice, aapl.High)
                 : Math.Max(aaplOrder.LimitPrice, aapl.Low);

@@ -127,7 +127,7 @@ namespace QuantConnect.Orders.Fills
             {
                 var targetOrder = kvp.Key;
                 var security = kvp.Value;
-                var fill = InternalMarketFill(security, targetOrder, targetOrder.GroupQuantity);
+                var fill = InternalMarketFill(security, targetOrder, targetOrder.Quantity);
                 if (fill.Status != OrderStatus.Filled)
                 {
                     return new List<OrderEvent>();
@@ -153,7 +153,7 @@ namespace QuantConnect.Orders.Fills
             {
                 var targetOrder = kvp.Key;
                 var security = kvp.Value;
-                var prices = GetPricesCheckingPythonWrapper(security, targetOrder.GroupDirection);
+                var prices = GetPricesCheckingPythonWrapper(security, targetOrder.Direction);
 
                 if (prices.EndTime.ConvertToUtc(security.Exchange.TimeZone) < targetOrder.Time)
                 {
@@ -190,7 +190,7 @@ namespace QuantConnect.Orders.Fills
                             fill.Status = OrderStatus.Filled;
                             fill.FillPrice = targetParameters.Prices.Low;
                             // assume the order completely filled
-                            fill.FillQuantity = targetParameters.Order.Quantity * targetParameters.Order.GroupOrderManager.Quantity;
+                            fill.FillQuantity = targetParameters.Order.Quantity;
 
                             fills.Add(fill);
                         }
@@ -211,7 +211,7 @@ namespace QuantConnect.Orders.Fills
                             fill.Status = OrderStatus.Filled;
                             fill.FillPrice = targetParameters.Prices.High;
                             // assume the order completely filled
-                            fill.FillQuantity = targetParameters.Order.Quantity * targetParameters.Order.GroupOrderManager.Quantity;
+                            fill.FillQuantity = targetParameters.Order.Quantity;
 
                             fills.Add(fill);
                         }
@@ -238,7 +238,7 @@ namespace QuantConnect.Orders.Fills
                 var security = kvp.Value;
 
                 var fill = InternalLimitFill(security, targetOrder, (targetOrder as ComboLegLimitOrder).LimitPrice,
-                    targetOrder.GroupQuantity);
+                    targetOrder.Quantity);
 
                 if (fill.Status != OrderStatus.Filled)
                 {
@@ -277,7 +277,7 @@ namespace QuantConnect.Orders.Fills
             // make sure the exchange is open/normal market hours before filling
             if (!IsExchangeOpen(asset, false)) return fill;
 
-            var orderDirection = order.GroupDirection;
+            var orderDirection = order.Direction;
             var prices = GetPricesCheckingPythonWrapper(asset, orderDirection);
             var pricesEndTimeUtc = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
 
@@ -584,7 +584,7 @@ namespace QuantConnect.Orders.Fills
                 return fill;
             }
             //Get the range of prices in the last bar:
-            var orderDirection = order.GroupDirection;
+            var orderDirection = order.Direction;
             var prices = GetPricesCheckingPythonWrapper(asset, orderDirection);
             var pricesEndTime = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
 
@@ -1013,7 +1013,8 @@ namespace QuantConnect.Orders.Fills
                     // we use the same, either low or high, for every leg depending on the combo direction
                     var price = Order.GroupOrderManager.Direction == OrderDirection.Buy ? Prices.Low : Prices.High;
 
-                    var quantity = Order.Quantity;
+                    // the limit price should be calculated using the ratios instead of the group quantities, like IB does
+                    var quantity = Order.Quantity.GetComboOrderLegRatio(Order.GroupOrderManager);
                     if (Security.Symbol.SecurityType == SecurityType.Equity)
                     {
                         quantity /= 100;

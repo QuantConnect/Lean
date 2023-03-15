@@ -50,6 +50,7 @@ namespace QuantConnect.Orders
             : base(symbol, quantity, time, tag, properties)
         {
             GroupOrderManager = groupOrderManager;
+            Quantity = quantity.GetComboOrderLegGroupQuantity(GroupOrderManager);
         }
 
         /// <summary>
@@ -58,7 +59,7 @@ namespace QuantConnect.Orders
         /// <param name="security">The security matching this order's symbol</param>
         protected override decimal GetValueImpl(Security security)
         {
-            return base.GetValueImpl(security) * GroupOrderManager.Quantity;
+            return base.GetValueImpl(security);
         }
 
         /// <summary>

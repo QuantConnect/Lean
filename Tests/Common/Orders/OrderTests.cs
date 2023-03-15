@@ -71,7 +71,7 @@ namespace QuantConnect.Tests.Common.Orders
             var order = new StopMarketOrder(Symbols.SPY, 1m, 123.4567m, DateTime.Today, tag);
             Assert.AreEqual(Invariant($"Stop Price: {order.StopPrice:C}"), order.Tag);
         }
-        
+
         [Test]
         [TestCase(null)]
         [TestCase("")]
@@ -79,6 +79,30 @@ namespace QuantConnect.Tests.Common.Orders
         {
             var order = new LimitIfTouchedOrder(Symbols.SPY, 1m, 123.4567m,122.4567m, DateTime.Today, tag);
             Assert.AreEqual(Invariant($"Trigger Price: {order.TriggerPrice:C} Limit Price: {order.LimitPrice:C}"), order.Tag);
+        }
+
+        [Test]
+        public void ComboOrdersSetGroupQuantity()
+        {
+            var groupOrderManager = new GroupOrderManager(1, 3, -10, 1000);
+
+            var dateTime = new DateTime(2023, 3, 15);
+            var comboMarketOrderRatio = 2;
+            var comboLimitOrderRatio = -3;
+            var comboLegLimitOrderRatio = 4;
+
+            var comboMarketOrder = new ComboMarketOrder(Symbols.SPY, comboMarketOrderRatio, dateTime, groupOrderManager);
+            var comboLimitOrder = new ComboLimitOrder(Symbols.SPY, comboLimitOrderRatio, 100, dateTime, groupOrderManager);
+            var comboLegLimitOrder = new ComboLegLimitOrder(Symbols.SPY, comboLegLimitOrderRatio, 100, dateTime, groupOrderManager);
+
+            var expectedComboMarketOrderQuantity = comboMarketOrderRatio * groupOrderManager.Quantity;
+            Assert.AreEqual(expectedComboMarketOrderQuantity, comboMarketOrder.Quantity);
+
+            var expectedComboLimitOrderQuantity = comboLimitOrderRatio * groupOrderManager.Quantity;
+            Assert.AreEqual(expectedComboLimitOrderQuantity, comboLimitOrder.Quantity);
+
+            var expectedComboLegLimitOrderQuantity = comboLegLimitOrderRatio * groupOrderManager.Quantity;
+            Assert.AreEqual(expectedComboLegLimitOrderQuantity, comboLegLimitOrder.Quantity);
         }
 
         private static TestCaseData[] GetValueTestParameters()
