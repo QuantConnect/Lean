@@ -132,23 +132,32 @@ namespace QuantConnect.Orders.Fills
             // Make sure the exchange is open/normal market hours before filling
             if (!IsExchangeOpen(asset, false)) return fill;
 
-            // Calculate the model slippage: e.g. 0.01c
-            var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
-
             var fillMessage = string.Empty;
 
             switch (order.Direction)
             {
                 case OrderDirection.Buy:
                     //Order [fill]price for a buy market order model is the current security ask price
-                    fill.FillPrice = GetBestEffortAskPrice(asset, order.Time, out fillMessage) + slip;
+                    //If the price is stale, the order is not filled
+                    if (!TryGetBestEffortAskPrice(asset, order.Time, out var askPrice, out fillMessage))
+                    {
+                        return fill;
+                    }
+
+                    fill.FillPrice = askPrice + asset.SlippageModel.GetSlippageApproximation(asset, order);
                     break;
                 case OrderDirection.Sell:
                     //Order [fill]price for a buy market order model is the current security bid price
-                    fill.FillPrice = GetBestEffortBidPrice(asset, order.Time, out fillMessage) - slip;
+                    //If the price is stale, the order is not filled.
+                    if (!TryGetBestEffortBidPrice(asset, order.Time, out var bidPrice, out fillMessage))
+                    {
+                        return fill;
+                    }
+
+                    fill.FillPrice = bidPrice - asset.SlippageModel.GetSlippageApproximation(asset, order);
                     break;
             }
-
+            
             // assume the order completely filled
             fill.FillQuantity = order.Quantity;
             fill.Message = fillMessage;
@@ -704,22 +713,27 @@ namespace QuantConnect.Orders.Fills
         }
 
         /// <summary>
-        /// Get current ask price for subscribed data
+        /// Try to get current ask price for subscribed data
         /// This method will try to get the most recent ask price data, so it will try to get tick quote first, then quote bar.
         /// If no quote, tick or bar, is available (e.g. hourly data), use trade data with preference to tick data.
+        /// If the attempt to get the current ask price does not use stale price, it's successful (returns true)  
         /// </summary>
         /// <param name="asset">Security which has subscribed data types</param>
         /// <param name="orderTime">Time the order was submitted</param>
+        /// <param name="bestEffortAskPrice">Current ask price for subscribed data</param>
         /// <param name="message">Information about the best effort, whether prices are stale or need to use trade information</param>
-        private decimal GetBestEffortAskPrice(Security asset, DateTime orderTime, out string message)
+        /// <returns>True if the best effort ask price is not stale data</returns>
+        private bool TryGetBestEffortAskPrice(Security asset, DateTime orderTime, out decimal bestEffortAskPrice, out string message)
         {
             message = string.Empty;
             BaseData baseData = null;
-            var bestEffortAskPrice = 0m;
+            bestEffortAskPrice = 0m;
 
             // Define the cut off time to get the best effort bid or ask and whether the price is stale
+            // If we don't allow fill on stale prices, the cut off time is the local order time
+            var cutOffTimeStamp = Parameters.FillOnStalePrices ? -Parameters.StalePriceTimeSpan : TimeSpan.Zero;
             var localOrderTime = orderTime.ConvertFromUtc(asset.Exchange.TimeZone);
-            var cutOffTime = localOrderTime.Add(-Parameters.StalePriceTimeSpan);
+            var cutOffTime = localOrderTime.Add(cutOffTimeStamp);
 
             var subscribedTypes = GetSubscribedTypes(asset);
 
@@ -735,7 +749,8 @@ namespace QuantConnect.Orders.Fills
                 {
                     if (quote.EndTime >= cutOffTime)
                     {
-                        return quote.AskPrice;
+                        bestEffortAskPrice = quote.AskPrice;
+                        return true;
                     }
 
                     baseData = quote;
@@ -751,7 +766,8 @@ namespace QuantConnect.Orders.Fills
                 {
                     if (quoteBar.EndTime >= cutOffTime)
                     {
-                        return quoteBar.Ask?.Close ?? quoteBar.Close;
+                        bestEffortAskPrice = quoteBar.Ask?.Close ?? quoteBar.Close;
+                        return true;
                     }
 
                     baseData = quoteBar;
@@ -769,7 +785,8 @@ namespace QuantConnect.Orders.Fills
 
                     if (trade.EndTime >= cutOffTime)
                     {
-                        return trade.Price;
+                        bestEffortAskPrice = trade.Price;
+                        return true;
                     }
 
                     baseData = trade;
@@ -786,7 +803,8 @@ namespace QuantConnect.Orders.Fills
 
                     if (tradeBar.EndTime >= cutOffTime)
                     {
-                        return tradeBar.Close;
+                        bestEffortAskPrice = tradeBar.Close;
+                        return true;
                     }
 
                     baseData = tradeBar;
@@ -794,31 +812,50 @@ namespace QuantConnect.Orders.Fills
                 }
             }
 
-            if (baseData != null)
+            if (baseData == null || bestEffortAskPrice == 0m)
             {
-                return bestEffortAskPrice;
+                throw new InvalidOperationException(Messages.FillModel.NoMarketDataToGetAskPriceForFilling(asset, subscribedTypes));
             }
 
-            throw new InvalidOperationException(Messages.FillModel.NoMarketDataToGetAskPriceForFilling(asset, subscribedTypes));
+            return Parameters.FillOnStalePrices;
         }
 
         /// <summary>
-        /// Get current bid price for subscribed data
-        /// This method will try to get the most recent bid price data, so it will try to get tick quote first, then quote bar.
+        /// Get current ask price for subscribed data
+        /// This method will try to get the most recent ask price data, so it will try to get tick quote first, then quote bar.
         /// If no quote, tick or bar, is available (e.g. hourly data), use trade data with preference to tick data.
         /// </summary>
         /// <param name="asset">Security which has subscribed data types</param>
         /// <param name="orderTime">Time the order was submitted</param>
         /// <param name="message">Information about the best effort, whether prices are stale or need to use trade information</param>
-        private decimal GetBestEffortBidPrice(Security asset, DateTime orderTime, out string message)
+        private decimal GetBestEffortAskPrice(Security asset, DateTime orderTime, out string message)
+        {
+            TryGetBestEffortAskPrice(asset, orderTime, out var bestEffortAskPrice, out message);
+            return bestEffortAskPrice;
+        }
+
+        /// <summary>
+        /// Try to get current bid price for subscribed data
+        /// This method will try to get the most recent bid price data, so it will try to get tick quote first, then quote bar.
+        /// If no quote, tick or bar, is available (e.g. hourly data), use trade data with preference to tick data.
+        /// If the attempt to get the current bid price does not use stale price, it's successful (returns true)  
+        /// </summary>
+        /// <param name="asset">Security which has subscribed data types</param>
+        /// <param name="orderTime">Time the order was submitted</param>
+        /// <param name="bestEffortBidPrice">Current bid price for subscribed data</param>
+        /// <param name="message">Information about the best effort, whether prices are stale or need to use trade information</param>
+        /// <returns>True if the best effort bid price is not stale data</returns>
+        private bool TryGetBestEffortBidPrice(Security asset, DateTime orderTime, out decimal bestEffortBidPrice, out string message)
         {
             message = string.Empty;
             BaseData baseData = null;
-            var bestEffortBidPrice = 0m;
+            bestEffortBidPrice = 0m;
 
             // Define the cut off time to get the best effort bid or ask and whether the price is stale
+            // If we don't allow fill on stale prices, the cut off time is the local order time
+            var cutOffTimeStamp = Parameters.FillOnStalePrices ? -Parameters.StalePriceTimeSpan : TimeSpan.Zero;
             var localOrderTime = orderTime.ConvertFromUtc(asset.Exchange.TimeZone);
-            var cutOffTime = localOrderTime.Add(-Parameters.StalePriceTimeSpan);
+            var cutOffTime = localOrderTime.Add(cutOffTimeStamp);
 
             var subscribedTypes = GetSubscribedTypes(asset);
 
@@ -834,7 +871,8 @@ namespace QuantConnect.Orders.Fills
                 {
                     if (quote.EndTime >= cutOffTime)
                     {
-                        return quote.BidPrice;
+                        bestEffortBidPrice = quote.BidPrice;
+                        return true;
                     }
 
                     baseData = quote;
@@ -850,7 +888,8 @@ namespace QuantConnect.Orders.Fills
                 {
                     if (quoteBar.EndTime >= cutOffTime)
                     {
-                        return quoteBar.Bid?.Close ?? quoteBar.Close;
+                        bestEffortBidPrice = quoteBar.Bid?.Close ?? quoteBar.Close;
+                        return true;
                     }
 
                     baseData = quoteBar;
@@ -868,7 +907,8 @@ namespace QuantConnect.Orders.Fills
 
                     if (trade.EndTime >= cutOffTime)
                     {
-                        return trade.Price;
+                        bestEffortBidPrice = trade.Price;
+                        return true;
                     }
 
                     baseData = trade;
@@ -885,7 +925,8 @@ namespace QuantConnect.Orders.Fills
 
                     if (tradeBar.EndTime >= cutOffTime)
                     {
-                        return tradeBar.Close;
+                        bestEffortBidPrice = tradeBar.Close;
+                        return true;
                     }
 
                     baseData = tradeBar;
@@ -893,12 +934,26 @@ namespace QuantConnect.Orders.Fills
                 }
             }
 
-            if (baseData != null)
+            if (baseData == null || bestEffortBidPrice == 0m)
             {
-                return bestEffortBidPrice;
+                throw new InvalidOperationException(Messages.FillModel.NoMarketDataToGetBidPriceForFilling(asset, subscribedTypes));
             }
 
-            throw new InvalidOperationException(Messages.FillModel.NoMarketDataToGetBidPriceForFilling(asset, subscribedTypes));
+            return Parameters.FillOnStalePrices;
+        }
+
+        /// <summary>
+        /// Get current bid price for subscribed data
+        /// This method will try to get the most recent bid price data, so it will try to get tick quote first, then quote bar.
+        /// If no quote, tick or bar, is available (e.g. hourly data), use trade data with preference to tick data.
+        /// </summary>
+        /// <param name="asset">Security which has subscribed data types</param>
+        /// <param name="orderTime">Time the order was submitted</param>
+        /// <param name="message">Information about the best effort, whether prices are stale or need to use trade information</param>
+        private decimal GetBestEffortBidPrice(Security asset, DateTime orderTime, out string message)
+        {
+            TryGetBestEffortBidPrice(asset, orderTime, out var bestEffortBidPrice, out message);
+            return bestEffortBidPrice;
         }
 
         /// <summary>
