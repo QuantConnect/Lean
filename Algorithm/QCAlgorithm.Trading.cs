@@ -788,7 +788,7 @@ namespace QuantConnect.Algorithm
                 var request = CreateSubmitOrderRequest(
                     orderType,
                     security,
-                    ((decimal)leg.Quantity).GetComboOrderLegGroupQuantity(groupOrderManager),
+                    ((decimal)leg.Quantity).GetOrderLegGroupQuantity(groupOrderManager),
                     tag,
                     orderProperties ?? DefaultOrderProperties?.Clone(),
                     groupOrderManager: groupOrderManager,

@@ -908,13 +908,13 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var groupOrderManager = new GroupOrderManager(0, 2, orderDirection == OrderDirection.Buy ? 10 : -10);
             var spyOrder = new ComboMarketOrder(
                 Symbols.SPY,
-                10m.GetComboOrderLegGroupQuantity(groupOrderManager),
+                10m.GetOrderLegGroupQuantity(groupOrderManager),
                 Noon,
                 groupOrderManager)
             { Id = 1 };
             var aaplOrder = new ComboMarketOrder(
                 Symbols.AAPL,
-                5m.GetComboOrderLegGroupQuantity(groupOrderManager),
+                5m.GetOrderLegGroupQuantity(groupOrderManager),
                 Noon,
                 groupOrderManager)
             { Id = 2 };
@@ -981,13 +981,13 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             var spyLegOrder = new ComboLimitOrder(
                 Symbols.SPY,
-                -100m.GetComboOrderLegGroupQuantity(groupOrderManager),
+                -100m.GetOrderLegGroupQuantity(groupOrderManager),
                 0m,
                 Noon,
                 groupOrderManager);
             var aaplLegOrder = new ComboLimitOrder(
                 Symbols.AAPL,
-                100m.GetComboOrderLegGroupQuantity(groupOrderManager),
+                100m.GetOrderLegGroupQuantity(groupOrderManager),
                 0m,
                 Noon,
                 groupOrderManager);
@@ -1010,8 +1010,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             };
 
             var getLegsPrice = (Func<Security, decimal> priceSelector) =>
-                priceSelector(spy) * spyLegOrder.Quantity.GetComboOrderLegRatio(groupOrderManager) / 100 +
-                priceSelector(aapl) * aaplLegOrder.Quantity.GetComboOrderLegRatio(groupOrderManager) / 100;
+                priceSelector(spy) * spyLegOrder.Quantity.GetOrderLegRatio(groupOrderManager) / 100 +
+                priceSelector(aapl) * aaplLegOrder.Quantity.GetOrderLegRatio(groupOrderManager) / 100;
 
             // set limit prices that won't fill.
             // combo limit orders fill based on the total price that will be paid/received for the legs
@@ -1088,7 +1088,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var spyLimitPrice = orderDirection == OrderDirection.Buy ? 101.1m : 102m;
             var spyOrder = new ComboLegLimitOrder(
                 Symbols.SPY,
-                10m.GetComboOrderLegGroupQuantity(groupOrderManager),
+                10m.GetOrderLegGroupQuantity(groupOrderManager),
                 spyLimitPrice,
                 Noon,
                 groupOrderManager)
@@ -1096,7 +1096,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var aaplLimitPrice = orderDirection == OrderDirection.Buy ? 252.5m : 251.1m;
             var aaplOrder = new ComboLegLimitOrder(
                 Symbols.AAPL,
-                multiplier * 5m.GetComboOrderLegGroupQuantity(groupOrderManager),
+                multiplier * 5m.GetOrderLegGroupQuantity(groupOrderManager),
                 aaplLimitPrice,
                 Noon,
                 groupOrderManager)

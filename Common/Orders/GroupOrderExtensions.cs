@@ -108,7 +108,7 @@ namespace QuantConnect.Orders
         /// <param name="legRatio">The leg ratio</param>
         /// <param name="groupOrderManager">The group order manager</param>
         /// <returns>The total number of shares to be bought/sold from this leg</returns>
-        public static decimal GetComboOrderLegGroupQuantity(this decimal legRatio, GroupOrderManager groupOrderManager)
+        public static decimal GetOrderLegGroupQuantity(this decimal legRatio, GroupOrderManager groupOrderManager)
         {
             return groupOrderManager != null ? legRatio * groupOrderManager.Quantity : legRatio;
         }
@@ -121,7 +121,7 @@ namespace QuantConnect.Orders
         /// </param>
         /// <param name="groupOrderManager">The group order manager</param>
         /// <returns>The ratio of this combo order leg</returns>
-        public static decimal GetComboOrderLegRatio(this decimal legGroupQuantity, GroupOrderManager groupOrderManager)
+        public static decimal GetOrderLegRatio(this decimal legGroupQuantity, GroupOrderManager groupOrderManager)
         {
             return groupOrderManager != null ? legGroupQuantity / groupOrderManager.Quantity : legGroupQuantity;
         }

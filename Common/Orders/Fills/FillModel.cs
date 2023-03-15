@@ -1014,7 +1014,7 @@ namespace QuantConnect.Orders.Fills
                     var price = Order.GroupOrderManager.Direction == OrderDirection.Buy ? Prices.Low : Prices.High;
 
                     // the limit price should be calculated using the ratios instead of the group quantities, like IB does
-                    var quantity = Order.Quantity.GetComboOrderLegRatio(Order.GroupOrderManager);
+                    var quantity = Order.Quantity.GetOrderLegRatio(Order.GroupOrderManager);
                     if (Security.Symbol.SecurityType == SecurityType.Equity)
                     {
                         quantity /= 100;
