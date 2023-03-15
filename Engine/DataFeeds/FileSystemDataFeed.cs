@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
@@ -47,6 +46,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IDataProvider _dataProvider;
         private IDataCacheProvider _cacheProvider;
         private SubscriptionCollection _subscriptions;
+        private MarketHoursDatabase _marketHoursDatabase;
         private SubscriptionDataReaderSubscriptionEnumeratorFactory _subscriptionFactory;
 
         /// <summary>
@@ -83,6 +83,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 enablePriceScaling: false);
 
             IsActive = true;
+            _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
         }
 
         /// <summary>
@@ -185,7 +186,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (request.Universe is ITimeTriggeredUniverse)
             {
                 factory = new TimeTriggeredUniverseSubscriptionEnumeratorFactory(request.Universe as ITimeTriggeredUniverse,
-                    MarketHoursDatabase.FromDataFolder(),
+                    _marketHoursDatabase,
                     _timeProvider);
 
                 if (request.Universe is UserDefinedUniverse)
@@ -223,10 +224,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             if (request.Configuration.Symbol.SecurityType.IsOption() && request.Configuration.Symbol.HasUnderlying)
             {
+                var underlyingSymbol = request.Configuration.Symbol.Underlying;
+                var underlyingMarketHours = _marketHoursDatabase.GetEntry(underlyingSymbol.ID.Market, underlyingSymbol, underlyingSymbol.SecurityType);
+
                 // TODO: creating this subscription request/config is bad
                 var underlyingRequests = new SubscriptionRequest(request,
                     isUniverseSubscription: false,
-                    configuration: new SubscriptionDataConfig(request.Configuration, symbol: request.Configuration.Symbol.Underlying, objectType: typeof(TradeBar), tickType: TickType.Trade));
+                    configuration: new SubscriptionDataConfig(request.Configuration, symbol: underlyingSymbol, objectType: typeof(TradeBar), tickType: TickType.Trade,
+                    // there's no guarantee the TZ are the same, specially the data timezone (index & index options)
+                    dataTimeZone: underlyingMarketHours.DataTimeZone,
+                    exchangeTimeZone: underlyingMarketHours.ExchangeHours.TimeZone));
 
                 var underlying = createEnumerator(underlyingRequests, fillForwardResolution);
                 underlying = new FilterEnumerator<BaseData>(underlying, data => data.DataType != MarketDataType.Auxiliary);

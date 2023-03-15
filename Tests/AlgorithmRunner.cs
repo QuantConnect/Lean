@@ -25,6 +25,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.Setup;
@@ -60,6 +61,7 @@ namespace QuantConnect.Tests
 
             Composer.Instance.Reset();
             SymbolCache.Clear();
+            TextSubscriptionDataSourceReader.ClearCache();
             MarketOnCloseOrder.SubmissionTimeBuffer = MarketOnCloseOrder.DefaultSubmissionTimeBuffer;
 
             // clean up object storage
