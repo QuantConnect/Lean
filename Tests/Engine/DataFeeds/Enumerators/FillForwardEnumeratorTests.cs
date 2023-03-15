@@ -34,12 +34,19 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using QuantConnect.Securities.Future;
+using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 {
     [TestFixture]
     public class FillForwardEnumeratorTests
     {
+        [SetUp]
+        public void SetUp()
+        {
+            TextSubscriptionDataSourceReader.ClearCache();
+        }
+
         [Test]
         public void FillForwardsUntilSubscriptionEnd()
         {
