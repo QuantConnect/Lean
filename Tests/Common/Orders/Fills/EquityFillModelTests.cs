@@ -37,11 +37,13 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         private static readonly DateTime Noon = new DateTime(2014, 6, 24, 12, 0, 0);
         private static readonly TimeKeeper TimeKeeper = new TimeKeeper(Noon.ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
 
-        [TestCase(11, 11,  11, "")]
-        [TestCase(12, 11, 11,"")]
+        [TestCase(11, 11, 11, "")]
+        [TestCase(12, 11, 11, "")]
         [TestCase(12, 10, 11, "Warning: No quote information")]
         [TestCase(12, 10, 10, "Warning: fill at stale price")]
-        public void PerformsMarketFillBuy(int orderHour, int quoteBarHour, int tradeBarHour, string message)
+        [TestCase(12, 10, 11, "", false)]
+        [TestCase(12, 10, 10, "", false)]
+        public void PerformsMarketFillBuy(int orderHour, int quoteBarHour, int tradeBarHour, string message, bool fillOnStalePrices = true)
         {
             var configTradeBar = CreateTradeBarConfig(Symbols.SPY);
             var configQuoteBar = new SubscriptionDataConfig(configTradeBar, typeof(QuoteBar));
@@ -56,7 +58,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var model = (EquityFillModel)equity.FillModel;
             var order = new MarketOrder(Symbols.SPY, 100, orderTime);
 
-            var parameters = new FillModelParameters(equity, order, configProvider, Time.OneHour, null);
+            var parameters = new FillModelParameters(equity, order, configProvider, Time.OneHour, null, fillOnStalePrices);
 
             // Sets price at time zero
             equity.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
@@ -74,7 +76,19 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             equity.SetMarketPrice(tradeBar);
 
             var fill = model.Fill(parameters).Single();
-            Assert.AreEqual(order.Quantity, fill.FillQuantity);
+
+            if (!fillOnStalePrices)
+            {
+                Assert.AreEqual(0, fill.FillQuantity);
+                Assert.AreEqual(0, fill.FillPrice);
+                Assert.AreEqual(OrderStatus.None, fill.Status);
+
+                // Update the security with quote past with the order time
+                equity.SetMarketPrice(new QuoteBar(orderTime, Symbols.SPY, bidBar, 0, askBar, 0));
+                fill = model.Fill(parameters).Single();
+            }
+            
+            Assert.AreEqual(order.Quantity, fill.FillQuantity); 
             Assert.AreEqual(close, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
             Assert.IsTrue(fill.Message.StartsWith(message, StringComparison.InvariantCultureIgnoreCase));
@@ -84,7 +98,9 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         [TestCase(12, 11, 11, "")]
         [TestCase(12, 10, 11, "Warning: No quote information")]
         [TestCase(12, 10, 10, "Warning: fill at stale price")]
-        public void PerformsMarketFillSell(int orderHour, int quoteBarHour, int tradeBarHour, string message)
+        [TestCase(12, 10, 11, "", false)]
+        [TestCase(12, 10, 10, "", false)]
+        public void PerformsMarketFillSell(int orderHour, int quoteBarHour, int tradeBarHour, string message, bool fillOnStalePrices = true)
         {
             var configTradeBar = CreateTradeBarConfig(Symbols.SPY);
             var configQuoteBar = new SubscriptionDataConfig(configTradeBar, typeof(QuoteBar));
@@ -99,7 +115,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var model = (EquityFillModel)equity.FillModel;
             var order = new MarketOrder(Symbols.SPY, -100, orderTime);
 
-            var parameters = new FillModelParameters(equity, order, configProvider, Time.OneHour, null);
+            var parameters = new FillModelParameters(equity, order, configProvider, Time.OneHour, null, fillOnStalePrices);
 
             // Sets price at time zero
             equity.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
@@ -117,12 +133,24 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             equity.SetMarketPrice(tradeBar);
 
             var fill = model.Fill(parameters).Single();
+
+            if (!fillOnStalePrices)
+            {
+                Assert.AreEqual(0, fill.FillQuantity);
+                Assert.AreEqual(0, fill.FillPrice);
+                Assert.AreEqual(OrderStatus.None, fill.Status);
+
+                // Update the security with quote past with the order time
+                equity.SetMarketPrice(new QuoteBar(orderTime, Symbols.SPY, bidBar, 0, askBar, 0));
+                fill = model.Fill(parameters).Single();
+            }
+
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
             Assert.AreEqual(close, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
             Assert.IsTrue(fill.Message.StartsWith(message, StringComparison.InvariantCultureIgnoreCase));
         }
-        
+
         [Test]
         public void PerformsStopLimitFillBuy()
         {
