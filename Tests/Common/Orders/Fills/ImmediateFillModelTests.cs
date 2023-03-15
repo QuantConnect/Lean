@@ -906,8 +906,18 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             var model = new ImmediateFillModel();
             var groupOrderManager = new GroupOrderManager(0, 2, orderDirection == OrderDirection.Buy ? 10 : -10);
-            var spyOrder = new ComboMarketOrder(Symbols.SPY, 10, Noon, groupOrderManager) { Id = 1 };
-            var aaplOrder = new ComboMarketOrder(Symbols.AAPL, 5, Noon, groupOrderManager) { Id = 2 };
+            var spyOrder = new ComboMarketOrder(
+                Symbols.SPY,
+                10m.GetComboOrderLegGroupQuantity(groupOrderManager),
+                Noon,
+                groupOrderManager)
+            { Id = 1 };
+            var aaplOrder = new ComboMarketOrder(
+                Symbols.AAPL,
+                5m.GetComboOrderLegGroupQuantity(groupOrderManager),
+                Noon,
+                groupOrderManager)
+            { Id = 2 };
 
             groupOrderManager.OrderIds.Add(spyOrder.Id);
             groupOrderManager.OrderIds.Add(aaplOrder.Id);
@@ -969,8 +979,18 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var groupOrderManager = new GroupOrderManager(0, 2, orderDirection == OrderDirection.Buy ? 10 : -10, 0m);
             Assert.AreEqual(orderDirection, groupOrderManager.Direction);
 
-            var spyLegOrder = new ComboLimitOrder(Symbols.SPY, -100, 0m, Noon, groupOrderManager);
-            var aaplLegOrder = new ComboLimitOrder(Symbols.AAPL, 100, 0m, Noon, groupOrderManager);
+            var spyLegOrder = new ComboLimitOrder(
+                Symbols.SPY,
+                -100m.GetComboOrderLegGroupQuantity(groupOrderManager),
+                0m,
+                Noon,
+                groupOrderManager);
+            var aaplLegOrder = new ComboLimitOrder(
+                Symbols.AAPL,
+                100m.GetComboOrderLegGroupQuantity(groupOrderManager),
+                0m,
+                Noon,
+                groupOrderManager);
             var legsOrders = new List<ComboLimitOrder>() { spyLegOrder, aaplLegOrder };
             for (var i = 0; i < legsOrders.Count; i++)
             {
@@ -1066,9 +1086,21 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var groupOrderManager = new GroupOrderManager(0, 2, multiplier * 10, 1m);
 
             var spyLimitPrice = orderDirection == OrderDirection.Buy ? 101.1m : 102m;
-            var spyOrder = new ComboLegLimitOrder(Symbols.SPY, 10, spyLimitPrice, Noon, groupOrderManager) { Id = 1 };
+            var spyOrder = new ComboLegLimitOrder(
+                Symbols.SPY,
+                10m.GetComboOrderLegGroupQuantity(groupOrderManager),
+                spyLimitPrice,
+                Noon,
+                groupOrderManager)
+            { Id = 1 };
             var aaplLimitPrice = orderDirection == OrderDirection.Buy ? 252.5m : 251.1m;
-            var aaplOrder = new ComboLegLimitOrder(Symbols.AAPL, multiplier * 5, aaplLimitPrice, Noon, groupOrderManager) { Id = 2 };
+            var aaplOrder = new ComboLegLimitOrder(
+                Symbols.AAPL,
+                multiplier * 5m.GetComboOrderLegGroupQuantity(groupOrderManager),
+                aaplLimitPrice,
+                Noon,
+                groupOrderManager)
+            { Id = 2 };
 
             groupOrderManager.OrderIds.Add(spyOrder.Id);
             groupOrderManager.OrderIds.Add(aaplOrder.Id);

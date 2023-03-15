@@ -2383,7 +2383,7 @@ namespace QuantConnect
             var submitOrderRequest = new SubmitOrderRequest(order.Type,
                 order.SecurityType,
                 order.Symbol,
-                order.Quantity.GetComboOrderLegRatio(order.GroupOrderManager),
+                order.Quantity,
                 stopPrice,
                 limitPrice,
                 triggerPrice,

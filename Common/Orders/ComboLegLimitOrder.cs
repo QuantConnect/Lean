@@ -52,7 +52,6 @@ namespace QuantConnect.Orders
             : base(symbol, quantity, limitPrice, time, tag, properties)
         {
             GroupOrderManager = groupOrderManager;
-            Quantity = quantity.GetComboOrderLegGroupQuantity(GroupOrderManager);
         }
 
         /// <summary>

@@ -230,7 +230,7 @@ namespace QuantConnect.Orders
         {
             Time = time;
             PriceCurrency = string.Empty;
-            Quantity = quantity.GetComboOrderLegGroupQuantity(groupOrderManager);
+            Quantity = quantity;
             Symbol = symbol;
             Status = OrderStatus.None;
             Tag = tag;
@@ -426,9 +426,8 @@ namespace QuantConnect.Orders
         /// <returns>The <see cref="Order"/> that matches the request</returns>
         public static Order CreateOrder(SubmitOrderRequest request)
         {
-            return CreateOrder(request.OrderId, request.OrderType, request.Symbol,
-                request.Quantity.GetComboOrderLegRatio(request.GroupOrderManager), request.Time, request.Tag, request.OrderProperties,
-                request.LimitPrice, request.StopPrice, request.TriggerPrice, request.GroupOrderManager);
+            return CreateOrder(request.OrderId, request.OrderType, request.Symbol, request.Quantity, request.Time, request.Tag,
+                request.OrderProperties, request.LimitPrice, request.StopPrice, request.TriggerPrice, request.GroupOrderManager);
         }
 
         private static Order CreateOrder(int orderId, OrderType type, Symbol symbol, decimal quantity, DateTime time,

@@ -785,7 +785,14 @@ namespace QuantConnect.Algorithm
                     limitPrice = leg.OrderPrice.Value;
                     orderType = OrderType.ComboLegLimit;
                 }
-                var request = CreateSubmitOrderRequest(orderType, security, leg.Quantity, tag, orderProperties ?? DefaultOrderProperties?.Clone(), groupOrderManager: groupOrderManager, limitPrice: limitPrice);
+                var request = CreateSubmitOrderRequest(
+                    orderType,
+                    security,
+                    ((decimal)leg.Quantity).GetComboOrderLegGroupQuantity(groupOrderManager),
+                    tag,
+                    orderProperties ?? DefaultOrderProperties?.Clone(),
+                    groupOrderManager: groupOrderManager,
+                    limitPrice: limitPrice);
 
                 // we execture pre order checks for all requests before submitting, so that if anything fails we are not left with half submitted combo orders
                 var response = PreOrderChecks(request);
@@ -1152,7 +1159,7 @@ namespace QuantConnect.Algorithm
                 LiquidateExistingHoldings(targets.Select(x => x.Symbol).ToHashSet(), tag, orderProperties);
             }
 
-            foreach (var portfolioTarget in targets 
+            foreach (var portfolioTarget in targets
                 // we need to create targets with quantities for OrderTargetsByMarginImpact
                 .Select(target => new PortfolioTarget(target.Symbol, CalculateOrderQuantity(target.Symbol, target.Quantity)))
                 .OrderTargetsByMarginImpact(this, targetIsDelta:true))
