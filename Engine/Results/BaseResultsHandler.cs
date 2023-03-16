@@ -232,9 +232,10 @@ namespace QuantConnect.Lean.Engine.Results
             ResultsDestinationFolder = Config.Get("results-destination-folder", Directory.GetCurrentDirectory());
             State = new Dictionary<string, string>
             {
-                ["StartTime"] = StartTime.ToStringInvariant(),
-                ["RuntimeError"] = String.Empty,
-                ["StackTrace"] = String.Empty
+                ["StartTime"] = StartTime.ToStringInvariant(DateFormat.UI),
+                ["EndTime"] = string.Empty,
+                ["RuntimeError"] = string.Empty,
+                ["StackTrace"] = string.Empty
             };
             _previousSalesVolume = new (2);
             _previousSalesVolume.Add(0);
@@ -759,10 +760,17 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Gets the algorithm state data
         /// </summary>
-        protected Dictionary<string, string> GetAlgorithmState(string endTime = "")
+        protected Dictionary<string, string> GetAlgorithmState(DateTime? endTime = null)
         {
-            State["Status"] = Algorithm != null ? Algorithm.Status.ToStringInvariant() : AlgorithmStatus.RuntimeError.ToStringInvariant();
-            State["EndTime"] = endTime;
+            if(Algorithm == null || !string.IsNullOrEmpty(State["RuntimeError"]))
+            {
+                State["Status"] = AlgorithmStatus.RuntimeError.ToStringInvariant();
+            }
+            else
+            {
+                State["Status"] = Algorithm.Status.ToStringInvariant();
+            }
+            State["EndTime"] = endTime != null ? endTime.ToStringInvariant(DateFormat.UI) : string.Empty;
             return State;
         }
 
