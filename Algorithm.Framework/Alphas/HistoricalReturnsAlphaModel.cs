@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -20,6 +20,7 @@ using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Securities;
+using static QuantConnect.Messages;
 
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
@@ -60,15 +61,16 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
         {
             var insights = new List<Insight>();
-            foreach (var symbolData in _symbolDataBySymbol.Values)
+            foreach (var kvp in _symbolDataBySymbol)
             {
+                var symbolData = kvp.Value;
                 if (symbolData.CanEmit())
                 {
                     var direction = InsightDirection.Flat;
                     var magnitude = (double)symbolData.ROC.Current.Value;
                     if (magnitude > 0) direction = InsightDirection.Up;
                     if (magnitude < 0) direction = InsightDirection.Down;
-                    insights.Add(Insight.Price(symbolData.Security.Symbol, _predictionInterval, direction, magnitude, null));
+                    insights.Add(Insight.Price(kvp.Key, _predictionInterval, direction, magnitude, null));
                 }
             }
             return insights;
@@ -96,11 +98,11 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             var addedSymbols = new List<Symbol>();
             foreach (var added in changes.AddedSecurities)
             {
-                if (!_symbolDataBySymbol.ContainsKey(added.Symbol))
+                var symbol = added.Symbol;
+                if (!_symbolDataBySymbol.ContainsKey(symbol))
                 {
-                    var symbolData = new SymbolData(algorithm, added, _lookback, _resolution);
-                    _symbolDataBySymbol[added.Symbol] = symbolData;
-                    addedSymbols.Add(symbolData.Security.Symbol);
+                    _symbolDataBySymbol[symbol] = new SymbolData(algorithm, symbol, _lookback, _resolution);
+                    addedSymbols.Add(symbol);
                 }
             }
 
@@ -124,18 +126,18 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         private class SymbolData
         {
-            public Security Security;
+            public Symbol Symbol;
             public IDataConsolidator Consolidator;
             public RateOfChange ROC;
             public long previous = 0;
 
-            public SymbolData(QCAlgorithm algorithm, Security security, int lookback, Resolution resolution)
+            public SymbolData(QCAlgorithm algorithm, Symbol symbol, int lookback, Resolution resolution)
             {
-                Security = security;
-                Consolidator = algorithm.ResolveConsolidator(security.Symbol, resolution);
-                algorithm.SubscriptionManager.AddConsolidator(security.Symbol, Consolidator);
-                ROC = new RateOfChange(security.Symbol.ToString(), lookback);
-                algorithm.RegisterIndicator(security.Symbol, ROC, Consolidator);
+                Symbol = symbol;
+                Consolidator = algorithm.ResolveConsolidator(symbol, resolution);
+                algorithm.SubscriptionManager.AddConsolidator(symbol, Consolidator);
+                ROC = new RateOfChange(symbol.ToString(), lookback);
+                algorithm.RegisterIndicator(symbol, ROC, Consolidator);
             }
 
             public bool CanEmit()

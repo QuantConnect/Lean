@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,7 +40,7 @@ class HistoricalReturnsAlphaModel(AlphaModel):
             if symbolData.CanEmit:
 
                 direction = InsightDirection.Flat
-                magnitude = symbolData.Return
+                magnitude = float(symbolData.ROC.Current.Value)
                 if magnitude > 0: direction = InsightDirection.Up
                 if magnitude < 0: direction = InsightDirection.Down
 
@@ -57,48 +57,32 @@ class HistoricalReturnsAlphaModel(AlphaModel):
         # clean up data for removed securities
         for removed in changes.RemovedSecurities:
             symbolData = self.symbolDataBySymbol.pop(removed.Symbol, None)
-            if symbolData is not None:
-                symbolData.RemoveConsolidators(algorithm)
+            if symbolData:
+                algorithm.SubscriptionManager.RemoveConsolidator(removed.Symbol, symbolData.Consolidator)
 
         # initialize data for added securities
-        symbols = [ x.Symbol for x in changes.AddedSecurities ]
-        history = algorithm.History(symbols, self.lookback, self.resolution)
-        if history.empty: return
-
-        tickers = history.index.levels[0]
-        for ticker in tickers:
-            symbol = SymbolCache.GetSymbol(ticker)
-
+        added_symbols = []
+        for added in changes.AddedSecurities:
+            symbol = added.Symbol
             if symbol not in self.symbolDataBySymbol:
-                symbolData = SymbolData(symbol, self.lookback)
-                self.symbolDataBySymbol[symbol] = symbolData
-                symbolData.RegisterIndicators(algorithm, self.resolution)
-                symbolData.WarmUpIndicators(history.loc[ticker])
+                self.symbolDataBySymbol[symbol] = SymbolData(algorithm, symbol, self.lookback, self.resolution)
+                added_symbols.append(symbol)
+        if added_symbols:
+            history = algorithm.History[TradeBar](added_symbols, self.lookback, self.resolution)
+            for trade_bars in history:
+                for bar in trade_bars.Values:
+                    self.symbolDataBySymbol[bar.Symbol].ROC.Update(bar.EndTime, bar.Value)
 
 
 class SymbolData:
     '''Contains data specific to a symbol required by this model'''
-    def __init__(self, symbol, lookback):
+    def __init__(self, algorithm, symbol, lookback, resolution):
         self.Symbol = symbol
         self.ROC = RateOfChange('{}.ROC({})'.format(symbol, lookback), lookback)
-        self.Consolidator = None
         self.previous = 0
 
-    def RegisterIndicators(self, algorithm, resolution):
         self.Consolidator = algorithm.ResolveConsolidator(self.Symbol, resolution)
         algorithm.RegisterIndicator(self.Symbol, self.ROC, self.Consolidator)
-
-    def RemoveConsolidators(self, algorithm):
-        if self.Consolidator is not None:
-            algorithm.SubscriptionManager.RemoveConsolidator(self.Symbol, self.Consolidator)
-
-    def WarmUpIndicators(self, history):
-        for tuple in history.itertuples():
-            self.ROC.Update(tuple.Index, tuple.close)
-
-    @property
-    def Return(self):
-        return float(self.ROC.Current.Value)
 
     @property
     def CanEmit(self):
