@@ -35,6 +35,9 @@ namespace QuantConnect.Tests
         public static readonly Symbol LODE = CreateEquitySymbol("LODE");
         public static readonly Symbol IBM = CreateEquitySymbol("IBM");
         public static readonly Symbol GOOG = CreateEquitySymbol("GOOG");
+        public static readonly Symbol NFLX = CreateEquitySymbol("NFLX");
+        public static readonly Symbol CAT = CreateEquitySymbol("CAT");
+        public static readonly Symbol SGX = CreateEquitySymbol("SGX", Market.SGX);
         public static readonly Symbol SBIN = CreateEquitySymbol("SBIN",Market.India);
         public static readonly Symbol IDEA = CreateEquitySymbol("IDEA", Market.India);
 
