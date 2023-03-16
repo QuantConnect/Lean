@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,7 +43,8 @@ class PearsonCorrelationPairsTradingAlphaModel(BasePairsTradingAlphaModel):
             changes: The security additions and removals from the algorithm'''
 
         for security in changes.AddedSecurities:
-            self.Securities.append(security)
+            if security.Type != SecurityType.Base:
+                self.Securities.append(security)
 
         for security in changes.RemovedSecurities:
             if security in self.Securities:

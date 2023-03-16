@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -56,6 +56,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="changes">The security additions and removals from the algorithm</param>
         public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
+            changes.FilterCustomSecurities = true;
             NotifiedSecurityChanges.UpdateCollection(Securities, changes);
 
             var symbols = Securities.Select(x => x.Symbol).ToArray();
