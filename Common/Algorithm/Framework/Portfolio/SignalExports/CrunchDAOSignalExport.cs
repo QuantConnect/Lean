@@ -107,7 +107,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <param name="holdings">A list of holdings from the portfolio,
         /// expected to be sent to CrunchDAO API</param>
         /// <exception cref="ArgumentException">Throws this exception when it finds a holding type different than stock</exception>
-        private static void VerifyTargetsAreStocks(List<PortfolioTarget> holdings)
+        public static void VerifyTargetsAreStocks(List<PortfolioTarget> holdings)
         {
             foreach (var signal in holdings)
             {

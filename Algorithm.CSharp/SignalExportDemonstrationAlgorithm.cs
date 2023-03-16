@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
@@ -33,8 +34,14 @@ namespace QuantConnect.Algorithm.CSharp
         private const string _collective2ApiKey = ""; // Replace this value with your Colletive2 API key
         private const int _collective2SystemId = 1; // Replace this value with your system ID
 
-        private const string _crunchDAOApiKey = ""; // Replace this values with your CrunchDAO API key
+        private const string _crunchDAOApiKey = ""; // Replace this value with your CrunchDAO API key
         private const string _crunchDAOModel = ""; // Replace this value with your model's name
+
+        private const string _numeraiPublicId = ""; // Replace this value with your Numerai Signals Public ID
+        private const string _numeraiSecretId = ""; // replace this value with your Numerai Signals Secret ID
+        private const string _numeraiModelId = ""; // Replce this value with your Numerai Signals Model ID
+
+        private PortfolioTarget[] _targets;
 
         public int FastPeriod = 100;
         public int SlowPeriod = 200;
@@ -53,13 +60,43 @@ namespace QuantConnect.Algorithm.CSharp
 
             AddSecurity(SecurityType.Equity, "SPY");
             AddSecurity(SecurityType.Equity, "AIG");
+            AddSecurity(SecurityType.Equity, "GOOGL");
+            AddSecurity(SecurityType.Equity, "AAPL");
+            AddSecurity(SecurityType.Equity, "AMZN");
+            AddSecurity(SecurityType.Equity, "TSLA");
+            AddSecurity(SecurityType.Equity, "NFLX");
+            AddSecurity(SecurityType.Equity, "INTC");
+            AddSecurity(SecurityType.Equity, "MSFT");
+            AddSecurity(SecurityType.Equity, "KO");
+            AddSecurity(SecurityType.Equity, "WMT");
+            AddSecurity(SecurityType.Equity, "IBM");
+            AddSecurity(SecurityType.Equity, "AMGN");
+            AddSecurity(SecurityType.Equity, "CAT");
 
             Fast = EMA("SPY", FastPeriod);
             Slow = EMA("SPY", SlowPeriod);
 
+            // Set targets to send
+            _targets = new PortfolioTarget[12]
+            {
+                new PortfolioTarget(Portfolio["AIG"].Symbol, (decimal)0.05),
+                new PortfolioTarget(Portfolio["IBM"].Symbol, (decimal)0.1),
+                new PortfolioTarget(Portfolio["GOOGL"].Symbol, (decimal)0.1),
+                new PortfolioTarget(Portfolio["AAPL"].Symbol, (decimal)0.05),
+                new PortfolioTarget(Portfolio["AMZN"].Symbol, (decimal)0.05),
+                new PortfolioTarget(Portfolio["TSLA"].Symbol, (decimal)0.05),
+                new PortfolioTarget(Portfolio["NFLX"].Symbol, (decimal)0.05),
+                new PortfolioTarget(Portfolio["INTC"].Symbol, (decimal)0.1),
+                new PortfolioTarget(Portfolio["MSFT"].Symbol, (decimal)0.1),
+                new PortfolioTarget(Portfolio["KO"].Symbol, (decimal)0.1),
+                new PortfolioTarget(Portfolio["CAT"].Symbol, (decimal)0.1),
+                new PortfolioTarget(Portfolio["SPY"].Symbol, (decimal)0.1)
+            };
+
             // Set the signal export providers
             SignalExport.AddSignalExportProviders(new Collective2SignalExport(_collective2ApiKey, _collective2SystemId, Portfolio));
             SignalExport.AddSignalExportProviders(new CrunchDAOSignalExport(_crunchDAOApiKey, _crunchDAOModel, Securities));
+            SignalExport.AddSignalExportProviders(new NumeraiSignalExport(_numeraiPublicId, _numeraiSecretId, _numeraiModelId));
         }
 
         /// <summary>
@@ -75,15 +112,19 @@ namespace QuantConnect.Algorithm.CSharp
             // This is not actually checking whether the EMA's are crossing between themselves
             if (Fast > Slow * 1.001m)
             {
-                SetHoldings("SPY", 1);
-                Liquidate("AIG");
-                SignalExport.SetTargetPortfolio(Portfolio);
+                SetHoldings("SPY", 0.1);
+                SetHoldings("AIG",0.01);
+                _targets[0] = new PortfolioTarget(Portfolio["AIG"].Symbol, (decimal)0.01);
+                _targets[11] = new PortfolioTarget(Portfolio["SPY"].Symbol, (decimal)0.1);
+                SignalExport.SetTargetPortfolio(_targets);
             }
             else if (Fast < Slow * 0.999m)
             {
-                Liquidate("SPY");
-                SetHoldings("AIG", 1);
-                SignalExport.SetTargetPortfolio(Portfolio);
+                SetHoldings("SPY", 0.01);
+                SetHoldings("AIG", 0.1);
+                _targets[0] = new PortfolioTarget(Portfolio["AIG"].Symbol, (decimal)0.1);
+                _targets[11] = new PortfolioTarget(Portfolio["SPY"].Symbol, (decimal)0.01);
+                SignalExport.SetTargetPortfolio(_targets);
             }
         }
 
