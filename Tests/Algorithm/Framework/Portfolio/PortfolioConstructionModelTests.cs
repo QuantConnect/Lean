@@ -17,6 +17,7 @@ using System;
 using NodaTime;
 using NUnit.Framework;
 using Python.Runtime;
+using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.UniverseSelection;
@@ -30,6 +31,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
     [TestFixture]
     public class PortfolioConstructionModelTests
     {
+        private QCAlgorithm _algorithm;
+
+        [SetUp]
+        public void SetUp()
+        {
+            _algorithm = new QCAlgorithm();
+        }
+
         [TestCase(Language.Python)]
         [TestCase(Language.CSharp)]
         public void RebalanceFunctionPeriodDue(Language language)
@@ -53,6 +62,8 @@ def RebalanceFunc(time):
             {
                 constructionModel = new TestPortfolioConstructionModel(time => time.AddDays(1));
             }
+
+            constructionModel.OnSecuritiesChanged(_algorithm, SecurityChanges.None);
 
             Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), new Insight[0]));
             Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(
@@ -88,6 +99,8 @@ def RebalanceFunc(time):
                 constructionModel = new TestPortfolioConstructionModel(time => time.AddDays(1));
             }
 
+            constructionModel.OnSecuritiesChanged(_algorithm, SecurityChanges.None);
+
             Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(
                 new DateTime(2020, 1, 2, 1, 0, 0), new Insight[0]));
 
@@ -99,7 +112,7 @@ def RebalanceFunc(time):
                 new RegisteredSecurityDataTypesProvider(),
                 new SecurityCache());
 
-            constructionModel.OnSecuritiesChanged(null, SecurityChangesTests.AddedNonInternal(security));
+            constructionModel.OnSecuritiesChanged(_algorithm, SecurityChangesTests.AddedNonInternal(security));
             Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 2), new Insight[0]));
             Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 2), new Insight[0]));
         }
@@ -127,6 +140,8 @@ def RebalanceFunc(time):
             {
                 constructionModel = new TestPortfolioConstructionModel(time => time.AddDays(1));
             }
+            
+            constructionModel.OnSecuritiesChanged(_algorithm, SecurityChanges.None);
 
             Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), new Insight[0]));
 
@@ -162,6 +177,8 @@ def RebalanceFunc(time):
                 constructionModel = new TestPortfolioConstructionModel(time => time.AddDays(10));
             }
 
+            constructionModel.OnSecuritiesChanged(_algorithm, SecurityChanges.None);
+
             constructionModel.SetNextExpiration(new DateTime(2020, 1, 2));
             constructionModel.RebalanceOnInsightChanges = false;
             Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 3), new Insight[0]));
@@ -195,6 +212,8 @@ def RebalanceFunc():
                 constructionModel = new TestPortfolioConstructionModel();
             }
 
+            constructionModel.OnSecuritiesChanged(_algorithm, SecurityChanges.None);
+
             Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), new Insight[0]));
             Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 2), new Insight[0]));
             Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 3), new Insight[0]));
@@ -207,9 +226,9 @@ def RebalanceFunc():
                 new RegisteredSecurityDataTypesProvider(),
                 new SecurityCache());
 
-            constructionModel.OnSecuritiesChanged(null, SecurityChangesTests.AddedNonInternal(security));
+            constructionModel.OnSecuritiesChanged(_algorithm, SecurityChangesTests.AddedNonInternal(security));
             Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), new Insight[0]));
-            constructionModel.OnSecuritiesChanged(null, SecurityChanges.None);
+            constructionModel.OnSecuritiesChanged(_algorithm, SecurityChanges.None);
             Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), new Insight[0]));
         }
 
@@ -254,6 +273,8 @@ def RebalanceFunc(time):
                         return null;
                     });
             }
+
+            constructionModel.OnSecuritiesChanged(_algorithm, SecurityChanges.None);
 
             Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), new Insight[0]));
             Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(
@@ -304,6 +325,8 @@ def RebalanceFunc(dateRules):
                 var dateRule = dateRules.On(new DateTime(2015, 1, 10), new DateTime(2015, 1, 30));
                 constructionModel = new TestPortfolioConstructionModel(dateRule);
             }
+
+            constructionModel.OnSecuritiesChanged(_algorithm, SecurityChanges.None);
 
             Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2015, 1, 1), new Insight[0]));
             Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2015, 1, 10), new Insight[0]));
@@ -363,6 +386,8 @@ def RebalanceFunc():
                 constructionModel = new TestPortfolioConstructionModel(time => time.AddMinutes(20));
             }
 
+            constructionModel.OnSecuritiesChanged(_algorithm, SecurityChanges.None);
+
             Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2015, 1, 1), new Insight[0]));
             Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2015, 1, 1, 0, 20, 0), new Insight[0]));
             Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2015, 1, 1, 0, 22, 0), new Insight[0]));
@@ -399,7 +424,7 @@ def RebalanceFunc():
 
             public void SetNextExpiration(DateTime nextExpiration)
             {
-                InsightCollection.Add(
+                Algorithm.Insights.Add(
                     new Insight(Symbols.SPY, time => nextExpiration, InsightType.Price, InsightDirection.Down));
             }
         }
