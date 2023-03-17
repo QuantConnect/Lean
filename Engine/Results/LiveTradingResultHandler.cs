@@ -428,9 +428,9 @@ namespace QuantConnect.Lean.Engine.Results
 
                 var result = new LiveResult(new LiveResultParameters(chartComplete,
                     new Dictionary<int, Order>(TransactionHandler.Orders),
-                    Algorithm.Transactions.TransactionRecord,
+                    Algorithm?.Transactions.TransactionRecord ?? new(),
                     holdings,
-                    Algorithm.Portfolio.CashBook,
+                    Algorithm?.Portfolio.CashBook ?? new(),
                     statistics: statistics.Summary,
                     runtimeStatistics: runtimeStatistics,
                     orderEvents: null, // we stored order events separately
