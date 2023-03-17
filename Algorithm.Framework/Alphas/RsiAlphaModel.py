@@ -66,34 +66,23 @@ class RsiAlphaModel(AlphaModel):
             changes: The security additions and removals from the algorithm'''
 
         # clean up data for removed securities
-        symbols = [ x.Symbol for x in changes.RemovedSecurities ]
-        if len(symbols) > 0:
-            for subscription in algorithm.SubscriptionManager.Subscriptions:
-                if subscription.Symbol in symbols:
-                    self.symbolDataBySymbol.pop(subscription.Symbol, None)
-                    subscription.Consolidators.Clear()
+        for removed in changes.RemovedSecurities:
+            symbolData = self.symbolDataBySymbol.pop(removed.Symbol, None)
+            if symbolData:
+                symbolData.dispose()
 
         # initialize data for added securities
-
-        addedSymbols = [ x.Symbol for x in changes.AddedSecurities if x.Symbol not in self.symbolDataBySymbol]
-        if len(addedSymbols) == 0: return
-
-        history = algorithm.History(addedSymbols, self.period, self.resolution)
-
-        for symbol in addedSymbols:
-            rsi = algorithm.RSI(symbol, self.period, MovingAverageType.Wilders, self.resolution)
-
-            if not history.empty:
-                ticker = SymbolCache.GetTicker(symbol)
-
-                if ticker not in history.index.levels[0]:
-                    Log.Trace(f'RsiAlphaModel.OnSecuritiesChanged: {ticker} not found in history data frame.')
-                    continue
-
-                for tuple in history.loc[ticker].itertuples():
-                    rsi.Update(tuple.Index, tuple.close)
-
-            self.symbolDataBySymbol[symbol] = SymbolData(symbol, rsi)
+        added_symbols = []
+        for added in changes.AddedSecurities:
+            symbol = added.Symbol
+            if symbol not in self.symbolDataBySymbol:
+                self.symbolDataBySymbol[symbol] = SymbolData(algorithm, symbol, self.period, self.resolution)
+                added_symbols.append(symbol)
+        if added_symbols:
+            history = algorithm.History[TradeBar](added_symbols, self.period, self.resolution)
+            for trade_bars in history:
+                for bar in trade_bars.Values:
+                    self.symbolDataBySymbol[bar.Symbol].RSI.Update(bar.EndTime, bar.Value)
 
 
     def GetState(self, rsi, previous):
@@ -115,10 +104,17 @@ class RsiAlphaModel(AlphaModel):
 
 class SymbolData:
     '''Contains data specific to a symbol required by this model'''
-    def __init__(self, symbol, rsi):
+    def __init__(self, algorithm, symbol, period, resolution):
+        self.Algorithm = algorithm
         self.Symbol = symbol
-        self.RSI = rsi
         self.State = State.Middle
+
+        self.RSI = RelativeStrengthIndex(period, MovingAverageType.Wilders)
+        self.Consolidator = TradeBarConsolidator.FromResolution(resolution)
+        algorithm.RegisterIndicator(symbol, self.RSI, self.Consolidator)
+
+    def dispose(self):
+        self.Algorithm.SubscriptionManager.RemoveConsolidator(self.Symbol, self.Consolidator)
 
 
 class State(Enum):

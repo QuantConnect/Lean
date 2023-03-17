@@ -15,6 +15,7 @@
 
 using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Util;
@@ -94,6 +95,16 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="changes">The security additions and removals from the algorithm</param>
         public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
+            foreach (var removed in changes.RemovedSecurities)
+            {
+                SymbolData data;
+                if (_symbolDataBySymbol.TryGetValue(removed.Symbol, out data))
+                {
+                    _symbolDataBySymbol.Remove(removed.Symbol);
+                    data.dispose();
+                }
+            }
+
             // clean up data for removed securities
             if (changes.RemovedSecurities.Count > 0)
             {
@@ -114,8 +125,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             {
                 if (!_symbolDataBySymbol.ContainsKey(added.Symbol))
                 {
-                    var rsi = algorithm.RSI(added.Symbol, _period, MovingAverageType.Wilders, _resolution);
-                    var symbolData = new SymbolData(added.Symbol, rsi);
+                    var symbolData = new SymbolData(algorithm, added.Symbol, _period, _resolution);
                     _symbolDataBySymbol[added.Symbol] = symbolData;
                     addedSymbols.Add(symbolData.Symbol);
                 }
@@ -179,12 +189,24 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             public Symbol Symbol { get; }
             public State State { get; set; }
             public RelativeStrengthIndex RSI { get; }
+            private QCAlgorithm _algorithm;
+            private TradeBarConsolidator _consolidator;
 
-            public SymbolData(Symbol symbol, RelativeStrengthIndex rsi)
+            public SymbolData(QCAlgorithm algorithm, Symbol symbol, int period, Resolution resolution)
             {
+                _algorithm = algorithm;
                 Symbol = symbol;
-                RSI = rsi;
                 State = State.Middle;
+
+
+                RSI = new RelativeStrengthIndex(period, MovingAverageType.Wilders);
+                _consolidator = TradeBarConsolidator.FromResolution(resolution);
+                algorithm.RegisterIndicator(symbol, RSI, _consolidator);
+            }
+
+            public void dispose()
+            {
+                _algorithm.SubscriptionManager.RemoveConsolidator(Symbol, _consolidator);
             }
         }
 
