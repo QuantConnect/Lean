@@ -121,6 +121,8 @@ class SymbolData:
         history = algorithm.History(symbol, period, resolution)
         if 'close' in history:
             history = history.close.unstack(0).squeeze()
+            # remove non-numeric rows from the close price series
+            history = history[pd.to_numeric(history, errors='coerce').notnull()]
             for time, value in history.iteritems():
                 self.SMA.Update(time, value)
                 self.STD.Update(time, value)
