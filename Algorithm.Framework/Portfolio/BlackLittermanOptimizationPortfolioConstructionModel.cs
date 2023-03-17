@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -249,15 +249,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         {
             var targets = new Dictionary<Insight, double>();
 
-            double[,] P;
-            double[] Q;
-            if (TryGetViews(lastActiveInsights, out P, out Q))
+            if (TryGetViews(lastActiveInsights, out var P, out var Q))
             {
                 // Updates the ReturnsSymbolData with insights
                 foreach (var insight in lastActiveInsights)
                 {
-                    ReturnsSymbolData symbolData;
-                    if (_symbolDataDict.TryGetValue(insight.Symbol, out symbolData))
+                    if (_symbolDataDict.TryGetValue(insight.Symbol, out var symbolData))
                     {
                         if (insight.Magnitude == null)
                         {
@@ -272,8 +269,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 var returns = _symbolDataDict.FormReturnsMatrix(symbols);
 
                 // Calculate posterior estimate of the mean and uncertainty in the mean
-                double[,] Σ;
-                var Π = GetEquilibriumReturns(returns, out Σ);
+                var Π = GetEquilibriumReturns(returns, out var Σ);
 
                 ApplyBlackLittermanMasterFormula(ref Π, ref Σ, P, Q);
 
@@ -306,7 +302,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         protected override List<Insight> GetTargetInsights()
         {
             // Get insight that haven't expired of each symbol that is still in the universe
-            var activeInsights = InsightCollection.GetActiveInsights(Algorithm.UtcTime);
+            var activeInsights = Algorithm.Insights.GetActiveInsights(Algorithm.UtcTime).Where(ShouldCreateTargetForInsight);
 
             // Get the last generated active insight for each symbol
             return (from insight in activeInsights
