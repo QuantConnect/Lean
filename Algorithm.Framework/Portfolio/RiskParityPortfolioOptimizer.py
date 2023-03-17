@@ -56,8 +56,8 @@ class RiskParityPortfolioOptimizer:
         objective = lambda weights: 0.5 * weights.T @ covariance @ weights - budget.T @ np.log(weights)
         gradient = lambda weights: covariance @ weights - budget / weights
         hessian = lambda weights: covariance + np.diag((budget / weights**2).flatten())
-        bounds = tuple((self.minimum_weight, self.maximum_weight) for _ in range(size))
-        solver = minimize(objective, jac=gradient, hess=hessian, x0=x0, bounds=bounds, method="trust-constr")
+        solver = minimize(objective, jac=gradient, hess=hessian, x0=x0, method="Newton-CG")
 
+        if not solver["success"]: return x0
         # Normalize weights: w = x / x^T.1
-        return solver["x"]/np.sum(solver["x"]) if solver["success"] else x0
+        return np.clip(solver["x"]/np.sum(solver["x"]), self.minimum_weight, self.maximum_weight)
