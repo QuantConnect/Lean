@@ -13,9 +13,12 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
+using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Securities;
@@ -70,6 +73,18 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <returns>The new insights generated</returns>
         public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
         {
+            // Reset indicators when corporate actions occur
+            foreach (var symbol in data.Splits.Keys.Union(data.Dividends.Keys))
+            {
+                if (_symbolData.ContainsKey(symbol))
+                {
+                    _symbolData[symbol].Reset();
+                }
+            }
+
+            // Only emit insights when there is quote data, not when a corporate action occurs (at midnight)
+            if (data.QuoteBars.Count == 0) yield break;
+
             foreach (var sd in _symbolData.Values)
             {
                 if (sd.Security.Price == 0)
@@ -124,22 +139,25 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 if (_symbolData.TryGetValue(removed.Symbol, out data))
                 {
                     // clean up our consolidator
-                    algorithm.SubscriptionManager.RemoveConsolidator(data.Security.Symbol, data.Consolidator);
+                    data.Dispose();
                     _symbolData.Remove(removed.Symbol);
                 }
             }
         }
 
-        public class SymbolData
+        public class SymbolData : IDisposable
         {
+            private readonly QCAlgorithm _algorithm;
+            private readonly Resolution _resolution;
             public InsightDirection? PreviousDirection { get; set; }
-
             public readonly Security Security;
             public readonly IDataConsolidator Consolidator;
             public readonly MovingAverageConvergenceDivergence MACD;
 
             public SymbolData(QCAlgorithm algorithm, Security security, int fastPeriod, int slowPeriod, int signalPeriod, MovingAverageType movingAverageType, Resolution resolution)
             {
+                _algorithm = algorithm;
+                _resolution = resolution;
                 Security = security;
                 Consolidator = algorithm.ResolveConsolidator(security.Symbol, resolution);
                 algorithm.SubscriptionManager.AddConsolidator(security.Symbol, Consolidator);
@@ -148,6 +166,22 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
                 algorithm.RegisterIndicator(security.Symbol, MACD, Consolidator);
                 algorithm.WarmUpIndicator(security.Symbol, MACD, resolution);
+            }
+
+            public void Reset()
+            {
+                // reset & warm up indicator
+                MACD.Reset();
+                _algorithm.WarmUpIndicator(Security.Symbol, MACD, _resolution);
+                // reset consolidator by updating
+                var history = _algorithm.History<TradeBar>(Security.Symbol, 1, _resolution).ToList();
+                Consolidator.Update(history[0]);
+            }
+
+            public void Dispose()
+            {
+                MACD.Reset();
+                _algorithm.SubscriptionManager.RemoveConsolidator(Security.Symbol, Consolidator);
             }
         }
     }
