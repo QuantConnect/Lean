@@ -430,6 +430,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, SecurityChangesTests.AddedNonInternal(appl, spy, ibm, aig, qqq));
 
             var createdValidTarget = false;
+            _algorithm.Insights.AddRange(insights);
             foreach (var target in _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights))
             {
                 QuantConnect.Logging.Log.Trace($"{target.Symbol}: {target.Quantity}");
@@ -461,10 +462,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
         private Insight GetInsight(Symbol symbol, InsightDirection direction, DateTime generatedTimeUtc, TimeSpan? period = null, double? confidence = DefaultPercent)
         {
-            period = period ?? TimeSpan.FromDays(1);
+            period ??= TimeSpan.FromDays(1);
             var insight = Insight.Price(symbol, period.Value, direction, confidence: confidence);
             insight.GeneratedTimeUtc = generatedTimeUtc;
             insight.CloseTimeUtc = generatedTimeUtc.Add(period.Value);
+            _algorithm.Insights.Add(insight);
             return insight;
         }
 

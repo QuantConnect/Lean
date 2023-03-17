@@ -61,6 +61,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new DataPermissionManager()));
         }
 
+        private void Clear() => _algorithm.Insights.Clear(_algorithm.Securities.Keys.ToArray());
+
         [TestCase(Language.CSharp, PortfolioBias.Long, 0.1, -0.1)]
         [TestCase(Language.Python, PortfolioBias.Long, 0.1, -0.1)]
         [TestCase(Language.CSharp, PortfolioBias.Short, -0.1, 0.1)]
@@ -100,7 +102,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                                       decimal expectedQty1,
                                       decimal expectedQty2)
         {
-            var targets = GeneratePortfolioTargets(language, direction1, direction2, magnitude1, magnitude2);
+            var targets = GeneratePortfolioTargets(language, direction1, direction2, magnitude1, magnitude2).ToList();
+            Clear();
             var quantities = targets.ToDictionary(target => {
                 QuantConnect.Logging.Log.Trace($"{target.Symbol}: {target.Quantity}");
                 return target.Symbol.Value;
@@ -198,6 +201,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new Insight(_nowUtc, aapl.Symbol, TimeSpan.FromDays(1), InsightType.Price, direction1, magnitude1, null),
                 new Insight(_nowUtc, spy.Symbol, TimeSpan.FromDays(1), InsightType.Price, direction2, magnitude2, null),
             };
+            _algorithm.Insights.AddRange(insights);
             _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, SecurityChangesTests.AddedNonInternal(aapl, spy));
 
             return _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights);

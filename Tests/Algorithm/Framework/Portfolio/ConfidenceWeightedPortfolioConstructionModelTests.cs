@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -61,6 +61,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             }
         }
 
+        [TearDown]
+        public void TearDown() => _algorithm.Insights.Clear(_algorithm.Securities.Keys.ToArray());
 
         [Test]
         [TestCase(Language.CSharp)]
@@ -381,10 +383,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
         private Insight GetInsight(Symbol symbol, InsightDirection direction, DateTime generatedTimeUtc, TimeSpan? period = null, double? confidence = Confidence)
         {
-            period = period ?? TimeSpan.FromDays(1);
+            period ??= TimeSpan.FromDays(1);
             var insight = Insight.Price(symbol, period.Value, direction, confidence: confidence);
             insight.GeneratedTimeUtc = generatedTimeUtc;
             insight.CloseTimeUtc = generatedTimeUtc.Add(period.Value);
+            _algorithm.Insights.Add(insight);
             return insight;
         }
 

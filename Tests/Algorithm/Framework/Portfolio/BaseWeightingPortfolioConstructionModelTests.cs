@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -18,7 +18,6 @@ using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Tests.Engine.DataFeeds;
@@ -44,6 +43,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             Algorithm = new QCAlgorithm();
             Algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(Algorithm));
         }
+        [TearDown]
+        public void TearDown() => Algorithm.Insights.Clear(Algorithm.Securities.Keys.ToArray());
+
 
         [Test]
         [TestCase(Language.CSharp)]
