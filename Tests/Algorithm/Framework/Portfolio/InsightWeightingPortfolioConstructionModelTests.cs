@@ -107,10 +107,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
         public override Insight GetInsight(Symbol symbol, InsightDirection direction, DateTime generatedTimeUtc, TimeSpan? period = null, double? weight = _weight)
         {
-            period = period ?? TimeSpan.FromDays(1);
+            period ??= TimeSpan.FromDays(1);
             var insight = Insight.Price(symbol, period.Value, direction, weight: weight);
             insight.GeneratedTimeUtc = generatedTimeUtc;
             insight.CloseTimeUtc = generatedTimeUtc.Add(period.Value);
+            Algorithm.Insights.Add(insight);
             return insight;
         }
 

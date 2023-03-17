@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -19,7 +19,6 @@ using System.Linq;
 using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Scheduling;
-using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -116,7 +115,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         {
             SetRebalancingFunc(rebalance);
         }
-
+        
         /// <summary>
         /// Initialize a new instance of <see cref="AccumulativeInsightPortfolioConstructionModel"/>
         /// </summary>
@@ -153,7 +152,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>An enumerable of the target insights</returns>
         protected override List<Insight> GetTargetInsights()
         {
-            return InsightCollection.GetActiveInsights(Algorithm.UtcTime)
+            return Algorithm.Insights.GetActiveInsights(Algorithm.UtcTime).Where(ShouldCreateTargetForInsight)
                 .OrderBy(insight => insight.GeneratedTimeUtc)
                 .ToList();
         }

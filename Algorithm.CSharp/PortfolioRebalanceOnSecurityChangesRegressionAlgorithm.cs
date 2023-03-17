@@ -31,6 +31,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class PortfolioRebalanceOnSecurityChangesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private int _generatedInsightsCount;
         private Dictionary<Symbol, DateTime> _lastOrderFilled;
 
         /// <summary>
@@ -62,6 +63,8 @@ namespace QuantConnect.Algorithm.CSharp
             SetExecution(new ImmediateExecutionModel());
 
             _lastOrderFilled = new Dictionary<Symbol, DateTime>();
+
+            InsightsGenerated += (_, e) => _generatedInsightsCount += e.Insights.Length;
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
@@ -79,6 +82,16 @@ namespace QuantConnect.Algorithm.CSharp
                 _lastOrderFilled[orderEvent.Symbol] = UtcTime;
 
                 Debug($"{orderEvent}");
+            }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            if (Insights.Count == _generatedInsightsCount)
+            {
+                // The number of insights is modified by the Portfolio Construction Model,
+                // since it removes expired insights and insights from removed securities 
+                throw new Exception($"The number of insights in the insight manager should be different of the number of all insights generated ({_generatedInsightsCount})");
             }
         }
 
