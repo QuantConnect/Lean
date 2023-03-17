@@ -33,14 +33,17 @@ class HistoricalReturnsAlphaModel(AlphaModel):
             algorithm: The algorithm instance
             data: The new data available
         Returns:
-            The new insights generated'''
+            The new insights generated'''        
         insights = []
 
         for symbol, symbolData in self.symbolDataBySymbol.items():
+            if symbol in data.Splits or symbol in data.Dividends:
+                symbolData.Reset()
+
             if symbolData.CanEmit:
 
                 direction = InsightDirection.Flat
-                magnitude = float(symbolData.ROC.Current.Value)
+                magnitude = symbolData.ROC.Current.Value
                 if magnitude > 0: direction = InsightDirection.Up
                 if magnitude < 0: direction = InsightDirection.Down
 
@@ -58,7 +61,7 @@ class HistoricalReturnsAlphaModel(AlphaModel):
         for removed in changes.RemovedSecurities:
             symbolData = self.symbolDataBySymbol.pop(removed.Symbol, None)
             if symbolData:
-                algorithm.SubscriptionManager.RemoveConsolidator(removed.Symbol, symbolData.Consolidator)
+                symbolData.dispose()
 
         # initialize data for added securities
         added_symbols = []
@@ -71,18 +74,20 @@ class HistoricalReturnsAlphaModel(AlphaModel):
             history = algorithm.History[TradeBar](added_symbols, self.lookback, self.resolution)
             for trade_bars in history:
                 for bar in trade_bars.Values:
-                    self.symbolDataBySymbol[bar.Symbol].ROC.Update(bar.EndTime, bar.Value)
+                    self.symbolDataBySymbol[bar.Symbol].Update(bar)
 
 
 class SymbolData:
     '''Contains data specific to a symbol required by this model'''
     def __init__(self, algorithm, symbol, lookback, resolution):
-        self.Symbol = symbol
+        self.algorithm = algorithm
+        self.symbol = symbol
+        self.lookback = lookback
         self.ROC = RateOfChange('{}.ROC({})'.format(symbol, lookback), lookback)
+        self.resolution = resolution
         self.previous = 0
 
-        self.Consolidator = algorithm.ResolveConsolidator(self.Symbol, resolution)
-        algorithm.RegisterIndicator(self.Symbol, self.ROC, self.Consolidator)
+        self.SetUpConsolidator()
 
     @property
     def CanEmit(self):
@@ -92,5 +97,26 @@ class SymbolData:
         self.previous = self.ROC.Samples
         return self.ROC.IsReady
 
+    def Update(self, bar):
+        self.consolidator.Update(bar)
+
+    def SetUpConsolidator(self):
+        self.consolidator = self.algorithm.ResolveConsolidator(self.symbol, self.resolution)
+        self.algorithm.RegisterIndicator(self.symbol, self.ROC, self.consolidator)
+
+    def Reset(self):
+        self.ROC.Reset()
+        self.dispose()
+        self.SetUpConsolidator()
+        
+        # Warm up consolidator / indicator
+        bars = self.algorithm.History[TradeBar](self.symbol, self.lookback, self.resolution)
+        for bar in bars:
+            self.Update(bar)
+
+
+    def dispose(self):
+        self.algorithm.SubscriptionManager.RemoveConsolidator(self.symbol, self.consolidator)
+
     def __str__(self, **kwargs):
-        return '{}: {:.2%}'.format(self.ROC.Name, (1 + self.Return)**252 - 1)
+        return '{}: {:.2%}'.format(self.ROC.Name, self.ROC.Current.Value)
