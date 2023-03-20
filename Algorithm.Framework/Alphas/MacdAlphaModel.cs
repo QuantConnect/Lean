@@ -37,8 +37,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         private readonly int _signalPeriod;
         private readonly MovingAverageType _movingAverageType;
         private readonly Resolution _resolution;
+        private readonly TimeSpan _insightPeriod;
         private const decimal BounceThresholdPercent = 0.01m;
-        protected readonly Dictionary<Symbol, SymbolData> _symbolData;
+        protected readonly Dictionary<Symbol, SymbolData> _symbolData = new();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MacdAlphaModel"/> class
@@ -61,7 +62,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             _signalPeriod = signalPeriod;
             _movingAverageType = movingAverageType;
             _resolution = resolution;
-            _symbolData = new Dictionary<Symbol, SymbolData>();
+            _insightPeriod = _resolution.ToTimeSpan().Multiply(_fastPeriod);
             Name = $"{nameof(MacdAlphaModel)}({fastPeriod},{slowPeriod},{signalPeriod},{movingAverageType},{resolution})";
         }
 
@@ -76,14 +77,18 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             // Reset indicators when corporate actions occur
             foreach (var symbol in data.Splits.Keys.Union(data.Dividends.Keys))
             {
-                if (_symbolData.ContainsKey(symbol))
+                if (_symbolData.TryGetValue(symbol, out var symbolData))
                 {
-                    _symbolData[symbol].Reset();
+                    algorithm.Log($"MacdAlphaModel: Reset {symbol} MACD due to corporate action.");
+                    symbolData.Reset();
                 }
             }
 
             // Only emit insights when there is quote data, not when a corporate action occurs (at midnight)
-            if (data.QuoteBars.Count == 0) yield break;
+            if (data.QuoteBars.Count == 0) 
+            {
+                yield break;
+            }
 
             foreach (var sd in _symbolData.Values)
             {
@@ -109,9 +114,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     continue;
                 }
 
-                var insightPeriod = _resolution.ToTimeSpan().Multiply(_fastPeriod);
-                var insight = Insight.Price(sd.Security.Symbol, insightPeriod, direction);
-                sd.PreviousDirection = insight.Direction;
+                var insight = Insight.Price(sd.Security.Symbol, _insightPeriod, direction);
+                sd.PreviousDirection = direction;
                 yield return insight;
             }
         }
@@ -135,12 +139,10 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
             foreach (var removed in changes.RemovedSecurities)
             {
-                SymbolData data;
-                if (_symbolData.TryGetValue(removed.Symbol, out data))
+                if (_symbolData.Remove(removed.Symbol, out var data))
                 {
-                    // clean up our consolidator
+                    // clean up our consolidator and indicator
                     data.Dispose();
-                    _symbolData.Remove(removed.Symbol);
                 }
             }
         }
@@ -159,23 +161,24 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 _algorithm = algorithm;
                 _resolution = resolution;
                 Security = security;
-                Consolidator = algorithm.ResolveConsolidator(security.Symbol, resolution);
-                algorithm.SubscriptionManager.AddConsolidator(security.Symbol, Consolidator);
 
                 MACD = new MovingAverageConvergenceDivergence(fastPeriod, slowPeriod, signalPeriod, movingAverageType);
-
+                Consolidator = algorithm.ResolveConsolidator(security.Symbol, resolution);
+                
                 algorithm.RegisterIndicator(security.Symbol, MACD, Consolidator);
+                algorithm.SubscriptionManager.AddConsolidator(security.Symbol, Consolidator);
                 algorithm.WarmUpIndicator(security.Symbol, MACD, resolution);
             }
 
             public void Reset()
             {
-                // reset & warm up indicator
+                // reset & warm up indicator & consolidator by updating
                 MACD.Reset();
-                _algorithm.WarmUpIndicator(Security.Symbol, MACD, _resolution);
-                // reset consolidator by updating
-                var history = _algorithm.History<TradeBar>(Security.Symbol, 1, _resolution).ToList();
-                Consolidator.Update(history[0]);
+                var history = _algorithm.History<TradeBar>(Security.Symbol, MACD.WarmUpPeriod, _resolution);
+                foreach (var bar in history)
+                {
+                    Consolidator.Update(bar);
+                }
             }
 
             public void Dispose()

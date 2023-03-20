@@ -56,13 +56,14 @@ class MacdAlphaModel(AlphaModel):
         # Reset indicators when corporate actions occur
         for symbol in set(list(data.Splits.keys()) + list(data.Dividends.keys())):
             if symbol in self.symbolData:
+                algorithm.Log(f"MacdAlphaModel: Reset {symbol} MACD due to corporate action.")
                 self.symbolData[symbol].Reset()
         
         # Only emit insights when there is quote data, not when a corporate action occurs (at midnight)
         if data.QuoteBars.Count == 0:
             return []
 
-        for key, sd in self.symbolData.items():
+        for sd in self.symbolData.values():
             if sd.Security.Price == 0:
                 continue
 
@@ -79,7 +80,7 @@ class MacdAlphaModel(AlphaModel):
                 continue
 
             insight = Insight.Price(sd.Security.Symbol, self.insightPeriod, direction)
-            sd.PreviousDirection = insight.Direction
+            sd.PreviousDirection = direction
             insights.append(insight)
 
         return insights
@@ -92,34 +93,36 @@ class MacdAlphaModel(AlphaModel):
             algorithm: The algorithm instance that experienced the change in securities
             changes: The security additions and removals from the algorithm'''
         for added in changes.AddedSecurities:
+            if added.Symbol in self.symbolData: continue
             self.symbolData[added.Symbol] = SymbolData(algorithm, added, self.fastPeriod, self.slowPeriod, self.signalPeriod, self.movingAverageType, self.resolution)
 
         for removed in changes.RemovedSecurities:
             data = self.symbolData.pop(removed.Symbol, None)
-            if data is not None:
-                # clean up our consolidator
-                algorithm.SubscriptionManager.RemoveConsolidator(removed.Symbol, data.Consolidator)
+            if data:
+                # clean up our consolidator and indicator
+                data.Dispose()
 
 class SymbolData:
     def __init__(self, algorithm, security, fastPeriod, slowPeriod, signalPeriod, movingAverageType, resolution):
         self.algorithm = algorithm
         self.Security = security
         self.resolution = resolution
+        
         self.MACD = MovingAverageConvergenceDivergence(fastPeriod, slowPeriod, signalPeriod, movingAverageType)
-
         self.Consolidator = algorithm.ResolveConsolidator(security.Symbol, resolution)
+        
         algorithm.RegisterIndicator(security.Symbol, self.MACD, self.Consolidator)
+        algorithm.SubscriptionManager.AddConsolidator(security.Symbol, self.Consolidator)
         algorithm.WarmUpIndicator(security.Symbol, self.MACD, resolution)
 
         self.PreviousDirection = None
     
     def Reset(self):
-        # reset & warm up indicator
+        # reset & warm up indicator & consolidator by updating
         self.MACD.Reset()
-        self.algorithm.WarmUpIndicator(self.Security.Symbol, self.MACD, self.resolution)
-        # reset consolidator by updating
-        history = self.algorithm.History[TradeBar](self.Security.Symbol, 1, self.resolution)
-        self.Consolidator.Update(history[0])
+        history = self.algorithm.History[TradeBar](self.Security.Symbol, self.MACD.WarmUpPeriod, self.resolution)
+        for bar in history:
+            self.Consolidator.Update(bar)
         
     def Dispose(self):
         self.MACD.Reset()

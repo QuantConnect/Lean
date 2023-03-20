@@ -32,7 +32,7 @@ class MacdAlphaModelFrameworkAlgorithm(QCAlgorithm):
         # With this procedure, the Alpha Model will experience multiple universe changes
         self.AddUniverseSelection(ScheduledUniverseSelectionModel(
             self.DateRules.EveryDay(), self.TimeRules.Midnight,
-            lambda dt: symbols if dt.day <= (self.EndDate - timedelta(1)).day else []))
+            lambda dt: symbols if dt < self.EndDate.astimezone(dt.tzinfo) - timedelta(1) else []))
 
         self.SetAlpha(MacdAlphaModel())
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
