@@ -118,11 +118,8 @@ class SymbolData:
         algorithm.RegisterIndicator(symbol, self.STD, self.Consolidator)
 
         # warmup our indicators by pushing history through the indicators
-        history = algorithm.History(symbol, period, resolution)
-        if 'close' in history:
-            history = history.close.unstack(0).squeeze().replace([np.inf, -np.inf], np.nan)
-            # remove non-numeric rows from the close price series
-            #history = history[pd.to_numeric(history, errors='coerce').notnull()]
-            for time, value in history.iteritems():
-                self.SMA.Update(time, value)
-                self.STD.Update(time, value)
+        data_type = QuoteBar if security.Type == SecurityType.Forex or security.Type == SecurityType.Cfd else TradeBar
+        bars = algorithm.History[data_type](symbol, period, resolution)
+        for bar in bars:
+            self.SMA.Update(bar.EndTime, bar.Close)
+            self.STD.Update(bar.EndTime, bar.Close)
