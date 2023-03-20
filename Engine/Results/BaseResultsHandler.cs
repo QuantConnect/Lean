@@ -42,6 +42,7 @@ namespace QuantConnect.Lean.Engine.Results
         private RollingWindow<decimal> _previousSalesVolume;
         private DateTime _previousPortfolioTurnoverSample;
         private bool _packetDroppedWarning;
+        private int _logCount;
         // used for resetting out/error upon completion
         private static readonly TextWriter StandardOut = Console.Out;
         private static readonly TextWriter StandardError = Console.Error;
@@ -235,7 +236,10 @@ namespace QuantConnect.Lean.Engine.Results
                 ["StartTime"] = StartTime.ToStringInvariant(DateFormat.UI),
                 ["EndTime"] = string.Empty,
                 ["RuntimeError"] = string.Empty,
-                ["StackTrace"] = string.Empty
+                ["StackTrace"] = string.Empty,
+                ["LogCount"] = "0",
+                ["OrderCount"] = "0",
+                ["InsightCount"] = "0"
             };
             _previousSalesVolume = new (2);
             _previousSalesVolume.Add(0);
@@ -771,6 +775,14 @@ namespace QuantConnect.Lean.Engine.Results
                 State["Status"] = Algorithm.Status.ToStringInvariant();
             }
             State["EndTime"] = endTime != null ? endTime.ToStringInvariant(DateFormat.UI) : string.Empty;
+
+            lock (LogStore)
+            {
+                State["LogCount"] = _logCount.ToStringInvariant();
+            }
+            State["OrderCount"] = Algorithm?.Transactions?.OrdersCount.ToStringInvariant() ?? "0";
+            State["InsightCount"] = Algorithm?.Insights.TotalCount.ToStringInvariant() ?? "0";
+
             return State;
         }
 
@@ -826,7 +838,14 @@ namespace QuantConnect.Lean.Engine.Results
         /// Save an algorithm message to the log store. Uses a different timestamped method of adding messaging to interweve debug and logging messages.
         /// </summary>
         /// <param name="message">String message to store</param>
-        protected abstract void AddToLogStore(string message);
+        protected virtual void AddToLogStore(string message)
+        {
+            lock (LogStore)
+            {
+                LogStore.Add(new LogEntry(message));
+                _logCount++;
+            }
+        }
 
         /// <summary>
         /// Processes algorithm logs.

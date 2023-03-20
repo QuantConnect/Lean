@@ -453,14 +453,11 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Message to add</param>
         protected override void AddToLogStore(string message)
         {
-            lock (LogStore)
-            {
-                var messageToLog = Algorithm != null
-                    ? new LogEntry(Algorithm.Time.ToStringInvariant(DateFormat.UI) + " " + message)
-                    : new LogEntry("Algorithm Initialization: " + message);
+            var messageToLog = Algorithm != null
+                ? Algorithm.Time.ToStringInvariant(DateFormat.UI) + " " + message
+                : "Algorithm Initialization: " + message;
 
-                LogStore.Add(messageToLog);
-            }
+            base.AddToLogStore(messageToLog);
         }
 
         /// <summary>

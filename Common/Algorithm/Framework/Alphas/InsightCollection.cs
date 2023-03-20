@@ -27,6 +27,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// </summary>
     public class InsightCollection : IEnumerable<Insight>
     {
+        private int _totalInsightCount;
         private int _openInsightCount;
         private readonly List<Insight> _insightsComplete = new();
         private readonly Dictionary<Symbol, List<Insight>> _insights = new();
@@ -45,6 +46,20 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             }
         }
 
+        /// <summary>
+        /// The total insight count
+        /// </summary>
+        public int TotalCount
+        {
+            get
+            {
+                lock (_insights)
+                {
+                    return _totalInsightCount;
+                }
+            }
+        }
+
         /// <summary>Adds an item to the <see cref="T:System.Collections.Generic.ICollection`1" />.</summary>
         /// <param name="item">The object to add to the <see cref="T:System.Collections.Generic.ICollection`1" />.</param>
         /// <exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1" /> is read-only.</exception>
@@ -53,6 +68,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             lock (_insights)
             {
                 _openInsightCount++;
+                _totalInsightCount++;
 
                 _insightsComplete.Add(item);
 
@@ -155,6 +171,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     if (value != null)
                     {
                         _openInsightCount += value.Count;
+                        _totalInsightCount += value.Count;
                     }
                     _insights[symbol] = value;
                 }

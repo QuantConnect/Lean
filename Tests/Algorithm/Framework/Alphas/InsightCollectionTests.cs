@@ -137,6 +137,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             Assert.AreEqual(3, collection.GetInsights().Count);
             Assert.AreEqual(insight, collection.GetInsights(x => insight == x).Single());
             Assert.AreEqual(0, collection.GetActiveInsights(_referenceTime.AddYears(1)).Count);
+            Assert.AreEqual(3, collection.TotalCount);
         }
 
         [Test]
@@ -176,6 +177,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             collection.RemoveInsights(x => x == firstInsight);
             Assert.AreEqual(4, collection.GetInsights().Count);
             Assert.AreEqual(0, collection.Count);
+            Assert.AreEqual(6, collection.TotalCount);
         }
 
         [Test]
@@ -194,6 +196,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             // expire 2 insights
             Assert.AreEqual(2, collection.RemoveExpiredInsights(_referenceTime.AddDays(2)).Count);
             Assert.AreEqual(2, collection.Count);
+            Assert.AreEqual(5, collection.TotalCount);
         }
 
         [Test]
@@ -212,6 +215,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 
             collection[Symbols.AAPL] = null;
             Assert.AreEqual(3, collection.Count);
+
+            Assert.AreEqual(7, collection.TotalCount);
         }
 
         [Test]
@@ -228,6 +233,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 Assert.IsTrue(collection.Contains(insight));
                 Assert.IsTrue(collection.ContainsKey(insight.Symbol));
             }
+            Assert.AreEqual(5, collection.TotalCount);
         }
 
         [Test]
@@ -244,6 +250,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             Assert.IsTrue(collection.ContainsKey(Symbols.SPY));
             Assert.IsTrue(collection.ContainsKey(Symbols.IBM));
             Assert.IsFalse(collection.ContainsKey(Symbols.AAPL));
+            Assert.AreEqual(5, collection.TotalCount);
         }
 
 
