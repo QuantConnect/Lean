@@ -64,14 +64,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     DateTime startTimeUtc;
                     DateTime endTimeUtc;
+                    // we will download until yesterday so we are sure we don't get partial data
+                    var endTimeUtcLimit = DateTime.UtcNow.Date.AddDays(-1);
                     if (resolution < Resolution.Hour)
                     {
                         // we can get the date from the path
                         startTimeUtc = date.ConvertToUtc(dataTimeZone);
-                        endTimeUtc = date.Add(resolution.ToTimeSpan()).ConvertToUtc(dataTimeZone);
+                        // let's get the whole day
+                        endTimeUtc = date.AddDays(1).ConvertToUtc(dataTimeZone);
+                        if(endTimeUtc > endTimeUtcLimit)
+                        {
+                            // we are at the limit, avoid getting partial data
+                            return;
+                        }
                     }
                     else
                     {
+                        // since hourly & daily are a single file we fetch the whole file
                         try
                         {
                             startTimeUtc = symbol.ID.Date;
@@ -80,7 +89,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         {
                             startTimeUtc = Time.BeginningOfTime;
                         }
-                        endTimeUtc = DateTime.UtcNow;
+                        endTimeUtc = endTimeUtcLimit;
                     }
 
                     // Save the data

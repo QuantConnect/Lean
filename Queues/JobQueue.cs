@@ -179,9 +179,9 @@ namespace QuantConnect.Queues
                     }
                     foreach (var data in brokerageFactoryForDataHandler.BrokerageData)
                     {
-                        if (data.Key == "live-holdings")
+                        if (data.Key == "live-holdings" || data.Key == "live-cash-balance")
                         {
-                            //live-holdings not required for data handler
+                            //live holdings & cash balance not required for data handler
                             continue;
                         }
                         else if (!liveJob.BrokerageData.ContainsKey(data.Key))
