@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,6 +43,11 @@ class HistoricalReturnsAlphaModel(AlphaModel):
                 magnitude = symbolData.Return
                 if magnitude > 0: direction = InsightDirection.Up
                 if magnitude < 0: direction = InsightDirection.Down
+                if direction == InsightDirection.Flat:
+                    existing_insights = algorithm.Insights.GetInsights(lambda x: x.Symbol == symbol and x.SourceModel == self.Name)
+                    for i in existing_insights:
+                        i.CloseTimeUtc = algorithm.UtcTime - timedelta(seconds=1)
+                    continue
 
                 insights.append(Insight.Price(symbol, self.predictionInterval, direction, magnitude, None))
 

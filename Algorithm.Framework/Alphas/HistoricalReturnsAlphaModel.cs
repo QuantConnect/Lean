@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -68,6 +68,16 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     var magnitude = (double)symbolData.ROC.Current.Value;
                     if (magnitude > 0) direction = InsightDirection.Up;
                     if (magnitude < 0) direction = InsightDirection.Down;
+                    if (direction == InsightDirection.Flat)
+                    {
+                        var existingInsights = algorithm.Insights
+                            .GetInsights(x => x.Symbol == symbolData.Security.Symbol && x.SourceModel == Name);
+                        foreach (var i in existingInsights)
+                        {
+                            i.CloseTimeUtc = algorithm.UtcTime.AddSeconds(-1);
+                        }
+                        continue;
+                    }
                     insights.Add(Insight.Price(symbolData.Security.Symbol, _predictionInterval, direction, magnitude, null));
                 }
             }
