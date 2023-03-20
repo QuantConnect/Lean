@@ -45,6 +45,11 @@ namespace QuantConnect.Tests.Common.Data
                 },
                 new Tick()
                 {
+                    Time = dt.AddMinutes(1),
+                    Value = 0
+                },
+                new Tick()
+                {
                     Time = dt.AddMinutes(2),
                     Value = 3
                 },
@@ -70,13 +75,20 @@ namespace QuantConnect.Tests.Common.Data
 
             var bar = list[0];
             Assert.AreEqual(1, bar.Open);
-            Assert.AreEqual(3, bar.Close);
-            Assert.AreEqual(1, bar.Low);
-            Assert.AreEqual(3, bar.High);
+            Assert.AreEqual(0, bar.Close);
+            Assert.AreEqual(0, bar.Low);
+            Assert.AreEqual(1, bar.High);
 
-            // Push the 4th item
+            var currentBar = (RangeBar)consolidator.WorkingData;
+            Assert.AreEqual(3, currentBar.Open);
+            Assert.AreEqual(3, currentBar.High);
+            Assert.AreEqual(3, currentBar.Low);
+            Assert.AreEqual(3, currentBar.Close);
+
+            // Push the 4th and 5th items
             consolidator.Update(testData[3]);
-            
+            consolidator.Update(testData[4]);
+
             Assert.AreEqual(2, list.Count);
 
             bar = list[1];
@@ -125,6 +137,7 @@ namespace QuantConnect.Tests.Common.Data
             }
 
             Assert.AreEqual(2, counter);
+
             consolidator.Dispose();
         }
     }

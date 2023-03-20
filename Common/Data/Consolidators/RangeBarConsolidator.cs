@@ -18,19 +18,29 @@ using System;
 
 namespace QuantConnect.Data.Consolidators 
 {
+    /// <summary>
+    /// Implementation of a range bar consolidator.
+    /// Ref 1: https://help.quantower.com/quantower/analytics-panels/chart/chart-types/range-bars
+    /// Ref 2: https://help.cqg.com/cqgic/20/default.htm#!Documents/rangebarrb.htm
+    /// </summary>
     public class RangeBarConsolidator : DataConsolidator<Tick>
     {
         private RangeBar _currentBar;
-        private readonly int _length;
+        private readonly decimal _length;
 
         /// <summary>
-        /// Creates a new instance of <see cref="RangeBarConsolidator"/> of given length (pips).
+        /// Creates a new instance of <see cref="RangeBarConsolidator"/> of given price length.
         /// </summary>
-        /// <param name="length"></param>
-        public RangeBarConsolidator(int length)
+        /// <param name="length">Price length</param>
+        public RangeBarConsolidator(decimal length)
         {
             _length = length;
         }
+
+        /// <summary>
+        /// Event handler that fires when a new piece of data is produced
+        /// </summary>
+        public new event EventHandler<RangeBar> DataConsolidated;
 
         /// <summary>
         /// Gets the type produced by this consolidator
@@ -62,23 +72,27 @@ namespace QuantConnect.Data.Consolidators
             }
 
             OnDataConsolidated(_currentBar);
-
-            // Init new range bar from closed bar last tick
-            var closedBarLastTick = _currentBar.LastTick;
-            _currentBar = new RangeBar(closedBarLastTick, _length);
-
-            // Push new tick
-            // If unsuccessful, example: price difference between last tick and current tick is more then range-bar length,
-            // then create a new range bar from current data (tick)
-            var isOutOfLengthScope = _currentBar.Update(data);
-            if (isOutOfLengthScope)
-            {
-                _currentBar = new RangeBar(data, _length);
-            }
+            
+            _currentBar = new RangeBar(data, _length);
         }
 
+        /// <summary>
+        /// Scans this consolidator to see if it should emit a bar due to time passing
+        /// </summary>
+        /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="BaseData.Time"/>)</param>
         public override void Scan(DateTime currentLocalTime)
         {
+        }
+
+        /// <summary>
+        /// Event invocator for the DataConsolidated event. This should be invoked
+        /// by derived classes when they have consolidated a new piece of data.
+        /// </summary>
+        /// <param name="consolidated">The newly consolidated data</param>
+        protected void OnDataConsolidated(RangeBar consolidated) 
+        {
+            base.OnDataConsolidated(consolidated);
+            DataConsolidated?.Invoke(this, consolidated);
         }
     }
 }

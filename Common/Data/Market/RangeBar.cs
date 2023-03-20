@@ -27,12 +27,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Bar length
         /// </summary>
-        public int Length { get; set; }
-
-        /// <summary>
-        /// Last tick
-        /// </summary>
-        public Tick LastTick { get; private set; }
+        public decimal Length { get; set; }
 
         /// <summary>
         /// Volume:
@@ -82,9 +77,9 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Initializes a new instance of the <see cref="RangeBar"/> class from a new tick
         /// </summary>
-        /// <param name="tick"></param>
-        /// <param name="length"></param>
-        public RangeBar(Tick tick, int length)
+        /// <param name="tick">First tick to initialize the bar</param>
+        /// <param name="length">Bar length</param>
+        public RangeBar(Tick tick, decimal length)
         {
             Length = length;
             Symbol = tick.Symbol;
@@ -95,7 +90,6 @@ namespace QuantConnect.Data.Market
             Low = tick.Price;
             Close = tick.Price;
             Volume = tick.Quantity;
-            LastTick = tick;
         }
 
         /// <summary>
@@ -133,9 +127,19 @@ namespace QuantConnect.Data.Market
             Close = price;
             EndTime = time;
 
-            LastTick = tick;
-
             return false;
+        }
+
+        /// <summary>
+        /// Formats a string with the symbol and values.
+        /// </summary>
+        public override string ToString() {
+            return $"{Symbol}: {Time} - {EndTime} " +
+                $"O: {Open.SmartRounding()} " +
+                $"H: {High.SmartRounding()} " +
+                $"L: {Low.SmartRounding()} " +
+                $"C: {Close.SmartRounding()} " +
+                $"V: {Volume.SmartRounding()}";
         }
     }
 }
