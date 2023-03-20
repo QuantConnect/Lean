@@ -559,10 +559,7 @@ namespace QuantConnect.Lean.Engine.Results
         protected override void AddToLogStore(string message)
         {
             Log.Debug("LiveTradingResultHandler.AddToLogStore(): Adding");
-            lock (LogStore)
-            {
-                LogStore.Add(new LogEntry(DateTime.Now.ToStringInvariant(DateFormat.UI) + " " + message));
-            }
+            base.AddToLogStore(DateTime.Now.ToStringInvariant(DateFormat.UI) + " " + message);
             Log.Debug("LiveTradingResultHandler.AddToLogStore(): Finished adding");
         }
 
