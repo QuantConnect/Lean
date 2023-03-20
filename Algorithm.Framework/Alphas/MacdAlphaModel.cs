@@ -94,9 +94,24 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     continue;
                 }
 
+                sd.PreviousDirection = direction;
+
+                if (direction == InsightDirection.Flat)
+                {
+                    var activeInsights = algorithm.Insights
+                        .GetInsights(x => x.Symbol == sd.Security.Symbol && x.SourceModel == Name);
+
+                    foreach (var activeInsight in activeInsights)
+                    {
+                        activeInsight.CloseTimeUtc = algorithm.UtcTime.AddSeconds(-1);
+                    }
+
+                    continue;
+                }
+
                 var insightPeriod = _resolution.ToTimeSpan().Multiply(_fastPeriod);
                 var insight = Insight.Price(sd.Security.Symbol, insightPeriod, direction);
-                sd.PreviousDirection = insight.Direction;
+
                 yield return insight;
             }
         }

@@ -69,8 +69,16 @@ class MacdAlphaModel(AlphaModel):
             if direction == sd.PreviousDirection:
                 continue
 
+            sd.PreviousDirection = direction
+            
+            if direction == InsightDirection.Flat:
+                activeInsights = algorithm.Insights.GetInsights(
+                    lambda x: x.Symbol == sd.Security.Symbol and x.SourceModel == self.Name)
+                for activeInsight in activeInsights:
+                    activeInsight.CloseTimeUtc = algorithm.UtcTime - timedelta(seconds=1)
+                continue
+            
             insight = Insight.Price(sd.Security.Symbol, self.insightPeriod, direction)
-            sd.PreviousDirection = insight.Direction
             insights.append(insight)
 
         return insights
