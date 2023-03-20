@@ -56,6 +56,7 @@ class MacdAlphaModel(AlphaModel):
         # Reset indicators when corporate actions occur
         for symbol in set(list(data.Splits.keys()) + list(data.Dividends.keys())):
             if symbol in self.symbolData:
+                algorithm.Log(f"MacdAlphaModel: Reset {symbol} MACD due to corporate action.")
                 self.symbolData[symbol].Reset()
         
         # Only emit insights when there is quote data, not when a corporate action occurs (at midnight)
@@ -105,21 +106,22 @@ class SymbolData:
         self.algorithm = algorithm
         self.Security = security
         self.resolution = resolution
+        
         self.MACD = MovingAverageConvergenceDivergence(fastPeriod, slowPeriod, signalPeriod, movingAverageType)
-
         self.Consolidator = algorithm.ResolveConsolidator(security.Symbol, resolution)
+        
         algorithm.RegisterIndicator(security.Symbol, self.MACD, self.Consolidator)
+        algorithm.SubscriptionManager.AddConsolidator(security.Symbol, self.Consolidator)
         algorithm.WarmUpIndicator(security.Symbol, self.MACD, resolution)
 
         self.PreviousDirection = None
     
     def Reset(self):
-        # reset & warm up indicator
+        # reset & warm up indicator & consolidator by updating
         self.MACD.Reset()
-        self.algorithm.WarmUpIndicator(self.Security.Symbol, self.MACD, self.resolution)
-        # reset consolidator by updating
-        history = self.algorithm.History[TradeBar](self.Security.Symbol, 1, self.resolution)
-        self.Consolidator.Update(history[0])
+        history = self.algorithm.History[TradeBar](self.Security.Symbol, self.MACD.WarmUpPeriod, self.resolution)
+        for bar in history:
+            self.Consolidator.Update(bar)
         
     def Dispose(self):
         self.MACD.Reset()

@@ -78,6 +78,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             {
                 if (_symbolData.ContainsKey(symbol))
                 {
+                    algorithm.Log($"MacdAlphaModel: Reset {symbol} MACD due to corporate action.");
                     _symbolData[symbol].Reset();
                 }
             }
@@ -159,23 +160,24 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 _algorithm = algorithm;
                 _resolution = resolution;
                 Security = security;
-                Consolidator = algorithm.ResolveConsolidator(security.Symbol, resolution);
-                algorithm.SubscriptionManager.AddConsolidator(security.Symbol, Consolidator);
 
                 MACD = new MovingAverageConvergenceDivergence(fastPeriod, slowPeriod, signalPeriod, movingAverageType);
-
+                Consolidator = algorithm.ResolveConsolidator(security.Symbol, resolution);
+                
                 algorithm.RegisterIndicator(security.Symbol, MACD, Consolidator);
+                algorithm.SubscriptionManager.AddConsolidator(security.Symbol, Consolidator);
                 algorithm.WarmUpIndicator(security.Symbol, MACD, resolution);
             }
 
             public void Reset()
             {
-                // reset & warm up indicator
+                // reset & warm up indicator & consolidator by updating
                 MACD.Reset();
-                _algorithm.WarmUpIndicator(Security.Symbol, MACD, _resolution);
-                // reset consolidator by updating
-                var history = _algorithm.History<TradeBar>(Security.Symbol, 1, _resolution).ToList();
-                Consolidator.Update(history[0]);
+                var history = _algorithm.History<TradeBar>(Security.Symbol, MACD.WarmUpPeriod, _resolution);
+                foreach (var bar in history)
+                {
+                    Consolidator.Update(bar);
+                }
             }
 
             public void Dispose()
