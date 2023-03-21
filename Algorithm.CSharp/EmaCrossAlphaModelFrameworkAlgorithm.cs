@@ -28,19 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
             base.Initialize();
             SetAlpha(new EmaCrossAlphaModel());
         }
-
-        public override Language[] Languages { get; } = { Language.CSharp };
-
-        /// <summary>
-        /// Data Points count of all timeslices of algorithm
-        /// </summary>
-        public override long DataPoints => 14869;
-
-        /// <summary>
-        /// Data Points count of the algorithm history
-        /// </summary>
-        public override int AlgorithmHistoryDataPoints => 152;
-
+        
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
