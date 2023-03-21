@@ -40,7 +40,33 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// <summary>
         /// Collection of all OptionStrategyDefinitions
         /// </summary>
-        public static ImmutableList<OptionStrategyDefinition> AllDefinitions => All.Value;
+        public static ImmutableList<OptionStrategyDefinition> AllDefinitions
+        {
+            get
+            {
+                var strategies = All.Value;
+
+                return strategies
+                    .SelectMany(optionStrategy => {
+                        // when selling the strategy can get reverted and it's still valid, we need the definition to match against
+                        var inverted = new OptionStrategyDefinition(optionStrategy.Name, optionStrategy.UnderlyingLots * -1,
+                            optionStrategy.Legs.Select(leg => new OptionStrategyLegDefinition(leg.Right, leg.Quantity * -1, leg)));
+
+                        if (strategies.Any(strategy => strategy.UnderlyingLots == inverted.UnderlyingLots
+                            && strategy.Legs.Count == inverted.Legs.Count
+                            && strategy.Legs.All(leg => inverted.Legs.
+                                Any(invertedLeg => invertedLeg.Right == leg.Right
+                                    && leg.Quantity == invertedLeg.Quantity
+                                    && leg.All(predicate => invertedLeg.Any(invertedPredicate => invertedPredicate.ToString() == predicate.ToString()))))))
+                        {
+                            // some strategies inverted have a different name we already know, let's skip those
+                            return new[] { optionStrategy };
+                        }
+                        return new[] { optionStrategy, inverted };
+                    })
+                    .ToImmutableList();
+            }
+        }
 
         /// <summary>
         /// Hold 1 lot of the underlying and sell 1 call contract

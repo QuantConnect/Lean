@@ -143,9 +143,10 @@ namespace QuantConnect.Securities.Positions
         /// <returns>An enumerable containing the position groups that could be impacted by the specified position changes</returns>
         public IEnumerable<IPositionGroup> GetImpactedGroups(PositionGroupCollection groups, IReadOnlyCollection<IPosition> positions)
         {
+            // we keep track of yielded groups for all resolvers
+            var seen = new HashSet<PositionGroupKey>();
             foreach (var resolver in _resolvers)
             {
-                var seen = new HashSet<PositionGroupKey>();
                 foreach (var group in resolver.GetImpactedGroups(groups, positions))
                 {
                     if (seen.Add(group.Key))

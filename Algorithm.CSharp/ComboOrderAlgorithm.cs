@@ -120,7 +120,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (FillOrderEvents.Zip(OrderLegs).Any(x => x.First.FillQuantity != x.Second.Quantity * ComboOrderQuantity))
             {
-                throw new Exception("Fill quantity does not match expected quantity for at least one order leg");
+                throw new Exception("Fill quantity does not match expected quantity for at least one order leg." +
+                    $"Expected: {string.Join(", ", OrderLegs.Select(x => x.Quantity * ComboOrderQuantity))}. " +
+                    $"Actual: {string.Join(", ", FillOrderEvents.Select(x => x.FillQuantity))}");
             }
         }
 

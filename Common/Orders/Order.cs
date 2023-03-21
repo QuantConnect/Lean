@@ -427,7 +427,7 @@ namespace QuantConnect.Orders
         public static Order CreateOrder(SubmitOrderRequest request)
         {
             return CreateOrder(request.OrderId, request.OrderType, request.Symbol, request.Quantity, request.Time,
-                request.Tag, request.OrderProperties, request.LimitPrice, request.StopPrice, request.TriggerPrice, request.GroupOrderManager);
+                 request.Tag, request.OrderProperties, request.LimitPrice, request.StopPrice, request.TriggerPrice, request.GroupOrderManager);
         }
 
         private static Order CreateOrder(int orderId, OrderType type, Symbol symbol, decimal quantity, DateTime time,
