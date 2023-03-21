@@ -26,20 +26,23 @@ using QuantConnect.Interfaces;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Abstract regression Framework algorithm used by <see cref="EmaCrossAlphaModelFrameworkAlgorithm"/>.
+    /// Abstract regression framework algorithm for multiple framework regression tests
     /// </summary>
-    public abstract class BaseAlphaModelFrameworkRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public abstract class BaseFrameworkRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);
-            SetEndDate(2013, 10, 11);
+            SetStartDate(2014, 6, 1);
+            SetEndDate(2014, 6, 30);
 
-            var symbols = new[] { "SPY", "AIG", "BAC", "IBM" }
+            UniverseSettings.Resolution = Resolution.Hour;
+            UniverseSettings.DataNormalizationMode = DataNormalizationMode.Raw;
+
+            var symbols = new[] { "AAPL", "AIG", "BAC", "SPY" }
                 .Select(ticker => QuantConnect.Symbol.Create(ticker, SecurityType.Equity, Market.USA))
                 .ToList();
 
-            // Manually add SPY and AIG when the algorithm starts
+            // Manually add AAPL and AIG when the algorithm starts
             SetUniverseSelection(new ManualUniverseSelectionModel(symbols.Take(2)));
 
             // At midnight, add all securities every day except on the last data
@@ -48,7 +51,7 @@ namespace QuantConnect.Algorithm.CSharp
                 DateRules.EveryDay(), TimeRules.Midnight,
                 dt => dt < EndDate.AddDays(-1) ? symbols : Enumerable.Empty<Symbol>()));
 
-            SetAlpha(new NullAlphaModel());
+            SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromDays(31), 0.025, null));
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
             SetExecution(new ImmediateExecutionModel());
             SetRiskManagement(new NullRiskManagementModel());
@@ -56,11 +59,11 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            // We have removed all securities from the universe. The Alpha Model should remove the consolidator
-            var consolidatorCount = SubscriptionManager.Subscriptions.Sum(s => s.Consolidators.Count);
-            if (consolidatorCount > 0)
+            // The base implementation checks for active insights
+            var insightsCount = Insights.GetInsights(insight => insight.IsActive(UtcTime)).Count;
+            if (insightsCount != 0)
             {
-                throw new Exception($"The number of consolidator is should be zero. Actual: {consolidatorCount}");
+                throw new Exception($"The number of active insights should be 0. Actual: {insightsCount}");
             }
         }
 
@@ -77,12 +80,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 14869;
+        public virtual long DataPoints => 765;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public virtual int AlgorithmHistoryDataPoints => 152;
+        public virtual int AlgorithmHistoryDataPoints => 0;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm

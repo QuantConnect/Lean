@@ -14,18 +14,21 @@
 from AlgorithmImports import *
 
 ### <summary>
-### Abstract regression Framework algorithm used by <see cref="EmaCrossAlphaModelFrameworkAlgorithm"/>.
+### Abstract regression framework algorithm for multiple framework regression tests
 ### </summary>
-class BaseAlphaModelFrameworkRegressionAlgorithm(QCAlgorithm):
+class BaseFrameworkRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        self.SetStartDate(2013, 10, 7)    #Set Start Date
-        self.SetEndDate(2013, 10, 11)      #Set End Date
+        self.SetStartDate(2014, 6, 1)
+        self.SetEndDate(2014, 6, 30)
         
-        symbols = [Symbol.Create(ticker, SecurityType.Equity, Market.USA)
-            for ticker in ["SPY", "AIG", "BAC", "IBM"]]
+        self.UniverseSettings.Resolution = Resolution.Hour;
+        self.UniverseSettings.DataNormalizationMode = DataNormalizationMode.Raw;
 
-        # Manually add SPY and AIG when the algorithm starts
+        symbols = [Symbol.Create(ticker, SecurityType.Equity, Market.USA)
+            for ticker in ["AAPL", "AIG", "BAC", "SPY"]]
+
+        # Manually add AAPL and AIG when the algorithm starts
         self.SetUniverseSelection(ManualUniverseSelectionModel(symbols[:2]))
 
         # At midnight, add all securities every day except on the last data
@@ -34,13 +37,13 @@ class BaseAlphaModelFrameworkRegressionAlgorithm(QCAlgorithm):
             self.DateRules.EveryDay(), self.TimeRules.Midnight,
             lambda dt: symbols if dt < self.EndDate.astimezone(dt.tzinfo) - timedelta(1) else []))
 
-        self.SetAlpha(NullAlphaModel())
+        self.SetAlpha(ConstantAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(31), 0.025, None))
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
         self.SetExecution(ImmediateExecutionModel())
         self.SetRiskManagement(NullRiskManagementModel())
 
     def OnEndOfAlgorithm(self):
-        # We have removed all securities from the universe. The Alpha Model should remove the consolidator
-        consolidatorCount = sum(s.Consolidators.Count for s in self.SubscriptionManager.Subscriptions)
-        if consolidatorCount > 0:
-            raise Exception(f"The number of consolidator is should be zero. Actual: {consolidatorCount}")
+        # The base implementation checks for active insights
+        insightsCount = len(self.Insights.GetInsights(lambda insight: insight.IsActive(self.UtcTime)))
+        if insightsCount != 0:
+            raise Exception(f"The number of active insights should be 0. Actual: {insightsCount}")
