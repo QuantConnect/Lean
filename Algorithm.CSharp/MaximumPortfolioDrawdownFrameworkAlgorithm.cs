@@ -14,34 +14,18 @@
 */
 
 using System.Collections.Generic;
-using QuantConnect.Algorithm.Framework.Alphas;
-using QuantConnect.Algorithm.Framework.Execution;
-using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
-using QuantConnect.Algorithm.Framework.Selection;
-using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Show example of how to use the <see cref="MaximumDrawdownPercentPortfolio"/> Risk Management Model
     /// </summary>
-    public class MaximumPortfolioDrawdownFrameworkAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class MaximumPortfolioDrawdownFrameworkAlgorithm : BaseRiskManagementModelFrameworkRegressionAlgorithm
     {
         public override void Initialize()
         {
-            // Set requested data resolution
-            UniverseSettings.Resolution = Resolution.Minute;
-
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 11);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
-
-            // set algorithm framework models
-            SetUniverseSelection(new ManualUniverseSelectionModel(QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)));
-            SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, System.TimeSpan.FromMinutes(20), 0.025, null));
-            SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
-            SetExecution(new ImmediateExecutionModel());
+            base.Initialize();
 
             // define risk management model as a composite of several risk management models
             SetRiskManagement(new CompositeRiskManagementModel(
@@ -49,56 +33,32 @@ namespace QuantConnect.Algorithm.CSharp
                 new MaximumDrawdownPercentPortfolio(0.015m, true) // Avoid profit losses
             ));
         }
-
-        /// <summary>
-        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
-        /// </summary>
-        public bool CanRunLocally { get; } = true;
-
-        /// <summary>
-        /// This is used by the regression test system to indicate which languages this algorithm is written in.
-        /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
-
-        /// <summary>
-        /// Data Points count of all timeslices of algorithm
-        /// </summary>
-        public long DataPoints => 3943;
-
-        /// <summary>
-        /// Data Points count of the algorithm history
-        /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
-
-        /// <summary>
-        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
-        /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public override Dictionary<string, string> ExpectedStatistics => new ()
         {
-            {"Total Trades", "5"},
+            {"Total Trades", "3"},
             {"Average Win", "0%"},
-            {"Average Loss", "-0.52%"},
-            {"Compounding Annual Return", "254.328%"},
-            {"Drawdown", "2.300%"},
+            {"Average Loss", "-1.02%"},
+            {"Compounding Annual Return", "79.043%"},
+            {"Drawdown", "1.700%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "1.631%"},
-            {"Sharpe Ratio", "8.255"},
-            {"Probabilistic Sharpe Ratio", "66.336%"},
+            {"Net Profit", "0.747%"},
+            {"Sharpe Ratio", "4.054"},
+            {"Probabilistic Sharpe Ratio", "58.417%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.148"},
-            {"Beta", "1.013"},
-            {"Annual Standard Deviation", "0.225"},
-            {"Annual Variance", "0.051"},
-            {"Information Ratio", "-28.357"},
-            {"Tracking Error", "0.004"},
-            {"Treynor Ratio", "1.837"},
-            {"Total Fees", "$17.20"},
-            {"Estimated Strategy Capacity", "$14000000.00"},
+            {"Alpha", "-0.694"},
+            {"Beta", "0.67"},
+            {"Annual Standard Deviation", "0.157"},
+            {"Annual Variance", "0.025"},
+            {"Information Ratio", "-15.375"},
+            {"Tracking Error", "0.088"},
+            {"Treynor Ratio", "0.948"},
+            {"Total Fees", "$10.29"},
+            {"Estimated Strategy Capacity", "$53000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "99.81%"},
-            {"OrderListHash", "dd675e7ef91983f4bf0255ea6729975e"}
+            {"Portfolio Turnover", "59.56%"},
+            {"OrderListHash", "6fcdb25204c75944b194eb5ec9f39c88"}
         };
     }
 }
