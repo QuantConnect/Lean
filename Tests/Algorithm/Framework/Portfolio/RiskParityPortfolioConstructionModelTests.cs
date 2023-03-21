@@ -146,6 +146,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new Insight(_nowUtc.AddDays(2), spy.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Up, null, null)
             };
             
+            _algorithm.Insights.AddRange(insights);
+
             var targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights).ToArray();
             Assert.AreEqual(targets[0].Quantity, 30m);      // AAPL
             Assert.AreEqual(targets[1].Quantity, 18m);      // SPY
