@@ -12,14 +12,17 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from BaseAlphaModelFrameworkRegressionAlgorithm import BaseAlphaModelFrameworkRegressionAlgorithm
+from BaseFrameworkRegressionAlgorithm import BaseFrameworkRegressionAlgorithm
 from Alphas.EmaCrossAlphaModel import EmaCrossAlphaModel
 
 ### <summary>
-### Framework algorithm that uses the <see cref="EmaCrossAlphaModel"/>.
+### Regression algorithm to assert the behavior of <see cref="EmaCrossAlphaModel"/>.
 ### </summary>
-class EmaCrossAlphaModelFrameworkAlgorithm(BaseAlphaModelFrameworkRegressionAlgorithm):
+class EmaCrossAlphaModelFrameworkRegressionAlgorithm(BaseFrameworkRegressionAlgorithm):
 
     def Initialize(self):
         super().Initialize()
         self.SetAlpha(EmaCrossAlphaModel())
+
+    def OnEndOfAlgorithm(self):
+        pass
