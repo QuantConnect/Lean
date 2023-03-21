@@ -24,6 +24,7 @@ using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Interfaces;
 using QuantConnect.Configuration;
+using System.Collections.Concurrent;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -32,6 +33,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class DownloaderDataProvider : BaseDownloaderDataProvider
     {
+        private readonly ConcurrentDictionary<Symbol, Symbol> _marketHoursWarning;
         private readonly MarketHoursDatabase _marketHoursDatabase;
         private readonly IDataDownloader _dataDownloader;
 
@@ -50,6 +52,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 throw new ArgumentException("DownloaderDataProvider(): requires 'data-downloader' to be set with a valid type name");
             }
 
+            _marketHoursWarning = new();
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
         }
 
@@ -72,6 +75,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     catch
                     {
                         // this could happen for some sources using the data provider but with not market hours data base entry, like interest rates
+                        if (_marketHoursWarning.TryAdd(symbol, symbol))
+                        {
+                            // log once
+                            Log.Trace($"DownloaderDataProvider.Get(): failed to find market hours for {symbol}, defaulting to UTC");
+                        }
                         dataTimeZone = TimeZones.Utc;
                     }
 
