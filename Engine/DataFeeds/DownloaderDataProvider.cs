@@ -15,6 +15,7 @@
 */
 
 using System;
+using NodaTime;
 using System.IO;
 using System.Linq;
 using QuantConnect.Util;
@@ -31,6 +32,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class DownloaderDataProvider : BaseDownloaderDataProvider
     {
+        private readonly MarketHoursDatabase _marketHoursDatabase;
         private readonly IDataDownloader _dataDownloader;
 
         /// <summary>
@@ -47,6 +49,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 throw new ArgumentException("DownloaderDataProvider(): requires 'data-downloader' to be set with a valid type name");
             }
+
+            _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
         }
 
         /// <summary>
@@ -60,7 +64,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 if (LeanData.TryParsePath(key, out var symbol, out var date, out var resolution, out var tickType, out var dataType))
                 {
-                    var dataTimeZone = MarketHoursDatabase.FromDataFolder().GetDataTimeZone(symbol.ID.Market, symbol, symbol.SecurityType);
+                    DateTimeZone dataTimeZone;
+                    try
+                    {
+                        dataTimeZone = _marketHoursDatabase.GetDataTimeZone(symbol.ID.Market, symbol, symbol.SecurityType);
+                    }
+                    catch
+                    {
+                        // this could happen for some sources using the data provider but with not market hours data base entry, like interest rates
+                        dataTimeZone = TimeZones.Utc;
+                    }
 
                     DateTime startTimeUtc;
                     DateTime endTimeUtc;
