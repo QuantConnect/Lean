@@ -17,8 +17,12 @@ using System;
 using NUnit.Framework;
 using Python.Runtime;
 using System.Collections.Generic;
+using System.Linq;
+using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Python;
+using QuantConnect.Algorithm;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Python
 {
@@ -230,5 +234,37 @@ namespace QuantConnect.Tests.Python
                 Assert.True(called);
             }
         }
+
+        [Test]
+        public void SubscriptionManagedDoesNotWrapCSharpConsolidators()
+        {
+            //Setup algorithm and Equity
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            var spy = algorithm.AddEquity("SPY").Symbol;
+
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
+                    "from AlgorithmImports import *\n" +
+                    "consolidator = QuoteBarConsolidator(timedelta(5))");
+
+                var pyConsolidator = module.GetAttr("consolidator");
+
+                algorithm.SubscriptionManager.AddConsolidator(spy, pyConsolidator);
+
+                pyConsolidator.TryConvert(out IDataConsolidator consolidator);
+                algorithm.SubscriptionManager.RemoveConsolidator(spy, consolidator);
+
+                var count = algorithm.SubscriptionManager
+                    .SubscriptionDataConfigService
+                    .GetSubscriptionDataConfigs(spy)
+                    .Sum(x => x.Consolidators.Count);
+
+                Assert.AreEqual(0, count);
+            }
+
+        }
+
     }
 }
