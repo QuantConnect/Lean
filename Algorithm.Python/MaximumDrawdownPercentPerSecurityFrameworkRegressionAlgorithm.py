@@ -26,5 +26,3 @@ class MaximumDrawdownPercentPerSecurityFrameworkRegressionAlgorithm(BaseFramewor
 
         self.SetRiskManagement(MaximumDrawdownPercentPerSecurity(0.004))
 
-    def OnEndOfAlgorithm(self):
-        pass

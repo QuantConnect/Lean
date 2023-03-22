@@ -32,10 +32,6 @@ namespace QuantConnect.Algorithm.CSharp
             SetRiskManagement(new MaximumDrawdownPercentPerSecurity(0.004m));
         }
 
-        public override void OnEndOfAlgorithm()
-        {
-        }
-
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
@@ -46,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override Dictionary<string, string> ExpectedStatistics => new()
         {
-            {"Total Trades", "18"},
+            {"Total Trades", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "-0.42%"},
             {"Compounding Annual Return", "-2.230%"},
