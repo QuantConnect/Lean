@@ -15,6 +15,8 @@
 
 using System;
 using Python.Runtime;
+using QuantConnect.Interfaces;
+using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
 {
@@ -23,7 +25,17 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
     /// </summary>
     public class InsightManager : InsightCollection
     {
+        private readonly IAlgorithm _algorithm;
         private IInsightScoreFunction _insightScoreFunction;
+
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        /// <param name="algorithm">The associated algorithm instance</param>
+        public InsightManager(IAlgorithm algorithm)
+        {
+            _algorithm = algorithm;
+        }
 
         /// <summary>
         /// Process a new time step handling insights scoring
@@ -58,6 +70,62 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
             {
                 _insightScoreFunction = new InsightScoreFunctionPythonWrapper(insightScoreFunction);
             }
+        }
+
+        /// <summary>
+        /// Expire the insights of the given symbols
+        /// </summary>
+        /// <param name="symbols">Symbol we want to expire insights for</param>
+        public void Expire(IEnumerable<Symbol> symbols)
+        {
+            if (symbols == null)
+            {
+                return;
+            }
+
+            foreach (var symbol in symbols)
+            {
+                if (TryGetValue(symbol, out var insights))
+                {
+                    Expire(insights);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Cancel the insights of the given symbols
+        /// </summary>
+        /// <param name="symbols">Symbol we want to cancel insights for</param>
+        public void Cancel(IEnumerable<Symbol> symbols)
+        {
+            Expire(symbols);
+        }
+
+        /// <summary>
+        /// Expire the given insights
+        /// </summary>
+        /// <param name="insights">Insights to expire</param>
+        public void Expire(IEnumerable<Insight> insights)
+        {
+            if (insights == null)
+            {
+                return;
+            }
+
+            var currentUtcTime = _algorithm.UtcTime;
+            foreach (var insight in insights)
+            {
+                insight.Expire(currentUtcTime);
+            }
+        }
+
+        /// <summary>
+        /// Cancel the given insights
+        /// </summary>
+        /// <param name="insights">Insights to cancel</param>
+        public void Cancel(IEnumerable<Insight> insights)
+        {
+            Expire(insights);
         }
     }
 }
