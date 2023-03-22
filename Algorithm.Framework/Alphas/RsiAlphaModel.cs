@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,11 +13,16 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.Consolidators;
+using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Util;
+using static QuantConnect.Messages;
 
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
@@ -95,16 +100,13 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
             // clean up data for removed securities
-            if (changes.RemovedSecurities.Count > 0)
+            foreach (var security in changes.RemovedSecurities)
             {
-                var removed = changes.RemovedSecurities.ToHashSet(x => x.Symbol);
-                foreach (var subscription in algorithm.SubscriptionManager.Subscriptions)
+                SymbolData symbolData;
+                if (_symbolDataBySymbol.TryGetValue(security.Symbol, out symbolData))
                 {
-                    if (removed.Contains(subscription.Symbol))
-                    {
-                        _symbolDataBySymbol.Remove(subscription.Symbol);
-                        subscription.Consolidators.Clear();
-                    }
+                    _symbolDataBySymbol.Remove(security.Symbol);
+                    symbolData.Dispose();
                 }
             }
 
@@ -114,10 +116,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             {
                 if (!_symbolDataBySymbol.ContainsKey(added.Symbol))
                 {
-                    var rsi = algorithm.RSI(added.Symbol, _period, MovingAverageType.Wilders, _resolution);
-                    var symbolData = new SymbolData(added.Symbol, rsi);
+                    var symbolData = new SymbolData(algorithm, added.Symbol, _period, _resolution);
                     _symbolDataBySymbol[added.Symbol] = symbolData;
-                    addedSymbols.Add(symbolData.Symbol);
+                    addedSymbols.Add(added.Symbol);
                 }
             }
 
@@ -130,7 +131,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                         SymbolData symbolData;
                         if (_symbolDataBySymbol.TryGetValue(data.Symbol, out symbolData))
                         {
-                            symbolData.RSI.Update(data.EndTime, data.Value);
+                            symbolData.Update(data);
                         }
                     });
             }
@@ -174,17 +175,39 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <summary>
         /// Contains data specific to a symbol required by this model
         /// </summary>
-        private class SymbolData
+        private class SymbolData : IDisposable
         {
-            public Symbol Symbol { get; }
             public State State { get; set; }
             public RelativeStrengthIndex RSI { get; }
+            private Symbol _symbol { get; }
+            private QCAlgorithm _algorithm;
+            private IDataConsolidator _consolidator;
 
-            public SymbolData(Symbol symbol, RelativeStrengthIndex rsi)
+            public SymbolData(QCAlgorithm algorithm, Symbol symbol, int period, Resolution resolution)
             {
-                Symbol = symbol;
-                RSI = rsi;
+                _algorithm = algorithm;
+                _symbol = symbol;
                 State = State.Middle;
+
+                RSI = new RelativeStrengthIndex(period, MovingAverageType.Wilders);
+                _consolidator = _algorithm.ResolveConsolidator(symbol, resolution);
+                _consolidator.DataConsolidated += ConsolidationHandler;
+                algorithm.SubscriptionManager.AddConsolidator(symbol, _consolidator);
+            }
+
+            public void ConsolidationHandler(object sender, IBaseData consolidatedBar)
+            {
+                RSI.Update(consolidatedBar.EndTime, consolidatedBar.Value);
+            }
+
+            public void Update(BaseData bar)
+            {
+                _consolidator.Update(bar);
+            }
+
+            public void Dispose()
+            {
+                _algorithm.SubscriptionManager.RemoveConsolidator(_symbol, _consolidator);
             }
         }
 

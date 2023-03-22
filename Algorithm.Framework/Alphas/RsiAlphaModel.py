@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -64,36 +64,26 @@ class RsiAlphaModel(AlphaModel):
         Args:
             algorithm: The algorithm instance that experienced the change in securities
             changes: The security additions and removals from the algorithm'''
-
         # clean up data for removed securities
-        symbols = [ x.Symbol for x in changes.RemovedSecurities ]
-        if len(symbols) > 0:
-            for subscription in algorithm.SubscriptionManager.Subscriptions:
-                if subscription.Symbol in symbols:
-                    self.symbolDataBySymbol.pop(subscription.Symbol, None)
-                    subscription.Consolidators.Clear()
+        for security in changes.RemovedSecurities:
+            symbol_data = self.symbolDataBySymbol.pop(security.Symbol, None)
+            if symbol_data:
+                symbol_data.dispose()
 
         # initialize data for added securities
-
-        addedSymbols = [ x.Symbol for x in changes.AddedSecurities if x.Symbol not in self.symbolDataBySymbol]
-        if len(addedSymbols) == 0: return
-
-        history = algorithm.History(addedSymbols, self.period, self.resolution)
-
-        for symbol in addedSymbols:
-            rsi = algorithm.RSI(symbol, self.period, MovingAverageType.Wilders, self.resolution)
-
-            if not history.empty:
-                ticker = SymbolCache.GetTicker(symbol)
-
-                if ticker not in history.index.levels[0]:
-                    Log.Trace(f'RsiAlphaModel.OnSecuritiesChanged: {ticker} not found in history data frame.')
-                    continue
-
-                for tuple in history.loc[ticker].itertuples():
-                    rsi.Update(tuple.Index, tuple.close)
-
-            self.symbolDataBySymbol[symbol] = SymbolData(symbol, rsi)
+        added_symbols = []
+        for security in changes.AddedSecurities:
+            symbol = security.Symbol 
+            if symbol not in self.symbolDataBySymbol:
+                symbol_data = SymbolData(algorithm, symbol, self.period, self.resolution)
+                self.symbolDataBySymbol[symbol] = symbol_data
+                added_symbols.append(symbol)
+                
+        if added_symbols:
+            history = algorithm.History[TradeBar](added_symbols, self.period, self.resolution)
+            for trade_bars in history:
+                for bar in trade_bars.Values:
+                    self.symbolDataBySymbol[bar.Symbol].update(bar)
 
 
     def GetState(self, rsi, previous):
@@ -115,10 +105,24 @@ class RsiAlphaModel(AlphaModel):
 
 class SymbolData:
     '''Contains data specific to a symbol required by this model'''
-    def __init__(self, symbol, rsi):
+    def __init__(self, algorithm, symbol, period, resolution):
+        self.algorithm = algorithm
         self.Symbol = symbol
-        self.RSI = rsi
         self.State = State.Middle
+
+        self.RSI = RelativeStrengthIndex(period, MovingAverageType.Wilders)
+        self.consolidator = algorithm.ResolveConsolidator(symbol, resolution)
+        self.consolidator.DataConsolidated += self.consolidation_handler
+        algorithm.SubscriptionManager.AddConsolidator(symbol, self.consolidator)
+
+    def consolidation_handler(self, sender: object, bar: BaseData) -> None:
+        self.RSI.Update(bar.EndTime, bar.Value)
+
+    def update(self, bar):
+        self.consolidator.Update(bar)
+
+    def dispose(self):
+        self.algorithm.SubscriptionManager.RemoveConsolidator(self.Symbol, self.consolidator)
 
 
 class State(Enum):
