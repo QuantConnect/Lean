@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -59,6 +59,19 @@ namespace QuantConnect.Algorithm.Framework.Risk
                 var pnl = security.Holdings.UnrealizedProfitPercent;
                 if (pnl < _maximumDrawdownPercent)
                 {
+                    // Cancel insights
+                    if (algorithm.Insights.TryGetValue(security.Symbol, out var insights))
+                    {
+                        foreach (var insight in insights)
+                        {
+                            if (insight.IsActive(algorithm.UtcTime))
+                            {
+                                insight.CloseTimeUtc = algorithm.UtcTime.AddSeconds(-1);
+                                algorithm.Insights.Remove(insight);
+                            }
+                        }
+                    }
+
                     // liquidate
                     yield return new PortfolioTarget(security.Symbol, 0);
                 }

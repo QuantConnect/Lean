@@ -36,6 +36,14 @@ class MaximumDrawdownPercentPerSecurity(RiskManagementModel):
 
             pnl = security.Holdings.UnrealizedProfitPercent
             if pnl < self.maximumDrawdownPercent:
+                # Cancel insights
+                symbol = security.Symbol
+                if algorithm.Insights.ContainsKey(symbol ):
+                    for insight in algorithm.Insights[symbol]:
+                        if insight.IsActive(algorithm.UtcTime):
+                            insight.CloseTimeUtc = algorithm.UtcTime - timedelta(seconds=1)
+                            algorithm.Insights.Remove(insight)
+
                 # liquidate
                 targets.append(PortfolioTarget(security.Symbol, 0))
 
