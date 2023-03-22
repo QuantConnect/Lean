@@ -30,6 +30,3 @@ class MaximumDrawdownPercentPortfolioFrameworkRegressionAlgorithm(BaseFrameworkR
             MaximumDrawdownPercentPortfolio(0.01),         # Avoid loss of initial capital
             MaximumDrawdownPercentPortfolio(0.015, True)   # Avoid profit losses
             ))
-
-    def OnEndOfAlgorithm(self):
-        pass

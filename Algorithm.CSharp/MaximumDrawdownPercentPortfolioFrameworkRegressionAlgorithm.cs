@@ -36,10 +36,6 @@ namespace QuantConnect.Algorithm.CSharp
             ));
         }
 
-        public override void OnEndOfAlgorithm()
-        {
-        }
-
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
@@ -50,7 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override Dictionary<string, string> ExpectedStatistics => new()
         {
-            {"Total Trades", "8"},
+            {"Total Trades", "2"},
             {"Average Win", "2.43%"},
             {"Average Loss", "-1.45%"},
             {"Compounding Annual Return", "12.322%"},
