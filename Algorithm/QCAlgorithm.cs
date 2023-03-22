@@ -1567,6 +1567,7 @@ namespace QuantConnect.Algorithm
                 Notify = new NotificationManager(live);
                 TradeBuilder.SetLiveMode(live);
                 Securities.SetLiveMode(live);
+                SignalExport.SetLiveMode(live);
                 if (live)
                 {
                     SetLiveModeStartDate();

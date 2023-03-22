@@ -13,20 +13,24 @@
  * limitations under the License.
 */
 
-using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
-using System;
+using QuantConnect.Interfaces;
+using System.Collections.Generic;
 
-namespace QuantConnect.Interfaces
+namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 {
     /// <summary>
-    /// Interface to send positions holdings to different 3rd party API's
+    /// Class to wrap objects needed to send signals to the different 3rd party API's
     /// </summary>
-    public interface ISignalExportTarget: IDisposable
+    public class SignalExportTargetParameters
     {
         /// <summary>
-        /// Sends the positions holdings the user have defined to certain 3rd party API
+        /// List of portfolio targets to be sent to some 3rd party API
         /// </summary>
-        /// <param name="parameters">Holdings the user have defined to be sent to certain 3rd party API and the algorithm being ran</param>
-        string Send(SignalExportTargetParameters parameters);
+        public List<PortfolioTarget> Targets { get; set; }
+
+        /// <summary>
+        /// Algorithm being ran
+        /// </summary>
+        public IAlgorithm Algorithm { get; set; }
     }
 }

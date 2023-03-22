@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
@@ -22,16 +21,16 @@ using System.Collections.Generic;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This algorithm sends and array of current portfolio targets to different 3rd party API's
-    /// every time the ema indicators crosses between themselves
+    /// This algorithm sends current portfolio targets from its Portfolio to different 3rd party API's
+    /// every time the ema indiicators crosses between themselves.
     /// </summary>
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="using quantconnect" />
     /// <meta name="tag" content="securities and portfolio" />
-    public class SignalExportDemonstrationAlgorithm : QCAlgorithm
+    public class PortfolioSignalExportDemonstrationAlgorithm : QCAlgorithm
     {
         private const string _collective2ApiKey = ""; // Replace this value with your Collective2 API key
-        private const int _collective2SystemId = 0; // Replace this value with your system ID given by Collective2 API
+        private const int _collective2SystemId = 0; // Replace this value with your system ID provided by Collective2 API
 
         private const string _crunchDAOApiKey = ""; // Replace this value with your CrunchDAO API key
         private const string _crunchDAOModel = ""; // Replace this value with your model's name
@@ -39,8 +38,6 @@ namespace QuantConnect.Algorithm.CSharp
         private const string _numeraiPublicId = ""; // Replace this value with your Numerai Signals Public ID
         private const string _numeraiSecretId = ""; // Replace this value with your Numerai Signals Secret ID
         private const string _numeraiModelId = ""; // Replace this value with your Numerai Signals Model ID
-
-        private PortfolioTarget[] _targets = new PortfolioTarget[14];
 
         private List<string> _symbols = new List<string>
         {
@@ -79,13 +76,9 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 11);
             SetCash(100 * 1000);
 
-            int index = 0;
-
             foreach (var symbol in _symbols)
             {
                 AddEquity(symbol);
-                _targets[index] = new PortfolioTarget(Portfolio[symbol].Symbol, (decimal)0.05);
-                index++;
             }
 
             Fast = EMA("SPY", FastPeriod);
@@ -111,7 +104,7 @@ namespace QuantConnect.Algorithm.CSharp
             // Wait for our indicators to be ready
             if (!Fast.IsReady || !Slow.IsReady) return;
 
-            // Set the value of flag _emaFastWasAbove, to know when the ema indicators crosses between themselves
+            // Set flag _emaFastWasAbove to know when the ema indicators crosses between themselves
             if (_emaFastIsNotSet)
             {
                 if (Fast > Slow * 1.001m)
@@ -125,23 +118,32 @@ namespace QuantConnect.Algorithm.CSharp
                 _emaFastIsNotSet = false;
             }
 
-            // Check if the ema indicators have crossed between themselves
+            // Check whether ema fast and ema slow crosses. If they do, set holdings to one
+            // of SPY or AIG, and send signals to the 3rd party API's defined above
             if ((Fast > Slow * 1.001m) && (!_emaFastWasAbove))
             {
                 SetHoldings("SPY", 0.1);
-                SetHoldings("AIG",0.01);
-                _targets[1] = new PortfolioTarget(Portfolio["AIG"].Symbol, (decimal)0.01);
-                _targets[0] = new PortfolioTarget(Portfolio["SPY"].Symbol, (decimal)0.1);
-                SignalExport.SetTargetPortfolio(this, _targets);
+                foreach (var symbol in _symbols)
+                {
+                    if (symbol != "SPY")
+                    {
+                        SetHoldings(symbol, 0.01);
+                    }
+                }
+                SignalExport.SetTargetPortfolio(this, Portfolio);
                 Quit();
             }
             else if ((Fast < Slow * 0.999m) && (_emaFastWasAbove))
             {
-                SetHoldings("SPY", 0.01);
                 SetHoldings("AIG", 0.1);
-                _targets[1] = new PortfolioTarget(Portfolio["AIG"].Symbol, (decimal)0.1);
-                _targets[0] = new PortfolioTarget(Portfolio["SPY"].Symbol, (decimal)0.01);
-                SignalExport.SetTargetPortfolio(this, _targets);
+                foreach (var symbol in _symbols)
+                {
+                    if (symbol != "AIG")
+                    {
+                        SetHoldings(symbol, 0.01);
+                    }
+                }
+                SignalExport.SetTargetPortfolio(this, Portfolio);
                 Quit();
             }
         }
