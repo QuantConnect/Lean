@@ -13,7 +13,9 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -31,6 +33,12 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
+            // We have removed all securities from the universe. The Alpha Model should remove the consolidator
+            var consolidatorCount = SubscriptionManager.Subscriptions.Sum(s => s.Consolidators.Count);
+            if (consolidatorCount > 0)
+            {
+                throw new Exception($"The number of consolidators should be zero. Actual: {consolidatorCount}");
+            }
         }
 
         public override long DataPoints => 772;
