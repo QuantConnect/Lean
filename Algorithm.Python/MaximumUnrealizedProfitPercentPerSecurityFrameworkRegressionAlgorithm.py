@@ -25,6 +25,3 @@ class MaximumUnrealizedProfitPercentPerSecurityFrameworkRegressionAlgorithm(Base
         self.SetUniverseSelection(ManualUniverseSelectionModel(Symbol.Create("AAPL", SecurityType.Equity, Market.USA)))
 
         self.SetRiskManagement(MaximumUnrealizedProfitPercentPerSecurity(0.004))
-
-    def OnEndOfAlgorithm(self):
-        pass
