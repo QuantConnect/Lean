@@ -69,17 +69,18 @@ namespace QuantConnect.Algorithm.Framework.Risk
             var pnl = GetTotalDrawdownPercent(currentValue);
             if (pnl < _maximumDrawdownPercent && targets.Length != 0)
             {
-                // Cancel insights
-                var insights = algorithm.Insights.GetActiveInsights(algorithm.UtcTime);
-                foreach (var insight in insights)
-                {
-                    insight.CloseTimeUtc = algorithm.UtcTime.AddSeconds(-1);
-                }
-
                 // reset the trailing high value for restart investing on next rebalcing period
                 _initialised = false;
                 foreach (var target in targets)
-                    yield return new PortfolioTarget(target.Symbol, 0);
+                {
+                    var symbol = target.Symbol;
+                    
+                    // Cancel insights
+                    algorithm.Insights.Cancel(new[] { symbol });
+
+                    // liquidate
+                    yield return new PortfolioTarget(symbol, 0);
+                }
             }
         }
 
