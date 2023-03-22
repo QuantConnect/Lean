@@ -33,8 +33,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class DownloaderDataProvider : BaseDownloaderDataProvider
     {
-        private readonly ConcurrentDictionary<Symbol, Symbol> _marketHoursWarning;
-        private readonly MarketHoursDatabase _marketHoursDatabase;
+        private bool _customDataDownloadError;
+        private readonly ConcurrentDictionary<Symbol, Symbol> _marketHoursWarning = new();
+        private readonly MarketHoursDatabase _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
         private readonly IDataDownloader _dataDownloader;
 
         /// <summary>
@@ -51,9 +52,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 throw new ArgumentException("DownloaderDataProvider(): requires 'data-downloader' to be set with a valid type name");
             }
+        }
 
-            _marketHoursWarning = new();
-            _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+        /// <summary>
+        /// Creates a new instance using a target data downloader
+        /// </summary>
+        public DownloaderDataProvider(IDataDownloader dataDownloader)
+        {
+            _dataDownloader = dataDownloader;
         }
 
         /// <summary>
@@ -67,6 +73,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 if (LeanData.TryParsePath(key, out var symbol, out var date, out var resolution, out var tickType, out var dataType))
                 {
+                    if (symbol.SecurityType == SecurityType.Base)
+                    {
+                        if (!_customDataDownloadError)
+                        {
+                            _customDataDownloadError = true;
+                            // lean data writter doesn't support it
+                            Log.Trace($"DownloaderDataProvider.Get(): custom data is not supported, requested: {symbol}");
+                        }
+                        return;
+                    }
+
                     DateTimeZone dataTimeZone;
                     try
                     {
@@ -104,19 +121,38 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // since hourly & daily are a single file we fetch the whole file
                         try
                         {
-                            startTimeUtc = symbol.ID.Date;
+                            // we don't really know when Futures, FutureOptions, Cryptos, etc, start date so let's give it a good guess
+                            if (symbol.SecurityType == SecurityType.Crypto)
+                            {
+                                // bitcoin start
+                                startTimeUtc = new DateTime(2009, 1, 1);
+                            }
+                            else if (symbol.SecurityType.IsOption() && symbol.Underlying != null && symbol.SecurityType == SecurityType.Option)
+                            {
+                                // the underlying equity start date
+                                startTimeUtc = symbol.Underlying.ID.Date;
+                            }
+                            else
+                            {
+                                startTimeUtc = symbol.ID.Date;
+                            }
                         }
                         catch (InvalidOperationException)
                         {
                             startTimeUtc = Time.BeginningOfTime;
                         }
+
+                        if (startTimeUtc <= Time.BeginningOfTime)
+                        {
+                            startTimeUtc = new DateTime(1998, 1, 2);
+                        }
+
                         endTimeUtc = endTimeUtcLimit;
                     }
 
-                    // Save the data
-                    var writer = new LeanDataWriter(resolution, symbol, Globals.DataFolder, tickType);
                     try
                     {
+                        LeanDataWriter writer = null;
                         var getParams = new DataDownloaderGetParameters(symbol, resolution, startTimeUtc, endTimeUtc, tickType);
 
                         var data = _dataDownloader.Get(getParams)
@@ -126,6 +162,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                         foreach (var dataPerSymbol in data)
                         {
+                            if (writer == null)
+                            {
+                                writer = new LeanDataWriter(resolution, symbol, Globals.DataFolder, tickType);
+                            }
+
+                            // Save the data
                             writer.Write(dataPerSymbol);
                         }
                     }
