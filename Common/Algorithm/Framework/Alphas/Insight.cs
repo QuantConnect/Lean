@@ -141,6 +141,25 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         }
 
         /// <summary>
+        /// Expire this insight
+        /// </summary>
+        /// <param name="utcTime">The algorithm's current time in UTC. See <see cref="IAlgorithm.UtcTime"/></param>
+        public void Expire(DateTime utcTime)
+        {
+            CloseTimeUtc = utcTime.Add(-Time.OneSecond);
+            Period = CloseTimeUtc - GeneratedTimeUtc;
+        }
+
+        /// <summary>
+        /// Cancel this insight
+        /// </summary>
+        /// <param name="utcTime">The algorithm's current time in UTC. See <see cref="IAlgorithm.UtcTime"/></param>
+        public void Cancel(DateTime utcTime)
+        {
+            Expire(utcTime);
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="Insight"/> class
         /// </summary>
         /// <param name="symbol">The symbol this insight is for</param>
