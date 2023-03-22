@@ -42,7 +42,6 @@ class MaximumDrawdownPercentPerSecurity(RiskManagementModel):
                     for insight in algorithm.Insights[symbol]:
                         if insight.IsActive(algorithm.UtcTime):
                             insight.CloseTimeUtc = algorithm.UtcTime - timedelta(seconds=1)
-                            algorithm.Insights.Remove(insight)
 
                 # liquidate
                 targets.append(PortfolioTarget(security.Symbol, 0))

@@ -67,7 +67,6 @@ namespace QuantConnect.Algorithm.Framework.Risk
                             if (insight.IsActive(algorithm.UtcTime))
                             {
                                 insight.CloseTimeUtc = algorithm.UtcTime.AddSeconds(-1);
-                                algorithm.Insights.Remove(insight);
                             }
                         }
                     }
