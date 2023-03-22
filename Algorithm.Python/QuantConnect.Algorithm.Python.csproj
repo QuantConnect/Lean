@@ -193,6 +193,7 @@
     <None Include="DropboxBaseDataUniverseSelectionAlgorithm.py" />
     <None Include="DropboxUniverseSelectionAlgorithm.py" />
     <None Include="DropboxCoarseFineAlgorithm.py" />
+    <None Include="EmaCrossAlphaModelFrameworkRegressionAlgorithm.py" />
     <None Include="EmaCrossFuturesFrontMonthAlgorithm.py" />
     <None Include="EmaCrossUniverseSelectionAlgorithm.py" />
     <None Include="EmaCrossUniverseSelectionFrameworkAlgorithm.py" />
@@ -212,7 +213,7 @@
     <None Include="MarginCallEventsAlgorithm.py" />
     <None Include="MarketOnOpenOnCloseAlgorithm.py" />
     <None Include="MarketOnCloseOrderBufferRegressionAlgorithm.py" />
-    <None Include="MaximumPortfolioDrawdownFrameworkAlgorithm.py" />
+    <None Include="MaximumDrawdownPercentPortfolioFrameworkRegressionAlgorithm.py" />
     <None Include="MeanVarianceOptimizationFrameworkAlgorithm.py" />
     <None Include="MovingAverageCrossAlgorithm.py" />
     <None Include="MultipleSymbolConsolidationAlgorithm.py" />

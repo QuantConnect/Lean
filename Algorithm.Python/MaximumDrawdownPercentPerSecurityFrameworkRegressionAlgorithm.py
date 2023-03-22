@@ -12,14 +12,19 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from BaseAlphaModelFrameworkRegressionAlgorithm import BaseAlphaModelFrameworkRegressionAlgorithm
-from Alphas.EmaCrossAlphaModel import EmaCrossAlphaModel
+from BaseFrameworkRegressionAlgorithm import BaseFrameworkRegressionAlgorithm
+from Risk.MaximumDrawdownPercentPerSecurity import MaximumDrawdownPercentPerSecurity
 
 ### <summary>
-### Framework algorithm that uses the <see cref="EmaCrossAlphaModel"/>.
+### Regression algorithm to assert the behavior of <see cref="MaximumDrawdownPercentPerSecurity"/>.
 ### </summary>
-class EmaCrossAlphaModelFrameworkAlgorithm(BaseAlphaModelFrameworkRegressionAlgorithm):
+class MaximumDrawdownPercentPerSecurityFrameworkRegressionAlgorithm(BaseFrameworkRegressionAlgorithm):
 
     def Initialize(self):
         super().Initialize()
-        self.SetAlpha(EmaCrossAlphaModel())
+        self.SetUniverseSelection(ManualUniverseSelectionModel(Symbol.Create("AAPL", SecurityType.Equity, Market.USA)))
+
+        self.SetRiskManagement(MaximumDrawdownPercentPerSecurity(0.004))
+
+    def OnEndOfAlgorithm(self):
+        pass

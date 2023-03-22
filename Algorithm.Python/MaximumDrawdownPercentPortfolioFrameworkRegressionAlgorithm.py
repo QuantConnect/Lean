@@ -12,29 +12,24 @@
 # limitations under the License.
 
 from AlgorithmImports import *
+from BaseFrameworkRegressionAlgorithm import BaseFrameworkRegressionAlgorithm
 from Risk.CompositeRiskManagementModel import CompositeRiskManagementModel
 from Risk.MaximumDrawdownPercentPortfolio import MaximumDrawdownPercentPortfolio
 
-class MaximumPortfolioDrawdownFrameworkAlgorithm(QCAlgorithm):
-    '''Show example of how to use the MaximumDrawdownPercentPortfolio Risk Management Model'''
+### <summary>
+### Regression algorithm to assert the behavior of <see cref="MaximumDrawdownPercentPortfolio"/>.
+### </summary>
+class MaximumDrawdownPercentPortfolioFrameworkRegressionAlgorithm(BaseFrameworkRegressionAlgorithm):
 
     def Initialize(self):
-
-        # Set requested data resolution
-        self.UniverseSettings.Resolution = Resolution.Minute
-
-        self.SetStartDate(2013,10,7)   #Set Start Date
-        self.SetEndDate(2013,10,11)    #Set End Date
-        self.SetCash(100000)           #Set Strategy Cash
-
-        # set algorithm framework models
-        self.SetUniverseSelection(ManualUniverseSelectionModel([ Symbol.Create("SPY", SecurityType.Equity, Market.USA) ]))
-        self.SetAlpha(ConstantAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(minutes = 20), 0.025, None))
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
-        self.SetExecution(ImmediateExecutionModel())
+        super().Initialize()
+        self.SetUniverseSelection(ManualUniverseSelectionModel(Symbol.Create("AAPL", SecurityType.Equity, Market.USA)))
 
         # define risk management model as a composite of several risk management models
         self.SetRiskManagement(CompositeRiskManagementModel(
             MaximumDrawdownPercentPortfolio(0.01),         # Avoid loss of initial capital
             MaximumDrawdownPercentPortfolio(0.015, True)   # Avoid profit losses
             ))
+
+    def OnEndOfAlgorithm(self):
+        pass
