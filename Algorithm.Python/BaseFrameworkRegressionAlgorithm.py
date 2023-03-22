@@ -35,7 +35,7 @@ class BaseFrameworkRegressionAlgorithm(QCAlgorithm):
         # With this procedure, the Alpha Model will experience multiple universe changes
         self.AddUniverseSelection(ScheduledUniverseSelectionModel(
             self.DateRules.EveryDay(), self.TimeRules.Midnight,
-            lambda dt: symbols if dt < self.EndDate.astimezone(dt.tzinfo) - timedelta(1) else []))
+            lambda dt: symbols if dt.replace(tzinfo=None) < self.EndDate - timedelta(1) else []))
 
         self.SetAlpha(ConstantAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(31), 0.025, None))
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
