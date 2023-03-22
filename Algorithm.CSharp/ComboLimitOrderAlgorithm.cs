@@ -151,11 +151,11 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$17.50"},
+            {"Total Fees", "$85.00"},
             {"Estimated Strategy Capacity", "$5000.00"},
             {"Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "1873.87%"},
-            {"OrderListHash", "17a5427a539f2b02a626fda15d6eb13f"}
+            {"Portfolio Turnover", "1893.90%"},
+            {"OrderListHash", "186986b27fac082600a064a8a59df604"}
         };
     }
 }

@@ -80,8 +80,11 @@ namespace QuantConnect.Securities.Positions
         {
             Key = key;
             _positions = positions;
-            var firstPosition = positions.First();
-            Quantity = firstPosition.Value.Quantity / firstPosition.Value.UnitQuantity;
+            if(positions.Count > 0)
+            {
+                var firstPosition = positions.First();
+                Quantity = firstPosition.Value.Quantity / firstPosition.Value.UnitQuantity;
+            }
         }
 
         /// <summary>

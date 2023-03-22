@@ -71,7 +71,7 @@ namespace QuantConnect.Tests.Common.Orders
             var order = new StopMarketOrder(Symbols.SPY, 1m, 123.4567m, DateTime.Today, tag);
             Assert.AreEqual(Invariant($"Stop Price: {order.StopPrice:C}"), order.Tag);
         }
-        
+
         [Test]
         [TestCase(null)]
         [TestCase("")]
