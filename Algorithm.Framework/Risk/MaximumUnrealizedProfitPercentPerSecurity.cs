@@ -64,7 +64,6 @@ namespace QuantConnect.Algorithm.Framework.Risk
                     foreach (var insight in insights)
                     {
                         insight.CloseTimeUtc = algorithm.UtcTime.AddSeconds(-1);
-                        algorithm.Insights.Remove(insight);
                     }
 
                     // liquidate
