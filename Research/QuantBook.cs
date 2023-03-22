@@ -852,17 +852,19 @@ namespace QuantConnect.Research
                 {
                     while (enumerator.MoveNext())
                     {
+                        var currentData = enumerator.Current;
+                        var time = currentData.EndTime;
                         var dataPoint = string.IsNullOrWhiteSpace(selector)
-                            ? enumerator.Current
-                            : GetPropertyValue(enumerator.Current, selector);
+                            ? currentData
+                            : GetPropertyValue(currentData, selector);
 
                         lock (data)
                         {
-                            if (!data.ContainsKey(enumerator.Current.Time))
+                            if (!data.ContainsKey(time))
                             {
-                                data[enumerator.Current.Time] = new DataDictionary<dynamic>(enumerator.Current.Time);
+                                data[time] = new DataDictionary<dynamic>(time);
                             }
-                            data[enumerator.Current.Time].Add(enumerator.Current.Symbol, dataPoint);
+                            data[time].Add(currentData.Symbol, dataPoint);
                         }
                     }
                 }
