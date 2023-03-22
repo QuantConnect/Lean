@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
@@ -30,6 +31,20 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// List of signal export providers
         /// </summary>
         private List<ISignalExportTarget> _signalExports;
+
+        /// <summary>
+        /// Flag indicating whether the current algorithm is in live mode or not
+        /// </summary>
+        private bool _isLiveMode;
+
+        /// <summary>
+        /// Set live mode state of the algorithm
+        /// </summary>
+        /// <param name="isLiveMode"></param>
+        public void SetLiveMode(bool isLiveMode)
+        {
+            _isLiveMode = isLiveMode;
+        }
 
         /// <summary>
         /// Adds one or more signal export providers if argument is different than null
@@ -49,21 +64,20 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <param name="signalExports">One or more signal export provider</param>
         public void AddSignalExportProviders(params ISignalExportTarget[] signalExports)
         {
-            if (_signalExports == null)
-            {
-                _signalExports = new List<ISignalExportTarget>();
-            }
+            _signalExports ??= new List<ISignalExportTarget>();
 
             _signalExports.AddRange(signalExports);
         }
 
         /// <summary>
-        /// Sets the portfolio targets from the given portfolio current holdings and sends them
-        /// to the signal exports providers set
+        /// Sets the portfolio targets from the given portfolio current holdings and sends them with the
+        /// algorithm being ran to the signal exports providers already set
         /// </summary>
+        /// <param name="algorithm">Algorithm being ran</param>
         /// <param name="portfolio">Portfolio containing the current holdings</param>
-        /// <exception cref="ArgumentException">If the portfolio is null it will throw an exception</exception>
-        public void SetTargetPortfolio(SecurityPortfolioManager portfolio)
+        /// <exception cref="ArgumentException">If the portfolio is null it will throw an exception as well as if the
+        /// TotalPortfolioValue is negative or zero</exception>
+        public void SetTargetPortfolio(IAlgorithm algorithm, SecurityPortfolioManager portfolio)
         {
             if (portfolio == null)
             {
@@ -75,36 +89,50 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
             foreach (var holding in portfolio.Values)
             {
-                if (portfolio.TotalPortfolioValue == 0)
+                if (portfolio.TotalPortfolioValue <= 0)
                 {
-                    throw new ArgumentException("Total portfolio value was 0");
+                    Log.Error("Total portfolio value was less than or equal to 0");
+                    return;
                 }
 
-                var holdingPercent = holding.HoldingsValue / portfolio.TotalPortfolioValue;
-                targets[index] = new PortfolioTarget(holding.Symbol, (decimal)holdingPercent);
+                var security = algorithm.Securities[holding.Symbol];
+                var holdingPercent = Math.Abs(security.BuyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(security, holding.Quantity))) / portfolio.TotalPortfolioValue;
+                targets[index] = new PortfolioTarget(holding.Symbol, holdingPercent);
                 ++index;
             }
 
-            SetTargetPortfolio(targets);
+            SetTargetPortfolio(algorithm, targets);
         }
 
         /// <summary>
-        /// Sets the portfolio targets with the given entries and sends them
-        /// to the signal exports providers set
+        /// Sets the portfolio targets with the given entries and sends them with the algorithm
+        /// being ran to the signal exports providers set, as long as the algorithm is in live mode
         /// </summary>
+        /// <param name="algorithm">Algorithm being ran</param>
         /// <param name="portfolioTargets">One or more portfolio targets to be sent to the defined signal export providers</param>
         /// <exception cref="ArgumentException">It will throw an exception if there's no portfolio target in the parameters</exception>
-        public void SetTargetPortfolio(params PortfolioTarget[] portfolioTargets)
+        public void SetTargetPortfolio(IAlgorithm algorithm, params PortfolioTarget[] portfolioTargets)
         {
+            if (!_isLiveMode)
+            {
+                return;
+            }
+
             if (portfolioTargets == null)
             {
                 throw new ArgumentException("No portfolio target given");
             }
 
             var targets = new List<PortfolioTarget>(portfolioTargets);
+            var signalExportTargetParameters = new SignalExportTargetParameters
+            {
+                Targets = targets,
+                Algorithm = algorithm
+            };
+
             foreach (var signalExport in _signalExports)
             {
-                signalExport.Send(targets);
+                signalExport.Send(signalExportTargetParameters);
             }
         }
     }

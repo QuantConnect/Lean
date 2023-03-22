@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
+using Newtonsoft.Json.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
-using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -26,7 +26,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
     /// <summary>
     /// Exports signals of the desired positions to CrunchDAO API
     /// </summary>
-    public class CrunchDAOSignalExport : ISignalExportTarget
+    public class CrunchDAOSignalExport : BaseSignalExport
     {
         /// <summary>
         /// CrunchDAO API endpoint
@@ -49,14 +49,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         private readonly string _comment;
 
         /// <summary>
-        /// User's securities
+        /// Algorithm being ran
         /// </summary>
-        private readonly SecurityManager _securities;
-
-        /// <summary>
-        /// Http client to make POST requests to CrunchDAO API
-        /// </summary>
-        private static HttpClient _client;
+        private IAlgorithm _algorithm;
 
         /// <summary>
         /// CrunchDAOSignalExport constructor. It obtains the required information for CrunchDAO API requests.
@@ -64,58 +59,38 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// </summary>
         /// <param name="apiKey">API key provided by CrunchDAO</param>
         /// <param name="model">Model ID or Name</param>
-        /// <param name="securities">User's securities</param>
         /// <param name="submissionName">Submission Name (Optional)</param>
         /// <param name="comment">Comment (Optional)</param>
-        public CrunchDAOSignalExport(string apiKey, string model, SecurityManager securities, string submissionName = "", string comment = "")
+        public CrunchDAOSignalExport(string apiKey, string model, string submissionName = "", string comment = "")
         {
             _model = model;
-            _securities = securities;
             _submissionName = submissionName;
             _comment = comment;
             _destination = new Uri($"https://api.tournament.crunchdao.com/v3/alpha-submissions?apiKey={apiKey}");
-            _client = new HttpClient();
         }
 
         /// <summary>
         /// Verifies every holding is a stock, creates a message with the desired positions
         /// using the expected CrunchDAO API format and then sends it with the other required
-        /// body features
-        /// </summary>
-        /// <param name="holdings">A list of holdings from the portfolio,
-        /// expected to be sent to CrunchDAO API</param>
+        /// body features</summary>
+        /// <param name="parameters">A list of holdings from the portfolio,
+        /// expected to be sent to CrunchDAO API and the algorithm being ran</param>
         /// <returns>The message with the positions sent to CrunchDAO API. 
         /// This is only used by test means</returns>
         /// <exception cref="ArgumentException">If holding list is empty it throws this exception</exception>
-        public string Send(List<PortfolioTarget> holdings)
+        public override string Send(SignalExportTargetParameters parameters)
         {
-            if (holdings.Count == 0)
+            if (parameters.Targets.Count == 0)
             {
                 throw new ArgumentException("Portfolio target is empty");
             }
+            _algorithm = parameters.Algorithm;
 
-            VerifyTargetsAreStocks(holdings);
-            var positions = ConvertToCSVFormat(holdings);
+            VerifyTargetsAreStocks(parameters.Targets);
+            var positions = ConvertToCSVFormat(parameters.Targets);
             SendPositions(positions);
 
             return positions;
-        }
-
-        /// <summary>
-        /// Verifies every holding in the given list is a stock or an index
-        /// </summary>
-        /// <param name="holdings">A list of holdings from the portfolio,
-        /// expected to be sent to CrunchDAO API</param>
-        /// <exception cref="ArgumentException">Throws this exception when it finds a holding type different than stock</exception>
-        public static void VerifyTargetsAreStocks(List<PortfolioTarget> holdings)
-        {
-            foreach (var signal in holdings)
-            {
-                if (signal.Symbol.SecurityType != SecurityType.Equity && signal.Symbol.SecurityType != SecurityType.Index)
-                {
-                    throw new ArgumentException($"{signal.Symbol.SecurityType} security type is not implemented: CrunchDao only accepts signals for US Equities");
-                }
-            }
         }
 
         /// <summary>
@@ -130,7 +105,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
             foreach (var holding in holdings)
             {
-                positions += $"{holding.Symbol},{_securities[holding.Symbol].LocalTime.ToString("yyyy-MM-dd")},{holding.Quantity}\n";
+                positions += $"{holding.Symbol},{_algorithm.Securities[holding.Symbol].LocalTime.ToString("yyyy-MM-dd")},{holding.Quantity}\n";
             }
 
             return positions;
@@ -141,20 +116,20 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// the message retrieved by the API if there was a HttpRequestException
         /// </summary>
         /// <param name="positions">A CSV format string of the given holdings with the required features</param>
-        private async void SendPositions(string positions)
+        private void SendPositions(string positions)
         {
             // Create positions stream
             var positionsStream = new MemoryStream();
-            var writer = new StreamWriter(positionsStream);
+            using var writer = new StreamWriter(positionsStream);
             writer.Write(positions);
             writer.Flush();
             positionsStream.Position = 0;
 
             // Create the required body features for the POST request
-            var file = new StreamContent(positionsStream);
-            var model = new StringContent(_model);
-            var submissionName = new StringContent(_submissionName);
-            var comment = new StringContent(_comment);
+            using var file = new StreamContent(positionsStream);
+            using var model = new StringContent(_model);
+            using var submissionName = new StringContent(_submissionName);
+            using var comment = new StringContent(_comment);
 
             // Crete the httpMessage to be sent and add the different POST request body features
             using var httpMessage = new MultipartFormDataContent
@@ -166,19 +141,18 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             };
 
             // Send the httpMessage
-            using HttpResponseMessage response = await _client.PostAsync(_destination, httpMessage).ConfigureAwait(true);
-            if(!response.IsSuccessStatusCode)
+            using HttpResponseMessage response = HttpClient.PostAsync(_destination, httpMessage).Result;
+            if (!response.IsSuccessStatusCode)
             {
-                Log.Trace($"HttpRequestException: {response.StatusCode}");
+                Log.Error($"CrunchDAOSignalExport.SendPositions(): CrunchDAO API returned HttpRequestException {response.StatusCode} at line 144");
             }
 
-            // Dispose the resources used to create and send the Http message
-            writer.Dispose();
-            file.Dispose();
-            model.Dispose();
-            submissionName.Dispose();
-            comment.Dispose();
-            httpMessage.Dispose();
+            if (response.StatusCode == System.Net.HttpStatusCode.Locked || response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+            {
+                var responseContent = response.Content.ReadAsStringAsync().Result;
+                var parsedResponseContent = JObject.Parse(responseContent);
+                Log.Error($"CrunchDAOSignalExport.SendPositions(): CrunchDAO API returned code: {parsedResponseContent["code"]} message:{parsedResponseContent["message"]} at line 144");
+            }
         }
     }
 }

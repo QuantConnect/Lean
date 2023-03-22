@@ -14,7 +14,7 @@
 from AlgorithmImports import *
 
 ### <summary>
-### This algorithm sends an array of current portfolio targets to different 3rd party API's every time
+### This algorithm sends current portfolio targets from its Psortfolio to different 3rd party API's every time
 ### the ema indicators crosses between themselves.
 ### </summary>
 ### <meta name="tag" content="using data" />
@@ -30,11 +30,9 @@ class SignalExportDemonstrationAlgorithm(QCAlgorithm):
         self.SetCash(100000)             #Set Strategy Cash
 
         self.symbols = ["SPY", "AIG", "GOOGL", "AAPL", "AMZN", "TSLA", "NFLX", "INTC", "MSFT", "KO", "WMT", "IBM", "AMGN", "CAT"]
-        self.targets = []
 
         for symbol in self.symbols:
             self.AddEquity(symbol)
-            self.targets.append(PortfolioTarget(self.Portfolio[symbol].Symbol, 0.05))
 
         fast_period = 100
         slow_period = 200
@@ -48,7 +46,7 @@ class SignalExportDemonstrationAlgorithm(QCAlgorithm):
 
         # Set the signal export providers
         self.collective2Apikey = "" # Replace this value with your Collective2 API key
-        self.collective2SystemId = 0 # Replace this value with your Collective2 system ID
+        self.collective2SystemId = 1 # Replace this value with your Collective2 system ID
         self.SignalExport.AddSignalExportProviders(Collective2SignalExport(self.collective2Apikey, self.collective2SystemId))
 
         self.crunchDAOApiKey = "" # Replace this value with your CrunchDAO API key
@@ -81,20 +79,21 @@ class SignalExportDemonstrationAlgorithm(QCAlgorithm):
             self.emaFastIsNotSet = False;
 
         # Check if the ema indicators have crossed between themselves
-        if fast > slow * 1.001 and (not self.emaFastWasAbove):
+        if (fast > slow * 1.001) and (not self.emaFastWasAbove):
             self.SetHoldings("SPY", 0.1)
-            self.SetHoldings("AIG", 0.01)
-            self.targets[1] = PortfolioTarget(self.Portfolio["AIG"].Symbol, 0.01)
-            self.targets[0] = PortfolioTarget(self.Portfolio["SPY"].Symbol, 0.1)
-            self.SignalExport.SetTargetPortfolio(self, self.targets)
+            for symbol in self.symbols:
+                if symbol != "SPY":
+                    self.SetHoldings(symbol, 0.01)
+            self.SignalExport.SetTargetPortfolio(self, self.Portfolio)
             self.Quit();
-        elif fast < slow * 0.999 and (self.emaFastWasAbove):
-            self.SetHoldings("SPY", 0.01)
+        elif (fast < slow * 0.999) and (self.emaFastWasAbove):
             self.SetHoldings("AIG", 0.1)
-            self.targets[1] = PortfolioTarget(self.Portfolio["AIG"].Symbol, 0.1)
-            self.targets[0] = PortfolioTarget(self.Portfolio["SPY"].Symbol, 0.01)
-            self.SignalExport.SetTargetPortfolio(self, self.targets)
+            for symbol in self.symbols:
+                if symbol != "AIG":
+                    self.SetHoldings(symbol, 0.01)
+            self.SignalExport.SetTargetPortfolio(self, self.Portfolio)
             self.Quit();
             
+
 
 

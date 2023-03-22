@@ -14,9 +14,9 @@
 */
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
-using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -27,7 +27,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
     /// <summary>
     /// Exports signals of desired positions to Collective2 API using JSON and HTTPS
     /// </summary>
-    public class Collective2SignalExport : ISignalExportTarget
+    public class Collective2SignalExport : BaseSignalExport
     {
         /// <summary>
         /// API key provided by Collective2
@@ -45,14 +45,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         private readonly Uri _destination;
 
         /// <summary>
-        /// User's portfolio
+        /// Algorithm being ran
         /// </summary>
-        private readonly SecurityPortfolioManager _portfolio;
-
-        /// <summary>
-        /// Http client used to make POST requests to Collective2 API
-        /// </summary>
-        private static HttpClient _client;
+        private IAlgorithm _algorithm;
 
         /// <summary>
         /// Collective2SignalExport constructor. It obtains the entry information for Collective2 API requests.
@@ -60,9 +55,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// </summary>
         /// <param name="apiKey">API key provided by Collective2</param>
         /// <param name="systemId">Trading system's ID number</param>
-        /// <param name="portfolio">User portfolio</param>
-        /// <param name="platformId">Platform ID is only used in the Private Platform context</param>
-        public Collective2SignalExport(string apiKey, int systemId, SecurityPortfolioManager portfolio, string platformId = null)
+        /// <param name="platformId">Platform ID, it's only used in the Private Platform context</param>
+        public Collective2SignalExport(string apiKey, int systemId, string platformId = null)
         {
             _apiKey = apiKey;
             _systemId = systemId;
@@ -74,26 +68,25 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             {
                 _destination = new Uri($"https://api.collective2.com/world/{platformId}/setDesiredPositions");
             }
-
-            _portfolio = portfolio;
-            _client = new HttpClient();
         }
 
         /// <summary>
         /// Creates a JSON message with the desired positions using the expected
         /// Collective2 API format and then sends it
         /// </summary>
-        /// <param name="holdings">A list of holdings from the portfolio 
-        /// expected to be sent to Collective2 API</param>
+        /// <param name="parameters">A list of holdings from the portfolio 
+        /// expected to be sent to Collective2 API and the algorithm being ran</param>
         /// <returns>Returns the message sent. This is used mainly by test means</returns>
-        public string Send(List<PortfolioTarget> holdings)
+        public override string Send(SignalExportTargetParameters parameters)
         {
-            if (holdings.Count == 0)
+            if (parameters.Targets.Count == 0)
             {
                 throw new ArgumentException("Portfolio target list is empty");
             }
 
-            var positions = ConvertHoldingsToCollective2(holdings);
+            _algorithm = parameters.Algorithm;
+
+            var positions = ConvertHoldingsToCollective2(parameters.Targets);
             var message = CreateMessage(positions);
             SendPositions(message);
 
@@ -150,11 +143,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <returns>Number of shares hold of the given position/returns>
         private int ConvertPercentageToQuantity(PortfolioTarget target)
         {
-            // TODO:  We use PortfolioTarget.Percent to calculate it really
-            var assetValue = target.Quantity * _portfolio.TotalPortfolioValue;
-            var numberShares = (int)(assetValue * _portfolio[target.Symbol].Price);
+            var numberShares = (int)(PortfolioTarget.Percent(_algorithm, target.Symbol, target.Quantity).Quantity);
 
-            if (_portfolio[target.Symbol].IsShort)
+            if (_algorithm.Portfolio[target.Symbol].IsShort)
             {
                 numberShares *= -1;
             }
@@ -184,18 +175,24 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// Sends the desired positions list in JSON format to Collective2 API using a POST request. It logs
         /// the message retrieved by the Collective2 API if there was a HttpRequestException
         /// </summary>
-        /// <param name="message">A JSON request of the desired positions list with the credentials</param>
-        private async void SendPositions(string message)
+        /// <param name="message">A JSON request string of the desired positions list with the credentials</param>
+        private void SendPositions(string message)
         {
-            var httpMessage = new StringContent(message, Encoding.UTF8, "application/json");
-            using HttpResponseMessage response = await _client.PostAsync(_destination, httpMessage).ConfigureAwait(true);
+            using var httpMessage = new StringContent(message, Encoding.UTF8, "application/json");
+            using HttpResponseMessage response = HttpClient.PostAsync(_destination, httpMessage).Result;
 
             if (!response.IsSuccessStatusCode)
             {
-                Log.Trace($"HttpRequestException: {response.StatusCode}");
+                Log.Error($"Collective2SignalExport.SendPositions(): Collective2 API returned HttpRequestException {response.StatusCode} at line 182");
+                return;
             }
 
-            httpMessage.Dispose();
+            var responseContent = response.Content.ReadAsStringAsync().Result;
+            var parsedResponseContent = JObject.Parse(responseContent);
+            if (parsedResponseContent["error"].HasValues)
+            {
+                Log.Error($"Collective2SignalExport.SendPositions(): Collective2 API returned the following errors: {String.Join(",", parsedResponseContent["error"])} at line 182");
+            }
         }
 
         /// <summary>
