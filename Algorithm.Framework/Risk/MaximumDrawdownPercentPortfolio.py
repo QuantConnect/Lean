@@ -49,7 +49,6 @@ class MaximumDrawdownPercentPortfolio(RiskManagementModel):
             insights = algorithm.Insights.GetActiveInsights(algorithm.UtcTime)
             for insight in insights:
                 insight.CloseTimeUtc = algorithm.UtcTime - timedelta(seconds=1)
-                algorithm.Insights.Remove(insight)
 
             self.initialised = False # reset the trailing high value for restart investing on next rebalcing period
             return [ PortfolioTarget(target.Symbol, 0) for target in targets ]
