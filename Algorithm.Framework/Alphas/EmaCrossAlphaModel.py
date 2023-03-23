@@ -48,11 +48,11 @@ class EmaCrossAlphaModel(AlphaModel):
 
                 if symbolData.FastIsOverSlow:
                     if symbolData.Slow > symbolData.Fast:
-                        insights.append(Insight.Price(symbolData.Symbol, self.predictionInterval, InsightDirection.Down))
+                        insights.append(Insight.Price(symbol, self.predictionInterval, InsightDirection.Down))
 
                 elif symbolData.SlowIsOverFast:
                     if symbolData.Fast > symbolData.Slow:
-                        insights.append(Insight.Price(symbolData.Symbol, self.predictionInterval, InsightDirection.Up))
+                        insights.append(Insight.Price(symbol, self.predictionInterval, InsightDirection.Up))
 
             symbolData.FastIsOverSlow = symbolData.Fast > symbolData.Slow
 
@@ -63,53 +63,53 @@ class EmaCrossAlphaModel(AlphaModel):
         Args:
             algorithm: The algorithm instance that experienced the change in securities
             changes: The security additions and removals from the algorithm'''
-        for added in changes.AddedSecurities:
-            symbolData = self.symbolDataBySymbol.get(added.Symbol)
-            if symbolData is None:
-                symbolData = SymbolData(added, self.fastPeriod, self.slowPeriod, algorithm, self.resolution)
-                self.symbolDataBySymbol[added.Symbol] = symbolData
-            else:
-                # a security that was already initialized was re-added, reset the indicators
-                symbolData.Fast.Reset()
-                symbolData.Slow.Reset()
+        added_symbols = []
+        for security in changes.AddedSecurities:
+            symbol = security.Symbol 
+            if symbol not in self.symbolDataBySymbol:
+                self.symbolDataBySymbol[symbol] = SymbolData(symbol, self.fastPeriod, self.slowPeriod, algorithm, self.resolution)
+                added_symbols.append(symbol)
+            
+        if added_symbols:
+            history = algorithm.History[TradeBar](added_symbols, self.slowPeriod, self.resolution)
+            for trade_bars in history:
+                for bar in trade_bars.Values:
+                    self.symbolDataBySymbol[bar.Symbol].update(bar)
 
-        for removed in changes.RemovedSecurities:
-            data = self.symbolDataBySymbol.pop(removed.Symbol, None)
-            if data is not None:
-                # clean up our consolidators
-                data.RemoveConsolidators()
+        for security in changes.RemovedSecurities:
+            symbol_data = self.symbolDataBySymbol.pop(security.Symbol, None)
+            if symbol_data:
+                symbol_data.dispose()
 
 
 class SymbolData:
     '''Contains data specific to a symbol required by this model'''
-    def __init__(self, security, fastPeriod, slowPeriod, algorithm, resolution):
-        self.Security = security
-        self.Symbol = security.Symbol
+    def __init__(self, symbol, fastPeriod, slowPeriod, algorithm, resolution):
+        self.symbol = symbol
         self.algorithm = algorithm
 
-        self.FastConsolidator = algorithm.ResolveConsolidator(security.Symbol, resolution)
-        self.SlowConsolidator = algorithm.ResolveConsolidator(security.Symbol, resolution)
-
-        algorithm.SubscriptionManager.AddConsolidator(security.Symbol, self.FastConsolidator)
-        algorithm.SubscriptionManager.AddConsolidator(security.Symbol, self.SlowConsolidator)
-
         # create fast/slow EMAs
-        self.Fast = ExponentialMovingAverage(security.Symbol, fastPeriod, ExponentialMovingAverage.SmoothingFactorDefault(fastPeriod))
-        self.Slow = ExponentialMovingAverage(security.Symbol, slowPeriod, ExponentialMovingAverage.SmoothingFactorDefault(slowPeriod))
+        self.Fast = ExponentialMovingAverage(symbol, fastPeriod, ExponentialMovingAverage.SmoothingFactorDefault(fastPeriod))
+        self.Slow = ExponentialMovingAverage(symbol, slowPeriod, ExponentialMovingAverage.SmoothingFactorDefault(slowPeriod))
 
-        algorithm.RegisterIndicator(security.Symbol, self.Fast, self.FastConsolidator);
-        algorithm.RegisterIndicator(security.Symbol, self.Slow, self.SlowConsolidator);
-
-        algorithm.WarmUpIndicator(security.Symbol, self.Fast, resolution);
-        algorithm.WarmUpIndicator(security.Symbol, self.Slow, resolution);
+        # Create a consolidator to update the EMAs over time
+        self.consolidator = algorithm.ResolveConsolidator(symbol, resolution)
+        self.consolidator.DataConsolidated += self.consolidation_handler
+        self.algorithm.SubscriptionManager.AddConsolidator(symbol, self.consolidator)
 
         # True if the fast is above the slow, otherwise false.
         # This is used to prevent emitting the same signal repeatedly
         self.FastIsOverSlow = False
+
+    def consolidation_handler(self, sender: object, bar: BaseData) -> None:
+        self.Fast.Update(bar.EndTime, bar.Value)
+        self.Slow.Update(bar.EndTime, bar.Value)
+
+    def update(self, bar):
+        self.consolidator.Update(bar)
         
-    def RemoveConsolidators(self):
-        self.algorithm.SubscriptionManager.RemoveConsolidator(self.Security.Symbol, self.FastConsolidator)
-        self.algorithm.SubscriptionManager.RemoveConsolidator(self.Security.Symbol, self.SlowConsolidator)
+    def dispose(self):
+        self.algorithm.SubscriptionManager.RemoveConsolidator(self.symbol, self.consolidator)
 
     @property
     def SlowIsOverFast(self):

@@ -19,6 +19,9 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Indicators;
 using QuantConnect.Securities;
+using System;
+using static QuantConnect.Messages;
+using System.Security.Cryptography;
 
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
@@ -67,8 +70,10 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
         {
             var insights = new List<Insight>();
-            foreach (var symbolData in SymbolDataBySymbol.Values)
+            foreach (var kvp in SymbolDataBySymbol)
             {
+                var symbol = kvp.Key;
+                var symbolData = kvp.Value;
                 if (symbolData.Fast.IsReady && symbolData.Slow.IsReady)
                 {
                     var insightPeriod = _resolution.ToTimeSpan().Multiply(_predictionInterval);
@@ -76,14 +81,14 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     {
                         if (symbolData.Slow > symbolData.Fast)
                         {
-                            insights.Add(Insight.Price(symbolData.Symbol, insightPeriod, InsightDirection.Down));
+                            insights.Add(Insight.Price(symbol, insightPeriod, InsightDirection.Down));
                         }
                     }
                     else if (symbolData.SlowIsOverFast)
                     {
                         if (symbolData.Fast > symbolData.Slow)
                         {
-                            insights.Add(Insight.Price(symbolData.Symbol, insightPeriod, InsightDirection.Up));
+                            insights.Add(Insight.Price(symbol, insightPeriod, InsightDirection.Up));
                         }
                     }
                 }
@@ -101,29 +106,40 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="changes">The security additions and removals from the algorithm</param>
         public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
-            foreach (var added in changes.AddedSecurities)
+            var addedSymbols = new List<Symbol>();
+            foreach (var security in changes.AddedSecurities)
             {
+                var symbol = security.Symbol;
                 SymbolData symbolData;
-                if (!SymbolDataBySymbol.TryGetValue(added.Symbol, out symbolData))
+                if (!SymbolDataBySymbol.TryGetValue(symbol, out symbolData))
                 {
-                    SymbolDataBySymbol[added.Symbol] = new SymbolData(added, _fastPeriod, _slowPeriod, algorithm, _resolution);
-                }
-                else
-                {
-                    // a security that was already initialized was re-added, reset the indicators
-                    symbolData.Fast.Reset();
-                    symbolData.Slow.Reset();
+                    SymbolDataBySymbol[symbol] = new SymbolData(symbol, _fastPeriod, _slowPeriod, algorithm, _resolution);
+                    addedSymbols.Add(symbol);
                 }
             }
 
-            foreach (var removed in changes.RemovedSecurities)
+            if (addedSymbols.Count > 0)
+            {
+                // warmup our indicators by pushing history through the consolidators
+                algorithm.History(addedSymbols, _slowPeriod, _resolution)
+                    .PushThrough(data =>
+                    {
+                        SymbolData symbolData;
+                        if (SymbolDataBySymbol.TryGetValue(data.Symbol, out symbolData))
+                        {
+                            symbolData.Update(data);
+                        }
+                    });
+            }
+
+            foreach (var security in changes.RemovedSecurities)
             {
                 SymbolData symbolData;
-                if (SymbolDataBySymbol.TryGetValue(removed.Symbol, out symbolData))
+                if (SymbolDataBySymbol.TryGetValue(security.Symbol, out symbolData))
                 {
                     // clean up our consolidators
-                    symbolData.RemoveConsolidators();
-                    SymbolDataBySymbol.Remove(removed.Symbol);
+                    symbolData.Dispose();
+                    SymbolDataBySymbol.Remove(security.Symbol);
                 }
             }
         }
@@ -131,16 +147,14 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <summary>
         /// Contains data specific to a symbol required by this model
         /// </summary>
-        public class SymbolData
+        public class SymbolData : IDisposable
         {
             private readonly QCAlgorithm _algorithm;
-            private readonly IDataConsolidator _fastConsolidator;
-            private readonly IDataConsolidator _slowConsolidator;
+            private readonly IDataConsolidator _consolidator;
             private readonly ExponentialMovingAverage _fast;
             private readonly ExponentialMovingAverage _slow;
-            private readonly Security _security;
+            private readonly Symbol _symbol;
 
-            public Symbol Symbol => _security.Symbol;
             public ExponentialMovingAverage Fast => _fast;
             public ExponentialMovingAverage Slow => _slow;
 
@@ -152,39 +166,51 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             public bool SlowIsOverFast => !FastIsOverSlow;
 
             public SymbolData(
-                Security security,
+                Symbol symbol,
                 int fastPeriod,
                 int slowPeriod,
                 QCAlgorithm algorithm,
                 Resolution resolution)
             {
+                _symbol = symbol;
                 _algorithm = algorithm;
-                _security = security;
-
-                _fastConsolidator = algorithm.ResolveConsolidator(security.Symbol, resolution);
-                _slowConsolidator = algorithm.ResolveConsolidator(security.Symbol, resolution);
-
-                algorithm.SubscriptionManager.AddConsolidator(security.Symbol, _fastConsolidator);
-                algorithm.SubscriptionManager.AddConsolidator(security.Symbol, _slowConsolidator);
 
                 // create fast/slow EMAs
-                _fast = new ExponentialMovingAverage(security.Symbol, fastPeriod, ExponentialMovingAverage.SmoothingFactorDefault(fastPeriod));
-                _slow = new ExponentialMovingAverage(security.Symbol, slowPeriod, ExponentialMovingAverage.SmoothingFactorDefault(slowPeriod));
+                _fast = new ExponentialMovingAverage(symbol, fastPeriod, ExponentialMovingAverage.SmoothingFactorDefault(fastPeriod));
+                _slow = new ExponentialMovingAverage(symbol, slowPeriod, ExponentialMovingAverage.SmoothingFactorDefault(slowPeriod));
 
-                algorithm.RegisterIndicator(security.Symbol, _fast, _fastConsolidator);
-                algorithm.RegisterIndicator(security.Symbol, _slow, _slowConsolidator);
-
-                algorithm.WarmUpIndicator(security.Symbol, _fast, resolution);
-                algorithm.WarmUpIndicator(security.Symbol, _slow, resolution);
+                // Create a consolidator to update the EMAs over time
+                _consolidator = algorithm.ResolveConsolidator(symbol, resolution);
+                _consolidator.DataConsolidated += ConsolidationHandler;
+                algorithm.SubscriptionManager.AddConsolidator(symbol, _consolidator);
             }
 
             /// <summary>
-            /// Remove Fast and Slow consolidators
+            /// Event handler for when the consolidator produces a new consolidated bar
             /// </summary>
-            public void RemoveConsolidators()
+            /// <param name="sender">The consolidator object that produced the bar</param>
+            /// <param name="bar">The consolidated bar</param>
+            public void ConsolidationHandler(object sender, IBaseData bar)
             {
-                _algorithm.SubscriptionManager.RemoveConsolidator(Symbol, _fastConsolidator);
-                _algorithm.SubscriptionManager.RemoveConsolidator(Symbol, _slowConsolidator);
+                _fast.Update(bar.EndTime, bar.Value);
+                _slow.Update(bar.EndTime, bar.Value);
+            }
+
+            /// <summary>
+            /// A method to warm up indicators by feeding historical data into the consolidator
+            /// </summary>
+            /// <param name="bar">A historical bar of data</param>
+            public void Update(BaseData bar)
+            {
+                _consolidator.Update(bar);
+            }
+
+            /// <summary>
+            /// Removes consolidators
+            /// </summary>
+            public void Dispose()
+            {
+                _algorithm.SubscriptionManager.RemoveConsolidator(_symbol, _consolidator);
             }
         }
     }
