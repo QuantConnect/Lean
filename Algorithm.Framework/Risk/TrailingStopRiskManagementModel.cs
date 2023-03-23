@@ -82,9 +82,12 @@ namespace QuantConnect.Algorithm.Framework.Risk
 
                 if (_maximumDrawdownPercent < drawdown)
                 {
+                    // Cancel insights
+                    algorithm.Insights.Cancel(new[] { symbol });
+
                     _trailingAbsoluteHoldingsState.Remove(symbol);
                     // liquidate
-                    yield return new PortfolioTarget(security.Symbol, 0);
+                    yield return new PortfolioTarget(symbol, 0);
                 }
             }
         }
