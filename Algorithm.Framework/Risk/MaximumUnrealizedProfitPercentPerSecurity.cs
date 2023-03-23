@@ -59,15 +59,13 @@ namespace QuantConnect.Algorithm.Framework.Risk
                 var pnl = security.Holdings.UnrealizedProfitPercent;
                 if (pnl > _maximumUnrealizedProfitPercent)
                 {
+                    var symbol = security.Symbol;
+
                     // Cancel insights
-                    var insights = algorithm.Insights.GetActiveInsights(algorithm.UtcTime);
-                    foreach (var insight in insights)
-                    {
-                        insight.CloseTimeUtc = algorithm.UtcTime.AddSeconds(-1);
-                    }
+                    algorithm.Insights.Cancel(new[] { symbol });
 
                     // liquidate
-                    yield return new PortfolioTarget(security.Symbol, 0);
+                    yield return new PortfolioTarget(symbol, 0);
                 }
             }
         }
