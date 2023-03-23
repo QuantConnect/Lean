@@ -14,83 +14,65 @@
 */
 
 using System.Collections.Generic;
-using QuantConnect.Data;
-using QuantConnect.Interfaces;
+using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Algorithm.Framework.Risk;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm which tests that a trailing stop liquidates and restarts correctly
+    /// Show cases how to use the <see cref="TrailingStopRiskManagementModel"/>
     /// </summary>
-    public class TrailingStopRiskFrameworkRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class TrailingStopRiskFrameworkRegressionAlgorithm : BaseFrameworkRegressionAlgorithm
     {
+        /// <summary>
+        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
+        /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2014, 6, 5);
-            SetEndDate(2014, 6, 9);
-            SetCash(100000);
-            AddEquity("AAPL");
-            AddRiskManagement(new TrailingStopRiskManagementModel(0.01m));
+            base.Initialize();
+            SetUniverseSelection(new ManualUniverseSelectionModel(QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA)));
+
+            SetRiskManagement(new TrailingStopRiskManagementModel(0.01m));
         }
 
-        public override void OnData(Slice slice)
+        public override void OnEndOfAlgorithm()
         {
-            if (!Portfolio.Invested)
-            {
-                SetHoldings("AAPL", 1);
-            }
         }
-
-        /// <summary>
-        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
-        /// </summary>
-        public bool CanRunLocally { get; } = true;
-
-        /// <summary>
-        /// This is used by the regression test system to indicate which languages this algorithm is written in.
-        /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 2371;
-
-        /// <summary>
-        /// Data Points count of the algorithm history
-        /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public override long DataPoints => 304;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "3"},
-            {"Average Win", "0%"},
-            {"Average Loss", "-0.31%"},
-            {"Compounding Annual Return", "202.556%"},
-            {"Drawdown", "1.400%"},
-            {"Expectancy", "-1"},
-            {"Net Profit", "1.426%"},
-            {"Sharpe Ratio", "9.374"},
-            {"Probabilistic Sharpe Ratio", "81.575%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "1.741"},
-            {"Beta", "-1.155"},
-            {"Annual Standard Deviation", "0.133"},
-            {"Annual Variance", "0.018"},
-            {"Information Ratio", "5.447"},
-            {"Tracking Error", "0.149"},
-            {"Treynor Ratio", "-1.075"},
-            {"Total Fees", "$71.90"},
-            {"Estimated Strategy Capacity", "$20000000.00"},
+            {"Total Trades", "12"},
+            {"Average Win", "2.58%"},
+            {"Average Loss", "-0.49%"},
+            {"Compounding Annual Return", "48.248%"},
+            {"Drawdown", "3.300%"},
+            {"Expectancy", "0.264"},
+            {"Net Profit", "3.252%"},
+            {"Sharpe Ratio", "3.269"},
+            {"Probabilistic Sharpe Ratio", "74.233%"},
+            {"Loss Rate", "80%"},
+            {"Win Rate", "20%"},
+            {"Profit-Loss Ratio", "5.32"},
+            {"Alpha", "0.312"},
+            {"Beta", "0.075"},
+            {"Annual Standard Deviation", "0.1"},
+            {"Annual Variance", "0.01"},
+            {"Information Ratio", "1.173"},
+            {"Tracking Error", "0.109"},
+            {"Treynor Ratio", "4.382"},
+            {"Total Fees", "$48.26"},
+            {"Estimated Strategy Capacity", "$16000000.00"},
             {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "59.13%"},
-            {"OrderListHash", "87da67837d4a2c4c4a419f01b467d9c6"}
+            {"Portfolio Turnover", "36.60%"},
+            {"OrderListHash", "7d7e5f8f0f637f270b6bc0b7a102c27c"}
         };
     }
 }
