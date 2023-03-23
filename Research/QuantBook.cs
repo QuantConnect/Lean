@@ -860,11 +860,11 @@ namespace QuantConnect.Research
 
                         lock (data)
                         {
-                            if (!data.ContainsKey(time))
+                            if (!data.TryGetValue(time, out var dataAtTime))
                             {
-                                data[time] = new DataDictionary<dynamic>(time);
+                                dataAtTime = data[time] = new DataDictionary<dynamic>(time);
                             }
-                            data[time].Add(currentData.Symbol, dataPoint);
+                            dataAtTime.Add(currentData.Symbol, dataPoint);
                         }
                     }
                 }

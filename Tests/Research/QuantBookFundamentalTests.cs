@@ -170,11 +170,16 @@ namespace QuantConnect.Tests.Research
             var security = _qb.AddEquity("AAPL");
 
             var history = _qb.History(Symbols.AAPL, startDate, endDate, Resolution.Daily).ToList();
+            Assert.IsNotEmpty(history);
+
             var fundamental = (_qb.GetFundamental("AAPL", "", startDate, endDate) as IEnumerable<DataDictionary<dynamic>>).ToList();
 
             var isEndDateOpen = security.Exchange.Hours.IsDateOpen(endDate);
-            var expectedFundamentalCount = isEndDateOpen ? history.Count + 1 : history.Count;
+            var expectedFundamentalCount = 10;
+            var expectedHistoryCount = isEndDateOpen ? expectedFundamentalCount - 1 : expectedFundamentalCount;
+
             Assert.AreEqual(expectedFundamentalCount, fundamental.Count);
+            Assert.AreEqual(expectedHistoryCount, history.Count);
 
             var historyTimes = history.Select(x => x.EndTime);
             var fundamentalTimes = fundamental.Select(x => x.Time).SkipLast(isEndDateOpen ? 1 : 0);
