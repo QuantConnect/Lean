@@ -36,7 +36,12 @@ class MaximumUnrealizedProfitPercentPerSecurity(RiskManagementModel):
 
             pnl = security.Holdings.UnrealizedProfitPercent
             if pnl > self.maximumUnrealizedProfitPercent:
+                symbol = security.Symbol
+
+                # Cancel insights
+                algorithm.Insights.Cancel([ symbol ]);
+
                 # liquidate
-                targets.append(PortfolioTarget(security.Symbol, 0))
+                targets.append(PortfolioTarget(symbol, 0))
 
         return targets
