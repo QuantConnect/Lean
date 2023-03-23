@@ -118,8 +118,7 @@ class SymbolData:
         algorithm.RegisterIndicator(symbol, self.STD, self.Consolidator)
 
         # warmup our indicators by pushing history through the indicators
-        data_type = QuoteBar if security.Type == SecurityType.Forex or security.Type == SecurityType.Cfd else TradeBar
-        bars = algorithm.History[data_type](symbol, period, resolution)
+        bars = algorithm.History[self.Consolidator.InputType](symbol, period, resolution)
         for bar in bars:
             self.SMA.Update(bar.EndTime, bar.Close)
             self.STD.Update(bar.EndTime, bar.Close)
