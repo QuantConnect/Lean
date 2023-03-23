@@ -23,6 +23,3 @@ class TrailingStopRiskFrameworkRegressionAlgorithm(BaseFrameworkRegressionAlgori
         self.SetUniverseSelection(ManualUniverseSelectionModel([Symbol.Create("AAPL", SecurityType.Equity, Market.USA)]))
 
         self.SetRiskManagement(TrailingStopRiskManagementModel(0.01))
-    
-    def OnEndOfAlgorithm(self):
-        pass
