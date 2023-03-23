@@ -36,10 +36,6 @@ namespace QuantConnect.Algorithm.CSharp
             ));
         }
 
-        public override void OnEndOfAlgorithm()
-        {
-        }
-
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
@@ -50,30 +46,30 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override Dictionary<string, string> ExpectedStatistics => new()
         {
-            {"Total Trades", "8"},
+            {"Total Trades", "3"},
             {"Average Win", "2.43%"},
-            {"Average Loss", "-1.45%"},
-            {"Compounding Annual Return", "12.322%"},
-            {"Drawdown", "6.000%"},
-            {"Expectancy", "-0.109"},
-            {"Net Profit", "0.949%"},
-            {"Sharpe Ratio", "0.834"},
-            {"Probabilistic Sharpe Ratio", "47.313%"},
-            {"Loss Rate", "67%"},
-            {"Win Rate", "33%"},
-            {"Profit-Loss Ratio", "1.67"},
-            {"Alpha", "-0.065"},
-            {"Beta", "0.79"},
-            {"Annual Standard Deviation", "0.11"},
-            {"Annual Variance", "0.012"},
-            {"Information Ratio", "-1.027"},
-            {"Tracking Error", "0.104"},
-            {"Treynor Ratio", "0.116"},
-            {"Total Fees", "$35.09"},
-            {"Estimated Strategy Capacity", "$35000000.00"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "34.433%"},
+            {"Drawdown", "2.900%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "2.434%"},
+            {"Sharpe Ratio", "2.552"},
+            {"Probabilistic Sharpe Ratio", "66.729%"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "100%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0.127"},
+            {"Beta", "0.559"},
+            {"Annual Standard Deviation", "0.093"},
+            {"Annual Variance", "0.009"},
+            {"Information Ratio", "0.426"},
+            {"Tracking Error", "0.092"},
+            {"Treynor Ratio", "0.425"},
+            {"Total Fees", "$7.57"},
+            {"Estimated Strategy Capacity", "$60000000.00"},
             {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "23.27%"},
-            {"OrderListHash", "b4ded74daedcb4bb12b65d6743f1300f"}
+            {"Portfolio Turnover", "6.64%"},
+            {"OrderListHash", "bc2cfedec1b692dfeae309db9c0ddd68"}
         };
     }
 }
