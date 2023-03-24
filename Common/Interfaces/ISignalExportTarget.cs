@@ -24,9 +24,9 @@ namespace QuantConnect.Interfaces
     public interface ISignalExportTarget: IDisposable
     {
         /// <summary>
-        /// Sends the positions holdings the user have defined to certain 3rd party API
+        /// Sends user's positions to certain 3rd party API
         /// </summary>
         /// <param name="parameters">Holdings the user have defined to be sent to certain 3rd party API and the algorithm being ran</param>
-        string Send(SignalExportTargetParameters parameters);
+        bool Send(SignalExportTargetParameters parameters);
     }
 }

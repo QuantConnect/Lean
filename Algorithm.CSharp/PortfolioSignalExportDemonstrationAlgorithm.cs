@@ -13,9 +13,7 @@
  * limitations under the License.
 */
 
-using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
-using QuantConnect.Data;
-using QuantConnect.Indicators;
+using QuantConnect.Interfaces;
 using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -27,125 +25,96 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="using quantconnect" />
     /// <meta name="tag" content="securities and portfolio" />
-    public class PortfolioSignalExportDemonstrationAlgorithm : QCAlgorithm
+    public class PortfolioSignalExportDemonstrationAlgorithm : SignalExportDemonstrationAlgorithm , IRegressionAlgorithmDefinition
     {
-        private const string _collective2ApiKey = ""; // Replace this value with your Collective2 API key
-        private const int _collective2SystemId = 0; // Replace this value with your system ID provided by Collective2 API
-
-        private const string _crunchDAOApiKey = ""; // Replace this value with your CrunchDAO API key
-        private const string _crunchDAOModel = ""; // Replace this value with your model's name
-
-        private const string _numeraiPublicId = ""; // Replace this value with your Numerai Signals Public ID
-        private const string _numeraiSecretId = ""; // Replace this value with your Numerai Signals Secret ID
-        private const string _numeraiModelId = ""; // Replace this value with your Numerai Signals Model ID
-
-        private List<string> _symbols = new List<string>
+        /// <summary>
+        /// Set Holdings to SPY and sends signals to the different 3rd party API's already defined
+        /// </summary>
+        /// <param name="quantity">Holding quantity to set to SPY</param>
+        public override void SetHoldingsToSpyAndSendSignals(decimal quantity)
         {
-            "SPY",
-            "AIG",
-            "GOOGL",
-            "AAPL",
-            "AMZN",
-            "TSLA",
-            "NFLX",
-            "INTC",
-            "MSFT",
-            "KO",
-            "WMT",
-            "IBM",
-            "AMGN",
-            "CAT"
+            SetHoldings("SPY", quantity);
+            SignalExport.SetTargetPortfolio(this);
+        }
+
+        /// <summary>
+        /// Set initial holding quantity for each symbol in Symbols list
+        /// </summary>
+        public override void SetInitialSignalValueForTargets()
+        {
+            foreach (var symbol in Symbols)
+            {
+                SetHoldings(symbol, 0.05);
+            }
+        }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public virtual Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 11743;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "8"},
+            {"Average Win", "0.00%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "31.500%"},
+            {"Drawdown", "0.400%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "0.351%"},
+            {"Sharpe Ratio", "6.444"},
+            {"Probabilistic Sharpe Ratio", "68.992%"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "100%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "-0.107"},
+            {"Beta", "0.2"},
+            {"Annual Standard Deviation", "0.045"},
+            {"Annual Variance", "0.002"},
+            {"Information Ratio", "-9.509"},
+            {"Tracking Error", "0.178"},
+            {"Treynor Ratio", "1.446"},
+            {"Total Fees", "$8.00"},
+            {"Estimated Strategy Capacity", "$6700000.00"},
+            {"Lowest Capacity Asset", "AIG R735QTJ8XC9X"},
+            {"Fitness Score", "0.048"},
+            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "9.197"},
+            {"Return Over Maximum Drawdown", "69.229"},
+            {"Portfolio Turnover", "0.049"},
+            {"Total Insights Generated", "0"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "0"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "bd935d199d8b92a3a9eb1fa64f57b930"}
         };
-
-        private bool _emaFastWasAbove;
-
-        private bool _emaFastIsNotSet;
-
-        public int FastPeriod = 100;
-        public int SlowPeriod = 200;
-
-        public ExponentialMovingAverage Fast;
-        public ExponentialMovingAverage Slow;
-
-        /// <summary>
-        /// Initialize the date and add all equity symbols present in list _symbols
-        /// </summary>
-        public override void Initialize()
-        {
-            SetStartDate(2013, 10, 07);
-            SetEndDate(2013, 10, 11);
-            SetCash(100 * 1000);
-
-            foreach (var symbol in _symbols)
-            {
-                AddEquity(symbol);
-            }
-
-            Fast = EMA("SPY", FastPeriod);
-            Slow = EMA("SPY", SlowPeriod);
-
-            // Initialize this flag, to check when the ema indicators crosses between themselves
-            _emaFastIsNotSet = true;
-
-            // Set the signal export providers
-            SignalExport.AddSignalExportProviders(new Collective2SignalExport(_collective2ApiKey, _collective2SystemId));
-            SignalExport.AddSignalExportProviders(new CrunchDAOSignalExport(_crunchDAOApiKey, _crunchDAOModel));
-            SignalExport.AddSignalExportProviders(new NumeraiSignalExport(_numeraiPublicId, _numeraiSecretId, _numeraiModelId));
-        }
-
-        /// <summary>
-        /// Reduce the quantity of holdings for one security and increase the holdings to the another
-        /// one when the EMA's indicators crosses between themselves, then send a signal to the 3rd party
-        /// API's defined and quit the algorithm
-        /// </summary>
-        /// <param name="slice"></param>
-        public override void OnData(Slice slice)
-        {
-            // Wait for our indicators to be ready
-            if (!Fast.IsReady || !Slow.IsReady) return;
-
-            // Set flag _emaFastWasAbove to know when the ema indicators crosses between themselves
-            if (_emaFastIsNotSet)
-            {
-                if (Fast > Slow * 1.001m)
-                {
-                    _emaFastWasAbove = true;
-                }
-                else
-                {
-                    _emaFastWasAbove = false;
-                }
-                _emaFastIsNotSet = false;
-            }
-
-            // Check whether ema fast and ema slow crosses. If they do, set holdings to one
-            // of SPY or AIG, and send signals to the 3rd party API's defined above
-            if ((Fast > Slow * 1.001m) && (!_emaFastWasAbove))
-            {
-                SetHoldings("SPY", 0.1);
-                foreach (var symbol in _symbols)
-                {
-                    if (symbol != "SPY")
-                    {
-                        SetHoldings(symbol, 0.01);
-                    }
-                }
-                SignalExport.SetTargetPortfolio(this, Portfolio);
-                Quit();
-            }
-            else if ((Fast < Slow * 0.999m) && (_emaFastWasAbove))
-            {
-                SetHoldings("AIG", 0.1);
-                foreach (var symbol in _symbols)
-                {
-                    if (symbol != "AIG")
-                    {
-                        SetHoldings(symbol, 0.01);
-                    }
-                }
-                SignalExport.SetTargetPortfolio(this, Portfolio);
-                Quit();
-            }
-        }
     }
 }

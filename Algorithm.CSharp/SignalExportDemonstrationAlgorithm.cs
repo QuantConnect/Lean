@@ -17,18 +17,19 @@ using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
+using QuantConnect.Interfaces;
 using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This algorithm sends and array of current portfolio targets to different 3rd party API's
+    /// This algorithm sends an array of current portfolio targets to different 3rd party API's
     /// every time the ema indicators crosses between themselves
     /// </summary>
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="using quantconnect" />
     /// <meta name="tag" content="securities and portfolio" />
-    public class SignalExportDemonstrationAlgorithm : QCAlgorithm
+    public class SignalExportDemonstrationAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const string _collective2ApiKey = ""; // Replace this value with your Collective2 API key
         private const int _collective2SystemId = 0; // Replace this value with your system ID given by Collective2 API
@@ -42,7 +43,17 @@ namespace QuantConnect.Algorithm.CSharp
 
         private PortfolioTarget[] _targets = new PortfolioTarget[14];
 
-        private List<string> _symbols = new List<string>
+        private bool _emaFastWasAbove;
+
+        private bool _emaFastIsNotSet;
+
+        private readonly int _fastPeriod = 100;
+        private readonly int _slowPeriod = 200;
+
+        private ExponentialMovingAverage _fast;
+        private ExponentialMovingAverage _slow;
+
+        protected List<string> Symbols = new List<string>
         {
             "SPY",
             "AIG",
@@ -60,18 +71,8 @@ namespace QuantConnect.Algorithm.CSharp
             "CAT"
         };
 
-        private bool _emaFastWasAbove;
-
-        private bool _emaFastIsNotSet;
-
-        public int FastPeriod = 100;
-        public int SlowPeriod = 200;
-
-        public ExponentialMovingAverage Fast;
-        public ExponentialMovingAverage Slow;
-
         /// <summary>
-        /// Initialize the date and add all equity symbols present in list _symbols
+        /// Initialize the date and add all equity symbols present in Symbols list
         /// </summary>
         public override void Initialize()
         {
@@ -79,17 +80,13 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 11);
             SetCash(100 * 1000);
 
-            int index = 0;
-
-            foreach (var symbol in _symbols)
+            foreach (var symbol in Symbols)
             {
                 AddEquity(symbol);
-                _targets[index] = new PortfolioTarget(Portfolio[symbol].Symbol, (decimal)0.05);
-                index++;
             }
 
-            Fast = EMA("SPY", FastPeriod);
-            Slow = EMA("SPY", SlowPeriod);
+            _fast = EMA("SPY", _fastPeriod);
+            _slow = EMA("SPY", _slowPeriod);
 
             // Initialize this flag, to check when the ema indicators crosses between themselves
             _emaFastIsNotSet = true;
@@ -101,20 +98,21 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
-        /// Reduce the quantity of holdings for one security and increase the holdings to the another
-        /// one when the EMA's indicators crosses between themselves, then send a signal to the 3rd party
-        /// API's defined and quit the algorithm
+        /// Reduce the quantity of holdings for SPY or increase it, depending the case, 
+        /// when the EMA's indicators crosses between themselves, then send a signal to the 3rd party
+        /// API's already defined
         /// </summary>
         /// <param name="slice"></param>
         public override void OnData(Slice slice)
         {
             // Wait for our indicators to be ready
-            if (!Fast.IsReady || !Slow.IsReady) return;
+            if (!_fast.IsReady || !_slow.IsReady) return;
 
             // Set the value of flag _emaFastWasAbove, to know when the ema indicators crosses between themselves
+            // Additionally, set an initial amount for each target
             if (_emaFastIsNotSet)
             {
-                if (Fast > Slow * 1.001m)
+                if (_fast > _slow * 1.001m)
                 {
                     _emaFastWasAbove = true;
                 }
@@ -123,27 +121,113 @@ namespace QuantConnect.Algorithm.CSharp
                     _emaFastWasAbove = false;
                 }
                 _emaFastIsNotSet = false;
+
+                SetInitialSignalValueForTargets();
             }
 
-            // Check if the ema indicators have crossed between themselves
-            if ((Fast > Slow * 1.001m) && (!_emaFastWasAbove))
+            // Check whether ema fast and ema slow crosses. If they do, set holdings to SPY
+            // or reduce its holdings, and send signals to the 3rd party API's defined above
+            if ((_fast > _slow * 1.001m) && (!_emaFastWasAbove))
             {
-                SetHoldings("SPY", 0.1);
-                SetHoldings("AIG",0.01);
-                _targets[1] = new PortfolioTarget(Portfolio["AIG"].Symbol, (decimal)0.01);
-                _targets[0] = new PortfolioTarget(Portfolio["SPY"].Symbol, (decimal)0.1);
-                SignalExport.SetTargetPortfolio(this, _targets);
-                Quit();
+                SetHoldingsToSpyAndSendSignals((decimal)0.1);
             }
-            else if ((Fast < Slow * 0.999m) && (_emaFastWasAbove))
+            else if ((_fast < _slow * 0.999m) && (_emaFastWasAbove))
             {
-                SetHoldings("SPY", 0.01);
-                SetHoldings("AIG", 0.1);
-                _targets[1] = new PortfolioTarget(Portfolio["AIG"].Symbol, (decimal)0.1);
-                _targets[0] = new PortfolioTarget(Portfolio["SPY"].Symbol, (decimal)0.01);
-                SignalExport.SetTargetPortfolio(this, _targets);
-                Quit();
+                SetHoldingsToSpyAndSendSignals((decimal)0.01);
             }
         }
+
+        /// <summary>
+        /// Set Holdings to SPY and sends signals to the different 3rd party API's already defined
+        /// </summary>
+        /// <param name="quantity">Percentage of holdings to set to SPY</param>
+        public virtual void SetHoldingsToSpyAndSendSignals(decimal quantity)
+        {
+            SetHoldings("SPY", quantity);
+            _targets[0] = new PortfolioTarget(Portfolio["SPY"].Symbol, quantity);
+            SignalExport.SetTargetPortfolio(this, _targets);
+        }
+        
+        /// <summary>
+        /// Set initial signal value for each portfolio target in _targets array
+        /// </summary>
+        public virtual void SetInitialSignalValueForTargets()
+        {
+            int index = 0;
+            foreach (var symbol in Symbols)
+            {
+                _targets[index] = new PortfolioTarget(Portfolio[symbol].Symbol, (decimal)0.05);
+                index++;
+            }
+        }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public virtual Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// Data Points count of all timeslices of algorithm
+        /// </summary>
+        public long DataPoints => 11743;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "2"},
+            {"Average Win", "0.00%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "13.574%"},
+            {"Drawdown", "0.000%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "0.163%"},
+            {"Sharpe Ratio", "13.636"},
+            {"Probabilistic Sharpe Ratio", "0%"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "100%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0.043"},
+            {"Beta", "0.033"},
+            {"Annual Standard Deviation", "0.008"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "-8.71"},
+            {"Tracking Error", "0.215"},
+            {"Treynor Ratio", "3.295"},
+            {"Total Fees", "$2.00"},
+            {"Estimated Strategy Capacity", "$130000000.00"},
+            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
+            {"Fitness Score", "0.024"},
+            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
+            {"Portfolio Turnover", "0.024"},
+            {"Total Insights Generated", "0"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "0"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "c275d939b91d3a24b4af6746fe3764c1"}
+        };
     }
 }

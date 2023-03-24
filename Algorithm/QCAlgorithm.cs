@@ -261,7 +261,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// SignalExport - Allows sending export signals to different 3rd party API's. So far it only allows to send signals
+        /// SignalExport - Allows sending export signals to different 3rd party API's. For example, it allows to send signals
         /// to Collective2, CrunchDAO and Numerai API's
         /// </summary>
         [DocumentationAttribute(SecuritiesAndPortfolio)]
