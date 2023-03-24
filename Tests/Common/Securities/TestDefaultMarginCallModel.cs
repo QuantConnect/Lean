@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -22,7 +22,7 @@ namespace QuantConnect.Tests.Common.Securities
     internal class TestDefaultMarginCallModel : DefaultMarginCallModel
     {
         public TestDefaultMarginCallModel(SecurityPortfolioManager portfolio, IOrderProperties defaultOrderProperties)
-            : base(portfolio, defaultOrderProperties)
+            : base(portfolio, null, defaultOrderProperties)
         {
         }
 

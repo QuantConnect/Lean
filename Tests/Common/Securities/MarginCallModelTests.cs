@@ -162,7 +162,7 @@ namespace QuantConnect.Tests.Common.Securities
             const decimal leverage = 1m;
             var orderProcessor = new FakeOrderProcessor();
             var portfolio = GetPortfolio(orderProcessor, quantity);
-            portfolio.MarginCallModel = new DefaultMarginCallModel(portfolio, null);
+            portfolio.MarginCallModel = new DefaultMarginCallModel(portfolio, null, null);
 
             var security = GetSecurity(Symbols.AAPL);
             portfolio.Securities.Add(security);
