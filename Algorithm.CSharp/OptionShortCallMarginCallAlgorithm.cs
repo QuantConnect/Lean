@@ -22,6 +22,7 @@ using QuantConnect.Orders;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
+    /// Algorithm asserting that the <see cref="QCAlgorithm.OnMarginCall"/> event is fired when trading options
     /// </summary>
     public class OptionShortCallMarginCallAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
@@ -57,7 +58,6 @@ namespace QuantConnect.Algorithm.CSharp
                 !Portfolio.Securities[_optionContractSymbol].Invested &&
                 slice.OptionChains.Count > 0)
             {
-                //MarketOrder(_optionContractSymbol.Underlying, 285);
                 MarketOrder(_optionContractSymbol, -10);
                 _orderPlaced = true;
             }

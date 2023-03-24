@@ -22,7 +22,7 @@ namespace QuantConnect.Tests.Common.Securities
     internal class TestDefaultMarginCallModel : DefaultMarginCallModel
     {
         public TestDefaultMarginCallModel(SecurityPortfolioManager portfolio, IOrderProperties defaultOrderProperties)
-            : base(portfolio, null, defaultOrderProperties)
+            : base(portfolio, defaultOrderProperties)
         {
         }
 

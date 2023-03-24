@@ -38,11 +38,6 @@ namespace QuantConnect.Securities
         protected SecurityPortfolioManager Portfolio { get; }
 
         /// <summary>
-        /// Gets the portfolio that margin calls will be transacted against
-        /// </summary>
-        protected SecurityTransactionManager Transactions { get; }
-
-        /// <summary>
         /// Gets the default order properties to be used in margin call orders
         /// </summary>
         protected IOrderProperties DefaultOrderProperties { get; }
@@ -51,15 +46,10 @@ namespace QuantConnect.Securities
         /// Initializes a new instance of the <see cref="DefaultMarginCallModel"/> class
         /// </summary>
         /// <param name="portfolio">The portfolio object to receive margin calls</param>
-        /// <param name="transactions">The transactions object to be used to get group order managers id</param>
         /// <param name="defaultOrderProperties">The default order properties to be used in margin call orders</param>
-        public DefaultMarginCallModel(
-            SecurityPortfolioManager portfolio,
-            SecurityTransactionManager transactions,
-            IOrderProperties defaultOrderProperties)
+        public DefaultMarginCallModel(SecurityPortfolioManager portfolio, IOrderProperties defaultOrderProperties)
         {
             Portfolio = portfolio;
-            Transactions = transactions;
             DefaultOrderProperties = defaultOrderProperties;
         }
 
@@ -168,7 +158,7 @@ namespace QuantConnect.Securities
             GroupOrderManager groupOrderManager = null;
             if (orderType == OrderType.ComboMarket)
             {
-                groupOrderManager = new GroupOrderManager(Transactions.GetIncrementGroupOrderManagerId(), positionGroup.Count, quantity);
+                groupOrderManager = new GroupOrderManager(Portfolio.Transactions.GetIncrementGroupOrderManagerId(), positionGroup.Count, quantity);
             }
 
             return securitiesBySymbol.Select(kvp =>
@@ -202,50 +192,22 @@ namespace QuantConnect.Securities
         /// <returns>An order object representing a liquidation order to be executed to bring the account within margin requirements</returns>
         protected virtual SubmitOrderRequest GenerateMarginCallOrder(Security security, decimal totalPortfolioValue, decimal totalUsedMargin)
         {
-            // leave a buffer in default implementation
-            const decimal marginBuffer = 0.10m;
-
-            if (totalUsedMargin <= totalPortfolioValue * (1 + marginBuffer))
-            {
-                return null;
-            }
-
             if (!security.Holdings.Invested)
             {
                 return null;
             }
 
-            if (security.QuoteCurrency.ConversionRate == 0m)
+            var orders = GenerateMarginCallOrders(
+                Portfolio.PositionGroups.Where(x => x.Count == 1 && x.Positions.Single().Symbol == security.Symbol).Single(),
+                totalPortfolioValue,
+                totalUsedMargin).ToList();
+
+            if (orders.Count == 0)
             {
-                // check for div 0 - there's no conv rate, so we can't place an order
                 return null;
             }
 
-            // compute the amount of quote currency we need to liquidate in order to get within margin requirements
-            var deltaAccountCurrency = totalUsedMargin - totalPortfolioValue;
-
-            // TODO: get all groups for this security holdings and calculate margins
-            var positionGroup = Portfolio.Positions.GetOrCreateDefaultGroup(security);
-
-            var currentlyUsedBuyingPower = positionGroup.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(Portfolio, positionGroup);
-
-            // if currentlyUsedBuyingPower > deltaAccountCurrency, means we can keep using the diff in buying power
-            var buyingPowerToKeep = Math.Max(0, currentlyUsedBuyingPower - deltaAccountCurrency);
-
-            // we want a reduction so we send the inverse side of our position
-            var deltaBuyingPower = (currentlyUsedBuyingPower - buyingPowerToKeep) * (security.Holdings.IsLong ? -1 : 1);
-
-            var result = positionGroup.BuyingPowerModel.GetMaximumLotsForDeltaBuyingPower(new GetMaximumLotsForDeltaBuyingPowerParameters(
-                Portfolio, positionGroup, deltaBuyingPower,
-                // margin is negative, we need to reduce positions, no minimum
-                minimumOrderMarginPortfolioPercentage: 0
-            ));
-
-            var quantity = result.NumberOfLots * security.SymbolProperties.LotSize;
-
-            return new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, quantity, 0, 0,
-                security.LocalTime.ConvertToUtc(security.Exchange.TimeZone), Messages.DefaultMarginCallModel.MarginCallOrderTag,
-                DefaultOrderProperties?.Clone());
+            return orders[0];
         }
 
         /// <summary>

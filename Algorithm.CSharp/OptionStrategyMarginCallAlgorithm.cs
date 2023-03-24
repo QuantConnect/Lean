@@ -24,6 +24,7 @@ using QuantConnect.Securities.Option;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
+    /// Algorithm asserting that the <see cref="QCAlgorithm.OnMarginCall"/> event is fired when trading options strateties
     /// </summary>
     public class OptionStrategyMarginCallAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {

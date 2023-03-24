@@ -84,7 +84,7 @@ namespace QuantConnect.Securities
             Securities = securityManager;
             Transactions = transactions;
             Positions = new PositionManager(securityManager);
-            MarginCallModel = new DefaultMarginCallModel(this, Transactions, defaultOrderProperties);
+            MarginCallModel = new DefaultMarginCallModel(this, defaultOrderProperties);
 
             CashBook = new CashBook();
             UnsettledCashBook = new CashBook();
