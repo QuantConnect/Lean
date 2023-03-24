@@ -47,6 +47,8 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2021, 1, 31);
             SetCash(1000000);
 
+            Portfolio.SetMarginCallModel(MarginCallModel.Null);
+
             SetSecurityInitializer(new CompositeSecurityInitializer(SecurityInitializer,
                 new FuncSecurityInitializer((security) =>
                 {
