@@ -25,7 +25,8 @@ using System.Text;
 namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 {
     /// <summary>
-    /// Exports signals of desired positions to Collective2 API using JSON and HTTPS
+    /// Exports signals of desired positions to Collective2 API using JSON and HTTPS.
+    /// Accepts signals in quantity(number of shares) i.e symbol:"SPY", quant:40
     /// </summary>
     public class Collective2SignalExport : BaseSignalExport
     {
@@ -43,11 +44,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// Collective2 API endpoint
         /// </summary>
         private readonly Uri _destination;
-
-        /// <summary>
-        /// Algorithm being ran
-        /// </summary>
-        private IAlgorithm _algorithm;
 
         /// <summary>
         /// Collective2SignalExport constructor. It obtains the entry information for Collective2 API requests.
@@ -76,40 +72,40 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// </summary>
         /// <param name="parameters">A list of holdings from the portfolio 
         /// expected to be sent to Collective2 API and the algorithm being ran</param>
-        /// <returns>Returns the message sent. This is used mainly by test means</returns>
-        public override string Send(SignalExportTargetParameters parameters)
+        /// <returns>True if the positions were sent correctly and Collective2 sent no errors, false otherwise</returns>
+        public override bool Send(SignalExportTargetParameters parameters)
         {
             if (parameters.Targets.Count == 0)
             {
                 throw new ArgumentException("Portfolio target list is empty");
             }
 
-            _algorithm = parameters.Algorithm;
-
-            var positions = ConvertHoldingsToCollective2(parameters.Targets);
+            var positions = ConvertHoldingsToCollective2(parameters);
             var message = CreateMessage(positions);
-            SendPositions(message);
+            var result = SendPositions(message);
 
-            return message;
+            return result;
         }
 
         /// <summary>
         /// Converts a list of targets to a list of Collective2 positions
         /// </summary>
-        /// <param name="holdings">A list of holdings from the portfolio 
-        /// expected to be sent to Collective2 API</param>
+        /// <param name="parameters">A list of targets from the portfolio 
+        /// expected to be sent to Collective2 API and the algorithm being ran</param>
         /// <returns>A list of Collective2 positions</returns>
-        protected List<Collective2Position> ConvertHoldingsToCollective2(List<PortfolioTarget> holdings)
+        protected List<Collective2Position> ConvertHoldingsToCollective2(SignalExportTargetParameters parameters)
         {
+            var algorithm = parameters.Algorithm;
+            var targets = parameters.Targets;
             var positions = new List<Collective2Position>();
-            foreach (var target in holdings)
+            foreach (var target in targets)
             {
                 if (target == null)
                 {
                     throw new ArgumentException("A target from PortfolioTarget was null");
                 }
 
-                positions.Add(new Collective2Position { symbol = target.Symbol, typeofsymbol = ConvertTypeOfSymbol(target.Symbol), quant = ConvertPercentageToQuantity(target) });
+                positions.Add(new Collective2Position { Symbol = target.Symbol, TypeOfSymbol = ConvertTypeOfSymbol(target.Symbol), Quant = ConvertPercentageToQuantity(algorithm, target) });
             }
 
             return positions;
@@ -139,16 +135,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <summary>
         /// Converts a given percentage of a position into the number of shares of it
         /// </summary>
+        /// <param name="algorithm">Algorithm being ran</param>
         /// <param name="target">Desired position to be sent to the Collective2 API</param>
         /// <returns>Number of shares hold of the given position/returns>
-        private int ConvertPercentageToQuantity(PortfolioTarget target)
+        protected int ConvertPercentageToQuantity(IAlgorithm algorithm, PortfolioTarget target)
         {
-            var numberShares = (int)(PortfolioTarget.Percent(_algorithm, target.Symbol, target.Quantity).Quantity);
-
-            if (_algorithm.Portfolio[target.Symbol].IsShort)
-            {
-                numberShares *= -1;
-            }
+            var numberShares = (int)(PortfolioTarget.Percent(algorithm, target.Symbol, target.Quantity).Quantity);
 
             return numberShares;
         }
@@ -156,13 +148,13 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <summary>
         /// Serializes the list of desired positions with the needed credentials in JSON format
         /// </summary>
-        /// <param name="_positions">List of Collective2 positions to be sent to Collective2 API</param>
+        /// <param name="positions">List of Collective2 positions to be sent to Collective2 API</param>
         /// <returns>A JSON request string of the desired positions to be sent by a POST request to Collective2 API</returns>
-        private string CreateMessage(List<Collective2Position> _positions)
+        protected string CreateMessage(List<Collective2Position> positions)
         {
             var payload = new
             {
-                positions = _positions,
+                positions,
                 systemid = _systemId,
                 apikey = _apiKey
             };
@@ -176,46 +168,53 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// the message retrieved by the Collective2 API if there was a HttpRequestException
         /// </summary>
         /// <param name="message">A JSON request string of the desired positions list with the credentials</param>
-        private void SendPositions(string message)
+        /// <returns>True if the positions were sent correctly and Collective2 API sent no errors, false otherwise</returns>
+        private bool SendPositions(string message)
         {
             using var httpMessage = new StringContent(message, Encoding.UTF8, "application/json");
             using HttpResponseMessage response = HttpClient.PostAsync(_destination, httpMessage).Result;
 
             if (!response.IsSuccessStatusCode)
             {
-                Log.Error($"Collective2SignalExport.SendPositions(): Collective2 API returned HttpRequestException {response.StatusCode} at line 182");
-                return;
+                Log.Error($"Collective2SignalExport.SendPositions(): Collective2 API returned HttpRequestException {response.StatusCode}");
+                return false;
             }
 
             var responseContent = response.Content.ReadAsStringAsync().Result;
             var parsedResponseContent = JObject.Parse(responseContent);
             if (parsedResponseContent["error"].HasValues)
             {
-                Log.Error($"Collective2SignalExport.SendPositions(): Collective2 API returned the following errors: {String.Join(",", parsedResponseContent["error"])} at line 182");
+                Log.Error($"Collective2SignalExport.SendPositions(): Collective2 API returned the following errors: {string.Join(",", parsedResponseContent["error"])}");
+                return false;
             }
+
+            return true;
         }
 
         /// <summary>
         /// Stores position's needed information to be serialized in JSON format
         /// and then sent to Collective2 API
         /// </summary>
-        public class Collective2Position
+        protected class Collective2Position
         {
             /// <summary>
             /// Position symbol
             /// </summary>
-            public string symbol;
+            [JsonProperty(PropertyName = "symbol")]
+            public string Symbol { get; set; }
 
             /// <summary>
             /// Type of symbol. It can be: stock, future, option or forex
             /// </summary>
-            public string typeofsymbol;
+            [JsonProperty(PropertyName = "typeofsymbol")]
+            public string TypeOfSymbol { get; set; }
 
             /// <summary>
             /// Number of shares of the given symbol. Positive quantites are long positions
             /// and negative short positions
             /// </summary>
-            public int quant; // number of shares not % of the portfolio
+            [JsonProperty(PropertyName = "quant")]
+            public int Quant { get; set; } // number of shares not % of the portfolio
         }
     }
 }

@@ -24,7 +24,8 @@ using System.Net.Http;
 namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 {
     /// <summary>
-    /// Exports signals of the desired positions to CrunchDAO API
+    /// Exports signals of the desired positions to CrunchDAO API.
+    /// Accepts signals in percentage i.e ticker:"SPY", date: "2020-10-04", signal:0.54
     /// </summary>
     public class CrunchDAOSignalExport : BaseSignalExport
     {
@@ -49,11 +50,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         private readonly string _comment;
 
         /// <summary>
-        /// Algorithm being ran
-        /// </summary>
-        private IAlgorithm _algorithm;
-
-        /// <summary>
         /// CrunchDAOSignalExport constructor. It obtains the required information for CrunchDAO API requests.
         /// See (https://colab.research.google.com/drive/1YW1xtHrIZ8ZHW69JvNANWowmxPcnkNu0?authuser=1#scrollTo=aPyWNxtuDc-X)
         /// </summary>
@@ -75,37 +71,37 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// body features</summary>
         /// <param name="parameters">A list of holdings from the portfolio,
         /// expected to be sent to CrunchDAO API and the algorithm being ran</param>
-        /// <returns>The message with the positions sent to CrunchDAO API. 
-        /// This is only used by test means</returns>
+        /// <returns>True if the positions were sent to CrunchDAO succesfully and errors were returned, false otherwise</returns>
         /// <exception cref="ArgumentException">If holding list is empty it throws this exception</exception>
-        public override string Send(SignalExportTargetParameters parameters)
+        public override bool Send(SignalExportTargetParameters parameters)
         {
             if (parameters.Targets.Count == 0)
             {
                 throw new ArgumentException("Portfolio target is empty");
             }
-            _algorithm = parameters.Algorithm;
 
-            VerifyTargetsAreStocks(parameters.Targets);
-            var positions = ConvertToCSVFormat(parameters.Targets);
-            SendPositions(positions);
+            VerifyTargets(parameters.Targets, DefaultAllowedSecurityTypes);
+            var positions = ConvertToCSVFormat(parameters);
+            var result = SendPositions(positions);
 
-            return positions;
+            return result;
         }
 
         /// <summary>
         /// Converts the list of holdings into a CSV format string
         /// </summary>
-        /// <param name="holdings">A list of holdings from the portfolio,
-        /// expected to be sent to CrunchDAO API</param>
+        /// <param name="parameters">A list of holdings from the portfolio,
+        /// expected to be sent to CrunchDAO API and the algorithm being ran</param>
         /// <returns>A CSV format string of the given holdings with the required features(ticker, date, signal)</returns>
-        protected string ConvertToCSVFormat(List<PortfolioTarget> holdings)
+        protected string ConvertToCSVFormat(SignalExportTargetParameters parameters)
         {
+            var holdings = parameters.Targets;
+            var algorithm = parameters.Algorithm;
             var positions = "ticker,date,signal\n";
 
             foreach (var holding in holdings)
             {
-                positions += $"{holding.Symbol},{_algorithm.Securities[holding.Symbol].LocalTime.ToString("yyyy-MM-dd")},{holding.Quantity}\n";
+                positions += $"{holding.Symbol},{algorithm.Securities[holding.Symbol].LocalTime.ToString("yyyy-MM-dd")},{holding.Quantity}\n";
             }
 
             return positions;
@@ -116,7 +112,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// the message retrieved by the API if there was a HttpRequestException
         /// </summary>
         /// <param name="positions">A CSV format string of the given holdings with the required features</param>
-        private void SendPositions(string positions)
+        /// <returns>True if the positions were sent to CrunchDAO successfully and errors were returned. False, otherwise</returns>
+        private bool SendPositions(string positions)
         {
             // Create positions stream
             var positionsStream = new MemoryStream();
@@ -144,15 +141,19 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             using HttpResponseMessage response = HttpClient.PostAsync(_destination, httpMessage).Result;
             if (!response.IsSuccessStatusCode)
             {
-                Log.Error($"CrunchDAOSignalExport.SendPositions(): CrunchDAO API returned HttpRequestException {response.StatusCode} at line 144");
+                Log.Error($"CrunchDAOSignalExport.SendPositions(): CrunchDAO API returned HttpRequestException {response.StatusCode}");
+                return false;
             }
 
             if (response.StatusCode == System.Net.HttpStatusCode.Locked || response.StatusCode == System.Net.HttpStatusCode.Forbidden)
             {
                 var responseContent = response.Content.ReadAsStringAsync().Result;
                 var parsedResponseContent = JObject.Parse(responseContent);
-                Log.Error($"CrunchDAOSignalExport.SendPositions(): CrunchDAO API returned code: {parsedResponseContent["code"]} message:{parsedResponseContent["message"]} at line 144");
+                Log.Error($"CrunchDAOSignalExport.SendPositions(): CrunchDAO API returned code: {parsedResponseContent["code"]} message:{parsedResponseContent["message"]}");
+                return false;
             }
+
+            return true;
         }
     }
 }

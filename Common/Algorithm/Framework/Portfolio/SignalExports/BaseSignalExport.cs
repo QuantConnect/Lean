@@ -36,25 +36,35 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         protected HttpClient HttpClient => _lazyClient.Value;
 
         /// <summary>
+        /// Default hashset of allowed Security types for Numerai and CrunchDAO API's
+        /// </summary>
+        protected readonly HashSet<SecurityType> DefaultAllowedSecurityTypes = new()
+        {
+            SecurityType.Equity,
+            SecurityType.Index
+        };
+
+        /// <summary>
         /// Sends positions to different 3rd party API's
         /// </summary>
         /// <param name="parameters">Holdings the user have defined to be sent to certain 3rd party API and the algorithm being ran</param>
-        /// <returns>The message sent to the 3rd party API</returns>
-        public abstract string Send(SignalExportTargetParameters parameters);
+        /// <returns>True if the positions were sent correctly and the 3rd party API sent no errors. False, otherwise</returns>
+        public abstract bool Send(SignalExportTargetParameters parameters);
 
         /// <summary>
-        /// Verifies every holding in the given list is a stock or an index
+        /// Verifies the security type of every holding in the given list is allowed
         /// </summary>
         /// <param name="holdings">A list of holdings from the portfolio,
-        /// expected to be sent to CrunchDAO API</param>
-        /// <exception cref="ArgumentException">Throws this exception when it finds a holding type different than stock</exception>
-        protected static void VerifyTargetsAreStocks(List<PortfolioTarget> holdings)
+        /// expected to be sent to certain 3rd party API</param>
+        /// <param name="allowedSecurityTypes">Allowed security types defined by each 3rd party signal export provider</param>
+        /// <exception cref="ArgumentException">Throws this exception when it finds a holding security type not allowed</exception>
+        protected static void VerifyTargets(List<PortfolioTarget> holdings, HashSet<SecurityType> allowedSecurityTypes)
         {
             foreach (var signal in holdings)
             {
-                if (signal.Symbol.SecurityType != SecurityType.Equity && signal.Symbol.SecurityType != SecurityType.Index)
+                if (!allowedSecurityTypes.Contains(signal.Symbol.SecurityType))
                 {
-                    throw new ArgumentException($"{signal.Symbol.SecurityType} security type is not implemented: CrunchDao only accepts signals for US Equities");
+                    throw new ArgumentException($"{signal.Symbol.SecurityType} security type is not supported. Allowed security types: [{string.Join(",", allowedSecurityTypes)}]");
                 }
             }
         }

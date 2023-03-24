@@ -34,13 +34,12 @@ class SignalExportDemonstrationAlgorithm(QCAlgorithm):
 
         for symbol in self.symbols:
             self.AddEquity(symbol)
-            self.targets.append(PortfolioTarget(self.Portfolio[symbol].Symbol, 0.05))
 
-        fast_period = 100
-        slow_period = 200
+        fastPeriod = 100
+        slowPeriod = 200
 
-        self.fast = self.EMA("SPY", fast_period)
-        self.slow = self.EMA("SPY", slow_period)
+        self.fast = self.EMA("SPY", fastPeriod)
+        self.slow = self.EMA("SPY", slowPeriod)
 
         # Initialize these flags, to check when the ema indicators crosses between themselves
         self.emaFastIsNotSet = True;
@@ -79,22 +78,25 @@ class SignalExportDemonstrationAlgorithm(QCAlgorithm):
             else:
                 self.emaFastWasAbove = False
             self.emaFastIsNotSet = False;
+            self.SetInitialSignalValueForTargets()
 
-        # Check if the ema indicators have crossed between themselves
+        # Check whether ema fast and ema slow crosses. If they do, set holdings to SPY
+        # or reduce its holdings, and send signals to the 3rd party API's defined above
         if fast > slow * 1.001 and (not self.emaFastWasAbove):
-            self.SetHoldings("SPY", 0.1)
-            self.SetHoldings("AIG", 0.01)
-            self.targets[1] = PortfolioTarget(self.Portfolio["AIG"].Symbol, 0.01)
-            self.targets[0] = PortfolioTarget(self.Portfolio["SPY"].Symbol, 0.1)
-            self.SignalExport.SetTargetPortfolio(self, self.targets)
-            self.Quit();
+            self.SetHoldingsToSpyAndSendSignals(0.1)
         elif fast < slow * 0.999 and (self.emaFastWasAbove):
-            self.SetHoldings("SPY", 0.01)
-            self.SetHoldings("AIG", 0.1)
-            self.targets[1] = PortfolioTarget(self.Portfolio["AIG"].Symbol, 0.1)
-            self.targets[0] = PortfolioTarget(self.Portfolio["SPY"].Symbol, 0.01)
-            self.SignalExport.SetTargetPortfolio(self, self.targets)
-            self.Quit();
+            self.SetHoldingsToSpyAndSendSignals(0.01)
+
+    def SetInitialSignalValueForTargets(self):
+        """ Set initial signal value for each portfolio target in _targets array """
+        for symbol in self.symbols:
+            self.targets.append(PortfolioTarget(self.Portfolio[symbol].Symbol, 0.05))
+
+    def SetHoldingsToSpyAndSendSignals(self, quantity):
+        """ Set Holdings to SPY and sends signals to the different 3rd party API's already defined """
+        self.SetHoldings("SPY", quantity)
+        self.targets[0] = PortfolioTarget(self.Portfolio["SPY"].Symbol, quantity)
+        self.SignalExport.SetTargetPortfolio(self, self.targets)
             
 
 

@@ -19,7 +19,9 @@ using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using QuantConnect.Tests.Engine.DataFeeds;
 using System;
 using System.Collections.Generic;
 
@@ -57,13 +59,53 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 Securities = securityManager
             };
 
-            var manager = new Collective2SignalExport("", 0);
+            var manager = new Collective2SignalExportHandler("", 0);
 
-            var message = manager.Send(new SignalExportTargetParameters { Targets = targetList, Algorithm = algorithm });
+            var message = manager.GetMessageSent(new SignalExportTargetParameters { Targets = targetList, Algorithm = algorithm});
 
             var expectedMessage = @"{""positions"":[{""symbol"":""SPY R735QTJ8XC9X"",""typeofsymbol"":""stock"",""quant"":99},{""symbol"":""EURUSD 8G"",""typeofsymbol"":""forex"",""quant"":149},{""symbol"":""ES 1S1"",""typeofsymbol"":""future"",""quant"":99},{""symbol"":""SPY 2U|SPY R735QTJ8XC9X"",""typeofsymbol"":""option"",""quant"":149}],""systemid"":0,""apikey"":""""}";
 
             Assert.AreEqual(expectedMessage, message);
+        }
+
+        [Test]
+        public void Collective2ConvertsPercentageToQuantityAppropiately()
+        {
+            var symbols = new List<Symbol>()
+            {
+                Symbols.SPY,
+                Symbols.EURUSD
+            };
+
+            var targetList = new List<PortfolioTarget>()
+            {
+                new PortfolioTarget(Symbols.SPY, (decimal)0.01),
+                new PortfolioTarget(Symbols.EURUSD, (decimal)0.99)
+            };
+
+            var securityManager = CreateSecurityManager(symbols);
+            var transactionManager = new SecurityTransactionManager(null, securityManager);
+            var portfolio = new SecurityPortfolioManager(securityManager, transactionManager);
+            portfolio.SetCash(50000);
+            var algorithm = new QCAlgorithm
+            {
+                Portfolio = portfolio,
+                Securities = securityManager
+            };
+
+            var manager = new Collective2SignalExportHandler("", 0);
+
+            var expectedQuantities = new Dictionary<string, int>()
+            {
+                { "SPY", 4 },
+                { "EURUSD", 492}
+            };
+
+            foreach (var target in targetList)
+            {
+                var quantity = manager.ConvertPercentageToQuantity(algorithm, target);
+                Assert.AreEqual(expectedQuantities[target.Symbol.Value], quantity);
+            }
         }
 
         [Test]
@@ -82,11 +124,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             };
 
             var securityManager = CreateSecurityManager(symbols);
-            var manager = new CrunchDAOSignalExport("", "");
+            var manager = new CrunchDAOSignalExportHandler("", "");
             var algorithm = new QCAlgorithm();
             algorithm.Securities = securityManager;
 
-            var message = manager.Send(new SignalExportTargetParameters { Targets = targetList, Algorithm = algorithm });
+            var message = manager.GetMessageSent(new SignalExportTargetParameters { Targets = targetList, Algorithm = algorithm });
             var expectedMessage = "ticker,date,signal\nSPY R735QTJ8XC9X,2016-02-16,0.2\nSPX 31,2016-02-16,0.8\n";
 
             Assert.AreEqual(expectedMessage, message);
@@ -109,13 +151,59 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new PortfolioTarget(Symbols.CAT, (decimal)0.1)
             };
 
-            var manager = new NumeraiSignalExport("", "", "");
+            var manager = new NumeraiSignalExportHandler("", "", "");
             var algorithm = new QCAlgorithm();
 
-            var message = manager.Send(new SignalExportTargetParameters { Targets = targets, Algorithm = algorithm});
+            var message = manager.GetMessageSent(new SignalExportTargetParameters { Targets = targets, Algorithm = algorithm});
             var expectedMessage = "numerai_ticker,signal\nSGX SP,0.05\nAAPL US,0.1\nMSFT US,0.1\nZNGA US,0.05\nFXE US,0.05\nLODE US,0.05\nIBM US,0.05\nGOOG US,0.1\nNFLX US,0.1\nCAT US,0.1\n";
 
             Assert.AreEqual(expectedMessage, message);
+        }
+
+        [Test]
+        public void SignalExportManagerGetsCorrectPortfolioTargetArray()
+        {
+            var symbols = new List<Symbol>()
+            {
+                Symbols.SPY,
+                Symbols.AAPL
+            };
+
+            var algorithm = new AlgorithmStub(true);
+            algorithm.SetFinishedWarmingUp();
+            algorithm.SetCash(100000);
+
+            var expectedPortfolioTargets = new Dictionary<string, string>();
+
+            var spy = algorithm.AddSecurity(SecurityType.Equity, symbols[0].Value);
+            spy.SetMarketPrice(new Tick(new DateTime(2022, 01, 04), spy.Symbol, 10.0001m, 10.0001m));
+            spy.Holdings.SetHoldings(10.00000000m, 99900);
+            expectedPortfolioTargets.Add("SPY", "0.4540913218970736629667003027");
+
+            var aapl = algorithm.AddSecurity(SecurityType.Equity, symbols[1].Value);
+            aapl.SetMarketPrice(new Tick(new DateTime(2022, 01, 04), aapl.Symbol, 10.0001m, 10.0001m));
+            aapl.Holdings.SetHoldings(10.00000000m, 100);
+            expectedPortfolioTargets.Add("AAPL", "0.0004545458677648385014681685");
+
+
+            var signalExportManagerHandler = new SignalExportManagerHandler();
+            var portfolioTargets = signalExportManagerHandler.GetPortfolioTargets(algorithm);
+
+            foreach (var target in portfolioTargets)
+            {
+                Assert.AreEqual(expectedPortfolioTargets[target.Symbol.Value], target.Quantity.ToString());
+            }
+        }
+
+        [Test]
+        public void SignalExportManagerThrowsErrorWhenNegativeTotalPortfolioValue()
+        {
+            var algorithm = new AlgorithmStub(true);
+            algorithm.SetFinishedWarmingUp();
+            algorithm.SetCash(-100000);
+
+            var signalExportManagerHandler = new SignalExportManagerHandler();
+            Assert.IsNull(signalExportManagerHandler.GetPortfolioTargets(algorithm));
         }
 
         private static SecurityManager CreateSecurityManager(List<Symbol> symbols)
@@ -157,6 +245,102 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         private static SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol)
         {
             return new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+        }
+
+        /// <summary>
+        /// Handler class to test how SignalExportManager obtains the portfolio targets from the algorithm's portfolio
+        /// </summary>
+        private class SignalExportManagerHandler: SignalExportManager
+        {
+            /// <summary>
+            /// Handler method to obtain portfolio targets from the given algorithm's portfolio
+            /// </summary>
+            /// <param name="algorithm">Algorithm being ran</param>
+            /// <returns>An array of portfolio targets from the algorithm's portfolio</returns>
+            public PortfolioTarget[] GetPortfolioTargets(IAlgorithm algorithm)
+            {
+                return base.GetPortfolioTargets(algorithm);
+            }
+        }
+
+        /// <summary>
+        /// Handler class to test how Collective2SignalExport converts target percentage to number of shares. Additionally,
+        /// to test the message sent to Collective2 API
+        /// </summary>
+        private class Collective2SignalExportHandler : Collective2SignalExport
+        {
+            public Collective2SignalExportHandler(string apiKey, int systemId, string platformId = null) : base(apiKey, systemId, platformId)
+            {
+            }
+
+            /// <summary>
+            /// Handler method to test how Collective2SignalExport converts target percentage to number of shares
+            /// </summary>
+            /// <param name="algorithm">Algorithm being ran</param>
+            /// <param name="target">Target with quantity as percentage</param>
+            /// <returns>Number of shares for the given target percentage</returns>
+            public int ConvertPercentageToQuantity(IAlgorithm algorithm, PortfolioTarget target)
+            {
+                return base.ConvertPercentageToQuantity(algorithm, target);
+            }
+
+            /// <summary>
+            /// Handler method to test the message sent to Collective2 API
+            /// </summary>
+            /// <param name="parameters">A list of holdings from the portfolio 
+            /// expected to be sent to Collective2 API and the algorithm being ran</param>
+            /// <returns>Message sent to Collective2 API</returns>
+            public string GetMessageSent(SignalExportTargetParameters parameters)
+            {
+                var positions = ConvertHoldingsToCollective2(parameters);
+                var message = CreateMessage(positions);
+
+                return message;
+            }
+        }
+
+        /// <summary>
+        /// Handler class to test the message sent to CrunchDAO API
+        /// </summary>
+        private class CrunchDAOSignalExportHandler : CrunchDAOSignalExport
+        {
+            public CrunchDAOSignalExportHandler(string apiKey, string model, string submissionName = "", string comment = "") : base(apiKey, model, submissionName, comment)
+            {
+            }
+
+            /// <summary>
+            /// Handler method to test the message sent to CrunchDAO API
+            /// </summary>
+            /// <param name="parameters">A list of holdings from the portfolio 
+            /// expected to be sent to CrunchDAO2 API and the algorithm being ran</param>
+            /// <returns>Message sent to CrunchDAO API</returns>
+            public string GetMessageSent(SignalExportTargetParameters parameters)
+            {
+                var message = ConvertToCSVFormat(parameters);
+                return message;
+            }
+        }
+
+        /// <summary>
+        /// Handler class to test message sent to Numerai API
+        /// </summary>
+        private class NumeraiSignalExportHandler : NumeraiSignalExport
+        {
+            public NumeraiSignalExportHandler(string publicId, string secretId, string modelId, string fileName = "predictions.csv") : base(publicId, secretId, modelId, fileName)
+            {
+            }
+
+            /// <summary>
+            /// Handler method to test the message sent to Numerai API
+            /// </summary>
+            /// <param name="parameters">A list of holdings from the portfolio 
+            /// expected to be sent to Numerai API and the algorithm being ran</param>
+            /// <returns>Message sent to Numerai API</returns>
+            public string GetMessageSent(SignalExportTargetParameters parameters)
+            {
+                var message = ConvertTargetsToNumerai(parameters.Targets);
+                return message;
+            }
         }
     }
 }

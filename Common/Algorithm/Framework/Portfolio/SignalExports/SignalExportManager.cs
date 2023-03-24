@@ -23,7 +23,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 {
     /// <summary>
     /// Class manager to send portfolio targets to different 3rd party API's
-    /// So far it only allows Collective2, CrunchDAO and Numerai signal export providers
+    /// For example, it allows Collective2, CrunchDAO and Numerai signal export providers
     /// </summary>
     public class SignalExportManager
     {
@@ -38,15 +38,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         private bool _isLiveMode;
 
         /// <summary>
-        /// Set live mode state of the algorithm
-        /// </summary>
-        /// <param name="isLiveMode"></param>
-        public void SetLiveMode(bool isLiveMode)
-        {
-            _isLiveMode = isLiveMode;
-        }
-
-        /// <summary>
         /// Adds one or more signal export providers if argument is different than null
         /// </summary>
         /// <param name="signalExports">List of signal export providers</param>
@@ -56,6 +47,15 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             {
                 AddSignalExportProviders(signalExports);
             }
+        }
+
+        /// <summary>
+        /// Set live mode state of the algorithm
+        /// </summary>
+        /// <param name="isLiveMode"></param>
+        public void SetLiveMode(bool isLiveMode)
+        {
+            _isLiveMode = isLiveMode;
         }
 
         /// <summary>
@@ -70,38 +70,52 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         }
 
         /// <summary>
-        /// Sets the portfolio targets from the given portfolio current holdings and sends them with the
+        /// Sets the portfolio targets from the given algorihtm's Portfolio and sends them with the
         /// algorithm being ran to the signal exports providers already set
         /// </summary>
         /// <param name="algorithm">Algorithm being ran</param>
-        /// <param name="portfolio">Portfolio containing the current holdings</param>
         /// <exception cref="ArgumentException">If the portfolio is null it will throw an exception as well as if the
         /// TotalPortfolioValue is negative or zero</exception>
-        public void SetTargetPortfolio(IAlgorithm algorithm, SecurityPortfolioManager portfolio)
+        public void SetTargetPortfolio(IAlgorithm algorithm)
         {
-            if (portfolio == null)
+            if (algorithm.Portfolio == null)
             {
                 throw new ArgumentException("Portfolio was null");
             }
 
+
+            var targets = GetPortfolioTargets(algorithm);
+            SetTargetPortfolio(algorithm, targets);
+        }
+
+        /// <summary>
+        /// Obtains an array of portfolio targets from algorithm's Portfolio and returns them
+        /// </summary>
+        /// <param name="algorithm">Algorithm being ran</param>
+        /// <returns>An array of portfolio targets from the algorithm's Portfolio</returns>
+        /// <exception cref="ArgumentException">It will throw an exception if TotalPortfolioValue is less than or equal to zero</exception>
+        protected PortfolioTarget[] GetPortfolioTargets(IAlgorithm algorithm)
+        {
+            var portfolio = algorithm.Portfolio;
             var targets = new PortfolioTarget[portfolio.Values.Count];
             var index = 0;
 
+            var totalPortfolioValue = portfolio.TotalPortfolioValue;
+            if (totalPortfolioValue <= 0)
+            {
+                Log.Error("SignalExportManager.GetPortfolioTargets(): Total portfolio value was less than or equal to 0");
+                return null;
+            }
+
             foreach (var holding in portfolio.Values)
             {
-                if (portfolio.TotalPortfolioValue <= 0)
-                {
-                    Log.Error("Total portfolio value was less than or equal to 0");
-                    return;
-                }
-
                 var security = algorithm.Securities[holding.Symbol];
-                var holdingPercent = Math.Abs(security.BuyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(security, holding.Quantity))) / portfolio.TotalPortfolioValue;
+                var holdingPercent = Math.Abs(security.BuyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(security, holding.Quantity))) / totalPortfolioValue;
                 targets[index] = new PortfolioTarget(holding.Symbol, holdingPercent);
                 ++index;
             }
 
-            SetTargetPortfolio(algorithm, targets);
+            return targets;
         }
 
         /// <summary>
@@ -110,12 +124,13 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// </summary>
         /// <param name="algorithm">Algorithm being ran</param>
         /// <param name="portfolioTargets">One or more portfolio targets to be sent to the defined signal export providers</param>
+        /// <returns>True if any 3rd party API returned an error after the signals were sent, false otherwise</returns>
         /// <exception cref="ArgumentException">It will throw an exception if there's no portfolio target in the parameters</exception>
-        public void SetTargetPortfolio(IAlgorithm algorithm, params PortfolioTarget[] portfolioTargets)
+        public bool SetTargetPortfolio(IAlgorithm algorithm, params PortfolioTarget[] portfolioTargets)
         {
             if (!_isLiveMode)
             {
-                return;
+                return false;
             }
 
             if (portfolioTargets == null)
@@ -130,10 +145,13 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 Algorithm = algorithm
             };
 
+            var result = true;
             foreach (var signalExport in _signalExports)
             {
-                signalExport.Send(signalExportTargetParameters);
+                result &= signalExport.Send(signalExportTargetParameters);
             }
+
+            return result;
         }
     }
 }
