@@ -69,7 +69,7 @@ namespace QuantConnect
         private static readonly HashSet<string> InvalidSecurityTypes = new HashSet<string>();
         private static readonly Regex DateCheck = new Regex(@"\d{8}", RegexOptions.Compiled);
         private static RecyclableMemoryStreamManager MemoryManager = new RecyclableMemoryStreamManager();
-        private static readonly int DataUpdatePeriod = Config.GetInt("api-data-update-period", 1);
+        private static readonly int DataUpdatePeriod = Config.GetInt("downloader-data-update-period", 7);
 
         private static readonly Dictionary<IntPtr, PythonActivator> PythonActivators
             = new Dictionary<IntPtr, PythonActivator>();
