@@ -42,7 +42,7 @@ class BasicTemplateFrameworkAlgorithm(QCAlgorithm):
         self.SetUniverseSelection(ManualUniverseSelectionModel(symbols))
         self.SetAlpha(ConstantAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(minutes = 20), 0.025, None))
 
-        # We can define who often the EWPCM will rebalance if no new insight is submitted using:
+        # We can define how often the EWPCM will rebalance if no new insight is submitted using:
         # Resolution Enum:
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel(Resolution.Daily))
         # timedelta
