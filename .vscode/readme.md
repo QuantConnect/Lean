@@ -156,5 +156,5 @@ _Figure 2: Python Debugger Messages_
 Here we will cover some common issues with setting this up. This section will expand as we get user feedback!
 
 - The "project file cannot be loaded" and "nuget packages not found" errors occurs when the project files are open by another process in the host. Closing all applications and/or restarting the computer solve the issue.
-- Autocomplete and reference finding with omnisharp can sometimes bug, if this occurs use the command palette to restart omnisharp. (Ctrl+Shift+P "OmniSharp: Restart OmniSharp")
+- Autocomplete and reference finding with omnisharp can sometimes be buggy, if this occurs use the command palette to restart omnisharp. (Ctrl+Shift+P "OmniSharp: Restart OmniSharp")
 - Any error messages about building in VSCode that point to comments in JSON. Either select **ignore** or follow steps described [here](https://stackoverflow.com/questions/47834825/in-vs-code-disable-error-comments-are-not-permitted-in-json) to remove the errors entirely.
