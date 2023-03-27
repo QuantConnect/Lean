@@ -55,3 +55,6 @@ class CustomBuyingPowerModel(BuyingPowerModel):
 
     def HasSufficientBuyingPowerForOrder(self, parameters):
         return HasSufficientBuyingPowerForOrderResult(True)
+
+    def GetMaximumOrderQuantityResult(self, parameters):
+        return GetMaximumOrderQuantityResult(0)

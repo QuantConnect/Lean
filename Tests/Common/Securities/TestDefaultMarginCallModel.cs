@@ -16,6 +16,9 @@
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Positions;
+using System.Collections.Generic;
+using static QuantConnect.Tests.Engine.PerformanceBenchmarkAlgorithms;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -26,10 +29,9 @@ namespace QuantConnect.Tests.Common.Securities
         {
         }
 
-        public new SubmitOrderRequest GenerateMarginCallOrder(Security security, decimal netLiquidationValue,
-            decimal totalUsedMargin)
+        public new IEnumerable<SubmitOrderRequest> GenerateMarginCallOrders(MarginCallOrdersParameters parameters)
         {
-            return base.GenerateMarginCallOrder(security, netLiquidationValue, totalUsedMargin);
+            return base.GenerateMarginCallOrders(parameters);
         }
     }
 }

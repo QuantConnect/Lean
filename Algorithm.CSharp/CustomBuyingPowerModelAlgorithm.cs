@@ -38,7 +38,6 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 31);
             var security = AddEquity("SPY", Resolution.Hour);
             _spy = security.Symbol;
-            Portfolio.SetMarginCallModel(MarginCallModel.Null);
 
             // set the buying power model
             security.SetBuyingPowerModel(new CustomBuyingPowerModel());
@@ -80,6 +79,13 @@ namespace QuantConnect.Algorithm.CSharp
 
                 // this model never allows a lack of funds get in the way of buying securities
                 return parameters.Sufficient();
+            }
+
+            // Let's override this method just to avoid the margin call orders
+            public override GetMaximumOrderQuantityResult GetMaximumOrderQuantityForDeltaBuyingPower(
+                GetMaximumOrderQuantityForDeltaBuyingPowerParameters parameters)
+            {
+                return new GetMaximumOrderQuantityResult(0);
             }
         }
 
