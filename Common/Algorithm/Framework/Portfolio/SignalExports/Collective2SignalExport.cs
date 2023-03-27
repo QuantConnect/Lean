@@ -77,12 +77,14 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         {
             if (parameters.Targets.Count == 0)
             {
-                throw new ArgumentException("Portfolio target list is empty");
+                Log.Trace("Collective2SignalExport.Send(): Portfolio target list is empty");
+                return false;
             }
 
-            var positions = ConvertHoldingsToCollective2(parameters);
+            var result = true;
+            result &= ConvertHoldingsToCollective2(parameters, out List<Collective2Position> positions);
             var message = CreateMessage(positions);
-            var result = SendPositions(message);
+            result &= SendPositions(message);
 
             return result;
         }
@@ -92,44 +94,69 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// </summary>
         /// <param name="parameters">A list of targets from the portfolio 
         /// expected to be sent to Collective2 API and the algorithm being ran</param>
-        /// <returns>A list of Collective2 positions</returns>
-        protected List<Collective2Position> ConvertHoldingsToCollective2(SignalExportTargetParameters parameters)
+        /// <param name="positions">A list of Collective2 positions</param>
+        /// <returns>True if the given targets could be converted to a Collective2Position list, false otherwise</returns>
+        protected bool ConvertHoldingsToCollective2(SignalExportTargetParameters parameters, out List<Collective2Position> positions)
         {
             var algorithm = parameters.Algorithm;
             var targets = parameters.Targets;
-            var positions = new List<Collective2Position>();
+            positions = new List<Collective2Position>();
             foreach (var target in targets)
             {
                 if (target == null)
                 {
-                    throw new ArgumentException("A target from PortfolioTarget was null");
+                    Log.Trace("Collective2SignalExport.ConvertHoldingsToCollective2(): One portfolio target was null");
+                    return false;
                 }
 
-                positions.Add(new Collective2Position { Symbol = target.Symbol, TypeOfSymbol = ConvertTypeOfSymbol(target.Symbol), Quant = ConvertPercentageToQuantity(algorithm, target) });
+                if (!ConvertTypeOfSymbol(target.Symbol, out string typeOfSymbol)) return false;
+                positions.Add(new Collective2Position { Symbol = target.Symbol, TypeOfSymbol = typeOfSymbol, Quant = ConvertPercentageToQuantity(algorithm, target) });
             }
 
-            return positions;
+            return true;
         }
 
         /// <summary>
         /// Classifies a symbol type into the possible symbol types values defined
-        /// by Collective2 API. If the symbol type is not allowed by Collective2 API
-        /// it throws an Argument Exception
+        /// by Collective2 API.
         /// </summary>
         /// <param name="targetSymbol">Symbol of the desired position</param>
-        /// <returns>The type of the symbol according to Collective2 API</returns>
-        private static string ConvertTypeOfSymbol(Symbol targetSymbol)
+        /// <param name="typeOfSymbol">The type of the symbol according to Collective2 API</param>
+        /// <returns>True if the symbol's type was allowed by Collective2, false otherwise</returns>
+        private static bool ConvertTypeOfSymbol(Symbol targetSymbol, out string typeOfSymbol)
         {
-            return targetSymbol.SecurityType switch
+            switch (targetSymbol.SecurityType)
             {
-                SecurityType.Equity => "stock",
-                SecurityType.Option => "option",
-                SecurityType.Future => "future",
-                SecurityType.Forex => "forex",
-                SecurityType.Index => "stock",
-                SecurityType.IndexOption => "option",
-                _ => throw new ArgumentException($"{targetSymbol.SecurityType} security type has not been implemented by Collective2 yet.")
-            };
+                case SecurityType.Equity:
+                    typeOfSymbol = "stock";
+                    break;
+                case SecurityType.Option:
+                    typeOfSymbol = "option";
+                    break;
+                case SecurityType.Future:
+                    typeOfSymbol = "future";
+                    break;
+                case SecurityType.Forex:
+                    typeOfSymbol = "forex";
+                    break;
+                case SecurityType.Index:
+                    typeOfSymbol = "index";
+                    break;
+                case SecurityType.IndexOption:
+                    typeOfSymbol = "option";
+                    break;
+                default:
+                    typeOfSymbol = "NotImplemented";
+                    break;
+            }
+
+            if (typeOfSymbol == "NotImplemented")
+            {
+                Log.Trace($"{targetSymbol.SecurityType} security type has not been implemented by Collective2 yet.");
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>

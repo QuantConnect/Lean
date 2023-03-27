@@ -89,43 +89,44 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// </summary>
         /// <param name="parameters">A list of portfolio holdings expected to be sent to Numerai API and the algorithm being ran</param>
         /// <returns>True if the positions were sent to Numerai API correctly and no errors were returned, false otherwise</returns>
-        /// <exception cref="ArgumentException">It throws an exception if there is less than 10 different signals</exception>
         public override bool Send(SignalExportTargetParameters parameters)
         {
             if (parameters.Targets.Count < 10)
             {
-                throw new ArgumentException($"Numerai Signals API accepts minimum 10 different signals, just found {parameters.Targets.Count}");
+                Log.Trace($"NumeraiSignalExport.Send(): Numerai Signals API accepts minimum 10 different signals, just found {parameters.Targets.Count}");
+                return false;
             }
 
-            VerifyTargets(parameters.Targets, DefaultAllowedSecurityTypes);
-            var positions = ConvertTargetsToNumerai(parameters.Targets);
-            var result = SendPositions(positions);
+            if (!VerifyTargets(parameters.Targets, DefaultAllowedSecurityTypes)) return false;
+
+            var result = true;
+            result &= ConvertTargetsToNumerai(parameters.Targets, out string positions);
+            result &= SendPositions(positions);
 
             return result;
         }
 
         /// <summary>
-        /// Verifies each holding's signal is between 0 and 1 (exclusive) and returns a message with the holdings in the expected Numerai
-        /// API format.
+        /// Verifies each holding's signal is between 0 and 1 (exclusive)
         /// </summary>
         /// <param name="holdings">A list of portfolio holdings expected to be sent to Numerai API</param>
-        /// <returns>A message with the desired positions in the expected Numerai API format</returns>
-        /// <exception cref="ArgumentException">It throws an exception whenever it finds a holding's signal that's not between 0 and 1
-        /// (exclusive). It also throws an exception if the given market is not supported yet by LEAN</exception>
-        protected string ConvertTargetsToNumerai(List<PortfolioTarget> holdings)
+        /// <param name="positions">A message with the desired positions in the expected Numerai API format</param>
+        /// <returns>True if a string message with the positions could be obtained, false otherwise</returns>
+        protected bool ConvertTargetsToNumerai(List<PortfolioTarget> holdings, out string positions)
         {
-            var positions = "numerai_ticker,signal\n";
+            positions = "numerai_ticker,signal\n";
             foreach ( var holding in holdings )
             {
                 if (holding.Quantity <= 0 || holding.Quantity >= 1)
                 {
-                    throw new ArgumentException($"All signals must be between 0 and 1 (exclusive, but {holding.Symbol.Value} signal was {holding.Quantity}");
+                    Log.Trace($"NumeraiSignalExport.ConvertTargetsToNumerai(): All signals must be between 0 and 1 (exclusive, but {holding.Symbol.Value} signal was {holding.Quantity}");
+                    return false;
                 }
 
                 positions += $"{holding.Symbol.Value} {_numeraiMarketFormat[holding.Symbol.ID.Market]},{holding.Quantity}\n";
             }
 
-            return positions;
+            return true;
         }
 
         /// <summary>
