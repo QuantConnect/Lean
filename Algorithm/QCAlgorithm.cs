@@ -50,7 +50,6 @@ using Index = QuantConnect.Securities.Index.Index;
 using QuantConnect.Securities.CryptoFuture;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
-using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
 
 namespace QuantConnect.Algorithm
 {

@@ -14,10 +14,8 @@
 */
 
 using Newtonsoft.Json.Linq;
-using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 
