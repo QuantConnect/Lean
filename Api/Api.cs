@@ -416,8 +416,9 @@ namespace QuantConnect.Api
         /// Sends a notification
         /// </summary>
         /// <param name="notification">The notification to send</param>
+        /// <param name="projectId">The project id</param>
         /// <returns><see cref="RestResponse"/> containing success response and errors</returns>
-        public virtual RestResponse SendNotification(Notification notification)
+        public virtual RestResponse SendNotification(Notification notification, int projectId)
         {
             throw new NotImplementedException($"{nameof(Api)} does not support sending notifications");
         }
