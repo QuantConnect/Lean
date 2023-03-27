@@ -29,6 +29,7 @@ class CustomBuyingPowerModelAlgorithm(QCAlgorithm):
         self.SetEndDate(2013,10,31)    # Set End Date
         security = self.AddEquity("SPY", Resolution.Hour)
         self.spy = security.Symbol
+        self.Portfolio.SetMarginCallModel(MarginCallModel.Null)
 
         # set the buying power model
         security.SetBuyingPowerModel(CustomBuyingPowerModel())

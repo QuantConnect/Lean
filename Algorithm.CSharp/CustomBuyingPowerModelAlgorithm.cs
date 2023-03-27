@@ -38,6 +38,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 31);
             var security = AddEquity("SPY", Resolution.Hour);
             _spy = security.Symbol;
+            Portfolio.SetMarginCallModel(MarginCallModel.Null);
 
             // set the buying power model
             security.SetBuyingPowerModel(new CustomBuyingPowerModel());
