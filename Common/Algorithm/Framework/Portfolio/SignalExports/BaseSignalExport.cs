@@ -14,6 +14,8 @@
 */
 
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
+using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -57,25 +59,30 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <param name="holdings">A list of holdings from the portfolio,
         /// expected to be sent to certain 3rd party API</param>
         /// <param name="allowedSecurityTypes">Allowed security types defined by each 3rd party signal export provider</param>
-        /// <exception cref="ArgumentException">Throws this exception when it finds a holding security type not allowed</exception>
-        protected static void VerifyTargets(List<PortfolioTarget> holdings, HashSet<SecurityType> allowedSecurityTypes)
+        /// <returns>True if all the targets were allowed, false otherwise</returns>
+        protected static bool VerifyTargets(List<PortfolioTarget> holdings, HashSet<SecurityType> allowedSecurityTypes)
         {
             foreach (var signal in holdings)
             {
                 if (!allowedSecurityTypes.Contains(signal.Symbol.SecurityType))
                 {
-                    throw new ArgumentException($"{signal.Symbol.SecurityType} security type is not supported. Allowed security types: [{string.Join(",", allowedSecurityTypes)}]");
+                    Log.Trace($"BaseSignalExport.VerifyTargets(): {signal.Symbol.SecurityType} security type is not supported. Allowed security types: [{string.Join(",", allowedSecurityTypes)}]");
+                    return false;
                 }
             }
+
+            return true;
         }
 
         /// <summary>
-        /// Dispose of HttpClient we used for the requests to the different 3rd party API's
-        /// finalization
+        /// If created, dispose of HttpClient we used for the requests to the different 3rd party API's
         /// </summary>
         public void Dispose()
         {
-            HttpClient.Dispose();
+            if (_lazyClient.IsValueCreated)
+            {
+                _lazyClient.Value.DisposeSafely();
+            }
         }
     }
 }

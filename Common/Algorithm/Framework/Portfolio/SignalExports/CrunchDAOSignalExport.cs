@@ -72,15 +72,16 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <param name="parameters">A list of holdings from the portfolio,
         /// expected to be sent to CrunchDAO API and the algorithm being ran</param>
         /// <returns>True if the positions were sent to CrunchDAO succesfully and errors were returned, false otherwise</returns>
-        /// <exception cref="ArgumentException">If holding list is empty it throws this exception</exception>
         public override bool Send(SignalExportTargetParameters parameters)
         {
             if (parameters.Targets.Count == 0)
             {
-                throw new ArgumentException("Portfolio target is empty");
+                Log.Trace("CrunchDAOSignalExport.Send(): Portfolio target is empty");
+                return false;
             }
 
-            VerifyTargets(parameters.Targets, DefaultAllowedSecurityTypes);
+            if (!VerifyTargets(parameters.Targets, DefaultAllowedSecurityTypes)) return false;
+
             var positions = ConvertToCSVFormat(parameters);
             var result = SendPositions(positions);
 

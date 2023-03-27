@@ -74,37 +74,39 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// algorithm being ran to the signal exports providers already set
         /// </summary>
         /// <param name="algorithm">Algorithm being ran</param>
-        /// <exception cref="ArgumentException">If the portfolio is null it will throw an exception as well as if the
-        /// TotalPortfolioValue is negative or zero</exception>
-        public void SetTargetPortfolio(IAlgorithm algorithm)
+        /// <returns>True if the target list could be obtained from the algorithm's Portfolio and they
+        /// were successfully sent to the signal export providers</returns>
+        public bool SetTargetPortfolio(IAlgorithm algorithm)
         {
             if (algorithm.Portfolio == null)
             {
-                throw new ArgumentException("Portfolio was null");
+                Log.Trace("SignalExportManager.SetTargetPortfolio(): Portfolio was null");
+                return false;
             }
 
-
-            var targets = GetPortfolioTargets(algorithm);
-            SetTargetPortfolio(algorithm, targets);
+            var result = true;
+            result &= GetPortfolioTargets(algorithm, out PortfolioTarget[] targets);
+            result &= SetTargetPortfolio(algorithm, targets);
+            return result;
         }
 
         /// <summary>
         /// Obtains an array of portfolio targets from algorithm's Portfolio and returns them
         /// </summary>
         /// <param name="algorithm">Algorithm being ran</param>
-        /// <returns>An array of portfolio targets from the algorithm's Portfolio</returns>
-        /// <exception cref="ArgumentException">It will throw an exception if TotalPortfolioValue is less than or equal to zero</exception>
-        protected PortfolioTarget[] GetPortfolioTargets(IAlgorithm algorithm)
+        /// <param name="targets">An array of portfolio targets from the algorithm's Portfolio</param>
+        /// <returns>True if TotalPortfolioValue was bigger than zero, false otherwise</returns>
+        protected bool GetPortfolioTargets(IAlgorithm algorithm, out PortfolioTarget[] targets)
         {
             var portfolio = algorithm.Portfolio;
-            var targets = new PortfolioTarget[portfolio.Values.Count];
+            targets = new PortfolioTarget[portfolio.Values.Count];
             var index = 0;
 
             var totalPortfolioValue = portfolio.TotalPortfolioValue;
             if (totalPortfolioValue <= 0)
             {
                 Log.Error("SignalExportManager.GetPortfolioTargets(): Total portfolio value was less than or equal to 0");
-                return null;
+                return false;
             }
 
             foreach (var holding in portfolio.Values)
@@ -115,7 +117,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 ++index;
             }
 
-            return targets;
+            return true;
         }
 
         /// <summary>
@@ -124,18 +126,19 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// </summary>
         /// <param name="algorithm">Algorithm being ran</param>
         /// <param name="portfolioTargets">One or more portfolio targets to be sent to the defined signal export providers</param>
-        /// <returns>True if any 3rd party API returned an error after the signals were sent, false otherwise</returns>
-        /// <exception cref="ArgumentException">It will throw an exception if there's no portfolio target in the parameters</exception>
+        /// <returns>True if the portfolio targets could be sent to the different signal export providers successfully, false otherwise</returns>
         public bool SetTargetPortfolio(IAlgorithm algorithm, params PortfolioTarget[] portfolioTargets)
         {
             if (!_isLiveMode)
             {
+                Log.Trace("SignalExportManager.SetTargetPortfolio(): The algorithm must be in live mode to send signals");
                 return false;
             }
 
             if (portfolioTargets == null)
             {
-                throw new ArgumentException("No portfolio target given");
+                Log.Trace("SignalExportManager.SetTargetPortfolio(): No portfolio target given");
+                return false;
             }
 
             var targets = new List<PortfolioTarget>(portfolioTargets);
