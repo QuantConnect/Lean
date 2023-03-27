@@ -105,14 +105,6 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception("OnMarginCall should be called with requests for each of regs of the strategy." +
                     $@"Expected: {string.Join(", ", investedOptions.Select(option => option.Symbol))}.Actual: {string.Join(", ", requests.Select(request => request.Symbol))}");
             }
-
-            //if (requests.All(request =>
-            //        request.Quantity == -investedOptions.Where(option => option.Symbol == request.Symbol).First().Holdings.Quantity))
-            //{
-            //    throw new Exception("OnMarginCall should be called with requests for each of the legs of the strategy with the opposite quantity." +
-            //        $@"Expected: {string.Join(", ", investedOptions.Select(option => -option.Holdings.Quantity))}, Actual: {
-            //            string.Join(", ", requests.Select(request => request.Quantity))}");
-            //}
         }
 
         public override void OnMarginCallWarning()

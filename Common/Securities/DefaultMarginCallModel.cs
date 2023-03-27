@@ -88,14 +88,10 @@ namespace QuantConnect.Securities
             {
                 foreach (var positionGroup in Portfolio.PositionGroups)
                 {
-                    var buyingPowerModel = positionGroup.BuyingPowerModel as PositionGroupBuyingPowerModel;
-                    if (buyingPowerModel != null)
+                    var positionMarginCallOrders = GenerateMarginCallOrders(positionGroup, totalPortfolioValue, totalMarginUsed).ToList();
+                    if (positionMarginCallOrders.Count > 0 && positionMarginCallOrders.All(x => x.Quantity != 0))
                     {
-                        var positionMarginCallOrders = GenerateMarginCallOrders(positionGroup, totalPortfolioValue, totalMarginUsed).ToList();
-                        if (positionMarginCallOrders.Count > 0 && positionMarginCallOrders.All(x => x.Quantity != 0))
-                        {
-                            marginCallOrders.AddRange(positionMarginCallOrders);
-                        }
+                        marginCallOrders.AddRange(positionMarginCallOrders);
                     }
                 }
                 issueMarginCallWarning = marginCallOrders.Count > 0;
