@@ -63,7 +63,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             var message = manager.GetMessageSent(new SignalExportTargetParameters { Targets = targetList, Algorithm = algorithm});
 
-            var expectedMessage = @"{""positions"":[{""symbol"":""SPY R735QTJ8XC9X"",""typeofsymbol"":""stock"",""quant"":99},{""symbol"":""EURUSD 8G"",""typeofsymbol"":""forex"",""quant"":149},{""symbol"":""ES 1S1"",""typeofsymbol"":""future"",""quant"":99},{""symbol"":""SPY 2U|SPY R735QTJ8XC9X"",""typeofsymbol"":""option"",""quant"":149}],""systemid"":0,""apikey"":""""}";
+            var expectedMessage = @"{""positions"":[{""symbol"":""SPY"",""typeofsymbol"":""stock"",""quant"":99},{""symbol"":""EURUSD 8G"",""typeofsymbol"":""forex"",""quant"":149},{""symbol"":""ES 1S1"",""typeofsymbol"":""future"",""quant"":99},{""symbol"":""SPY 2U|SPY R735QTJ8XC9X"",""typeofsymbol"":""option"",""quant"":149}],""systemid"":0,""apikey"":""""}";
 
             Assert.AreEqual(expectedMessage, message);
         }
@@ -146,7 +146,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             algorithm.Securities = securityManager;
 
             var message = manager.GetMessageSent(new SignalExportTargetParameters { Targets = targetList, Algorithm = algorithm });
-            var expectedMessage = "ticker,date,signal\nSPY R735QTJ8XC9X,2016-02-16,0.2\nSPX 31,2016-02-16,0.8\n";
+            var expectedMessage = "ticker,date,signal\nSPY,2016-02-16,0.2\nSPX 31,2016-02-16,0.8\n";
 
             Assert.AreEqual(expectedMessage, message);
         }
