@@ -9,7 +9,7 @@ This document will cover the setup, getting started, and known issues.
 <br>
 
 # Setup
-Below we cover how to get setup with our three option listed above. 
+Below we cover how to get setup with our two options listed above. 
 
 <br>
 
