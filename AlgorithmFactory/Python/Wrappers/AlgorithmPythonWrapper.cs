@@ -452,6 +452,11 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public InsightManager Insights => _baseAlgorithm.Insights;
 
         /// <summary>
+        /// Gets the market simulation instance
+        /// </summary>
+        public IBacktestingMarketSimulation MarketSimulation => _baseAlgorithm.MarketSimulation;
+
+        /// <summary>
         /// Set a required SecurityType-symbol and resolution for algorithm
         /// </summary>
         /// <param name="securityType">SecurityType Enum: Equity, Commodity, FOREX or Future</param>
@@ -1041,6 +1046,14 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public bool Shortable(Symbol symbol, decimal quantity)
         {
             return _baseAlgorithm.Shortable(symbol, quantity);
+        }
+
+        /// <summary>
+        /// Set the <see cref="IBacktestingMarketSimulation"/> implementation to simulate market activity
+        /// </summary>
+        public void SetMarketSimulation(IBacktestingMarketSimulation marketSimulation)
+        {
+            _baseAlgorithm.SetMarketSimulation(marketSimulation);
         }
     }
 }

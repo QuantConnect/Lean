@@ -350,6 +350,11 @@ namespace QuantConnect.Interfaces
         Slice CurrentSlice { get; }
 
         /// <summary>
+        /// The <see cref="IBacktestingMarketSimulation"/> implementation to simulate market activity
+        /// </summary>
+        IBacktestingMarketSimulation MarketSimulation { get;  }
+
+        /// <summary>
         /// Initialise the Algorithm and Prepare Required Data:
         /// </summary>
         void Initialize();
@@ -752,5 +757,10 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="objectStore">The object store</param>
         void SetObjectStore(IObjectStore objectStore);
+
+        /// <summary>
+        /// Set the <see cref="IBacktestingMarketSimulation"/> implementation to simulate market activity
+        /// </summary>
+        void SetMarketSimulation(IBacktestingMarketSimulation marketSimulation);
     }
 }

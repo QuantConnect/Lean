@@ -83,7 +83,7 @@ namespace QuantConnect.Brokerages.Backtesting
             : base("Backtesting Brokerage")
         {
             Algorithm = algorithm;
-            MarketSimulation = marketSimulation;
+            Algorithm.SetMarketSimulation(marketSimulation);
             _pending = new ConcurrentDictionary<int, Order>();
         }
 
@@ -240,11 +240,6 @@ namespace QuantConnect.Brokerages.Backtesting
 
             return result;
         }
-
-        /// <summary>
-        /// Market Simulation - simulates various market conditions in backtest
-        /// </summary>
-        public IBacktestingMarketSimulation MarketSimulation { get; set; }
 
         /// <summary>
         /// Scans all the outstanding orders and applies the algorithm model fills to generate the order events
@@ -455,7 +450,7 @@ namespace QuantConnect.Brokerages.Backtesting
         public void SimulateMarket()
         {
             // if simulator is installed, we run it
-            MarketSimulation?.SimulateMarketConditions(this, Algorithm);
+            Algorithm.MarketSimulation?.SimulateMarketConditions(this, Algorithm);
         }
 
         /// <summary>

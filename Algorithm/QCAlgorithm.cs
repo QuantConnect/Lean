@@ -49,6 +49,7 @@ using QuantConnect.Storage;
 using Index = QuantConnect.Securities.Index.Index;
 using QuantConnect.Securities.CryptoFuture;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
+using QuantConnect.Brokerages.Backtesting;
 
 namespace QuantConnect.Algorithm
 {
@@ -562,6 +563,12 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(HandlingData)]
         [DocumentationAttribute(MachineLearning)]
         public ObjectStore ObjectStore { get; private set; }
+
+        /// <summary>
+        /// The <see cref="IBacktestingMarketSimulation"/> implementation to simulate market activity
+        /// </summary>
+        [DocumentationAttribute(Modeling)]
+        public IBacktestingMarketSimulation MarketSimulation { get; private set; }
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -1569,6 +1576,20 @@ namespace QuantConnect.Algorithm
         {
             TradeBuilder = tradeBuilder;
             TradeBuilder.SetLiveMode(LiveMode);
+        }
+
+        /// <summary>
+        /// Set the <see cref="IBacktestingMarketSimulation"/> implementation to simulate market activity
+        /// </summary>
+        [DocumentationAttribute(Modeling)]
+        public void SetMarketSimulation(IBacktestingMarketSimulation marketSimulation)
+        {
+            if (marketSimulation == null)
+            {
+                throw new ArgumentNullException(nameof(marketSimulation),
+                    "Algorithm.SetMarketSimulation(): Market simulation cannot be null.");
+            }
+            MarketSimulation = marketSimulation;
         }
 
         /// <summary>
