@@ -1111,6 +1111,11 @@ namespace QuantConnect.Util
                 // find where the useful part of the path starts - i.e. the securityType
                 var startIndex = info.FindIndex(x => SecurityTypeAsDataPath.Contains(x.ToLowerInvariant()));
 
+                if(startIndex == -1)
+                {
+                    // SPDB & MHDB folders
+                    return false;
+                }
                 var securityType = ParseDataSecurityType(info[startIndex]);
 
                 var market = Market.USA;
