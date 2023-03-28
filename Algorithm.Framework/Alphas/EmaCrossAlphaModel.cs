@@ -178,19 +178,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
                 // Create a consolidator to update the EMAs over time
                 _consolidator = algorithm.ResolveConsolidator(symbol, resolution);
-                _consolidator.DataConsolidated += ConsolidationHandler;
-                algorithm.SubscriptionManager.AddConsolidator(symbol, _consolidator);
-            }
-
-            /// <summary>
-            /// Event handler for when the consolidator produces a new consolidated bar
-            /// </summary>
-            /// <param name="sender">The consolidator object that produced the bar</param>
-            /// <param name="bar">The consolidated bar</param>
-            public void ConsolidationHandler(object sender, IBaseData bar)
-            {
-                _fast.Update(bar.EndTime, bar.Value);
-                _slow.Update(bar.EndTime, bar.Value);
+                algorithm.RegisterIndicator(symbol, _fast, _consolidator);
+                algorithm.RegisterIndicator(symbol, _slow, _consolidator);
             }
 
             /// <summary>

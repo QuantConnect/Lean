@@ -94,16 +94,12 @@ class SymbolData:
 
         # Create a consolidator to update the EMAs over time
         self.consolidator = algorithm.ResolveConsolidator(symbol, resolution)
-        self.consolidator.DataConsolidated += self.consolidation_handler
-        self.algorithm.SubscriptionManager.AddConsolidator(symbol, self.consolidator)
+        algorithm.RegisterIndicator(self.symbol, self.Fast, self.consolidator)
+        algorithm.RegisterIndicator(self.symbol, self.Slow, self.consolidator)
 
         # True if the fast is above the slow, otherwise false.
         # This is used to prevent emitting the same signal repeatedly
         self.FastIsOverSlow = False
-
-    def consolidation_handler(self, sender: object, bar: BaseData) -> None:
-        self.Fast.Update(bar.EndTime, bar.Value)
-        self.Slow.Update(bar.EndTime, bar.Value)
 
     def update(self, bar):
         self.consolidator.Update(bar)
