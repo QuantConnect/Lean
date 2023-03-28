@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework.Alphas;
 
@@ -31,6 +32,11 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
+            const int expected = 76;
+            if (Insights.TotalCount != expected)
+            {
+                throw new Exception($"The total number of insights should be {expected}. Actual: {Insights.TotalCount}");
+            }
         }
 
         public override long DataPoints => 779;
