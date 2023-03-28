@@ -18,10 +18,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Indicators;
-using QuantConnect.Securities;
 using System;
-using static QuantConnect.Messages;
-using System.Security.Cryptography;
 
 namespace QuantConnect.Algorithm.Framework.Alphas
 {

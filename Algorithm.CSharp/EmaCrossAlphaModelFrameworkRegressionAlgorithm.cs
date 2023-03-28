@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override int AlgorithmHistoryDataPoints => 152;
+        public override int AlgorithmHistoryDataPoints => 104;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
