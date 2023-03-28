@@ -112,11 +112,7 @@ class SymbolData:
 
         self.RSI = RelativeStrengthIndex(period, MovingAverageType.Wilders)
         self.consolidator = algorithm.ResolveConsolidator(symbol, resolution)
-        self.consolidator.DataConsolidated += self.consolidation_handler
-        algorithm.SubscriptionManager.AddConsolidator(symbol, self.consolidator)
-
-    def consolidation_handler(self, sender: object, bar: BaseData) -> None:
-        self.RSI.Update(bar.EndTime, bar.Value)
+        algorithm.RegisterIndicator(symbol, self.RSI, self.consolidator)
 
     def update(self, bar):
         self.consolidator.Update(bar)

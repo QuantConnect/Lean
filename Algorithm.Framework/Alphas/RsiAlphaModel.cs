@@ -15,14 +15,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
-using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
-using QuantConnect.Util;
-using static QuantConnect.Messages;
 
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
@@ -191,13 +187,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
                 RSI = new RelativeStrengthIndex(period, MovingAverageType.Wilders);
                 _consolidator = _algorithm.ResolveConsolidator(symbol, resolution);
-                _consolidator.DataConsolidated += ConsolidationHandler;
-                algorithm.SubscriptionManager.AddConsolidator(symbol, _consolidator);
-            }
-
-            public void ConsolidationHandler(object sender, IBaseData consolidatedBar)
-            {
-                RSI.Update(consolidatedBar.EndTime, consolidatedBar.Value);
+                algorithm.RegisterIndicator(symbol, RSI, _consolidator);
             }
 
             public void Update(BaseData bar)
