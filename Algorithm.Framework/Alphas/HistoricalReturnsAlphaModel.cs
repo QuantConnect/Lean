@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -32,6 +32,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         private readonly Resolution _resolution;
         private readonly TimeSpan _predictionInterval;
         private readonly Dictionary<Symbol, SymbolData> _symbolDataBySymbol;
+        private readonly  InsightCollection _insightCollection;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HistoricalReturnsAlphaModel"/> class
@@ -47,6 +48,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             _resolution = resolution;
             _predictionInterval = _resolution.ToTimeSpan().Multiply(_lookback);
             _symbolDataBySymbol = new Dictionary<Symbol, SymbolData>();
+            _insightCollection = new InsightCollection();
             Name = $"{nameof(HistoricalReturnsAlphaModel)}({lookback},{resolution})";
         }
 
@@ -60,7 +62,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
         {
             var insights = new List<Insight>();
-            foreach (var symbolData in _symbolDataBySymbol.Values)
+            foreach (var (symbol, symbolData) in _symbolDataBySymbol)
             {
                 if (symbolData.CanEmit())
                 {
@@ -68,9 +70,17 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     var magnitude = (double)symbolData.ROC.Current.Value;
                     if (magnitude > 0) direction = InsightDirection.Up;
                     if (magnitude < 0) direction = InsightDirection.Down;
+                    
+                    if (direction == InsightDirection.Flat)
+                    {
+                        CancelInsights(algorithm, symbol);
+                        continue;
+                    }
+
                     insights.Add(Insight.Price(symbolData.Security.Symbol, _predictionInterval, direction, magnitude, null));
                 }
             }
+            _insightCollection.AddRange(insights);
             return insights;
         }
 
@@ -90,6 +100,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     _symbolDataBySymbol.Remove(removed.Symbol);
                     algorithm.SubscriptionManager.RemoveConsolidator(removed.Symbol, data.Consolidator);
                 }
+
+                CancelInsights(algorithm, removed.Symbol);
             }
 
             // initialize data for added securities
@@ -116,6 +128,15 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                         symbolData.ROC.Update(bar.EndTime, bar.Value);
                     }
                 });
+            }
+        }
+
+        private void CancelInsights(QCAlgorithm algorithm, Symbol symbol)
+        {
+            if (_insightCollection.TryGetValue(symbol, out var insights))
+            {
+                algorithm.Insights.Cancel(insights);
+                insights.ForEach(i => _insightCollection.Remove(i));
             }
         }
 
