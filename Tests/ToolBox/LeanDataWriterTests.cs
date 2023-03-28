@@ -22,7 +22,6 @@ using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using NodaTime;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
@@ -103,6 +102,38 @@ namespace QuantConnect.Tests.ToolBox
             }
         }
 
+        [TestCase(true)]
+        [TestCase(false)]
+        public void Mapping(bool mapSymbol)
+        {
+            // asset got mapped on 20080929 to SPWRA
+            var symbol = Symbol.Create("SPWR", SecurityType.Equity, Market.USA);
+            var leanDataWriter = new LeanDataWriter(Resolution.Daily, symbol, _dataDirectory, TickType.Trade, mapSymbol: mapSymbol);
+            var sourceData = new List<TradeBar>
+            {
+                new (new DateTime(2008, 9, 29), symbol, 10, 11, 12, 13, 2),
+                new (new DateTime(2008, 9, 30), symbol, 10, 11, 12, 13, 2),
+            };
+            leanDataWriter.Write(sourceData);
+
+            for (int i = 0; i < sourceData.Count; i++)
+            {
+                var bar = sourceData[i];
+                var expectedTicker = (i == 0 || !mapSymbol) ? "SPWR" : "SPWRA";
+                symbol = symbol.UpdateMappedSymbol(expectedTicker);
+
+                var filePath = LeanData.GenerateZipFilePath(_dataDirectory, symbol, bar.Time, Resolution.Daily, TickType.Trade);
+                Assert.IsTrue(File.Exists(filePath));
+                Assert.IsFalse(File.Exists(filePath + ".tmp"));
+
+                var data = QuantConnect.Compression.Unzip(filePath).Single();
+
+                Assert.AreEqual(!mapSymbol ? 2 : 1, data.Value.Count);
+                Assert.AreEqual($"{expectedTicker}.csv".ToLower(), data.Key, $"Key {data.Key} BarTime: {bar.Time}");
+                Assert.IsTrue(data.Value.Any(point => point.StartsWith(bar.Time.ToStringInvariant(DateFormat.TwelveCharacter), StringComparison.Ordinal)), $"Key {data.Key} BarTime: {bar.Time}");
+            }
+        }
+
         [Test]
         public void LeanDataWriter_CanWriteForex()
         {
@@ -141,8 +172,9 @@ namespace QuantConnect.Tests.ToolBox
             }
             else if (securityType == SecurityType.FutureOption)
             {
-                contract1 = Symbol.CreateOption(Futures.Indices.SP500EMini, Market.CME, OptionStyle.American, OptionRight.Call, 1, new DateTime(2020, 02, 01));
-                contract2 = Symbol.CreateOption(Futures.Indices.SP500EMini, Market.CME, OptionStyle.American, OptionRight.Call, 1, new DateTime(2020, 03, 01));
+                var underlying = Symbols.ES_Future_Chain;
+                contract1 = Symbol.CreateOption(underlying, Market.CME, OptionStyle.American, OptionRight.Call, 1, new DateTime(2020, 02, 01));
+                contract2 = Symbol.CreateOption(underlying, Market.CME, OptionStyle.American, OptionRight.Call, 1, new DateTime(2020, 03, 01));
             }
             else
             {

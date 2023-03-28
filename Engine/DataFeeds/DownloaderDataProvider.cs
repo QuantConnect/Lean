@@ -164,7 +164,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         {
                             if (writer == null)
                             {
-                                writer = new LeanDataWriter(resolution, symbol, Globals.DataFolder, tickType);
+                                writer = new LeanDataWriter(resolution, symbol, Globals.DataFolder, tickType, mapSymbol: true);
                             }
 
                             // Save the data
