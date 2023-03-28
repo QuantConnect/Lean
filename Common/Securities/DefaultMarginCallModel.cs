@@ -86,15 +86,21 @@ namespace QuantConnect.Securities
             // if we still have margin remaining then there's no need for a margin call
             if (marginRemaining <= 0)
             {
-                foreach (var positionGroup in Portfolio.PositionGroups)
+                // leave a buffer in default implementation
+                const decimal marginBuffer = 0.10m;
+                if (totalMarginUsed > totalPortfolioValue * (1 + marginBuffer))
                 {
-                    var positionMarginCallOrders = GenerateMarginCallOrders(
-                        new MarginCallOrdersParameters(positionGroup, totalPortfolioValue, totalMarginUsed)).ToList();
-                    if (positionMarginCallOrders.Count > 0 && positionMarginCallOrders.All(x => x.Quantity != 0))
+                    foreach (var positionGroup in Portfolio.PositionGroups)
                     {
-                        marginCallOrders.AddRange(positionMarginCallOrders);
+                        var positionMarginCallOrders = GenerateMarginCallOrders(
+                            new MarginCallOrdersParameters(positionGroup, totalPortfolioValue, totalMarginUsed)).ToList();
+                        if (positionMarginCallOrders.Count > 0 && positionMarginCallOrders.All(x => x.Quantity != 0))
+                        {
+                            marginCallOrders.AddRange(positionMarginCallOrders);
+                        }
                     }
                 }
+
                 issueMarginCallWarning = marginCallOrders.Count > 0;
             }
 
@@ -110,13 +116,9 @@ namespace QuantConnect.Securities
         protected virtual IEnumerable<SubmitOrderRequest> GenerateMarginCallOrders(MarginCallOrdersParameters parameters)
         {
             var positionGroup = parameters.PositionGroup;
-            // leave a buffer in default implementation
-            const decimal marginBuffer = 0.10m;
-
-            if (parameters.TotalUsedMargin <= parameters.TotalPortfolioValue * (1 + marginBuffer) ||
-                // check for div 0 - there's no conv rate, so we can't place an order
-                positionGroup.Positions.Any(position => Portfolio.Securities[position.Symbol].QuoteCurrency.ConversionRate == 0))
+            if (positionGroup.Positions.Any(position => Portfolio.Securities[position.Symbol].QuoteCurrency.ConversionRate == 0))
             {
+                // check for div 0 - there's no conv rate, so we can't place an order
                 return Enumerable.Empty<SubmitOrderRequest>();
             }
 
