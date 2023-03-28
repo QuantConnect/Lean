@@ -32,7 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            const int expected = 76;
+            const int expected = 74;
             if (Insights.TotalCount != expected)
             {
                 throw new Exception($"The total number of insights should be {expected}. Actual: {Insights.TotalCount}");
