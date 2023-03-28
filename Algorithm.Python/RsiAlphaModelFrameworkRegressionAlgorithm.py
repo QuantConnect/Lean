@@ -25,4 +25,7 @@ class RsiAlphaModelFrameworkRegressionAlgorithm(BaseFrameworkRegressionAlgorithm
         self.SetAlpha(RsiAlphaModel())
 
     def OnEndOfAlgorithm(self):
-        pass
+        # We have removed all securities from the universe. The Alpha Model should remove the consolidator
+        consolidator_count = sum([s.Consolidators.Count for s in self.SubscriptionManager.Subscriptions])
+        if consolidator_count > 0:
+            raise Exception(f"The number of consolidators should be zero. Actual: {consolidator_count}")
