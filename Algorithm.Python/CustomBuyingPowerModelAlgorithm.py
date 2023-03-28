@@ -29,7 +29,6 @@ class CustomBuyingPowerModelAlgorithm(QCAlgorithm):
         self.SetEndDate(2013,10,31)    # Set End Date
         security = self.AddEquity("SPY", Resolution.Hour)
         self.spy = security.Symbol
-        self.Portfolio.SetMarginCallModel(MarginCallModel.Null)
 
         # set the buying power model
         security.SetBuyingPowerModel(CustomBuyingPowerModel())
@@ -56,5 +55,11 @@ class CustomBuyingPowerModel(BuyingPowerModel):
     def HasSufficientBuyingPowerForOrder(self, parameters):
         return HasSufficientBuyingPowerForOrderResult(True)
 
-    def GetMaximumOrderQuantityResult(self, parameters):
-        return GetMaximumOrderQuantityResult(0)
+    # Let's always return 0 as the maintenance margin so we avoid margin call orders
+    def GetMaintenanceMargin(self, parameters):
+        return MaintenanceMargin(0)
+
+    # Override this as well because the base implementation calls GetMaintenanceMargin (overridden)
+    # because in C# it wouldn't resolve the overridden Python method
+    def GetReservedBuyingPowerForPosition(self, parameters):
+        return parameters.ResultInAccountCurrency(0);

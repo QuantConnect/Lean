@@ -114,13 +114,8 @@ namespace QuantConnect.Securities
             const decimal marginBuffer = 0.10m;
 
             if (parameters.TotalUsedMargin <= parameters.TotalPortfolioValue * (1 + marginBuffer) ||
-                positionGroup.Positions.Any(position =>
-                {
-                    var security = Portfolio.Securities[position.Symbol];
-                    return !security.Invested ||
-                        // check for div 0 - there's no conv rate, so we can't place an order
-                        security.QuoteCurrency.ConversionRate == 0;
-                }))
+                // check for div 0 - there's no conv rate, so we can't place an order
+                positionGroup.Positions.Any(position => Portfolio.Securities[position.Symbol].QuoteCurrency.ConversionRate == 0))
             {
                 return Enumerable.Empty<SubmitOrderRequest>();
             }
