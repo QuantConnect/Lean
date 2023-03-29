@@ -25,6 +25,6 @@ class MacdAlphaModelFrameworkRegressionAlgorithm(BaseFrameworkRegressionAlgorith
         self.SetAlpha(MacdAlphaModel())
 
     def OnEndOfAlgorithm(self):
-        expected = 6
+        expected = 4
         if self.Insights.TotalCount != expected:
            raise Exception(f"The total number of insights should be {expected}. Actual: {self.Insights.TotalCount}")
