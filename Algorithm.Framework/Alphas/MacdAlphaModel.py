@@ -37,6 +37,7 @@ class MacdAlphaModel(AlphaModel):
         self.resolution = resolution
         self.insightPeriod = Time.Multiply(Extensions.ToTimeSpan(resolution), fastPeriod)
         self.bounceThresholdPercent = 0.01
+        self.insightCollection = InsightCollection()
         self.symbolData = {}
 
         resolutionString = Extensions.GetEnumString(resolution, Resolution)
@@ -69,9 +70,19 @@ class MacdAlphaModel(AlphaModel):
             if direction == sd.PreviousDirection:
                 continue
 
+            sd.PreviousDirection = direction
+
+            if direction == InsightDirection.Flat:
+                activeInsights = [ x for x in self.insightCollection if x.Symbol == sd.Security.Symbol ]
+                if activeInsights:
+                    for activeInsight in activeInsights:
+                        self.insightCollection.Remove(activeInsight)
+                        algorithm.Insights.Cancel([activeInsight])
+                continue
+
             insight = Insight.Price(sd.Security.Symbol, self.insightPeriod, direction)
-            sd.PreviousDirection = insight.Direction
             insights.append(insight)
+            self.insightCollection.Add(insight)
 
         return insights
 
@@ -86,10 +97,17 @@ class MacdAlphaModel(AlphaModel):
             self.symbolData[added.Symbol] = SymbolData(algorithm, added, self.fastPeriod, self.slowPeriod, self.signalPeriod, self.movingAverageType, self.resolution)
 
         for removed in changes.RemovedSecurities:
-            data = self.symbolData.pop(removed.Symbol, None)
+            symbol = removed.Symbol
+
+            data = self.symbolData.pop(symbol, None)
             if data is not None:
                 # clean up our consolidator
-                algorithm.SubscriptionManager.RemoveConsolidator(removed.Symbol, data.Consolidator)
+                algorithm.SubscriptionManager.RemoveConsolidator(symbol, data.Consolidator)
+                
+                # remove from insight collection manager
+                for insight in [x for x in self.insightCollection if x.Symbol == symbol]:
+                    self.insightCollection.Remove(insight)
+                    algorithm.Insights.Cancel([insight]);
 
 class SymbolData:
     def __init__(self, algorithm, security, fastPeriod, slowPeriod, signalPeriod, movingAverageType, resolution):

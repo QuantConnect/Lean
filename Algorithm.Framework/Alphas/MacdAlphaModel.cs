@@ -14,6 +14,7 @@
 */
 
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.UniverseSelection;
@@ -35,6 +36,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         private readonly MovingAverageType _movingAverageType;
         private readonly Resolution _resolution;
         private const decimal BounceThresholdPercent = 0.01m;
+        private InsightCollection _insightCollection = new();
         protected readonly Dictionary<Symbol, SymbolData> _symbolData;
 
         /// <summary>
@@ -94,9 +96,26 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     continue;
                 }
 
+                sd.PreviousDirection = direction;
+
+                if (direction == InsightDirection.Flat)
+                {
+                    if (_insightCollection.TryGetValue(sd.Security.Symbol, out var insights))
+                    {
+                        foreach (var activeInsight in insights)
+                        {
+                            _insightCollection.Remove(activeInsight);
+                            algorithm.Insights.Cancel(new[] { activeInsight });
+                        }
+                    }
+
+                    continue;
+                }
+
                 var insightPeriod = _resolution.ToTimeSpan().Multiply(_fastPeriod);
                 var insight = Insight.Price(sd.Security.Symbol, insightPeriod, direction);
-                sd.PreviousDirection = insight.Direction;
+                _insightCollection.Add(insight);
+
                 yield return insight;
             }
         }
@@ -120,12 +139,21 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
             foreach (var removed in changes.RemovedSecurities)
             {
+                var symbol = removed.Symbol;
+
                 SymbolData data;
-                if (_symbolData.TryGetValue(removed.Symbol, out data))
+                if (_symbolData.TryGetValue(symbol, out data))
                 {
                     // clean up our consolidator
-                    algorithm.SubscriptionManager.RemoveConsolidator(data.Security.Symbol, data.Consolidator);
-                    _symbolData.Remove(removed.Symbol);
+                    algorithm.SubscriptionManager.RemoveConsolidator(symbol, data.Consolidator);
+                    _symbolData.Remove(symbol);
+
+                    // remove from insight collection manager
+                    foreach (var insight in _insightCollection.Where(x => x.Symbol == symbol))
+                    {
+                        _insightCollection.Remove(insight);
+                        algorithm.Insights.Cancel(new[] { insight });
+                    }
                 }
             }
         }
