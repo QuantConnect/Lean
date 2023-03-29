@@ -136,7 +136,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             if (_insightCollection.TryGetValue(symbol, out var insights))
             {
                 algorithm.Insights.Cancel(insights);
-                insights.ForEach(i => _insightCollection.Remove(i));
+                _insightCollection.Clear(new[] { symbol });
             }
         }
 

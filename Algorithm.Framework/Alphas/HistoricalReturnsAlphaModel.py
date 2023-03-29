@@ -87,7 +87,7 @@ class HistoricalReturnsAlphaModel(AlphaModel):
             return
         insights = self.insightCollection[symbol]
         algorithm.Insights.Cancel(insights)
-        [self.insightCollection.Remove(i) for i in insights]
+        self.insightCollection.Clear([ symbol ]);
 
 
 class SymbolData:
