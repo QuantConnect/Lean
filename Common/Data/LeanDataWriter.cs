@@ -23,6 +23,8 @@ using System.Threading.Tasks;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using System.Collections.Generic;
+using QuantConnect.Configuration;
+using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect.Data
 {
@@ -31,7 +33,12 @@ namespace QuantConnect.Data
     /// </summary>
     public class LeanDataWriter
     {
+        private static readonly Lazy<IMapFileProvider> MapFileProvider = new(
+            Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"), forceTypeNameOnExisting: false)
+        );
+
         private readonly Symbol _symbol;
+        private readonly bool _mapSymbol;
         private readonly string _dataDirectory;
         private readonly TickType _tickType;
         private readonly Resolution _resolution;
@@ -48,8 +55,9 @@ namespace QuantConnect.Data
         /// <param name="tickType">The tick type</param>
         /// <param name="dataCacheProvider">The data cache provider to use</param>
         /// <param name="writePolicy">The file write policy to use</param>
+        /// <param name="mapSymbol">True if the symbol should be mapped while writting the data</param>
         public LeanDataWriter(Resolution resolution, Symbol symbol, string dataDirectory, TickType tickType = TickType.Trade,
-            IDataCacheProvider dataCacheProvider = null, WritePolicy? writePolicy = null) : this(
+            IDataCacheProvider dataCacheProvider = null, WritePolicy? writePolicy = null, bool mapSymbol = false) : this(
             dataDirectory,
             resolution,
             symbol.ID.SecurityType,
@@ -59,6 +67,7 @@ namespace QuantConnect.Data
         )
         {
             _symbol = symbol;
+            _mapSymbol = mapSymbol;
             // All fx data is quote data.
             if (_securityType == SecurityType.Forex || _securityType == SecurityType.Cfd)
             {
@@ -108,6 +117,7 @@ namespace QuantConnect.Data
         {
             var lastTime = DateTime.MinValue;
             var outputFile = string.Empty;
+            Symbol symbol = null;
             var currentFileData = new List<TimedLine>();
             var writeTasks = new Queue<Task>();
 
@@ -120,8 +130,10 @@ namespace QuantConnect.Data
                 // Only do this on date change, because we know we don't have a any data zips smaller than a day, saves time
                 if (data.Time.Date != lastTime.Date)
                 {
+                    var mappedSymbol = GetMappedSymbol(data.Time, data.Symbol);
                     // Get the latest file name, if it has changed, we have entered a new file, write our current data to file
-                    var latestOutputFile = GetZipOutputFileName(_dataDirectory, data.Time);
+                    var latestOutputFile = GetZipOutputFileName(_dataDirectory, data.Time, mappedSymbol);
+                    var latestSymbol = mappedSymbol;
                     if (outputFile.IsNullOrEmpty() || outputFile != latestOutputFile)
                     {
                         if (!currentFileData.IsNullOrEmpty())
@@ -129,15 +141,17 @@ namespace QuantConnect.Data
                             // Launch a write task for the current file and data set
                             var file = outputFile;
                             var fileData = currentFileData;
+                            var fileSymbol = symbol;
                             writeTasks.Enqueue(Task.Run(() =>
                             {
-                                WriteFile(file, fileData);
+                                WriteFile(file, fileData, fileSymbol);
                             }));
                         }
 
                         // Reset our dictionary and store new output file
                         currentFileData = new List<TimedLine>();
                         outputFile = latestOutputFile;
+                        symbol = latestSymbol;
                     }
                 }
 
@@ -153,7 +167,7 @@ namespace QuantConnect.Data
             if (!currentFileData.IsNullOrEmpty())
             {
                 // we want to finish ASAP so let's do it ourselves
-                WriteFile(outputFile, currentFileData);
+                WriteFile(outputFile, currentFileData, symbol);
             }
 
             // Wait for all our write tasks to finish
@@ -270,12 +284,13 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="filePath">The full path to the new file</param>
         /// <param name="data">The data to write as a list of dates and strings</param>
+        /// <param name="symbol">The symbol associated with this data</param>
         /// <remarks>The reason we have the data as IEnumerable(DateTime, string) is to support
         /// a generic write that works for all resolutions. In order to merge in hour/daily case I need the
         /// date of the data to correctly merge the two. In order to support writing ticks I need to allow
         /// two data points to have the same time. Thus I cannot use a single list of just strings nor
         /// a sorted dictionary of DateTimes and strings. </remarks>
-        private void WriteFile(string filePath, List<TimedLine> data)
+        private void WriteFile(string filePath, List<TimedLine> data, Symbol symbol)
         {
             if (data == null || data.Count == 0)
             {
@@ -284,7 +299,7 @@ namespace QuantConnect.Data
 
             var date = data[0].Time;
             // Generate this csv entry name
-            var entryName = LeanData.GenerateZipEntryName(_symbol, date, _resolution, _tickType);
+            var entryName = LeanData.GenerateZipEntryName(symbol, date, _resolution, _tickType);
             
             // Check disk once for this file ahead of time, reuse where possible
             var fileExists = File.Exists(filePath);
@@ -338,10 +353,31 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="baseDirectory">Base output directory for the zip file</param>
         /// <param name="time">Date/time for the data we're writing</param>
+        /// <param name="symbol">The associated symbol. For example for options/futures it will be different than the canonical at <see cref="_symbol"/></param>
         /// <returns>The full path to the output zip file</returns>
-        private string GetZipOutputFileName(string baseDirectory, DateTime time)
+        private string GetZipOutputFileName(string baseDirectory, DateTime time, Symbol symbol)
         {
-            return LeanData.GenerateZipFilePath(baseDirectory, _symbol, time, _resolution, _tickType);
+            return LeanData.GenerateZipFilePath(baseDirectory, symbol, time, _resolution, _tickType);
+        }
+
+        /// <summary>
+        /// Helper method to map a symbol if required at the given date
+        /// </summary>
+        private Symbol GetMappedSymbol(DateTime time, Symbol symbol)
+        {
+            if (!_mapSymbol)
+            {
+                return _symbol;
+            }
+            if (symbol.RequiresMapping())
+            {
+                var mapFileResolver = MapFileProvider.Value.Get(AuxiliaryDataKey.Create(symbol.ID));
+                var mapFile = mapFileResolver.ResolveMapFile(symbol);
+                var mappedTicker = mapFile.GetMappedSymbol(time, symbol);
+                symbol = symbol.UpdateMappedSymbol(mappedTicker);
+            }
+
+            return symbol;
         }
 
         private class TimedLine
