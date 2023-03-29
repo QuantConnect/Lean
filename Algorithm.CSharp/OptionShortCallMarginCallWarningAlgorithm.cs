@@ -30,8 +30,6 @@ namespace QuantConnect.Algorithm.CSharp
 
         private bool _receivedMarginCallWarning;
 
-        private bool _onMarginCallWasCalled;
-
         public override void Initialize()
         {
             SetStartDate(2015, 12, 23);
@@ -60,8 +58,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnMarginCall(List<SubmitOrderRequest> requests)
         {
-            Debug($"OnMarginCall at {Time}");
-            _onMarginCallWasCalled = true;
+            throw new Exception("Expected OnMarginCall to not be invoked");
         }
 
         public override void OnMarginCallWarning()
@@ -85,11 +82,6 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            if (_onMarginCallWasCalled)
-            {
-                throw new Exception("Expected OnMarginCall to not be invoked");
-            }
-
             if (!_receivedMarginCallWarning)
             {
                 throw new Exception("OnMarginCallWarning was not invoked");

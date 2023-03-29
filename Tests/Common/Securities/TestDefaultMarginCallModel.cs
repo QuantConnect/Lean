@@ -13,12 +13,11 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
+
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Positions;
-using System.Collections.Generic;
-using static QuantConnect.Tests.Engine.PerformanceBenchmarkAlgorithms;
 
 namespace QuantConnect.Tests.Common.Securities
 {

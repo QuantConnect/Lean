@@ -194,10 +194,18 @@ namespace QuantConnect.Securities
                 .Select(x => x.Select(kvp => kvp.Key));
             foreach (var requests in orderedByLosers)
             {
+                var tickets = new List<OrderTicket>();
                 foreach (var request in requests)
                 {
-                    var ticket = Portfolio.Transactions.AddOrder(request);
-                    Portfolio.Transactions.WaitForOrder(request.OrderId);
+                    tickets.Add(Portfolio.Transactions.AddOrder(request));
+                }
+
+                foreach (var ticket in tickets)
+                {
+                    if (ticket.Status.IsOpen())
+                    {
+                        Portfolio.Transactions.WaitForOrder(ticket.OrderId);
+                    }
                     executedOrders.Add(ticket);
                 }
 

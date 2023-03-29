@@ -32,8 +32,6 @@ namespace QuantConnect.Algorithm.CSharp
 
         private OptionStrategy _optionStrategy;
 
-        private bool _receivedMarginCallWarning;
-
         private bool _onMarginCallWasCalled;
 
         private bool _orderPlaced;
@@ -109,8 +107,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnMarginCallWarning()
         {
-            Debug($"OnMarginCallWarning at {Time}");
-            _receivedMarginCallWarning = true;
+            throw new Exception("Expected OnMarginCallWarning to not be invoked");
         }
 
         public override void OnEndOfAlgorithm()
@@ -120,19 +117,9 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception("Expected OnMarginCall to be invoked");
             }
 
-            if (_receivedMarginCallWarning)
-            {
-                throw new Exception("Expected OnMarginCall to not be invoked");
-            }
-
             if (!_orderPlaced)
             {
                 throw new Exception("Expected an initial order to be placed");
-            }
-
-            if (Portfolio.Invested)
-            {
-                throw new Exception("Expected to be fully liquidated");
             }
         }
 

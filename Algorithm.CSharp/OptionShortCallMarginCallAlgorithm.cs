@@ -28,8 +28,6 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private Symbol _optionContractSymbol;
 
-        private bool _receivedMarginCallWarning;
-
         private bool _onMarginCallWasCalled;
 
         private bool _orderPlaced;
@@ -87,21 +85,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnMarginCallWarning()
         {
-            // this code gets called when the margin remaining drops below 5% of our total portfolio value, it gives the algorithm
-            // a chance to prevent a margin call from occurring
-
-            // prevent margin calls by responding to the warning and increasing margin remaining
-            var security = Securities[_optionContractSymbol];
-            var holdings = security.Holdings.Quantity;
-            var shares = (int)(-Math.Sign(holdings) * Math.Max(Math.Abs(holdings) * .005m, security.SymbolProperties.LotSize));
-            Log($"{Time.ToStringInvariant()} - OnMarginCallWarning(): Liquidating {shares.ToStringInvariant()} shares of the option to avoid margin call.");
-            MarketOrder(_optionContractSymbol, shares);
-
-            if (!_receivedMarginCallWarning)
-            {
-                Debug($"OnMarginCallWarning at {Time}");
-                _receivedMarginCallWarning = true;
-            }
+            throw new Exception("Expected OnMarginCallWarning to not be invoked");
         }
 
         public override void OnEndOfAlgorithm()
@@ -109,11 +93,6 @@ namespace QuantConnect.Algorithm.CSharp
             if (!_onMarginCallWasCalled)
             {
                 throw new Exception("Expected OnMarginCall to be invoked");
-            }
-
-            if (_receivedMarginCallWarning)
-            {
-                throw new Exception("Expected OnMarginCall to not be invoked");
             }
 
             if (!_orderPlaced)
