@@ -44,7 +44,6 @@ from QuantConnect.Statistics import *
 from QuantConnect.Parameters import *
 from QuantConnect.Benchmarks import *
 from QuantConnect.Brokerages import *
-from QuantConnect.Brokerages.Backtesting import *
 from QuantConnect.Securities import *
 from QuantConnect.Indicators import *
 from QuantConnect.Interfaces import *
@@ -71,6 +70,7 @@ from QuantConnect.Orders.TimeInForces import *
 from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Securities.Volatility import *
 from QuantConnect.Securities.Interfaces import *
+from QuantConnect.Brokerages.Backtesting import *
 from QuantConnect.Data.UniverseSelection import *
 from QuantConnect.Data.Custom.IconicTypes import *
 from QuantConnect.Securities.CryptoFuture import *

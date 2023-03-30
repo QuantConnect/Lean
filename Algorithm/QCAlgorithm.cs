@@ -1585,8 +1585,7 @@ namespace QuantConnect.Algorithm
         {
             if (marketSimulation == null)
             {
-                throw new ArgumentNullException(nameof(marketSimulation),
-                    "Algorithm.SetMarketSimulation(): Market simulation cannot be null.");
+                throw new ArgumentNullException(nameof(marketSimulation), "Algorithm.SetMarketSimulation(): Market simulation cannot be null.");
             }
             MarketSimulation = marketSimulation;
         }
