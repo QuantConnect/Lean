@@ -49,7 +49,6 @@ using QuantConnect.Storage;
 using Index = QuantConnect.Securities.Index.Index;
 using QuantConnect.Securities.CryptoFuture;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
-using QuantConnect.Brokerages.Backtesting;
 
 namespace QuantConnect.Algorithm
 {

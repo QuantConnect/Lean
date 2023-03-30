@@ -44,6 +44,7 @@ from QuantConnect.Statistics import *
 from QuantConnect.Parameters import *
 from QuantConnect.Benchmarks import *
 from QuantConnect.Brokerages import *
+from QuantConnect.Brokerages.Backtesting import *
 from QuantConnect.Securities import *
 from QuantConnect.Indicators import *
 from QuantConnect.Interfaces import *
