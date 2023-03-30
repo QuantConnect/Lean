@@ -44,15 +44,15 @@ public class HilbertTransformIndicatorTests : CommonIndicatorTests<IndicatorData
     }
 
     [Test]
-    public void ComparesAgainstExternalDataQuad()
+    public void ComparesAgainstExternalDataQuadrature()
     {
         var hilbertTransformIndicator = new HilbertTransformIndicator();
         TestHelper.TestIndicator(
             hilbertTransformIndicator,
             TestFileName,
-            "Quad",
+            "Quadrature",
             (actual, expected) =>
-                Assert.AreEqual(expected, (double)hilbertTransformIndicator.Quad.Current.Value, 1e-3));
+                Assert.AreEqual(expected, (double)hilbertTransformIndicator.Quadrature.Current.Value, 1e-3));
     }
 
     [Test]
@@ -65,7 +65,7 @@ public class HilbertTransformIndicatorTests : CommonIndicatorTests<IndicatorData
 
         hti.Reset();
         TestHelper.AssertIndicatorIsInDefaultState(hti);
-        TestHelper.AssertIndicatorIsInDefaultState(hti.Quad);
+        TestHelper.AssertIndicatorIsInDefaultState(hti.Quadrature);
         TestHelper.AssertIndicatorIsInDefaultState(hti.InPhase);
     }
 }
