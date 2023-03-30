@@ -73,11 +73,7 @@ class MacdAlphaModel(AlphaModel):
             sd.PreviousDirection = direction
 
             if direction == InsightDirection.Flat:
-                activeInsights = [ x for x in self.insightCollection if x.Symbol == sd.Security.Symbol ]
-                if activeInsights:
-                    for activeInsight in activeInsights:
-                        self.insightCollection.Remove(activeInsight)
-                        algorithm.Insights.Cancel([activeInsight])
+                self.CancelInsights(algorithm, sd.Security.Symbol)
                 continue
 
             insight = Insight.Price(sd.Security.Symbol, self.insightPeriod, direction)
@@ -104,10 +100,16 @@ class MacdAlphaModel(AlphaModel):
                 # clean up our consolidator
                 algorithm.SubscriptionManager.RemoveConsolidator(symbol, data.Consolidator)
                 
-                # remove from insight collection manager
-                for insight in [x for x in self.insightCollection if x.Symbol == symbol]:
-                    self.insightCollection.Remove(insight)
-                    algorithm.Insights.Cancel([insight]);
+            # remove from insight collection manager
+            self.CancelInsights(algorithm, symbol)
+
+    def CancelInsights(self, algorithm, symbol):
+        if not self.insightCollection.ContainsKey(symbol):
+            return
+        insights = self.insightCollection[symbol]
+        algorithm.Insights.Cancel(insights)
+        self.insightCollection.Clear([ symbol ]);
+
 
 class SymbolData:
     def __init__(self, algorithm, security, fastPeriod, slowPeriod, signalPeriod, movingAverageType, resolution):

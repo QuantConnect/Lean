@@ -100,15 +100,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
                 if (direction == InsightDirection.Flat)
                 {
-                    if (_insightCollection.TryGetValue(sd.Security.Symbol, out var insights))
-                    {
-                        foreach (var activeInsight in insights)
-                        {
-                            _insightCollection.Remove(activeInsight);
-                            algorithm.Insights.Cancel(new[] { activeInsight });
-                        }
-                    }
-
+                    CancelInsights(algorithm, sd.Security.Symbol);
                     continue;
                 }
 
@@ -147,14 +139,19 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     // clean up our consolidator
                     algorithm.SubscriptionManager.RemoveConsolidator(symbol, data.Consolidator);
                     _symbolData.Remove(symbol);
-
-                    // remove from insight collection manager
-                    foreach (var insight in _insightCollection.Where(x => x.Symbol == symbol))
-                    {
-                        _insightCollection.Remove(insight);
-                        algorithm.Insights.Cancel(new[] { insight });
-                    }
                 }
+
+                // remove from insight collection manager
+                CancelInsights(algorithm, symbol);
+            }
+        }
+
+        private void CancelInsights(QCAlgorithm algorithm, Symbol symbol)
+        {
+            if (_insightCollection.TryGetValue(symbol, out var insights))
+            {
+                algorithm.Insights.Cancel(insights);
+                _insightCollection.Clear(new[] { symbol });
             }
         }
 
