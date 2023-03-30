@@ -14,10 +14,6 @@ RUN pip install --no-cache-dir ptvsd==4.3.2 debugpy~=1.5.1 pydevd-pycharm~=201.8
 # Install vsdbg for remote C# debugging in Visual Studio and Visual Studio Code
 RUN wget https://aka.ms/getvsdbgsh -O - 2>/dev/null | /bin/sh /dev/stdin -v 16.9.20122.2 -l /root/vsdbg
 
-# Install NetCoreDbg
-RUN wget https://github.com/Samsung/netcoredbg/releases/download/2.0.0-880/netcoredbg-linux-amd64.tar.gz \
-&& tar xvzf netcoredbg-linux-amd64.tar.gz && rm netcoredbg-linux-amd64.tar.gz
-
 COPY ./DataLibraries /Lean/Launcher/bin/Debug/
 COPY ./Lean/Launcher/bin/Debug/ /Lean/Launcher/bin/Debug/
 COPY ./Lean/Optimizer.Launcher/bin/Debug/ /Lean/Optimizer.Launcher/bin/Debug/
