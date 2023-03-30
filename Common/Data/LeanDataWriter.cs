@@ -18,6 +18,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using QuantConnect.Util;
+using System.Globalization;
 using QuantConnect.Logging;
 using System.Threading.Tasks;
 using QuantConnect.Interfaces;
@@ -345,7 +346,12 @@ namespace QuantConnect.Data
                 _dataCacheProvider.Store($"{filePath}#{entryName}", bytes);
             }
 
-            Log.Debug($"LeanDataWriter.Write(): Appended: {filePath} @ {entryName}");
+            if (Log.DebuggingEnabled)
+            {
+                var from = data[0].Time.Date.ToString(DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+                var to = data[data.Count - 1].Time.Date.ToString(DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+                Log.Debug($"LeanDataWriter.Write({symbol.ID}): Appended: {filePath} @ {entryName} {from}->{to}");
+            }
         }
 
         /// <summary>
@@ -373,8 +379,12 @@ namespace QuantConnect.Data
             {
                 var mapFileResolver = MapFileProvider.Value.Get(AuxiliaryDataKey.Create(symbol.ID));
                 var mapFile = mapFileResolver.ResolveMapFile(symbol);
-                var mappedTicker = mapFile.GetMappedSymbol(time, symbol);
-                symbol = symbol.UpdateMappedSymbol(mappedTicker);
+                var mappedTicker = mapFile.GetMappedSymbol(time);
+                if(!string.IsNullOrEmpty(mappedTicker))
+                {
+                    // only update if we got something to map to
+                    symbol = symbol.UpdateMappedSymbol(mappedTicker);
+                }
             }
 
             return symbol;

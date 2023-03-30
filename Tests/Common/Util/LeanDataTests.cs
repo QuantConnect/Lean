@@ -20,6 +20,7 @@ using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Util;
 using Bitcoin = QuantConnect.Algorithm.CSharp.LiveTradingFeaturesAlgorithm.Bitcoin;
 
@@ -213,6 +214,21 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(result, LeanData.TryParseSecurityType(path, out var securityType, out var parsedMarket));
             Assert.AreEqual(expectedSecurityType, securityType);
             Assert.AreEqual(market, parsedMarket);
+        }
+
+        [Test]
+        public void UniversesDataPath()
+        {
+            var path = "equity/usa/universes/etf/spy/20200102.csv";
+            Assert.IsTrue(LeanData.TryParsePath(path, out var symbol, out var date, out var resolution));
+
+            Assert.AreEqual(SecurityType.Base, symbol.SecurityType);
+            Assert.AreEqual(Market.USA, symbol.ID.Market);
+            Assert.AreEqual(Resolution.Daily, resolution);
+            Assert.AreEqual("SPY.ETFConstituentData", symbol.ID.Symbol);
+            Assert.AreEqual(new DateTime(2020, 1, 2), date);
+            Assert.IsTrue(symbol.ID.Symbol.TryGetCustomDataType(out var dataType));
+            Assert.AreEqual(typeof(ETFConstituentData).Name, dataType);
         }
 
         [Test]

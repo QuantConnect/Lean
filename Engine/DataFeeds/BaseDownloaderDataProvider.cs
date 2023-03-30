@@ -47,8 +47,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // This will allow different threads to download different paths at the same time.
                     if (_currentDownloads.TryAdd(key, key))
                     {
-                        download(key);
-                        _currentDownloads.TryRemove(key, out _);
+                        try
+                        {
+                            download(key);
+                        }
+                        finally
+                        {
+                            // even if we fail we need to release it from the current downloads
+                            _currentDownloads.TryRemove(key, out _);
+                        }
                         return base.Fetch(key);
                     }
                 }
