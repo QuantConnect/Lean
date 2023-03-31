@@ -15,7 +15,6 @@
 */
 
 using System;
-using NodaTime;
 using System.IO;
 using System.Linq;
 using QuantConnect.Util;
@@ -33,10 +32,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class DownloaderDataProvider : BaseDownloaderDataProvider
     {
+        /// <summary>
+        /// Synchronizer in charge of guaranteeing a single operation per file path
+        /// </summary>
+        private readonly static KeyStringSynchronizer DiskSynchronizer = new();
+
         private bool _customDataDownloadError;
         private readonly ConcurrentDictionary<Symbol, Symbol> _marketHoursWarning = new();
         private readonly MarketHoursDatabase _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
         private readonly IDataDownloader _dataDownloader;
+        private readonly IDataCacheProvider _dataCacheProvider = new DiskDataCacheProvider(DiskSynchronizer);
 
         /// <summary>
         /// Creates a new instance
@@ -55,7 +60,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Creates a new instance using a target data downloader
+        /// Creates a new instance using a target data downloader used for testing
         /// </summary>
         public DownloaderDataProvider(IDataDownloader dataDownloader)
         {
@@ -84,10 +89,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         return;
                     }
 
-                    DateTimeZone dataTimeZone;
+                    MarketHoursDatabase.Entry entry;
                     try
                     {
-                        dataTimeZone = _marketHoursDatabase.GetDataTimeZone(symbol.ID.Market, symbol, symbol.SecurityType);
+                        entry = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.SecurityType);
                     }
                     catch
                     {
@@ -95,11 +100,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         if (_marketHoursWarning.TryAdd(symbol, symbol))
                         {
                             // log once
-                            Log.Trace($"DownloaderDataProvider.Get(): failed to find market hours for {symbol}, defaulting to UTC");
+                            Log.Trace($"DownloaderDataProvider.Get(): failed to find market hours for {symbol}, skipping");
                         }
-                        dataTimeZone = TimeZones.Utc;
+                        // this shouldn't happen for data we want can download
+                        return;
                     }
 
+                    var dataTimeZone = entry.DataTimeZone;
+                    var exchangeTimeZone = entry.ExchangeHours.TimeZone;
                     DateTime startTimeUtc;
                     DateTime endTimeUtc;
                     // we will download until yesterday so we are sure we don't get partial data
@@ -156,7 +164,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         var getParams = new DataDownloaderGetParameters(symbol, resolution, startTimeUtc, endTimeUtc, tickType);
 
                         var data = _dataDownloader.Get(getParams)
-                            .Where(baseData => symbol.SecurityType == SecurityType.Base || baseData.GetType() == dataType)
+                            .Where(baseData =>
+                            {
+                                if(symbol.SecurityType == SecurityType.Base || baseData.GetType() == dataType)
+                                {
+                                    // we need to store the data in data time zone
+                                    baseData.Time = baseData.Time.ConvertTo(exchangeTimeZone, dataTimeZone);
+                                    baseData.EndTime = baseData.EndTime.ConvertTo(exchangeTimeZone, dataTimeZone);
+                                    return true;
+                                }
+                                return false;
+                            })
                             // for canonical symbols, downloader will return data for all of the chain
                             .GroupBy(baseData => baseData.Symbol);
 
@@ -164,7 +182,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         {
                             if (writer == null)
                             {
-                                writer = new LeanDataWriter(resolution, symbol, Globals.DataFolder, tickType, mapSymbol: true);
+                                writer = new LeanDataWriter(resolution, symbol, Globals.DataFolder, tickType, mapSymbol: true, dataCacheProvider: _dataCacheProvider);
                             }
 
                             // Save the data
@@ -177,6 +195,34 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                 }
             });
+        }
+
+        /// <summary>
+        /// Get's the stream for a given file path
+        /// </summary>
+        protected override Stream GetStream(string key)
+        {
+            if(LeanData.TryParsePath(key, out var symbol, out var date, out var resolution) && resolution > Resolution.Minute && symbol.RequiresMapping())
+            {
+                // because the file could be updated even after it's created because of symbol mapping we can't stream from disk
+                return DiskSynchronizer.Execute(key, () =>
+                {
+                    var baseStream = base.Fetch(key);
+                    if (baseStream != null)
+                    {
+                        var result = new MemoryStream();
+                        baseStream.CopyTo(result);
+                        baseStream.Dispose();
+                        // move position back to the start
+                        result.Position = 0;
+
+                        return result;
+                    }
+                    return null;
+                });
+            }
+
+            return base.Fetch(key);
         }
 
         /// <summary>

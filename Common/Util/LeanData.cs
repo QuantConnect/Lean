@@ -23,6 +23,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
@@ -1113,6 +1114,10 @@ namespace QuantConnect.Util
 
                 if(startIndex == -1)
                 {
+                    if (Log.DebuggingEnabled)
+                    {
+                        Log.Debug($"LeanData.TryParsePath(): Failed to parse '{fileName}' unexpected SecurityType");
+                    }
                     // SPDB & MHDB folders
                     return false;
                 }
@@ -1120,13 +1125,28 @@ namespace QuantConnect.Util
 
                 var market = Market.USA;
                 string ticker;
+                var isUniverses = false;
+                if (!Enum.TryParse(info[startIndex + 2], true, out resolution))
+                {
+                    resolution = Resolution.Daily;
+                    isUniverses = info[startIndex + 2].Equals("universes", StringComparison.InvariantCultureIgnoreCase);
+                    if (securityType != SecurityType.Base)
+                    {
+                        if (!isUniverses)
+                        {
+                            if (Log.DebuggingEnabled)
+                            {
+                                Log.Debug($"LeanData.TryParsePath(): Failed to parse '{fileName}' unexpected Resolution");
+                            }
+                            // only acept a failure to parse resolution if we are facing a universes path
+                            return false;
+                        }
+                        securityType = SecurityType.Base;
+                    }
+                }
+
                 if (securityType == SecurityType.Base)
                 {
-                    if (!Enum.TryParse(info[startIndex + 2], true, out resolution))
-                    {
-                        resolution = Resolution.Daily;
-                    }
-
                     // the last part of the path is the file name
                     var fileNameNoPath = info[info.Count - 1].Split('_').First();
 
@@ -1147,8 +1167,6 @@ namespace QuantConnect.Util
                 }
                 else
                 {
-                    resolution = (Resolution)Enum.Parse(typeof(Resolution), info[startIndex + 2], true);
-
                     // Gather components used to create the security
                     market = info[startIndex + 1];
                     ticker = info[startIndex + 3];
@@ -1185,7 +1203,12 @@ namespace QuantConnect.Util
                 }
                 else
                 {
-                    symbol = Symbol.Create(ticker, securityType, market);
+                    Type dataType = null;
+                    if (isUniverses && info[startIndex + 3].Equals("etf", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        dataType = typeof(ETFConstituentData);
+                    }
+                    symbol = Symbol.Create(ticker, securityType, market, baseDataType: dataType);
                 }
 
             }

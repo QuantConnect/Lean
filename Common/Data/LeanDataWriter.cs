@@ -18,6 +18,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using QuantConnect.Util;
+using System.Globalization;
 using QuantConnect.Logging;
 using System.Threading.Tasks;
 using QuantConnect.Interfaces;
@@ -33,6 +34,7 @@ namespace QuantConnect.Data
     /// </summary>
     public class LeanDataWriter
     {
+        private static KeyStringSynchronizer _keySynchronizer = new();
         private static readonly Lazy<IMapFileProvider> MapFileProvider = new(
             Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"), forceTypeNameOnExisting: false)
         );
@@ -297,55 +299,65 @@ namespace QuantConnect.Data
                 return;
             }
 
-            var date = data[0].Time;
-            // Generate this csv entry name
-            var entryName = LeanData.GenerateZipEntryName(symbol, date, _resolution, _tickType);
-            
-            // Check disk once for this file ahead of time, reuse where possible
-            var fileExists = File.Exists(filePath);
+            // because we read & write the same file we need to take a lock per file path so we don't read something that might get outdated
+            // by someone writting to the same path at the same time
+            _keySynchronizer.Execute(filePath, singleExecution: false, () =>
+            {
+                var date = data[0].Time;
+                // Generate this csv entry name
+                var entryName = LeanData.GenerateZipEntryName(symbol, date, _resolution, _tickType);
 
-            // If our file doesn't exist its possible the directory doesn't exist, make sure at least the directory exists
-            if (!fileExists)
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(filePath));
-            }
+                // Check disk once for this file ahead of time, reuse where possible
+                var fileExists = File.Exists(filePath);
 
-            // Handle merging of files
-            // Only merge on files with hour/daily resolution, that exist, and can be loaded
-            string finalData = null;
-            if (_writePolicy == WritePolicy.Append)
-            {
-                var streamWriter = new ZipStreamWriter(filePath, entryName);
-                foreach (var tuple in data)
+                // If our file doesn't exist its possible the directory doesn't exist, make sure at least the directory exists
+                if (!fileExists)
                 {
-                    streamWriter.WriteLine(tuple.Line);
-                }
-                streamWriter.DisposeSafely();
-            }
-            else if (_writePolicy == WritePolicy.Merge && fileExists && TryLoadFile(filePath, entryName, date, out var rows))
-            {
-                // Preform merge on loaded rows
-                foreach (var timedLine in data)
-                {
-                    rows[timedLine.Time] = timedLine.Line;
+                    Directory.CreateDirectory(Path.GetDirectoryName(filePath));
                 }
 
-                // Final merged data product
-                finalData = string.Join("\n", rows.Values);
-            }
-            else
-            {
-                // Otherwise just extract the data from the given list.
-                finalData = string.Join("\n", data.Select(x => x.Line));
-            }
+                // Handle merging of files
+                // Only merge on files with hour/daily resolution, that exist, and can be loaded
+                string finalData = null;
+                if (_writePolicy == WritePolicy.Append)
+                {
+                    var streamWriter = new ZipStreamWriter(filePath, entryName);
+                    foreach (var tuple in data)
+                    {
+                        streamWriter.WriteLine(tuple.Line);
+                    }
+                    streamWriter.DisposeSafely();
+                }
+                else if (_writePolicy == WritePolicy.Merge && fileExists && TryLoadFile(filePath, entryName, date, out var rows))
+                {
+                    // Preform merge on loaded rows
+                    foreach (var timedLine in data)
+                    {
+                        rows[timedLine.Time] = timedLine.Line;
+                    }
 
-            if (finalData != null)
-            {
-                var bytes = Encoding.UTF8.GetBytes(finalData);
-                _dataCacheProvider.Store($"{filePath}#{entryName}", bytes);
-            }
+                    // Final merged data product
+                    finalData = string.Join("\n", rows.Values);
+                }
+                else
+                {
+                    // Otherwise just extract the data from the given list.
+                    finalData = string.Join("\n", data.Select(x => x.Line));
+                }
 
-            Log.Debug($"LeanDataWriter.Write(): Appended: {filePath} @ {entryName}");
+                if (finalData != null)
+                {
+                    var bytes = Encoding.UTF8.GetBytes(finalData);
+                    _dataCacheProvider.Store($"{filePath}#{entryName}", bytes);
+                }
+
+                if (Log.DebuggingEnabled)
+                {
+                    var from = data[0].Time.Date.ToString(DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+                    var to = data[data.Count - 1].Time.Date.ToString(DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+                    Log.Debug($"LeanDataWriter.Write({symbol.ID}): Appended: {filePath} @ {entryName} {from}->{to}");
+                }
+            });
         }
 
         /// <summary>
@@ -373,8 +385,12 @@ namespace QuantConnect.Data
             {
                 var mapFileResolver = MapFileProvider.Value.Get(AuxiliaryDataKey.Create(symbol.ID));
                 var mapFile = mapFileResolver.ResolveMapFile(symbol);
-                var mappedTicker = mapFile.GetMappedSymbol(time, symbol);
-                symbol = symbol.UpdateMappedSymbol(mappedTicker);
+                var mappedTicker = mapFile.GetMappedSymbol(time);
+                if(!string.IsNullOrEmpty(mappedTicker))
+                {
+                    // only update if we got something to map to
+                    symbol = symbol.UpdateMappedSymbol(mappedTicker);
+                }
             }
 
             return symbol;

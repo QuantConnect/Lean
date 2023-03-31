@@ -224,7 +224,7 @@ namespace QuantConnect
             }
             catch (Exception err)
             {
-                Log.Error(err);
+                Log.Error(err, $"file: {path} entry: {entry}");
                 return false;
             }
             return true;
