@@ -16,7 +16,7 @@
 
 using System;
 using System.IO;
-using System.Collections.Concurrent;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -25,7 +25,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public abstract class BaseDownloaderDataProvider : DefaultDataProvider
     {
-        private readonly ConcurrentDictionary<string, string> _currentDownloads = new ConcurrentDictionary<string, string>();
+        /// <summary>
+        /// Key string synchronizer instance to use
+        /// </summary>
+        protected static KeyStringSynchronizer KeySynchronizer { get; } = new();
 
         /// <summary>
         /// Helper method which guarantees each requested key is downloaded only once concurrently if required based on <see cref="NeedToDownload"/>
@@ -38,36 +41,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // If we don't already have this file or its out of date, download it
             if (NeedToDownload(key))
             {
-                lock (key)
-                {
-                    // only one thread can add a path at the same time
-                    // - The thread that adds the path, downloads the file and removes the path from the collection after it finishes.
-                    // - Threads that don't add the path, will get the value in the collection and try taking a lock on it, since the downloading
-                    // thread takes the lock on it first, they will wait till he finishes.
-                    // This will allow different threads to download different paths at the same time.
-                    if (_currentDownloads.TryAdd(key, key))
-                    {
-                        try
-                        {
-                            download(key);
-                        }
-                        finally
-                        {
-                            // even if we fail we need to release it from the current downloads
-                            _currentDownloads.TryRemove(key, out _);
-                        }
-                        return base.Fetch(key);
-                    }
-                }
+                // only the first thread will download the rest will wait for him to finish
+                KeySynchronizer.Execute(key, singleExecution: true, () => download(key));
+                // single download finished, let's get the stream!
+                return GetStream(key);
             }
 
-            // even though we should not download in this path, we need to wait for any download in progress to be finished
-            // in this case it would be present in the '_currentDownloads' collection with it's lock taken
-            _currentDownloads.TryGetValue(key, out var existingKey);
-            lock (existingKey ?? new object())
-            {
-                return base.Fetch(key);
-            }
+            // even if we are not downloading the file because it exists we need to synchronize because the download might still be updating the file on disk
+            return KeySynchronizer.Execute(key, () => GetStream(key));
+        }
+
+        /// <summary>
+        /// Get's the stream for a given file path
+        /// </summary>
+        protected virtual Stream GetStream(string key)
+        {
+            return base.Fetch(key);
         }
 
         /// <summary>

@@ -14,11 +14,16 @@
 */
 
 using System;
+using System.IO;
 using System.Linq;
 using NUnit.Framework;
+using System.Threading;
 using QuantConnect.Data;
 using QuantConnect.Util;
+using QuantConnect.Logging;
+using System.Threading.Tasks;
 using QuantConnect.Securities;
+using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Data.Custom.IconicTypes;
@@ -28,6 +33,77 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     [TestFixture]
     public class DownloaderDataProviderTests
     {
+        [Test]
+        public void ConcurrentDownloadsSameFile()
+        {
+            Log.DebuggingEnabled = true;
+            var downloader = new DataDownloaderTest();
+            using var dataProvider = new DownloaderDataProvider(downloader);
+
+            var date = new DateTime(2000, 3, 17);
+            var dataSymbol = Symbol.Create("TEST", SecurityType.Equity, Market.USA);
+            var actualPath = LeanData.GenerateZipFilePath(Globals.DataFolder, dataSymbol, date, Resolution.Daily, TickType.Trade);
+
+            // the symbol of the data is the same
+            for (var i = 0; i < 10; i++)
+            {
+                downloader.Data.Add(new TradeBar(date.AddDays(i), dataSymbol, i, i, i, i, i));
+            }
+            File.Delete(actualPath);
+
+            var failures = 0L;
+            using var cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+
+            // here we request symbols which is different than the data the downloader will return & we need to store, simulating mapping behavior
+            // the data will always use 'dataSymbol' and the same output path
+            var endedCount = 0;
+            var taskCount = 5;
+            for (var i = 0; i < taskCount; i++)
+            {
+                var myLockId = i;
+                var task = new Task(() =>
+                {
+                    try
+                    {
+                        var count = 0;
+                        while (count++ < 10)
+                        {
+                            var requestSymbol = Symbol.Create($"TEST{count + Math.Pow(10, myLockId)}", SecurityType.Equity, Market.USA);
+                            var path = LeanData.GenerateZipFilePath(Globals.DataFolder, requestSymbol, date, Resolution.Daily, TickType.Trade);
+                            // we will get null back because the data is stored to another path, the 'dataSymbol' path which is read bellow
+                            Assert.IsNull(dataProvider.Fetch(path));
+                        }
+                    }
+                    catch (Exception exception)
+                    {
+                        Interlocked.Increment(ref failures);
+                        Log.Error(exception);
+                        cancellationToken.Cancel();
+                    }
+
+                    if(Interlocked.Increment(ref endedCount) == taskCount)
+                    {
+                        // the end
+                        cancellationToken.Cancel();
+                    }
+                }, cancellationToken.Token);
+                task.Start();
+            }
+
+            cancellationToken.Token.WaitHandle.WaitOne();
+
+            Assert.AreEqual(0, Interlocked.Read(ref failures));
+            lock (downloader.DataDownloaderGetParameters)
+            {
+                Assert.AreEqual(downloader.DataDownloaderGetParameters.Count, 50);
+            }
+
+            var data = QuantConnect.Compression.Unzip(actualPath).Single();
+
+            // the data was merged
+            Assert.AreEqual(85, data.Value.Count);
+        }
+
         [Test]
         public void CustomDataRequest()
         {
@@ -126,11 +202,29 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         private class DataDownloaderTest : IDataDownloader
         {
-            public List<DataDownloaderGetParameters > DataDownloaderGetParameters { get; set; } = new ();
+            public List<BaseData> Data { get; } = new();
+            public List<DataDownloaderGetParameters > DataDownloaderGetParameters { get; } = new ();
             public IEnumerable<BaseData> Get(DataDownloaderGetParameters dataDownloaderGetParameters)
             {
-                DataDownloaderGetParameters.Add(dataDownloaderGetParameters);
-                return Enumerable.Empty<BaseData>();
+                lock(DataDownloaderGetParameters)
+                {
+                    DataDownloaderGetParameters.Add(dataDownloaderGetParameters);
+
+                    if (dataDownloaderGetParameters.Symbol.ID.Symbol.StartsWith("TEST", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        // let's create some more data based on the symbol, so we can assert it's merged
+                        var id = int.Parse(dataDownloaderGetParameters.Symbol.ID.Symbol.RemoveFromStart("TEST"));
+                        return Data.Select(bar =>
+                        {
+                            var result = bar.Clone();
+                            result.Time = bar.Time.AddDays(id);
+                            result.EndTime = bar.EndTime.AddDays(id);
+                            return result;
+                        });
+                    }
+
+                    return Data;
+                }
             }
         }
     }
