@@ -465,6 +465,61 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(expectedOrderSize, result.Quantity);
         }
 
+        [TestCase(0)]
+        [TestCase(-10)]
+        public void GetsMaintenanceMarginForAPotentialShortPositionWithoutInitialHoldings(decimal initialHoldings)
+        {
+            // Computing the maintenance margin for a potential position is useful because it will be used to check whether there is
+            // enough available buying power to open said new position.
+
+            const decimal price = 14m;
+            const decimal underlyingPrice = 196m;
+            var tz = TimeZones.NewYork;
+
+            var equity = new QuantConnect.Securities.Equity.Equity(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
+            equity.SetMarketPrice(new Tick { Value = underlyingPrice });
+
+            var optionCall = new Option(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new SubscriptionDataConfig(
+                    typeof(TradeBar),
+                    Symbols.SPY_C_192_Feb19_2016,
+                    Resolution.Minute,
+                    tz,
+                    tz,
+                    true,
+                    false,
+                    false
+                ),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
+            optionCall.SetMarketPrice(new Tick { Value = price });
+            optionCall.Underlying = equity;
+            optionCall.Holdings.SetHoldings(price, initialHoldings);
+
+            var buyingPowerModel = new OptionMarginModel();
+
+            if (initialHoldings == 0)
+            {
+                // No holdings for the option, so no maintenance margin expected
+                Assert.AreEqual(0m, buyingPowerModel.GetMaintenanceMargin(optionCall));
+            }
+
+            // Short option positions are very expensive in terms of margin.
+            // Margin = 2 * 100 * (14 + 0.2 * 196) = 10640
+            Assert.AreEqual(10640m, buyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(optionCall, -2)).Value);
+        }
+
         private static void UpdatePrice(Security security, decimal close)
         {
             security.SetMarketPrice(new TradeBar
