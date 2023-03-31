@@ -16,6 +16,7 @@
 using Newtonsoft.Json.Linq;
 using QuantConnect.Logging;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 
@@ -46,6 +47,20 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// Comment (Optional)
         /// </summary>
         private readonly string _comment;
+
+        /// <summary>
+        /// HashSet of allowed SecurityTypes for CrunchDAO
+        /// </summary>
+        private readonly HashSet<SecurityType> _allowedSecurityTypes = new()
+        {
+            SecurityType.Equity,
+            SecurityType.Index
+        };
+
+        /// <summary>
+        /// HashSet property of allowed SecurityTypes for CrunchDAO
+        /// </summary>
+        protected override HashSet<SecurityType> DefaultAllowedSecurityTypes => _allowedSecurityTypes;
 
         /// <summary>
         /// CrunchDAOSignalExport constructor. It obtains the required information for CrunchDAO API requests.

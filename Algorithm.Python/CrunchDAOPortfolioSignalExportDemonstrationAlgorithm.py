@@ -14,26 +14,23 @@
 from AlgorithmImports import *
 
 ### <summary>
-### This algorithm sends an array of current portfolio targets to different 3rd party API's every time
-### the ema indicators crosses between themselves.
+### This algorithm sends a list of portfolio targets from algorithm's Portfolio
+### to CrunchDAO API every time the ema indicators crosses between themselves.
 ### </summary>
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="using quantconnect" />
 ### <meta name="tag" content="securities and portfolio" />
-class SignalExportDemonstrationAlgorithm(QCAlgorithm):
+class CrunchDAOPortfolioSignalExportDemonstrationAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        ''' Initialize the date and add all equity symbols present in list _symbols '''
+        ''' Initialize the date and add one equity and one index, as CrunchDAO only accepts stock and index symbols '''
 
         self.SetStartDate(2013, 10, 7)   #Set Start Date
         self.SetEndDate(2013, 10, 11)    #Set End Date
         self.SetCash(100000)             #Set Strategy Cash
 
-        self.symbols = ["SPY", "AIG", "GOOGL", "AAPL", "AMZN", "TSLA", "NFLX", "INTC", "MSFT", "KO", "WMT", "IBM", "AMGN", "CAT"]
-        self.targets = []
-
-        for symbol in self.symbols:
-            self.AddEquity(symbol)
+        self.AddEquity("SPY");
+        self.AddIndex("SPX");
 
         fastPeriod = 100
         slowPeriod = 200
@@ -45,24 +42,16 @@ class SignalExportDemonstrationAlgorithm(QCAlgorithm):
         self.emaFastIsNotSet = True;
         self.emaFastWasAbove = False;
 
-        # Set the signal export providers
-        self.collective2Apikey = "" # Replace this value with your Collective2 API key
-        self.collective2SystemId = 0 # Replace this value with your Collective2 system ID
-        self.SignalExport.AddSignalExportProviders(Collective2SignalExport(self.collective2Apikey, self.collective2SystemId))
-
+        # Set the CrunchDAO signal export provider
         self.crunchDAOApiKey = "" # Replace this value with your CrunchDAO API key
         self.crunchDAOModel = "" # Replace this value with your model's name
-        self.SignalExport.AddSignalExportProviders(CrunchDAOSignalExport(self.crunchDAOApiKey, self.crunchDAOModel))
-
-        self.numeraiPublicId = "" # Replace this value with your Numerai Signals Public ID
-        self.numeraiSecretId = "" # Replace this value with your Numerai Signals Secret ID
-        self.numeraiModelId = "" # Replace this value with your Numerai Signals Model ID
-        self.SignalExport.AddSignalExportProviders(NumeraiSignalExport(self.numeraiPublicId, self.numeraiSecretId, self.numeraiModelId))
+        self.crunchDAOSubmissionName = "" # Replace this value with the name for your submission (Optional)
+        self.crunchDAOComment = "" # Replace this value with a comment for your submission (Optional)
+        self.SignalExport.AddSignalExportProviders(CrunchDAOSignalExport(self.crunchDAOApiKey, self.crunchDAOModel, self.crunchDAOSubmissionName, self.crunchDAOComment))
 
     def OnData(self, data):
         ''' Reduce the quantity of holdings for one security and increase the holdings to the another
-        one when the EMA's indicators crosses between themselves, then send a signal to the 3rd party
-        API's defined and quit the algorithm '''
+        one when the EMA's indicators crosses between themselves, then send a signal to CrunchDAO API '''
 
         # Wait for our indicators to be ready
         if not self.fast.IsReady or not self.slow.IsReady:
@@ -78,25 +67,14 @@ class SignalExportDemonstrationAlgorithm(QCAlgorithm):
             else:
                 self.emaFastWasAbove = False
             self.emaFastIsNotSet = False;
-            self.SetInitialSignalValueForTargets()
 
         # Check whether ema fast and ema slow crosses. If they do, set holdings to SPY
-        # or reduce its holdings, and send signals to the 3rd party API's defined above
+        # or reduce its holdings, and send signals to the CrunchDAO API from your Portfolio
         if fast > slow * 1.001 and (not self.emaFastWasAbove):
-            self.SetHoldingsToSpyAndSendSignals(0.1)
+            self.SetHoldings("SPY", 0.1)
+            self.SetHoldings("SPX", 0.01)
+            self.SignalExport.SetTargetPortfolioFromPortfolio()
         elif fast < slow * 0.999 and (self.emaFastWasAbove):
-            self.SetHoldingsToSpyAndSendSignals(0.01)
-
-    def SetInitialSignalValueForTargets(self):
-        """ Set initial signal value for each portfolio target in _targets array """
-        for symbol in self.symbols:
-            self.targets.append(PortfolioTarget(self.Portfolio[symbol].Symbol, 0.05))
-
-    def SetHoldingsToSpyAndSendSignals(self, quantity):
-        """ Set Holdings to SPY and sends signals to the different 3rd party API's already defined """
-        self.SetHoldings("SPY", quantity)
-        self.targets[0] = PortfolioTarget(self.Portfolio["SPY"].Symbol, quantity)
-        self.SignalExport.SetTargetPortfolio(self, self.targets)
-            
-
-
+            self.SetHoldings("SPY", 0.01)
+            self.SetHoldings("SPX", 0.1)
+            self.SignalExport.SetTargetPortfolioFromPortfolio()

@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using QLNet;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
 using QuantConnect.Data;
@@ -23,56 +24,55 @@ using System.Collections.Generic;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This algorithm sends an array of current portfolio targets to different 3rd party API's
-    /// every time the ema indicators crosses between themselves
+    /// This algorithm sends a list of portfolio targets from algorithm's Portfolio
+    /// to Collective2 API every time the ema indicators crosses between themselves
     /// </summary>
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="using quantconnect" />
     /// <meta name="tag" content="securities and portfolio" />
-    public class SignalExportDemonstrationAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class Collective2SignalExportDemonstrationAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private const string _collective2ApiKey = ""; // Replace this value with your Collective2 API key
-        private const int _collective2SystemId = 0; // Replace this value with your system ID given by Collective2 API
+        /// <summary>
+        /// Field to set your Collective2 API key (See https://collective2.com/api-docs/latest)
+        /// </summary>
+        private const string _collective2ApiKey = "";
 
-        private const string _crunchDAOApiKey = ""; // Replace this value with your CrunchDAO API key
-        private const string _crunchDAOModel = ""; // Replace this value with your model's name
+        /// <summary>
+        /// Field to set your system ID given by Collective2 API (See https://collective2.com/api-docs/latest#createNewSystem)
+        /// </summary>
+        private const int _collective2SystemId = 0;
 
-        private const string _numeraiPublicId = ""; // Replace this value with your Numerai Signals Public ID
-        private const string _numeraiSecretId = ""; // Replace this value with your Numerai Signals Secret ID
-        private const string _numeraiModelId = ""; // Replace this value with your Numerai Signals Model ID
-
-        private PortfolioTarget[] _targets = new PortfolioTarget[14];
-
-        private bool _emaFastWasAbove;
-
-        private bool _emaFastIsNotSet;
+        /// <summary>
+        /// Field to set your platform ID given by Collective2 (See https://collective2.com/api-docs/latest)
+        /// </summary>
+        private const string _collective2PlatformId = "";
 
         private readonly int _fastPeriod = 100;
         private readonly int _slowPeriod = 200;
-
         private ExponentialMovingAverage _fast;
         private ExponentialMovingAverage _slow;
+        private bool _emaFastWasAbove;
+        private bool _emaFastIsNotSet;
 
-        protected List<string> Symbols = new List<string>
+        private PortfolioTarget[] _targets = new PortfolioTarget[5];
+        
+        /// <summary>
+        /// Symbols accepted by Collective2. Collective2 accepts stock,
+        /// future, forex, index and option symbols
+        /// </summary>
+        private List<Pair<string, SecurityType>> _symbols = new()
         {
-            "SPY",
-            "AIG",
-            "GOOGL",
-            "AAPL",
-            "AMZN",
-            "TSLA",
-            "NFLX",
-            "INTC",
-            "MSFT",
-            "KO",
-            "WMT",
-            "IBM",
-            "AMGN",
-            "CAT"
+            new Pair<string, SecurityType>("SPY", SecurityType.Equity),
+            new Pair<string, SecurityType>("ES", SecurityType.Future),
+            new Pair<string, SecurityType>("EURUSD", SecurityType.Forex),
+            new Pair<string, SecurityType>("SPX", SecurityType.Index),
+            new Pair<string, SecurityType>("SPY", SecurityType.Option),
         };
 
         /// <summary>
-        /// Initialize the date and add all equity symbols present in Symbols list
+        /// Initialize the date and add all equity symbols present in _symbols list.
+        /// Besides, make a new PortfolioTarget for each symbol in _symbols, assign it
+        /// an initial quantity of 0.05 and save it in _targets array
         /// </summary>
         public override void Initialize()
         {
@@ -80,9 +80,12 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 11);
             SetCash(100 * 1000);
 
-            foreach (var symbol in Symbols)
+            var index = 0;
+            foreach (var item in _symbols)
             {
-                AddEquity(symbol);
+                var symbol = AddSecurity(item.second, item.first).Symbol;
+                _targets[index] = new PortfolioTarget(symbol, (decimal)0.05);
+                index++;
             }
 
             _fast = EMA("SPY", _fastPeriod);
@@ -91,16 +94,14 @@ namespace QuantConnect.Algorithm.CSharp
             // Initialize this flag, to check when the ema indicators crosses between themselves
             _emaFastIsNotSet = true;
 
-            // Set the signal export providers
-            SignalExport.AddSignalExportProviders(new Collective2SignalExport(_collective2ApiKey, _collective2SystemId));
-            SignalExport.AddSignalExportProviders(new CrunchDAOSignalExport(_crunchDAOApiKey, _crunchDAOModel));
-            SignalExport.AddSignalExportProviders(new NumeraiSignalExport(_numeraiPublicId, _numeraiSecretId, _numeraiModelId));
+            // Set Collective2 signal export provider
+            SignalExport.AddSignalExportProviders(new Collective2SignalExport(_collective2ApiKey, _collective2SystemId, _collective2PlatformId));
         }
 
         /// <summary>
         /// Reduce the quantity of holdings for SPY or increase it, depending the case, 
-        /// when the EMA's indicators crosses between themselves, then send a signal to the 3rd party
-        /// API's already defined
+        /// when the EMA's indicators crosses between themselves, then send a signal to 
+        /// Collective2 API
         /// </summary>
         /// <param name="slice"></param>
         public override void OnData(Slice slice)
@@ -109,7 +110,6 @@ namespace QuantConnect.Algorithm.CSharp
             if (!_fast.IsReady || !_slow.IsReady) return;
 
             // Set the value of flag _emaFastWasAbove, to know when the ema indicators crosses between themselves
-            // Additionally, set an initial amount for each target
             if (_emaFastIsNotSet)
             {
                 if (_fast > _slow * 1.001m)
@@ -121,43 +121,22 @@ namespace QuantConnect.Algorithm.CSharp
                     _emaFastWasAbove = false;
                 }
                 _emaFastIsNotSet = false;
-
-                SetInitialSignalValueForTargets();
             }
 
             // Check whether ema fast and ema slow crosses. If they do, set holdings to SPY
-            // or reduce its holdings, and send signals to the 3rd party API's defined above
+            // or reduce its holdings, change its value in _targets array and send signals
+            // to the Collective2 API from _targets array
             if ((_fast > _slow * 1.001m) && (!_emaFastWasAbove))
             {
-                SetHoldingsToSpyAndSendSignals((decimal)0.1);
+                SetHoldings("SPY", 0.1);
+                _targets[0] = new PortfolioTarget(Portfolio["SPY"].Symbol, (decimal)0.1);
+                SignalExport.SetTargetPortfolio(_targets);
             }
             else if ((_fast < _slow * 0.999m) && (_emaFastWasAbove))
             {
-                SetHoldingsToSpyAndSendSignals((decimal)0.01);
-            }
-        }
-
-        /// <summary>
-        /// Set Holdings to SPY and sends signals to the different 3rd party API's already defined
-        /// </summary>
-        /// <param name="quantity">Percentage of holdings to set to SPY</param>
-        public virtual void SetHoldingsToSpyAndSendSignals(decimal quantity)
-        {
-            SetHoldings("SPY", quantity);
-            _targets[0] = new PortfolioTarget(Portfolio["SPY"].Symbol, quantity);
-            SignalExport.SetTargetPortfolio(this, _targets);
-        }
-        
-        /// <summary>
-        /// Set initial signal value for each portfolio target in _targets array
-        /// </summary>
-        public virtual void SetInitialSignalValueForTargets()
-        {
-            int index = 0;
-            foreach (var symbol in Symbols)
-            {
-                _targets[index] = new PortfolioTarget(Portfolio[symbol].Symbol, (decimal)0.05);
-                index++;
+                SetHoldings("SPY", 0.01);
+                _targets[0] = new PortfolioTarget(Portfolio["SPY"].Symbol, (decimal)0.01);
+                SignalExport.SetTargetPortfolio(_targets);
             }
         }
 
@@ -174,42 +153,42 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 11743;
+        public long DataPoints => 28745;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public int AlgorithmHistoryDataPoints => 7594;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "2"},
-            {"Average Win", "0.00%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "13.574%"},
+            {"Total Trades", "6"},
+            {"Average Win", "0%"},
+            {"Average Loss", "0.00%"},
+            {"Compounding Annual Return", "13.086%"},
             {"Drawdown", "0.000%"},
-            {"Expectancy", "0"},
-            {"Net Profit", "0.163%"},
-            {"Sharpe Ratio", "13.636"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "0.159%"},
+            {"Sharpe Ratio", "13.384"},
             {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
+            {"Loss Rate", "100%"},
+            {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.043"},
+            {"Alpha", "0.04"},
             {"Beta", "0.033"},
             {"Annual Standard Deviation", "0.008"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-8.71"},
+            {"Information Ratio", "-8.723"},
             {"Tracking Error", "0.215"},
-            {"Treynor Ratio", "3.295"},
-            {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$130000000.00"},
+            {"Treynor Ratio", "3.211"},
+            {"Total Fees", "$6.00"},
+            {"Estimated Strategy Capacity", "$38000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "2.00%"},
-            {"OrderListHash", "c275d939b91d3a24b4af6746fe3764c1"}
+            {"Portfolio Turnover", "2.14%"},
+            {"OrderListHash", "37f7df4b973e64be3052832a3fc566aa"}
         };
     }
 }

@@ -266,41 +266,35 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             Assert.IsFalse(result);
         }
 
-        [Test]
-        public void SignalExportManagerGetsCorrectPortfolioTargetArray()
-        {
-            var symbols = new List<Symbol>()
-            {
-                Symbols.SPY,
-                Symbols.AAPL
-            };
+        [TestCase(SecurityType.Equity,"SPY", 68)]
+        [TestCase(SecurityType.Equity,"AAPL", -68)]
+        [TestCase(SecurityType.Equity,"GOOG", 345)]
+        [TestCase(SecurityType.Equity, "IBM", 0)]
+        [TestCase(SecurityType.Forex, "EURUSD", 90)]
+        [TestCase(SecurityType.Forex, "EURUSD", -90)]
+        [TestCase(SecurityType.Index, "SPX", 20)]
+        [TestCase(SecurityType.Index, "SPX", -20)]
+        [TestCase(SecurityType.Future, "ES", 4)]
+        [TestCase(SecurityType.Future, "ES", -4)]
 
+        public void SignalExportManagerGetsCorrectPortfolioTargetArray(SecurityType securityType, string ticker, int quantity)
+        {
             var algorithm = new AlgorithmStub(true);
             algorithm.SetFinishedWarmingUp();
             algorithm.SetCash(100000);
 
-            var expectedPortfolioTargets = new Dictionary<string, string>();
+            var security = algorithm.AddSecurity(securityType, ticker);
+            security.SetMarketPrice(new Tick(new DateTime(2022, 01, 04), security.Symbol, 144.80m, 144.82m));
+            security.Holdings.SetHoldings(144.81m, quantity);
 
-            var spy = algorithm.AddSecurity(SecurityType.Equity, symbols[0].Value);
-            spy.SetMarketPrice(new Tick(new DateTime(2022, 01, 04), spy.Symbol, 10.0001m, 10.0001m));
-            spy.Holdings.SetHoldings(10.00000000m, 99900);
-            expectedPortfolioTargets.Add("SPY", "0.4540913218970736629667003027");
-
-            var aapl = algorithm.AddSecurity(SecurityType.Equity, symbols[1].Value);
-            aapl.SetMarketPrice(new Tick(new DateTime(2022, 01, 04), aapl.Symbol, 10.0001m, 10.0001m));
-            aapl.Holdings.SetHoldings(10.00000000m, 100);
-            expectedPortfolioTargets.Add("AAPL", "0.0004545458677648385014681685");
-
-
-            var signalExportManagerHandler = new SignalExportManagerHandler();
-            var result = signalExportManagerHandler.GetPortfolioTargets(algorithm, out PortfolioTarget[] portfolioTargets);
+            var signalExportManagerHandler = new SignalExportManagerHandler(algorithm);
+            var result = signalExportManagerHandler.GetPortfolioTargets(out PortfolioTarget[] portfolioTargets);
 
             Assert.IsTrue(result);
-
-            foreach (var target in portfolioTargets)
-            {
-                Assert.AreEqual(expectedPortfolioTargets[target.Symbol.Value], target.Quantity.ToString());
-            }
+            var target = portfolioTargets[0];
+            var targetQuantity = (int)PortfolioTarget.Percent(algorithm, target.Symbol, target.Quantity).Quantity;
+            // The quantites can differ by one because of the number of lots for certain securities
+            Assert.AreEqual(quantity, targetQuantity, 1);
         }
 
         [Test]
@@ -310,8 +304,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             algorithm.SetFinishedWarmingUp();
             algorithm.SetCash(-100000);
 
-            var signalExportManagerHandler = new SignalExportManagerHandler();
-            Assert.IsFalse(signalExportManagerHandler.GetPortfolioTargets(algorithm, out _));
+            var signalExportManagerHandler = new SignalExportManagerHandler(algorithm);
+            Assert.IsFalse(signalExportManagerHandler.GetPortfolioTargets(out _));
         }
 
         private static SecurityManager CreateSecurityManager(List<Symbol> symbols)
@@ -334,7 +328,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 CreateTradeBarConfig(symbol),
-                new Cash(Currencies.USD, 0, 1m),
+                new QuantConnect.Securities.Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,
@@ -360,15 +354,19 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         /// </summary>
         private class SignalExportManagerHandler: SignalExportManager
         {
+            public SignalExportManagerHandler(IAlgorithm algorithm) : base(algorithm)
+            {
+
+            }
+
             /// <summary>
-            /// Handler method to obtain portfolio targets from the given algorithm's portfolio
+            /// Handler method to obtain portfolio targets from algorithm's portfolio
             /// </summary>
-            /// <param name="algorithm">Algorithm being ran</param>
             /// <param name="targets">An array of portfolio targets from the algorithm's Portfolio</param>
             /// <returns>True if TotalPortfolioValue was bigger than zero</returns>
-            public bool GetPortfolioTargets(IAlgorithm algorithm, out PortfolioTarget[] targets)
+            public bool GetPortfolioTargets(out PortfolioTarget[] targets)
             {
-                return base.GetPortfolioTargets(algorithm, out targets);
+                return base.GetPortfolioTargets(out targets);
             }
         }
 

@@ -38,13 +38,29 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         protected HttpClient HttpClient => _lazyClient.Value;
 
         /// <summary>
-        /// Default hashset of allowed Security types for Numerai and CrunchDAO API's
+        /// List of all SecurityTypes present in LEAN
         /// </summary>
-        protected readonly HashSet<SecurityType> DefaultAllowedSecurityTypes = new()
+        private HashSet<SecurityType> _defaultAllowedSecurityTypes = new HashSet<SecurityType>
         {
             SecurityType.Equity,
-            SecurityType.Index
+            SecurityType.Forex,
+            SecurityType.Option,
+            SecurityType.Future,
+            SecurityType.FutureOption,
+            SecurityType.Crypto,
+            SecurityType.CryptoFuture,
+            SecurityType.Cfd,
+            SecurityType.Index,
+            SecurityType.IndexOption,
         };
+
+        /// <summary>
+        /// Default hashset of allowed Security types
+        /// </summary>
+        protected virtual HashSet<SecurityType> DefaultAllowedSecurityTypes
+        {
+            get => _defaultAllowedSecurityTypes;
+        }
 
         /// <summary>
         /// Sends positions to different 3rd party API's

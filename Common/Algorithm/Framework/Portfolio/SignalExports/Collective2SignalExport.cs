@@ -81,10 +81,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 return false;
             }
 
-            var result = true;
-            result &= ConvertHoldingsToCollective2(parameters, out List<Collective2Position> positions);
+            if (ConvertHoldingsToCollective2(parameters, out List<Collective2Position> positions)) return false;
             var message = CreateMessage(positions);
-            result &= SendPositions(message);
+            var result = SendPositions(message);
 
             return result;
         }
@@ -167,9 +166,13 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <returns>Number of shares hold of the given position/returns>
         protected int ConvertPercentageToQuantity(IAlgorithm algorithm, PortfolioTarget target)
         {
-            var numberShares = (int)(PortfolioTarget.Percent(algorithm, target.Symbol, target.Quantity).Quantity);
+            var numberShares = PortfolioTarget.Percent(algorithm, target.Symbol, target.Quantity).Quantity;
 
-            return numberShares;
+            if (numberShares == null)
+            {
+                throw new NullReferenceException("Collective2SignalExport.ConvertPercentageToQuantity(): PortfolioTarget.Percent() returned null");
+            }
+            return (int)numberShares;
         }
 
         /// <summary>

@@ -68,6 +68,20 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         };
 
         /// <summary>
+        /// Hashset of Numerai allowed SecurityTypes
+        /// </summary>
+        private readonly HashSet<SecurityType> _allowedSecurityTypes = new()
+        {
+            SecurityType.Equity,
+            SecurityType.Index
+        };
+
+        /// <summary>
+        /// Hashset property of Numerai allowed SecurityTypes
+        /// </summary>
+        protected override HashSet<SecurityType> DefaultAllowedSecurityTypes => _allowedSecurityTypes;
+
+        /// <summary>
         /// NumeraiSignalExport Constructor. It obtains the required information for Numerai API requests
         /// </summary>
         /// <param name="publicId">PUBLIC_ID provided by Numerai</param>
@@ -80,7 +94,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             _publicId = publicId;
             _secretId = secretId;
             _modelId = modelId;
-            _fileName = fileName;
         }
 
         /// <summary>
@@ -98,10 +111,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             }
 
             if (!VerifyTargets(parameters.Targets, DefaultAllowedSecurityTypes)) return false;
-
-            var result = true;
-            result &= ConvertTargetsToNumerai(parameters.Targets, out string positions);
-            result &= SendPositions(positions);
+            if (ConvertTargetsToNumerai(parameters.Targets, out string positions)) return false;
+            var result = SendPositions(positions);
 
             return result;
         }

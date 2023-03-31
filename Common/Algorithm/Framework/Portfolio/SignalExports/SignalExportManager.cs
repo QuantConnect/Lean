@@ -33,29 +33,24 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         private List<ISignalExportTarget> _signalExports;
 
         /// <summary>
-        /// Flag indicating whether the current algorithm is in live mode or not
+        /// Algorithm being ran
         /// </summary>
-        private bool _isLiveMode;
+        private readonly IAlgorithm _algorithm;
 
         /// <summary>
-        /// Adds one or more signal export providers if argument is different than null
+        /// Flag to indicate if the user has tried to send signals with live mode off
         /// </summary>
-        /// <param name="signalExports">List of signal export providers</param>
-        public SignalExportManager(params ISignalExportTarget[] signalExports)
-        {
-            if (signalExports.Length != 0)
-            {
-                AddSignalExportProviders(signalExports);
-            }
-        }
+        private bool _isLiveWarningModeLog;
 
         /// <summary>
-        /// Set live mode state of the algorithm
+        /// SignalExportManager Constructor, obtains the entry information needed to send signals
+        /// and initializes the fields to be used
         /// </summary>
-        /// <param name="isLiveMode"></param>
-        public void SetLiveMode(bool isLiveMode)
+        /// <param name="algorithm">Algorithm being run</param>
+        public SignalExportManager(IAlgorithm algorithm)
         {
-            _isLiveMode = isLiveMode;
+            _algorithm = algorithm;
+            _isLiveWarningModeLog = false;
         }
 
         /// <summary>
@@ -70,35 +65,28 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         }
 
         /// <summary>
-        /// Sets the portfolio targets from the given algorihtm's Portfolio and sends them with the
+        /// Sets the portfolio targets from the algorihtm's Portfolio and sends them with the
         /// algorithm being ran to the signal exports providers already set
         /// </summary>
-        /// <param name="algorithm">Algorithm being ran</param>
         /// <returns>True if the target list could be obtained from the algorithm's Portfolio and they
         /// were successfully sent to the signal export providers</returns>
-        public bool SetTargetPortfolio(IAlgorithm algorithm)
+        public bool SetTargetPortfolioFromPortfolio()
         {
-            if (algorithm.Portfolio == null)
-            {
-                Log.Trace("SignalExportManager.SetTargetPortfolio(): Portfolio was null");
-                return false;
-            }
-
-            var result = true;
-            result &= GetPortfolioTargets(algorithm, out PortfolioTarget[] targets);
-            result &= SetTargetPortfolio(algorithm, targets);
+            if (!GetPortfolioTargets(out PortfolioTarget[] targets)) return false;
+            var result = SetTargetPortfolio(targets);
             return result;
         }
 
         /// <summary>
-        /// Obtains an array of portfolio targets from algorithm's Portfolio and returns them
+        /// Obtains an array of portfolio targets from algorithm's Portfolio and returns them.
+        /// See  <see cref="PortfolioTarget.Percent(IAlgorithm, Symbol, decimal, bool)"/> for more
+        /// information about how each symbol quantity was calculated
         /// </summary>
-        /// <param name="algorithm">Algorithm being ran</param>
         /// <param name="targets">An array of portfolio targets from the algorithm's Portfolio</param>
         /// <returns>True if TotalPortfolioValue was bigger than zero, false otherwise</returns>
-        protected bool GetPortfolioTargets(IAlgorithm algorithm, out PortfolioTarget[] targets)
+        protected bool GetPortfolioTargets(out PortfolioTarget[] targets)
         {
-            var portfolio = algorithm.Portfolio;
+            var portfolio = _algorithm.Portfolio;
             targets = new PortfolioTarget[portfolio.Values.Count];
             var index = 0;
 
@@ -111,9 +99,20 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
             foreach (var holding in portfolio.Values)
             {
-                var security = algorithm.Securities[holding.Symbol];
-                var holdingPercent = Math.Abs(security.BuyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(security, holding.Quantity))) / totalPortfolioValue;
-                targets[index] = new PortfolioTarget(holding.Symbol, holdingPercent);
+                var security = _algorithm.Securities[holding.Symbol];
+                var marginParameters = MaintenanceMarginParameters.ForQuantityAtCurrentPrice(security, holding.Quantity);
+                var adjustedPercent = security.BuyingPowerModel.GetMaintenanceMargin(marginParameters) / totalPortfolioValue;
+                var holdingPercent = adjustedPercent * security.BuyingPowerModel.GetLeverage(security);
+
+                // FreePortfolioValue is used for orders not to be rejected due to volatility when using SetHoldings and CalculateOrderQuantity
+                // Then, we need to substract its value from the TotalPortfolioValue and obtain again the holding percentage for our holding
+                var adjustedHoldingPercent = (holdingPercent * totalPortfolioValue) / (totalPortfolioValue - _algorithm.Settings.FreePortfolioValue);
+                if (holding.Quantity < 0)
+                {
+                    adjustedHoldingPercent *= -1;
+                }
+
+                targets[index] = new PortfolioTarget(holding.Symbol, adjustedHoldingPercent);
                 ++index;
             }
 
@@ -124,14 +123,18 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// Sets the portfolio targets with the given entries and sends them with the algorithm
         /// being ran to the signal exports providers set, as long as the algorithm is in live mode
         /// </summary>
-        /// <param name="algorithm">Algorithm being ran</param>
         /// <param name="portfolioTargets">One or more portfolio targets to be sent to the defined signal export providers</param>
         /// <returns>True if the portfolio targets could be sent to the different signal export providers successfully, false otherwise</returns>
-        public bool SetTargetPortfolio(IAlgorithm algorithm, params PortfolioTarget[] portfolioTargets)
+        public bool SetTargetPortfolio(params PortfolioTarget[] portfolioTargets)
         {
-            if (!_isLiveMode)
+            if (!_algorithm.LiveMode)
             {
-                Log.Trace("SignalExportManager.SetTargetPortfolio(): The algorithm must be in live mode to send signals");
+                if (!_isLiveWarningModeLog)
+                {
+                    Log.Debug("SignalExportManager.SetTargetPortfolio(): The algorithm must be in live mode to send signals");
+                    _isLiveWarningModeLog = true;
+                }
+
                 return false;
             }
 
@@ -145,7 +148,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             var signalExportTargetParameters = new SignalExportTargetParameters
             {
                 Targets = targets,
-                Algorithm = algorithm
+                Algorithm = _algorithm
             };
 
             var result = true;

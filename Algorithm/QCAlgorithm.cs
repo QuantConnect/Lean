@@ -159,7 +159,7 @@ namespace QuantConnect.Algorithm
             Securities = new SecurityManager(_timeKeeper);
             Transactions = new SecurityTransactionManager(this, Securities);
             Portfolio = new SecurityPortfolioManager(Securities, Transactions, DefaultOrderProperties);
-            SignalExport = new SignalExportManager();
+            SignalExport = new SignalExportManager(this);
             BrokerageModel = new DefaultBrokerageModel();
             Notify = new NotificationManager(false); // Notification manager defaults to disabled.
 
@@ -1567,7 +1567,6 @@ namespace QuantConnect.Algorithm
                 Notify = new NotificationManager(live);
                 TradeBuilder.SetLiveMode(live);
                 Securities.SetLiveMode(live);
-                SignalExport.SetLiveMode(live);
                 if (live)
                 {
                     SetLiveModeStartDate();
