@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Threading;
 using System.Collections.Generic;
 
 namespace QuantConnect.Util
@@ -24,7 +25,7 @@ namespace QuantConnect.Util
     /// </summary>
     public class KeyStringSynchronizer
     {
-        private readonly Dictionary<string, object> _currentStrings = new ();
+        private readonly Dictionary<string, string> _currentStrings = new ();
 
         /// <summary>
         /// Execute the given action synchronously with any other thread using the same key
@@ -54,40 +55,51 @@ namespace QuantConnect.Util
 
         private void ExecuteImplementation(string key, bool singleExecution, Action action)
         {
-            var myLock = new object();
-
-            lock (myLock)
+            lock (key)
             {
                 while (true)
                 {
-                    object currentInstance;
+                    bool lockTaken = false;
+                    string existingKey;
                     lock (_currentStrings)
                     {
-                        if(!_currentStrings.TryGetValue(key, out currentInstance))
+                        if(!_currentStrings.TryGetValue(key, out existingKey))
                         {
-                            _currentStrings[key] = currentInstance = myLock;
+                            _currentStrings[key] = existingKey = key;
                         }
                     }
 
-                    if (currentInstance == myLock)
+                    try
                     {
-                        try
+                        lockTaken = Monitor.TryEnter(existingKey);
+                        // this way we can handle reentry with no issues
+                        if (lockTaken)
                         {
-                            // happy case
-                            action();
-                            return;
-                        }
-                        finally
-                        {
-                            lock (_currentStrings)
+                            try
                             {
-                                // even if we fail we need to release it
-                                _currentStrings.Remove(key);
+                                // happy case
+                                action();
+                                return;
+                            }
+                            finally
+                            {
+                                lock (_currentStrings)
+                                {
+                                    // even if we fail we need to release it
+                                    _currentStrings.Remove(key);
+                                }
                             }
                         }
                     }
+                    finally
+                    {
+                        if (lockTaken)
+                        {
+                            Monitor.Exit(existingKey);
+                        }
+                    }
 
-                    lock (currentInstance)
+                    lock (existingKey)
                     {
                         // if we are here the thread that had the lock finished
                         if (!singleExecution)

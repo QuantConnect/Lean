@@ -26,9 +26,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public abstract class BaseDownloaderDataProvider : DefaultDataProvider
     {
         /// <summary>
-        /// Key string synchronizer instance to use
+        /// Synchronizer in charge of guaranteeing a single download per path request
         /// </summary>
-        protected static KeyStringSynchronizer KeySynchronizer { get; } = new();
+        private readonly KeyStringSynchronizer _singleDownloadSynchronizer = new();
 
         /// <summary>
         /// Helper method which guarantees each requested key is downloaded only once concurrently if required based on <see cref="NeedToDownload"/>
@@ -42,13 +42,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (NeedToDownload(key))
             {
                 // only the first thread will download the rest will wait for him to finish
-                KeySynchronizer.Execute(key, singleExecution: true, () => download(key));
+                _singleDownloadSynchronizer.Execute(key, singleExecution: true, () => download(key));
                 // single download finished, let's get the stream!
                 return GetStream(key);
             }
 
             // even if we are not downloading the file because it exists we need to synchronize because the download might still be updating the file on disk
-            return KeySynchronizer.Execute(key, () => GetStream(key));
+            return _singleDownloadSynchronizer.Execute(key, () => GetStream(key));
         }
 
         /// <summary>

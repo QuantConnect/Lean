@@ -27,6 +27,32 @@ namespace QuantConnect.Tests.Common.Util
     public class KeyStringSynchronizerTests
     {
         [Test]
+        public void ReEntrancy()
+        {
+            var synchronizer = new KeyStringSynchronizer();
+
+            var counter = 0;
+            using var cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            var task = new Task(() =>
+            {
+                var key = "someKey";
+                synchronizer.Execute(key, singleExecution: true, () =>
+                {
+                    synchronizer.Execute(key, singleExecution: true, () =>
+                    {
+                        counter++;
+                    });
+                });
+                cancellationToken.Cancel();
+            });
+            task.Start();
+
+            cancellationToken.Token.WaitHandle.WaitOne();
+
+            Assert.AreEqual(1, counter);
+        }
+
+        [Test]
         public void ExecuteOnce()
         {
             var synchronizer = new KeyStringSynchronizer();
@@ -39,7 +65,7 @@ namespace QuantConnect.Tests.Common.Util
             {
                 var task = new Task(() =>
                 {
-                    synchronizer.Execute("someKey", singleExecution: true, () =>
+                    synchronizer.Execute(new string("someKey"), singleExecution: true, () =>
                     {
                         Thread.Sleep(2000);
                         counter++;

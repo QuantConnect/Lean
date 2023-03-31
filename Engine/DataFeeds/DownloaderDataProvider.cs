@@ -32,11 +32,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class DownloaderDataProvider : BaseDownloaderDataProvider
     {
+        /// <summary>
+        /// Synchronizer in charge of guaranteeing a single operation per file path
+        /// </summary>
+        private readonly static KeyStringSynchronizer DiskSynchronizer = new();
+
         private bool _customDataDownloadError;
         private readonly ConcurrentDictionary<Symbol, Symbol> _marketHoursWarning = new();
         private readonly MarketHoursDatabase _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
         private readonly IDataDownloader _dataDownloader;
-        private readonly IDataCacheProvider _dataCacheProvider = new DiskDataCacheProvider(KeySynchronizer);
+        private readonly IDataCacheProvider _dataCacheProvider = new DiskDataCacheProvider(DiskSynchronizer);
 
         /// <summary>
         /// Creates a new instance
@@ -200,7 +205,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if(LeanData.TryParsePath(key, out var symbol, out var date, out var resolution) && resolution > Resolution.Minute && symbol.RequiresMapping())
             {
                 // because the file could be updated even after it's created because of symbol mapping we can't stream from disk
-                return KeySynchronizer.Execute(key, () =>
+                return DiskSynchronizer.Execute(key, () =>
                 {
                     var baseStream = base.Fetch(key);
                     if (baseStream != null)
@@ -208,6 +213,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         var result = new MemoryStream();
                         baseStream.CopyTo(result);
                         baseStream.Dispose();
+                        // move position back to the start
+                        result.Position = 0;
 
                         return result;
                     }
