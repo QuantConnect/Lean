@@ -190,6 +190,15 @@ public class HilbertTransformIndicator : Indicator, IIndicatorWarmUpPeriodProvid
     public override void Reset()
     {
         base.Reset();
+
+        _input.Reset();
+        _prev.Reset();
+        _detrendPrice.Reset();
+        _detrendPriceDelay2.Reset();
+        _detrendPriceDelay4.Reset();
+        _inPhaseDelay3.Reset();
+        _quadratureDelay2.Reset();
+
         InPhase.Reset();
         Quadrature.Reset();
     }
