@@ -119,14 +119,14 @@ public class HilbertTransformIndicator : Indicator, IIndicatorWarmUpPeriodProvid
     /// </summary>
     /// <param name="length">The length of the FIR filter used in the calculation of the Hilbert Transform.
     /// This parameter determines the number of filter coefficients in the FIR filter.</param>
-    /// <param name="iMult">The multiplication factor used in the calculation of the in-phase component
+    /// <param name="inPhaseMultiplicationFactor">The multiplication factor used in the calculation of the in-phase component
     /// of the Hilbert Transform. This parameter adjusts the sensitivity and responsiveness of
     /// the transform to changes in the input signal.</param>
-    /// <param name="qMult">The multiplication factor used in the calculation of the quadrature component of
+    /// <param name="quadratureMultiplicationFactor">The multiplication factor used in the calculation of the quadrature component of
     /// the Hilbert Transform. This parameter also adjusts the sensitivity and responsiveness of the
     /// transform to changes in the input signal.</param>
-    public HilbertTransformIndicator(int length = 7, decimal iMult = 0.635M, decimal qMult = 0.338M)
-        : this($"Hilbert({length}, {iMult}, {qMult})", length, iMult, qMult)
+    public HilbertTransformIndicator(int length = 7, decimal inPhaseMultiplicationFactor = 0.635M, decimal quadratureMultiplicationFactor = 0.338M)
+        : this($"Hilbert({length}, {inPhaseMultiplicationFactor}, {quadratureMultiplicationFactor})", length, inPhaseMultiplicationFactor, quadratureMultiplicationFactor)
     {
     }
 
