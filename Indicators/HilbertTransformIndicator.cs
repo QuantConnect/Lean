@@ -38,7 +38,6 @@ public class HilbertTransformIndicator : Indicator, IIndicatorWarmUpPeriodProvid
     private readonly Queue<IndicatorDataPoint> _inPhase3 = new();
     private readonly Queue<IndicatorDataPoint> _quadrature2 = new();
 
-    private int updatesCount = 0;
     private readonly int _inPhase3WarmUpPeriod;
     private readonly int _quad2WarmUpPeriod;
     private readonly int _length;
@@ -139,7 +138,7 @@ public class HilbertTransformIndicator : Indicator, IIndicatorWarmUpPeriodProvid
     /// <summary>
     /// Gets a flag indicating when this indicator is ready and fully initialized
     /// </summary>
-    public override bool IsReady => updatesCount >= WarmUpPeriod;
+    public override bool IsReady => Samples >= WarmUpPeriod;
 
     /// <summary>
     /// Computes the next value of this indicator from the given state
@@ -149,8 +148,6 @@ public class HilbertTransformIndicator : Indicator, IIndicatorWarmUpPeriodProvid
     protected override decimal ComputeNextValue(IndicatorDataPoint input)
     {
         Debug.Assert(input != null, nameof(input) + " != null");
-
-        updatesCount += 1;
 
         _input.Update(input);
         _prev.Update(input);
@@ -204,6 +201,5 @@ public class HilbertTransformIndicator : Indicator, IIndicatorWarmUpPeriodProvid
         base.Reset();
         InPhase.Reset();
         Quadrature.Reset();
-        updatesCount = 0;
     }
 }
