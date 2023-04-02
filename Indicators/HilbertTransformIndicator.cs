@@ -41,6 +41,7 @@ public class HilbertTransformIndicator : Indicator, IIndicatorWarmUpPeriodProvid
     private int updatesCount = 0;
     private readonly int _inPhase3WarmUpPeriod;
     private readonly int _quad2WarmUpPeriod;
+    private readonly int _length;
 
     /// <summary>
     /// Real (inPhase) part of complex number component of price values
@@ -67,24 +68,29 @@ public class HilbertTransformIndicator : Indicator, IIndicatorWarmUpPeriodProvid
     public HilbertTransformIndicator(string name, int length, decimal inPhaseMultiplicationFactor, decimal quadratureMultiplicationFactor)
         : base(name)
     {
-        _quad2WarmUpPeriod = length + 2;
+        _length = length;
+        _quad2WarmUpPeriod = _length + 2;
         _inPhase3WarmUpPeriod = _quad2WarmUpPeriod + InPhase3Length;
 
         _input = new Identity(name + "_input");
         _prev = new Delay(name + "_prev", length);
-        _v1 = new FunctionalIndicator<IndicatorDataPoint>(name + "_v1",
-            _ => _v1!.IsReady ? _input - _prev : decimal.Zero,
-            _ => _input.IsReady && _prev.IsReady,
-            () =>
-            {
-                _input.Reset();
-                _prev.Reset();
-            });
+        _v1 = _input.Minus(_prev);
         _v2 = new Delay(name + "_v2", 2);
         _v4 = new Delay(name + "_v4", 4);
         InPhase = new FunctionalIndicator<IndicatorDataPoint>(name + "_inPhase",
-            _ => InPhase!.IsReady ? (_v4 - _v2 * inPhaseMultiplicationFactor) * 1.25M + _inPhase3.Peek().Value * inPhaseMultiplicationFactor : decimal.Zero,
-            _ => _v2.IsReady && _v4.IsReady,
+            _ =>
+            {
+                if (!InPhase!.IsReady)
+                {
+                    return decimal.Zero;
+                }
+
+                var v2Value = _v2.IsReady ? _v2.Current.Value : decimal.Zero;
+                var v4Value = _v4.IsReady ? _v4.Current.Value : decimal.Zero;
+                var inPhase3Value = _inPhase3.Count == InPhase3Length ? _inPhase3.Peek().Value : decimal.Zero;
+                return (v4Value - v2Value * inPhaseMultiplicationFactor) * 1.25M + inPhase3Value * inPhaseMultiplicationFactor;
+            },
+            _ => Samples > _length + 2,
             () =>
             {
                 _v1.Reset();
@@ -93,8 +99,19 @@ public class HilbertTransformIndicator : Indicator, IIndicatorWarmUpPeriodProvid
                 _inPhase3.Clear();
             });
         Quadrature = new FunctionalIndicator<IndicatorDataPoint>(name + "_quad",
-            _ => Quadrature!.IsReady ? _v2 - _v1 * quadratureMultiplicationFactor + _quadrature2.Peek().Value * quadratureMultiplicationFactor : decimal.Zero,
-            _ => _v1.IsReady && _v2.IsReady,
+            _ =>
+            {
+                if (!Quadrature!.IsReady)
+                {
+                    return decimal.Zero;
+                }
+
+                var v2Value = _v2.IsReady ? _v2.Current.Value : decimal.Zero;
+                var v1Value = _v1.IsReady ? _v1.Current.Value : decimal.Zero;
+                var quadrature2Value = _quadrature2.Count == Quadrature2Length ? _quadrature2.Peek().Value : decimal.Zero;
+                return v2Value - v1Value * quadratureMultiplicationFactor + quadrature2Value * quadratureMultiplicationFactor;
+            },
+            _ => Samples > _length,
             () =>
             {
                 _v1.Reset();
@@ -137,19 +154,35 @@ public class HilbertTransformIndicator : Indicator, IIndicatorWarmUpPeriodProvid
 
         _input.Update(input);
         _prev.Update(input);
-        _v1.Update(input);
-        _v2.Update(_v1.Current);
-        _v4.Update(_v1.Current);
+
+        if (_prev.IsReady)
+        {
+            _v1.Update(input);
+        }
+
+        if (_v1.IsReady)
+        {
+            _v2.Update(_v1.Current);
+            _v4.Update(_v1.Current);
+        }
 
         InPhase.Update(input);
-        _inPhase3.Enqueue(InPhase.Current);
+        if (InPhase.IsReady)
+        {
+            _inPhase3.Enqueue(InPhase.Current);
+        }
+
         while (_inPhase3.Count > InPhase3Length)
         {
             _inPhase3.Dequeue();
         }
 
         Quadrature.Update(input);
-        _quadrature2.Enqueue(Quadrature.Current);
+        if (Quadrature.IsReady)
+        {
+            _quadrature2.Enqueue(Quadrature.Current);
+        }
+
         while (_quadrature2.Count > Quadrature2Length)
         {
             _quadrature2.Dequeue();
