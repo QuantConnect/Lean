@@ -38,9 +38,8 @@ public class HilbertTransformIndicator : Indicator, IIndicatorWarmUpPeriodProvid
     private readonly IndicatorBase<IndicatorDataPoint> _inPhase3;
     private readonly IndicatorBase<IndicatorDataPoint> _quadrature2;
 
-    private readonly int _inPhase3WarmUpPeriod;
-    private readonly int _quad2WarmUpPeriod;
-    private readonly int _length;
+    private readonly int _inPhaseWarmUpPeriod;
+    private readonly int _quadratureWarmUpPeriod;
 
     /// <summary>
     /// Real (inPhase) part of complex number component of price values
@@ -67,9 +66,9 @@ public class HilbertTransformIndicator : Indicator, IIndicatorWarmUpPeriodProvid
     public HilbertTransformIndicator(string name, int length, decimal inPhaseMultiplicationFactor, decimal quadratureMultiplicationFactor)
         : base(name)
     {
-        _length = length;
-        _quad2WarmUpPeriod = _length + 2;
-        _inPhase3WarmUpPeriod = _quad2WarmUpPeriod + InPhase3Length;
+        _quadratureWarmUpPeriod = length;
+        _inPhaseWarmUpPeriod = length + 2;
+        WarmUpPeriod = Math.Max(_quadratureWarmUpPeriod, _inPhaseWarmUpPeriod);
 
         _input = new Identity(name + "_input");
         _prev = new Delay(name + "_prev", length);
@@ -91,7 +90,7 @@ public class HilbertTransformIndicator : Indicator, IIndicatorWarmUpPeriodProvid
                 var inPhase3Value = _inPhase3.IsReady ? _inPhase3.Current.Value : decimal.Zero;
                 return (v4Value - v2Value * inPhaseMultiplicationFactor) * 1.25M + inPhase3Value * inPhaseMultiplicationFactor;
             },
-            _ => Samples > _length + 2,
+            _ => Samples > length + 2,
             () =>
             {
                 _v1.Reset();
@@ -112,7 +111,7 @@ public class HilbertTransformIndicator : Indicator, IIndicatorWarmUpPeriodProvid
                 var quadrature2Value = _quadrature2.IsReady ? _quadrature2.Current.Value : decimal.Zero;
                 return v2Value - v1Value * quadratureMultiplicationFactor + quadrature2Value * quadratureMultiplicationFactor;
             },
-            _ => Samples > _length,
+            _ => Samples > length,
             () =>
             {
                 _v1.Reset();
@@ -183,7 +182,7 @@ public class HilbertTransformIndicator : Indicator, IIndicatorWarmUpPeriodProvid
     /// <summary>
     /// Required period, in data points, for the indicator to be ready and fully initialized.
     /// </summary>
-    public int WarmUpPeriod => Math.Max(_inPhase3WarmUpPeriod, _quad2WarmUpPeriod);
+    public int WarmUpPeriod { get; }
 
     /// <summary>
     /// Resets this indicator to its initial state
