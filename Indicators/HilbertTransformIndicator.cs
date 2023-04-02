@@ -32,11 +32,11 @@ public class HilbertTransformIndicator : Indicator, IIndicatorWarmUpPeriodProvid
 
     private readonly IndicatorBase<IndicatorDataPoint> _input;
     private readonly IndicatorBase<IndicatorDataPoint> _prev;
-    private readonly IndicatorBase<IndicatorDataPoint> _v1;
-    private readonly IndicatorBase<IndicatorDataPoint> _v2;
-    private readonly IndicatorBase<IndicatorDataPoint> _v4;
-    private readonly IndicatorBase<IndicatorDataPoint> _inPhase3;
-    private readonly IndicatorBase<IndicatorDataPoint> _quadrature2;
+    private readonly IndicatorBase<IndicatorDataPoint> _detrendPrice;
+    private readonly IndicatorBase<IndicatorDataPoint> _detrendPriceDelay2;
+    private readonly IndicatorBase<IndicatorDataPoint> _detrendPriceDelay4;
+    private readonly IndicatorBase<IndicatorDataPoint> _inPhaseDelay3;
+    private readonly IndicatorBase<IndicatorDataPoint> _quadratureDelay2;
 
     private readonly int _inPhaseWarmUpPeriod;
     private readonly int _quadratureWarmUpPeriod;
@@ -72,11 +72,11 @@ public class HilbertTransformIndicator : Indicator, IIndicatorWarmUpPeriodProvid
 
         _input = new Identity(name + "_input");
         _prev = new Delay(name + "_prev", length);
-        _v1 = _input.Minus(_prev);
-        _v2 = new Delay(name + "_v2", 2);
-        _v4 = new Delay(name + "_v4", 4);
-        _inPhase3 = new Delay(name + "_inPhase3", 2);
-        _quadrature2 = new Delay(name + "_inPhase3", 1);
+        _detrendPrice = _input.Minus(_prev);
+        _detrendPriceDelay2 = new Delay(name + "_detrendPriceDelay2", 2);
+        _detrendPriceDelay4 = new Delay(name + "_detrendPriceDelay4", 4);
+        _inPhaseDelay3 = new Delay(name + "_inPhaseDelay3", 2);
+        _quadratureDelay2 = new Delay(name + "_quadratureDelay2", 1);
         InPhase = new FunctionalIndicator<IndicatorDataPoint>(name + "_inPhase",
             _ =>
             {
@@ -85,18 +85,18 @@ public class HilbertTransformIndicator : Indicator, IIndicatorWarmUpPeriodProvid
                     return decimal.Zero;
                 }
 
-                var v2Value = _v2.IsReady ? _v2.Current.Value : decimal.Zero;
-                var v4Value = _v4.IsReady ? _v4.Current.Value : decimal.Zero;
-                var inPhase3Value = _inPhase3.IsReady ? _inPhase3.Current.Value : decimal.Zero;
+                var v2Value = _detrendPriceDelay2.IsReady ? _detrendPriceDelay2.Current.Value : decimal.Zero;
+                var v4Value = _detrendPriceDelay4.IsReady ? _detrendPriceDelay4.Current.Value : decimal.Zero;
+                var inPhase3Value = _inPhaseDelay3.IsReady ? _inPhaseDelay3.Current.Value : decimal.Zero;
                 return (v4Value - v2Value * inPhaseMultiplicationFactor) * 1.25M + inPhase3Value * inPhaseMultiplicationFactor;
             },
             _ => Samples > length + 2,
             () =>
             {
-                _v1.Reset();
-                _v2.Reset();
-                _v4.Reset();
-                _inPhase3.Reset();
+                _detrendPrice.Reset();
+                _detrendPriceDelay2.Reset();
+                _detrendPriceDelay4.Reset();
+                _inPhaseDelay3.Reset();
             });
         Quadrature = new FunctionalIndicator<IndicatorDataPoint>(name + "_quad",
             _ =>
@@ -106,17 +106,17 @@ public class HilbertTransformIndicator : Indicator, IIndicatorWarmUpPeriodProvid
                     return decimal.Zero;
                 }
 
-                var v2Value = _v2.IsReady ? _v2.Current.Value : decimal.Zero;
-                var v1Value = _v1.IsReady ? _v1.Current.Value : decimal.Zero;
-                var quadrature2Value = _quadrature2.IsReady ? _quadrature2.Current.Value : decimal.Zero;
+                var v2Value = _detrendPriceDelay2.IsReady ? _detrendPriceDelay2.Current.Value : decimal.Zero;
+                var v1Value = _detrendPrice.IsReady ? _detrendPrice.Current.Value : decimal.Zero;
+                var quadrature2Value = _quadratureDelay2.IsReady ? _quadratureDelay2.Current.Value : decimal.Zero;
                 return v2Value - v1Value * quadratureMultiplicationFactor + quadrature2Value * quadratureMultiplicationFactor;
             },
             _ => Samples > length,
             () =>
             {
-                _v1.Reset();
-                _v2.Reset();
-                _quadrature2.Reset();
+                _detrendPrice.Reset();
+                _detrendPriceDelay2.Reset();
+                _quadratureDelay2.Reset();
             });
     }
 
@@ -155,25 +155,25 @@ public class HilbertTransformIndicator : Indicator, IIndicatorWarmUpPeriodProvid
 
         if (_prev.IsReady)
         {
-            _v1.Update(input);
+            _detrendPrice.Update(input);
         }
 
-        if (_v1.IsReady)
+        if (_detrendPrice.IsReady)
         {
-            _v2.Update(_v1.Current);
-            _v4.Update(_v1.Current);
+            _detrendPriceDelay2.Update(_detrendPrice.Current);
+            _detrendPriceDelay4.Update(_detrendPrice.Current);
         }
 
         InPhase.Update(input);
         if (InPhase.IsReady)
         {
-            _inPhase3.Update(InPhase.Current);
+            _inPhaseDelay3.Update(InPhase.Current);
         }
 
         Quadrature.Update(input);
         if (Quadrature.IsReady)
         {
-            _quadrature2.Update(Quadrature.Current);
+            _quadratureDelay2.Update(Quadrature.Current);
         }
 
         return input.Value;
