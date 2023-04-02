@@ -27,9 +27,6 @@ namespace QuantConnect.Indicators;
 /// </summary>
 public class HilbertTransformIndicator : Indicator, IIndicatorWarmUpPeriodProvider
 {
-    private const int Quadrature2Length = 2;
-    private const int InPhase3Length = 3;
-
     private readonly IndicatorBase<IndicatorDataPoint> _input;
     private readonly IndicatorBase<IndicatorDataPoint> _prev;
     private readonly IndicatorBase<IndicatorDataPoint> _detrendPrice;
@@ -37,9 +34,6 @@ public class HilbertTransformIndicator : Indicator, IIndicatorWarmUpPeriodProvid
     private readonly IndicatorBase<IndicatorDataPoint> _detrendPriceDelay4;
     private readonly IndicatorBase<IndicatorDataPoint> _inPhaseDelay3;
     private readonly IndicatorBase<IndicatorDataPoint> _quadratureDelay2;
-
-    private readonly int _inPhaseWarmUpPeriod;
-    private readonly int _quadratureWarmUpPeriod;
 
     /// <summary>
     /// Real (inPhase) part of complex number component of price values
@@ -66,9 +60,9 @@ public class HilbertTransformIndicator : Indicator, IIndicatorWarmUpPeriodProvid
     public HilbertTransformIndicator(string name, int length, decimal inPhaseMultiplicationFactor, decimal quadratureMultiplicationFactor)
         : base(name)
     {
-        _quadratureWarmUpPeriod = length;
-        _inPhaseWarmUpPeriod = length + 2;
-        WarmUpPeriod = Math.Max(_quadratureWarmUpPeriod, _inPhaseWarmUpPeriod);
+        var quadratureWarmUpPeriod = length;
+        var inPhaseWarmUpPeriod = length + 2;
+        WarmUpPeriod = Math.Max(quadratureWarmUpPeriod, inPhaseWarmUpPeriod);
 
         _input = new Identity(name + "_input");
         _prev = new Delay(name + "_prev", length);
