@@ -82,7 +82,7 @@ namespace QuantConnect.Securities.Option
             var feesInAccountCurrency = parameters.CurrencyConverter.ConvertToAccountCurrency(fees.Value);
 
             var value = parameters.Order.GetValue(parameters.Security);
-            var orderMargin = value * GetMarginRequirement(parameters.Security, value);
+            var orderMargin = value * GetMarginRequirement(parameters.Security, parameters.Order.Quantity, value);
 
             return orderMargin + Math.Sign(orderMargin) * feesInAccountCurrency.Amount;
         }
@@ -109,15 +109,7 @@ namespace QuantConnect.Securities.Option
                         * security.SymbolProperties.ContractMultiplier
                         * security.Price
                         * quantity;
-            return new InitialMargin(value * GetMarginRequirement(security, value));
-        }
-
-        /// <summary>
-        /// The percentage of the holding's absolute cost that must be held in free cash in order to avoid a margin call
-        /// </summary>
-        private decimal GetMaintenanceMarginRequirement(Security security, decimal holding)
-        {
-            return GetMarginRequirement(security, holding);
+            return new InitialMargin(value * GetMarginRequirement(security, quantity, value));
         }
 
         /// <summary>
@@ -126,52 +118,6 @@ namespace QuantConnect.Securities.Option
         private decimal GetMaintenanceMarginRequirement(MaintenanceMarginParameters parameters)
         {
             return GetMarginRequirement(parameters.Security, parameters.Quantity, parameters.HoldingsCost);
-        }
-
-        /// <summary>
-        /// Private method takes option security and its holding and returns required margin. Method considers all short positions naked.
-        /// </summary>
-        /// <param name="security">Option security</param>
-        /// <param name="value">Holding value</param>
-        /// <returns></returns>
-        private decimal GetMarginRequirement(Security security, decimal value)
-        {
-            var option = (Option) security;
-
-            if (value == 0m ||
-                option.Close == 0m ||
-                option.StrikePrice == 0m ||
-                option.Underlying == null ||
-                option.Underlying.Close == 0m)
-            {
-                return 0m;
-            }
-
-            if (value > 0m)
-            {
-                return OptionMarginRequirement;
-            }
-
-            var absValue = -value;
-            var optionProperties = (OptionSymbolProperties) option.SymbolProperties;
-            var underlying = option.Underlying;
-
-            // inferring ratios of the option and its underlying to get underlying security value
-            var multiplierRatio = underlying.SymbolProperties.ContractMultiplier / optionProperties.ContractMultiplier;
-            var quantityRatio = optionProperties.ContractUnitOfTrade;
-            var priceRatio = underlying.Close / (absValue / quantityRatio);
-            var underlyingValueRatio = multiplierRatio * quantityRatio * priceRatio;
-
-            // calculating underlying security value less out-of-the-money amount
-            var amountOTM = option.Right == OptionRight.Call
-                ? Math.Max(0, option.StrikePrice - underlying.Close)
-                : Math.Max(0, underlying.Close - option.StrikePrice);
-            var priceRatioOTM = amountOTM / (absValue / quantityRatio);
-            var underlyingValueRatioOTM = multiplierRatio * quantityRatio * priceRatioOTM;
-
-            return OptionMarginRequirement +
-                   option.Holdings.AbsoluteQuantity * Math.Max(NakedPositionMarginRequirement * underlyingValueRatio,
-                       NakedPositionMarginRequirementOtm * underlyingValueRatio - underlyingValueRatioOTM);
         }
 
         /// <summary>

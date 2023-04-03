@@ -412,31 +412,26 @@ namespace QuantConnect.Tests.Common.Securities
                 quantity.Value);
         }
 
-        // This test set showcases some odd behaviour by our OptionMarginModel margin requirement calculation.
+        // For -1.5% target (15k), we can short -2 contracts for 478 margin requirement per unit
+        [TestCase(0, -2, -.015)] // Open Short (0 + -2 = -2)
+        [TestCase(-1, -1, -.015)] // Short to Shorter (-1 + -1 = -2)
+        [TestCase(-2, 0, -.015)] // No action
+        [TestCase(2, -4, -.015)] // Long To Short (2 + -4 = -2)
 
-        // ~-1.5% Target (~-15K). If we are already shorted or long we reduce holdings to 0, this is because the requirement for a
-        // short option position is at base ~-200K, but the issue is if we have zero holdings it allows us to buy -31 contracts for
-        // 478 margin requirement per unit. This is because the margin requirement seems to be contingent upon the current holdings.
-        [TestCase(-31, 31, -.015)] // Short to Short (-31 + 31 = 0)
-        [TestCase(0, -31, -.015)] // Open Short (0 + -31 = -31)
-        [TestCase(31, -31, -.015)] // Long To Short (31 + -31 = 0)
+        // -40% Target (~-400k), we can short -58 contracts for 478 margin requirement per unit
+        [TestCase(0, -58, -0.40)] // Open Short (0 + -58 = -58)
+        [TestCase(-2, -56, -0.40)] // Short to Shorter (-2 + -56 = -58)
+        [TestCase(2, -60, -0.40)] // Long To Short (2 + -60 = -58)
 
-        // -40% Target (~-400k), All end up at different allocations.
-        // This is because of the initial margin requirement calculations.
-        [TestCase(-31, -380, -0.40)] // Short to Shorter (-31 + -380 = -411)
-        [TestCase(0, -836, -0.40)] // Open Short (0 + -836 = -836)
-        [TestCase(31, -467, -0.40)] // Long To Short (31 + -467 = -436)
-
-        // 40% Target (~400k), All end up at different allocations.
-        // This is because of the initial margin requirement calculations.
-        [TestCase(-31, 855, 0.40)] // Short to Long (-31 + 855 = 824)
+        // 40% Target (~400k), we can buy 836 contracts
         [TestCase(0, 836, 0.40)] // Open Long (0 + 836 = 836)
-        [TestCase(31, 818, 0.40)] // Long To Longer (31 + 818 = 849)
+        [TestCase(-2, 838, 0.40)] // Short to Long (-2 + 838 = 836)
+        [TestCase(2, 834, 0.40)] // Long To Longer (2 + 834 = 836)
 
         // ~0.04% Target (~400). This is below the needed margin for one unit. We end up at 0 holdings for all cases.
-        [TestCase(-31, 31, 0.0004)] // Short to Long (-31 + 31 = 0)
         [TestCase(0, 0, 0.0004)] // Open Long (0 + 0 = 0)
-        [TestCase(31, -31, 0.0004)] // Long To Longer (31 + -31 = 0)
+        [TestCase(-2, 2, 0.0004)] // Short to Long (-2 + 2 = 0)
+        [TestCase(2, -2, 0.0004)] // Long To Longer (2 + -2 = 0)
         public void CallOTM_MarginRequirement(int startingHoldings, int expectedOrderSize, decimal targetPercentage)
         {
             // Initialize algorithm
@@ -451,6 +446,7 @@ namespace QuantConnect.Tests.Common.Securities
             var option = algorithm.AddOptionContract(optionSymbol);
 
             option.Holdings.SetHoldings(4.74m, startingHoldings);
+            Assert.GreaterOrEqual(algorithm.Portfolio.MarginRemaining, 0);
             option.FeeModel = new ConstantFeeModel(0);
             option.SetLeverage(1);
 
@@ -463,6 +459,15 @@ namespace QuantConnect.Tests.Common.Securities
             var model = new OptionMarginModel();
             var result = model.GetMaximumOrderQuantityForTargetBuyingPower(algorithm.Portfolio, option, targetPercentage, 0);
             Assert.AreEqual(expectedOrderSize, result.Quantity);
+
+            var initialPortfolioValue = algorithm.Portfolio.TotalPortfolioValue;
+            var initialMarginUsed = algorithm.Portfolio.TotalMarginUsed;
+            option.Holdings.SetHoldings(4.74m, result.Quantity + startingHoldings);
+
+            if (option.Holdings.Invested)
+            {
+                Assert.LessOrEqual(Math.Abs(initialMarginUsed - algorithm.Portfolio.TotalMarginUsed), initialPortfolioValue * Math.Abs(targetPercentage));
+            }
         }
 
         [TestCase(0)]
@@ -513,6 +518,11 @@ namespace QuantConnect.Tests.Common.Securities
             {
                 // No holdings for the option, so no maintenance margin expected
                 Assert.AreEqual(0m, buyingPowerModel.GetMaintenanceMargin(optionCall));
+            }
+            else
+            {
+                // Margin = 10 * 100 * (14 + 0.2 * 196) = 53200
+                Assert.AreEqual(53200m, buyingPowerModel.GetMaintenanceMargin(optionCall));
             }
 
             // Short option positions are very expensive in terms of margin.

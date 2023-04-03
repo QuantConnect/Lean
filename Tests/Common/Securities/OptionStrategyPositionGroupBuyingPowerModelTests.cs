@@ -97,73 +97,8 @@ namespace QuantConnect.Tests.Common.Securities
             _portfolio.Securities.Add(_putOption.Symbol, _putOption);
         }
 
-        [TestCase(-10, true)]
-        [TestCase(-12, true)]
-        [TestCase(-20, false)]
-        public void TestHasSufficientBuyingPowerForShortOrderWithoutInitialHoldings(decimal strategyQuantity, bool hasSufficientBuyingPower)
-        {
-            const decimal price = 1.2345m;
-            const decimal underlyingPrice = 200m;
-
-            _equity.SetMarketPrice(new Tick { Value = underlyingPrice });
-            _putOption.SetMarketPrice(new Tick { Value = price });
-            _callOption.SetMarketPrice(new Tick { Value = price });
-
-            var optionStrategy = OptionStrategies.Straddle(_callOption.Symbol.Canonical, 192, new DateTime(2016, 2, 22));
-            var buyingPowerModel = new OptionStrategyPositionGroupBuyingPowerModel(optionStrategy);
-
-            var groupOrderManager = new GroupOrderManager(1, 2, strategyQuantity);
-            var orders = new List<Order>()
-            {
-                Order.CreateOrder(new SubmitOrderRequest(
-                    OrderType.ComboMarket,
-                    _callOption.Type,
-                    _callOption.Symbol,
-                    1m.GetOrderLegGroupQuantity(groupOrderManager),
-                    0,
-                    0,
-                    _algorithm.Time,
-                    "",
-                    groupOrderManager: groupOrderManager)),
-                Order.CreateOrder(new SubmitOrderRequest(
-                    OrderType.ComboMarket,
-                    _putOption.Type,
-                    _putOption.Symbol,
-                    1m.GetOrderLegGroupQuantity(groupOrderManager),
-                    0,
-                    0,
-                    _algorithm.Time,
-                    "",
-                    groupOrderManager: groupOrderManager))
-            };
-
-            var positionGroup = _portfolio.Positions.CreatePositionGroup(orders);
-            var hasSufficientBuyingPowerResult = buyingPowerModel.HasSufficientBuyingPowerForOrder(
-                new HasSufficientPositionGroupBuyingPowerForOrderParameters(_portfolio, positionGroup, orders));
-
-            Assert.AreEqual(hasSufficientBuyingPower, hasSufficientBuyingPowerResult.IsSufficient);
-
-            var positionGroupMaintenanceMargin = buyingPowerModel.GetMaintenanceMargin(
-                new PositionGroupMaintenanceMarginParameters(_portfolio, positionGroup));
-            if (hasSufficientBuyingPower)
-            {
-                Assert.Less(positionGroupMaintenanceMargin, _portfolio.MarginRemaining);
-            }
-            else
-            {
-                Assert.GreaterOrEqual(positionGroupMaintenanceMargin, _portfolio.MarginRemaining);
-            }
-        }
-
-        // Liquidating part of the position
-        [TestCase(5, true)]
-        // Liquidating the whole position
-        [TestCase(10, true)]
-        // Shorting more, but with margin left
-        [TestCase(-2, true)]
-        // Shorting even more to the point margin is no longer enough
-        [TestCase(-10, false)]
-        public void TestHasSufficientBuyingPowerForLiquidatingPartOfAStrategyPosition(decimal strategyQuantity, bool hasSufficientBuyingPower)
+        [Test]
+        public void TestHasSufficientBuyingPower([Values] bool withInitialHoldings)
         {
             const decimal price = 1.2345m;
             const decimal underlyingPrice = 200m;
@@ -171,20 +106,97 @@ namespace QuantConnect.Tests.Common.Securities
             var initialMargin = _portfolio.MarginRemaining;
 
             _equity.SetMarketPrice(new Tick { Value = underlyingPrice });
-            _putOption.SetMarketPrice(new Tick { Value = price });
-            _putOption.Holdings.SetHoldings(1m, -10);
             _callOption.SetMarketPrice(new Tick { Value = price });
-            _callOption.Holdings.SetHoldings(1.5m, -10);
+            _putOption.SetMarketPrice(new Tick { Value = price });
+
+            var initialHoldingsQuantity = withInitialHoldings ? -10 : 0;
+            _callOption.Holdings.SetHoldings(1.5m, initialHoldingsQuantity);
+            _putOption.Holdings.SetHoldings(1m, initialHoldingsQuantity);
 
             var optionStrategy = OptionStrategies.Straddle(_callOption.Symbol.Canonical, 192, new DateTime(2016, 2, 22));
-            var buyingPowerModel = new OptionStrategyPositionGroupBuyingPowerModel(
-                _callOption.Holdings.Quantity + strategyQuantity  == 0
-                    // Liquidating
-                    ? null
-                    : optionStrategy);
 
-            var groupOrderManager = new GroupOrderManager(1, 2, strategyQuantity);
-            var orders = new List<Order>()
+            var sufficientCaseConsidered = false;
+            var insufficientCaseConsidered = false;
+
+            // make sure these cases are considered:
+            // 1. liquidating part of the position
+            var partialLiquidationCaseConsidered = false;
+            // 2. liquidating the whole position
+            var fullLiquidationCaseConsidered = false;
+            // 3. shorting more, but with margin left
+            var furtherShortingWithMarginRemainingCaseConsidered = false;
+            // 4. shorting even more to the point margin is no longer enough
+            var furtherShortingWithNoMarginRemainingCaseConsidered = false;
+
+            for (var strategyQuantity = Math.Abs(initialHoldingsQuantity); strategyQuantity > -30; strategyQuantity--)
+            {
+                var buyingPowerModel = new OptionStrategyPositionGroupBuyingPowerModel(
+                    _callOption.Holdings.Quantity + strategyQuantity == 0
+                        // Liquidating
+                        ? null
+                        : optionStrategy);
+                var orders = GetStrategyOrders(strategyQuantity);
+
+                var positionGroup = _portfolio.Positions.CreatePositionGroup(orders);
+
+                var maintenanceMargin = buyingPowerModel.GetMaintenanceMargin(
+                    new PositionGroupMaintenanceMarginParameters(_portfolio, positionGroup));
+
+                var hasSufficientBuyingPowerResult = buyingPowerModel.HasSufficientBuyingPowerForOrder(
+                    new HasSufficientPositionGroupBuyingPowerForOrderParameters(_portfolio, positionGroup, orders));
+
+                Assert.AreEqual(maintenanceMargin < initialMargin, hasSufficientBuyingPowerResult.IsSufficient);
+
+                if (hasSufficientBuyingPowerResult.IsSufficient)
+                {
+                    sufficientCaseConsidered = true;
+                }
+                else
+                {
+                    Assert.IsTrue(sufficientCaseConsidered, "All 'sufficient buying power' case should have been before the 'insufficient' ones");
+
+                    insufficientCaseConsidered = true;
+                }
+
+                var newPositionQuantity = positionGroup.Quantity;
+                if (newPositionQuantity == 0)
+                {
+                    fullLiquidationCaseConsidered = true;
+                }
+                else if (newPositionQuantity < 0)
+                {
+                    if (newPositionQuantity > initialHoldingsQuantity)
+                    {
+                        partialLiquidationCaseConsidered = true;
+                    }
+                    else if (hasSufficientBuyingPowerResult.IsSufficient)
+                    {
+                        furtherShortingWithMarginRemainingCaseConsidered = true;
+                    }
+                    else
+                    {
+                        furtherShortingWithNoMarginRemainingCaseConsidered = true;
+                    }
+                }
+            }
+
+            Assert.IsTrue(sufficientCaseConsidered, "The 'sufficient buying power' case was not considered");
+            Assert.IsTrue(insufficientCaseConsidered, "The 'insufficient buying power' case was not considered");
+
+            if (withInitialHoldings)
+            {
+                Assert.IsTrue(partialLiquidationCaseConsidered, "The 'partial liquidation' case was not considered");
+                Assert.IsTrue(fullLiquidationCaseConsidered, "The 'full liquidation' case was not considered");
+            }
+
+            Assert.IsTrue(furtherShortingWithMarginRemainingCaseConsidered, "The 'further shorting with margin remaining' case was not considered");
+            Assert.IsTrue(furtherShortingWithNoMarginRemainingCaseConsidered, "The 'further shorting with no margin remaining' case was not considered");
+        }
+
+        private List<Order> GetStrategyOrders(decimal quantity)
+        {
+            var groupOrderManager = new GroupOrderManager(1, 2, quantity);
+            return new List<Order>()
             {
                 Order.CreateOrder(new SubmitOrderRequest(
                     OrderType.ComboMarket,
@@ -207,24 +219,6 @@ namespace QuantConnect.Tests.Common.Securities
                     "",
                     groupOrderManager: groupOrderManager))
             };
-
-            var positionGroup = _portfolio.Positions.CreatePositionGroup(orders);
-            var hasSufficientBuyingPowerResult = buyingPowerModel.HasSufficientBuyingPowerForOrder(
-                new HasSufficientPositionGroupBuyingPowerForOrderParameters(_portfolio, positionGroup, orders));
-
-            var positionGroupMaintenanceMargin = buyingPowerModel.GetMaintenanceMargin(
-                new PositionGroupMaintenanceMarginParameters(_portfolio, positionGroup));
-
-            Assert.AreEqual(hasSufficientBuyingPower, hasSufficientBuyingPowerResult.IsSufficient);
-
-            if (hasSufficientBuyingPower)
-            {
-                Assert.Less(positionGroupMaintenanceMargin, initialMargin);
-            }
-            else
-            {
-                Assert.GreaterOrEqual(positionGroupMaintenanceMargin, initialMargin);
-            }
         }
     }
 }
