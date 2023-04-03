@@ -67,7 +67,7 @@ namespace QuantConnect.Tests.Common.Util
                 {
                     synchronizer.Execute(new string("someKey"), singleExecution: true, () =>
                     {
-                        Thread.Sleep(2000);
+                        Thread.Sleep(4000);
                         counter++;
                     });
 
