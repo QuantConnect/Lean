@@ -30,6 +30,12 @@ namespace QuantConnect.Algorithm.CSharp
     /// either way Lean has to detect the option strategy been executed and margin used has to get reduced</remarks>
     public class OptionEquityBearCallSpreadSetHoldingsRegressionAlgorithm : OptionEquityBaseStrategyRegressionAlgorithm
     {
+        public override void Initialize()
+        {
+            base.Initialize();
+            SetCash(1000000);
+        }
+
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
@@ -50,12 +56,12 @@ namespace QuantConnect.Algorithm.CSharp
                     var shortCall = callContracts.First();
                     var longCall = callContracts.First(contract => contract.Strike > shortCall.Strike && contract.Expiry == shortCall.Expiry);
 
-                    SetHoldings(shortCall.Symbol, -0.20m);
+                    SetHoldings(shortCall.Symbol, -0.05m);
                     var freeMargin = Portfolio.MarginRemaining;
 
                     AssertDefaultGroup(shortCall.Symbol, Securities[shortCall.Symbol].Holdings.Quantity);
 
-                    SetHoldings(longCall.Symbol, +0.20m);
+                    SetHoldings(longCall.Symbol, +0.05m);
                     var freeMarginPostTrade = Portfolio.MarginRemaining;
 
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.BearCallSpread.Name);
@@ -103,10 +109,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$3.25"},
-            {"Estimated Strategy Capacity", "$4600000.00"},
+            {"Estimated Strategy Capacity", "$33000000.00"},
             {"Lowest Capacity Asset", "GOOCV WBGM95TAH2LI|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "36.93%"},
-            {"OrderListHash", "44036cc16c7da789eaf2dbb47070c6cb"}
+            {"Portfolio Turnover", "6.17%"},
+            {"OrderListHash", "354a85b9f17c89e921c3eb57e48ce909"}
         };
     }
 }
