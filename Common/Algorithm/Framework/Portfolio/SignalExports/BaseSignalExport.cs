@@ -45,7 +45,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             SecurityType.Crypto,
             SecurityType.CryptoFuture,
             SecurityType.Cfd,
-            SecurityType.Index,
             SecurityType.IndexOption,
         };
 

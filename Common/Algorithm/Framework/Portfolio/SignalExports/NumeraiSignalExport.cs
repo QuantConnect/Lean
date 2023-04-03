@@ -72,8 +72,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// </summary>
         private readonly HashSet<SecurityType> _allowedSecurityTypes = new()
         {
-            SecurityType.Equity,
-            SecurityType.Index
+            SecurityType.Equity
         };
 
         /// <summary>

@@ -148,9 +148,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 case SecurityType.Forex:
                     typeOfSymbol = "forex";
                     break;
-                case SecurityType.Index:
-                    typeOfSymbol = "index";
-                    break;
                 case SecurityType.IndexOption:
                     typeOfSymbol = "option";
                     break;
