@@ -43,5 +43,13 @@ namespace QuantConnect.Brokerages
             Symbol = symbol;
             Position = position;
         }
+
+        /// <summary>
+        /// Returns the string representation of this event
+        /// </summary>
+        public override string ToString()
+        {
+            return $"{Symbol} position: {Position}";
+        }
     }
 }

@@ -16,11 +16,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -45,6 +45,14 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2021, 1, 4);
             SetEndDate(2021, 1, 31);
             SetCash(1000000);
+
+            SetSecurityInitializer(new CompositeSecurityInitializer(SecurityInitializer,
+                new FuncSecurityInitializer((security) =>
+                {
+                    var option = security as Option;
+                    // avoid getting assigned
+                    option?.SetOptionAssignmentModel(new NullOptionAssignmentModel());
+                })));
 
             _spx = AddIndex("SPX", Resolution.Minute).Symbol;
 

@@ -71,7 +71,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             base.ProcessSynchronousEvents();
 
-            _brokerage.SimulateMarket();
             _brokerage.Scan();
 
             // Run our delistings processing, only do this once a slice
@@ -89,7 +88,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             base.ProcessAsynchronousEvents();
 
-            _brokerage.SimulateMarket();
             _brokerage.Scan();
         }
 

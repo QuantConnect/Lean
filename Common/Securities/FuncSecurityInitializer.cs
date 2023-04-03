@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,6 +15,8 @@
 */
 
 using System;
+using Python.Runtime;
+using QuantConnect.Util;
 
 namespace QuantConnect.Securities
 {
@@ -24,6 +26,19 @@ namespace QuantConnect.Securities
     public class FuncSecurityInitializer : ISecurityInitializer
     {
         private readonly Action<Security> _initializer;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FuncSecurityInitializer"/> class
+        /// </summary>
+        /// <param name="initializer">The functional implementation of <see cref="ISecurityInitializer.Initialize"/></param>
+        public FuncSecurityInitializer(PyObject initializer)
+        {
+            _initializer = PythonUtil.ToAction<Security>(initializer);
+            if (_initializer == null)
+            {
+                throw new InvalidOperationException("FuncSecurityInitializer constructor requires an action taking a single security instance as an argument");
+            }
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FuncSecurityInitializer"/> class

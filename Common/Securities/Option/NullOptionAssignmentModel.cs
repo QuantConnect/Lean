@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -13,22 +13,21 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
-using QuantConnect.Interfaces;
-using QuantConnect.Packets;
-
-namespace QuantConnect.Brokerages.Backtesting
+namespace QuantConnect.Securities.Option
 {
     /// <summary>
-    /// Backtesting Market Simulation interface, that must be implemented by all simulators of market conditions run during backtest
+    /// The null option assignment model, that will disable automatic order assignment
     /// </summary>
-    public interface IBacktestingMarketSimulation
+    public class NullOptionAssignmentModel : IOptionAssignmentModel
     {
         /// <summary>
-        /// Method is called by backtesting brokerage to simulate market conditions. 
+        /// Get's the option assignments to generate if any
         /// </summary>
-        /// <param name="brokerage">Backtesting brokerage instance</param>
-        /// <param name="algorithm">Algorithm instance</param>
-        void SimulateMarketConditions(IBrokerage brokerage, IAlgorithm algorithm);
+        /// <param name="parameters">The option assignment parameters data transfer object</param>
+        /// <returns>The option assignment result</returns>
+        public OptionAssignmentResult GetAssignment(OptionAssignmentParameters parameters)
+        {
+            return OptionAssignmentResult.Null;
+        }
     }
 }
