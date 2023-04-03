@@ -16,7 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
+
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
@@ -44,6 +44,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2021, 1, 4);
             SetEndDate(2021, 1, 31);
+            SetCash(1000000);
 
             _spx = AddIndex("SPX", Resolution.Minute).Symbol;
 
@@ -184,28 +185,28 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "2"},
-            {"Average Win", "50.03%"},
+            {"Average Win", "5.00%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-76.172%"},
-            {"Drawdown", "12.200%"},
+            {"Compounding Annual Return", "-12.811%"},
+            {"Drawdown", "1.200%"},
             {"Expectancy", "0"},
-            {"Net Profit", "-9.594%"},
-            {"Sharpe Ratio", "-2.017"},
-            {"Probabilistic Sharpe Ratio", "0.506%"},
+            {"Net Profit", "-0.959%"},
+            {"Sharpe Ratio", "-3.005"},
+            {"Probabilistic Sharpe Ratio", "0.483%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "100%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.629"},
-            {"Beta", "0.188"},
-            {"Annual Standard Deviation", "0.307"},
-            {"Annual Variance", "0.095"},
-            {"Information Ratio", "-2.04"},
-            {"Tracking Error", "0.326"},
-            {"Treynor Ratio", "-3.302"},
+            {"Alpha", "-0.093"},
+            {"Beta", "0.019"},
+            {"Annual Standard Deviation", "0.031"},
+            {"Annual Variance", "0.001"},
+            {"Information Ratio", "-0.99"},
+            {"Tracking Error", "0.139"},
+            {"Treynor Ratio", "-4.919"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "SPX XL80P3GHDZXQ|SPX 31"},
-            {"Portfolio Turnover", "1.93%"},
+            {"Portfolio Turnover", "0.19%"},
             {"OrderListHash", "e7cbe009c8a1f81580e2307789979302"}
         };
     }
