@@ -20,10 +20,12 @@ using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 using QuantConnect.Securities.Positions;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -39,66 +41,24 @@ namespace QuantConnect.Tests.Common.Securities
         [SetUp]
         public void Setup()
         {
-            _algorithm = new();
+            _algorithm = new AlgorithmStub();
             _algorithm.SetCash(100000);
             _portfolio = _algorithm.Portfolio;
 
-            var tz = TimeZones.NewYork;
+            _equity = _algorithm.AddEquity("SPY");
 
-            _equity = new(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
-                new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
+            var strike = 200m;
+            var expiry = new DateTime(2016, 1, 15);
 
-            _callOption = new(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(
-                    typeof(TradeBar),
-                    Symbols.SPY_C_192_Feb19_2016,
-                    Resolution.Minute,
-                    tz,
-                    tz,
-                    true,
-                    false,
-                    false
-                ),
-                new Cash(Currencies.USD, 0, 1m),
-                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
-            _callOption.Underlying = _equity;
+            var callOptionSymbol = Symbols.CreateOptionSymbol("SPY", OptionRight.Call, strike, expiry);
+            _callOption = _algorithm.AddOptionContract(callOptionSymbol);
 
-            _putOption = new(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(
-                    typeof(TradeBar),
-                    Symbols.SPY_P_192_Feb19_2016,
-                    Resolution.Minute,
-                    tz,
-                    tz,
-                    true,
-                    false,
-                    false
-                ),
-                new Cash(Currencies.USD, 0, 1m),
-                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
-            _putOption.Underlying = _equity;
-
-            _portfolio.Securities.Add(_equity.Symbol, _equity);
-            _portfolio.Securities.Add(_callOption.Symbol, _callOption);
-            _portfolio.Securities.Add(_putOption.Symbol, _putOption);
+            var putOptionSymbol = Symbols.CreateOptionSymbol("SPY", OptionRight.Put, strike, expiry);
+            _putOption = _algorithm.AddOptionContract(putOptionSymbol);
         }
 
         [Test]
-        public void TestHasSufficientBuyingPower([Values] bool withInitialHoldings)
+        public void HasSufficientBuyingPowerForStrategyOrder([Values] bool withInitialHoldings)
         {
             const decimal price = 1.2345m;
             const decimal underlyingPrice = 200m;
@@ -113,7 +73,7 @@ namespace QuantConnect.Tests.Common.Securities
             _callOption.Holdings.SetHoldings(1.5m, initialHoldingsQuantity);
             _putOption.Holdings.SetHoldings(1m, initialHoldingsQuantity);
 
-            var optionStrategy = OptionStrategies.Straddle(_callOption.Symbol.Canonical, 192, new DateTime(2016, 2, 22));
+            var optionStrategy = OptionStrategies.Straddle(_callOption.Symbol.Canonical, _callOption.StrikePrice, _callOption.Expiry);
 
             var sufficientCaseConsidered = false;
             var insufficientCaseConsidered = false;

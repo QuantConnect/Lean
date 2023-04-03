@@ -477,8 +477,8 @@ namespace QuantConnect.Tests.Common.Securities
             // Computing the maintenance margin for a potential position is useful because it will be used to check whether there is
             // enough available buying power to open said new position.
 
-            const decimal price = 14m;
-            const decimal underlyingPrice = 196m;
+            const decimal price = 1.6m;
+            const decimal underlyingPrice = 410m;
             var tz = TimeZones.NewYork;
 
             var equity = new QuantConnect.Securities.Equity.Equity(
@@ -495,7 +495,7 @@ namespace QuantConnect.Tests.Common.Securities
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new SubscriptionDataConfig(
                     typeof(TradeBar),
-                    Symbols.SPY_C_192_Feb19_2016,
+                    Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 408m, new DateTime(2023, 04, 03)),
                     Resolution.Minute,
                     tz,
                     tz,
@@ -521,13 +521,13 @@ namespace QuantConnect.Tests.Common.Securities
             }
             else
             {
-                // Margin = 10 * 100 * (14 + 0.2 * 196) = 53200
-                Assert.AreEqual(53200m, buyingPowerModel.GetMaintenanceMargin(optionCall));
+                // Margin = 10 * 100 * (1.6 + 0.2 * 410) = 83600
+                Assert.AreEqual(83600m, buyingPowerModel.GetMaintenanceMargin(optionCall));
             }
 
             // Short option positions are very expensive in terms of margin.
-            // Margin = 2 * 100 * (14 + 0.2 * 196) = 10640
-            Assert.AreEqual(10640m, buyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(optionCall, -2)).Value);
+            // Margin = 2 * 100 * (1.6 + 0.2 * 410) = 16720
+            Assert.AreEqual(16720m, buyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(optionCall, -2)).Value);
         }
 
         private static void UpdatePrice(Security security, decimal close)
