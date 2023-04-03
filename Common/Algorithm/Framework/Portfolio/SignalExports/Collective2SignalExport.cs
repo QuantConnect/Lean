@@ -46,6 +46,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         private readonly Uri _destination;
 
         /// <summary>
+        /// The name of this signal export
+        /// </summary>
+        protected override string Name { get; } = "Collective2";
+
+        /// <summary>
         /// Collective2SignalExport constructor. It obtains the entry information for Collective2 API requests.
         /// See (https://collective2.com/api-docs/latest)
         /// </summary>
@@ -75,13 +80,15 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <returns>True if the positions were sent correctly and Collective2 sent no errors, false otherwise</returns>
         public override bool Send(SignalExportTargetParameters parameters)
         {
-            if (parameters.Targets.Count == 0)
+            if (base.Send(parameters))
             {
-                Log.Trace("Collective2SignalExport.Send(): Portfolio target list is empty");
                 return false;
             }
 
-            if (ConvertHoldingsToCollective2(parameters, out List<Collective2Position> positions)) return false;
+            if (ConvertHoldingsToCollective2(parameters, out List<Collective2Position> positions))
+            {
+                return false;
+            }
             var message = CreateMessage(positions);
             var result = SendPositions(message);
 
@@ -108,7 +115,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                     return false;
                 }
 
-                if (!ConvertTypeOfSymbol(target.Symbol, out string typeOfSymbol)) return false;
+                if (!ConvertTypeOfSymbol(target.Symbol, out string typeOfSymbol))
+                {
+                    return false;
+                }
                 positions.Add(new Collective2Position { Symbol = target.Symbol, TypeOfSymbol = typeOfSymbol, Quant = ConvertPercentageToQuantity(algorithm, target) });
             }
 
@@ -168,10 +178,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         {
             var numberShares = PortfolioTarget.Percent(algorithm, target.Symbol, target.Quantity).Quantity;
 
-            if (numberShares == null)
-            {
-                throw new NullReferenceException("Collective2SignalExport.ConvertPercentageToQuantity(): PortfolioTarget.Percent() returned null");
-            }
             return (int)numberShares;
         }
 

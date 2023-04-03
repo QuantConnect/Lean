@@ -16,7 +16,6 @@
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
-using System;
 using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
@@ -72,7 +71,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// were successfully sent to the signal export providers</returns>
         public bool SetTargetPortfolioFromPortfolio()
         {
-            if (!GetPortfolioTargets(out PortfolioTarget[] targets)) return false;
+            if (!GetPortfolioTargets(out PortfolioTarget[] targets))
+            {
+                return false;
+            }
             var result = SetTargetPortfolio(targets);
             return result;
         }
@@ -102,6 +104,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 var security = _algorithm.Securities[holding.Symbol];
                 var marginParameters = MaintenanceMarginParameters.ForQuantityAtCurrentPrice(security, holding.Quantity);
                 var adjustedPercent = security.BuyingPowerModel.GetMaintenanceMargin(marginParameters) / totalPortfolioValue;
+                // See PortfolioTarget.Percent:
+                // we normalize the target buying power by the leverage so we work in the land of margin
                 var holdingPercent = adjustedPercent * security.BuyingPowerModel.GetLeverage(security);
 
                 // FreePortfolioValue is used for orders not to be rejected due to volatility when using SetHoldings and CalculateOrderQuantity
@@ -138,7 +142,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 return false;
             }
 
-            if (portfolioTargets == null)
+            if (portfolioTargets == null || portfolioTargets.Length == 0)
             {
                 Log.Trace("SignalExportManager.SetTargetPortfolio(): No portfolio target given");
                 return false;

@@ -267,7 +267,6 @@ namespace QuantConnect.Algorithm
         public SignalExportManager SignalExport
         {
             get;
-            set;
         }
 
         /// <summary>

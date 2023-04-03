@@ -65,7 +65,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 Securities = securityManager
             };
 
-            var manager = new Collective2SignalExportHandler("", 0);
+            using var manager = new Collective2SignalExportHandler("", 0);
 
             var message = manager.GetMessageSent(new SignalExportTargetParameters { Targets = targetList, Algorithm = algorithm});
 
@@ -109,7 +109,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 Securities = securityManager
             };
 
-            var manager = new Collective2SignalExportHandler("", 0);
+            using var manager = new Collective2SignalExportHandler("", 0);
 
             var expectedQuantities = new Dictionary<string, int>()
             {
@@ -147,7 +147,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             };
 
             var securityManager = CreateSecurityManager(symbols);
-            var manager = new CrunchDAOSignalExportHandler("", "");
+            using var manager = new CrunchDAOSignalExportHandler("", "");
             var algorithm = new QCAlgorithm();
             algorithm.Securities = securityManager;
 
@@ -176,7 +176,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             }
 
             var securityManager = CreateSecurityManager(symbols);
-            var manager = new CrunchDAOSignalExport("", "");
+            using var manager = new CrunchDAOSignalExport("", "");
             var algorithm = new QCAlgorithm();
             algorithm.Securities = securityManager;
 
@@ -188,7 +188,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         public void CrunchDAOSignalExportReturnsFalseWhenPortfolioTargetListIsEmpty()
         {
             var targetList = new List<PortfolioTarget>();
-            var manager = new CrunchDAOSignalExport("", "");
+            using var manager = new CrunchDAOSignalExport("", "");
             var algorithm = new QCAlgorithm();
 
             var result = manager.Send(new SignalExportTargetParameters { Targets = targetList, Algorithm = algorithm });
@@ -212,7 +212,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new PortfolioTarget(Symbols.CAT, (decimal)0.1)
             };
 
-            var manager = new NumeraiSignalExportHandler("", "", "");
+            using var manager = new NumeraiSignalExportHandler("", "", "");
             var algorithm = new QCAlgorithm();
 
             var message = manager.GetMessageSent(new SignalExportTargetParameters { Targets = targets, Algorithm = algorithm});
@@ -238,7 +238,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new PortfolioTarget(Symbols.EURUSD, (decimal)0.1)
             };
 
-            var manager = new NumeraiSignalExport("", "", "");
+            using var manager = new NumeraiSignalExport("", "", "");
             var algorithm = new QCAlgorithm();
             var result = manager.Send(new SignalExportTargetParameters { Targets = targets, Algorithm = algorithm });
             Assert.IsFalse(result);
@@ -260,7 +260,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new PortfolioTarget(Symbols.NFLX, (decimal)0.1),
             };
 
-            var manager = new NumeraiSignalExport("", "", "");
+            using var manager = new NumeraiSignalExport("", "", "");
             var algorithm = new QCAlgorithm();
             var result = manager.Send(new SignalExportTargetParameters { Targets = targets, Algorithm = algorithm });
             Assert.IsFalse(result);
@@ -423,7 +423,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             /// <returns>Message sent to CrunchDAO API</returns>
             public string GetMessageSent(SignalExportTargetParameters parameters)
             {
-                VerifyTargets(parameters.Targets, DefaultAllowedSecurityTypes);
                 var message = ConvertToCSVFormat(parameters);
                 return message;
             }
@@ -446,7 +445,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             /// <returns>Message sent to Numerai API</returns>
             public string GetMessageSent(SignalExportTargetParameters parameters)
             {
-                VerifyTargets(parameters.Targets, DefaultAllowedSecurityTypes);
                 ConvertTargetsToNumerai(parameters.Targets, out string message);
                 return message;
             }

@@ -58,9 +58,14 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         };
 
         /// <summary>
+        /// The name of this signal export
+        /// </summary>
+        protected override string Name { get; } = "CrunchDAO";
+
+        /// <summary>
         /// HashSet property of allowed SecurityTypes for CrunchDAO
         /// </summary>
-        protected override HashSet<SecurityType> DefaultAllowedSecurityTypes => _allowedSecurityTypes;
+        protected override HashSet<SecurityType> AllowedSecurityTypes => _allowedSecurityTypes;
 
         /// <summary>
         /// CrunchDAOSignalExport constructor. It obtains the required information for CrunchDAO API requests.
@@ -87,13 +92,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <returns>True if the positions were sent to CrunchDAO succesfully and errors were returned, false otherwise</returns>
         public override bool Send(SignalExportTargetParameters parameters)
         {
-            if (parameters.Targets.Count == 0)
+            if (!base.Send(parameters))
             {
-                Log.Trace("CrunchDAOSignalExport.Send(): Portfolio target is empty");
                 return false;
             }
-
-            if (!VerifyTargets(parameters.Targets, DefaultAllowedSecurityTypes)) return false;
 
             var positions = ConvertToCSVFormat(parameters);
             var result = SendPositions(positions);

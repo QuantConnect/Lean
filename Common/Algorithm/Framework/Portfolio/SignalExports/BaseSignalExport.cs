@@ -33,11 +33,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         private Lazy<HttpClient> _lazyClient = new Lazy<HttpClient>();
 
         /// <summary>
-        /// Property to access a HttpClient
-        /// </summary>
-        protected HttpClient HttpClient => _lazyClient.Value;
-
-        /// <summary>
         /// List of all SecurityTypes present in LEAN
         /// </summary>
         private HashSet<SecurityType> _defaultAllowedSecurityTypes = new HashSet<SecurityType>
@@ -55,9 +50,20 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         };
 
         /// <summary>
+        /// The name of this signal export
+        /// </summary>
+        protected abstract string Name { get; }
+
+        /// <summary>
+        /// Property to access a HttpClient
+        /// </summary>
+
+        protected HttpClient HttpClient => _lazyClient.Value;
+
+        /// <summary>
         /// Default hashset of allowed Security types
         /// </summary>
-        protected virtual HashSet<SecurityType> DefaultAllowedSecurityTypes
+        protected virtual HashSet<SecurityType> AllowedSecurityTypes
         {
             get => _defaultAllowedSecurityTypes;
         }
@@ -67,22 +73,30 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// </summary>
         /// <param name="parameters">Holdings the user have defined to be sent to certain 3rd party API and the algorithm being ran</param>
         /// <returns>True if the positions were sent correctly and the 3rd party API sent no errors. False, otherwise</returns>
-        public abstract bool Send(SignalExportTargetParameters parameters);
+        public virtual bool Send(SignalExportTargetParameters parameters)
+        {
+            if (parameters.Targets.Count == 0)
+            {
+                Log.Trace("BaseSignalExport.Send(): Portfolio target is empty");
+                return false;
+            }
+
+            return VerifyTargets(parameters);
+        }
 
         /// <summary>
         /// Verifies the security type of every holding in the given list is allowed
         /// </summary>
-        /// <param name="holdings">A list of holdings from the portfolio,
-        /// expected to be sent to certain 3rd party API</param>
+        /// <param name="parameters">Holdings the user have defined to be sent to certain 3rd party API and the algorithm being ran</param>
         /// <param name="allowedSecurityTypes">Allowed security types defined by each 3rd party signal export provider</param>
         /// <returns>True if all the targets were allowed, false otherwise</returns>
-        protected static bool VerifyTargets(List<PortfolioTarget> holdings, HashSet<SecurityType> allowedSecurityTypes)
+        private bool VerifyTargets(SignalExportTargetParameters parameters)
         {
-            foreach (var signal in holdings)
+            foreach (var signal in parameters.Targets)
             {
-                if (!allowedSecurityTypes.Contains(signal.Symbol.SecurityType))
+                if (!AllowedSecurityTypes.Contains(signal.Symbol.SecurityType))
                 {
-                    Log.Trace($"BaseSignalExport.VerifyTargets(): {signal.Symbol.SecurityType} security type is not supported. Allowed security types: [{string.Join(",", allowedSecurityTypes)}]");
+                    parameters.Algorithm.Debug($"BaseSignalExport.VerifyTargets(): {signal.Symbol.SecurityType} security type is not supported by {Name}. Allowed security types: [{string.Join(",", AllowedSecurityTypes)}]");
                     return false;
                 }
             }

@@ -24,8 +24,7 @@ using System.Collections.Generic;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This algorithm sends a list of portfolio targets from algorithm's Portfolio
-    /// to Collective2 API every time the ema indicators crosses between themselves
+    /// This algorithm sends a list of portfolio targets to Collective2 API every time the ema indicators crosses between themselves
     /// </summary>
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="using quantconnect" />

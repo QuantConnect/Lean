@@ -77,9 +77,14 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         };
 
         /// <summary>
+        /// The name of this signal export
+        /// </summary>
+        protected override string Name { get; } = "Numerai";
+
+        /// <summary>
         /// Hashset property of Numerai allowed SecurityTypes
         /// </summary>
-        protected override HashSet<SecurityType> DefaultAllowedSecurityTypes => _allowedSecurityTypes;
+        protected override HashSet<SecurityType> AllowedSecurityTypes => _allowedSecurityTypes;
 
         /// <summary>
         /// NumeraiSignalExport Constructor. It obtains the required information for Numerai API requests
@@ -104,14 +109,21 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <returns>True if the positions were sent to Numerai API correctly and no errors were returned, false otherwise</returns>
         public override bool Send(SignalExportTargetParameters parameters)
         {
+            if (!base.Send(parameters))
+            {
+                return false;
+            }
+
             if (parameters.Targets.Count < 10)
             {
                 Log.Trace($"NumeraiSignalExport.Send(): Numerai Signals API accepts minimum 10 different signals, just found {parameters.Targets.Count}");
                 return false;
             }
 
-            if (!VerifyTargets(parameters.Targets, DefaultAllowedSecurityTypes)) return false;
-            if (ConvertTargetsToNumerai(parameters.Targets, out string positions)) return false;
+            if (ConvertTargetsToNumerai(parameters.Targets, out string positions))
+            {
+                return false;
+            }
             var result = SendPositions(positions);
 
             return result;

@@ -14,8 +14,7 @@
 from AlgorithmImports import *
 
 ### <summary>
-### This algorithm sends a list of current portfolio targets to Collective2 API every time
-### the ema indicators crosses between themselves.
+### This algorithm sends a list of portfolio targets to Collective2 API every time the ema indicators crosses between themselves.
 ### </summary>
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="using quantconnect" />
