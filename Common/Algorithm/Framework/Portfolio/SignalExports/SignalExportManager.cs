@@ -131,7 +131,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             {
                 if (!_isLiveWarningModeLog)
                 {
-                    _algorithm.Debug("SignalExportManager.SetTargetPortfolio(): The algorithm must be in live mode to send signals");
+                    _algorithm.Debug("Portfolio targets are only sent in live mode");
                     _isLiveWarningModeLog = true;
                 }
 
