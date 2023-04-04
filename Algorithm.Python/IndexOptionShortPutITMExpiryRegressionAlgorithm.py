@@ -30,6 +30,9 @@ class IndexOptionShortCallITMExpiryRegressionAlgorithm(QCAlgorithm):
         self.SetEndDate(2021, 1, 31)
         self.SetCash(1000000)
 
+        # avoid getting assigned
+        self.SetSecurityInitializer(CompositeSecurityInitializer(self.SecurityInitializer, FuncSecurityInitializer(self.CustomSecurityInitializer)))
+
         self.spx = self.AddIndex("SPX", Resolution.Minute).Symbol
 
         # Select a index option expiring ITM, and adds it to the algorithm.
@@ -101,3 +104,7 @@ class IndexOptionShortCallITMExpiryRegressionAlgorithm(QCAlgorithm):
     def OnEndOfAlgorithm(self):
         if self.Portfolio.Invested:
             raise Exception(f"Expected no holdings at end of algorithm, but are invested in: {', '.join(self.Portfolio.Keys)}")
+
+    def CustomSecurityInitializer(self, security):
+        if Extensions.IsOption(security.Symbol.SecurityType):
+            security.SetOptionAssignmentModel(NullOptionAssignmentModel())
