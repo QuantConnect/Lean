@@ -14,7 +14,7 @@
 */
 
 using Newtonsoft.Json.Linq;
-using QuantConnect.Logging;
+using QuantConnect.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -47,6 +47,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// Comment (Optional)
         /// </summary>
         private readonly string _comment;
+
+        /// <summary>
+        /// Algorithm being ran
+        /// </summary>
+        private IAlgorithm _algorithm;
 
         /// <summary>
         /// HashSet of allowed SecurityTypes for CrunchDAO
@@ -96,7 +101,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 return false;
             }
 
-            var positions = ConvertToCSVFormat(parameters);
+            if (!ConvertToCSVFormat(parameters, out string positions))
+            {
+                return false;
+            }
+
             var result = SendPositions(positions);
 
             return result;
@@ -107,19 +116,26 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// </summary>
         /// <param name="parameters">A list of holdings from the portfolio,
         /// expected to be sent to CrunchDAO API and the algorithm being ran</param>
-        /// <returns>A CSV format string of the given holdings with the required features(ticker, date, signal)</returns>
-        protected string ConvertToCSVFormat(SignalExportTargetParameters parameters)
+        /// <param name="positions">A CSV format string of the given holdings with the required features(ticker, date, signal)</param>
+        /// <returns>True if a string message with the positions could be obtained, false otherwise</returns>
+        protected bool ConvertToCSVFormat(SignalExportTargetParameters parameters, out string positions)
         {
             var holdings = parameters.Targets;
-            var algorithm = parameters.Algorithm;
-            var positions = "ticker,date,signal\n";
+            _algorithm = parameters.Algorithm;
+            positions = "ticker,date,signal\n";
 
             foreach (var holding in holdings)
             {
-                positions += $"{holding.Symbol},{algorithm.Securities[holding.Symbol].LocalTime.ToString("yyyy-MM-dd")},{holding.Quantity}\n";
+                if (holding.Quantity < 0 || holding.Quantity > 1)
+                {
+                    _algorithm.Error($"All signals must be between 0 and 1, but {holding.Symbol.Value} signal was {holding.Quantity}");
+                    return false;
+                }
+
+                positions += $"{holding.Symbol},{_algorithm.Securities[holding.Symbol].LocalTime.ToString("yyyy-MM-dd")},{holding.Quantity}\n";
             }
 
-            return positions;
+            return true;
         }
 
         /// <summary>
@@ -154,17 +170,17 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
             // Send the httpMessage
             using HttpResponseMessage response = HttpClient.PostAsync(_destination, httpMessage).Result;
-            if (!response.IsSuccessStatusCode)
-            {
-                Log.Error($"CrunchDAOSignalExport.SendPositions(): CrunchDAO API returned HttpRequestException {response.StatusCode}");
-                return false;
-            }
-
             if (response.StatusCode == System.Net.HttpStatusCode.Locked || response.StatusCode == System.Net.HttpStatusCode.Forbidden)
             {
                 var responseContent = response.Content.ReadAsStringAsync().Result;
                 var parsedResponseContent = JObject.Parse(responseContent);
-                Log.Error($"CrunchDAOSignalExport.SendPositions(): CrunchDAO API returned code: {parsedResponseContent["code"]} message:{parsedResponseContent["message"]}");
+                _algorithm.Error($"CrunchDAO API returned code: {parsedResponseContent["code"]} message:{parsedResponseContent["message"]}");
+                return false;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _algorithm.Error($"CrunchDAO API returned HttpRequestException {response.StatusCode}");
                 return false;
             }
 

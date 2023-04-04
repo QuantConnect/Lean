@@ -14,7 +14,6 @@
 */
 
 using QuantConnect.Interfaces;
-using QuantConnect.Logging;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
@@ -76,7 +75,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         {
             if (parameters.Targets.Count == 0)
             {
-                Log.Trace("BaseSignalExport.Send(): Portfolio target is empty");
+                parameters.Algorithm.Debug("Portfolio target is empty");
                 return false;
             }
 
@@ -87,7 +86,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// Verifies the security type of every holding in the given list is allowed
         /// </summary>
         /// <param name="parameters">Holdings the user have defined to be sent to certain 3rd party API and the algorithm being ran</param>
-        /// <param name="allowedSecurityTypes">Allowed security types defined by each 3rd party signal export provider</param>
         /// <returns>True if all the targets were allowed, false otherwise</returns>
         private bool VerifyTargets(SignalExportTargetParameters parameters)
         {
@@ -95,7 +93,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             {
                 if (!AllowedSecurityTypes.Contains(signal.Symbol.SecurityType))
                 {
-                    parameters.Algorithm.Debug($"BaseSignalExport.VerifyTargets(): {signal.Symbol.SecurityType} security type is not supported by {Name}. Allowed security types: [{string.Join(",", AllowedSecurityTypes)}]");
+                    parameters.Algorithm.Debug($"{signal.Symbol.SecurityType} security type is not supported by {Name}. Allowed security types: [{string.Join(",", AllowedSecurityTypes)}]");
                     return false;
                 }
             }

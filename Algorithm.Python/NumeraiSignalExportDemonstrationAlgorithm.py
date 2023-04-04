@@ -37,21 +37,27 @@ class NumeraiSignalExportDemonstrationAlgorithm(QCAlgorithm):
             symbol = self.AddEquity(ticker).Symbol
             self.targets.append(PortfolioTarget(symbol, 0.05)) # Numerai only accepts signals between 0 and 1 (exclusive)
 
-        fastPeriod = 100
-        slowPeriod = 200
-
-        self.fast = self.EMA("SPY", fastPeriod)
-        self.slow = self.EMA("SPY", slowPeriod)
+        self.fast = self.EMA("SPY", 10)
+        self.slow = self.EMA("SPY", 100)
 
         # Initialize these flags, to check when the ema indicators crosses between themselves
         self.emaFastIsNotSet = True;
         self.emaFastWasAbove = False;
 
         # Set Numerai signal export provider
-        self.numeraiPublicId = "" # Replace this value with your Numerai Signals Public ID
-        self.numeraiSecretId = "" # Replace this value with your Numerai Signals Secret ID
-        self.numeraiModelId = "" # Replace this value with your Numerai Signals Model ID
-        self.numeraiFilename = "" # Replace this values with your submission filename
+        # Numerai Public ID: This value is provided by Numerai Signals in their main webpage once you've logged in
+        # and created a API key. See (https://signals.numer.ai/account)
+        self.numeraiPublicId = ""
+
+        # Numerai Public ID: This value is provided by Numerai Signals in their main webpage once you've logged in
+        # and created a API key. See (https://signals.numer.ai/account)
+        self.numeraiSecretId = ""
+
+        # Numerai Model ID: This value is provided by Numerai Signals in their main webpage once you've logged in
+        # and created a model. See (https://signals.numer.ai/models)
+        self.numeraiModelId = ""
+
+        self.numeraiFilename = "" # Replace this values with your submission filename (Optional)
         self.SignalExport.AddSignalExportProviders(NumeraiSignalExport(self.numeraiPublicId, self.numeraiSecretId, self.numeraiModelId, self.numeraiFilename))
 
     def OnData(self, data):

@@ -32,22 +32,20 @@ namespace QuantConnect.Algorithm.CSharp
     public class Collective2PortfolioSignalExportDemonstrationAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         /// <summary>
-        /// Field to set your Collective2 API key (See https://collective2.com/api-docs/latest)
+        /// Collective2 API: This value is provided by Collective2 in their webpage in your account section (See https://collective2.com/account-info)
         /// </summary>
         private const string _collective2ApiKey = "";
 
         /// <summary>
-        /// Field to set your system ID given by Collective2 API (See https://collective2.com/api-docs/latest#createNewSystem)
+        /// Collective2 System ID: This value is found beside the system's name (strategy's name) on the main system page
         /// </summary>
         private const int _collective2SystemId = 0;
 
         /// <summary>
-        /// Field to set your platform ID given by Collective2 (See https://collective2.com/api-docs/latest)
+        /// Field to set your platform ID given by Collective2 (See https://collective2.com/api-docs/latest) (Optional)
         /// </summary>
         private const string _collective2PlatformId = "";
 
-        private readonly int _fastPeriod = 100;
-        private readonly int _slowPeriod = 200;
         private ExponentialMovingAverage _fast;
         private ExponentialMovingAverage _slow;
         private bool _emaFastWasAbove;
@@ -55,15 +53,12 @@ namespace QuantConnect.Algorithm.CSharp
 
         /// <summary>
         /// Symbols accepted by Collective2. Collective2 accepts stock,
-        /// future, forex, index and option symbols 
+        /// future, forex and option symbols 
         /// </summary>
         private List<Pair<string, SecurityType>> _symbols = new()
         {
             new Pair<string, SecurityType>("SPY", SecurityType.Equity),
-            new Pair<string, SecurityType>("ES", SecurityType.Future),
-            new Pair<string, SecurityType>("EURUSD", SecurityType.Forex),
-            new Pair<string, SecurityType>("SPX", SecurityType.Index),
-            new Pair<string, SecurityType>("SPY", SecurityType.Option),
+            new Pair<string, SecurityType>("EURUSD", SecurityType.Forex)
         };
 
         /// <summary>
@@ -80,8 +75,8 @@ namespace QuantConnect.Algorithm.CSharp
                 AddSecurity(item.second, item.first);
             }
 
-            _fast = EMA("SPY", _fastPeriod);
-            _slow = EMA("SPY", _slowPeriod);
+            _fast = EMA("SPY", 10);
+            _slow = EMA("SPY", 100);
 
             // Initialize this flag, to check when the ema indicators crosses between themselves
             _emaFastIsNotSet = true;
@@ -143,7 +138,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 28745;
+        public long DataPoints => 3944;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -158,27 +153,27 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "6"},
             {"Average Win", "0%"},
             {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "13.086%"},
-            {"Drawdown", "0.000%"},
+            {"Compounding Annual Return", "9.315%"},
+            {"Drawdown", "0.200%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "0.159%"},
-            {"Sharpe Ratio", "13.384"},
-            {"Probabilistic Sharpe Ratio", "0%"},
+            {"Net Profit", "0.114%"},
+            {"Sharpe Ratio", "5.01"},
+            {"Probabilistic Sharpe Ratio", "66.849%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.04"},
-            {"Beta", "0.033"},
-            {"Annual Standard Deviation", "0.008"},
+            {"Alpha", "-0.085"},
+            {"Beta", "0.098"},
+            {"Annual Standard Deviation", "0.022"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-8.723"},
-            {"Tracking Error", "0.215"},
-            {"Treynor Ratio", "3.211"},
+            {"Information Ratio", "-9.336"},
+            {"Tracking Error", "0.201"},
+            {"Treynor Ratio", "1.115"},
             {"Total Fees", "$6.00"},
-            {"Estimated Strategy Capacity", "$38000000.00"},
+            {"Estimated Strategy Capacity", "$28000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "2.14%"},
-            {"OrderListHash", "37f7df4b973e64be3052832a3fc566aa"}
+            {"Portfolio Turnover", "2.13%"},
+            {"OrderListHash", "f2f9bba2b756b2b7456e7ab705a08d49"}
         };
     }
 }

@@ -135,7 +135,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var symbols = new List<Symbol>()
             {
                 Symbols.SPY,
-                Symbols.SPX,
                 Symbols.AAPL,
                 Symbols.CAT
             };
@@ -143,7 +142,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var targetList = new List<PortfolioTarget>()
             {
                 new PortfolioTarget(Symbols.SPY, (decimal)0.2),
-                new PortfolioTarget(Symbols.SPX, (decimal)0.8)
+                new PortfolioTarget(Symbols.AAPL, (decimal)0.2),
+                new PortfolioTarget(Symbols.CAT, (decimal)0.2),
             };
 
             var securityManager = CreateSecurityManager(symbols);
@@ -152,7 +152,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             algorithm.Securities = securityManager;
 
             var message = manager.GetMessageSent(new SignalExportTargetParameters { Targets = targetList, Algorithm = algorithm });
-            var expectedMessage = "ticker,date,signal\nSPY R735QTJ8XC9X,2016-02-16,0.2\nSPX 31,2016-02-16,0.8\n";
+            var expectedMessage = "ticker,date,signal\nSPY R735QTJ8XC9X,2016-02-16,0.2\nAAPL R735QTJ8XC9X,2016-02-16,0.2\nCAT 2T,2016-02-16,0.2\n";
 
             Assert.AreEqual(expectedMessage, message);
         }
@@ -272,8 +272,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(SecurityType.Equity, "IBM", 0)]
         [TestCase(SecurityType.Forex, "EURUSD", 90)]
         [TestCase(SecurityType.Forex, "EURUSD", -90)]
-        [TestCase(SecurityType.Index, "SPX", 20)]
-        [TestCase(SecurityType.Index, "SPX", -20)]
         [TestCase(SecurityType.Future, "ES", 4)]
         [TestCase(SecurityType.Future, "ES", -4)]
 
@@ -423,7 +421,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             /// <returns>Message sent to CrunchDAO API</returns>
             public string GetMessageSent(SignalExportTargetParameters parameters)
             {
-                var message = ConvertToCSVFormat(parameters);
+                ConvertToCSVFormat(parameters, out string message);
                 return message;
             }
         }

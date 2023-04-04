@@ -16,7 +16,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Interfaces;
-using QuantConnect.Logging;
+using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -46,6 +46,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         private readonly Uri _destination;
 
         /// <summary>
+        /// Algorithm being ran
+        /// </summary>
+        private IAlgorithm _algorithm;
+
+        /// <summary>
         /// The name of this signal export
         /// </summary>
         protected override string Name { get; } = "Collective2";
@@ -56,12 +61,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// </summary>
         /// <param name="apiKey">API key provided by Collective2</param>
         /// <param name="systemId">Trading system's ID number</param>
-        /// <param name="platformId">Platform ID, it's only used in the Private Platform context</param>
-        public Collective2SignalExport(string apiKey, int systemId, string platformId = null)
+        /// <param name="platformId">Platform ID, it's only used in the Private Platform context. Empty string by default</param>
+        public Collective2SignalExport(string apiKey, int systemId, string platformId = "")
         {
             _apiKey = apiKey;
             _systemId = systemId;
-            if (platformId == null)
+            if (platformId.IsNullOrEmpty())
             {
                 _destination = new Uri("https://api.collective2.com/world/apiv3/setDesiredPositions");
             } 
@@ -80,12 +85,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <returns>True if the positions were sent correctly and Collective2 sent no errors, false otherwise</returns>
         public override bool Send(SignalExportTargetParameters parameters)
         {
-            if (base.Send(parameters))
+            if (!base.Send(parameters))
             {
                 return false;
             }
 
-            if (ConvertHoldingsToCollective2(parameters, out List<Collective2Position> positions))
+            if (!ConvertHoldingsToCollective2(parameters, out List<Collective2Position> positions))
             {
                 return false;
             }
@@ -104,14 +109,14 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <returns>True if the given targets could be converted to a Collective2Position list, false otherwise</returns>
         protected bool ConvertHoldingsToCollective2(SignalExportTargetParameters parameters, out List<Collective2Position> positions)
         {
-            var algorithm = parameters.Algorithm;
+            _algorithm = parameters.Algorithm;
             var targets = parameters.Targets;
             positions = new List<Collective2Position>();
             foreach (var target in targets)
             {
                 if (target == null)
                 {
-                    Log.Trace("Collective2SignalExport.ConvertHoldingsToCollective2(): One portfolio target was null");
+                    _algorithm.Error("One portfolio target was null");
                     return false;
                 }
 
@@ -119,7 +124,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 {
                     return false;
                 }
-                positions.Add(new Collective2Position { Symbol = target.Symbol, TypeOfSymbol = typeOfSymbol, Quant = ConvertPercentageToQuantity(algorithm, target) });
+                positions.Add(new Collective2Position { Symbol = target.Symbol, TypeOfSymbol = typeOfSymbol, Quant = ConvertPercentageToQuantity(_algorithm, target) });
             }
 
             return true;
@@ -132,7 +137,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <param name="targetSymbol">Symbol of the desired position</param>
         /// <param name="typeOfSymbol">The type of the symbol according to Collective2 API</param>
         /// <returns>True if the symbol's type was allowed by Collective2, false otherwise</returns>
-        private static bool ConvertTypeOfSymbol(Symbol targetSymbol, out string typeOfSymbol)
+        private bool ConvertTypeOfSymbol(Symbol targetSymbol, out string typeOfSymbol)
         {
             switch (targetSymbol.SecurityType)
             {
@@ -158,7 +163,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
             if (typeOfSymbol == "NotImplemented")
             {
-                Log.Trace($"{targetSymbol.SecurityType} security type has not been implemented by Collective2 yet.");
+                _algorithm.Error($"{targetSymbol.SecurityType} security type has not been implemented by Collective2 yet.");
                 return false;
             }
 
@@ -173,9 +178,13 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <returns>Number of shares hold of the given position/returns>
         protected int ConvertPercentageToQuantity(IAlgorithm algorithm, PortfolioTarget target)
         {
-            var numberShares = PortfolioTarget.Percent(algorithm, target.Symbol, target.Quantity).Quantity;
+            var numberShares = PortfolioTarget.Percent(algorithm, target.Symbol, target.Quantity);
+            if (numberShares == null)
+            {
+                throw new InvalidOperationException($"Collective2 failed to calculate target quantity for {target}");
+            }
 
-            return (int)numberShares;
+            return (int)numberShares.Quantity;
         }
 
         /// <summary>
@@ -209,15 +218,15 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
             if (!response.IsSuccessStatusCode)
             {
-                Log.Error($"Collective2SignalExport.SendPositions(): Collective2 API returned HttpRequestException {response.StatusCode}");
+                _algorithm.Error($"Collective2 API returned HttpRequestException {response.StatusCode}");
                 return false;
             }
 
             var responseContent = response.Content.ReadAsStringAsync().Result;
             var parsedResponseContent = JObject.Parse(responseContent);
-            if (parsedResponseContent["error"].HasValues)
+            if ((string)parsedResponseContent["ok"] == "0")
             {
-                Log.Error($"Collective2SignalExport.SendPositions(): Collective2 API returned the following errors: {string.Join(",", parsedResponseContent["error"])}");
+                _algorithm.Error($"Collective2 API returned the following errors: {string.Join(",", parsedResponseContent["error"])}");
                 return false;
             }
 

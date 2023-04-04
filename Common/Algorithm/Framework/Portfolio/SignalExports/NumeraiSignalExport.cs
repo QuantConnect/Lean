@@ -15,7 +15,7 @@
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using QuantConnect.Logging;
+using QuantConnect.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -59,6 +59,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         private readonly string _fileName;
 
         /// <summary>
+        /// Algorithm being ran
+        /// </summary>
+        private IAlgorithm _algorithm;
+
+        /// <summary>
         /// Dictionary to obtain corresponding Numerai Market name for the given LEAN market name
         /// </summary>
         private readonly Dictionary<string, string> _numeraiMarketFormat = new() // There can be stocks from other markets
@@ -98,6 +103,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             _publicId = publicId;
             _secretId = secretId;
             _modelId = modelId;
+            _fileName = fileName;
         }
 
         /// <summary>
@@ -113,13 +119,15 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 return false;
             }
 
+            _algorithm = parameters.Algorithm;
+
             if (parameters.Targets.Count < 10)
             {
-                Log.Trace($"NumeraiSignalExport.Send(): Numerai Signals API accepts minimum 10 different signals, just found {parameters.Targets.Count}");
+                _algorithm.Error($"Numerai Signals API accepts minimum 10 different signals, just found {parameters.Targets.Count}");
                 return false;
             }
 
-            if (ConvertTargetsToNumerai(parameters.Targets, out string positions))
+            if (!ConvertTargetsToNumerai(parameters.Targets, out string positions))
             {
                 return false;
             }
@@ -141,7 +149,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             {
                 if (holding.Quantity <= 0 || holding.Quantity >= 1)
                 {
-                    Log.Trace($"NumeraiSignalExport.ConvertTargetsToNumerai(): All signals must be between 0 and 1 (exclusive, but {holding.Symbol.Value} signal was {holding.Quantity}");
+                    _algorithm.Error($"All signals must be between 0 and 1 (exclusive), but {holding.Symbol.Value} signal was {holding.Quantity}");
                     return false;
                 }
 
@@ -193,14 +201,14 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             var responseContent = response.Content.ReadAsStringAsync().Result;
             if (!response.IsSuccessStatusCode)
             {
-                Log.Error($"NumeraiSignalExport.SendPositions(): Numerai API returned HttpRequestException {response.StatusCode}");
+                _algorithm.Error($"Numerai API returned HttpRequestException {response.StatusCode}");
                 return false;
             }
 
             var parsedResponseContent = JObject.Parse(responseContent);
             if (!parsedResponseContent["data"]["submissionUploadSignalsAuth"].HasValues)
             {
-                Log.Error($"NumeraiSignalExport.SendPositions(): Numerai API returned the following errors: {string.Join(",", parsedResponseContent["errors"])}");
+                _algorithm.Error($"Numerai API returned the following errors: {string.Join(",", parsedResponseContent["errors"])}");
                 return false;
             }
 
@@ -256,14 +264,14 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             var submissionResponseContent = submissionResponse.Content.ReadAsStringAsync().Result;
             if (!submissionResponse.IsSuccessStatusCode)
             {
-                Log.Error($"NumeraiSignalExport.SendPositions(): Numerai API returned HttpRequestException {submissionResponseContent}");
+                _algorithm.Error($"Numerai API returned HttpRequestException {submissionResponseContent}");
                 return false;
             }
 
             var parsedSubmissionResponseContent = JObject.Parse(submissionResponseContent);
             if (!parsedSubmissionResponseContent["data"]["createSignalsSubmission"].HasValues)
             {
-                Log.Error($"NumeraiSignalExport.SendPositions(): Numerai API returned the following errors: {string.Join(",", parsedSubmissionResponseContent["errors"])}");
+                _algorithm.Error($"Numerai API returned the following errors: {string.Join(",", parsedSubmissionResponseContent["errors"])}");
                 return false;
             }
 

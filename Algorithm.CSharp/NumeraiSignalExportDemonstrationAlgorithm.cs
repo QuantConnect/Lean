@@ -33,17 +33,30 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="securities and portfolio" />
     public class NumeraiSignalExportDemonstrationAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private const string _numeraiPublicId = ""; // Replace this value with your Numerai Signals Public ID
-        private const string _numeraiSecretId = ""; // Replace this value with your Numerai Signals Secret ID
-        private const string _numeraiModelId = ""; // Replace this value with your Numerai Signals Model ID
-        private const string _numeraiFilename = ""; // Replace this value with your submission filename
+        /// <summary>
+        /// Numerai Public ID: This value is provided by Numerai Signals in their main webpage once you've logged in
+        /// and created a API key. See (https://signals.numer.ai/account)
+        /// </summary>
+        private const string _numeraiPublicId = "";
+
+        /// <summary>
+        /// Numerai Public ID: This value is provided by Numerai Signals in their main webpage once you've logged in
+        /// and created a API key. See (https://signals.numer.ai/account)
+        /// </summary>
+        private const string _numeraiSecretId = "";
+
+        /// <summary>
+        /// Numerai Model ID: This value is provided by Numerai Signals in their main webpage once you've logged in
+        /// and created a model. See (https://signals.numer.ai/models)
+        /// </summary>
+        private const string _numeraiModelId = "";
+
+        private const string _numeraiFilename = ""; // Replace this value with your submission filename (Optional)
 
         private PortfolioTarget[] _targets = new PortfolioTarget[14];
 
         private bool _emaFastWasAbove;
         private bool _emaFastIsNotSet;
-        private readonly int _fastPeriod = 100;
-        private readonly int _slowPeriod = 200;
         private ExponentialMovingAverage _fast;
         private ExponentialMovingAverage _slow;
 
@@ -81,11 +94,11 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 var symbol = AddEquity(ticker).Symbol;
                 _targets[index] = new PortfolioTarget(symbol, (decimal)0.05); // Numerai only accepts signals between 0 and 1 (exclusive)
-
+                index++;
             }
 
-            _fast = EMA("SPY", _fastPeriod);
-            _slow = EMA("SPY", _slowPeriod);
+            _fast = EMA("SPY", 10);
+            _slow = EMA("SPY", 100);
 
             // Initialize this flag, to check when the ema indicators crosses between themselves
             _emaFastIsNotSet = true;
@@ -161,30 +174,30 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "2"},
-            {"Average Win", "0.00%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "13.574%"},
-            {"Drawdown", "0.000%"},
-            {"Expectancy", "0"},
-            {"Net Profit", "0.163%"},
-            {"Sharpe Ratio", "13.636"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
+            {"Total Trades", "6"},
+            {"Average Win", "0%"},
+            {"Average Loss", "0.00%"},
+            {"Compounding Annual Return", "9.315%"},
+            {"Drawdown", "0.200%"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "0.114%"},
+            {"Sharpe Ratio", "5.01"},
+            {"Probabilistic Sharpe Ratio", "66.849%"},
+            {"Loss Rate", "100%"},
+            {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.043"},
-            {"Beta", "0.033"},
-            {"Annual Standard Deviation", "0.008"},
+            {"Alpha", "-0.085"},
+            {"Beta", "0.098"},
+            {"Annual Standard Deviation", "0.022"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-8.71"},
-            {"Tracking Error", "0.215"},
-            {"Treynor Ratio", "3.295"},
-            {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$130000000.00"},
+            {"Information Ratio", "-9.336"},
+            {"Tracking Error", "0.201"},
+            {"Treynor Ratio", "1.115"},
+            {"Total Fees", "$6.00"},
+            {"Estimated Strategy Capacity", "$28000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "2.00%"},
-            {"OrderListHash", "c275d939b91d3a24b4af6746fe3764c1"}
+            {"Portfolio Turnover", "2.13%"},
+            {"OrderListHash", "f2f9bba2b756b2b7456e7ab705a08d49"}
         };
     }
 }

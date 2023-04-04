@@ -14,7 +14,6 @@
 */
 
 using QuantConnect.Interfaces;
-using QuantConnect.Logging;
 using QuantConnect.Securities;
 using System.Collections.Generic;
 
@@ -95,7 +94,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             var totalPortfolioValue = portfolio.TotalPortfolioValue;
             if (totalPortfolioValue <= 0)
             {
-                Log.Error("SignalExportManager.GetPortfolioTargets(): Total portfolio value was less than or equal to 0");
+                _algorithm.Error("Total portfolio value was less than or equal to 0");
                 return false;
             }
 
@@ -139,12 +138,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                     _isLiveWarningModeLog = true;
                 }
 
-                return false;
+                return true;
             }
 
             if (portfolioTargets == null || portfolioTargets.Length == 0)
             {
-                Log.Trace("SignalExportManager.SetTargetPortfolio(): No portfolio target given");
+                _algorithm.Debug("No portfolio target given");
                 return false;
             }
 

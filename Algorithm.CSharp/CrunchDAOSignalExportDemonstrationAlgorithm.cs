@@ -23,7 +23,7 @@ using System.Collections.Generic;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This algorithm sends an array of current portfolio targets to CrunchDAO API
+    /// This algorithm sends a current portfolio target to CrunchDAO API
     /// every time the ema indicators crosses between themselves
     /// </summary>
     /// <meta name="tag" content="using data" />
@@ -31,24 +31,28 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="securities and portfolio" />
     public class CrunchDAOSignalExportDemonstrationAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private const string _crunchDAOApiKey = ""; // Replace this value with your CrunchDAO API key
-        private const string _crunchDAOModel = ""; // Replace this value with your model's name
+        /// <summary>
+        /// CrunchDAO API key: This value is provided by CrunchDAO when you sign up
+        /// </summary>
+        private const string _crunchDAOApiKey = "";
+
+        /// <summary>
+        /// CrunchDAO Model ID: When your email is verified, you can find this value in your CrunchDAO profile main page:
+        /// See (https://tournament.crunchdao.com/profile/alpha)
+        /// </summary>
+        private const string _crunchDAOModel = "";
+
         private const string _crunchDAOSubmissionName = ""; // Replace this value with the name for your submission (Optional)
         private const string _crunchDAOComment = ""; // Replace this value with a comment for your submission (Optional)
 
-        private readonly int _fastPeriod = 100;
-        private readonly int _slowPeriod = 200;
         private ExponentialMovingAverage _fast;
         private ExponentialMovingAverage _slow;
         private bool _emaFastWasAbove;
         private bool _emaFastIsNotSet;
-
-        private PortfolioTarget[] _targets = new PortfolioTarget[2];
         private Symbol _spy;
-        private Symbol _spx;
 
         /// <summary>
-        /// Initialize the date and add one equity and one index, as CrunchDAO
+        /// Initialize the date and add one equity symbol, as CrunchDAO
         /// only accepts stock and index symbols
         /// </summary>
         public override void Initialize()
@@ -58,15 +62,9 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100 * 1000);
 
             _spy = AddEquity("SPY").Symbol;
-            _spx = AddIndex("SPX").Symbol;
 
-            // Create a new PortfolioTarget for each symbol, assign it an initial quantity of 0.05
-            // and save it in _targets array
-            _targets[0] = new PortfolioTarget(_spy, (decimal)0.05);
-            _targets[1] = new PortfolioTarget(_spx, (decimal)0.05);
-
-            _fast = EMA("SPY", _fastPeriod);
-            _slow = EMA("SPY", _slowPeriod);
+            _fast = EMA("SPY", 10);
+            _slow = EMA("SPY", 100);
 
             // Initialize this flag, to check when the ema indicators crosses between themselves
             _emaFastIsNotSet = true;
@@ -101,23 +99,19 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             // Check whether ema fast and ema slow crosses. If they do, set holdings to SPY
-            // or reduce its holdings, update its value in _targets and send signals to
-            // CrunchDAO API from _targets array
+            // or reduce its holdings, update its value in target and send signals to
+            // CrunchDAO API from target
             if ((_fast > _slow * 1.001m) && (!_emaFastWasAbove))
             {
                 SetHoldings("SPY", 0.1);
-                SetHoldings("SPX", 0.01);
-                _targets[0] = new PortfolioTarget(_spy, (decimal)0.1);
-                _targets[1] = new PortfolioTarget(_spx, (decimal)0.01);
-                SignalExport.SetTargetPortfolio(_targets);
+                var target= new PortfolioTarget(_spy, (decimal)0.1);
+                SignalExport.SetTargetPortfolio(target);
             }
             else if ((_fast < _slow * 0.999m) && (_emaFastWasAbove))
             {
                 SetHoldings("SPY", 0.01);
-                SetHoldings("SPX", 0.1);
-                _targets[0] = new PortfolioTarget(_spy, (decimal)0.01);
-                _targets[1] = new PortfolioTarget(_spx, (decimal)0.1);
-                SignalExport.SetTargetPortfolio(_targets);
+                var target = new PortfolioTarget(_spy, (decimal)0.01);
+                SignalExport.SetTargetPortfolio(target);
             }
         }
 
@@ -134,7 +128,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 3944;
+        public long DataPoints => 3943;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -146,30 +140,30 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "2"},
-            {"Average Win", "0.00%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "13.574%"},
-            {"Drawdown", "0.000%"},
-            {"Expectancy", "0"},
-            {"Net Profit", "0.163%"},
-            {"Sharpe Ratio", "13.636"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
+            {"Total Trades", "6"},
+            {"Average Win", "0%"},
+            {"Average Loss", "0.00%"},
+            {"Compounding Annual Return", "9.315%"},
+            {"Drawdown", "0.200%"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "0.114%"},
+            {"Sharpe Ratio", "5.01"},
+            {"Probabilistic Sharpe Ratio", "66.849%"},
+            {"Loss Rate", "100%"},
+            {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.043"},
-            {"Beta", "0.033"},
-            {"Annual Standard Deviation", "0.008"},
+            {"Alpha", "-0.085"},
+            {"Beta", "0.098"},
+            {"Annual Standard Deviation", "0.022"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-8.71"},
-            {"Tracking Error", "0.215"},
-            {"Treynor Ratio", "3.295"},
-            {"Total Fees", "$2.00"},
-            {"Estimated Strategy Capacity", "$130000000.00"},
+            {"Information Ratio", "-9.336"},
+            {"Tracking Error", "0.201"},
+            {"Treynor Ratio", "1.115"},
+            {"Total Fees", "$6.00"},
+            {"Estimated Strategy Capacity", "$28000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "2.00%"},
-            {"OrderListHash", "c275d939b91d3a24b4af6746fe3764c1"}
+            {"Portfolio Turnover", "2.13%"},
+            {"OrderListHash", "f2f9bba2b756b2b7456e7ab705a08d49"}
         };
     }
 }

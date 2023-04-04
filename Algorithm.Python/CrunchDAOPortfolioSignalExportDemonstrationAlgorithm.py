@@ -14,7 +14,7 @@
 from AlgorithmImports import *
 
 ### <summary>
-### This algorithm sends a list of portfolio targets from algorithm's Portfolio
+### This algorithm sends a portfolio target from algorithm's Portfolio
 ### to CrunchDAO API every time the ema indicators crosses between themselves.
 ### </summary>
 ### <meta name="tag" content="using data" />
@@ -23,35 +23,38 @@ from AlgorithmImports import *
 class CrunchDAOPortfolioSignalExportDemonstrationAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        ''' Initialize the date and add one equity and one index, as CrunchDAO only accepts stock and index symbols '''
+        ''' Initialize the date and add one equity symbol, as CrunchDAO only accepts stock and index symbols '''
 
         self.SetStartDate(2013, 10, 7)   #Set Start Date
         self.SetEndDate(2013, 10, 11)    #Set End Date
         self.SetCash(100000)             #Set Strategy Cash
 
         self.AddEquity("SPY");
-        self.AddIndex("SPX");
 
-        fastPeriod = 100
-        slowPeriod = 200
-
-        self.fast = self.EMA("SPY", fastPeriod)
-        self.slow = self.EMA("SPY", slowPeriod)
+        self.fast = self.EMA("SPY", 10)
+        self.slow = self.EMA("SPY", 100)
 
         # Initialize these flags, to check when the ema indicators crosses between themselves
         self.emaFastIsNotSet = True;
         self.emaFastWasAbove = False;
 
         # Set the CrunchDAO signal export provider
-        self.crunchDAOApiKey = "" # Replace this value with your CrunchDAO API key
-        self.crunchDAOModel = "" # Replace this value with your model's name
-        self.crunchDAOSubmissionName = "" # Replace this value with the name for your submission (Optional)
-        self.crunchDAOComment = "" # Replace this value with a comment for your submission (Optional)
+        # CrunchDAO API key: This value is provided by CrunchDAO when you sign up
+        self.crunchDAOApiKey = ""
+
+        # CrunchDAO Model ID: When your email is verified, you can find this value in your CrunchDAO profile main page: https://tournament.crunchdao.com/profile/alpha
+        self.crunchDAOModel = ""
+
+        # Replace this value with the name for your submission (Optional)
+        self.crunchDAOSubmissionName = ""
+
+        # Replace this value with a comment for your submission (Optional)
+        self.crunchDAOComment = ""
         self.SignalExport.AddSignalExportProviders(CrunchDAOSignalExport(self.crunchDAOApiKey, self.crunchDAOModel, self.crunchDAOSubmissionName, self.crunchDAOComment))
 
     def OnData(self, data):
-        ''' Reduce the quantity of holdings for one security and increase the holdings to the another
-        one when the EMA's indicators crosses between themselves, then send a signal to CrunchDAO API '''
+        ''' Reduce the quantity of holdings for spy or increase it when the EMA's indicators crosses
+        between themselves, then send a signal to CrunchDAO API '''
 
         # Wait for our indicators to be ready
         if not self.fast.IsReady or not self.slow.IsReady:
@@ -72,9 +75,7 @@ class CrunchDAOPortfolioSignalExportDemonstrationAlgorithm(QCAlgorithm):
         # or reduce its holdings, and send signals to the CrunchDAO API from your Portfolio
         if fast > slow * 1.001 and (not self.emaFastWasAbove):
             self.SetHoldings("SPY", 0.1)
-            self.SetHoldings("SPX", 0.01)
             self.SignalExport.SetTargetPortfolioFromPortfolio()
         elif fast < slow * 0.999 and (self.emaFastWasAbove):
             self.SetHoldings("SPY", 0.01)
-            self.SetHoldings("SPX", 0.1)
             self.SignalExport.SetTargetPortfolioFromPortfolio()

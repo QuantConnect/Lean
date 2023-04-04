@@ -14,7 +14,7 @@
 from AlgorithmImports import *
 
 ### <summary>
-### This algorithm sends a list of current portfolio targets to CrunchDAO API every time
+### This algorithm sends a current portfolio target to CrunchDAO API every time
 ### the ema indicators crosses between themselves.
 ### </summary>
 ### <meta name="tag" content="using data" />
@@ -23,41 +23,38 @@ from AlgorithmImports import *
 class CrunchDAOSignalExportDemonstrationAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        ''' Initialize the date and add one equity and one index, as CrunchDAO only accepts stock and index symbols '''
+        ''' Initialize the date and add one equity symbol, as CrunchDAO only accepts stock and index symbols '''
 
         self.SetStartDate(2013, 10, 7)   #Set Start Date
         self.SetEndDate(2013, 10, 11)    #Set End Date
         self.SetCash(100000)             #Set Strategy Cash
 
-        self.targets = []
-
         self.spy = self.AddEquity("SPY").Symbol;
-        self.spx = self.AddIndex("SPX").Symbol;
 
-        # Create a new PortfolioTarget for each symbol, assign it an initial quantity of 0.05 and save it self.targets list
-        self.targets.append(PortfolioTarget(self.spy, 0.05))
-        self.targets.append(PortfolioTarget(self.spx, 0.05))
-
-        fastPeriod = 100
-        slowPeriod = 200
-
-        self.fast = self.EMA("SPY", fastPeriod)
-        self.slow = self.EMA("SPY", slowPeriod)
+        self.fast = self.EMA("SPY", 10)
+        self.slow = self.EMA("SPY", 100)
 
         # Initialize these flags, to check when the ema indicators crosses between themselves
         self.emaFastIsNotSet = True;
         self.emaFastWasAbove = False;
 
         # Set the CrunchDAO signal export provider
-        self.crunchDAOApiKey = "" # Replace this value with your CrunchDAO API key
-        self.crunchDAOModel = "" # Replace this value with your model's name
-        self.crunchDAOSubmissionName = "" # Replace this value with the name for your submission (Optional)
-        self.crunchDAOComment = "" # Replace this value with a comment for your submission (Optional)
+        # CrunchDAO API key: This value is provided by CrunchDAO when you sign up
+        self.crunchDAOApiKey = ""
+
+        # CrunchDAO Model ID: When your email is verified, you can find this value in your CrunchDAO profile main page: https://tournament.crunchdao.com/profile/alpha
+        self.crunchDAOModel = ""
+
+        # Replace this value with the name for your submission (Optional)
+        self.crunchDAOSubmissionName = ""
+
+        # Replace this value with a comment for your submission (Optional)
+        self.crunchDAOComment = ""
         self.SignalExport.AddSignalExportProviders(CrunchDAOSignalExport(self.crunchDAOApiKey, self.crunchDAOModel, self.crunchDAOSubmissionName, self.crunchDAOComment))
 
     def OnData(self, data):
-        ''' Reduce the quantity of holdings for one security and increase the holdings to the another
-        one when the EMA's indicators crosses between themselves, then send a signal to CrunchDAO API '''
+        ''' Reduce the quantity of holdings for spy or increase it when the EMA's indicators crosses
+        between themselves, then send a signal to CrunchDAO API '''
 
         # Wait for our indicators to be ready
         if not self.fast.IsReady or not self.slow.IsReady:
@@ -75,17 +72,13 @@ class CrunchDAOSignalExportDemonstrationAlgorithm(QCAlgorithm):
             self.emaFastIsNotSet = False;
 
         # Check whether ema fast and ema slow crosses. If they do, set holdings to SPY
-        # or reduce its holdings,update their values in self.targets and send signals
-        # to the CrunchDAO API from self.targets
+        # or reduce its holdings,update its value in self.target and send signals
+        # to the CrunchDAO API from self.target
         if fast > slow * 1.001 and (not self.emaFastWasAbove):
             self.SetHoldings("SPY", 0.1)
-            self.SetHoldings("SPX", 0.01)
-            self.targets[0] = PortfolioTarget(self.spy, 0.1)
-            self.targets[1] = PortfolioTarget(self.spx, 0.01)
-            self.SignalExport.SetTargetPortfolio(self.targets)
+            target = PortfolioTarget(self.spy, 0.1)
+            self.SignalExport.SetTargetPortfolio(target)
         elif fast < slow * 0.999 and (self.emaFastWasAbove):
             self.SetHoldings("SPY", 0.01)
-            self.SetHoldings("SPX", 0.1)
-            self.targets[0] = PortfolioTarget(self.spy, 0.01)
-            self.targets[1] = PortfolioTarget(self.spx, 0.1)
-            self.SignalExport.SetTargetPortfolio(self.targets)
+            target = PortfolioTarget(self.spy, 0.01)
+            self.SignalExport.SetTargetPortfolio(target)

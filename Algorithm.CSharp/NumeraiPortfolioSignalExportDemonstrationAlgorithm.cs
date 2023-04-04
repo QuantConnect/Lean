@@ -32,15 +32,28 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="securities and portfolio" />
     public class NumeraiPortfolioSignalExportDemonstrationAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private const string _numeraiPublicId = ""; // Replace this value with your Numerai Signals Public ID
-        private const string _numeraiSecretId = ""; // Replace this value with your Numerai Signals Secret ID
-        private const string _numeraiModelId = ""; // Replace this value with your Numerai Signals Model ID
+        /// <summary>
+        /// Numerai Public ID: This value is provided by Numerai Signals in their main webpage once you've logged in
+        /// and created a API key. See (https://signals.numer.ai/account)
+        /// </summary>
+        private const string _numeraiPublicId = "";
+
+        /// <summary>
+        /// Numerai Public ID: This value is provided by Numerai Signals in their main webpage once you've logged in
+        /// and created a API key. See (https://signals.numer.ai/account)
+        /// </summary>
+        private const string _numeraiSecretId = "";
+
+        /// <summary>
+        /// Numerai Model ID: This value is provided by Numerai Signals in their main webpage once you've logged in
+        /// and created a model. See (https://signals.numer.ai/models)
+        /// </summary>
+        private const string _numeraiModelId = "";
+
         private const string _numeraiFilename = ""; // Replace this value with your submission filename (Optional)
 
         private bool _emaFastWasAbove;
         private bool _emaFastIsNotSet;
-        private readonly int _fastPeriod = 100;
-        private readonly int _slowPeriod = 200;
         private ExponentialMovingAverage _fast;
         private ExponentialMovingAverage _slow;
 
@@ -76,8 +89,8 @@ namespace QuantConnect.Algorithm.CSharp
                 AddEquity(ticker);
             }
 
-            _fast = EMA("SPY", _fastPeriod);
-            _slow = EMA("SPY", _slowPeriod);
+            _fast = EMA("SPY", 10);
+            _slow = EMA("SPY", 100);
 
             // Initialize this flag, to check when the ema indicators crosses between themselves
             _emaFastIsNotSet = true;
@@ -157,30 +170,30 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "8"},
-            {"Average Win", "0.00%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "31.500%"},
-            {"Drawdown", "0.400%"},
-            {"Expectancy", "0"},
-            {"Net Profit", "0.351%"},
-            {"Sharpe Ratio", "6.444"},
-            {"Probabilistic Sharpe Ratio", "68.992%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "100%"},
+            {"Total Trades", "18"},
+            {"Average Win", "0%"},
+            {"Average Loss", "0.00%"},
+            {"Compounding Annual Return", "27.847%"},
+            {"Drawdown", "0.500%"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "0.315%"},
+            {"Sharpe Ratio", "5.437"},
+            {"Probabilistic Sharpe Ratio", "65.765%"},
+            {"Loss Rate", "100%"},
+            {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.107"},
-            {"Beta", "0.2"},
-            {"Annual Standard Deviation", "0.045"},
-            {"Annual Variance", "0.002"},
-            {"Information Ratio", "-9.509"},
-            {"Tracking Error", "0.178"},
-            {"Treynor Ratio", "1.446"},
-            {"Total Fees", "$8.00"},
-            {"Estimated Strategy Capacity", "$6700000.00"},
+            {"Alpha", "-0.177"},
+            {"Beta", "0.233"},
+            {"Annual Standard Deviation", "0.052"},
+            {"Annual Variance", "0.003"},
+            {"Information Ratio", "-9.941"},
+            {"Tracking Error", "0.171"},
+            {"Treynor Ratio", "1.222"},
+            {"Total Fees", "$18.00"},
+            {"Estimated Strategy Capacity", "$5700000.00"},
             {"Lowest Capacity Asset", "AIG R735QTJ8XC9X"},
-            {"Portfolio Turnover", "4.06%"},
-            {"OrderListHash", "bd935d199d8b92a3a9eb1fa64f57b930"}
+            {"Portfolio Turnover", "4.36%"},
+            {"OrderListHash", "be4e47e5f2a5be8c6a639597578b0cc5"}
         };
     }
 }
