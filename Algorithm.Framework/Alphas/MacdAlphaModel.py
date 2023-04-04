@@ -37,6 +37,7 @@ class MacdAlphaModel(AlphaModel):
         self.resolution = resolution
         self.insightPeriod = Time.Multiply(Extensions.ToTimeSpan(resolution), fastPeriod)
         self.bounceThresholdPercent = 0.01
+        self.insightCollection = InsightCollection()
         self.symbolData = {}
 
         resolutionString = Extensions.GetEnumString(resolution, Resolution)
@@ -69,9 +70,15 @@ class MacdAlphaModel(AlphaModel):
             if direction == sd.PreviousDirection:
                 continue
 
+            sd.PreviousDirection = direction
+
+            if direction == InsightDirection.Flat:
+                self.CancelInsights(algorithm, sd.Security.Symbol)
+                continue
+
             insight = Insight.Price(sd.Security.Symbol, self.insightPeriod, direction)
-            sd.PreviousDirection = insight.Direction
             insights.append(insight)
+            self.insightCollection.Add(insight)
 
         return insights
 
@@ -86,10 +93,23 @@ class MacdAlphaModel(AlphaModel):
             self.symbolData[added.Symbol] = SymbolData(algorithm, added, self.fastPeriod, self.slowPeriod, self.signalPeriod, self.movingAverageType, self.resolution)
 
         for removed in changes.RemovedSecurities:
-            data = self.symbolData.pop(removed.Symbol, None)
+            symbol = removed.Symbol
+
+            data = self.symbolData.pop(symbol, None)
             if data is not None:
                 # clean up our consolidator
-                algorithm.SubscriptionManager.RemoveConsolidator(removed.Symbol, data.Consolidator)
+                algorithm.SubscriptionManager.RemoveConsolidator(symbol, data.Consolidator)
+                
+            # remove from insight collection manager
+            self.CancelInsights(algorithm, symbol)
+
+    def CancelInsights(self, algorithm, symbol):
+        if not self.insightCollection.ContainsKey(symbol):
+            return
+        insights = self.insightCollection[symbol]
+        algorithm.Insights.Cancel(insights)
+        self.insightCollection.Clear([ symbol ]);
+
 
 class SymbolData:
     def __init__(self, algorithm, security, fastPeriod, slowPeriod, signalPeriod, movingAverageType, resolution):

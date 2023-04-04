@@ -45,9 +45,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             var period = TimeSpan.FromDays(12);
             return new[]
             {
-                Insight.Price(Symbols.SPY, period, InsightDirection.Flat),
                 Insight.Price(Symbols.SPY, period, InsightDirection.Down),
-                Insight.Price(Symbols.SPY, period, InsightDirection.Flat),
                 Insight.Price(Symbols.SPY, period, InsightDirection.Up)
             };
         }

@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework.Alphas;
 
@@ -31,6 +32,11 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
+            const int expected = 4;
+            if (Insights.TotalCount != expected)
+            {
+                throw new Exception($"The total number of insights should be {expected}. Actual: {Insights.TotalCount}");
+            }
         }
 
         public override int AlgorithmHistoryDataPoints => 136;
@@ -41,29 +47,29 @@ namespace QuantConnect.Algorithm.CSharp
         public override Dictionary<string, string> ExpectedStatistics => new()
         {
             {"Total Trades", "38"},
-            {"Average Win", "0.35%"},
+            {"Average Win", "0.38%"},
             {"Average Loss", "-0.09%"},
-            {"Compounding Annual Return", "66.292%"},
+            {"Compounding Annual Return", "66.547%"},
             {"Drawdown", "1.800%"},
-            {"Expectancy", "2.541"},
-            {"Net Profit", "4.269%"},
-            {"Sharpe Ratio", "6.944"},
-            {"Probabilistic Sharpe Ratio", "94.826%"},
-            {"Loss Rate", "28%"},
-            {"Win Rate", "72%"},
-            {"Profit-Loss Ratio", "3.90"},
-            {"Alpha", "0.498"},
-            {"Beta", "-0.288"},
-            {"Annual Standard Deviation", "0.063"},
+            {"Expectancy", "2.700"},
+            {"Net Profit", "4.282%"},
+            {"Sharpe Ratio", "6.951"},
+            {"Probabilistic Sharpe Ratio", "94.794%"},
+            {"Loss Rate", "29%"},
+            {"Win Rate", "71%"},
+            {"Profit-Loss Ratio", "4.24"},
+            {"Alpha", "0.5"},
+            {"Beta", "-0.29"},
+            {"Annual Standard Deviation", "0.064"},
             {"Annual Variance", "0.004"},
-            {"Information Ratio", "2.763"},
+            {"Information Ratio", "2.776"},
             {"Tracking Error", "0.088"},
-            {"Treynor Ratio", "-1.528"},
-            {"Total Fees", "$75.55"},
+            {"Treynor Ratio", "-1.527"},
+            {"Total Fees", "$75.37"},
             {"Estimated Strategy Capacity", "$4900000.00"},
             {"Lowest Capacity Asset", "AIG R735QTJ8XC9X"},
-            {"Portfolio Turnover", "16.21%"},
-            {"OrderListHash", "fa61d8c4f00c03bddfef5a33c8c3aa4c"}
+            {"Portfolio Turnover", "16.18%"},
+            {"OrderListHash", "796c98641f705dc9eafc0772aa83a0ea" }
         };
     }
 }
