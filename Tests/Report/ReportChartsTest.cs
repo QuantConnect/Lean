@@ -22,7 +22,6 @@ using Python.Runtime;
 using QuantConnect.Packets;
 using QuantConnect.Report;
 using Newtonsoft.Json;
-using System.Text.RegularExpressions;
 
 namespace QuantConnect.Tests.Report
 {
