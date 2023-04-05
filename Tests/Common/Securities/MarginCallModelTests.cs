@@ -20,7 +20,9 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -254,6 +256,90 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(1, marginCallOrders.Count);
         }
 
+        [Test]
+        public void GenerateMarginCallOrdersForPositionGroup()
+        {
+            const int quantity = 25000;
+            const decimal leverage = 1m;
+            var orderProcessor = new FakeOrderProcessor();
+            var portfolio = GetPortfolio(orderProcessor, quantity);
+            portfolio.MarginCallModel = new DefaultMarginCallModel(portfolio, null);
+
+            var underlying = GetSecurity(Symbols.SPY);
+            var callOption = GetOption(Symbols.SPY_C_192_Feb19_2016);
+            var putOption = GetOption(Symbols.SPY_P_192_Feb19_2016);
+            callOption.Underlying = underlying;
+            putOption.Underlying = underlying;
+
+            portfolio.Securities.Add(underlying);
+            portfolio.Securities.Add(callOption);
+            portfolio.Securities.Add(putOption);
+
+            var time = DateTime.Now;
+            const decimal underlyingPrice = 100m;
+            const decimal callOptionPrice = 1m;
+            const decimal putOptionPrice = 1m;
+            underlying.SetMarketPrice(new Tick(time, underlying.Symbol, underlyingPrice, underlyingPrice));
+            callOption.SetMarketPrice(new Tick(time, callOption.Symbol, callOptionPrice, callOptionPrice));
+            putOption.SetMarketPrice(new Tick(time, putOption.Symbol, putOptionPrice, putOptionPrice));
+
+            var groupOrderManager = new GroupOrderManager(1, 2, -10);
+            var callOptionOrder = new ComboMarketOrder(callOption.Symbol, -10, time, groupOrderManager) { Price = callOptionPrice };
+            var putOptionOrder = new ComboMarketOrder(putOption.Symbol, -10, time, groupOrderManager) { Price = putOptionPrice };
+
+            var callOptionOrderFill = new OrderEvent(callOptionOrder, DateTime.UtcNow, OrderFee.Zero)
+            {
+                FillPrice = callOptionOrder.Price,
+                FillQuantity = callOptionOrder.Quantity,
+                Status = OrderStatus.Filled
+            };
+            var putOptionOrderFill = new OrderEvent(putOptionOrder, DateTime.UtcNow, OrderFee.Zero)
+            {
+                FillPrice = putOptionOrder.Price,
+                FillQuantity = putOptionOrder.Quantity,
+                Status = OrderStatus.Filled
+            };
+
+            orderProcessor.AddOrder(callOptionOrder);
+            orderProcessor.AddOrder(putOptionOrder);
+
+            var callOptionRequest = new SubmitOrderRequest(
+                OrderType.ComboMarket,
+                callOption.Type,
+                callOption.Symbol,
+                callOptionOrder.Quantity,
+                0,
+                0,
+                callOptionOrder.Time,
+                "",
+                groupOrderManager: groupOrderManager);
+            var putOptionRequest = new SubmitOrderRequest(
+                OrderType.ComboMarket,
+                putOption.Type,
+                putOption.Symbol,
+                putOptionOrder.Quantity,
+                0,
+                0,
+                putOptionOrder.Time,
+                "",
+                groupOrderManager: groupOrderManager);
+
+            callOptionRequest.SetOrderId(1);
+            putOptionRequest.SetOrderId(2);
+
+            groupOrderManager.OrderIds.Add(1);
+            groupOrderManager.OrderIds.Add(2);
+
+            orderProcessor.AddTicket(new OrderTicket(null, callOptionRequest));
+            orderProcessor.AddTicket(new OrderTicket(null, putOptionRequest));
+
+            portfolio.ProcessFills(new List<OrderEvent> { callOptionOrderFill, putOptionOrderFill });
+
+            var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out var issueMarginCallWarning);
+            Assert.IsTrue(issueMarginCallWarning);
+            Assert.AreEqual(2, marginCallOrders.Count);
+        }
+
         private SecurityPortfolioManager GetPortfolio(IOrderProcessor orderProcessor, int cash)
         {
             var securities = new SecurityManager(new TimeKeeper(DateTime.Now, new[] { TimeZones.NewYork }));
@@ -286,6 +372,26 @@ namespace QuantConnect.Tests.Common.Securities
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCache()
             );
+        }
+
+        private Option GetOption(Symbol symbol)
+        {
+            return new Option(
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                new SubscriptionDataConfig(
+                    typeof(TradeBar),
+                    symbol,
+                    Resolution.Minute,
+                    TimeZones.NewYork,
+                    TimeZones.NewYork,
+                    true,
+                    true,
+                    true
+                ),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null);
         }
     }
 }
