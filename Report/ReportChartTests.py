@@ -163,7 +163,7 @@ result = charts.GetLeverage(backtest, live)
 
 ## Test GetExposurePlot
 time = [pd.Timestamp(x).to_pydatetime() for x in pd.date_range('2014-10-01', periods=365)]
-long_securities = ['Equity', 'Option', 'Commodity', 'Forex', 'Future', 'Cfd', 'Crypto', 'FutureOption', 'IndexOption']
+long_securities = list(ReportCharts.color_map.keys())
 short_securities = long_securities
 long = [np.random.uniform(0, 0.5, 365) for x in long_securities]
 short = [np.random.uniform(-0.5, 0, 365) for x in short_securities]

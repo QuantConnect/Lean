@@ -51,6 +51,31 @@ namespace QuantConnect.Tests.Report
             Assert.IsNotEmpty(html);
         }
 
+        [Test]
+        public void ReportChartsColorMapWorksForEverySecurityType()
+        {
+            using (Py.GIL())
+            {
+                var reportChartsModule = Py.Import("ReportCharts");
+                var reportChartsClass = reportChartsModule.GetAttr("ReportCharts");
+                dynamic colorMap = reportChartsClass.GetAttr("color_map");
+                var chartSecurities = new HashSet<string>();
+
+                foreach (string security in colorMap.keys())
+                {
+                    chartSecurities.Add(security);
+                }
+
+                foreach (var security in Enum.GetValues(typeof(SecurityType)))
+                {
+                    if (security.ToString() != "Base" && security.ToString() != "Index")
+                    {
+                        Assert.IsTrue(chartSecurities.Contains(security.ToString()), $"{security} SecurityType is not present in ReportCharts.py color_map dictionary");
+                    }
+                }
+            }
+        }
+
         [TestCaseSource(nameof(CurrencySymbols))]
         public void EstimatedCapacityIsParsedRegardlessOfTheCurrency(string currencySymbol)
         {
