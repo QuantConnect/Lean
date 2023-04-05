@@ -74,7 +74,7 @@ namespace QuantConnect.Tests.Report
                         Assert.IsTrue(chartSecurities.Contains(security.ToString()), $"{security} SecurityType is not present in ReportCharts.py color_map dictionary");
                     }
                 }
-            }        
+            }
         }
 
         [TestCaseSource(nameof(CurrencySymbols))]
