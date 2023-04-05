@@ -34,7 +34,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2015, 12, 23);
             SetEndDate(2015, 12, 23);
-            SetCash(115000);
+            SetCash(87000);
 
             var equitySymbol = AddEquity("GOOG").Symbol;
             var optionSymbol = QuantConnect.Symbol.CreateOption(
@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Securities[_optionContractSymbol].Invested && slice.OptionChains.Count > 0)
             {
-                MarketOrder(_optionContractSymbol, -5);
+                MarketOrder(_optionContractSymbol, -6);
             }
         }
 
@@ -132,11 +132,11 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$2.25"},
+            {"Total Fees", "$2.50"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "GOOCV W6NBKMCY0IH2|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "0.23%"},
-            {"OrderListHash", "dfe06c5ccfcaf488ffee1e200553b891"}
+            {"Portfolio Turnover", "0.33%"},
+            {"OrderListHash", "367800f09758f6c7a28ecf6292e42a3c"}
         };
     }
 }

@@ -40,7 +40,6 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
 
             var equity = AddEquity("GOOG");
-            equity.SetLeverage(100);
             _symbol = equity.Symbol;
         }
 
