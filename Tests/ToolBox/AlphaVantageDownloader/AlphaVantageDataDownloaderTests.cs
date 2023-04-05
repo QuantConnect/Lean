@@ -140,8 +140,9 @@ namespace QuantConnect.Tests.ToolBox.AlphaVantageDownloader
         {
             var ticker = "IBM";
             var symbol = Symbol.Create(ticker, SecurityType.Equity, Market.USA);
-            var start = new DateTime(2021, 04, 05);
-            var end = new DateTime(2021, 05, 06);
+            var year = DateTime.UtcNow.Year - 1;
+            var start = new DateTime(year, 04, 05);
+            var end = new DateTime(year, 05, 06);
 
             var expectedBars = new[]
             {
@@ -154,11 +155,11 @@ namespace QuantConnect.Tests.ToolBox.AlphaVantageDownloader
             var responses = new[]
             {
                 "time,open,high,low,close,volume\n" +
-                "2021-04-05 10:30:00,134.3,134.56,134.245,134.34,154723\n" +
-                "2021-04-05 09:30:00,133.71,133.72,133.62,133.62,1977\n",
+                $"{year}-04-05 10:30:00,134.3,134.56,134.245,134.34,154723\n" +
+                $"{year}-04-05 09:30:00,133.71,133.72,133.62,133.62,1977\n",
                 "time,open,high,low,close,volume\n" +
-                "2021-05-06 10:30:00,134.905,134.949,134.65,134.65,101997\n" +
-                "2021-05-06 09:30:00,135.54,135.56,135.26,135.28,2315\n",
+                $"{year}-05-06 10:30:00,134.905,134.949,134.65,134.65,101997\n" +
+                $"{year}-05-06 09:30:00,135.54,135.56,135.26,135.28,2315\n",
             };
 
             var requestCount = 0;
