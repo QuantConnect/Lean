@@ -55,33 +55,26 @@ namespace QuantConnect.Tests.Report
         [Test]
         public void ReportChartsColorMapWorksForEverySecurityType()
         {
-            string colorMap;
-            var pyCode = File.ReadAllText("../../../Report/ReportCharts.py");
             using (Py.GIL())
             {
-                using PyModule scope = Py.CreateScope();
-                scope.Exec(pyCode);
-                var reportCharts = scope.Get<object>("ReportCharts");
-                var reportChartsPyObject = (PyObject)reportCharts;
-                colorMap = reportChartsPyObject.GetAttr("color_map").ToSafeString();
-            }
+                var reportChartsModule = Py.Import("ReportCharts");
+                var reportChartsClass = reportChartsModule.GetAttr("ReportCharts");
+                dynamic colorMap = reportChartsClass.GetAttr("color_map");
+                var chartSecurities = new HashSet<string>();
 
-            var pattern = new Regex("[{}' ]");
-            colorMap = pattern.Replace(colorMap, "");
-            var colorMapList = colorMap.Split(',');
-            var chartSecurities = new HashSet<string>();
-            foreach (var item in colorMapList)
-            {
-                var security = (item.Split(':')[0]);
-                chartSecurities.Add(security);
-            }
-
-            foreach(var security in Enum.GetValues(typeof(SecurityType))){
-                if (security.ToString() != "Base" && security.ToString() != "Index")
+                foreach (string security in colorMap.keys())
                 {
-                    Assert.IsTrue(chartSecurities.Contains(security.ToString()), $"{security} SecurityType is not present in ReportCharts.py color_map dictionary");
+                    chartSecurities.Add(security);
                 }
-            }
+
+                foreach (var security in Enum.GetValues(typeof(SecurityType)))
+                {
+                    if (security.ToString() != "Base" && security.ToString() != "Index")
+                    {
+                        Assert.IsTrue(chartSecurities.Contains(security.ToString()), $"{security} SecurityType is not present in ReportCharts.py color_map dictionary");
+                    }
+                }
+            }        
         }
 
         [TestCaseSource(nameof(CurrencySymbols))]
