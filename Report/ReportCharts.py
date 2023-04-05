@@ -40,6 +40,18 @@ la = matplotlib.font_manager.FontManager()
 lu = matplotlib.font_manager.FontProperties(family = "Open Sans Condensed")
 
 class ReportCharts:
+    color_map = {
+            "Equity": "#ff9914",
+            "Option": "#DAA520",
+            "Commodity": "#9400D3",
+            "Forex": "#6495ED",
+            "Future": "#808000",
+            "Cfd": "#FFD700",
+            "Crypto": "#FFDAB9",
+            "FutureOption": "#1ED3A9",
+            "IndexOption": "#A4AACC",
+            "CryptoFuture": "#E55812"
+        }
 
     def fig_to_base64(self, filename = '', fig = None, dpi = 200):
         base64 = 'data:image/png;base64,'
@@ -988,26 +1000,14 @@ class ReportCharts:
             plt.close('all')
             return base64
 
-        color_map = {
-            "Equity": "#ff9914",
-            "Option": "#DAA520",
-            "Commodity": "#9400D3",
-            "Forex": "#6495ED",
-            "Future": "#808000",
-            "Cfd": "#FFD700",
-            "Crypto": "#FFDAB9",
-            "FutureOption": "#1ED3A9",
-            "IndexOption": "#A4AACC",
-        }
-
-        for k, v in list(color_map.items()):
-            color_map[k + ' - Short'] = '#' + hex(int(v[1:], 16) ^ 0xffffff)[2:].zfill(6)
+        for k, v in list(self.color_map.items()):
+            self.color_map[k + ' - Short'] = '#' + hex(int(v[1:], 16) ^ 0xffffff)[2:].zfill(6)
 
         # None if no colors can be mapped, so stackplot gets None and doesn't try to access this color list
-        long_colors = [color_map[security] for security in long_securities] if len(long_securities) > 0 else None
-        long_live_colors = [color_map[security] for security in live_long_securities] if len(live_long_securities) > 0 else None
-        short_colors = [color_map[security + ' - Short'] for security in short_securities] if len(short_securities) > 0 else None
-        short_live_colors = [color_map[security + ' - Short'] for security in live_short_securities] if len(live_short_securities) > 0 else None
+        long_colors = [self.color_map[security] for security in long_securities] if len(long_securities) > 0 else None
+        long_live_colors = [self.color_map[security] for security in live_long_securities] if len(live_long_securities) > 0 else None
+        short_colors = [self.color_map[security + ' - Short'] for security in short_securities] if len(short_securities) > 0 else None
+        short_live_colors = [self.color_map[security + ' - Short'] for security in live_short_securities] if len(live_short_securities) > 0 else None
 
         ax = plt.gca()
 
@@ -1122,8 +1122,8 @@ class ReportCharts:
         # use dict.fromkeys() instead of set() to remove duplicates and preserve order
         labels = list(dict.fromkeys(labels))
         live_labels = list(dict.fromkeys(live_labels))
-        rectangles = [plt.Rectangle((0, 0), 1, 1, fc=color_map[lab]) for lab in labels]
-        live_rectangles = [plt.Rectangle((0, 0), 1, 1, fc=color_map[lab]) for lab in live_labels]
+        rectangles = [plt.Rectangle((0, 0), 1, 1, fc=self.color_map[lab]) for lab in labels]
+        live_rectangles = [plt.Rectangle((0, 0), 1, 1, fc=self.color_map[lab]) for lab in live_labels]
         ax.legend(rectangles + live_rectangles, labels + [f'{lab} - Live' for lab in live_labels], handlelength=0.8,
                   handleheight=0.8, frameon=False, fontsize=8, ncol=len(labels), loc='upper right')
         fig = ax.get_figure()
