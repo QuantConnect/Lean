@@ -18,31 +18,26 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Orders;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Algorithm asserting that the <see cref="QCAlgorithm.OnMarginCall"/> event is fired when trading options strateties
+    /// Algorithm asserting that the <see cref="QCAlgorithm.OnMarginCallWarning"/> event is fired when trading options strategies
     /// </summary>
-    public class OptionStrategyMarginCallAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class OptionStrategyMarginCallWarningAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _optionSymbol;
-
         private OptionStrategy _optionStrategy;
-
-        private bool _onMarginCallWasCalled;
-
-        private bool _orderPlaced;
+        private bool _onMarginCallWarningWasCalled;
 
         public override void Initialize()
         {
             SetStartDate(2015, 12, 24);
             SetEndDate(2015, 12, 24);
-            SetCash(150000);
+            SetCash(163000);
 
-            var equity = AddEquity("GOOG", leverage: 4);
+            var equity = AddEquity("GOOG");
             var option = AddOption(equity.Symbol);
             _optionSymbol = option.Symbol;
 
@@ -52,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
-            if (!_orderPlaced && !Portfolio.Invested)
+            if (!Portfolio.Invested)
             {
                 if (IsMarketOpen(_optionSymbol) && slice.OptionChains.TryGetValue(_optionSymbol, out var chain))
                 {
@@ -69,57 +64,26 @@ namespace QuantConnect.Algorithm.CSharp
                     var higherStrike = callContracts[2].Strike;
 
                     _optionStrategy = OptionStrategies.Straddle(_optionSymbol, higherStrike, expiry);
-
                     Order(_optionStrategy, -5);
-                    _orderPlaced = true;
                 }
-            }
-        }
-
-        public override void OnMarginCall(List<SubmitOrderRequest> requests)
-        {
-            Debug($"OnMarginCall at {Time}");
-            _onMarginCallWasCalled = true;
-
-            var investedOptions = Portfolio.Securities.Values
-                .Where(x => x.Invested && x.Type == SecurityType.Option)
-                .ToList();
-
-            if (investedOptions.Count != _optionStrategy.OptionLegs.Count)
-            {
-                throw new Exception("OnMarginCall was called with a different number of options than the strategy has legs" +
-                    $"Expected: {investedOptions.Count}. Actual: {_optionStrategy.OptionLegs.Count}");
-            }
-
-            if (requests.Count != investedOptions.Count)
-            {
-                throw new Exception("OnMarginCall should be called with the same number of requests as the number of legs in the strategy. " +
-                    $"Expected: {investedOptions.Count}, Actual: {requests.Count}");
-            }
-
-            if (requests.Skip(1).Any(request => request.Symbol == requests[0].Symbol) ||
-                requests.Any(request => !investedOptions.Any(option => option.Symbol == request.Symbol)))
-            {
-                throw new Exception("OnMarginCall should be called with requests for each of regs of the strategy." +
-                    $@"Expected: {string.Join(", ", investedOptions.Select(option => option.Symbol))}.Actual: {string.Join(", ", requests.Select(request => request.Symbol))}");
             }
         }
 
         public override void OnMarginCallWarning()
         {
-            throw new Exception("Expected OnMarginCallWarning to not be invoked");
+            _onMarginCallWarningWasCalled = true;
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (!_onMarginCallWasCalled)
+            if (!Portfolio.Invested)
             {
-                throw new Exception("Expected OnMarginCall to be invoked");
+                throw new Exception("Portfolio should be invested");
             }
 
-            if (!_orderPlaced)
+            if (!_onMarginCallWarningWasCalled)
             {
-                throw new Exception("Expected an initial order to be placed");
+                throw new Exception("Expected OnMarginCallWarning to be invoked");
             }
         }
 
@@ -148,7 +112,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "4"},
+            {"Total Trades", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
@@ -167,11 +131,11 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$25.00"},
-            {"Estimated Strategy Capacity", "$180000.00"},
+            {"Total Fees", "$12.50"},
+            {"Estimated Strategy Capacity", "$490000.00"},
             {"Lowest Capacity Asset", "GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "18.59%"},
-            {"OrderListHash", "d301d24a1268d3c9312b3c0138416e65"}
+            {"Portfolio Turnover", "8.10%"},
+            {"OrderListHash", "4a7e52cd0db1a02674128d743aa0768c"}
         };
     }
 }

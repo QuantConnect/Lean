@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -27,7 +26,6 @@ namespace QuantConnect.Algorithm.CSharp
     public class OptionShortCallMarginCallWarningAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _optionContractSymbol;
-
         private bool _receivedMarginCallWarning;
 
         public override void Initialize()
@@ -56,32 +54,19 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnMarginCall(List<SubmitOrderRequest> requests)
-        {
-            throw new Exception("Expected OnMarginCall to not be invoked");
-        }
-
         public override void OnMarginCallWarning()
         {
-            // this code gets called when the margin remaining drops below 5% of our total portfolio value, it gives the algorithm
-            // a chance to prevent a margin call from occurring
-
-            // prevent margin calls by responding to the warning and increasing margin remaining
-            var security = Securities[_optionContractSymbol];
-            var holdings = security.Holdings.Quantity;
-            var shares = (int)(-Math.Sign(holdings) * Math.Max(Math.Abs(holdings) * .005m, security.SymbolProperties.LotSize));
-            Log($"{Time.ToStringInvariant()} - OnMarginCallWarning(): Liquidating {shares.ToStringInvariant()} shares of the option to avoid margin call.");
-            MarketOrder(_optionContractSymbol, shares);
-
-            if (!_receivedMarginCallWarning)
-            {
-                Debug($"OnMarginCallWarning at {Time}");
-                _receivedMarginCallWarning = true;
-            }
+            Debug($"OnMarginCallWarning at {Time}");
+            _receivedMarginCallWarning = true;
         }
 
         public override void OnEndOfAlgorithm()
         {
+            if (!Portfolio.Invested)
+            {
+                throw new Exception("Portfolio should be invested");
+            }
+
             if (!_receivedMarginCallWarning)
             {
                 throw new Exception("OnMarginCallWarning was not invoked");
@@ -113,7 +98,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "2"},
+            {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
@@ -132,11 +117,11 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$2.50"},
-            {"Estimated Strategy Capacity", "$0"},
+            {"Total Fees", "$1.50"},
+            {"Estimated Strategy Capacity", "$1000.00"},
             {"Lowest Capacity Asset", "GOOCV W6NBKMCY0IH2|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "0.33%"},
-            {"OrderListHash", "367800f09758f6c7a28ecf6292e42a3c"}
+            {"Portfolio Turnover", "0.28%"},
+            {"OrderListHash", "5419a6a88ec79b90fb1de45c213aee4b"}
         };
     }
 }
