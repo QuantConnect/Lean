@@ -140,7 +140,7 @@ namespace QuantConnect.Securities.Positions
                 )
             );
 
-            var quantity = result.Quantity * security.SymbolProperties.LotSize;
+            var quantity = result.Quantity / security.SymbolProperties.LotSize;
             return new GetMaximumLotsResult(quantity, result.Reason, result.IsError);
         }
 

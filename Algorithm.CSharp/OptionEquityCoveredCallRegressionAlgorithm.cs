@@ -49,14 +49,14 @@ namespace QuantConnect.Algorithm.CSharp
 
                     var initialMargin = Portfolio.MarginRemaining;
                     // covered call
-                    MarketOrder(atmContract.Symbol, -10);
-                    AssertDefaultGroup(atmContract.Symbol, -10);
-                    MarketOrder(atmContract.Symbol.Underlying, 1000);
+                    MarketOrder(atmContract.Symbol, -5);
+                    AssertDefaultGroup(atmContract.Symbol, -5);
+                    MarketOrder(atmContract.Symbol.Underlying, 500);
                     var freeMarginPostTrade = Portfolio.MarginRemaining;
-                    AssertOptionStrategyIsPresent(OptionStrategyDefinitions.CoveredCall.Name, 10);
+                    AssertOptionStrategyIsPresent(OptionStrategyDefinitions.CoveredCall.Name, 5);
 
                     var underlyingMarginRequirements = Securities[atmContract.Symbol.Underlying].BuyingPowerModel
-                        .GetInitialMarginRequirement(new InitialMarginParameters(Securities[atmContract.Symbol.Underlying], 1000));
+                        .GetInitialMarginRequirement(new InitialMarginParameters(Securities[atmContract.Symbol.Underlying], 500));
 
                     var expectedMarginUsage = underlyingMarginRequirements;
                     if (expectedMarginUsage != Portfolio.TotalMarginUsed)
@@ -108,11 +108,11 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$7.50"},
-            {"Estimated Strategy Capacity", "$550000.00"},
+            {"Total Fees", "$3.75"},
+            {"Estimated Strategy Capacity", "$1100000.00"},
             {"Lowest Capacity Asset", "GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "403.94%"},
-            {"OrderListHash", "1c8cd35ee32ffc285f10447020b6ec61"}
+            {"Portfolio Turnover", "201.44%"},
+            {"OrderListHash", "539232baa4a3a8467a2ceb3d86e186dc"}
         };
     }
 }

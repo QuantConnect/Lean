@@ -12,19 +12,19 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from BaseFrameworkRegressionAlgorithm import BaseFrameworkRegressionAlgorithm
-from Alphas.MacdAlphaModel import MacdAlphaModel
+from QuantConnect.Algorithm.CSharp import *
 
 ### <summary>
-### Regression algorithm to assert the behavior of <see cref="MacdAlphaModel"/>.
+### Regression algorithm assering we can disable automatic option assignment
 ### </summary>
-class MacdAlphaModelFrameworkRegressionAlgorithm(BaseFrameworkRegressionAlgorithm):
-
+class NullOptionAssignmentRegressionAlgorithm(OptionAssignmentRegressionAlgorithm):
     def Initialize(self):
+        self.SetSecurityInitializer(self.CustomSecurityInitializer)
         super().Initialize()
-        self.SetAlpha(MacdAlphaModel())
 
-    def OnEndOfAlgorithm(self):
-        expected = 4
-        if self.Insights.TotalCount != expected:
-           raise Exception(f"The total number of insights should be {expected}. Actual: {self.Insights.TotalCount}")
+    def OnData(self, data):
+        super().OnData(data)
+
+    def CustomSecurityInitializer(self, security):
+        if Extensions.IsOption(security.Symbol.SecurityType):
+            security.SetOptionAssignmentModel(NullOptionAssignmentModel())

@@ -28,6 +28,10 @@ class IndexOptionShortCallITMExpiryRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
         self.SetStartDate(2021, 1, 4)
         self.SetEndDate(2021, 1, 31)
+        self.SetCash(1000000)
+
+        # avoid getting assigned
+        self.SetSecurityInitializer(CompositeSecurityInitializer(self.SecurityInitializer, FuncSecurityInitializer(self.CustomSecurityInitializer)))
 
         self.spx = self.AddIndex("SPX", Resolution.Minute).Symbol
 
@@ -36,7 +40,7 @@ class IndexOptionShortCallITMExpiryRegressionAlgorithm(QCAlgorithm):
         self.spxOption = [i for i in self.spxOption if i.ID.StrikePrice <= 4200 and i.ID.OptionRight == OptionRight.Put and i.ID.Date.year == 2021 and i.ID.Date.month == 1]
         self.spxOption = list(sorted(self.spxOption, key=lambda x: x.ID.StrikePrice, reverse=True))[0]
         self.spxOption = self.AddIndexOptionContract(self.spxOption, Resolution.Minute).Symbol
-        
+
         self.expectedContract = Symbol.CreateOption(self.spx, Market.USA, OptionStyle.European, OptionRight.Put, 4200, datetime(2021, 1, 15))
         if self.spxOption != self.expectedContract:
             raise Exception(f"Contract self.expectedContract was not found in the chain")
@@ -50,23 +54,23 @@ class IndexOptionShortCallITMExpiryRegressionAlgorithm(QCAlgorithm):
             if delisting.Type == DelistingType.Warning:
                 if delisting.Time != datetime(2021, 1, 15):
                     raise Exception(f"Delisting warning issued at unexpected date: {delisting.Time}")
-                
+
             if delisting.Type == DelistingType.Delisted:
                 if delisting.Time != datetime(2021, 1, 16):
                     raise Exception(f"Delisting happened at unexpected date: {delisting.Time}")
-                
-            
-        
-    
+
+
+
+
 
     def OnOrderEvent(self, orderEvent: OrderEvent):
         if orderEvent.Status != OrderStatus.Filled:
             # There's lots of noise with OnOrderEvent, but we're only interested in fills.
             return
-        
+
         if orderEvent.Symbol not in self.Securities:
             raise Exception(f"Order event Symbol not found in Securities collection: {orderEvent.Symbol}")
-        
+
         security = self.Securities[orderEvent.Symbol]
         if security.Symbol == self.spx:
             self.AssertIndexOptionOrderExercise(orderEvent, security, self.Securities[self.expectedContract])
@@ -79,7 +83,7 @@ class IndexOptionShortCallITMExpiryRegressionAlgorithm(QCAlgorithm):
         if "Assignment" in orderEvent.Message:
             if orderEvent.FillPrice != 4200:
                 raise Exception("Option was not assigned at expected strike price (4200)")
-            
+
             if orderEvent.Direction != OrderDirection.Sell or index.Holdings.Quantity != 0:
                 raise Exception(f"Expected Qty: 0 index holdings for assigned index option {index.Symbol}, found {index.Holdings.Quantity}")
 
@@ -89,7 +93,7 @@ class IndexOptionShortCallITMExpiryRegressionAlgorithm(QCAlgorithm):
     def AssertIndexOptionContractOrder(self, orderEvent: OrderEvent, option: Security):
         if orderEvent.Direction == OrderDirection.Sell and option.Holdings.Quantity != -1:
             raise Exception(f"No holdings were created for option contract {option.Symbol}")
-        
+
         if orderEvent.IsAssignment and option.Holdings.Quantity != 0:
             raise Exception(f"Holdings were found after option contract was assigned: {option.Symbol}")
 
@@ -100,3 +104,7 @@ class IndexOptionShortCallITMExpiryRegressionAlgorithm(QCAlgorithm):
     def OnEndOfAlgorithm(self):
         if self.Portfolio.Invested:
             raise Exception(f"Expected no holdings at end of algorithm, but are invested in: {', '.join(self.Portfolio.Keys)}")
+
+    def CustomSecurityInitializer(self, security):
+        if Extensions.IsOption(security.Symbol.SecurityType):
+            security.SetOptionAssignmentModel(NullOptionAssignmentModel())

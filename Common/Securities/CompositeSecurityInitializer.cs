@@ -14,6 +14,10 @@
  *
 */
 
+using Python.Runtime;
+using QuantConnect.Python;
+using System.Linq;
+
 namespace QuantConnect.Securities
 {
     /// <summary>
@@ -23,6 +27,15 @@ namespace QuantConnect.Securities
     public class CompositeSecurityInitializer : ISecurityInitializer
     {
         private readonly ISecurityInitializer[] _initializers;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CompositeSecurityInitializer"/> class
+        /// </summary>
+        /// <param name="initializers">The initializers to execute in order</param>
+        public CompositeSecurityInitializer(params PyObject[] initializers)
+        {
+            _initializers = initializers.Select(x => new SecurityInitializerPythonWrapper(x)).ToArray();
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CompositeSecurityInitializer"/> class

@@ -13,18 +13,18 @@
 
 from AlgorithmImports import *
 from BaseFrameworkRegressionAlgorithm import BaseFrameworkRegressionAlgorithm
-from Alphas.MacdAlphaModel import MacdAlphaModel
+from Alphas.HistoricalReturnsAlphaModel import HistoricalReturnsAlphaModel
 
 ### <summary>
-### Regression algorithm to assert the behavior of <see cref="MacdAlphaModel"/>.
+### Regression algorithm to assert the behavior of <see cref="HistoricalReturnsAlphaModel"/>.
 ### </summary>
-class MacdAlphaModelFrameworkRegressionAlgorithm(BaseFrameworkRegressionAlgorithm):
+class HistoricalReturnsAlphaModelFrameworkRegressionAlgorithm(BaseFrameworkRegressionAlgorithm):
 
     def Initialize(self):
         super().Initialize()
-        self.SetAlpha(MacdAlphaModel())
+        self.SetAlpha(HistoricalReturnsAlphaModel())
 
     def OnEndOfAlgorithm(self):
-        expected = 4
+        expected = 74
         if self.Insights.TotalCount != expected:
-           raise Exception(f"The total number of insights should be {expected}. Actual: {self.Insights.TotalCount}")
+            raise Exception(f"The total number of insights should be {expected}. Actual: {self.Insights.TotalCount}")

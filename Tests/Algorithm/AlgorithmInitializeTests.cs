@@ -41,11 +41,15 @@ namespace QuantConnect.Tests.Algorithm
         public void Validates_SetEndTime(bool explicitSet)
         {
             var algorithm = GetAlgorithm();
+
+            // We initialize the algorithm with `now` in the algorithm default time zone
+            var end = DateTime.UtcNow.ConvertFromUtc(algorithm.TimeZone);
+
             if (explicitSet)
             {
-                algorithm.SetEndDate(DateTime.Now);
+                algorithm.SetEndDate(end);
             }
-            var excepted = DateTime.Now.RoundDown(TimeSpan.FromDays(1)).AddTicks(-1);
+            var excepted = end.RoundDown(TimeSpan.FromDays(1)).AddTicks(-1);
             Assert.AreEqual(algorithm.EndDate, excepted);
         }
 

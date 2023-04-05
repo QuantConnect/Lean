@@ -201,7 +201,6 @@ namespace QuantConnect.Lean.Engine
             var mapFileProviderTypeName = Config.Get("map-file-provider", "LocalDiskMapFileProvider");
             var factorFileProviderTypeName = Config.Get("factor-file-provider", "LocalDiskFactorFileProvider");
             var dataProviderTypeName = Config.Get("data-provider", "DefaultDataProvider");
-            var alphaHandlerTypeName = Config.Get("alpha-handler", "DefaultAlphaHandler");
             var objectStoreTypeName = Config.Get("object-store", "LocalObjectStore");
             var dataPermissionManager = Config.Get("data-permission-manager", "DataPermissionManager");
 

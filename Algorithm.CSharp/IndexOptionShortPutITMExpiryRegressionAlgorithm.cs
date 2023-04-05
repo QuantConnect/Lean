@@ -16,11 +16,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -44,6 +44,15 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2021, 1, 4);
             SetEndDate(2021, 1, 31);
+            SetCash(1000000);
+
+            SetSecurityInitializer(new CompositeSecurityInitializer(SecurityInitializer,
+                new FuncSecurityInitializer((security) =>
+                {
+                    var option = security as Option;
+                    // avoid getting assigned
+                    option?.SetOptionAssignmentModel(new NullOptionAssignmentModel());
+                })));
 
             _spx = AddIndex("SPX", Resolution.Minute).Symbol;
 
@@ -188,28 +197,28 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "2"},
-            {"Average Win", "49.82%"},
+            {"Average Win", "4.98%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "260.861%"},
-            {"Drawdown", "2.500%"},
+            {"Compounding Annual Return", "14.302%"},
+            {"Drawdown", "0.300%"},
             {"Expectancy", "0"},
-            {"Net Profit", "9.444%"},
-            {"Sharpe Ratio", "4.963"},
-            {"Probabilistic Sharpe Ratio", "87.571%"},
+            {"Net Profit", "0.944%"},
+            {"Sharpe Ratio", "3.101"},
+            {"Probabilistic Sharpe Ratio", "87.326%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "100%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "1.612"},
-            {"Beta", "-0.214"},
-            {"Annual Standard Deviation", "0.323"},
-            {"Annual Variance", "0.104"},
-            {"Information Ratio", "4.296"},
-            {"Tracking Error", "0.363"},
-            {"Treynor Ratio", "-7.475"},
+            {"Alpha", "0.101"},
+            {"Beta", "-0.021"},
+            {"Annual Standard Deviation", "0.032"},
+            {"Annual Variance", "0.001"},
+            {"Information Ratio", "0.38"},
+            {"Tracking Error", "0.144"},
+            {"Treynor Ratio", "-4.672"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "SPX 31KC0UJHC75TA|SPX 31"},
-            {"Portfolio Turnover", "1.92%"},
+            {"Portfolio Turnover", "0.19%"},
             {"OrderListHash", "535f4de122602f0cd69245f20731c5af"}
         };
     }

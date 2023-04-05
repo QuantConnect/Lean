@@ -62,6 +62,12 @@ namespace QuantConnect.Packets
         public decimal CpuAllocation;
 
         /// <summary>
+        /// The user live log limit
+        /// </summary>
+        [JsonProperty(PropertyName = "iLiveLogLimit")]
+        public int LiveLogLimit;
+
+        /// <summary>
         /// The user backtesting log limit
         /// </summary>
         [JsonProperty(PropertyName = "iBacktestLogLimit")]

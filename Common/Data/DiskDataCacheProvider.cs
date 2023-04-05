@@ -30,10 +30,28 @@ namespace QuantConnect.Data
     /// </summary>
     public class DiskDataCacheProvider : IDataCacheProvider
     {
+        private readonly KeyStringSynchronizer _synchronizer;
+
         /// <summary>
         /// Property indicating the data is temporary in nature and should not be cached.
         /// </summary>
         public bool IsDataEphemeral => false;
+
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        public DiskDataCacheProvider() : this(new KeyStringSynchronizer())
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance using the given synchronizer
+        /// </summary>
+        /// <param name="locker">The synchronizer instance to use</param>
+        public DiskDataCacheProvider(KeyStringSynchronizer locker)
+        {
+            _synchronizer = locker;
+        }
 
         /// <summary>
         /// Fetch data from the cache
@@ -44,44 +62,47 @@ namespace QuantConnect.Data
         {
             LeanData.ParseKey(key, out var filePath, out var entryName);
 
-            if (!File.Exists(filePath))
+            return _synchronizer.Execute(filePath, () =>
             {
-                return null;
-            }
-
-            try
-            {
-                using (var zip = ZipFile.Read(filePath))
+                if (!File.Exists(filePath))
                 {
-                    ZipEntry entry;
-                    if (entryName.IsNullOrEmpty())
+                    return null;
+                }
+
+                try
+                {
+                    using (var zip = ZipFile.Read(filePath))
                     {
-                        // Return the first entry
-                        entry = zip[0];
-                    }
-                    else
-                    {
-                        // Attempt to find our specific entry
-                        if (!zip.ContainsEntry(entryName))
+                        ZipEntry entry;
+                        if (entryName.IsNullOrEmpty())
                         {
-                            return null;
+                            // Return the first entry
+                            entry = zip[0];
+                        }
+                        else
+                        {
+                            // Attempt to find our specific entry
+                            if (!zip.ContainsEntry(entryName))
+                            {
+                                return null;
+                            }
+
+                            entry = zip[entryName];
                         }
 
-                        entry = zip[entryName];
+                        // Extract our entry and return it
+                        var stream = new MemoryStream();
+                        entry.Extract(stream);
+                        stream.Position = 0;
+                        return stream;
                     }
-
-                    // Extract our entry and return it
-                    var stream = new MemoryStream();
-                    entry.Extract(stream);
-                    stream.Position = 0;
-                    return stream;
                 }
-            }
-            catch (ZipException exception)
-            {
-                Log.Error("DiskDataCacheProvider.Fetch(): Corrupt file: " + key + " Error: " + exception);
-                return null;
-            }
+                catch (ZipException exception)
+                {
+                    Log.Error("DiskDataCacheProvider.Fetch(): Corrupt file: " + key + " Error: " + exception);
+                    return null;
+                }
+            });
         }
 
         /// <summary>
@@ -92,7 +113,11 @@ namespace QuantConnect.Data
         public void Store(string key, byte[] data)
         {
             LeanData.ParseKey(key, out var filePath, out var entryName);
-            Compression.ZipCreateAppendData(filePath, entryName, data, true);
+
+            _synchronizer.Execute(filePath, singleExecution: false, () =>
+            {
+                Compression.ZipCreateAppendData(filePath, entryName, data, true);
+            });
         }
 
         /// <summary>
@@ -100,8 +125,11 @@ namespace QuantConnect.Data
         /// </summary>
         public List<string> GetZipEntries(string zipFile)
         {
-            using var stream = new FileStream(zipFile, FileMode.Open, FileAccess.Read);
-            return Compression.GetZipEntryFileNames(stream).ToList();
+            return _synchronizer.Execute(zipFile, () =>
+            {
+                using var stream = new FileStream(zipFile, FileMode.Open, FileAccess.Read);
+                return Compression.GetZipEntryFileNames(stream).ToList();
+            });
         }
 
         /// <summary>

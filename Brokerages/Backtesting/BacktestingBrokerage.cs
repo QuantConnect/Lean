@@ -42,6 +42,7 @@ namespace QuantConnect.Brokerages.Backtesting
         // is not exactly the fastest operation and Scan gets called at least twice per
         // time loop
         private bool _needsScan;
+        private DateTime _nextOptionAssignmentTime;
         private readonly ConcurrentDictionary<int, Order> _pending;
         private readonly object _needsScanLock = new object();
         private readonly HashSet<Symbol> _pendingOptionAssignments = new HashSet<Symbol>();
@@ -56,10 +57,8 @@ namespace QuantConnect.Brokerages.Backtesting
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         public BacktestingBrokerage(IAlgorithm algorithm)
-            : base("Backtesting Brokerage")
+            : this(algorithm, "Backtesting Brokerage")
         {
-            Algorithm = algorithm;
-            _pending = new ConcurrentDictionary<int, Order>();
         }
 
         /// <summary>
@@ -71,19 +70,6 @@ namespace QuantConnect.Brokerages.Backtesting
             : base(name)
         {
             Algorithm = algorithm;
-            _pending = new ConcurrentDictionary<int, Order>();
-        }
-
-        /// <summary>
-        /// Creates a new BacktestingBrokerage for the specified algorithm. Adds market simulation to BacktestingBrokerage;
-        /// </summary>
-        /// <param name="algorithm">The algorithm instance</param>
-        /// <param name="marketSimulation">The backtesting market simulation instance</param>
-        public BacktestingBrokerage(IAlgorithm algorithm, IBacktestingMarketSimulation marketSimulation)
-            : base("Backtesting Brokerage")
-        {
-            Algorithm = algorithm;
-            MarketSimulation = marketSimulation;
             _pending = new ConcurrentDictionary<int, Order>();
         }
 
@@ -242,15 +228,12 @@ namespace QuantConnect.Brokerages.Backtesting
         }
 
         /// <summary>
-        /// Market Simulation - simulates various market conditions in backtest
-        /// </summary>
-        public IBacktestingMarketSimulation MarketSimulation { get; set; }
-
-        /// <summary>
         /// Scans all the outstanding orders and applies the algorithm model fills to generate the order events
         /// </summary>
         public virtual void Scan()
         {
+            ProcessAssignmentOrders();
+
             lock (_needsScanLock)
             {
                 // there's usually nothing in here
@@ -450,52 +433,43 @@ namespace QuantConnect.Brokerages.Backtesting
         }
 
         /// <summary>
-        /// Runs market simulation
+        /// Helper method to drive option assignment models
         /// </summary>
-        public void SimulateMarket()
+        private void ProcessAssignmentOrders()
         {
-            // if simulator is installed, we run it
-            MarketSimulation?.SimulateMarketConditions(this, Algorithm);
-        }
-
-        /// <summary>
-        /// This method is called by market simulator in order to launch an assignment event
-        /// </summary>
-        /// <param name="option">Option security to assign</param>
-        /// <param name="quantity">Quantity to assign</param>
-        public virtual void ActivateOptionAssignment(Option option, int quantity)
-        {
-            // do not process the same assignment more than once
-            if (_pendingOptionAssignments.Contains(option.Symbol)) return;
-
-            _pendingOptionAssignments.Add(option.Symbol);
-
-            // assignments always cause a positive change to option contract holdings
-            var request = new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, Math.Abs(quantity), 0m, 0m, 0m, Algorithm.UtcTime, "Simulated option assignment before expiration");
-
-            var ticket = Algorithm.Transactions.ProcessRequest(request);
-            Log.Trace($"BacktestingBrokerage.ActivateOptionAssignment(): OrderId: {ticket.OrderId}");
-        }
-
-        private void RemovePendingOptionAssignments(OrderEvent orderEvent)
-        {
-            if (orderEvent.Status.IsClosed() && _pendingOptionAssignments.Contains(orderEvent.Symbol))
+            if (Algorithm.UtcTime >= _nextOptionAssignmentTime)
             {
-                _pendingOptionAssignments.Remove(orderEvent.Symbol);
+                _nextOptionAssignmentTime = Algorithm.UtcTime.RoundDown(Time.OneHour) + Time.OneHour;
+
+                foreach (var security in Algorithm.Securities.Values
+                    .Where(security => security.Symbol.SecurityType.IsOption() && security.Holdings.IsShort)
+                    .OrderBy(security => security.Symbol.ID.Symbol))
+                {
+                    var option = (Option)security;
+                    var result = option.OptionAssignmentModel.GetAssignment(new OptionAssignmentParameters(option));
+                    if (result != null && result.Quantity != 0)
+                    {
+                        var request = new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, Math.Abs(result.Quantity), 0m, 0m, 0m, Algorithm.UtcTime, result.Tag);
+                        if (!_pendingOptionAssignments.Add(option.Symbol))
+                        {
+                            throw new InvalidOperationException($"Duplicate option exercise order request for symbol {option.Symbol}. Please contact support");
+                        }
+                        Algorithm.Transactions.ProcessRequest(request);
+                    }
+                }
             }
         }
 
         /// <summary>
         /// Event invocator for the OrderFilled event
         /// </summary>
-        /// <param name="orderEvents">The OrderEvent list</param>
+        /// <param name="orderEvents">The list of order events</param>
         protected override void OnOrderEvents(List<OrderEvent> orderEvents)
         {
-            foreach (var e in orderEvents)
+            for (int i = 0; i < orderEvents.Count; i++)
             {
-                RemovePendingOptionAssignments(e);
+                _pendingOptionAssignments.Remove(orderEvents[i].Symbol);
             }
-
             base.OnOrderEvents(orderEvents);
         }
 
