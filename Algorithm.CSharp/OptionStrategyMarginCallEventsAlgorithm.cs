@@ -27,7 +27,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Algorithm asserting that the <see cref="QCAlgorithm.OnMarginCallWarning"/> event is fired when trading options strategies
     /// </summary>
-    public class OptionStrategyMarginCallWarningAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class OptionStrategyMarginCallEventsAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private readonly int _strategyQuantity = -50;
         private Symbol _optionSymbol;

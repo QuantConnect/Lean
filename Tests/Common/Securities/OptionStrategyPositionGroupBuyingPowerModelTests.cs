@@ -15,12 +15,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 
 using QuantConnect.Algorithm;
-using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
@@ -151,6 +150,44 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.IsTrue(furtherShortingWithMarginRemainingCaseConsidered, "The 'further shorting with margin remaining' case was not considered");
             Assert.IsTrue(furtherShortingWithNoMarginRemainingCaseConsidered, "The 'further shorting with no margin remaining' case was not considered");
+        }
+
+        [Test]
+        public void HasSufficientBuyingPowerForReducingStrategyOrder()
+        {
+            const decimal price = 1m;
+            const decimal underlyingPrice = 200m;
+
+            _equity.SetMarketPrice(new Tick { Value = underlyingPrice });
+            _callOption.SetMarketPrice(new Tick { Value = price });
+            _putOption.SetMarketPrice(new Tick { Value = price });
+
+            var initialHoldingsQuantity = -10;
+            _callOption.Holdings.SetHoldings(1.5m, initialHoldingsQuantity);
+            _putOption.Holdings.SetHoldings(1m, initialHoldingsQuantity);
+
+            _algorithm.SetCash(_portfolio.TotalMarginUsed * 0.95m);
+
+            var optionStrategy = OptionStrategies.Straddle(_callOption.Symbol.Canonical, _callOption.StrikePrice, _callOption.Expiry);
+            var quantity = -initialHoldingsQuantity / 2;
+            var buyingPowerModel = new OptionStrategyPositionGroupBuyingPowerModel(optionStrategy);
+            var orders = GetStrategyOrders(quantity);
+
+            var positionGroup = _portfolio.Positions.CreatePositionGroup(orders);
+
+            var parameters = new HasSufficientPositionGroupBuyingPowerForOrderParameters(_portfolio, positionGroup, orders);
+            var availableBuyingPower = buyingPowerModel.GetPositionGroupBuyingPower(parameters.Portfolio, parameters.PositionGroup, orders.First().GroupOrderManager.Direction);
+            var deltaBuyingPowerArgs = new ReservedBuyingPowerImpactParameters(parameters.Portfolio, parameters.PositionGroup, parameters.Orders);
+            var deltaBuyingPower = buyingPowerModel.GetReservedBuyingPowerImpact(deltaBuyingPowerArgs).Delta;
+
+            // Buying power should be sufficient for reducing the position, even if the delta buying power is greater than the available buying power
+            Assert.Less(deltaBuyingPower, 0);
+            Assert.Greater(deltaBuyingPower, availableBuyingPower);
+
+            var hasSufficientBuyingPowerResult = buyingPowerModel.HasSufficientBuyingPowerForOrder(
+                new HasSufficientPositionGroupBuyingPowerForOrderParameters(_portfolio, positionGroup, orders));
+
+            Assert.IsTrue(hasSufficientBuyingPowerResult.IsSufficient);
         }
 
         private List<Order> GetStrategyOrders(decimal quantity)
