@@ -17,6 +17,7 @@
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Orders.Fees;
+using System.Collections.Generic;
 
 namespace QuantConnect.Brokerages
 {
@@ -25,6 +26,16 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class RBIBrokerageModel : DefaultBrokerageModel
     {
+        /// <summary>
+        /// Array's RBI supports security types
+        /// </summary>
+        private readonly HashSet<SecurityType> _supportSecurityTypes = new (new [] { SecurityType.Equity });
+
+        /// <summary>
+        /// Array's RBI supports order types
+        /// </summary>
+        private readonly HashSet<OrderType> _supportOrderTypes = new(new [] { OrderType.Market, OrderType.Limit, OrderType.StopMarket, OrderType.StopLimit });
+
         /// <summary>
         /// Constructor for RBI brokerage model
         /// </summary>
@@ -52,7 +63,7 @@ namespace QuantConnect.Brokerages
             }
 
             message = null;
-            if (security.Type != SecurityType.Equity)
+            if (!_supportSecurityTypes.Contains(security.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
@@ -60,7 +71,7 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (order.Type != OrderType.Market)
+            if (!_supportOrderTypes.Contains(order.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.RBIBrokerageModel.UnsupportedOrderType(order));
