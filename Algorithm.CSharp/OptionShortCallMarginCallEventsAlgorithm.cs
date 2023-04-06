@@ -18,29 +18,28 @@ using System.Linq;
 
 using QuantConnect.Data;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Algorithm asserting that the margin call events are fired when trading options strategies
+    /// Algorithm asserting that the margin call events are fired when trading options
     /// </summary>
-    public class OptionStrategyMarginCallEventsAlgorithm : OptionsMarginCallEventsAlgorithmBase
+    public class OptionShortCallMarginCallEventsAlgorithm : OptionsMarginCallEventsAlgorithmBase
     {
         private Symbol _optionSymbol;
-        private OptionStrategy _optionStrategy;
 
-        protected override int OriginalQuantity => -50;
-        protected override int ExpectedOrdersCount => 4;
+        protected override int OriginalQuantity => -10;
+        protected override int ExpectedOrdersCount => 2;
 
         public override void Initialize()
         {
-            SetStartDate(2015, 12, 24);
+            SetStartDate(2015, 12, 23);
             SetEndDate(2015, 12, 30);
-            SetCash(1640000);
+            SetCash(160000);
 
-            var equity = AddEquity("GOOG");
-            var option = AddOption(equity.Symbol);
+            var equitySymbol = AddEquity("GOOG").Symbol;
+
+            var option = AddOption(equitySymbol);
             _optionSymbol = option.Symbol;
 
             option.SetFilter(u => u.Strikes(-2, +2)
@@ -62,11 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
                         .OrderByDescending(x => x.Strike)
                         .ToList();
 
-                    var expiry = callContracts[0].Expiry;
-                    var strike = callContracts[0].Strike;
-
-                    _optionStrategy = OptionStrategies.Straddle(_optionSymbol, strike, expiry);
-                    Order(_optionStrategy, OriginalQuantity);
+                    MarketOrder(callContracts[0].Symbol, OriginalQuantity);
                 }
             }
         }
@@ -84,7 +79,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 3132879;
+        public override long DataPoints => 3179296;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -96,30 +91,30 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "4"},
+            {"Total Trades", "2"},
             {"Average Win", "0%"},
-            {"Average Loss", "-0.02%"},
-            {"Compounding Annual Return", "-5.684%"},
-            {"Drawdown", "0.700%"},
+            {"Average Loss", "-0.07%"},
+            {"Compounding Annual Return", "10.520%"},
+            {"Drawdown", "1.400%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "-0.107%"},
-            {"Sharpe Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
+            {"Net Profit", "0.210%"},
+            {"Sharpe Ratio", "6.232"},
+            {"Probabilistic Sharpe Ratio", "95.221%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
+            {"Alpha", "0.078"},
+            {"Beta", "-0.023"},
+            {"Annual Standard Deviation", "0.013"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-0.681"},
-            {"Tracking Error", "0.092"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$1252.00"},
-            {"Estimated Strategy Capacity", "$130000.00"},
+            {"Information Ratio", "1.1"},
+            {"Tracking Error", "0.088"},
+            {"Treynor Ratio", "-3.423"},
+            {"Total Fees", "$3.50"},
+            {"Estimated Strategy Capacity", "$66000.00"},
             {"Lowest Capacity Asset", "GOOCV W78ZFMML01JA|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "1.20%"},
-            {"OrderListHash", "583b89f10ce6ca6fa842b21a35fbf0f2"}
+            {"Portfolio Turnover", "1.01%"},
+            {"OrderListHash", "c92fcc558f089ca06719642a66abb525"}
         };
     }
 }
