@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Util;
@@ -162,6 +163,15 @@ namespace QuantConnect.Securities.Positions
                 return o.Direction;
             }).First();
 
+            var deltaBuyingPowerArgs = new ReservedBuyingPowerImpactParameters(parameters.Portfolio, parameters.PositionGroup, parameters.Orders);
+            var deltaBuyingPower = GetReservedBuyingPowerImpact(deltaBuyingPowerArgs).Delta;
+
+            // When order only reduces or closes a security position, capital is always sufficient
+            if (deltaBuyingPower < 0)
+            {
+                return parameters.Sufficient();
+            }
+
             var availableBuyingPower = this.GetPositionGroupBuyingPower(parameters.Portfolio, parameters.PositionGroup, direction);
 
             // 2. Confirm we pass position group specific checks
@@ -172,8 +182,6 @@ namespace QuantConnect.Securities.Positions
             }
 
             // 3. Confirm that the new groupings arising from the change doesn't make maintenance margin exceed TPV
-            var args = new ReservedBuyingPowerImpactParameters(parameters.Portfolio, parameters.PositionGroup, parameters.Orders);
-            var deltaBuyingPower = GetReservedBuyingPowerImpact(args).Delta;
             if (deltaBuyingPower <= availableBuyingPower)
             {
                 return parameters.Sufficient();

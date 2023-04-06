@@ -33,6 +33,12 @@ namespace QuantConnect.Securities
     public class DefaultMarginCallModel : IMarginCallModel
     {
         /// <summary>
+        /// The percent margin buffer to use when checking whether the total margin used is
+        /// above the total portfolio value to generate margin call orders
+        /// </summary>
+        private readonly decimal _marginBuffer;
+
+        /// <summary>
         /// Gets the portfolio that margin calls will be transacted against
         /// </summary>
         protected SecurityPortfolioManager Portfolio { get; }
@@ -47,10 +53,15 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="portfolio">The portfolio object to receive margin calls</param>
         /// <param name="defaultOrderProperties">The default order properties to be used in margin call orders</param>
-        public DefaultMarginCallModel(SecurityPortfolioManager portfolio, IOrderProperties defaultOrderProperties)
+        /// <param name="marginBuffer">
+        /// The percent margin buffer to use when checking whether the total margin used is
+        /// above the total portfolio value to generate margin call orders
+        /// </param>
+        public DefaultMarginCallModel(SecurityPortfolioManager portfolio, IOrderProperties defaultOrderProperties, decimal marginBuffer = 0.10m)
         {
             Portfolio = portfolio;
             DefaultOrderProperties = defaultOrderProperties;
+            _marginBuffer = marginBuffer;
         }
 
         /// <summary>
@@ -86,9 +97,7 @@ namespace QuantConnect.Securities
             // if we still have margin remaining then there's no need for a margin call
             if (marginRemaining <= 0)
             {
-                // leave a buffer in default implementation
-                const decimal marginBuffer = 0.10m;
-                if (totalMarginUsed > totalPortfolioValue * (1 + marginBuffer))
+                if (totalMarginUsed > totalPortfolioValue * (1 + _marginBuffer))
                 {
                     foreach (var positionGroup in Portfolio.PositionGroups)
                     {
