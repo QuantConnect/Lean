@@ -139,6 +139,11 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Binance Futures COIN-Margined contracts are settled and collateralized in their based cryptocurrency.
         /// </summary>
-        BinanceCoinFutures
+        BinanceCoinFutures,
+
+        /// <summary>
+        /// Transaction and submit/execution rules will use RBI models
+        /// </summary>
+        RBI,
     }
 }

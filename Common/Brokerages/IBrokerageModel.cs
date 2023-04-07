@@ -260,6 +260,9 @@ namespace QuantConnect.Brokerages
                 case BrokerageName.TDAmeritrade:
                     return new TDAmeritradeBrokerageModel(accountType);
 
+                case BrokerageName.RBI: 
+                    return new RBIBrokerageModel(accountType);
+
                 default:
                     throw new ArgumentOutOfRangeException(nameof(brokerage), brokerage, null);
             }
@@ -338,6 +341,9 @@ namespace QuantConnect.Brokerages
 
                 case TDAmeritradeBrokerageModel _:
                     return BrokerageName.TDAmeritrade;
+
+                case RBIBrokerageModel _:
+                    return BrokerageName.RBI;
 
                 case DefaultBrokerageModel _:
                     return BrokerageName.Default;
