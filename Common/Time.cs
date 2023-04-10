@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using Newtonsoft.Json.Converters;
 using NodaTime;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
@@ -771,6 +772,20 @@ namespace QuantConnect
         public static TimeSpan Abs(this TimeSpan timeSpan)
         {
             return TimeSpan.FromTicks(Math.Abs(timeSpan.Ticks));
+        }
+
+        /// <summary>
+        /// Helper method to deserialize month/year
+        /// </summary>
+        public class MonthYearJsonConverter : IsoDateTimeConverter
+        {
+            /// <summary>
+            /// Creates a new instance
+            /// </summary>
+            public MonthYearJsonConverter()
+            {
+                DateTimeFormat = @"MM/yy";
+            }
         }
     }
 }
