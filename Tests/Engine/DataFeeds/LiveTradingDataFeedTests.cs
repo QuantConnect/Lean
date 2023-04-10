@@ -2907,8 +2907,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     if (securityType == SecurityType.Future)
                     {
-                        // -1 to remove canonical since it's not part of the chain
-                        Assert.AreEqual(futureSymbols.Count - 1, futureContractCount);
+                        // -2 to remove canonical & internal since it's not part of the chain
+                        Assert.AreEqual(futureSymbols.Count - 2, futureContractCount);
 
                         foreach (var symbol in futureSymbols)
                         {
