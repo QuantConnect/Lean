@@ -80,6 +80,12 @@ namespace QuantConnect.Algorithm.CSharp
                 // this model never allows a lack of funds get in the way of buying securities
                 return parameters.Sufficient();
             }
+
+            // Let's always return 0 as the maintenance margin so we avoid margin call orders
+            public override MaintenanceMargin GetMaintenanceMargin(MaintenanceMarginParameters parameters)
+            {
+                return new MaintenanceMargin(0);
+            }
         }
 
         /// <summary>
@@ -127,7 +133,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0.844"},
             {"Treynor Ratio", "1.555"},
             {"Total Fees", "$30.00"},
-            {"Estimated Strategy Capacity", "$22000000.00"},
+            {"Estimated Strategy Capacity", "$150000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Portfolio Turnover", "26.62%"},
             {"OrderListHash", "eba70a03119f2e8fe526d1092fbc36d0"}

@@ -30,6 +30,8 @@ class IndexOptionShortCallITMExpiryRegressionAlgorithm(QCAlgorithm):
         self.SetEndDate(2021, 1, 31)
         self.SetCash(1000000)
 
+        self.Portfolio.SetMarginCallModel(MarginCallModel.Null);
+
         # avoid getting assigned
         self.SetSecurityInitializer(CompositeSecurityInitializer(self.SecurityInitializer, FuncSecurityInitializer(self.CustomSecurityInitializer)))
 
@@ -58,10 +60,6 @@ class IndexOptionShortCallITMExpiryRegressionAlgorithm(QCAlgorithm):
             if delisting.Type == DelistingType.Delisted:
                 if delisting.Time != datetime(2021, 1, 16):
                     raise Exception(f"Delisting happened at unexpected date: {delisting.Time}")
-
-
-
-
 
     def OnOrderEvent(self, orderEvent: OrderEvent):
         if orderEvent.Status != OrderStatus.Filled:

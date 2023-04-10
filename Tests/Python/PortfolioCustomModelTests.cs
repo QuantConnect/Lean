@@ -39,7 +39,7 @@ namespace QuantConnect.Tests.Python
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             algorithm.SetDateTime(new DateTime(2018, 8, 20, 15, 0, 0));
             algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
-            
+
             var spy = algorithm.AddEquity("SPY", Resolution.Daily);
             spy.SetMarketPrice(new Tick(algorithm.Time, Symbols.SPY, 100m, 100m));
 

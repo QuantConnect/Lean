@@ -246,7 +246,8 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.MarginCallModel = new TestDefaultMarginCallModel(portfolio, new OrderProperties());
 
             var expected = -(int)(Math.Round((totalMargin - netLiquidationValue) / securityPrice, MidpointRounding.AwayFromZero) * 4m);
-            var actual = (portfolio.MarginCallModel as TestDefaultMarginCallModel).GenerateMarginCallOrder(security, netLiquidationValue, totalMargin).Quantity;
+            var actual = (portfolio.MarginCallModel as TestDefaultMarginCallModel).GenerateMarginCallOrders(
+                new MarginCallOrdersParameters(portfolio.PositionGroups.Single(), netLiquidationValue, totalMargin)).Single().Quantity;
 
             Assert.AreEqual(expected, actual);
         }
@@ -273,7 +274,8 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.MarginCallModel = new TestDefaultMarginCallModel(portfolio, new OrderProperties());
 
             var expected = -(int)(Math.Round((totalMargin - netLiquidationValue) / securityPrice, MidpointRounding.AwayFromZero) * 2m);
-            var actual = (portfolio.MarginCallModel as TestDefaultMarginCallModel).GenerateMarginCallOrder(security, netLiquidationValue, totalMargin).Quantity;
+            var actual = (portfolio.MarginCallModel as TestDefaultMarginCallModel).GenerateMarginCallOrders(
+                new MarginCallOrdersParameters(portfolio.PositionGroups.Single(), netLiquidationValue, totalMargin)).Single().Quantity;
 
             Assert.AreEqual(expected, actual);
         }
@@ -299,7 +301,8 @@ namespace QuantConnect.Tests.Common.Securities
             var totalMargin = portfolio.TotalMarginUsed;
 
             var expected = (int)(Math.Round((totalMargin - netLiquidationValue) / securityPrice, MidpointRounding.AwayFromZero) * 4m);
-            var actual = (portfolio.MarginCallModel as TestDefaultMarginCallModel).GenerateMarginCallOrder(security, netLiquidationValue, totalMargin).Quantity;
+            var actual = (portfolio.MarginCallModel as TestDefaultMarginCallModel).GenerateMarginCallOrders(
+                new MarginCallOrdersParameters(portfolio.PositionGroups.Single(), netLiquidationValue, totalMargin)).Single().Quantity;
 
             Assert.AreEqual(expected, actual);
         }
@@ -325,7 +328,8 @@ namespace QuantConnect.Tests.Common.Securities
             var totalMargin = portfolio.TotalMarginUsed;
 
             var expected = (int)(Math.Round((totalMargin - netLiquidationValue) / securityPrice, MidpointRounding.AwayFromZero) * 2m);
-            var actual = (portfolio.MarginCallModel as TestDefaultMarginCallModel).GenerateMarginCallOrder(security, netLiquidationValue, totalMargin).Quantity;
+            var actual = (portfolio.MarginCallModel as TestDefaultMarginCallModel).GenerateMarginCallOrders(
+                new MarginCallOrdersParameters(portfolio.PositionGroups.Single(), netLiquidationValue, totalMargin)).Single().Quantity;
 
             Assert.AreEqual(expected, actual);
         }

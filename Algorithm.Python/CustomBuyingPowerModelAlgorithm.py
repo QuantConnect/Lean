@@ -54,3 +54,12 @@ class CustomBuyingPowerModel(BuyingPowerModel):
 
     def HasSufficientBuyingPowerForOrder(self, parameters):
         return HasSufficientBuyingPowerForOrderResult(True)
+
+    # Let's always return 0 as the maintenance margin so we avoid margin call orders
+    def GetMaintenanceMargin(self, parameters):
+        return MaintenanceMargin(0)
+
+    # Override this as well because the base implementation calls GetMaintenanceMargin (overridden)
+    # because in C# it wouldn't resolve the overridden Python method
+    def GetReservedBuyingPowerForPosition(self, parameters):
+        return parameters.ResultInAccountCurrency(0);
