@@ -192,8 +192,17 @@ namespace QuantConnect.Optimizer
         /// Handles starting Lean for a given parameter set
         /// </summary>
         /// <param name="parameterSet">The parameter set for the backtest to run</param>
+        /// <param name="backtestName">The backtest name to use</param>
         /// <returns>The new unique backtest id</returns>
-        protected abstract string RunLean(ParameterSet parameterSet);
+        protected abstract string RunLean(ParameterSet parameterSet, string backtestName);
+
+        /// <summary>
+        /// Get's a new backtest name
+        /// </summary>
+        protected virtual string GetBacktestName(ParameterSet parameterSet)
+        {
+            return "OptimizationBacktest";
+        }
 
         /// <summary>
         /// Handles a new backtest json result matching a requested backtest id
@@ -410,7 +419,8 @@ namespace QuantConnect.Optimizer
 
                 try
                 {
-                    var backtestId = RunLean(parameterSet);
+                    var backtestName = GetBacktestName(parameterSet);
+                    var backtestId = RunLean(parameterSet, backtestName);
 
                     if (!string.IsNullOrEmpty(backtestId))
                     {
