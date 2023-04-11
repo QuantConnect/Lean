@@ -124,7 +124,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "6"},
             {"Average Win", "0%"},
             {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "-0.395%"},
+            {"Compounding Annual Return", "-0.386%"},
             {"Drawdown", "0.000%"},
             {"Expectancy", "-1"},
             {"Net Profit", "-0.004%"},
@@ -141,10 +141,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "₹36.00"},
-            {"Estimated Strategy Capacity", "₹74000.00"},
+            {"Estimated Strategy Capacity", "₹84000.00"},
             {"Lowest Capacity Asset", "JUNIORBEES UL"},
             {"Portfolio Turnover", "0.04%"},
-            {"OrderListHash", "4637f26543287548b28a3c296db055d3"}
+            {"OrderListHash", "57558324bc9b67b36ae33c3e1c191740"}
         };
     }
 }
