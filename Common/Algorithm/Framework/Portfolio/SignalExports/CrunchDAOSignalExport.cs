@@ -29,6 +29,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
     public class CrunchDAOSignalExport : BaseSignalExport
     {
         /// <summary>
+        /// CrunchDAO API key
+        /// </summary>
+        private readonly string _apiKey;
+
+        /// <summary>
         /// CrunchDAO API endpoint
         /// </summary>
         private readonly Uri _destination;
@@ -81,6 +86,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <param name="comment">Comment (Optional)</param>
         public CrunchDAOSignalExport(string apiKey, string model, string submissionName = "", string comment = "")
         {
+            _apiKey = apiKey;
             _model = model;
             _submissionName = submissionName;
             _comment = comment;
@@ -89,8 +95,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
         /// <summary>
         /// Verifies every holding is a stock, creates a message with the desired positions
-        /// using the expected CrunchDAO API format and then sends it with the other required
-        /// body features</summary>
+        /// using the expected CrunchDAO API format, verifies there is an open round and then
+        /// sends the positions with the other required body features. If another signal was 
+        /// submitted before, it deletes the last signal and sends the new one</summary>
         /// <param name="parameters">A list of holdings from the portfolio,
         /// expected to be sent to CrunchDAO API and the algorithm being ran</param>
         /// <returns>True if the positions were sent to CrunchDAO succesfully and errors were returned, false otherwise</returns>
@@ -106,8 +113,21 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 return false;
             }
 
-            var result = SendPositions(positions);
+            if (!GetCurrentRoundID(out int currentRoundId))
+            {
+                return false;
+            }
 
+            if (GetLastSubmissionId(currentRoundId, out int lastSubmissionId))
+            {
+                _algorithm.Debug($"You have already submitted a signal for round {currentRoundId}. Your last submission is going to be overwritten with the new one");
+                if (!DeleteLastSubmission(lastSubmissionId))
+                {
+                    return false;
+                }
+            }
+
+            var result = SendPositions(positions);
             return result;
         }
 
@@ -134,7 +154,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
                 positions += $"{holding.Symbol},{_algorithm.Securities[holding.Symbol].LocalTime.ToString("yyyy-MM-dd")},{holding.Quantity}\n";
             }
-
+            
             return true;
         }
 
@@ -184,6 +204,78 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 return false;
             }
 
+            return true;
+        }
+
+        /// <summary>
+        /// Checks if there is an open round, if so it assigns the current round ID to currentRoundId
+        /// parameter
+        /// </summary>
+        /// <param name="currentRoundId">Current round ID</param>
+        /// <returns>True if there is an open round, false otherwise</returns>
+        private bool GetCurrentRoundID(out int currentRoundId)
+        {
+            // Assign a default value to currentRoundId
+            currentRoundId = -1;
+            using HttpResponseMessage roundIdResponse = HttpClient.GetAsync("https://api.tournament.crunchdao.com/v2/rounds/@current").Result;
+            if (roundIdResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                var responseContent = roundIdResponse.Content.ReadAsStringAsync().Result;
+                var parsedResponseContent = JObject.Parse(responseContent);
+                _algorithm.Error($"CrunchDAO API returned code: {parsedResponseContent["code"]} message:{parsedResponseContent["message"]}");
+                return false;
+            } 
+            else if (!roundIdResponse.IsSuccessStatusCode)
+            {
+                _algorithm.Error($"CrunchDAO API returned HttpRequestException {roundIdResponse.StatusCode}");
+                return false;
+            }
+
+            var roundIdResponseContent = roundIdResponse.Content.ReadAsStringAsync().Result;
+            currentRoundId = (int)(JObject.Parse(roundIdResponseContent)["id"]);
+            return true;
+        }
+
+        /// <summary>
+        /// Checks if there is a submission for the current round, if so it assigns its ID to
+        /// lastSubmissionId
+        /// </summary>
+        /// <param name="currentRoundId">Current round ID</param>
+        /// <param name="lastSubmissionId">Last submission ID (for the current round)</param>
+        /// <returns>True if there's a submission for the current round, false otherwise</returns>
+        private bool GetLastSubmissionId(int currentRoundId, out int lastSubmissionId)
+        {
+            using HttpResponseMessage submissionIdResponse = HttpClient.GetAsync($"https://tournament.crunchdao.com/api/v3/alpha-submissions?includeAll=false&roundId={currentRoundId}&apiKey={_apiKey}").Result;
+            var submissionIdResponseContent = submissionIdResponse.Content.ReadAsStringAsync().Result;
+            var parsedSubmissionIdResponseContent = JArray.Parse(submissionIdResponseContent);
+            if (!parsedSubmissionIdResponseContent.HasValues)
+            {
+                // Default value for lastSubmissionId
+                lastSubmissionId = -1;
+                return false;
+            }
+
+            lastSubmissionId = (int)parsedSubmissionIdResponseContent[0]["id"];
+            return true;
+        }
+
+        /// <summary>
+        /// Deletes the last submission for the current round
+        /// </summary>
+        /// <param name="lastSubmissionId">Last submission ID for the current round</param>
+        /// <returns>True if the last submission could be deleted sucessfully, false otherwise</returns>
+        private bool DeleteLastSubmission(int lastSubmissionId)
+        {
+            using HttpResponseMessage deleteSubmissionResponse = HttpClient.DeleteAsync($"https://tournament.crunchdao.com/api/v3/alpha-submissions/{lastSubmissionId}?&apiKey={_apiKey}").Result;
+            if (!deleteSubmissionResponse.IsSuccessStatusCode)
+            {
+                var responseContent = deleteSubmissionResponse.Content.ReadAsStringAsync().Result;
+                var parsedResponseContent = JObject.Parse(responseContent);
+                _algorithm.Error($"CrunchDAO API returned code: {parsedResponseContent["code"]} message:{parsedResponseContent["message"]}. Last submission could not be deleted");
+                return false;
+            }
+
+            _algorithm.Debug($"Last submission has been deleted");
             return true;
         }
     }
