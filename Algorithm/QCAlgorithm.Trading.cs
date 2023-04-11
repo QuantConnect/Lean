@@ -1028,8 +1028,10 @@ namespace QuantConnect.Algorithm
                 var nextMarketClose = security.Exchange.Hours.GetNextMarketClose(security.LocalTime, false);
 
                 // Enforce MarketOnClose submission buffer
-                var latestSubmissionTime = nextMarketClose.Subtract(Orders.MarketOnCloseOrder.SubmissionTimeBuffer);
-                if (Time > latestSubmissionTime)
+                var latestSubmissionTimeUtc = nextMarketClose
+                    .ConvertToUtc(security.Exchange.TimeZone)
+                    .Subtract(Orders.MarketOnCloseOrder.SubmissionTimeBuffer);
+                if (UtcTime > latestSubmissionTimeUtc)
                 {
                     // Tell user the required buffer on these orders, also inform them it can be changed for special cases.
                     // Default buffer is 15.5 minutes because with minute data a user will receive the 3:44->3:45 bar at 3:45,
