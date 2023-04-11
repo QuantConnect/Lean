@@ -54,6 +54,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
+            // ES has an expiration on december but because we are using 'contractDepthOffset: 1' we expect to use the next contract
+            if (_continuousContract.Mapped.ID.Date.Month != 3)
+            {
+                throw new Exception($"Unexpected mapped continuous contract future {_continuousContract.Mapped}");
+            }
+
             if (IsWarmingUp)
             {
                 // warm up data
@@ -146,10 +152,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$2.15"},
-            {"Estimated Strategy Capacity", "$3600000000.00"},
-            {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
-            {"Portfolio Turnover", "41.40%"},
-            {"OrderListHash", "1fcd459f69177160b35f7daf96b01a0d"}
+            {"Estimated Strategy Capacity", "$100000000.00"},
+            {"Lowest Capacity Asset", "ES VP274HSU1AF5"},
+            {"Portfolio Turnover", "41.23%"},
+            {"OrderListHash", "7b395abde9110078c28e2899bf1e1dc3"}
         };
     }
 }

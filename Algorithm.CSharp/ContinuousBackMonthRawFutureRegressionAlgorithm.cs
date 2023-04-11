@@ -76,6 +76,11 @@ namespace QuantConnect.Algorithm.CSharp
                         throw new Exception($"Unexpected current mapped contract expiration {currentExpiration}" +
                             $" @ {Time} it should be AT front month expiration {frontMonthExpiration}");
                     }
+
+                    if (_continuousContract.Mapped != changedEvent.Symbol.Underlying)
+                    {
+                        throw new Exception($"Unexpected mapped continuous contract {_continuousContract.Mapped} expected {changedEvent.Symbol.Underlying}");
+                    }
                 }
             }
 
@@ -147,29 +152,29 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "2"},
-            {"Average Win", "1.50%"},
+            {"Average Win", "1.48%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "2.993%"},
+            {"Compounding Annual Return", "2.968%"},
             {"Drawdown", "1.600%"},
             {"Expectancy", "0"},
-            {"Net Profit", "1.496%"},
-            {"Sharpe Ratio", "0.814"},
-            {"Probabilistic Sharpe Ratio", "42.511%"},
+            {"Net Profit", "1.483%"},
+            {"Sharpe Ratio", "0.815"},
+            {"Probabilistic Sharpe Ratio", "42.535%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "100%"},
             {"Profit-Loss Ratio", "0"},
             {"Alpha", "-0.005"},
-            {"Beta", "0.114"},
+            {"Beta", "0.113"},
             {"Annual Standard Deviation", "0.026"},
             {"Annual Variance", "0.001"},
-            {"Information Ratio", "-2.672"},
+            {"Information Ratio", "-2.674"},
             {"Tracking Error", "0.076"},
             {"Treynor Ratio", "0.184"},
             {"Total Fees", "$4.30"},
-            {"Estimated Strategy Capacity", "$2200000000.00"},
-            {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
+            {"Estimated Strategy Capacity", "$76000000.00"},
+            {"Lowest Capacity Asset", "ES VP274HSU1AF5"},
             {"Portfolio Turnover", "0.91%"},
-            {"OrderListHash", "ebeeac4c57ccacef7b458b6160190f5b"}
+            {"OrderListHash", "7dc4343c40b253d98995984c027524f6"}
         };
     }
 }

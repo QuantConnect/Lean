@@ -1705,7 +1705,8 @@ namespace QuantConnect.Algorithm
                     fillDataForward,
                     extendedMarketHours,
                     isFilteredSubscription,
-                    dataNormalizationMode: dataNormalizationMode.Value);
+                    dataNormalizationMode: dataNormalizationMode.Value,
+                    contractDepthOffset: (uint)contractDepthOffset);
             }
             else
             {
@@ -1713,7 +1714,8 @@ namespace QuantConnect.Algorithm
                    resolution,
                    fillDataForward,
                    extendedMarketHours,
-                   isFilteredSubscription);
+                   isFilteredSubscription,
+                   contractDepthOffset: (uint)contractDepthOffset);
             }
 
             var security = Securities.CreateSecurity(symbol, configs, leverage);
