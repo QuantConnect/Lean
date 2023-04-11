@@ -17,8 +17,9 @@ namespace QuantConnect.Indicators
 {
     /// <summary>
     /// Represents the traditional exponential moving average indicator (EMA).
-    /// After the first sample, the value of the EMA indicator is a function
-    /// of the previous EMA value. Therefore, depending on the number of samples
+    /// When the indicator is ready, the first value of the EMA is equivalent to the simple moving average.
+    /// After the first EMA value, the EMA value is a function of the previous EMA value.
+    /// Therefore, depending on the number of samples
     /// you feed into the indicator, it can provide different EMA values for a single
     /// security and lookback period. To make the indicator values consistent
     /// across time, warm up the indicator with all the trailing security price history.
