@@ -293,16 +293,27 @@ namespace QuantConnect.Algorithm
             bool? fillForward = null)
             where T : IBaseData
         {
-            foreach (var symbol in symbols)
+            var requests = symbols.Select(x =>
             {
-                var res = GetResolution(symbol, resolution);
+                var res = GetResolution(x, resolution);
                 if (res == Resolution.Tick)
                 {
                     throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
                 }
-            }
 
-            var requests = CreateBarCountHistoryRequests(symbols, periods, resolution, fillForward);
+                var config = GetMatchingSubscription(x, typeof(T), res);
+                if (config == null) return null;
+
+                var exchange = GetExchangeHours(x);
+                var start = _historyRequestFactory.GetStartTimeAlgoTz(x, periods, res, exchange, config.DataTimeZone);
+                var request = _historyRequestFactory.CreateHistoryRequest(config, start, Time, exchange, res);
+
+                // apply overrides
+                if (fillForward.HasValue) request.FillForwardResolution = fillForward.Value ? GetResolution(x, resolution) : (Resolution?)null;
+
+                return request;
+            });
+
             return GetDataTypedHistory<T>(requests);
         }
 
@@ -321,7 +332,20 @@ namespace QuantConnect.Algorithm
             bool? fillForward = null)
             where T : IBaseData
         {
-            var requests = CreateDateRangeHistoryRequests(symbols, start, end, resolution, fillForward);
+            var requests = symbols.Select(x =>
+            {
+                var res = GetResolution(x, resolution);
+                var config = GetMatchingSubscription(x, typeof(T), res);
+                if (config == null) return null;
+
+                var request = _historyRequestFactory.CreateHistoryRequest(config, start, Time, GetExchangeHours(x), res);
+
+                // apply overrides
+                if (fillForward.HasValue) request.FillForwardResolution = fillForward.Value ? GetResolution(x, resolution) : (Resolution?)null;
+
+                return request;
+            });
+
             return GetDataTypedHistory<T>(requests);
         }
 
