@@ -221,11 +221,12 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="span">The span over which to request data. This is a calendar span, so take into consideration weekends and such</param>
         /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <returns>An enumerable of slice containing data over the most recent span for all configured securities</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<Slice> History(TimeSpan span, Resolution? resolution = null)
+        public IEnumerable<Slice> History(TimeSpan span, Resolution? resolution = null, bool? fillForward = null)
         {
-            return History(Securities.Keys, Time - span, Time, resolution).Memoize();
+            return History(Securities.Keys, Time - span, Time, resolution, fillForward).Memoize();
         }
 
         /// <summary>
@@ -235,11 +236,12 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <returns>An enumerable of slice containing data over the most recent span for all configured securities</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<Slice> History(int periods, Resolution? resolution = null)
+        public IEnumerable<Slice> History(int periods, Resolution? resolution = null, bool? fillForward = null)
         {
-            return History(Securities.Keys, periods, resolution).Memoize();
+            return History(Securities.Keys, periods, resolution, fillForward).Memoize();
         }
 
         /// <summary>
@@ -249,12 +251,13 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<DataDictionary<T>> History<T>(TimeSpan span, Resolution? resolution = null)
+        public IEnumerable<DataDictionary<T>> History<T>(TimeSpan span, Resolution? resolution = null, bool? fillForward = null)
             where T : IBaseData
         {
-            return History<T>(Securities.Keys, span, resolution).Memoize();
+            return History<T>(Securities.Keys, span, resolution, fillForward).Memoize();
         }
 
         /// <summary>
@@ -265,12 +268,13 @@ namespace QuantConnect.Algorithm
         /// <param name="symbols">The symbols to retrieve historical data for</param>
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, TimeSpan span, Resolution? resolution = null)
+        public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, TimeSpan span, Resolution? resolution = null, bool? fillForward = null)
             where T : IBaseData
         {
-            return History<T>(symbols, Time - span, Time, resolution).Memoize();
+            return History<T>(symbols, Time - span, Time, resolution, fillForward).Memoize();
         }
 
         /// <summary>
@@ -282,27 +286,23 @@ namespace QuantConnect.Algorithm
         /// <param name="symbols">The symbols to retrieve historical data for</param>
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null)
+        public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null,
+            bool? fillForward = null)
             where T : IBaseData
         {
-            var requests = symbols.Select(x =>
+            foreach (var symbol in symbols)
             {
-                var res = GetResolution(x, resolution);
+                var res = GetResolution(symbol, resolution);
                 if (res == Resolution.Tick)
                 {
                     throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
                 }
+            }
 
-                var config = GetMatchingSubscription(x, typeof(T));
-                if (config == null) return null;
-
-                var exchange = GetExchangeHours(x);
-                var start = _historyRequestFactory.GetStartTimeAlgoTz(x, periods, res, exchange, config.DataTimeZone);
-                return _historyRequestFactory.CreateHistoryRequest(config, start, Time, exchange, res);
-            });
-
+            var requests = CreateBarCountHistoryRequests(symbols, periods, resolution, fillForward);
             return GetDataTypedHistory<T>(requests);
         }
 
@@ -314,19 +314,14 @@ namespace QuantConnect.Algorithm
         /// <param name="start">The start time in the algorithm's time zone</param>
         /// <param name="end">The end time in the algorithm's time zone</param>
         /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null)
+        public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null,
+            bool? fillForward = null)
             where T : IBaseData
         {
-            var requests = symbols.Select(x =>
-            {
-                var config = GetMatchingSubscription(x, typeof(T), resolution);
-                if (config == null) return null;
-
-                return _historyRequestFactory.CreateHistoryRequest(config, start, end, GetExchangeHours(x), resolution);
-            });
-
+            var requests = CreateDateRangeHistoryRequests(symbols, start, end, resolution, fillForward);
             return GetDataTypedHistory<T>(requests);
         }
 
@@ -337,12 +332,13 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">The symbol to retrieve historical data for</param>
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<T> History<T>(Symbol symbol, TimeSpan span, Resolution? resolution = null)
+        public IEnumerable<T> History<T>(Symbol symbol, TimeSpan span, Resolution? resolution = null, bool? fillForward = null)
             where T : IBaseData
         {
-            return History<T>(symbol, Time - span, Time, resolution).Memoize();
+            return History<T>(symbol, Time - span, Time, resolution, fillForward).Memoize();
         }
 
         /// <summary>
@@ -352,9 +348,10 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">The symbol to retrieve historical data for</param>
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<TradeBar> History(Symbol symbol, int periods, Resolution? resolution = null)
+        public IEnumerable<TradeBar> History(Symbol symbol, int periods, Resolution? resolution = null, bool? fillForward = null)
         {
             if (symbol == null) throw new ArgumentException(_symbolEmptyErrorMessage);
 
@@ -362,7 +359,7 @@ namespace QuantConnect.Algorithm
             var marketHours = GetMarketHours(symbol);
             var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, marketHours.ExchangeHours, marketHours.DataTimeZone);
 
-            return History(symbol, start, Time, resolution);
+            return History(symbol, start, Time, resolution, fillForward);
         }
 
         /// <summary>
@@ -373,9 +370,10 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">The symbol to retrieve historical data for</param>
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<T> History<T>(Symbol symbol, int periods, Resolution? resolution = null)
+        public IEnumerable<T> History<T>(Symbol symbol, int periods, Resolution? resolution = null, bool? fillForward = null)
             where T : IBaseData
         {
             resolution = GetResolution(symbol, resolution);
@@ -384,7 +382,7 @@ namespace QuantConnect.Algorithm
                 throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
             }
 
-            var requests = CreateBarCountHistoryRequests(new [] { symbol }, typeof(T), periods, resolution);
+            var requests = CreateBarCountHistoryRequests(new [] { symbol }, typeof(T), periods, resolution, fillForward);
             return GetDataTypedHistory<T>(requests, symbol);
         }
 
@@ -395,12 +393,13 @@ namespace QuantConnect.Algorithm
         /// <param name="start">The start time in the algorithm's time zone</param>
         /// <param name="end">The end time in the algorithm's time zone</param>
         /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<T> History<T>(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null)
+        public IEnumerable<T> History<T>(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null, bool? fillForward = null)
             where T : IBaseData
         {
-            var requests = CreateDateRangeHistoryRequests(new[] { symbol }, typeof(T), start, end, resolution);
+            var requests = CreateDateRangeHistoryRequests(new[] { symbol }, typeof(T), start, end, resolution, fillForward);
             return GetDataTypedHistory<T>(requests, symbol);
         }
 
@@ -410,11 +409,12 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">The symbol to retrieve historical data for</param>
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<TradeBar> History(Symbol symbol, TimeSpan span, Resolution? resolution = null)
+        public IEnumerable<TradeBar> History(Symbol symbol, TimeSpan span, Resolution? resolution = null, bool? fillForward = null)
         {
-            return History(symbol, Time - span, Time, resolution);
+            return History(symbol, Time - span, Time, resolution, fillForward);
         }
 
         /// <summary>
@@ -424,9 +424,10 @@ namespace QuantConnect.Algorithm
         /// <param name="start">The start time in the algorithm's time zone</param>
         /// <param name="end">The end time in the algorithm's time zone</param>
         /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<TradeBar> History(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null)
+        public IEnumerable<TradeBar> History(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null, bool? fillForward = null)
         {
             var securityType = symbol.ID.SecurityType;
             if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
@@ -441,7 +442,7 @@ namespace QuantConnect.Algorithm
                                                     " Please use the generic version with Tick type parameter or provide a list of Symbols to use the Slice history request API.");
             }
 
-            return History(new[] { symbol }, start, end, resolutionToUse).Get(symbol).Memoize();
+            return History(new[] { symbol }, start, end, resolutionToUse, fillForward).Get(symbol).Memoize();
         }
 
         /// <summary>
@@ -452,11 +453,12 @@ namespace QuantConnect.Algorithm
         /// <param name="symbols">The symbols to retrieve historical data for</param>
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, TimeSpan span, Resolution? resolution = null)
+        public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, TimeSpan span, Resolution? resolution = null, bool? fillForward = null)
         {
-            return History(symbols, Time - span, Time, resolution).Memoize();
+            return History(symbols, Time - span, Time, resolution, fillForward).Memoize();
         }
 
         /// <summary>
@@ -467,12 +469,13 @@ namespace QuantConnect.Algorithm
         /// <param name="symbols">The symbols to retrieve historical data for</param>
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null)
+        public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null, bool? fillForward = null)
         {
             if (resolution == Resolution.Tick) throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
-            return History(CreateBarCountHistoryRequests(symbols, periods, resolution)).Memoize();
+            return History(CreateBarCountHistoryRequests(symbols, periods, resolution, fillForward)).Memoize();
         }
 
         /// <summary>
@@ -788,25 +791,26 @@ namespace QuantConnect.Algorithm
         /// Helper methods to create a history request for the specified symbols and bar count
         /// </summary>
         private IEnumerable<HistoryRequest> CreateBarCountHistoryRequests(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null,
-            DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
+            bool? fillForward = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
+            int? contractDepthOffset = null)
         {
-            return CreateBarCountHistoryRequests(symbols, typeof(BaseData), periods, resolution, dataMappingMode, dataNormalizationMode,
-                contractDepthOffset);
+            return CreateBarCountHistoryRequests(symbols, typeof(BaseData), periods, resolution, fillForward, dataMappingMode,
+                dataNormalizationMode, contractDepthOffset);
         }
 
         /// <summary>
         /// Helper methods to create a history request for the specified symbols and bar count with custom data type
         /// </summary>
         private IEnumerable<HistoryRequest> CreateBarCountHistoryRequests(IEnumerable<Symbol> symbols, Type requestedType, int periods,
-            Resolution? resolution = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
-            int? contractDepthOffset = null)
+            Resolution? resolution = null, bool? fillForward = null, DataMappingMode? dataMappingMode = null,
+            DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
         {
             return symbols.Where(HistoryRequestValid).SelectMany(x =>
             {
                 var res = GetResolution(x, resolution);
                 var exchange = GetExchangeHours(x);
                 var configs = GetMatchingSubscriptions(x, requestedType, resolution).ToList();
-                if (!configs.Any())
+                if (configs.Count == 0)
                 {
                     return Enumerable.Empty<HistoryRequest>();
                 }
@@ -814,8 +818,16 @@ namespace QuantConnect.Algorithm
                 var start = _historyRequestFactory.GetStartTimeAlgoTz(x, periods, res, exchange, configs.First().DataTimeZone);
                 var end = Time;
 
-                return configs.Select(config => _historyRequestFactory.CreateHistoryRequest(config, start, end, exchange, res, dataMappingMode,
-                    dataNormalizationMode, contractDepthOffset));
+                return configs.Select(config =>
+                {
+                    var request = _historyRequestFactory.CreateHistoryRequest(config, start, end, exchange, res, dataMappingMode,
+                        dataNormalizationMode, contractDepthOffset);
+
+                    // apply overrides
+                    if (fillForward.HasValue) request.FillForwardResolution = fillForward.Value ? GetResolution(x, resolution) : (Resolution?)null;
+
+                    return request;
+                });
             });
         }
 
