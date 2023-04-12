@@ -90,9 +90,10 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="transactionHandler">The transaction handler used to get the algorithms <see cref="Order"/> information</param>
         public override void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, ITransactionHandler transactionHandler)
         {
+            _job = (BacktestNodePacket)job;
+            State["Name"] = _job.Name;
             _algorithmId = job.AlgorithmId;
             _projectId = job.ProjectId;
-            _job = (BacktestNodePacket)job;
             if (_job == null) throw new Exception("BacktestingResultHandler.Constructor(): Submitted Job type invalid.");
             base.Initialize(job, messagingHandler, api, transactionHandler);
         }

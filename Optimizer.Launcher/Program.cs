@@ -23,6 +23,7 @@ using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 
 namespace QuantConnect.Optimizer.Launcher
@@ -60,7 +61,8 @@ namespace QuantConnect.Optimizer.Launcher
                     MaximumConcurrentBacktests = Config.GetInt("maximum-concurrent-backtests", Math.Max(1, Environment.ProcessorCount / 2))
                 };
 
-                var optimizer = new ConsoleLeanOptimizer(packet);
+                var optimizerType = Config.Get("optimization-launcher", typeof(ConsoleLeanOptimizer).Name);
+                var optimizer = (LeanOptimizer)Activator.CreateInstance(Composer.Instance.GetExportedTypes<LeanOptimizer>().Single(x => x.Name == optimizerType), packet);
 
                 if (Config.GetBool("estimate", false))
                 {
