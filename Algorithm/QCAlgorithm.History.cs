@@ -338,7 +338,7 @@ namespace QuantConnect.Algorithm
                 var config = GetMatchingSubscription(x, typeof(T), res);
                 if (config == null) return null;
 
-                var request = _historyRequestFactory.CreateHistoryRequest(config, start, Time, GetExchangeHours(x), res);
+                var request = _historyRequestFactory.CreateHistoryRequest(config, start, end, GetExchangeHours(x), res);
 
                 // apply overrides
                 if (fillForward.HasValue) request.FillForwardResolution = fillForward.Value ? GetResolution(x, resolution) : (Resolution?)null;
