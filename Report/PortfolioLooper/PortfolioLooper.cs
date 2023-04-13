@@ -139,17 +139,14 @@ namespace QuantConnect.Report
             // Begin setting up the currency conversion feed if needed
             var coreSecurities = Algorithm.Securities.Values.ToList();
 
-            if (coreSecurities.Any(x => x.Symbol.SecurityType == SecurityType.Forex || x.Symbol.SecurityType == SecurityType.Crypto))
-            {
-                BaseSetupHandler.SetupCurrencyConversions(Algorithm, _dataManager.UniverseSelection);
-                var conversionSecurities = Algorithm.Securities.Values.Where(s => !coreSecurities.Contains(s)).ToList();
+            BaseSetupHandler.SetupCurrencyConversions(Algorithm, _dataManager.UniverseSelection);
+            var conversionSecurities = Algorithm.Securities.Values.Where(s => !coreSecurities.Contains(s)).ToList();
 
-                // Skip the history request if we don't need to convert anything
-                if (conversionSecurities.Any())
-                {
-                    // Point-in-time Slices to convert FX and Crypto currencies to the portfolio currency
-                    _conversionSlices = GetHistory(Algorithm, conversionSecurities, resolution);
-                }
+            // Skip the history request if we don't need to convert anything
+            if (conversionSecurities.Any())
+            {
+                // Point-in-time Slices to convert FX and Crypto currencies to the portfolio currency
+                _conversionSlices = GetHistory(Algorithm, conversionSecurities, resolution);
             }
         }
 
