@@ -2149,6 +2149,28 @@ tradeBar = TradeBar
             var expectedPeriod = resolution.ToTimeSpan();
             Assert.IsTrue(historyWithFillForward.All(bar => bar.Period == expectedPeriod));
             Assert.IsTrue(historyWithoutFillForward.All(bar => bar.Period == expectedPeriod));
+
+            // Check that fill-forwarded history has data for every period in the requested time span
+            var symbol = historyWithFillForward.First().Symbol;
+            var hours = MarketHoursDatabase.FromDataFolder().GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType).ExchangeHours;
+            for (var i = 0; i < historyWithFillForward.Count;)
+            {
+                var currentDayHours = hours.GetMarketHours(historyWithFillForward[i].Time);
+                var regularMarketSegments = currentDayHours.Segments.Where(x => x.State == MarketHoursState.Market).ToList();
+                var firstSegmentOfDayIndex = i > 0
+                    ? 0
+                    : regularMarketSegments
+                        .FindIndex(x => historyWithFillForward[i].Time.TimeOfDay >= x.Start && historyWithFillForward[i].Time.TimeOfDay < x.End);
+
+                foreach (var segment in regularMarketSegments.Skip(firstSegmentOfDayIndex))
+                {
+                    var start = i > 0 ? segment.Start : historyWithFillForward[i].Time.TimeOfDay;
+                    for (var time = start; time < segment.End; time += expectedPeriod, i++)
+                    {
+                        Assert.AreEqual(time, historyWithFillForward[i].Time.TimeOfDay);
+                    }
+                }
+            }
         }
 
         /// <summary>
