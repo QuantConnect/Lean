@@ -121,6 +121,13 @@ namespace QuantConnect.Brokerages
             {
                 case LimitOrder limitOrder:
                     quantityIsValid &= IsOrderSizeLargeEnough(limitOrder.LimitPrice);
+                    if (!quantityIsValid)
+                    {
+                        message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", 
+                            Messages.DefaultBrokerageModel.InvalidOrderSize(security, order.Quantity, limitOrder.LimitPrice));
+                        
+                        return false;
+                    }
                     break;
                 case MarketOrder:
                     if (!security.HasData)
@@ -133,17 +140,39 @@ namespace QuantConnect.Brokerages
 
                     var price = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
                     quantityIsValid &= IsOrderSizeLargeEnough(price);
+                    if (!quantityIsValid)
+                    {
+                        message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                            Messages.DefaultBrokerageModel.InvalidOrderSize(security, order.Quantity, price));
+
+                        return false;
+                    }
                     break;
                 case StopLimitOrder stopLimitOrder:
                     if (security.Symbol.SecurityType == SecurityType.CryptoFuture)
                     {
                         message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                             Messages.BinanceBrokerageModel.UnsupportedOrderTypeForSecurityType(order, security));
+
                         return false;
                     }
                     quantityIsValid &= IsOrderSizeLargeEnough(stopLimitOrder.LimitPrice);
+                    if (!quantityIsValid)
+                    {
+                        message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                            Messages.DefaultBrokerageModel.InvalidOrderSize(security, order.Quantity, stopLimitOrder.LimitPrice));
+                        
+                        return false;
+                    }
                     // Binance Trading UI requires this check too...
                     quantityIsValid &= IsOrderSizeLargeEnough(stopLimitOrder.StopPrice);
+                    if (!quantityIsValid)
+                    {
+                        message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                            Messages.DefaultBrokerageModel.InvalidOrderSize(security, order.Quantity, stopLimitOrder.StopPrice));
+                        
+                        return false;
+                    }
                     break;
                 case StopMarketOrder:
                     // despite Binance API allows you to post STOP_LOSS and TAKE_PROFIT order types
@@ -158,15 +187,6 @@ namespace QuantConnect.Brokerages
                     message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                         Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, new [] { OrderType.StopMarket, OrderType.StopLimit, OrderType.Market, OrderType.Limit }));
                     return false;
-            }
-
-
-            if (!quantityIsValid)
-            {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.InvalidOrderQuantity(security, order.Quantity));
-
-                return false;
             }
 
             if (security.Type != SecurityType.Crypto && security.Type != SecurityType.CryptoFuture)
