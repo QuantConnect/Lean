@@ -301,7 +301,7 @@ namespace QuantConnect.Algorithm
                     throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
                 }
 
-                var config = GetMatchingSubscription(x, typeof(T), res);
+                var config = GetMatchingSubscription(x, typeof(T));
                 if (config == null) return null;
 
                 var exchange = GetExchangeHours(x);
@@ -309,7 +309,7 @@ namespace QuantConnect.Algorithm
                 var request = _historyRequestFactory.CreateHistoryRequest(config, start, Time, exchange, res);
 
                 // apply overrides
-                if (fillForward.HasValue) request.FillForwardResolution = fillForward.Value ? GetResolution(x, resolution) : (Resolution?)null;
+                if (fillForward.HasValue) request.FillForwardResolution = fillForward.Value ? res : (Resolution?)null;
 
                 return request;
             });
@@ -341,7 +341,7 @@ namespace QuantConnect.Algorithm
                 var request = _historyRequestFactory.CreateHistoryRequest(config, start, end, GetExchangeHours(x), res);
 
                 // apply overrides
-                if (fillForward.HasValue) request.FillForwardResolution = fillForward.Value ? GetResolution(x, resolution) : (Resolution?)null;
+                if (fillForward.HasValue) request.FillForwardResolution = fillForward.Value ? res : (Resolution?)null;
 
                 return request;
             });
@@ -793,15 +793,16 @@ namespace QuantConnect.Algorithm
         {
             return symbols.Where(HistoryRequestValid).SelectMany(x =>
             {
+                var res = GetResolution(x, resolution);
                 var requests = new List<HistoryRequest>();
 
                 foreach (var config in GetMatchingSubscriptions(x, requestedType, resolution))
                 {
-                    var request = _historyRequestFactory.CreateHistoryRequest(config, startAlgoTz, endAlgoTz, GetExchangeHours(x), resolution,
+                    var request = _historyRequestFactory.CreateHistoryRequest(config, startAlgoTz, endAlgoTz, GetExchangeHours(x), res,
                         dataMappingMode, dataNormalizationMode, contractDepthOffset);
 
                     // apply overrides
-                    if (fillForward.HasValue) request.FillForwardResolution = fillForward.Value ? GetResolution(x, resolution) : (Resolution?)null;
+                    if (fillForward.HasValue) request.FillForwardResolution = fillForward.Value ? res : (Resolution?)null;
                     if (extendedMarket.HasValue) request.IncludeExtendedMarketHours = extendedMarket.Value;
 
                     requests.Add(request);
@@ -833,7 +834,7 @@ namespace QuantConnect.Algorithm
             {
                 var res = GetResolution(x, resolution);
                 var exchange = GetExchangeHours(x);
-                var configs = GetMatchingSubscriptions(x, requestedType, resolution).ToList();
+                var configs = GetMatchingSubscriptions(x, requestedType, res).ToList();
                 if (configs.Count == 0)
                 {
                     return Enumerable.Empty<HistoryRequest>();
@@ -848,7 +849,7 @@ namespace QuantConnect.Algorithm
                         dataNormalizationMode, contractDepthOffset);
 
                     // apply overrides
-                    if (fillForward.HasValue) request.FillForwardResolution = fillForward.Value ? GetResolution(x, resolution) : (Resolution?)null;
+                    if (fillForward.HasValue) request.FillForwardResolution = fillForward.Value ? res : (Resolution?)null;
 
                     return request;
                 });

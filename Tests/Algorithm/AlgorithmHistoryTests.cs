@@ -1573,10 +1573,8 @@ def getOpenInterestHistory(algorithm, symbol, start, end):
             if (language == Language.CSharp)
             {
                 // No symbol, time span
-                var noSymbolTimeSpanHistoryWithFillForward = algorithm.History(dateRange, Resolution.Minute, fillForward: true)
-                    .Where(x => x.ContainsKey(aaplSymbol)).ToList();
-                var noSymbolTimeSpanHistoryWithoutFillForward = algorithm.History(dateRange, Resolution.Minute, fillForward: false)
-                    .Where(x => x.ContainsKey(aaplSymbol)).ToList();
+                var noSymbolTimeSpanHistoryWithFillForward = algorithm.History(dateRange, Resolution.Minute, fillForward: true).ToList();
+                var noSymbolTimeSpanHistoryWithoutFillForward = algorithm.History(dateRange, Resolution.Minute, fillForward: false).ToList();
                 AssertFillForwardHistoryResults(
                     noSymbolTimeSpanHistoryWithFillForward,
                     noSymbolTimeSpanHistoryWithoutFillForward,
@@ -1584,10 +1582,8 @@ def getOpenInterestHistory(algorithm, symbol, start, end):
                     historyWithoutFillForwardExpectedCount);
 
                 // No symbol, periods
-                var noSymbolPeriodBasedHistoryWithFillForward = algorithm.History(periods, Resolution.Minute, fillForward: true)
-                    .Where(x => x.ContainsKey(aaplSymbol)).ToList();
-                var noSymbolPeriodBasedHistoryWithoutFillForward = algorithm.History(periods, Resolution.Minute, fillForward: false)
-                    .Where(x => x.ContainsKey(aaplSymbol)).ToList();
+                var noSymbolPeriodBasedHistoryWithFillForward = algorithm.History(periods, Resolution.Minute, fillForward: true).ToList();
+                var noSymbolPeriodBasedHistoryWithoutFillForward = algorithm.History(periods, Resolution.Minute, fillForward: false).ToList();
                 AssertFillForwardHistoryResults(
                     noSymbolPeriodBasedHistoryWithFillForward,
                     noSymbolPeriodBasedHistoryWithoutFillForward,
