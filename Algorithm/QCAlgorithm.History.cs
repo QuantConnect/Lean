@@ -330,11 +330,10 @@ namespace QuantConnect.Algorithm
         {
             var requests = symbols.Select(x =>
             {
-                var res = GetResolution(x, resolution);
-                var config = GetMatchingSubscription(x, typeof(T), res);
+                var config = GetMatchingSubscription(x, typeof(T), resolution);
                 if (config == null) return null;
 
-                return _historyRequestFactory.CreateHistoryRequest(config, start, end, GetExchangeHours(x), res, fillForward);
+                return _historyRequestFactory.CreateHistoryRequest(config, start, end, GetExchangeHours(x), resolution, fillForward);
             });
 
             return GetDataTypedHistory<T>(requests);
@@ -819,7 +818,7 @@ namespace QuantConnect.Algorithm
             {
                 var res = GetResolution(x, resolution);
                 var exchange = GetExchangeHours(x);
-                var configs = GetMatchingSubscriptions(x, requestedType, res).ToList();
+                var configs = GetMatchingSubscriptions(x, requestedType, resolution).ToList();
                 if (configs.Count == 0)
                 {
                     return Enumerable.Empty<HistoryRequest>();
