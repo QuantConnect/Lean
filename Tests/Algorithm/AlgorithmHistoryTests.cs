@@ -1780,7 +1780,8 @@ tradeBar = TradeBar
                         singleSymbolTimeSpanHistoryWithFillForward,
                         singleSymbolTimeSpanHistoryWithoutFillForward,
                         tradeBarOnlyHistoryWithFillForwardExpectedCount,
-                        tradeBarOnlyHistoryWithoutFillForwardExpectedCount);
+                        tradeBarOnlyHistoryWithoutFillForwardExpectedCount,
+                        resolution);
 
                     // Single symbol, periods
                     var singleSymbolPeriodBasedHistoryWithFillForward = algorithm.History(pySymbol, periods, resolution, fillForward: true);
@@ -1789,7 +1790,8 @@ tradeBar = TradeBar
                         singleSymbolPeriodBasedHistoryWithFillForward,
                         singleSymbolPeriodBasedHistoryWithoutFillForward,
                         tradeBarOnlyHistoryWithFillForwardExpectedCount,
-                        tradeBarOnlyHistoryWithoutFillForwardExpectedCount);
+                        tradeBarOnlyHistoryWithoutFillForwardExpectedCount,
+                        resolution);
 
                     // Single symbol, date range
                     var singleSymbolDateRangeHistoryWithFillForward = algorithm.History(pySymbol, start, end, resolution, fillForward: true);
@@ -1798,7 +1800,8 @@ tradeBar = TradeBar
                         singleSymbolDateRangeHistoryWithFillForward,
                         singleSymbolDateRangeHistoryWithoutFillForward,
                         tradeBarOnlyHistoryWithFillForwardExpectedCount,
-                        tradeBarOnlyHistoryWithoutFillForwardExpectedCount);
+                        tradeBarOnlyHistoryWithoutFillForwardExpectedCount,
+                        resolution);
 
                     // Symbol array, time span
                     var symbolsTimeSpanHistoryWithFillForward = algorithm.History(pySymbols, timeSpan, resolution, fillForward: true);
@@ -1807,7 +1810,8 @@ tradeBar = TradeBar
                         symbolsTimeSpanHistoryWithFillForward,
                         symbolsTimeSpanHistoryWithoutFillForward,
                         tradeBarOnlyHistoryWithFillForwardExpectedCount,
-                        tradeBarOnlyHistoryWithoutFillForwardExpectedCount);
+                        tradeBarOnlyHistoryWithoutFillForwardExpectedCount,
+                        resolution);
 
                     // Symbol array, periods
                     var symbolsPeriodBasedHistoryWithFillForward = algorithm.History(pySymbols, periods, resolution, fillForward: true);
@@ -1816,7 +1820,8 @@ tradeBar = TradeBar
                         symbolsPeriodBasedHistoryWithFillForward,
                         symbolsPeriodBasedHistoryWithoutFillForward,
                         tradeBarOnlyHistoryWithFillForwardExpectedCount,
-                        tradeBarOnlyHistoryWithoutFillForwardExpectedCount);
+                        tradeBarOnlyHistoryWithoutFillForwardExpectedCount,
+                        resolution);
 
                     // Symbol array, date range
                     var symbolsDateRangeHistoryWithFillForward = algorithm.History(pySymbols, start, end, resolution, fillForward: true);
@@ -1825,7 +1830,8 @@ tradeBar = TradeBar
                         symbolsDateRangeHistoryWithFillForward,
                         symbolsDateRangeHistoryWithoutFillForward,
                         tradeBarOnlyHistoryWithFillForwardExpectedCount,
-                        tradeBarOnlyHistoryWithoutFillForwardExpectedCount);
+                        tradeBarOnlyHistoryWithoutFillForwardExpectedCount,
+                        resolution);
 
                     // Generic, single symbol, time span
                     var typedSingleSymbolTimeSpanHistoryWithFillForward = algorithm.History(pyTradeBarType, pySymbol, timeSpan,
@@ -1836,7 +1842,8 @@ tradeBar = TradeBar
                         typedSingleSymbolTimeSpanHistoryWithFillForward,
                         typedSingleSymbolTimeSpanHistoryWithoutFillForward,
                         tradeBarOnlyHistoryWithFillForwardExpectedCount,
-                        tradeBarOnlyHistoryWithoutFillForwardExpectedCount);
+                        tradeBarOnlyHistoryWithoutFillForwardExpectedCount,
+                        resolution);
 
                     // Same as previous but using a Symbol instead of pySymbol
                     typedSingleSymbolTimeSpanHistoryWithFillForward = algorithm.History(pyTradeBarType, symbol, timeSpan,
@@ -1847,7 +1854,8 @@ tradeBar = TradeBar
                         typedSingleSymbolTimeSpanHistoryWithFillForward,
                         typedSingleSymbolTimeSpanHistoryWithoutFillForward,
                         tradeBarOnlyHistoryWithFillForwardExpectedCount,
-                        tradeBarOnlyHistoryWithoutFillForwardExpectedCount);
+                        tradeBarOnlyHistoryWithoutFillForwardExpectedCount,
+                        resolution);
 
                     // Generic, single symbol, periods
                     var typedSingleSymbolPeriodBasedHistoryWithFillForward = algorithm.History(pyTradeBarType, pySymbol, periods,
@@ -1858,7 +1866,8 @@ tradeBar = TradeBar
                         typedSingleSymbolPeriodBasedHistoryWithFillForward,
                         typedSingleSymbolPeriodBasedHistoryWithoutFillForward,
                         tradeBarOnlyHistoryWithFillForwardExpectedCount,
-                        tradeBarOnlyHistoryWithoutFillForwardExpectedCount);
+                        tradeBarOnlyHistoryWithoutFillForwardExpectedCount,
+                        resolution);
 
                     // Same as previous but using a Symbol instead of pySymbol
                     typedSingleSymbolPeriodBasedHistoryWithFillForward = algorithm.History(pyTradeBarType, symbol, periods,
@@ -1869,7 +1878,8 @@ tradeBar = TradeBar
                         typedSingleSymbolPeriodBasedHistoryWithFillForward,
                         typedSingleSymbolPeriodBasedHistoryWithoutFillForward,
                         tradeBarOnlyHistoryWithFillForwardExpectedCount,
-                        tradeBarOnlyHistoryWithoutFillForwardExpectedCount);
+                        tradeBarOnlyHistoryWithoutFillForwardExpectedCount,
+                        resolution);
 
                     // Generic, single symbol, date range
                     var typedSingleSymbolDateRangeHistoryWithFillForward = algorithm.History(pyTradeBarType, pySymbol, start, end,
@@ -1880,7 +1890,8 @@ tradeBar = TradeBar
                         typedSingleSymbolDateRangeHistoryWithFillForward,
                         typedSingleSymbolDateRangeHistoryWithoutFillForward,
                         tradeBarOnlyHistoryWithFillForwardExpectedCount,
-                        tradeBarOnlyHistoryWithoutFillForwardExpectedCount);
+                        tradeBarOnlyHistoryWithoutFillForwardExpectedCount,
+                        resolution);
 
                     // Same as previous but using a Symbol instead of pySymbol
                     typedSingleSymbolDateRangeHistoryWithFillForward = algorithm.History(pyTradeBarType, symbol, start, end,
@@ -1891,7 +1902,8 @@ tradeBar = TradeBar
                         typedSingleSymbolDateRangeHistoryWithFillForward,
                         typedSingleSymbolDateRangeHistoryWithoutFillForward,
                         tradeBarOnlyHistoryWithFillForwardExpectedCount,
-                        tradeBarOnlyHistoryWithoutFillForwardExpectedCount);
+                        tradeBarOnlyHistoryWithoutFillForwardExpectedCount,
+                        resolution);
 
                     // Generic, symbol array, time span
                     var typedSymbolsTimeSpanHistoryWithFillForward = algorithm.History(pyTradeBarType, pySymbols, timeSpan,
@@ -1902,7 +1914,8 @@ tradeBar = TradeBar
                         typedSymbolsTimeSpanHistoryWithFillForward,
                         typedSymbolsTimeSpanHistoryWithoutFillForward,
                         tradeBarOnlyHistoryWithFillForwardExpectedCount,
-                        tradeBarOnlyHistoryWithoutFillForwardExpectedCount);
+                        tradeBarOnlyHistoryWithoutFillForwardExpectedCount,
+                        resolution);
 
                     // Generic, symbol array, periods
                     var typedSymbolsPeriodBasedHistoryWithFillForward = algorithm.History(pyTradeBarType, pySymbols, periods,
@@ -1913,7 +1926,8 @@ tradeBar = TradeBar
                         typedSymbolsPeriodBasedHistoryWithFillForward,
                         typedSymbolsPeriodBasedHistoryWithoutFillForward,
                         tradeBarOnlyHistoryWithFillForwardExpectedCount,
-                        tradeBarOnlyHistoryWithoutFillForwardExpectedCount);
+                        tradeBarOnlyHistoryWithoutFillForwardExpectedCount,
+                        resolution);
 
                     // Generic, symbol array, date range
                     var typedSymbolsDateRangeHistoryWithFillForward = algorithm.History(pyTradeBarType, pySymbols, start, end,
@@ -1924,7 +1938,8 @@ tradeBar = TradeBar
                         typedSymbolsDateRangeHistoryWithFillForward,
                         typedSymbolsDateRangeHistoryWithoutFillForward,
                         tradeBarOnlyHistoryWithFillForwardExpectedCount,
-                        tradeBarOnlyHistoryWithoutFillForwardExpectedCount);
+                        tradeBarOnlyHistoryWithoutFillForwardExpectedCount,
+                        resolution);
                 }
             }
         }
@@ -2138,6 +2153,33 @@ tradeBar = TradeBar
         }
 
         /// <summary>
+        /// Asserts that fill forwarded history results has data for every period in the requested time span
+        /// </summary>
+        private static void AssertFillForwardedHistoryTimes(Symbol symbol, List<DateTime> times, TimeSpan period)
+        {
+            var hours = MarketHoursDatabase.FromDataFolder().GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType).ExchangeHours;
+
+            for (var i = 0; i < times.Count;)
+            {
+                var currentDayHours = hours.GetMarketHours(times[i]);
+                var regularMarketSegments = currentDayHours.Segments.Where(x => x.State == MarketHoursState.Market).ToList();
+                var firstSegmentOfDayIndex = i > 0
+                    ? 0
+                    : regularMarketSegments
+                        .FindIndex(x => times[i].TimeOfDay > x.Start && times[i].TimeOfDay <= x.End);
+
+                foreach (var segment in regularMarketSegments.Skip(firstSegmentOfDayIndex))
+                {
+                    var start = i > 0 ? segment.Start + period : times[i].TimeOfDay;
+                    for (var time = start; time <= segment.End; time += period, i++)
+                    {
+                        Assert.AreEqual(time, times[i].TimeOfDay);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Asserts that history data, when called with fillForward set to true, has a period that is equal to the resolution used.
         /// Used in the test <see cref="HistoryRequestWithFillForward"/>.
         /// </summary>
@@ -2150,27 +2192,9 @@ tradeBar = TradeBar
             Assert.IsTrue(historyWithFillForward.All(bar => bar.Period == expectedPeriod));
             Assert.IsTrue(historyWithoutFillForward.All(bar => bar.Period == expectedPeriod));
 
-            // Check that fill-forwarded history has data for every period in the requested time span
             var symbol = historyWithFillForward.First().Symbol;
-            var hours = MarketHoursDatabase.FromDataFolder().GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType).ExchangeHours;
-            for (var i = 0; i < historyWithFillForward.Count;)
-            {
-                var currentDayHours = hours.GetMarketHours(historyWithFillForward[i].Time);
-                var regularMarketSegments = currentDayHours.Segments.Where(x => x.State == MarketHoursState.Market).ToList();
-                var firstSegmentOfDayIndex = i > 0
-                    ? 0
-                    : regularMarketSegments
-                        .FindIndex(x => historyWithFillForward[i].Time.TimeOfDay >= x.Start && historyWithFillForward[i].Time.TimeOfDay < x.End);
-
-                foreach (var segment in regularMarketSegments.Skip(firstSegmentOfDayIndex))
-                {
-                    var start = i > 0 ? segment.Start : historyWithFillForward[i].Time.TimeOfDay;
-                    for (var time = start; time < segment.End; time += expectedPeriod, i++)
-                    {
-                        Assert.AreEqual(time, historyWithFillForward[i].Time.TimeOfDay);
-                    }
-                }
-            }
+            var times = historyWithFillForward.Select(bar => bar.EndTime).ToList();
+            AssertFillForwardedHistoryTimes(symbol, times, expectedPeriod);
         }
 
         /// <summary>
@@ -2259,7 +2283,8 @@ tradeBar = TradeBar
             PyObject historyWithFillForward,
             PyObject historyWithoutFillForward,
             int expectedHistoryWithFillForwardCount,
-            int expectedHistoryWithoutFillForwardCount)
+            int expectedHistoryWithoutFillForwardCount,
+            Resolution resolution)
         {
             var historyWithFillForwardCount = historyWithFillForward.GetAttr("shape")[0].As<int>();
             var historyWithoutFillForwardCount = historyWithoutFillForward.GetAttr("shape")[0].As<int>();
@@ -2268,6 +2293,15 @@ tradeBar = TradeBar
             Assert.AreEqual(expectedHistoryWithFillForwardCount, historyWithFillForwardCount);
             Assert.AreEqual(expectedHistoryWithoutFillForwardCount, historyWithoutFillForwardCount);
             Assert.Less(historyWithoutFillForwardCount, historyWithFillForwardCount);
+
+            var index = historyWithFillForward
+                .GetAttr("index")
+                .GetAttr("to_flat_index").Invoke()
+                .GetAttr("tolist").Invoke()
+                .As<List<PyObject>>();
+            var symbol = index.First()[0].As<Symbol>();
+            var times = index.Select(x => x[1].As<DateTime>()).ToList();
+            AssertFillForwardedHistoryTimes(symbol, times, resolution.ToTimeSpan());
         }
     }
 }
