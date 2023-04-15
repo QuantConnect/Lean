@@ -16,7 +16,7 @@ from AlgorithmImports import *
 class ConstantAlphaModel(AlphaModel):
     ''' Provides an implementation of IAlphaModel that always returns the same insight for each security'''
 
-    def __init__(self, type, direction, period, magnitude = None, confidence = None):
+    def __init__(self, type, direction, period, magnitude = None, confidence = None, weight = None):
         '''Initializes a new instance of the ConstantAlphaModel class
         Args:
             type: The type of insight
@@ -29,6 +29,7 @@ class ConstantAlphaModel(AlphaModel):
         self.period = period
         self.magnitude = magnitude
         self.confidence = confidence
+        self.weight = weight
         self.securities = []
         self.insightsTimeBySymbol = {}
 
@@ -57,7 +58,7 @@ class ConstantAlphaModel(AlphaModel):
             # security price could be zero until we get the first data point. e.g. this could happen
             # when adding both forex and equities, we will first get a forex data point
             if security.Price != 0 and self.ShouldEmitInsight(algorithm.UtcTime, security.Symbol):
-                insights.append(Insight(security.Symbol, self.period, self.type, self.direction, self.magnitude, self.confidence))
+                insights.append(Insight(security.Symbol, self.period, self.type, self.direction, self.magnitude, self.confidence, None, self.weight))
 
         return insights
 
