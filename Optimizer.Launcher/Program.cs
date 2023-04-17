@@ -48,9 +48,11 @@ namespace QuantConnect.Optimizer.Launcher
 
                 var optimizationStrategyName = Config.Get("optimization-strategy",
                     "QuantConnect.Optimizer.GridSearchOptimizationStrategy");
+                var channel = Config.Get("data-channel");
+                var optimizationId = Config.Get("optimization-id", Guid.NewGuid().ToString());
                 var packet = new OptimizationNodePacket
                 {
-                    OptimizationId = Guid.NewGuid().ToString(),
+                    OptimizationId = optimizationId,
                     OptimizationStrategy = optimizationStrategyName,
                     OptimizationStrategySettings = (OptimizationStrategySettings)JsonConvert.DeserializeObject(Config.Get(
                         "optimization-strategy-settings",
@@ -58,7 +60,8 @@ namespace QuantConnect.Optimizer.Launcher
                     Criterion = JsonConvert.DeserializeObject<Target>(Config.Get("optimization-criterion", "{\"target\":\"Statistics.TotalProfit\", \"extremum\": \"max\"}")),
                     Constraints = JsonConvert.DeserializeObject<List<Constraint>>(Config.Get("constraints", "[]")).AsReadOnly(),
                     OptimizationParameters = JsonConvert.DeserializeObject<HashSet<OptimizationParameter>>(Config.Get("parameters", "[]")),
-                    MaximumConcurrentBacktests = Config.GetInt("maximum-concurrent-backtests", Math.Max(1, Environment.ProcessorCount / 2))
+                    MaximumConcurrentBacktests = Config.GetInt("maximum-concurrent-backtests", Math.Max(1, Environment.ProcessorCount / 2)),
+                    Channel = channel,
                 };
 
                 var optimizerType = Config.Get("optimization-launcher", typeof(ConsoleLeanOptimizer).Name);

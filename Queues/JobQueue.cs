@@ -197,6 +197,7 @@ namespace QuantConnect.Queues
                 return liveJob;
             }
 
+            var optimizationId = Config.Get("optimization-id");
             //Default run a backtesting job.
             var backtestJob = new BacktestNodePacket(0, 0, "", new byte[] { }, Config.Get("backtest-name", "local"))
             {
@@ -213,6 +214,7 @@ namespace QuantConnect.Queues
                 Language = Language,
                 Parameters = parameters,
                 Controls = controls,
+                OptimizationId = optimizationId,
                 PythonVirtualEnvironment = Config.Get("python-venv")
             };
 
