@@ -214,9 +214,13 @@ namespace QuantConnect.Queues
                 Language = Language,
                 Parameters = parameters,
                 Controls = controls,
-                OptimizationId = optimizationId,
                 PythonVirtualEnvironment = Config.Get("python-venv")
             };
+            // Only set optimization id when backtest is for optimization
+            if (!optimizationId.IsNullOrEmpty())
+            {
+                backtestJob.OptimizationId = optimizationId;
+            }
 
             return backtestJob;
         }
