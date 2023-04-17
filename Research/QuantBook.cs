@@ -364,22 +364,22 @@ namespace QuantConnect.Research
                     if (symbol.Underlying.SecurityType == SecurityType.Equity)
                     {
                         // only add underlying if not present
-                        AddEquity(symbol.Underlying.Value, resolutionToUseForUnderlying, fillDataForward: fillForward,
+                        AddEquity(symbol.Underlying.Value, resolutionToUseForUnderlying, fillForward: fillForward,
                             extendedMarketHours: extendedMarket);
                     }
                     else if (symbol.Underlying.SecurityType == SecurityType.Index)
                     {
                         // only add underlying if not present
-                        AddIndex(symbol.Underlying.Value, resolutionToUseForUnderlying, fillDataForward: fillForward);
+                        AddIndex(symbol.Underlying.Value, resolutionToUseForUnderlying, fillForward: fillForward);
                     }
                     else if(symbol.Underlying.SecurityType == SecurityType.Future && symbol.Underlying.IsCanonical())
                     {
-                        AddFuture(symbol.Underlying.ID.Symbol, resolutionToUseForUnderlying, fillDataForward: fillForward,
+                        AddFuture(symbol.Underlying.ID.Symbol, resolutionToUseForUnderlying, fillForward: fillForward,
                             extendedMarketHours: extendedMarket);
                     }
                     else if (symbol.Underlying.SecurityType == SecurityType.Future)
                     {
-                        AddFutureContract(symbol.Underlying, resolutionToUseForUnderlying, fillDataForward: fillForward,
+                        AddFutureContract(symbol.Underlying, resolutionToUseForUnderlying, fillForward: fillForward,
                             extendedMarketHours: extendedMarket);
                     }
                 }

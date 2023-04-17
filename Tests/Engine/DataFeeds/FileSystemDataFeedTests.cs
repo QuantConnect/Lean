@@ -181,7 +181,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             synchronizer.Initialize(algorithm, algorithm.DataManager);
 
             feed.Initialize(algorithm, job, resultHandler, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider, algorithm.DataManager, synchronizer, dataPermissionManager.DataChannelProvider);
-            var option = algorithm.AddOption("AAPL", fillDataForward: fillForward);
+            var option = algorithm.AddOption("AAPL", fillForward: fillForward);
             option.SetFilter(filter => filter.FrontMonth());
             algorithm.PostInitialize();
 
@@ -232,7 +232,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             feed.Initialize(algorithm, job, resultHandler, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider,
                 algorithm.DataManager, synchronizer, dataPermissionManager.DataChannelProvider);
-            var future = algorithm.AddFuture("ES", fillDataForward: fillForward, extendedMarketHours: true);
+            var future = algorithm.AddFuture("ES", fillForward: fillForward, extendedMarketHours: true);
             future.SetFilter(0, 300);
             algorithm.PostInitialize();
 

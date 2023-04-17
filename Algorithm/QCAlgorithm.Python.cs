@@ -98,13 +98,13 @@ namespace QuantConnect.Algorithm
         /// <param name="ticker">Key/Ticker for data</param>
         /// <param name="resolution">Resolution of the Data Required</param>
         /// <param name="timeZone">Specifies the time zone of the raw data</param>
-        /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
+        /// <param name="fillForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
         /// <returns>The new <see cref="Security"/></returns>
         [DocumentationAttribute(AddingData)]
-        public Security AddData(PyObject type, string ticker, Resolution? resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
+        public Security AddData(PyObject type, string ticker, Resolution? resolution, DateTimeZone timeZone, bool fillForward = false, decimal leverage = 1.0m)
         {
-            return AddData(type.CreateType(), ticker, resolution, timeZone, fillDataForward, leverage);
+            return AddData(type.CreateType(), ticker, resolution, timeZone, fillForward, leverage);
         }
 
         /// <summary>
@@ -118,7 +118,7 @@ namespace QuantConnect.Algorithm
         /// <param name="underlying">The underlying symbol for the custom data</param>
         /// <param name="resolution">Resolution of the Data Required</param>
         /// <param name="timeZone">Specifies the time zone of the raw data</param>
-        /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
+        /// <param name="fillForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
         /// <returns>The new <see cref="Security"/></returns>
         /// <remarks>
@@ -128,9 +128,9 @@ namespace QuantConnect.Algorithm
         /// due to pythonnet's method precedence, as viewable here: https://github.com/QuantConnect/pythonnet/blob/9e29755c54e6008cb016e3dd9d75fbd8cd19fcf7/src/runtime/methodbinder.cs#L215
         /// </remarks>
         [DocumentationAttribute(AddingData)]
-        public Security AddData(PyObject type, Symbol underlying, Resolution? resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
+        public Security AddData(PyObject type, Symbol underlying, Resolution? resolution, DateTimeZone timeZone, bool fillForward = false, decimal leverage = 1.0m)
         {
-            return AddData(type.CreateType(), underlying, resolution, timeZone, fillDataForward, leverage);
+            return AddData(type.CreateType(), underlying, resolution, timeZone, fillForward, leverage);
         }
 
         /// <summary>
@@ -142,11 +142,11 @@ namespace QuantConnect.Algorithm
         /// <param name="ticker">Key/Ticker for data</param>
         /// <param name="resolution">Resolution of the Data Required</param>
         /// <param name="timeZone">Specifies the time zone of the raw data</param>
-        /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
+        /// <param name="fillForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
         /// <returns>The new <see cref="Security"/></returns>
         [DocumentationAttribute(AddingData)]
-        public Security AddData(Type dataType, string ticker, Resolution? resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
+        public Security AddData(Type dataType, string ticker, Resolution? resolution, DateTimeZone timeZone, bool fillForward = false, decimal leverage = 1.0m)
         {
             // NOTE: Invoking methods on BaseData w/out setting the symbol may provide unexpected behavior
             var baseInstance = dataType.GetBaseDataInstance();
@@ -155,7 +155,7 @@ namespace QuantConnect.Algorithm
                 var symbol = new Symbol(
                     SecurityIdentifier.GenerateBase(dataType, ticker, Market.USA, baseInstance.RequiresMapping()),
                     ticker);
-                return AddDataImpl(dataType, symbol, resolution, timeZone, fillDataForward, leverage);
+                return AddDataImpl(dataType, symbol, resolution, timeZone, fillForward, leverage);
             }
             // If we need a mappable ticker and we can't find one in the SymbolCache, throw
             Symbol underlying;
@@ -167,7 +167,7 @@ namespace QuantConnect.Algorithm
                                                     $"An example use case can be found in CustomDataAddDataRegressionAlgorithm");
             }
 
-            return AddData(dataType, underlying, resolution, timeZone, fillDataForward, leverage);
+            return AddData(dataType, underlying, resolution, timeZone, fillForward, leverage);
         }
 
         /// <summary>
@@ -181,7 +181,7 @@ namespace QuantConnect.Algorithm
         /// <param name="underlying"></param>
         /// <param name="resolution">Resolution of the Data Required</param>
         /// <param name="timeZone">Specifies the time zone of the raw data</param>
-        /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
+        /// <param name="fillForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
         /// <returns>The new <see cref="Security"/></returns>
         /// <remarks>
@@ -191,10 +191,10 @@ namespace QuantConnect.Algorithm
         /// due to pythonnet's method precedence, as viewable here: https://github.com/QuantConnect/pythonnet/blob/9e29755c54e6008cb016e3dd9d75fbd8cd19fcf7/src/runtime/methodbinder.cs#L215
         /// </remarks>
         [DocumentationAttribute(AddingData)]
-        public Security AddData(Type dataType, Symbol underlying, Resolution? resolution = null, DateTimeZone timeZone = null, bool fillDataForward = false, decimal leverage = 1.0m)
+        public Security AddData(Type dataType, Symbol underlying, Resolution? resolution = null, DateTimeZone timeZone = null, bool fillForward = false, decimal leverage = 1.0m)
         {
             var symbol = QuantConnect.Symbol.CreateBase(dataType, underlying, Market.USA);
-            return AddDataImpl(dataType, symbol, resolution, timeZone, fillDataForward, leverage);
+            return AddDataImpl(dataType, symbol, resolution, timeZone, fillForward, leverage);
         }
 
         /// <summary>
@@ -207,11 +207,11 @@ namespace QuantConnect.Algorithm
         /// <param name="properties">The properties of this new custom data</param>
         /// <param name="exchangeHours">The Exchange hours of this symbol</param>
         /// <param name="resolution">Resolution of the Data Required</param>
-        /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
+        /// <param name="fillForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
         /// <returns>The new <see cref="Security"/></returns>
         [DocumentationAttribute(AddingData)]
-        public Security AddData(PyObject type, string ticker, SymbolProperties properties, SecurityExchangeHours exchangeHours, Resolution? resolution = null, bool fillDataForward = false, decimal leverage = 1.0m)
+        public Security AddData(PyObject type, string ticker, SymbolProperties properties, SecurityExchangeHours exchangeHours, Resolution? resolution = null, bool fillForward = false, decimal leverage = 1.0m)
         {
             // Get the right key for storage of base type symbols
             var dataType = type.CreateType();
@@ -221,7 +221,7 @@ namespace QuantConnect.Algorithm
             SetDatabaseEntries(key, properties, exchangeHours);
 
             // Then add the data
-            return AddData(dataType, ticker, resolution, null, fillDataForward, leverage);
+            return AddData(dataType, ticker, resolution, null, fillForward, leverage);
         }
 
         /// <summary>
@@ -252,10 +252,10 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">Final symbol that includes underlying (if any)</param>
         /// <param name="resolution">Resolution of the Data required</param>
         /// <param name="timeZone">Specifies the time zone of the raw data</param>
-        /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
+        /// <param name="fillForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
         /// <returns>The new <see cref="Security"/></returns>
-        private Security AddDataImpl(Type dataType, Symbol symbol, Resolution? resolution, DateTimeZone timeZone, bool fillDataForward, decimal leverage)
+        private Security AddDataImpl(Type dataType, Symbol symbol, Resolution? resolution, DateTimeZone timeZone, bool fillForward, decimal leverage)
         {
             var alias = symbol.ID.Symbol;
             SymbolCache.Set(alias, symbol);
@@ -271,7 +271,7 @@ namespace QuantConnect.Algorithm
                 dataType,
                 symbol,
                 resolution,
-                fillDataForward,
+                fillForward,
                 isCustomData: true,
                 extendedMarketHours: true);
             var security = Securities.CreateSecurity(symbol, config, leverage, addToSymbolCache: false);
@@ -844,13 +844,13 @@ namespace QuantConnect.Algorithm
         /// <param name="tickers">The symbols to retrieve historical data for</param>
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
-        /// <param name="fillDataForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <returns>A python dictionary with pandas DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject tickers, int periods, Resolution? resolution = null, bool? fillDataForward = null)
+        public PyObject History(PyObject tickers, int periods, Resolution? resolution = null, bool? fillForward = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
-            return GetDataFrame(History(symbols, periods, resolution, fillDataForward));
+            return GetDataFrame(History(symbols, periods, resolution, fillForward));
         }
 
         /// <summary>
@@ -860,13 +860,13 @@ namespace QuantConnect.Algorithm
         /// <param name="tickers">The symbols to retrieve historical data for</param>
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
-        /// <param name="fillDataForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <returns>A python dictionary with pandas DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject tickers, TimeSpan span, Resolution? resolution = null, bool? fillDataForward = null)
+        public PyObject History(PyObject tickers, TimeSpan span, Resolution? resolution = null, bool? fillForward = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
-            return GetDataFrame(History(symbols, span, resolution, fillDataForward));
+            return GetDataFrame(History(symbols, span, resolution, fillForward));
         }
 
         /// <summary>
@@ -876,7 +876,7 @@ namespace QuantConnect.Algorithm
         /// <param name="start">The start time in the algorithm's time zone</param>
         /// <param name="end">The end time in the algorithm's time zone</param>
         /// <param name="resolution">The resolution to request</param>
-        /// <param name="fillDataForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
         /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
@@ -884,12 +884,12 @@ namespace QuantConnect.Algorithm
         /// For example, 0 (default) will use the front month, 1 will use the back month contract</param>
         /// <returns>A python dictionary with a pandas DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject tickers, DateTime start, DateTime end, Resolution? resolution = null, bool? fillDataForward = null,
+        public PyObject History(PyObject tickers, DateTime start, DateTime end, Resolution? resolution = null, bool? fillForward = null,
             bool? extendedMarket = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
             int? contractDepthOffset = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
-            return GetDataFrame(History(symbols, start, end, resolution, fillDataForward, extendedMarket, dataMappingMode,
+            return GetDataFrame(History(symbols, start, end, resolution, fillForward, extendedMarket, dataMappingMode,
                 dataNormalizationMode, contractDepthOffset));
         }
 
@@ -916,7 +916,7 @@ namespace QuantConnect.Algorithm
         /// <param name="start">The start time in the algorithm's time zone</param>
         /// <param name="end">The end time in the algorithm's time zone</param>
         /// <param name="resolution">The resolution to request</param>
-        /// <param name="fillDataForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
         /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
@@ -925,12 +925,12 @@ namespace QuantConnect.Algorithm
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public PyObject History(PyObject type, PyObject tickers, DateTime start, DateTime end, Resolution? resolution = null,
-            bool? fillDataForward = null, bool? extendedMarket = null, DataMappingMode? dataMappingMode = null,
+            bool? fillForward = null, bool? extendedMarket = null, DataMappingMode? dataMappingMode = null,
             DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
             var requestedType = type.CreateType();
-            var requests = CreateDateRangeHistoryRequests(symbols, requestedType, start, end, resolution, fillDataForward, extendedMarket,
+            var requests = CreateDateRangeHistoryRequests(symbols, requestedType, start, end, resolution, fillForward, extendedMarket,
                 dataMappingMode, dataNormalizationMode, contractDepthOffset);
             return GetDataFrame(History(requests.Where(x => x != null)), requestedType);
         }
@@ -944,10 +944,10 @@ namespace QuantConnect.Algorithm
         /// <param name="tickers">The symbols to retrieve historical data for</param>
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
-        /// <param name="fillDataForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject type, PyObject tickers, int periods, Resolution? resolution = null, bool? fillDataForward = null)
+        public PyObject History(PyObject type, PyObject tickers, int periods, Resolution? resolution = null, bool? fillForward = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
             if (symbols.Any(symbol => GetResolution(symbol, resolution) == Resolution.Tick))
@@ -956,7 +956,7 @@ namespace QuantConnect.Algorithm
             }
 
             var requestedType = type.CreateType();
-            var requests = CreateBarCountHistoryRequests(symbols, requestedType, periods, resolution, fillDataForward);
+            var requests = CreateBarCountHistoryRequests(symbols, requestedType, periods, resolution, fillForward);
 
             return GetDataFrame(History(requests.Where(x => x != null)), requestedType);
         }
@@ -969,12 +969,12 @@ namespace QuantConnect.Algorithm
         /// <param name="tickers">The symbols to retrieve historical data for</param>
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
-        /// <param name="fillDataForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject type, PyObject tickers, TimeSpan span, Resolution? resolution = null, bool? fillDataForward = null)
+        public PyObject History(PyObject type, PyObject tickers, TimeSpan span, Resolution? resolution = null, bool? fillForward = null)
         {
-            return History(type, tickers, Time - span, Time, resolution, fillDataForward);
+            return History(type, tickers, Time - span, Time, resolution, fillForward);
         }
 
         /// <summary>
@@ -985,13 +985,13 @@ namespace QuantConnect.Algorithm
         /// <param name="start">The start time in the algorithm's time zone</param>
         /// <param name="end">The end time in the algorithm's time zone</param>
         /// <param name="resolution">The resolution to request</param>
-        /// <param name="fillDataForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject type, Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null, bool? fillDataForward = null)
+        public PyObject History(PyObject type, Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null, bool? fillForward = null)
         {
             var requestedType = type.CreateType();
-            var requests = CreateDateRangeHistoryRequests(new [] {  symbol }, requestedType, start, end, resolution, fillDataForward);
+            var requests = CreateDateRangeHistoryRequests(new [] {  symbol }, requestedType, start, end, resolution, fillForward);
             if (requests.IsNullOrEmpty())
             {
                 throw new ArgumentException($"No history data could be fetched. " +
@@ -1010,10 +1010,10 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">The symbol to retrieve historical data for</param>
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
-        /// <param name="fillDataForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject type, Symbol symbol, int periods, Resolution? resolution = null, bool? fillDataForward = null)
+        public PyObject History(PyObject type, Symbol symbol, int periods, Resolution? resolution = null, bool? fillForward = null)
         {
             resolution = GetResolution(symbol, resolution);
             if (resolution == Resolution.Tick)
@@ -1023,7 +1023,7 @@ namespace QuantConnect.Algorithm
 
             var marketHours = GetMarketHours(symbol);
             var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, marketHours.ExchangeHours, marketHours.DataTimeZone);
-            return History(type, symbol, start, Time, resolution, fillDataForward);
+            return History(type, symbol, start, Time, resolution, fillForward);
         }
 
         /// <summary>
@@ -1034,12 +1034,12 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">The symbol to retrieve historical data for</param>
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
-        /// <param name="fillDataForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject type, Symbol symbol, TimeSpan span, Resolution? resolution = null, bool? fillDataForward = null)
+        public PyObject History(PyObject type, Symbol symbol, TimeSpan span, Resolution? resolution = null, bool? fillForward = null)
         {
-            return History(type, symbol, Time - span, Time, resolution, fillDataForward);
+            return History(type, symbol, Time - span, Time, resolution, fillForward);
         }
 
         /// <summary>

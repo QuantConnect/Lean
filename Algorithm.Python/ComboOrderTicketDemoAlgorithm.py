@@ -24,8 +24,8 @@ class ComboOrderTicketDemoAlgorithm(QCAlgorithm):
         self.SetEndDate(2015, 12, 24)
         self.SetCash(100000)
 
-        equity = self.AddEquity("GOOG", leverage=4, fillDataForward=True)
-        option = self.AddOption(equity.Symbol, fillDataForward=True)
+        equity = self.AddEquity("GOOG", leverage=4, fillForward=True)
+        option = self.AddOption(equity.Symbol, fillForward=True)
         self._optionSymbol = option.Symbol
 
         option.SetFilter(lambda u: u.Strikes(-2, +2).Expiration(0, 180))

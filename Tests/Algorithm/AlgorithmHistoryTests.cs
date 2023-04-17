@@ -400,7 +400,7 @@ def getTickHistory(algorithm, symbol, start, end):
             if (language == Language.CSharp)
             {
                 _algorithm.History(new [] {Symbols.SPY}, new DateTime(1,1,1,1,1,1), new DateTime(1, 1, 1, 1, 1, 2), Resolution.Tick,
-                    fillDataForward: true);
+                    fillForward: true);
             }
             else
             {
@@ -409,7 +409,7 @@ def getTickHistory(algorithm, symbol, start, end):
                     _algorithm.SetPandasConverter();
                     using var symbols = new PyList(new [] {Symbols.SPY.ToPython()});
                     _algorithm.History(symbols, new DateTime(1,1,1,1,1,1), new DateTime(1, 1, 1, 1, 1, 2),
-                        Resolution.Tick, fillDataForward: true);
+                        Resolution.Tick, fillForward: true);
                 }
             }
 
@@ -671,7 +671,7 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
 
             if (language == Language.CSharp)
             {
-                var result = _algorithm.History(new[] { optionSymbol }, start, end, historyResolution, fillDataForward:false).ToList();
+                var result = _algorithm.History(new[] { optionSymbol }, start, end, historyResolution, fillForward:false).ToList();
 
                 Assert.AreEqual(53, result.Count);
                 Assert.IsTrue(result.Any(slice => slice.ContainsKey(optionSymbol)));
@@ -720,7 +720,7 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
 
             if (language == Language.CSharp)
             {
-                var result = _algorithm.History(new[] { optionSymbol, optionSymbol2 }, start, end, historyResolution, fillDataForward: false).ToList();
+                var result = _algorithm.History(new[] { optionSymbol, optionSymbol2 }, start, end, historyResolution, fillForward: false).ToList();
 
                 Assert.AreEqual(415, result.Count);
                 Assert.IsTrue(result.Any(slice => slice.ContainsKey(optionSymbol)));
@@ -1578,43 +1578,43 @@ def getOpenInterestHistory(algorithm, symbol, start, end):
             if (language == Language.CSharp)
             {
                 // No symbol, time span
-                var noSymbolTimeSpanHistory = algorithm.History(timeSpan, resolution, fillDataForward: fillForward).ToList();
+                var noSymbolTimeSpanHistory = algorithm.History(timeSpan, resolution, fillForward: fillForward).ToList();
                 AssertFillForwardHistoryResults(noSymbolTimeSpanHistory, expectedHistoryCount, resolution, fillForward);
 
                 // No symbol, periods
-                var noSymbolPeriodBasedHistory = algorithm.History(periods, resolution, fillDataForward: fillForward).ToList();
+                var noSymbolPeriodBasedHistory = algorithm.History(periods, resolution, fillForward: fillForward).ToList();
                 AssertFillForwardHistoryResults(noSymbolPeriodBasedHistory, expectedHistoryCount, resolution, fillForward);
 
                 // No symbol, date range
                 // TODO: to be implemented
 
                 // Single symbol, time span
-                var singleSymbolTimeSpanHistory = algorithm.History(symbol, timeSpan, resolution, fillDataForward: fillForward).ToList();
+                var singleSymbolTimeSpanHistory = algorithm.History(symbol, timeSpan, resolution, fillForward: fillForward).ToList();
                 AssertFillForwardHistoryResults(singleSymbolTimeSpanHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
 
                 // Single symbol, periods
-                var singleSymbolPeriodBasedHistory = algorithm.History(symbol, periods, resolution, fillDataForward: fillForward).ToList();
+                var singleSymbolPeriodBasedHistory = algorithm.History(symbol, periods, resolution, fillForward: fillForward).ToList();
                 AssertFillForwardHistoryResults(singleSymbolPeriodBasedHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
 
                 // Single symbol, date range
                 var singleSymbolDateRangeHistory = algorithm.History(symbol, start, end,
-                    resolution, fillDataForward: fillForward).ToList();
+                    resolution, fillForward: fillForward).ToList();
                 AssertFillForwardHistoryResults(singleSymbolDateRangeHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
 
                 // Symbol array, time span
-                var symbolsTimeSpanHistory = algorithm.History(new[] { symbol }, timeSpan, resolution, fillDataForward: fillForward).ToList();
+                var symbolsTimeSpanHistory = algorithm.History(new[] { symbol }, timeSpan, resolution, fillForward: fillForward).ToList();
                 AssertFillForwardHistoryResults(symbolsTimeSpanHistory, expectedHistoryCount, resolution, fillForward);
 
                 // Symbol array, periods
-                var symbolsPeriodBasedHistory = algorithm.History(new[] { symbol }, periods, resolution, fillDataForward: fillForward).ToList();
+                var symbolsPeriodBasedHistory = algorithm.History(new[] { symbol }, periods, resolution, fillForward: fillForward).ToList();
                 AssertFillForwardHistoryResults(symbolsPeriodBasedHistory, expectedHistoryCount, resolution, fillForward);
 
                 // Symbol array, date range
-                var symbolsdateRangeHistory = algorithm.History(new[] { symbol }, start, end, resolution, fillDataForward: fillForward).ToList();
+                var symbolsdateRangeHistory = algorithm.History(new[] { symbol }, start, end, resolution, fillForward: fillForward).ToList();
                 AssertFillForwardHistoryResults(symbolsdateRangeHistory, expectedHistoryCount, resolution, fillForward);
 
                 // Generic, no symbol, time span
-                var typedNoSymbolTimeSpanHistory = algorithm.History<TradeBar>(timeSpan, resolution, fillDataForward: fillForward).ToList();
+                var typedNoSymbolTimeSpanHistory = algorithm.History<TradeBar>(timeSpan, resolution, fillForward: fillForward).ToList();
                 AssertFillForwardHistoryResults(typedNoSymbolTimeSpanHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
 
                 // Generic, no symbol, periods
@@ -1625,32 +1625,32 @@ def getOpenInterestHistory(algorithm, symbol, start, end):
 
                 // Generic, single symbol, time span
                 var typedSingleSymbolTimeSpanHistory = algorithm.History<TradeBar>(symbol, timeSpan,
-                    resolution, fillDataForward: fillForward).ToList();
+                    resolution, fillForward: fillForward).ToList();
                 AssertFillForwardHistoryResults(typedSingleSymbolTimeSpanHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
 
                 // Generic, single symbol, periods
                 var typedSingleSymbolPeriodBasedHistory = algorithm.History<TradeBar>(symbol, periods,
-                    resolution, fillDataForward: fillForward).ToList();
+                    resolution, fillForward: fillForward).ToList();
                 AssertFillForwardHistoryResults(typedSingleSymbolPeriodBasedHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
 
                 // Generic, single symbol, date range
                 var typedSingleSymbolDateRangeHistory = algorithm.History<TradeBar>(symbol, start, end,
-                    resolution, fillDataForward: fillForward).ToList();
+                    resolution, fillForward: fillForward).ToList();
                 AssertFillForwardHistoryResults(typedSingleSymbolDateRangeHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
 
                 // Generic, symbol array, time span
                 var typedSymbolsTimeSpanHistory = algorithm.History<TradeBar>(new[] { symbol }, timeSpan,
-                    resolution, fillDataForward: fillForward).ToList();
+                    resolution, fillForward: fillForward).ToList();
                 AssertFillForwardHistoryResults(typedSymbolsTimeSpanHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
 
                 // Generic, symbol array, periods
                 var typedSymbolsPeriodBasedHistory = algorithm.History<TradeBar>(new[] { symbol }, periods,
-                    resolution, fillDataForward: fillForward).ToList();
+                    resolution, fillForward: fillForward).ToList();
                 AssertFillForwardHistoryResults(typedSymbolsPeriodBasedHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
 
                 // Generic, symbol array, date range
                 var typedSymbolsDateRangeHistory = algorithm.History<TradeBar>(new[] { symbol }, start, end,
-                    resolution, fillDataForward: fillForward).ToList();
+                    resolution, fillForward: fillForward).ToList();
                 AssertFillForwardHistoryResults(typedSymbolsDateRangeHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
             }
             else
@@ -1669,71 +1669,71 @@ tradeBar = TradeBar
                     using var pyTradeBarType = testModule.GetAttr("tradeBar");
 
                     // Single symbol, time span
-                    var singleSymbolTimeSpanHistory = algorithm.History(pySymbol, timeSpan, resolution, fillDataForward: fillForward);
+                    var singleSymbolTimeSpanHistory = algorithm.History(pySymbol, timeSpan, resolution, fillForward: fillForward);
                     AssertFillForwardHistoryResults(singleSymbolTimeSpanHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
 
                     // Single symbol, periods
-                    var singleSymbolPeriodBasedHistory = algorithm.History(pySymbol, periods, resolution, fillDataForward: fillForward);
+                    var singleSymbolPeriodBasedHistory = algorithm.History(pySymbol, periods, resolution, fillForward: fillForward);
                     AssertFillForwardHistoryResults(singleSymbolPeriodBasedHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
 
                     // Single symbol, date range
-                    var singleSymbolDateRangeHistory = algorithm.History(pySymbol, start, end, resolution, fillDataForward: fillForward);
+                    var singleSymbolDateRangeHistory = algorithm.History(pySymbol, start, end, resolution, fillForward: fillForward);
                     AssertFillForwardHistoryResults(singleSymbolDateRangeHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
 
                     // Symbol array, time span
-                    var symbolsTimeSpanHistory = algorithm.History(pySymbols, timeSpan, resolution, fillDataForward: fillForward);
+                    var symbolsTimeSpanHistory = algorithm.History(pySymbols, timeSpan, resolution, fillForward: fillForward);
                     AssertFillForwardHistoryResults(symbolsTimeSpanHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
 
                     // Symbol array, periods
-                    var symbolsPeriodBasedHistory = algorithm.History(pySymbols, periods, resolution, fillDataForward: fillForward);
+                    var symbolsPeriodBasedHistory = algorithm.History(pySymbols, periods, resolution, fillForward: fillForward);
                     AssertFillForwardHistoryResults(symbolsPeriodBasedHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
 
                     // Symbol array, date range
-                    var symbolsDateRangeHistory = algorithm.History(pySymbols, start, end, resolution, fillDataForward: fillForward);
+                    var symbolsDateRangeHistory = algorithm.History(pySymbols, start, end, resolution, fillForward: fillForward);
                     AssertFillForwardHistoryResults(symbolsDateRangeHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
 
                     // Generic, single symbol, time span
                     var typedSingleSymbolTimeSpanHistory = algorithm.History(pyTradeBarType, pySymbol, timeSpan,
-                        resolution, fillDataForward: fillForward);
+                        resolution, fillForward: fillForward);
                     AssertFillForwardHistoryResults(typedSingleSymbolTimeSpanHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
 
                     // Same as previous but using a Symbol instead of pySymbol
-                    typedSingleSymbolTimeSpanHistory = algorithm.History(pyTradeBarType, symbol, timeSpan, resolution, fillDataForward: fillForward);
+                    typedSingleSymbolTimeSpanHistory = algorithm.History(pyTradeBarType, symbol, timeSpan, resolution, fillForward: fillForward);
                     AssertFillForwardHistoryResults(typedSingleSymbolTimeSpanHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
 
                     // Generic, single symbol, periods
                     var typedSingleSymbolPeriodBasedHistory = algorithm.History(pyTradeBarType, pySymbol, periods,
-                        resolution, fillDataForward: fillForward);
+                        resolution, fillForward: fillForward);
                     AssertFillForwardHistoryResults(typedSingleSymbolPeriodBasedHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
 
                     // Same as previous but using a Symbol instead of pySymbol
                     typedSingleSymbolPeriodBasedHistory = algorithm.History(pyTradeBarType, symbol, periods,
-                        resolution, fillDataForward: fillForward);
+                        resolution, fillForward: fillForward);
                     AssertFillForwardHistoryResults(typedSingleSymbolPeriodBasedHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
 
                     // Generic, single symbol, date range
                     var typedSingleSymbolDateRangeHistory = algorithm.History(pyTradeBarType, pySymbol, start, end,
-                        resolution, fillDataForward: fillForward);
+                        resolution, fillForward: fillForward);
                     AssertFillForwardHistoryResults(typedSingleSymbolDateRangeHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
 
                     // Same as previous but using a Symbol instead of pySymbol
                     typedSingleSymbolDateRangeHistory = algorithm.History(pyTradeBarType, symbol, start, end,
-                        resolution, fillDataForward: fillForward);
+                        resolution, fillForward: fillForward);
                     AssertFillForwardHistoryResults(typedSingleSymbolDateRangeHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
 
                     // Generic, symbol array, time span
                     var typedSymbolsTimeSpanHistory = algorithm.History(pyTradeBarType, pySymbols, timeSpan,
-                        resolution, fillDataForward: fillForward);
+                        resolution, fillForward: fillForward);
                     AssertFillForwardHistoryResults(typedSymbolsTimeSpanHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
 
                     // Generic, symbol array, periods
                     var typedSymbolsPeriodBasedHistory = algorithm.History(pyTradeBarType, pySymbols, periods,
-                        resolution, fillDataForward: fillForward);
+                        resolution, fillForward: fillForward);
                     AssertFillForwardHistoryResults(typedSymbolsPeriodBasedHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
 
                     // Generic, symbol array, date range
                     var typedSymbolsDateRangeHistory = algorithm.History(pyTradeBarType, pySymbols, start, end,
-                        resolution, fillDataForward: fillForward);
+                        resolution, fillForward: fillForward);
                     AssertFillForwardHistoryResults(typedSymbolsDateRangeHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
                 }
             }
