@@ -23,7 +23,8 @@ class ConstantAlphaModel(AlphaModel):
             direction: The direction of the insight
             period: The period over which the insight with come to fruition
             magnitude: The predicted change in magnitude as a +- percentage
-            confidence: The confidence in the insight'''
+            confidence: The confidence in the insight
+            weight: The portfolio weight of the insights'''
         self.type = type
         self.direction = direction
         self.period = period
@@ -58,7 +59,7 @@ class ConstantAlphaModel(AlphaModel):
             # security price could be zero until we get the first data point. e.g. this could happen
             # when adding both forex and equities, we will first get a forex data point
             if security.Price != 0 and self.ShouldEmitInsight(algorithm.UtcTime, security.Symbol):
-                insights.append(Insight(security.Symbol, self.period, self.type, self.direction, self.magnitude, self.confidence, None, self.weight))
+                insights.append(Insight(security.Symbol, self.period, self.type, self.direction, self.magnitude, self.confidence, weight = self.weight))
 
         return insights
 
