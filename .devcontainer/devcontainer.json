@@ -24,7 +24,7 @@
 	// "forwardPorts": [],
 
 	// Uncomment the next line to run commands after the container is created - for example installing curl.
-	"postCreateCommand": "dotnet nuget add source /Lean/LocalPackages; dos2unix /Lean/.vscode/launch_research.sh",
+	"postCreateCommand": "dotnet nuget add source /Lean/LocalPackages;chmod u+x /Lean/.vscode/launch_research.sh;dos2unix /Lean/.vscode/launch_research.sh",
 
 	// Add mounts to docker container
 	"mounts": [ 
