@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -45,6 +45,8 @@ namespace QuantConnect.Data
         /// <param name="endAlgoTz">History request end time in algorithm time zone</param>
         /// <param name="exchangeHours">Security exchange hours</param>
         /// <param name="resolution">The resolution to use. If null will use <see cref="SubscriptionDataConfig.Resolution"/></param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
         /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
@@ -55,6 +57,8 @@ namespace QuantConnect.Data
             DateTime endAlgoTz,
             SecurityExchangeHours exchangeHours,
             Resolution? resolution,
+            bool? fillForward = null,
+            bool? extendedMarket = null,
             DataMappingMode? dataMappingMode = null,
             DataNormalizationMode? dataNormalizationMode = null,
             int? contractDepthOffset = null)
@@ -70,6 +74,12 @@ namespace QuantConnect.Data
                 dataType = LeanData.GetDataType(resolution.Value, subscription.TickType);
             }
 
+            var fillForwardResolution = subscription.FillDataForward ? resolution : null;
+            if (fillForward != null)
+            {
+                fillForwardResolution = fillForward.Value ? resolution : null;
+            }
+
             var request = new HistoryRequest(subscription,
                 exchangeHours,
                 startAlgoTz.ConvertToUtc(_algorithm.TimeZone),
@@ -77,9 +87,14 @@ namespace QuantConnect.Data
             {
                 DataType = dataType,
                 Resolution = resolution.Value,
-                FillForwardResolution = subscription.FillDataForward ? resolution : null,
+                FillForwardResolution = fillForwardResolution,
                 TickType = subscription.TickType
             };
+
+            if (extendedMarket != null)
+            {
+                request.IncludeExtendedMarketHours = extendedMarket.Value;
+            }
 
             if (dataMappingMode != null)
             {

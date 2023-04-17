@@ -50,8 +50,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             SetBrokerageModel(new InteractiveBrokersBrokerageModel());
 
-            var index = AddIndex("SPX", Resolution.Hour, fillDataForward: true);
-            var indexOption = AddIndexOption(index.Symbol, Resolution.Hour, fillDataForward: true);
+            var index = AddIndex("SPX", Resolution.Hour, fillForward: true);
+            var indexOption = AddIndexOption(index.Symbol, Resolution.Hour, fillForward: true);
             indexOption.SetFilter(filterFunc => filterFunc.CallsOnly());
 
             _option = indexOption;

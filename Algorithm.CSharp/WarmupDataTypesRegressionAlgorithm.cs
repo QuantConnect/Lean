@@ -39,8 +39,8 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 08);
             SetEndDate(2013, 10, 10);
 
-            AddEquity("SPY", Resolution.Minute, fillDataForward: false);
-            AddCrypto("BTCUSD", Resolution.Hour, market: Market.Bitfinex, fillDataForward: false);
+            AddEquity("SPY", Resolution.Minute, fillForward: false);
+            AddCrypto("BTCUSD", Resolution.Hour, market: Market.Bitfinex, fillForward: false);
 
             SetWarmUp(24, Resolution.Hour);
         }

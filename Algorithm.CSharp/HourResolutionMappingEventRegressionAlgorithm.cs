@@ -37,7 +37,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2008, 08, 20);
             SetEndDate(2008, 10, 1);
 
-            AddEquity("SPWR", Resolution.Hour, fillDataForward:false);
+            AddEquity("SPWR", Resolution.Hour, fillForward:false);
         }
 
         /// <summary>

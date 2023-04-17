@@ -61,7 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 08);
             SetEndDate(2013, 10, 08);
 
-            AddEquity("SPY", Resolution.Minute, fillDataForward: false);
+            AddEquity("SPY", Resolution.Minute, fillForward: false);
 
             Schedule.On(DateRules.EveryDay(), TimeRules.Every(TimeSpan.FromHours(6)), () =>
             {

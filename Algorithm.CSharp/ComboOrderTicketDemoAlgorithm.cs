@@ -43,8 +43,8 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2015, 12, 24);
             SetCash(100000);
 
-            var equity = AddEquity("GOOG", leverage: 4, fillDataForward: true);
-            var option = AddOption(equity.Symbol, fillDataForward: true);
+            var equity = AddEquity("GOOG", leverage: 4, fillForward: true);
+            var option = AddOption(equity.Symbol, fillForward: true);
             _optionSymbol = option.Symbol;
 
             option.SetFilter(u => u.Strikes(-2, +2)
