@@ -18,7 +18,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using QuantConnect.Data;
 using QuantConnect.Indicators;
 
 namespace QuantConnect.Algorithm
@@ -36,10 +35,7 @@ namespace QuantConnect.Algorithm
             { "Benchmark", new List<string>() { "Benchmark" } },
             { "Assets Sales Volume", new List<string>() },
             { "Exposure", new List<string>() },
-            { "Alpha", new List<string> { "Direction Score", "Magnitude Score" } },
-            { "Alpha Count", new List<string> { "Count" } },
-            { "Alpha Assets", new List<string>() },
-            { "Alpha Asset Breakdown", new List<string>() }
+            { "Portfolio Turnover", new List<string> { "Portfolio Turnover" } }
         };
 
         /// <summary>
