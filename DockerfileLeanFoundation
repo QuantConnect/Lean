@@ -226,7 +226,8 @@ RUN pip install --no-cache-dir      \
     pyarrow==11.0.0                 \
     dwave-ocean-sdk==6.1.1          \
     chardet==5.1.0                  \
-    stable-baselines3==1.7.0
+    stable-baselines3==1.7.0        \
+    pystan==3.6.0
 
 # Install dwave tool
 RUN dwave install --all -y
