@@ -46,14 +46,12 @@ namespace QuantConnect.Orders.OptionExercise
         {
             using (Py.GIL())
             {
-                var orderEventGenerator = _model.OptionExercise(option, order) as PyObject;
-                var iterator = orderEventGenerator.GetIterator();
+                using var orderEventGenerator = _model.OptionExercise(option, order) as PyObject;
+                using var iterator = orderEventGenerator.GetIterator();
                 foreach (PyObject item in iterator)
                 {
                     yield return item.GetAndDispose<OrderEvent>();
                 }
-                iterator.Dispose();
-                orderEventGenerator.Dispose();
             }
         }
     }

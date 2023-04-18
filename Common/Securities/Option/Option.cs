@@ -458,7 +458,7 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// Sets the automatic option exercise model
+        /// Sets the option exercise model
         /// </summary>
         /// <param name="pyObject">The option exercise model to use</param>
         public void SetOptionExerciseModel(PyObject pyObject)
@@ -479,7 +479,7 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// Sets the automatic option exercise model
+        /// Sets the option exercise model
         /// </summary>
         /// <param name="optionExerciseModel">The option exercise model to use</param>
         public void SetOptionExerciseModel(IOptionExerciseModel optionExerciseModel)

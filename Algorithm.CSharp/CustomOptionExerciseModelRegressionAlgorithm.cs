@@ -40,10 +40,6 @@ namespace QuantConnect.Algorithm.CSharp
 
         private class CustomOptionExerciseModel : DefaultExerciseModel
         {
-            public CustomOptionExerciseModel()
-            {
-
-            }
             public override IEnumerable<OrderEvent> OptionExercise(Option option, OptionExerciseOrder order)
             {
                 yield return new OrderEvent(
@@ -56,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
                 order.Quantity,
                 OrderFee.Zero,
                 "Tag"
-            )
+                )
                 {
                     IsAssignment = false
                 };
