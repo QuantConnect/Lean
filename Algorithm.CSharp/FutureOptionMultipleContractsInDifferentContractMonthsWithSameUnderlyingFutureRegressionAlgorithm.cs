@@ -43,7 +43,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2020, 1, 4);
             SetEndDate(2020, 1, 6);
 
-            var goldFutures = AddFuture("GC", Resolution.Minute, Market.COMEX, extendedMarketHours: true);
+            var goldFutures = AddFuture("GC", Resolution.Minute, Market.COMEX, extendedMarket: true);
             goldFutures.SetFilter(0, 365);
 
             AddFutureOption(goldFutures.Symbol);

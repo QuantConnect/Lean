@@ -155,7 +155,7 @@ namespace QuantConnect.Tests.Engine.Results
             algo.SetFinishedWarmingUp();
             var dataManager = new DataManagerStub(new TestDataFeed(), algo);
             algo.SubscriptionManager.SetDataManager(dataManager);
-            var aapl = algo.AddEquity("AAPL", extendedMarketHours: extendedMarketHoursEnabled);
+            var aapl = algo.AddEquity("AAPL", extendedMarket: extendedMarketHoursEnabled);
             algo.PostInitialize();
             resultHandler.SetAlgorithm(algo, 100000);
             resultHandler.OnSecuritiesChanged(SecurityChangesTests.AddedNonInternal(aapl));

@@ -101,7 +101,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 {
                     algorithm.AddSecurity(symbol,
                         resolution: algorithm.UniverseSettings.Resolution,
-                        extendedMarketHours: algorithm.UniverseSettings.ExtendedMarketHours);
+                        extendedMarket: algorithm.UniverseSettings.ExtendedMarketHours);
                 }
             }
             _symbolsPerAlpha[alphaId] = newSymbols;

@@ -309,7 +309,7 @@ namespace QuantConnect.Securities
                 var config = subscriptions.SubscriptionDataConfigService.Add(symbol,
                     minimumResolution,
                     fillForward: true,
-                    extendedMarketHours: false,
+                    extendedMarket: false,
                     isInternalFeed: true,
                     subscriptionDataTypes: new List<Tuple<Type, TickType>>
                         {new Tuple<Type, TickType>(objectType, tickType)}).First();

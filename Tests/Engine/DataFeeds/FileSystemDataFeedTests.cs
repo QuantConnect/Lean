@@ -232,7 +232,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             feed.Initialize(algorithm, job, resultHandler, TestGlobals.MapFileProvider, TestGlobals.FactorFileProvider, TestGlobals.DataProvider,
                 algorithm.DataManager, synchronizer, dataPermissionManager.DataChannelProvider);
-            var future = algorithm.AddFuture("ES", fillForward: fillForward, extendedMarketHours: true);
+            var future = algorithm.AddFuture("ES", fillForward: fillForward, extendedMarket: true);
             future.SetFilter(0, 300);
             algorithm.PostInitialize();
 

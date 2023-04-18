@@ -1402,7 +1402,7 @@ namespace QuantConnect.Tests.Algorithm
             var es20h20 = algo.AddFutureContract(
                 QuantConnect.Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 3, 20)),
                 Resolution.Minute,
-                extendedMarketHours: true);
+                extendedMarket: true);
             var es20h20FOP = algo.AddFutureOptionContract(
                 Symbol.CreateOption(es20h20.Symbol, Market.CME, OptionStyle.American, OptionRight.Call, 2550m, new DateTime(2020, 3, 20)),
                 Resolution.Minute);

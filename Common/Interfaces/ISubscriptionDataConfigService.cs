@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -36,7 +36,7 @@ namespace QuantConnect.Interfaces
             Symbol symbol,
             Resolution? resolution = null,
             bool fillForward = true,
-            bool extendedMarketHours = false,
+            bool extendedMarket = false,
             bool isFilteredSubscription = true,
             bool isInternalFeed = false,
             bool isCustomData = false,
@@ -54,7 +54,7 @@ namespace QuantConnect.Interfaces
             Symbol symbol,
             Resolution? resolution = null,
             bool fillForward = true,
-            bool extendedMarketHours = false,
+            bool extendedMarket = false,
             bool isFilteredSubscription = true,
             bool isInternalFeed = false,
             bool isCustomData = false,

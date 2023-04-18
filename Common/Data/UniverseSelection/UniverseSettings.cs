@@ -41,7 +41,17 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// True to allow extended market hours data, false otherwise
         /// </summary>
-        public bool ExtendedMarketHours;
+        public bool ExtendedMarket;
+
+        /// <summary>
+        /// True to allow extended market hours data, false otherwise
+        /// </summary>
+        [Obsolete("This property has been deprecated. Please use ExtendedMarket instead.")]
+        public bool ExtendedMarketHours
+        {
+            get { return ExtendedMarket; }
+            set { ExtendedMarket = value; }
+        }
 
         /// <summary>
         /// Defines the minimum amount of time a security must be in
@@ -80,13 +90,14 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="resolution">The resolution</param>
         /// <param name="leverage">The leverage to be used</param>
         /// <param name="fillForward">True to fill data forward, false otherwise</param>
-        /// <param name="extendedMarketHours">True to allow extended market hours data, false otherwise</param>
+        /// <param name="extendedMarket">True to allow extended market hours data, false otherwise</param>
         /// <param name="minimumTimeInUniverse">Defines the minimum amount of time a security must remain in the universe before being removed</param>
         /// <param name="dataNormalizationMode">Defines how universe data is normalized before being send into the algorithm</param>
         /// <param name="dataMappingMode">The contract mapping mode to use for the security</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 (default) will use the front month, 1 will use the back month contract</param>
-        public UniverseSettings(Resolution resolution, decimal leverage, bool fillForward, bool extendedMarketHours, TimeSpan minimumTimeInUniverse, DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted,
+        public UniverseSettings(Resolution resolution, decimal leverage, bool fillForward, bool extendedMarket, TimeSpan minimumTimeInUniverse,
+            DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted,
             DataMappingMode dataMappingMode = DataMappingMode.OpenInterest, int contractDepthOffset = 0)
         {
             Resolution = resolution;
@@ -94,7 +105,7 @@ namespace QuantConnect.Data.UniverseSelection
             FillForward = fillForward;
             DataMappingMode = dataMappingMode;
             ContractDepthOffset = contractDepthOffset;
-            ExtendedMarketHours = extendedMarketHours;
+            ExtendedMarketHours = extendedMarket;
             MinimumTimeInUniverse = minimumTimeInUniverse;
             DataNormalizationMode = dataNormalizationMode;
         }

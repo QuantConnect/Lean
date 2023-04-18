@@ -66,7 +66,7 @@ namespace QuantConnect.Data
         /// </param>
         /// <param name="isCustomData">True if this is custom user supplied data, false for normal QC data</param>
         /// <param name="fillForward">when there is no data pass the last tradebar forward</param>
-        /// <param name="extendedMarketHours">Request premarket data as well when true </param>
+        /// <param name="extendedMarket">Request premarket data as well when true </param>
         /// <returns>
         ///     The newly created <see cref="SubscriptionDataConfig" /> or existing instance if it already existed
         /// </returns>
@@ -77,7 +77,7 @@ namespace QuantConnect.Data
             DateTimeZone exchangeTimeZone,
             bool isCustomData = false,
             bool fillForward = true,
-            bool extendedMarketHours = false
+            bool extendedMarket = false
             )
         {
             //Set the type: market data only comes in two forms -- ticks(trade by trade) or tradebar(time summaries)
@@ -89,7 +89,7 @@ namespace QuantConnect.Data
 
             var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType);
             return Add(dataType, tickType, symbol, resolution, timeZone, exchangeTimeZone, isCustomData, fillForward,
-                extendedMarketHours);
+                extendedMarket);
         }
 
         /// <summary>
@@ -106,7 +106,7 @@ namespace QuantConnect.Data
         /// </param>
         /// <param name="isCustomData">True if this is custom user supplied data, false for normal QC data</param>
         /// <param name="fillForward">when there is no data pass the last tradebar forward</param>
-        /// <param name="extendedMarketHours">Request premarket data as well when true </param>
+        /// <param name="extendedMarket">Request premarket data as well when true </param>
         /// <param name="isInternalFeed">
         ///     Set to true to prevent data from this subscription from being sent into the algorithm's
         ///     OnData events
@@ -128,14 +128,14 @@ namespace QuantConnect.Data
             DateTimeZone exchangeTimeZone,
             bool isCustomData,
             bool fillForward = true,
-            bool extendedMarketHours = false,
+            bool extendedMarket = false,
             bool isInternalFeed = false,
             bool isFilteredSubscription = true,
             DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted
             )
         {
             return SubscriptionDataConfigService.Add(symbol, resolution, fillForward,
-                extendedMarketHours, isFilteredSubscription, isInternalFeed, isCustomData,
+                extendedMarket, isFilteredSubscription, isInternalFeed, isCustomData,
                 new List<Tuple<Type, TickType>> {new Tuple<Type, TickType>(dataType, tickType)},
                 dataNormalizationMode).First();
         }

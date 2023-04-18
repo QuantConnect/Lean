@@ -36,7 +36,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2014, 6, 5);
             SetEndDate(2014, 6, 9);
 
-            _twx = AddEquity("TWX", Resolution.Minute, extendedMarketHours: true).Symbol;
+            _twx = AddEquity("TWX", Resolution.Minute, extendedMarket: true).Symbol;
             Schedule.On(DateRules.EveryDay(_twx), TimeRules.Every(TimeSpan.FromHours(1)), PlotPrice);
         }
 

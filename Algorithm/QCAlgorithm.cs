@@ -1590,14 +1590,14 @@ namespace QuantConnect.Algorithm
         /// <param name="ticker">The security ticker</param>
         /// <param name="resolution">Resolution of the Data Required</param>
         /// <param name="fillForward">When no data available on a tradebar, return the last data that was generated</param>
-        /// <param name="extendedMarketHours">Use extended market hours data</param>
+        /// <param name="extendedMarket">Use extended market hours data</param>
         /// <param name="dataMappingMode">The contract mapping mode to use for the security</param>
         /// <param name="dataNormalizationMode">The price scaling mode to use for the security</param>
         [DocumentationAttribute(AddingData)]
-        public Security AddSecurity(SecurityType securityType, string ticker, Resolution? resolution = null, bool fillForward = true, bool extendedMarketHours = false,
+        public Security AddSecurity(SecurityType securityType, string ticker, Resolution? resolution = null, bool fillForward = true, bool extendedMarket = false,
             DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null)
         {
-            return AddSecurity(securityType, ticker, resolution, fillForward, Security.NullLeverage, extendedMarketHours, dataMappingMode, dataNormalizationMode);
+            return AddSecurity(securityType, ticker, resolution, fillForward, Security.NullLeverage, extendedMarket, dataMappingMode, dataNormalizationMode);
         }
 
         /// <summary>
@@ -1608,15 +1608,15 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">Resolution of the Data Required</param>
         /// <param name="fillForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
-        /// <param name="extendedMarketHours">Use extended market hours data</param>
+        /// <param name="extendedMarket">Use extended market hours data</param>
         /// <param name="dataMappingMode">The contract mapping mode to use for the security</param>
         /// <param name="dataNormalizationMode">The price scaling mode to use for the security</param>
-        /// <remarks> AddSecurity(SecurityType securityType, Symbol symbol, Resolution resolution, bool fillForward, decimal leverage, bool extendedMarketHours)</remarks>
+        /// <remarks> AddSecurity(SecurityType securityType, Symbol symbol, Resolution resolution, bool fillForward, decimal leverage, bool extendedMarket)</remarks>
         [DocumentationAttribute(AddingData)]
-        public Security AddSecurity(SecurityType securityType, string ticker, Resolution? resolution, bool fillForward, decimal leverage, bool extendedMarketHours,
+        public Security AddSecurity(SecurityType securityType, string ticker, Resolution? resolution, bool fillForward, decimal leverage, bool extendedMarket,
             DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null)
         {
-            return AddSecurity(securityType, ticker, resolution, null, fillForward, leverage, extendedMarketHours, dataMappingMode, dataNormalizationMode);
+            return AddSecurity(securityType, ticker, resolution, null, fillForward, leverage, extendedMarket, dataMappingMode, dataNormalizationMode);
         }
 
         /// <summary>
@@ -1628,11 +1628,11 @@ namespace QuantConnect.Algorithm
         /// <param name="market">The market the requested security belongs to, such as 'usa' or 'fxcm'</param>
         /// <param name="fillForward">If true, returns the last available data even if none in that timeslice.</param>
         /// <param name="leverage">leverage for this security</param>
-        /// <param name="extendedMarketHours">Use extended market hours data</param>
+        /// <param name="extendedMarket">Use extended market hours data</param>
         /// <param name="dataMappingMode">The contract mapping mode to use for the security</param>
         /// <param name="dataNormalizationMode">The price scaling mode to use for the security</param>
         [DocumentationAttribute(AddingData)]
-        public Security AddSecurity(SecurityType securityType, string ticker, Resolution? resolution, string market, bool fillForward, decimal leverage, bool extendedMarketHours,
+        public Security AddSecurity(SecurityType securityType, string ticker, Resolution? resolution, string market, bool fillForward, decimal leverage, bool extendedMarket,
             DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null)
         {
             // if AddSecurity method is called to add an option or a future, we delegate a call to respective methods
@@ -1643,7 +1643,7 @@ namespace QuantConnect.Algorithm
 
             if (securityType == SecurityType.Future)
             {
-                return AddFuture(ticker, resolution, market, fillForward, leverage, extendedMarketHours, dataMappingMode, dataNormalizationMode);
+                return AddFuture(ticker, resolution, market, fillForward, leverage, extendedMarket, dataMappingMode, dataNormalizationMode);
             }
 
             try
@@ -1664,7 +1664,7 @@ namespace QuantConnect.Algorithm
                     symbol = QuantConnect.Symbol.Create(ticker, securityType, market);
                 }
 
-                return AddSecurity(symbol, resolution, fillForward, leverage, extendedMarketHours, dataMappingMode, dataNormalizationMode);
+                return AddSecurity(symbol, resolution, fillForward, leverage, extendedMarket, dataMappingMode, dataNormalizationMode);
             }
             catch (Exception err)
             {
@@ -1680,14 +1680,14 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">Resolution of the MarketType required: MarketData, Second or Minute</param>
         /// <param name="fillForward">If true, returns the last available data even if none in that timeslice.</param>
         /// <param name="leverage">leverage for this security</param>
-        /// <param name="extendedMarketHours">Use extended market hours data</param>
+        /// <param name="extendedMarket">Use extended market hours data</param>
         /// <param name="dataMappingMode">The contract mapping mode to use for the security</param>
         /// <param name="dataNormalizationMode">The price scaling mode to use for the security</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 (default) will use the front month, 1 will use the back month contract</param>
         /// <returns>The new Security that was added to the algorithm</returns>
         [DocumentationAttribute(AddingData)]
-        public Security AddSecurity(Symbol symbol, Resolution? resolution = null, bool fillForward = true, decimal leverage = Security.NullLeverage, bool extendedMarketHours = false,
+        public Security AddSecurity(Symbol symbol, Resolution? resolution = null, bool fillForward = true, decimal leverage = Security.NullLeverage, bool extendedMarket = false,
             DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null, int contractDepthOffset = 0)
         {
             // allow users to specify negative numbers, we get the abs of it
@@ -1703,7 +1703,7 @@ namespace QuantConnect.Algorithm
             // Short-circuit to AddOptionContract because it will add the underlying if required
             if (!isCanonical && symbol.SecurityType.IsOption())
             {
-                return AddOptionContract(symbol, resolution, fillForward, leverage, extendedMarketHours);
+                return AddOptionContract(symbol, resolution, fillForward, leverage, extendedMarket);
             }
 
             var isFilteredSubscription = !isCanonical;
@@ -1715,7 +1715,7 @@ namespace QuantConnect.Algorithm
                 configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol,
                     resolution,
                     fillForward,
-                    extendedMarketHours,
+                    extendedMarket,
                     isFilteredSubscription,
                     dataNormalizationMode: dataNormalizationMode.Value,
                     contractDepthOffset: (uint)contractDepthOffset);
@@ -1725,7 +1725,7 @@ namespace QuantConnect.Algorithm
                 configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol,
                    resolution,
                    fillForward,
-                   extendedMarketHours,
+                   extendedMarket,
                    isFilteredSubscription,
                    contractDepthOffset: (uint)contractDepthOffset);
             }
@@ -1742,7 +1742,7 @@ namespace QuantConnect.Algorithm
                 if (!UniverseManager.TryGetValue(symbol, out universe) && !IsAlreadyPending(symbol))
                 {
                     var canonicalConfig = configs.First();
-                    var settings = new UniverseSettings(canonicalConfig.Resolution, leverage, fillForward, extendedMarketHours, UniverseSettings.MinimumTimeInUniverse);
+                    var settings = new UniverseSettings(canonicalConfig.Resolution, leverage, fillForward, extendedMarket, UniverseSettings.MinimumTimeInUniverse);
                     if (symbol.SecurityType.IsOption())
                     {
                         universe = new OptionChainUniverse((Option)security, settings);
@@ -1754,7 +1754,7 @@ namespace QuantConnect.Algorithm
                             GetResolution(symbol, resolution), isCanonical: false);
                         var continuousUniverseSettings = new UniverseSettings(settings)
                         {
-                            ExtendedMarketHours = extendedMarketHours,
+                            ExtendedMarketHours = extendedMarket,
                             DataMappingMode = dataMappingMode ?? UniverseSettings.DataMappingMode,
                             DataNormalizationMode = dataNormalizationMode ?? UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType),
                             ContractDepthOffset = (int)contractOffset,
@@ -1789,14 +1789,14 @@ namespace QuantConnect.Algorithm
         /// <param name="market">The equity's market, <seealso cref="Market"/>. Default value is null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
         /// <param name="fillForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
         /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
-        /// <param name="extendedMarketHours">True to send data during pre and post market sessions. Default is <value>false</value></param>
+        /// <param name="extendedMarket">True to send data during pre and post market sessions. Default is <value>false</value></param>
         /// <param name="dataNormalizationMode">The price scaling mode to use for the equity</param>
         /// <returns>The new <see cref="Equity"/> security</returns>
         [DocumentationAttribute(AddingData)]
         public Equity AddEquity(string ticker, Resolution? resolution = null, string market = null, bool fillForward = true,
-            decimal leverage = Security.NullLeverage, bool extendedMarketHours = false, DataNormalizationMode? dataNormalizationMode = null)
+            decimal leverage = Security.NullLeverage, bool extendedMarket = false, DataNormalizationMode? dataNormalizationMode = null)
         {
-            return AddSecurity<Equity>(SecurityType.Equity, ticker, resolution, market, fillForward, leverage, extendedMarketHours, normalizationMode: dataNormalizationMode);
+            return AddSecurity<Equity>(SecurityType.Equity, ticker, resolution, market, fillForward, leverage, extendedMarket, normalizationMode: dataNormalizationMode);
         }
 
         /// <summary>
@@ -1896,7 +1896,7 @@ namespace QuantConnect.Algorithm
         /// <param name="market">The futures market, <seealso cref="Market"/>. Default is value null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
         /// <param name="fillForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
         /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
-        /// <param name="extendedMarketHours">Use extended market hours data</param>
+        /// <param name="extendedMarket">Use extended market hours data</param>
         /// <param name="dataMappingMode">The contract mapping mode to use for the continuous future contract</param>
         /// <param name="dataNormalizationMode">The price scaling mode to use for the continuous future contract</param>
         /// <param name="contractDepthOffset">The continuous future contract desired offset from the current front month.
@@ -1904,7 +1904,7 @@ namespace QuantConnect.Algorithm
         /// <returns>The new <see cref="Future"/> security</returns>
         [DocumentationAttribute(AddingData)]
         public Future AddFuture(string ticker, Resolution? resolution = null, string market = null,
-            bool fillForward = true, decimal leverage = Security.NullLeverage, bool extendedMarketHours = false,
+            bool fillForward = true, decimal leverage = Security.NullLeverage, bool extendedMarket = false,
             DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null, int contractDepthOffset = 0)
         {
             if (market == null)
@@ -1925,7 +1925,7 @@ namespace QuantConnect.Algorithm
                 canonicalSymbol = QuantConnect.Symbol.Create(ticker, SecurityType.Future, market, alias);
             }
 
-            return (Future)AddSecurity(canonicalSymbol, resolution, fillForward, leverage, extendedMarketHours, dataMappingMode: dataMappingMode,
+            return (Future)AddSecurity(canonicalSymbol, resolution, fillForward, leverage, extendedMarket, dataMappingMode: dataMappingMode,
                 dataNormalizationMode: dataNormalizationMode, contractDepthOffset: contractDepthOffset);
         }
 
@@ -1936,13 +1936,13 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
         /// <param name="fillForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
         /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
-        /// <param name="extendedMarketHours">Use extended market hours data</param>
+        /// <param name="extendedMarket">Use extended market hours data</param>
         /// <returns>The new <see cref="Future"/> security</returns>
         [DocumentationAttribute(AddingData)]
         public Future AddFutureContract(Symbol symbol, Resolution? resolution = null, bool fillForward = true,
-            decimal leverage = Security.NullLeverage, bool extendedMarketHours = false)
+            decimal leverage = Security.NullLeverage, bool extendedMarket = false)
         {
-            return (Future)AddSecurity(symbol, resolution, fillForward, leverage, extendedMarketHours);
+            return (Future)AddSecurity(symbol, resolution, fillForward, leverage, extendedMarket);
         }
 
         /// <summary>
@@ -1970,19 +1970,19 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">Resolution of the option contract, i.e. the granularity of the data</param>
         /// <param name="fillForward">If true, this will fill in missing data points with the previous data point</param>
         /// <param name="leverage">The leverage to apply to the option contract</param>
-        /// <param name="extendedMarketHours">Use extended market hours data</param>
+        /// <param name="extendedMarket">Use extended market hours data</param>
         /// <returns>Option security</returns>
         /// <exception cref="ArgumentException">Symbol is canonical (i.e. a generic Symbol returned from <see cref="AddFuture"/> or <see cref="AddOption(string, Resolution?, string, bool, decimal)"/>)</exception>
         [DocumentationAttribute(AddingData)]
         public Option AddFutureOptionContract(Symbol symbol, Resolution? resolution = null, bool fillForward = true,
-            decimal leverage = Security.NullLeverage, bool extendedMarketHours = false)
+            decimal leverage = Security.NullLeverage, bool extendedMarket = false)
         {
             if (symbol.IsCanonical())
             {
                 throw new ArgumentException("Expected non-canonical Symbol (i.e. a Symbol representing a specific Future contract");
             }
 
-            return AddOptionContract(symbol, resolution, fillForward, leverage, extendedMarketHours);
+            return AddOptionContract(symbol, resolution, fillForward, leverage, extendedMarket);
         }
 
         /// <summary>
@@ -2060,11 +2060,11 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
         /// <param name="fillForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
         /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
-        /// <param name="extendedMarketHours">Use extended market hours data</param>
+        /// <param name="extendedMarket">Use extended market hours data</param>
         /// <returns>The new <see cref="Option"/> security</returns>
         [DocumentationAttribute(AddingData)]
         public Option AddOptionContract(Symbol symbol, Resolution? resolution = null, bool fillForward = true,
-            decimal leverage = Security.NullLeverage, bool extendedMarketHours = false)
+            decimal leverage = Security.NullLeverage, bool extendedMarket = false)
         {
             if(symbol == null || !symbol.SecurityType.IsOption() || symbol.Underlying == null)
             {
@@ -2078,7 +2078,7 @@ namespace QuantConnect.Algorithm
             List<SubscriptionDataConfig> underlyingConfigs;
             if (!Securities.TryGetValue(underlying, out underlyingSecurity) || !underlyingSecurity.IsTradable)
             {
-                underlyingSecurity = AddSecurity(underlying, resolution, fillForward, leverage, extendedMarketHours);
+                underlyingSecurity = AddSecurity(underlying, resolution, fillForward, leverage, extendedMarket);
                 underlyingConfigs = SubscriptionManager.SubscriptionDataConfigService
                     .GetSubscriptionDataConfigs(underlying);
             }
@@ -2099,7 +2099,7 @@ namespace QuantConnect.Algorithm
                 }
             }
 
-            var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, fillForward, extendedMarketHours,
+            var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, fillForward, extendedMarket,
                 dataNormalizationMode: DataNormalizationMode.Raw);
             var option = (Option)Securities.CreateSecurity(symbol, configs, leverage, underlying: underlyingSecurity);
 
@@ -2117,7 +2117,7 @@ namespace QuantConnect.Algorithm
                 var settings = new UniverseSettings(UniverseSettings) {
                     DataNormalizationMode = DataNormalizationMode.Raw,
                     Resolution = underlyingConfigs.GetHighestResolution(),
-                    ExtendedMarketHours = extendedMarketHours
+                    ExtendedMarketHours = extendedMarket
                 };
                 lock (_pendingUniverseAdditionsLock)
                 {
@@ -2651,7 +2651,7 @@ namespace QuantConnect.Algorithm
         /// Creates and adds a new <see cref="Security"/> to the algorithm
         /// </summary>
         [DocumentationAttribute(AddingData)]
-        private T AddSecurity<T>(SecurityType securityType, string ticker, Resolution? resolution, string market, bool fillForward, decimal leverage, bool extendedMarketHours,
+        private T AddSecurity<T>(SecurityType securityType, string ticker, Resolution? resolution, string market, bool fillForward, decimal leverage, bool extendedMarket,
             DataMappingMode? mappingMode = null, DataNormalizationMode? normalizationMode = null)
             where T : Security
         {
@@ -2671,7 +2671,7 @@ namespace QuantConnect.Algorithm
                 symbol = QuantConnect.Symbol.Create(ticker, securityType, market);
             }
 
-            var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, fillForward, extendedMarketHours,
+            var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, fillForward, extendedMarket,
                 dataNormalizationMode: normalizationMode ?? UniverseSettings.DataNormalizationMode,
                 dataMappingMode: mappingMode ?? UniverseSettings.DataMappingMode);
             var security = Securities.CreateSecurity(symbol, configs, leverage);

@@ -41,10 +41,10 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 11);
 
             var esFutureSymbol = QuantConnect.Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2013, 12, 20));
-            _es = AddFutureContract(esFutureSymbol, Resolution.Hour, fillForward: true, extendedMarketHours: true);
+            _es = AddFutureContract(esFutureSymbol, Resolution.Hour, fillForward: true, extendedMarket: true);
 
             var gcFutureSymbol = QuantConnect.Symbol.CreateFuture(Futures.Metals.Gold, Market.COMEX, new DateTime(2013, 10, 29));
-            _gc = AddFutureContract(gcFutureSymbol, Resolution.Hour, fillForward: true, extendedMarketHours: false);
+            _gc = AddFutureContract(gcFutureSymbol, Resolution.Hour, fillForward: true, extendedMarket: false);
         }
 
         public override void OnData(Slice slice)

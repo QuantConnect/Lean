@@ -27,7 +27,7 @@ class MarketOnOpenOnCloseAlgorithm(QCAlgorithm):
         self.SetEndDate(2013,10,11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.equity = self.AddEquity("SPY", Resolution.Second, fillForward = True, extendedMarketHours = True)
+        self.equity = self.AddEquity("SPY", Resolution.Second, fillForward = True, extendedMarket = True)
         self.__submittedMarketOnCloseToday = False
         self.__last = datetime.min
 

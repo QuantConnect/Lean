@@ -51,7 +51,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2022, 02, 01);
             SetEndDate(2022, 02, 08);
-            var esFuture = AddFuture("ES", extendedMarketHours: ExtendedMarketHours).Symbol;
+            var esFuture = AddFuture("ES", extendedMarket: ExtendedMarketHours).Symbol;
 
             _afterMarketOpenQueue = new Queue<DateTime>(AfterMarketOpen);
             _beforeMarketCloseQueue = new Queue<DateTime>(BeforeMarketClose);

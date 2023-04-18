@@ -770,7 +770,7 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
             var resolution = Resolution.Daily;
             _algorithm = GetAlgorithm(historyEnd);
             var symbol = _algorithm.AddFuture(Futures.Indices.SP500EMini, resolution, dataMappingMode: dataMappingModes.First(),
-                extendedMarketHours: true).Symbol;
+                extendedMarket: true).Symbol;
             var expectedHistoryCount = 74;
 
             if (language == Language.CSharp)
@@ -1334,7 +1334,7 @@ def getHistoryForDataNormalizationMode(algorithm, symbol, start, end, resolution
             var resolution = Resolution.Daily;
             var algorithm = GetAlgorithm(historyEnd);
             var symbol = algorithm.AddFuture(Futures.Indices.SP500EMini, resolution, dataMappingMode: dataMappingModes.First(),
-                extendedMarketHours: true).Symbol;
+                extendedMarket: true).Symbol;
 
             using (Py.GIL())
             {
@@ -2141,7 +2141,7 @@ tick = Tick
             var start = new DateTime(2014, 06, 09);
             var end = new DateTime(2014, 06, 10);
             var algorithm = GetAlgorithm(end);
-            var aapl = algorithm.AddEquity("AAPL", extendedMarketHours: assetWithExtendedMarket);
+            var aapl = algorithm.AddEquity("AAPL", extendedMarket: assetWithExtendedMarket);
             var config = algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(aapl.Symbol).First();
             var exchangeHours = aapl.Exchange.Hours;
 
@@ -2244,7 +2244,7 @@ tick = Tick
         {
             var resolution = Resolution.Daily;
             var algorithm = GetAlgorithm(dateTime);
-            algorithm.AddFuture(Futures.Indices.SP500EMini, resolution, extendedMarketHours: true);
+            algorithm.AddFuture(Futures.Indices.SP500EMini, resolution, extendedMarket: true);
 
             return algorithm;
         }

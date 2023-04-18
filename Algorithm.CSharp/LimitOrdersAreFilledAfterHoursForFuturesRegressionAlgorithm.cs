@@ -46,9 +46,9 @@ namespace QuantConnect.Algorithm.CSharp
                 dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
                 dataMappingMode: DataMappingMode.LastTradingDay,
                 contractDepthOffset: 0,
-                extendedMarketHours: true
+                extendedMarket: true
             );
-            _futureContract = AddFutureContract(FutureChainProvider.GetFutureContractList(_continuousContract.Symbol, Time).First(), extendedMarketHours: true);
+            _futureContract = AddFutureContract(FutureChainProvider.GetFutureContractList(_continuousContract.Symbol, Time).First(), extendedMarket: true);
         }
 
         public override void OnWarmupFinished()

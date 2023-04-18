@@ -48,7 +48,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // Requesting data
                 var continuousContract = AddFuture(future,
                     resolution: Resolution.Daily,
-                    extendedMarketHours: true,
+                    extendedMarket: true,
                     dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
                     dataMappingMode: DataMappingMode.OpenInterest,
                     contractDepthOffset: 0

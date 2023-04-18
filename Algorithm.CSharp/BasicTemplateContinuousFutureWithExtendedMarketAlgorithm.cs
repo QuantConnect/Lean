@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
                 dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
                 dataMappingMode: DataMappingMode.LastTradingDay,
                 contractDepthOffset: 0,
-                extendedMarketHours: true
+                extendedMarket: true
             );
 
             _fast = SMA(_continuousContract.Symbol, 3, Resolution.Daily);

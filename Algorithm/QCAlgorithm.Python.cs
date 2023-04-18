@@ -273,7 +273,7 @@ namespace QuantConnect.Algorithm
                 resolution,
                 fillForward,
                 isCustomData: true,
-                extendedMarketHours: true);
+                extendedMarket: true);
             var security = Securities.CreateSecurity(symbol, config, leverage, addToSymbolCache: false);
 
             return AddToUserDefinedUniverse(security, new List<SubscriptionDataConfig> { config });

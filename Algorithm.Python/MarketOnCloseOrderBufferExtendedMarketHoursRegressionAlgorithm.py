@@ -24,7 +24,7 @@ class MarketOnCloseOrderBufferExtendedMarketHoursRegressionAlgorithm(QCAlgorithm
         self.SetStartDate(2013,10,7)   #Set Start Date
         self.SetEndDate(2013,10,8)    #Set End Date
 
-        self.AddEquity("SPY", Resolution.Minute, extendedMarketHours = True)
+        self.AddEquity("SPY", Resolution.Minute, extendedMarket = True)
 
         def mocAtMidNight():
             self.validOrderTicketAtMidnight = self.MarketOnCloseOrder("SPY", 2)

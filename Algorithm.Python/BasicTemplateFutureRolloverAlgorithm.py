@@ -36,7 +36,7 @@ class BasicTemplateFutureRolloverAlgorithm(QCAlgorithm):
             # Requesting data
             continuous_contract = self.AddFuture(future,
                 resolution = Resolution.Daily,
-                extendedMarketHours = True,
+                extendedMarket = True,
                 dataNormalizationMode = DataNormalizationMode.BackwardsRatio,
                 dataMappingMode = DataMappingMode.OpenInterest,
                 contractDepthOffset = 0

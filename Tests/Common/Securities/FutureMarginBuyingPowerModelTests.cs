@@ -645,7 +645,7 @@ namespace QuantConnect.Tests.Common.Securities
             algorithm.Transactions.SetOrderProcessor(orderProcessor);
 
             var ticker = QuantConnect.Securities.Futures.Financials.EuroDollar;
-            var futureSecurity = algorithm.AddFuture(ticker, extendedMarketHours: true);
+            var futureSecurity = algorithm.AddFuture(ticker, extendedMarket: true);
             Update(futureSecurity, 100, algorithm);
             var localTime = new DateTime(2020, 2, 3);
             var utcTime = localTime.ConvertToUtc(futureSecurity.Exchange.TimeZone);

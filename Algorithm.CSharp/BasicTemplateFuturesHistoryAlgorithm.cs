@@ -56,7 +56,7 @@ namespace QuantConnect.Algorithm.CSharp
             foreach (var root in roots)
             {
                 // set our expiry filter for this futures chain
-                AddFuture(root, Resolution.Minute, extendedMarketHours: ExtendedMarketHours).SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
+                AddFuture(root, Resolution.Minute, extendedMarket: ExtendedMarketHours).SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
             }
 
             SetBenchmark(d => 1000000);

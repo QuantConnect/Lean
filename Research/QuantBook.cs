@@ -365,7 +365,7 @@ namespace QuantConnect.Research
                     {
                         // only add underlying if not present
                         AddEquity(symbol.Underlying.Value, resolutionToUseForUnderlying, fillForward: fillForward,
-                            extendedMarketHours: extendedMarket);
+                            extendedMarket: extendedMarket);
                     }
                     else if (symbol.Underlying.SecurityType == SecurityType.Index)
                     {
@@ -375,12 +375,12 @@ namespace QuantConnect.Research
                     else if(symbol.Underlying.SecurityType == SecurityType.Future && symbol.Underlying.IsCanonical())
                     {
                         AddFuture(symbol.Underlying.ID.Symbol, resolutionToUseForUnderlying, fillForward: fillForward,
-                            extendedMarketHours: extendedMarket);
+                            extendedMarket: extendedMarket);
                     }
                     else if (symbol.Underlying.SecurityType == SecurityType.Future)
                     {
                         AddFutureContract(symbol.Underlying, resolutionToUseForUnderlying, fillForward: fillForward,
-                            extendedMarketHours: extendedMarket);
+                            extendedMarket: extendedMarket);
                     }
                 }
                 var allSymbols = new List<Symbol>();

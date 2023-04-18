@@ -39,7 +39,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 8); //Set End Date
 
             var ticker = "SPY";
-            AddEquity(ticker, Resolution.Minute, extendedMarketHours: true);
+            AddEquity(ticker, Resolution.Minute, extendedMarket: true);
 
             Schedule.On(DateRules.Tomorrow, TimeRules.Midnight, () =>
             {
