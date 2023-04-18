@@ -458,6 +458,36 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
+        /// Sets the automatic option exercise model
+        /// </summary>
+        /// <param name="pyObject">The option exercise model to use</param>
+        public void SetOptionExerciseModel(PyObject pyObject)
+        {
+            if (pyObject.TryConvert<IOptionExerciseModel>(out var optionExerciseModel))
+            {
+                // pure C# implementation
+                SetOptionExerciseModel(optionExerciseModel);
+            }
+            else if (Extensions.TryConvert<IOptionExerciseModel>(pyObject, out _, allowPythonDerivative: true))
+            {
+                SetOptionExerciseModel(new OptionExerciseModelPythonWrapper(pyObject));
+            }
+            else
+            {
+                throw new ArgumentException($"SetOptionExerciseModel: {pyObject.Repr()} is not a valid argument.");
+            }
+        }
+
+        /// <summary>
+        /// Sets the automatic option exercise model
+        /// </summary>
+        /// <param name="optionExerciseModel">The option exercise model to use</param>
+        public void SetOptionExerciseModel(IOptionExerciseModel optionExerciseModel)
+        {
+            OptionExerciseModel = optionExerciseModel;
+        }
+
+        /// <summary>
         /// Sets the <see cref="ContractFilter"/> to a new instance of the filter
         /// using the specified min and max strike values. Contracts with expirations further than 35
         /// days out will also be filtered.
