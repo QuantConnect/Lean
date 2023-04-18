@@ -444,7 +444,10 @@ namespace QuantConnect.Securities.Option
             }
             else
             {
-                throw new ArgumentException($"SetOptionAssignmentModel: {pyObject.Repr()} is not a valid argument.");
+                using(Py.GIL())
+                {
+                    throw new ArgumentException($"SetOptionAssignmentModel: {pyObject.Repr()} is not a valid argument.");
+                }
             }
         }
 
@@ -474,7 +477,10 @@ namespace QuantConnect.Securities.Option
             }
             else
             {
-                throw new ArgumentException($"SetOptionExerciseModel: {pyObject.Repr()} is not a valid argument.");
+                using (Py.GIL())
+                {
+                    throw new ArgumentException($"SetOptionExerciseModel: {pyObject.Repr()} is not a valid argument.");
+                }
             }
         }
 

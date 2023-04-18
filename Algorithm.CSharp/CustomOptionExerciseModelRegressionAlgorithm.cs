@@ -40,19 +40,17 @@ namespace QuantConnect.Algorithm.CSharp
 
         private class CustomOptionExerciseModel : DefaultExerciseModel
         {
-            public override IEnumerable<OrderEvent> OptionExercise(Option option, OptionExerciseOrder order)
+            public IEnumerable<OrderEvent> OptionExercise(Option option, OptionExerciseOrder order)
             {
-                yield return new OrderEvent(
-                order.Id,
-                option.Symbol,
-                option.LocalTime.ConvertToUtc(option.Exchange.TimeZone),
-                OrderStatus.Filled,
-                Extensions.GetOrderDirection(order.Quantity),
-                0.0m,
-                order.Quantity,
-                OrderFee.Zero,
-                "Tag"
-                )
+                yield return new OrderEvent(order.Id,
+                    option.Symbol,
+                    option.LocalTime.ConvertToUtc(option.Exchange.TimeZone),
+                    OrderStatus.Filled,
+                    Extensions.GetOrderDirection(order.Quantity),
+                    0.0m,
+                    order.Quantity,
+                    OrderFee.Zero,
+                    "Tag")
                 {
                     IsAssignment = false
                 };
