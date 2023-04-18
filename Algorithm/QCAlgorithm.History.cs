@@ -300,6 +300,7 @@ namespace QuantConnect.Algorithm
             bool? fillForward = null, bool? extendedMarketHours = null)
             where T : IBaseData
         {
+            CheckPeriodBasedHistoryRequestResolution(symbols, resolution);
             var requests = CreateBarCountHistoryRequests(symbols, typeof(T), periods, resolution, fillForward, extendedMarketHours);
             return GetDataTypedHistory<T>(requests);
         }
@@ -359,6 +360,7 @@ namespace QuantConnect.Algorithm
             if (symbol == null) throw new ArgumentException(_symbolEmptyErrorMessage);
 
             resolution = GetResolution(symbol, resolution);
+            CheckPeriodBasedHistoryRequestResolution(new[] { symbol }, resolution);
             var marketHours = GetMarketHours(symbol);
             var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, marketHours.ExchangeHours,
                 marketHours.DataTimeZone, extendedMarketHours);
@@ -382,6 +384,8 @@ namespace QuantConnect.Algorithm
             bool? extendedMarketHours = null)
             where T : IBaseData
         {
+            resolution = GetResolution(symbol, resolution);
+            CheckPeriodBasedHistoryRequestResolution(new[] { symbol }, resolution);
             var requests = CreateBarCountHistoryRequests(new [] { symbol }, typeof(T), periods, resolution, fillForward, extendedMarketHours);
             return GetDataTypedHistory<T>(requests, symbol);
         }
@@ -484,6 +488,7 @@ namespace QuantConnect.Algorithm
         public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null, bool? fillForward = null,
             bool? extendedMarketHours = null)
         {
+            CheckPeriodBasedHistoryRequestResolution(symbols, resolution);
             return History(CreateBarCountHistoryRequests(symbols, periods, resolution, fillForward, extendedMarketHours)).Memoize();
         }
 
@@ -812,11 +817,6 @@ namespace QuantConnect.Algorithm
             return symbols.Where(HistoryRequestValid).SelectMany(symbol =>
             {
                 var res = GetResolution(symbol, resolution);
-                if (res == Resolution.Tick)
-                {
-                    throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
-                }
-
                 var exchange = GetExchangeHours(symbol);
                 var configs = GetMatchingSubscriptions(symbol, requestedType, resolution).ToList();
                 if (configs.Count == 0)
@@ -1002,6 +1002,21 @@ namespace QuantConnect.Algorithm
             _warmupTimeSpan = timeSpan;
             _warmupBarCount = barCount;
             Settings.WarmupResolution = resolution;
+        }
+
+        /// <summary>
+        /// Throws if a period bases history request is made for tick resolution, which is not allowed.
+        /// </summary>
+        private void CheckPeriodBasedHistoryRequestResolution(IEnumerable<Symbol> symbols, Resolution? resolution)
+        {
+            foreach (var symbol in symbols)
+            {
+                var res = GetResolution(symbol, resolution);
+                if (res == Resolution.Tick)
+                {
+                    throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
+                }
+            }
         }
 
         /// <summary>
