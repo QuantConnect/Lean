@@ -40,7 +40,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         private class CustomOptionExerciseModel : DefaultExerciseModel
         {
-            public IEnumerable<OrderEvent> OptionExercise(Option option, OptionExerciseOrder order)
+            public override IEnumerable<OrderEvent> OptionExercise(Option option, OptionExerciseOrder order)
             {
                 yield return new OrderEvent(order.Id,
                     option.Symbol,
