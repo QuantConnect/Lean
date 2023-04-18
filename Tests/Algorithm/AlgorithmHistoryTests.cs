@@ -1942,7 +1942,7 @@ tradeBar = TradeBar
         // Python
         [TestCase(Language.Python, true, 163977, 0, 461207)]
         [TestCase(Language.Python, false, 149720, 0, 420604)]
-        public void HistoryRequestHoursTickResolution(
+        public void HistoryRequestWithExtendedMarketHoursTickResolution(
             Language language,
             bool extendedMarket,
             int historyExpectedCount,

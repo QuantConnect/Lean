@@ -300,23 +300,16 @@ namespace QuantConnect.Algorithm
             bool? fillForward = null, bool? extendedMarket = null)
             where T : IBaseData
         {
-            var requests = symbols.Select(x =>
+            foreach (var symbol in symbols)
             {
-                var res = GetResolution(x, resolution);
+                var res = GetResolution(symbol, resolution);
                 if (res == Resolution.Tick)
                 {
                     throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
                 }
+            }
 
-                var config = GetMatchingSubscription(x, typeof(T));
-                if (config == null) return null;
-
-                var exchange = GetExchangeHours(x);
-                var start = _historyRequestFactory.GetStartTimeAlgoTz(x, periods, res, exchange, config.DataTimeZone, extendedMarket);
-
-                return _historyRequestFactory.CreateHistoryRequest(config, start, Time, exchange, res, fillForward, extendedMarket);
-            });
-
+            var requests = CreateBarCountHistoryRequests(symbols, typeof(T), periods, resolution, fillForward, extendedMarket);
             return GetDataTypedHistory<T>(requests);
         }
 
@@ -336,7 +329,7 @@ namespace QuantConnect.Algorithm
             bool? fillForward = null, bool? extendedMarket = null)
             where T : IBaseData
         {
-            var requests = CreateDateRangeHistoryRequests(symbols, start, end, resolution, fillForward, extendedMarket);
+            var requests = CreateDateRangeHistoryRequests(symbols, typeof(T), start, end, resolution, fillForward, extendedMarket);
             return GetDataTypedHistory<T>(requests);
         }
 
