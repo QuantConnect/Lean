@@ -845,12 +845,13 @@ namespace QuantConnect.Algorithm
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
         /// <returns>A python dictionary with pandas DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject tickers, int periods, Resolution? resolution = null, bool? fillForward = null)
+        public PyObject History(PyObject tickers, int periods, Resolution? resolution = null, bool? fillForward = null, bool? extendedMarket = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
-            return GetDataFrame(History(symbols, periods, resolution, fillForward));
+            return GetDataFrame(History(symbols, periods, resolution, fillForward, extendedMarket));
         }
 
         /// <summary>
@@ -861,12 +862,13 @@ namespace QuantConnect.Algorithm
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
         /// <returns>A python dictionary with pandas DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject tickers, TimeSpan span, Resolution? resolution = null, bool? fillForward = null)
+        public PyObject History(PyObject tickers, TimeSpan span, Resolution? resolution = null, bool? fillForward = null, bool? extendedMarket = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
-            return GetDataFrame(History(symbols, span, resolution, fillForward));
+            return GetDataFrame(History(symbols, span, resolution, fillForward, extendedMarket));
         }
 
         /// <summary>
@@ -945,9 +947,11 @@ namespace QuantConnect.Algorithm
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject type, PyObject tickers, int periods, Resolution? resolution = null, bool? fillForward = null)
+        public PyObject History(PyObject type, PyObject tickers, int periods, Resolution? resolution = null, bool? fillForward = null,
+            bool? extendedMarket = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
             if (symbols.Any(symbol => GetResolution(symbol, resolution) == Resolution.Tick))
@@ -956,7 +960,7 @@ namespace QuantConnect.Algorithm
             }
 
             var requestedType = type.CreateType();
-            var requests = CreateBarCountHistoryRequests(symbols, requestedType, periods, resolution, fillForward);
+            var requests = CreateBarCountHistoryRequests(symbols, requestedType, periods, resolution, fillForward, extendedMarket);
 
             return GetDataFrame(History(requests.Where(x => x != null)), requestedType);
         }
@@ -970,11 +974,13 @@ namespace QuantConnect.Algorithm
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject type, PyObject tickers, TimeSpan span, Resolution? resolution = null, bool? fillForward = null)
+        public PyObject History(PyObject type, PyObject tickers, TimeSpan span, Resolution? resolution = null, bool? fillForward = null,
+            bool? extendedMarket = null)
         {
-            return History(type, tickers, Time - span, Time, resolution, fillForward);
+            return History(type, tickers, Time - span, Time, resolution, fillForward, extendedMarket);
         }
 
         /// <summary>
@@ -986,12 +992,14 @@ namespace QuantConnect.Algorithm
         /// <param name="end">The end time in the algorithm's time zone</param>
         /// <param name="resolution">The resolution to request</param>
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject type, Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null, bool? fillForward = null)
+        public PyObject History(PyObject type, Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null, bool? fillForward = null,
+            bool? extendedMarket = null)
         {
             var requestedType = type.CreateType();
-            var requests = CreateDateRangeHistoryRequests(new [] {  symbol }, requestedType, start, end, resolution, fillForward);
+            var requests = CreateDateRangeHistoryRequests(new [] {  symbol }, requestedType, start, end, resolution, fillForward, extendedMarket);
             if (requests.IsNullOrEmpty())
             {
                 throw new ArgumentException($"No history data could be fetched. " +
@@ -1011,9 +1019,11 @@ namespace QuantConnect.Algorithm
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject type, Symbol symbol, int periods, Resolution? resolution = null, bool? fillForward = null)
+        public PyObject History(PyObject type, Symbol symbol, int periods, Resolution? resolution = null, bool? fillForward = null,
+            bool? extendedMarket = null)
         {
             resolution = GetResolution(symbol, resolution);
             if (resolution == Resolution.Tick)
@@ -1022,8 +1032,9 @@ namespace QuantConnect.Algorithm
             }
 
             var marketHours = GetMarketHours(symbol);
-            var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, marketHours.ExchangeHours, marketHours.DataTimeZone);
-            return History(type, symbol, start, Time, resolution, fillForward);
+            var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, marketHours.ExchangeHours,
+                marketHours.DataTimeZone, extendedMarket);
+            return History(type, symbol, start, Time, resolution, fillForward, extendedMarket);
         }
 
         /// <summary>
@@ -1035,11 +1046,13 @@ namespace QuantConnect.Algorithm
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
-        public PyObject History(PyObject type, Symbol symbol, TimeSpan span, Resolution? resolution = null, bool? fillForward = null)
+        public PyObject History(PyObject type, Symbol symbol, TimeSpan span, Resolution? resolution = null, bool? fillForward = null,
+            bool? extendedMarket = null)
         {
-            return History(type, symbol, Time - span, Time, resolution, fillForward);
+            return History(type, symbol, Time - span, Time, resolution, fillForward, extendedMarket);
         }
 
         /// <summary>

@@ -123,19 +123,35 @@ namespace QuantConnect.Data
         /// <param name="resolution">The length of each bar</param>
         /// <param name="exchange">The exchange hours used for market open hours</param>
         /// <param name="dataTimeZone">The time zone in which data are stored</param>
+        /// <param name="extendedMarket">
+        /// True to include extended market hours data, false otherwise.
+        /// If not passed, the config will be used to determined whether to include extended market hours.
+        /// </param>
         /// <returns>The start time that would provide the specified number of bars ending at the algorithm's current time</returns>
         public DateTime GetStartTimeAlgoTz(
             Symbol symbol,
             int periods,
             Resolution resolution,
             SecurityExchangeHours exchange,
-            DateTimeZone dataTimeZone)
+            DateTimeZone dataTimeZone,
+            bool? extendedMarket = null)
         {
-            var configs = _algorithm.SubscriptionManager
-                .SubscriptionDataConfigService
-                .GetSubscriptionDataConfigs(symbol);
+            var isExtendedMarketHours = false;
             // hour resolution does no have extended market hours data
-            var isExtendedMarketHours = resolution != Resolution.Hour && configs.IsExtendedMarketHours();
+            if (resolution != Resolution.Hour)
+            {
+                if (extendedMarket.HasValue)
+                {
+                    isExtendedMarketHours = extendedMarket.Value;
+                }
+                else
+                {
+                    var configs = _algorithm.SubscriptionManager
+                        .SubscriptionDataConfigService
+                        .GetSubscriptionDataConfigs(symbol);
+                    isExtendedMarketHours = configs.IsExtendedMarketHours();
+                }
+            }
 
             var timeSpan = resolution.ToTimeSpan();
             // make this a minimum of one second
