@@ -44,16 +44,6 @@ namespace QuantConnect.Data.UniverseSelection
         public bool ExtendedMarket;
 
         /// <summary>
-        /// True to allow extended market hours data, false otherwise
-        /// </summary>
-        [Obsolete("This property has been deprecated. Please use ExtendedMarket instead.")]
-        public bool ExtendedMarketHours
-        {
-            get { return ExtendedMarket; }
-            set { ExtendedMarket = value; }
-        }
-
-        /// <summary>
         /// Defines the minimum amount of time a security must be in
         /// the universe before being removed.
         /// </summary>
@@ -105,7 +95,7 @@ namespace QuantConnect.Data.UniverseSelection
             FillForward = fillForward;
             DataMappingMode = dataMappingMode;
             ContractDepthOffset = contractDepthOffset;
-            ExtendedMarketHours = extendedMarket;
+            ExtendedMarket = extendedMarket;
             MinimumTimeInUniverse = minimumTimeInUniverse;
             DataNormalizationMode = dataNormalizationMode;
         }
@@ -120,7 +110,7 @@ namespace QuantConnect.Data.UniverseSelection
             FillForward = universeSettings.FillForward;
             DataMappingMode = universeSettings.DataMappingMode;
             ContractDepthOffset = universeSettings.ContractDepthOffset;
-            ExtendedMarketHours = universeSettings.ExtendedMarketHours;
+            ExtendedMarket = universeSettings.ExtendedMarket;
             MinimumTimeInUniverse = universeSettings.MinimumTimeInUniverse;
             DataNormalizationMode = universeSettings.DataNormalizationMode;
             SubscriptionDataTypes = universeSettings.SubscriptionDataTypes;

@@ -300,15 +300,6 @@ namespace QuantConnect.Algorithm
             bool? fillForward = null, bool? extendedMarket = null)
             where T : IBaseData
         {
-            foreach (var symbol in symbols)
-            {
-                var res = GetResolution(symbol, resolution);
-                if (res == Resolution.Tick)
-                {
-                    throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
-                }
-            }
-
             var requests = CreateBarCountHistoryRequests(symbols, typeof(T), periods, resolution, fillForward, extendedMarket);
             return GetDataTypedHistory<T>(requests);
         }
@@ -391,12 +382,6 @@ namespace QuantConnect.Algorithm
             bool? extendedMarket = null)
             where T : IBaseData
         {
-            resolution = GetResolution(symbol, resolution);
-            if (resolution == Resolution.Tick)
-            {
-                throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
-            }
-
             var requests = CreateBarCountHistoryRequests(new [] { symbol }, typeof(T), periods, resolution, fillForward, extendedMarket);
             return GetDataTypedHistory<T>(requests, symbol);
         }
@@ -499,7 +484,6 @@ namespace QuantConnect.Algorithm
         public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null, bool? fillForward = null,
             bool? extendedMarket = null)
         {
-            if (resolution == Resolution.Tick) throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
             return History(CreateBarCountHistoryRequests(symbols, periods, resolution, fillForward, extendedMarket)).Memoize();
         }
 
@@ -825,28 +809,27 @@ namespace QuantConnect.Algorithm
             Resolution? resolution = null, bool? fillForward = null, bool? extendedMarket = null, DataMappingMode? dataMappingMode = null,
             DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
         {
-            return symbols.Where(HistoryRequestValid).SelectMany(x =>
+            return symbols.Where(HistoryRequestValid).SelectMany(symbol =>
             {
-                var res = GetResolution(x, resolution);
-                var exchange = GetExchangeHours(x);
-                var configs = GetMatchingSubscriptions(x, requestedType, resolution).ToList();
+                var res = GetResolution(symbol, resolution);
+                if (res == Resolution.Tick)
+                {
+                    throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
+                }
+
+                var exchange = GetExchangeHours(symbol);
+                var configs = GetMatchingSubscriptions(symbol, requestedType, resolution).ToList();
                 if (configs.Count == 0)
                 {
                     return Enumerable.Empty<HistoryRequest>();
                 }
 
-                var start = _historyRequestFactory.GetStartTimeAlgoTz(x, periods, res, exchange, configs.First().DataTimeZone, extendedMarket);
+                var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, res, exchange, configs.First().DataTimeZone, extendedMarket);
                 var end = Time;
 
                 return configs.Select(config => _historyRequestFactory.CreateHistoryRequest(config, start, end, exchange, res, fillForward,
                     extendedMarket, dataMappingMode, dataNormalizationMode, contractDepthOffset));
             });
-        }
-
-        private SubscriptionDataConfig GetMatchingSubscription(Symbol symbol, Type type, Resolution? resolution = null)
-        {
-            // find the first subscription matching the requested type with a higher resolution than requested
-            return GetMatchingSubscriptions(symbol, type, resolution).FirstOrDefault();
         }
 
         private int GetTickTypeOrder(SecurityType securityType, TickType tickType)
