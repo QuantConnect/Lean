@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,7 +26,7 @@ class BasicTemplateFuturesDailyAlgorithm(QCAlgorithm):
         self.SetCash(1000000)
 
         resolution = self.GetResolution()
-        extendedMarket = self.GetExtendedMarketHours()
+        extendedMarketHours = self.GetExtendedMarketHours()
 
         # Subscribe and set our expiry filter for the futures chain
         self.futureSP500 = self.AddFuture(Futures.Indices.SP500EMini, resolution, extendedMarket=extendedMarketHours)

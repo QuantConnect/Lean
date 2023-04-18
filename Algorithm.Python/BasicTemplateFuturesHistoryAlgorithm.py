@@ -29,7 +29,7 @@ class BasicTemplateFuturesHistoryAlgorithm(QCAlgorithm):
         self.SetEndDate(2013, 10, 9)
         self.SetCash(1000000)
 
-        extendedMarket = self.GetExtendedMarketHours()
+        extendedMarketHours = self.GetExtendedMarketHours()
 
         # Subscribe and set our expiry filter for the futures chain
         # find the front contract expiring no earlier than in 90 days
