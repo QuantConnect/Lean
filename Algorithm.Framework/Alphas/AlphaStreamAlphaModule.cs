@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -101,7 +101,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 {
                     algorithm.AddSecurity(symbol,
                         resolution: algorithm.UniverseSettings.Resolution,
-                        extendedMarket: algorithm.UniverseSettings.ExtendedMarketHours);
+                        extendedMarketHours: algorithm.UniverseSettings.ExtendedMarketHours);
                 }
             }
             _symbolsPerAlpha[alphaId] = newSymbols;

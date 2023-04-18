@@ -41,10 +41,10 @@ namespace QuantConnect.Algorithm.CSharp
                 dataNormalizationMode: DataNormalizationMode.BackwardsRatio,
                 dataMappingMode: DataMappingMode.LastTradingDay,
                 contractDepthOffset: 0,
-                extendedMarket: true
+                extendedMarketHours: true
             );
             _futureContract = AddFutureContract(FutureChainProvider.GetFutureContractList(_continuousContract.Symbol, Time).First(),
-                extendedMarket: true);
+                extendedMarketHours: true);
         }
         public override void OnData(Slice slice)
         {

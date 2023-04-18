@@ -29,7 +29,7 @@ class BasicTemplateContinuousFutureWithExtendedMarketAlgorithm(QCAlgorithm):
                                                   dataNormalizationMode = DataNormalizationMode.BackwardsRatio,
                                                   dataMappingMode = DataMappingMode.LastTradingDay,
                                                   contractDepthOffset = 0,
-                                                  extendedMarket = True)
+                                                  extendedMarketHours = True)
 
         self._fast = self.SMA(self._continuousContract.Symbol, 3, Resolution.Daily)
         self._slow = self.SMA(self._continuousContract.Symbol, 10, Resolution.Daily)

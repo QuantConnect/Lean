@@ -613,10 +613,10 @@ namespace QuantConnect
         /// <param name="end">The end time of the last bar over the requested period</param>
         /// <param name="barSize">The length of each bar</param>
         /// <param name="barCount">The number of bars requested</param>
-        /// <param name="extendedMarket">True to allow extended market hours bars, otherwise false for only normal market hours</param>
+        /// <param name="extendedMarketHours">True to allow extended market hours bars, otherwise false for only normal market hours</param>
         /// <param name="dataTimeZone">Timezone for this data</param>
         /// <returns>The start time that would provide the specified number of bars ending at the specified end time, rounded down by the requested bar size</returns>
-        public static DateTime GetStartTimeForTradeBars(SecurityExchangeHours exchangeHours, DateTime end, TimeSpan barSize, int barCount, bool extendedMarket, DateTimeZone dataTimeZone)
+        public static DateTime GetStartTimeForTradeBars(SecurityExchangeHours exchangeHours, DateTime end, TimeSpan barSize, int barCount, bool extendedMarketHours, DateTimeZone dataTimeZone)
         {
             if (barSize <= TimeSpan.Zero)
             {
@@ -629,7 +629,7 @@ namespace QuantConnect
             {
                 var previous = current;
                 current = current - barSize;
-                if (exchangeHours.IsOpen(current, previous, extendedMarket))
+                if (exchangeHours.IsOpen(current, previous, extendedMarketHours))
                 {
                     i++;
                 }
@@ -645,9 +645,9 @@ namespace QuantConnect
         /// <param name="start">The end time of the last bar over the requested period</param>
         /// <param name="barSize">The length of each bar</param>
         /// <param name="barCount">The number of bars requested</param>
-        /// <param name="extendedMarket">True to allow extended market hours bars, otherwise false for only normal market hours</param>
+        /// <param name="extendedMarketHours">True to allow extended market hours bars, otherwise false for only normal market hours</param>
         /// <returns>The start time that would provide the specified number of bars ending at the specified end time, rounded down by the requested bar size</returns>
-        public static DateTime GetEndTimeForTradeBars(SecurityExchangeHours exchangeHours, DateTime start, TimeSpan barSize, int barCount, bool extendedMarket)
+        public static DateTime GetEndTimeForTradeBars(SecurityExchangeHours exchangeHours, DateTime start, TimeSpan barSize, int barCount, bool extendedMarketHours)
         {
             if (barSize <= TimeSpan.Zero)
             {
@@ -673,7 +673,7 @@ namespace QuantConnect
             {
                 var previous = current;
                 current = current + barSize;
-                if (exchangeHours.IsOpen(previous, current, extendedMarket))
+                if (exchangeHours.IsOpen(previous, current, extendedMarketHours))
                 {
                     i++;
                 }

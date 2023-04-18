@@ -31,8 +31,8 @@ class BasicTemplateFuturesWithExtendedMarketAlgorithm(QCAlgorithm):
         self.contractSymbol = None
 
         # Subscribe and set our expiry filter for the futures chain
-        self.futureSP500 = self.AddFuture(Futures.Indices.SP500EMini, extendedMarket = True)
-        self.futureGold = self.AddFuture(Futures.Metals.Gold, extendedMarket = True)
+        self.futureSP500 = self.AddFuture(Futures.Indices.SP500EMini, extendedMarketHours = True)
+        self.futureGold = self.AddFuture(Futures.Metals.Gold, extendedMarketHours = True)
 
         # set our expiry filter for this futures chain
         # SetFilter method accepts timedelta objects or integer for days.

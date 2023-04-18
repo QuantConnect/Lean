@@ -120,11 +120,11 @@ namespace QuantConnect.Securities
         /// Gets the market opening time of day
         /// </summary>
         /// <param name="time">The reference time, the open returned will be the first open after the specified time if there are multiple market open segments</param>
-        /// <param name="extendedMarket">True to include extended market hours, false for regular market hours</param>
+        /// <param name="extendedMarketHours">True to include extended market hours, false for regular market hours</param>
         /// <param name="previousDayLastSegment">The previous days last segment. This is used when the potential next market open is the first segment of the day
         /// so we need to check that segment is not part of previous day last segment. If null, it means there were no segments on the last day</param>
         /// <returns>The market's opening time of day</returns>
-        public TimeSpan? GetMarketOpen(TimeSpan time, bool extendedMarket, TimeSpan? previousDayLastSegment = null)
+        public TimeSpan? GetMarketOpen(TimeSpan time, bool extendedMarketHours, TimeSpan? previousDayLastSegment = null)
         {
             var previousSegment = previousDayLastSegment;
             bool prevSegmentIsFromPrevDay = true;
@@ -135,7 +135,7 @@ namespace QuantConnect.Securities
                 {
                     // update prev segment end time only if the current segment could have been taken into account
                     // (regular hours or, when enabled, extended hours segment)
-                    if (segment.State == MarketHoursState.Market || extendedMarket)
+                    if (segment.State == MarketHoursState.Market || extendedMarketHours)
                     {
                         previousSegment = segment.End;
                         prevSegmentIsFromPrevDay = false;
@@ -145,7 +145,7 @@ namespace QuantConnect.Securities
                 }
 
                 // let's try this segment if it's regular market hours or if it is extended market hours and extended market is allowed
-                if (segment.State == MarketHoursState.Market || extendedMarket)
+                if (segment.State == MarketHoursState.Market || extendedMarketHours)
                 {
                     if (!IsContinuousMarketOpen(previousSegment, segment.Start, prevSegmentIsFromPrevDay))
                     {
@@ -165,12 +165,12 @@ namespace QuantConnect.Securities
         /// Gets the market closing time of day
         /// </summary>
         /// <param name="time">The reference time, the close returned will be the first close after the specified time if there are multiple market open segments</param>
-        /// <param name="extendedMarket">True to include extended market hours, false for regular market hours</param>
+        /// <param name="extendedMarketHours">True to include extended market hours, false for regular market hours</param>
         /// <param name="nextDaySegmentStart">Next day first segment start. This is used when the potential next market close is
         /// the last segment of the day so we need to check that segment is not continued on next day first segment.
         /// If null, it means there are no segments on the next day</param>
         /// <returns>The market's closing time of day</returns>
-        public TimeSpan? GetMarketClose(TimeSpan time, bool extendedMarket, TimeSpan? nextDaySegmentStart = null)
+        public TimeSpan? GetMarketClose(TimeSpan time, bool extendedMarketHours, TimeSpan? nextDaySegmentStart = null)
         {
             TimeSpan? nextSegment;
             bool nextSegmentIsFromNextDay = false;
@@ -187,7 +187,7 @@ namespace QuantConnect.Securities
                     var potentialNextSegment = Segments[i+1];
 
                     // Check whether we can consider PostMarket or not
-                    if (potentialNextSegment.State != MarketHoursState.Market && !extendedMarket)
+                    if (potentialNextSegment.State != MarketHoursState.Market && !extendedMarketHours)
                     {
                         nextSegment = null;
                     }
@@ -202,7 +202,7 @@ namespace QuantConnect.Securities
                     nextSegmentIsFromNextDay = true;
                 }
 
-                if ((segment.State == MarketHoursState.Market || extendedMarket) &&
+                if ((segment.State == MarketHoursState.Market || extendedMarketHours) &&
                     !IsContinuousMarketOpen(segment.End, nextSegment, nextSegmentIsFromNextDay))
                 {
                     return segment.End;
@@ -217,9 +217,9 @@ namespace QuantConnect.Securities
         /// Determines if the exchange is open at the specified time
         /// </summary>
         /// <param name="time">The time of day to check</param>
-        /// <param name="extendedMarket">True to check exended market hours, false to check regular market hours</param>
+        /// <param name="extendedMarketHours">True to check exended market hours, false to check regular market hours</param>
         /// <returns>True if the exchange is considered open, false otherwise</returns>
-        public bool IsOpen(TimeSpan time, bool extendedMarket)
+        public bool IsOpen(TimeSpan time, bool extendedMarketHours)
         {
             for (var i = 0; i < Segments.Count; i++)
             {
@@ -231,7 +231,7 @@ namespace QuantConnect.Securities
 
                 if (segment.Contains(time))
                 {
-                    return extendedMarket || segment.State == MarketHoursState.Market;
+                    return extendedMarketHours || segment.State == MarketHoursState.Market;
                 }
             }
 
@@ -244,13 +244,13 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="start">The start time of the interval</param>
         /// <param name="end">The end time of the interval</param>
-        /// <param name="extendedMarket">True to check exended market hours, false to check regular market hours</param>
+        /// <param name="extendedMarketHours">True to check exended market hours, false to check regular market hours</param>
         /// <returns>True if the exchange is considered open, false otherwise</returns>
-        public bool IsOpen(TimeSpan start, TimeSpan end, bool extendedMarket)
+        public bool IsOpen(TimeSpan start, TimeSpan end, bool extendedMarketHours)
         {
             if (start == end)
             {
-                return IsOpen(start, extendedMarket);
+                return IsOpen(start, extendedMarketHours);
             }
 
             for (var i = 0; i < Segments.Count; i++)
@@ -261,7 +261,7 @@ namespace QuantConnect.Securities
                     continue;
                 }
 
-                if (extendedMarket || segment.State == MarketHoursState.Market)
+                if (extendedMarketHours || segment.State == MarketHoursState.Market)
                 {
                     if (segment.Overlaps(start, end))
                     {

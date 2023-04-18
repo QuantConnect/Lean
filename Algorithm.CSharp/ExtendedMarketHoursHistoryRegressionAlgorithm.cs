@@ -39,7 +39,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 09);
             SetCash(100000);
 
-            AddEquity("SPY", Resolution.Minute, extendedMarket:true, fillForward:false);
+            AddEquity("SPY", Resolution.Minute, extendedMarketHours:true, fillForward:false);
 
             Schedule.On("RunHistoryCall", DateRules.EveryDay(), TimeRules.Every(TimeSpan.FromHours(1)), RunHistoryCall);
         }

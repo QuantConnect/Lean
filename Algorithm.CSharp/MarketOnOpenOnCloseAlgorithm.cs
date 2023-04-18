@@ -39,7 +39,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 11);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
-            AddSecurity(SecurityType.Equity, "SPY", Resolution.Second, fillForward: true, extendedMarket: true);
+            AddSecurity(SecurityType.Equity, "SPY", Resolution.Second, fillForward: true, extendedMarketHours: true);
 
             _security = Securities["SPY"];
         }

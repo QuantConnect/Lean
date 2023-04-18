@@ -46,7 +46,7 @@ namespace QuantConnect.Data
         /// <param name="exchangeHours">Security exchange hours</param>
         /// <param name="resolution">The resolution to use. If null will use <see cref="SubscriptionDataConfig.Resolution"/></param>
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
-        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
         /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
@@ -58,7 +58,7 @@ namespace QuantConnect.Data
             SecurityExchangeHours exchangeHours,
             Resolution? resolution,
             bool? fillForward = null,
-            bool? extendedMarket = null,
+            bool? extendedMarketHours = null,
             DataMappingMode? dataMappingMode = null,
             DataNormalizationMode? dataNormalizationMode = null,
             int? contractDepthOffset = null)
@@ -91,9 +91,9 @@ namespace QuantConnect.Data
                 TickType = subscription.TickType
             };
 
-            if (extendedMarket != null)
+            if (extendedMarketHours != null)
             {
-                request.IncludeExtendedMarketHours = extendedMarket.Value;
+                request.IncludeExtendedMarketHours = extendedMarketHours.Value;
             }
 
             if (dataMappingMode != null)
@@ -123,7 +123,7 @@ namespace QuantConnect.Data
         /// <param name="resolution">The length of each bar</param>
         /// <param name="exchange">The exchange hours used for market open hours</param>
         /// <param name="dataTimeZone">The time zone in which data are stored</param>
-        /// <param name="extendedMarket">
+        /// <param name="extendedMarketHours">
         /// True to include extended market hours data, false otherwise.
         /// If not passed, the config will be used to determined whether to include extended market hours.
         /// </param>
@@ -134,15 +134,15 @@ namespace QuantConnect.Data
             Resolution resolution,
             SecurityExchangeHours exchange,
             DateTimeZone dataTimeZone,
-            bool? extendedMarket = null)
+            bool? extendedMarketHours = null)
         {
             var isExtendedMarketHours = false;
             // hour resolution does no have extended market hours data
             if (resolution != Resolution.Hour)
             {
-                if (extendedMarket.HasValue)
+                if (extendedMarketHours.HasValue)
                 {
-                    isExtendedMarketHours = extendedMarket.Value;
+                    isExtendedMarketHours = extendedMarketHours.Value;
                 }
                 else
                 {

@@ -222,12 +222,12 @@ namespace QuantConnect.Algorithm
         /// <param name="span">The span over which to request data. This is a calendar span, so take into consideration weekends and such</param>
         /// <param name="resolution">The resolution to request</param>
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
-        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
         /// <returns>An enumerable of slice containing data over the most recent span for all configured securities</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<Slice> History(TimeSpan span, Resolution? resolution = null, bool? fillForward = null, bool? extendedMarket = null)
+        public IEnumerable<Slice> History(TimeSpan span, Resolution? resolution = null, bool? fillForward = null, bool? extendedMarketHours = null)
         {
-            return History(Securities.Keys, Time - span, Time, resolution, fillForward, extendedMarket).Memoize();
+            return History(Securities.Keys, Time - span, Time, resolution, fillForward, extendedMarketHours).Memoize();
         }
 
         /// <summary>
@@ -238,12 +238,12 @@ namespace QuantConnect.Algorithm
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
-        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
         /// <returns>An enumerable of slice containing data over the most recent span for all configured securities</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<Slice> History(int periods, Resolution? resolution = null, bool? fillForward = null, bool? extendedMarket = null)
+        public IEnumerable<Slice> History(int periods, Resolution? resolution = null, bool? fillForward = null, bool? extendedMarketHours = null)
         {
-            return History(Securities.Keys, periods, resolution, fillForward, extendedMarket).Memoize();
+            return History(Securities.Keys, periods, resolution, fillForward, extendedMarketHours).Memoize();
         }
 
         /// <summary>
@@ -254,14 +254,14 @@ namespace QuantConnect.Algorithm
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
-        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public IEnumerable<DataDictionary<T>> History<T>(TimeSpan span, Resolution? resolution = null, bool? fillForward = null,
-            bool? extendedMarket = null)
+            bool? extendedMarketHours = null)
             where T : IBaseData
         {
-            return History<T>(Securities.Keys, span, resolution, fillForward, extendedMarket).Memoize();
+            return History<T>(Securities.Keys, span, resolution, fillForward, extendedMarketHours).Memoize();
         }
 
         /// <summary>
@@ -273,14 +273,14 @@ namespace QuantConnect.Algorithm
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
-        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, TimeSpan span, Resolution? resolution = null,
-            bool? fillForward = null, bool? extendedMarket = null)
+            bool? fillForward = null, bool? extendedMarketHours = null)
             where T : IBaseData
         {
-            return History<T>(symbols, Time - span, Time, resolution, fillForward, extendedMarket).Memoize();
+            return History<T>(symbols, Time - span, Time, resolution, fillForward, extendedMarketHours).Memoize();
         }
 
         /// <summary>
@@ -293,14 +293,14 @@ namespace QuantConnect.Algorithm
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
-        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null,
-            bool? fillForward = null, bool? extendedMarket = null)
+            bool? fillForward = null, bool? extendedMarketHours = null)
             where T : IBaseData
         {
-            var requests = CreateBarCountHistoryRequests(symbols, typeof(T), periods, resolution, fillForward, extendedMarket);
+            var requests = CreateBarCountHistoryRequests(symbols, typeof(T), periods, resolution, fillForward, extendedMarketHours);
             return GetDataTypedHistory<T>(requests);
         }
 
@@ -313,14 +313,14 @@ namespace QuantConnect.Algorithm
         /// <param name="end">The end time in the algorithm's time zone</param>
         /// <param name="resolution">The resolution to request</param>
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
-        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null,
-            bool? fillForward = null, bool? extendedMarket = null)
+            bool? fillForward = null, bool? extendedMarketHours = null)
             where T : IBaseData
         {
-            var requests = CreateDateRangeHistoryRequests(symbols, typeof(T), start, end, resolution, fillForward, extendedMarket);
+            var requests = CreateDateRangeHistoryRequests(symbols, typeof(T), start, end, resolution, fillForward, extendedMarketHours);
             return GetDataTypedHistory<T>(requests);
         }
 
@@ -332,14 +332,14 @@ namespace QuantConnect.Algorithm
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
-        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public IEnumerable<T> History<T>(Symbol symbol, TimeSpan span, Resolution? resolution = null, bool? fillForward = null,
-            bool? extendedMarket = null)
+            bool? extendedMarketHours = null)
             where T : IBaseData
         {
-            return History<T>(symbol, Time - span, Time, resolution, fillForward, extendedMarket).Memoize();
+            return History<T>(symbol, Time - span, Time, resolution, fillForward, extendedMarketHours).Memoize();
         }
 
         /// <summary>
@@ -350,20 +350,20 @@ namespace QuantConnect.Algorithm
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
-        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public IEnumerable<TradeBar> History(Symbol symbol, int periods, Resolution? resolution = null, bool? fillForward = null,
-            bool? extendedMarket = null)
+            bool? extendedMarketHours = null)
         {
             if (symbol == null) throw new ArgumentException(_symbolEmptyErrorMessage);
 
             resolution = GetResolution(symbol, resolution);
             var marketHours = GetMarketHours(symbol);
             var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, marketHours.ExchangeHours,
-                marketHours.DataTimeZone, extendedMarket);
+                marketHours.DataTimeZone, extendedMarketHours);
 
-            return History(symbol, start, Time, resolution, fillForward, extendedMarket);
+            return History(symbol, start, Time, resolution, fillForward, extendedMarketHours);
         }
 
         /// <summary>
@@ -375,14 +375,14 @@ namespace QuantConnect.Algorithm
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
-        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public IEnumerable<T> History<T>(Symbol symbol, int periods, Resolution? resolution = null, bool? fillForward = null,
-            bool? extendedMarket = null)
+            bool? extendedMarketHours = null)
             where T : IBaseData
         {
-            var requests = CreateBarCountHistoryRequests(new [] { symbol }, typeof(T), periods, resolution, fillForward, extendedMarket);
+            var requests = CreateBarCountHistoryRequests(new [] { symbol }, typeof(T), periods, resolution, fillForward, extendedMarketHours);
             return GetDataTypedHistory<T>(requests, symbol);
         }
 
@@ -394,14 +394,14 @@ namespace QuantConnect.Algorithm
         /// <param name="end">The end time in the algorithm's time zone</param>
         /// <param name="resolution">The resolution to request</param>
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
-        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public IEnumerable<T> History<T>(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null, bool? fillForward = null,
-            bool? extendedMarket = null)
+            bool? extendedMarketHours = null)
             where T : IBaseData
         {
-            var requests = CreateDateRangeHistoryRequests(new[] { symbol }, typeof(T), start, end, resolution, fillForward, extendedMarket);
+            var requests = CreateDateRangeHistoryRequests(new[] { symbol }, typeof(T), start, end, resolution, fillForward, extendedMarketHours);
             return GetDataTypedHistory<T>(requests, symbol);
         }
 
@@ -412,13 +412,13 @@ namespace QuantConnect.Algorithm
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
-        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public IEnumerable<TradeBar> History(Symbol symbol, TimeSpan span, Resolution? resolution = null, bool? fillForward = null,
-            bool? extendedMarket = null)
+            bool? extendedMarketHours = null)
         {
-            return History(symbol, Time - span, Time, resolution, fillForward, extendedMarket);
+            return History(symbol, Time - span, Time, resolution, fillForward, extendedMarketHours);
         }
 
         /// <summary>
@@ -429,11 +429,11 @@ namespace QuantConnect.Algorithm
         /// <param name="end">The end time in the algorithm's time zone</param>
         /// <param name="resolution">The resolution to request</param>
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
-        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public IEnumerable<TradeBar> History(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null, bool? fillForward = null,
-            bool? extendedMarket = null)
+            bool? extendedMarketHours = null)
         {
             var securityType = symbol.ID.SecurityType;
             if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
@@ -448,7 +448,7 @@ namespace QuantConnect.Algorithm
                                                     " Please use the generic version with Tick type parameter or provide a list of Symbols to use the Slice history request API.");
             }
 
-            return History(new[] { symbol }, start, end, resolutionToUse, fillForward, extendedMarket).Get(symbol).Memoize();
+            return History(new[] { symbol }, start, end, resolutionToUse, fillForward, extendedMarketHours).Get(symbol).Memoize();
         }
 
         /// <summary>
@@ -460,13 +460,13 @@ namespace QuantConnect.Algorithm
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
-        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, TimeSpan span, Resolution? resolution = null, bool? fillForward = null,
-            bool? extendedMarket = null)
+            bool? extendedMarketHours = null)
         {
-            return History(symbols, Time - span, Time, resolution, fillForward, extendedMarket).Memoize();
+            return History(symbols, Time - span, Time, resolution, fillForward, extendedMarketHours).Memoize();
         }
 
         /// <summary>
@@ -478,13 +478,13 @@ namespace QuantConnect.Algorithm
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
-        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null, bool? fillForward = null,
-            bool? extendedMarket = null)
+            bool? extendedMarketHours = null)
         {
-            return History(CreateBarCountHistoryRequests(symbols, periods, resolution, fillForward, extendedMarket)).Memoize();
+            return History(CreateBarCountHistoryRequests(symbols, periods, resolution, fillForward, extendedMarketHours)).Memoize();
         }
 
         /// <summary>
@@ -495,7 +495,7 @@ namespace QuantConnect.Algorithm
         /// <param name="end">The end time in the algorithm's time zone</param>
         /// <param name="resolution">The resolution to request</param>
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
-        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
         /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
         /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
@@ -503,10 +503,10 @@ namespace QuantConnect.Algorithm
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null,
-            bool? fillForward = null, bool? extendedMarket = null, DataMappingMode? dataMappingMode = null,
+            bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
             DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
         {
-            return History(CreateDateRangeHistoryRequests(symbols, start, end, resolution, fillForward, extendedMarket, dataMappingMode,
+            return History(CreateDateRangeHistoryRequests(symbols, start, end, resolution, fillForward, extendedMarketHours, dataMappingMode,
                 dataNormalizationMode, contractDepthOffset)).Memoize();
         }
 
@@ -762,10 +762,10 @@ namespace QuantConnect.Algorithm
         /// Helper method to create history requests from a date range
         /// </summary>
         private IEnumerable<HistoryRequest> CreateDateRangeHistoryRequests(IEnumerable<Symbol> symbols, DateTime startAlgoTz, DateTime endAlgoTz,
-            Resolution? resolution = null, bool? fillForward = null, bool? extendedMarket = null, DataMappingMode? dataMappingMode = null,
+            Resolution? resolution = null, bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
             DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
         {
-            return CreateDateRangeHistoryRequests(symbols, typeof(BaseData), startAlgoTz, endAlgoTz, resolution, fillForward, extendedMarket,
+            return CreateDateRangeHistoryRequests(symbols, typeof(BaseData), startAlgoTz, endAlgoTz, resolution, fillForward, extendedMarketHours,
                 dataMappingMode, dataNormalizationMode, contractDepthOffset);
         }
 
@@ -773,7 +773,7 @@ namespace QuantConnect.Algorithm
         /// Helper method to create history requests from a date range with custom data type
         /// </summary>
         private IEnumerable<HistoryRequest> CreateDateRangeHistoryRequests(IEnumerable<Symbol> symbols, Type requestedType, DateTime startAlgoTz, DateTime endAlgoTz,
-            Resolution? resolution = null, bool? fillForward = null, bool? extendedMarket = null, DataMappingMode? dataMappingMode = null,
+            Resolution? resolution = null, bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
             DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
         {
             return symbols.Where(HistoryRequestValid).SelectMany(x =>
@@ -783,7 +783,7 @@ namespace QuantConnect.Algorithm
                 foreach (var config in GetMatchingSubscriptions(x, requestedType, resolution))
                 {
                     var request = _historyRequestFactory.CreateHistoryRequest(config, startAlgoTz, endAlgoTz, GetExchangeHours(x), resolution,
-                        fillForward, extendedMarket, dataMappingMode, dataNormalizationMode, contractDepthOffset);
+                        fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode, contractDepthOffset);
                     requests.Add(request);
                 }
 
@@ -795,10 +795,10 @@ namespace QuantConnect.Algorithm
         /// Helper methods to create a history request for the specified symbols and bar count
         /// </summary>
         private IEnumerable<HistoryRequest> CreateBarCountHistoryRequests(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null,
-            bool? fillForward = null, bool? extendedMarket = null, DataMappingMode? dataMappingMode = null,
+            bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
             DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
         {
-            return CreateBarCountHistoryRequests(symbols, typeof(BaseData), periods, resolution, fillForward, extendedMarket, dataMappingMode,
+            return CreateBarCountHistoryRequests(symbols, typeof(BaseData), periods, resolution, fillForward, extendedMarketHours, dataMappingMode,
                 dataNormalizationMode, contractDepthOffset);
         }
 
@@ -806,7 +806,7 @@ namespace QuantConnect.Algorithm
         /// Helper methods to create a history request for the specified symbols and bar count with custom data type
         /// </summary>
         private IEnumerable<HistoryRequest> CreateBarCountHistoryRequests(IEnumerable<Symbol> symbols, Type requestedType, int periods,
-            Resolution? resolution = null, bool? fillForward = null, bool? extendedMarket = null, DataMappingMode? dataMappingMode = null,
+            Resolution? resolution = null, bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
             DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
         {
             return symbols.Where(HistoryRequestValid).SelectMany(symbol =>
@@ -824,11 +824,11 @@ namespace QuantConnect.Algorithm
                     return Enumerable.Empty<HistoryRequest>();
                 }
 
-                var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, res, exchange, configs.First().DataTimeZone, extendedMarket);
+                var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, res, exchange, configs.First().DataTimeZone, extendedMarketHours);
                 var end = Time;
 
                 return configs.Select(config => _historyRequestFactory.CreateHistoryRequest(config, start, end, exchange, res, fillForward,
-                    extendedMarket, dataMappingMode, dataNormalizationMode, contractDepthOffset));
+                    extendedMarketHours, dataMappingMode, dataNormalizationMode, contractDepthOffset));
             });
         }
 

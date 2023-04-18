@@ -473,7 +473,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Symbol symbol,
             Resolution? resolution = null,
             bool fillForward = true,
-            bool extendedMarket = false,
+            bool extendedMarketHours = false,
             bool isFilteredSubscription = true,
             bool isInternalFeed = false,
             bool isCustomData = false,
@@ -482,7 +482,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             uint contractDepthOffset = 0
             )
         {
-            return Add(symbol, resolution, fillForward, extendedMarket, isFilteredSubscription, isInternalFeed, isCustomData,
+            return Add(symbol, resolution, fillForward, extendedMarketHours, isFilteredSubscription, isInternalFeed, isCustomData,
                 new List<Tuple<Type, TickType>> { new Tuple<Type, TickType>(dataType, LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType))},
                 dataNormalizationMode, dataMappingMode, contractDepthOffset)
                 .First();
@@ -497,7 +497,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Symbol symbol,
             Resolution? resolution = null,
             bool fillForward = true,
-            bool extendedMarket = false,
+            bool extendedMarketHours = false,
             bool isFilteredSubscription = true,
             bool isInternalFeed = false,
             bool isCustomData = false,
@@ -582,7 +582,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     marketHoursDbEntry.DataTimeZone,
                     exchangeHours.TimeZone,
                     fillForward,
-                    extendedMarket,
+                    extendedMarketHours,
                     // if the subscription data types were not provided and the tick type is OpenInterest we make it internal
                     subscriptionDataTypes == null && tickType == TickType.OpenInterest || isInternalFeed,
                     isCustomData,

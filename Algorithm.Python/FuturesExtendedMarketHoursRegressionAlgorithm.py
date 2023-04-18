@@ -21,10 +21,10 @@ class FuturesExtendedMarketHoursRegressionAlgorithm(QCAlgorithm):
         self.SetStartDate(2013, 10, 6)
         self.SetEndDate(2013, 10, 11)
 
-        self._es = self.AddFuture(Futures.Indices.SP500EMini, Resolution.Hour, fillForward=True, extendedMarket=True)
+        self._es = self.AddFuture(Futures.Indices.SP500EMini, Resolution.Hour, fillForward=True, extendedMarketHours=True)
         self._es.SetFilter(0, 180)
 
-        self._gc = self.AddFuture(Futures.Metals.Gold, Resolution.Hour, fillForward=True, extendedMarket=False)
+        self._gc = self.AddFuture(Futures.Metals.Gold, Resolution.Hour, fillForward=True, extendedMarketHours=False)
         self._gc.SetFilter(0, 180)
 
         self._esRanOnRegularHours = False

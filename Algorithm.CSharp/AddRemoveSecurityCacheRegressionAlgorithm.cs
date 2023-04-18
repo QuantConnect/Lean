@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 11);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
 
-            AddEquity("SPY", Resolution.Minute, extendedMarket: true);
+            AddEquity("SPY", Resolution.Minute, extendedMarketHours: true);
         }
 
         /// <summary>

@@ -123,7 +123,7 @@ namespace QuantConnect.Tests.Algorithm
             [Values(true, false)] bool extendedMarketHours,
             [ValueSource(nameof(FuturesTestCases))] Func<QCAlgorithm, Security> getFuture)
         {
-            var future = _algo.AddFuture(Futures.Indices.VIX, Resolution.Minute, extendedMarket: extendedMarketHours);
+            var future = _algo.AddFuture(Futures.Indices.VIX, Resolution.Minute, extendedMarketHours: extendedMarketHours);
             Assert.That(_algo.SubscriptionManager.Subscriptions.Where(x => x.Symbol == future.Symbol).Select(x => x.ExtendedMarketHours),
                 Has.All.EqualTo(extendedMarketHours));
         }
@@ -265,9 +265,9 @@ namespace QuantConnect.Tests.Algorithm
             {
                 return new Func<QCAlgorithm, Security>[]
                 {
-                    (algo) => algo.AddFuture(Futures.Indices.VIX, Resolution.Minute, extendedMarket: true),
+                    (algo) => algo.AddFuture(Futures.Indices.VIX, Resolution.Minute, extendedMarketHours: true),
                     (algo) => algo.AddFutureContract(Symbol.CreateFuture(Futures.Indices.VIX, Market.CFE, new DateTime(2022, 8, 1)),
-                        Resolution.Minute, extendedMarket: true)
+                        Resolution.Minute, extendedMarketHours: true)
                 };
             }
         }

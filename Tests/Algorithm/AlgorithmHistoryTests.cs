@@ -770,7 +770,7 @@ def getOpenInterestHistory(algorithm, symbol, start, end, resolution):
             var resolution = Resolution.Daily;
             _algorithm = GetAlgorithm(historyEnd);
             var symbol = _algorithm.AddFuture(Futures.Indices.SP500EMini, resolution, dataMappingMode: dataMappingModes.First(),
-                extendedMarket: true).Symbol;
+                extendedMarketHours: true).Symbol;
             var expectedHistoryCount = 74;
 
             if (language == Language.CSharp)
@@ -1334,7 +1334,7 @@ def getHistoryForDataNormalizationMode(algorithm, symbol, start, end, resolution
             var resolution = Resolution.Daily;
             var algorithm = GetAlgorithm(historyEnd);
             var symbol = algorithm.AddFuture(Futures.Indices.SP500EMini, resolution, dataMappingMode: dataMappingModes.First(),
-                extendedMarket: true).Symbol;
+                extendedMarketHours: true).Symbol;
 
             using (Py.GIL())
             {
@@ -1762,12 +1762,12 @@ tradeBar = TradeBar
             if (language == Language.CSharp)
             {
                 // No symbol, time span
-                var noSymbolTimeSpanHistory = algorithm.History(timeSpan, resolution, extendedMarket: extendedMarket).ToList();
+                var noSymbolTimeSpanHistory = algorithm.History(timeSpan, resolution, extendedMarketHours: extendedMarket).ToList();
                 AssertExtendedMarketHistoryResults(noSymbolTimeSpanHistory, expectedHistoryCount, extendedMarket);
 
                 // No symbol, periods
                 var noSymbolPeriodBasedHistory = algorithm.History(extendedMarketPeriods,
-                    resolution, extendedMarket: extendedMarket).ToList();
+                    resolution, extendedMarketHours: extendedMarket).ToList();
                 AssertExtendedMarketHistoryResults(noSymbolPeriodBasedHistory, expectedHistoryCount, extendedMarket);
 
                 //// No symbol, date range
@@ -1775,37 +1775,37 @@ tradeBar = TradeBar
 
                 // Single symbol, time span
                 var singleSymbolTimeSpanHistory = algorithm.History(symbol, timeSpan,
-                    resolution, extendedMarket: extendedMarket).ToList();
+                    resolution, extendedMarketHours: extendedMarket).ToList();
                 AssertExtendedMarketHistoryResults(singleSymbolTimeSpanHistory, expectedHistoryCount, extendedMarket);
 
                 // Single symbol, periods
                 var singleSymbolPeriodBasedHistory = algorithm.History(symbol, extendedMarketPeriods,
-                    resolution, extendedMarket: extendedMarket).ToList();
+                    resolution, extendedMarketHours: extendedMarket).ToList();
                 AssertExtendedMarketHistoryResults(singleSymbolPeriodBasedHistory, expectedHistoryCount, extendedMarket);
 
                 // Single symbol, date range
                 var singleSymbolDateRangeHistory = algorithm.History(symbol, start, end,
-                    resolution, extendedMarket: extendedMarket).ToList();
+                    resolution, extendedMarketHours: extendedMarket).ToList();
                 AssertExtendedMarketHistoryResults(singleSymbolDateRangeHistory, expectedHistoryCount, extendedMarket);
 
                 // Symbol array, time span
                 var symbolsTimeSpanHistory = algorithm.History(new[] { symbol }, timeSpan,
-                    resolution, extendedMarket: extendedMarket).ToList();
+                    resolution, extendedMarketHours: extendedMarket).ToList();
                 AssertExtendedMarketHistoryResults(symbolsTimeSpanHistory, expectedHistoryCount, extendedMarket);
 
                 // Symbol array, periods
                 var symbolsPeriodBasedHistory = algorithm.History(new[] { symbol }, extendedMarketPeriods,
-                    resolution, extendedMarket: extendedMarket).ToList();
+                    resolution, extendedMarketHours: extendedMarket).ToList();
                 AssertExtendedMarketHistoryResults(symbolsPeriodBasedHistory, expectedHistoryCount, extendedMarket);
 
                 // Symbol array, date range
                 var symbolsdateRangeHistory = algorithm.History(new[] { symbol }, start, end,
-                    resolution, extendedMarket: extendedMarket).ToList();
+                    resolution, extendedMarketHours: extendedMarket).ToList();
                 AssertExtendedMarketHistoryResults(symbolsdateRangeHistory, expectedHistoryCount, extendedMarket);
 
                 // Generic, no symbol, time span
                 var typedNoSymbolTimeSpanHistory = algorithm.History<TradeBar>(timeSpan,
-                    resolution, extendedMarket: extendedMarket).ToList();
+                    resolution, extendedMarketHours: extendedMarket).ToList();
                 AssertExtendedMarketHistoryResults(typedNoSymbolTimeSpanHistory, expectedHistoryCount, extendedMarket);
 
                 //// Generic, no symbol, periods
@@ -1816,32 +1816,32 @@ tradeBar = TradeBar
 
                 // Generic, single symbol, time span
                 var typedSingleSymbolTimeSpanHistory = algorithm.History<TradeBar>(symbol, timeSpan,
-                    resolution, extendedMarket: extendedMarket).ToList();
+                    resolution, extendedMarketHours: extendedMarket).ToList();
                 AssertExtendedMarketHistoryResults(typedSingleSymbolTimeSpanHistory, expectedHistoryCount, extendedMarket);
 
                 // Generic, single symbol, periods
                 var typedSingleSymbolPeriodBasedHistory = algorithm.History<TradeBar>(symbol, extendedMarketPeriods,
-                    resolution, extendedMarket: extendedMarket).ToList();
+                    resolution, extendedMarketHours: extendedMarket).ToList();
                 AssertExtendedMarketHistoryResults(typedSingleSymbolPeriodBasedHistory, expectedHistoryCount, extendedMarket);
 
                 // Generic, single symbol, date range
                 var typedSingleSymbolDateRangeHistory = algorithm.History<TradeBar>(symbol, start, end,
-                    resolution, extendedMarket: extendedMarket).ToList();
+                    resolution, extendedMarketHours: extendedMarket).ToList();
                 AssertExtendedMarketHistoryResults(typedSingleSymbolDateRangeHistory, expectedHistoryCount, extendedMarket);
 
                 // Generic, symbol array, time span
                 var typedSymbolsTimeSpanHistory = algorithm.History<TradeBar>(new[] { symbol }, timeSpan,
-                    resolution, extendedMarket: extendedMarket).ToList();
+                    resolution, extendedMarketHours: extendedMarket).ToList();
                 AssertExtendedMarketHistoryResults(typedSymbolsTimeSpanHistory, expectedHistoryCount, extendedMarket);
 
                 // Generic, symbol array, periods
                 var typedSymbolsPeriodBasedHistory = algorithm.History<TradeBar>(new[] { symbol }, extendedMarketPeriods,
-                    resolution, extendedMarket: extendedMarket).ToList();
+                    resolution, extendedMarketHours: extendedMarket).ToList();
                 AssertExtendedMarketHistoryResults(typedSymbolsPeriodBasedHistory, expectedHistoryCount, extendedMarket);
 
                 // Generic, symbol array, date range
                 var typedSymbolsDateRangeHistory = algorithm.History<TradeBar>(new[] { symbol }, start, end,
-                    resolution, extendedMarket: extendedMarket).ToList();
+                    resolution, extendedMarketHours: extendedMarket).ToList();
                 AssertExtendedMarketHistoryResults(typedSymbolsDateRangeHistory, expectedHistoryCount, extendedMarket);
             }
             else
@@ -1860,77 +1860,77 @@ tradeBar = TradeBar
 
                     // Single symbol, time span
                     var singleSymbolTimeSpanHistory = algorithm.History(pySymbol, timeSpan,
-                        resolution, extendedMarket: extendedMarket);
+                        resolution, extendedMarketHours: extendedMarket);
                     AssertExtendedMarketHistoryResults(singleSymbolTimeSpanHistory, expectedHistoryCount, extendedMarket);
 
                     // Single symbol, periods
                     var singleSymbolPeriodBasedHistory = algorithm.History(pySymbol, extendedMarketPeriods,
-                        resolution, extendedMarket: extendedMarket);
+                        resolution, extendedMarketHours: extendedMarket);
                     AssertExtendedMarketHistoryResults(singleSymbolPeriodBasedHistory, expectedHistoryCount, extendedMarket);
 
                     // Single symbol, date range
                     var singleSymbolDateRangeHistory = algorithm.History(pySymbol, start, end,
-                        resolution, extendedMarket: extendedMarket);
+                        resolution, extendedMarketHours: extendedMarket);
                     AssertExtendedMarketHistoryResults(singleSymbolDateRangeHistory, expectedHistoryCount, extendedMarket);
 
                     // Symbol array, time span
                     var symbolsTimeSpanHistory = algorithm.History(pySymbols, timeSpan,
-                        resolution, extendedMarket: extendedMarket);
+                        resolution, extendedMarketHours: extendedMarket);
                     AssertExtendedMarketHistoryResults(symbolsTimeSpanHistory, expectedHistoryCount, extendedMarket);
 
                     // Symbol array, periods
                     var symbolsPeriodBasedHistory = algorithm.History(pySymbols, extendedMarketPeriods,
-                        resolution, extendedMarket: extendedMarket);
+                        resolution, extendedMarketHours: extendedMarket);
                     AssertExtendedMarketHistoryResults(symbolsPeriodBasedHistory, expectedHistoryCount, extendedMarket);
 
                     // Symbol array, date range
                     var symbolsDateRangeHistory = algorithm.History(pySymbols, start, end,
-                        resolution, extendedMarket: extendedMarket);
+                        resolution, extendedMarketHours: extendedMarket);
                     AssertExtendedMarketHistoryResults(symbolsDateRangeHistory, expectedHistoryCount, extendedMarket);
 
                     // Generic, single symbol, time span
                     var typedSingleSymbolTimeSpanHistory = algorithm.History(pyTradeBarType, pySymbol, timeSpan,
-                        resolution, extendedMarket: extendedMarket);
+                        resolution, extendedMarketHours: extendedMarket);
                     AssertExtendedMarketHistoryResults(typedSingleSymbolTimeSpanHistory, expectedHistoryCount, extendedMarket);
 
                     // Same as previous but using a Symbol instead of pySymbol
                     typedSingleSymbolTimeSpanHistory = algorithm.History(pyTradeBarType, symbol, timeSpan,
-                        resolution, extendedMarket: extendedMarket);
+                        resolution, extendedMarketHours: extendedMarket);
                     AssertExtendedMarketHistoryResults(typedSingleSymbolTimeSpanHistory, expectedHistoryCount, extendedMarket);
 
                     // Generic, single symbol, periods
                     var typedSingleSymbolPeriodBasedHistory = algorithm.History(pyTradeBarType, pySymbol,
-                        extendedMarketPeriods, resolution, extendedMarket: extendedMarket);
+                        extendedMarketPeriods, resolution, extendedMarketHours: extendedMarket);
                     AssertExtendedMarketHistoryResults(typedSingleSymbolPeriodBasedHistory, expectedHistoryCount, extendedMarket);
 
                     // Same as previous but using a Symbol instead of pySymbol
                     typedSingleSymbolPeriodBasedHistory = algorithm.History(pyTradeBarType, symbol,
-                        extendedMarketPeriods, resolution, extendedMarket: extendedMarket);
+                        extendedMarketPeriods, resolution, extendedMarketHours: extendedMarket);
                     AssertExtendedMarketHistoryResults(typedSingleSymbolPeriodBasedHistory, expectedHistoryCount, extendedMarket);
 
                     // Generic, single symbol, date range
                     var typedSingleSymbolDateRangeHistory = algorithm.History(pyTradeBarType, pySymbol, start, end,
-                        resolution, extendedMarket: extendedMarket);
+                        resolution, extendedMarketHours: extendedMarket);
                     AssertExtendedMarketHistoryResults(typedSingleSymbolDateRangeHistory, expectedHistoryCount, extendedMarket);
 
                     // Same as previous but using a Symbol instead of pySymbol
                     typedSingleSymbolDateRangeHistory = algorithm.History(pyTradeBarType, symbol, start, end,
-                        resolution, extendedMarket: extendedMarket);
+                        resolution, extendedMarketHours: extendedMarket);
                     AssertExtendedMarketHistoryResults(typedSingleSymbolDateRangeHistory, expectedHistoryCount, extendedMarket);
 
                     // Generic, symbol array, time span
                     var typedSymbolsTimeSpanHistory = algorithm.History(pyTradeBarType, pySymbols, timeSpan,
-                        resolution, extendedMarket: extendedMarket);
+                        resolution, extendedMarketHours: extendedMarket);
                     AssertExtendedMarketHistoryResults(typedSymbolsTimeSpanHistory, expectedHistoryCount, extendedMarket);
 
                     // Generic, symbol array, periods
                     var typedSymbolsPeriodBasedHistory = algorithm.History(pyTradeBarType, pySymbols, extendedMarketPeriods,
-                        resolution, extendedMarket: extendedMarket);
+                        resolution, extendedMarketHours: extendedMarket);
                     AssertExtendedMarketHistoryResults(typedSymbolsPeriodBasedHistory, expectedHistoryCount, extendedMarket);
 
                     // Generic, symbol array, date range
                     var typedSymbolsDateRangeHistory = algorithm.History(pyTradeBarType, pySymbols, start, end,
-                        resolution, extendedMarket: extendedMarket);
+                        resolution, extendedMarketHours: extendedMarket);
                     AssertExtendedMarketHistoryResults(typedSymbolsDateRangeHistory, expectedHistoryCount, extendedMarket);
                 }
             }
@@ -1964,7 +1964,7 @@ tradeBar = TradeBar
             if (language == Language.CSharp)
             {
                 // No symbol, time span
-                var noSymbolTimeSpanHistory = algorithm.History(timeSpan, Resolution.Tick, extendedMarket: extendedMarket)
+                var noSymbolTimeSpanHistory = algorithm.History(timeSpan, Resolution.Tick, extendedMarketHours: extendedMarket)
                     .SelectMany(x => x.Ticks[symbol]).ToList();
                 AssertExtendedMarketHistoryResults(noSymbolTimeSpanHistory, historyExpectedCount, extendedMarket);
 
@@ -1985,7 +1985,7 @@ tradeBar = TradeBar
 
                 // Symbol array, time span
                 var symbolsTimeSpanHistory = algorithm.History(new[] { symbol }, timeSpan,
-                    Resolution.Tick, extendedMarket: extendedMarket).SelectMany(x => x.Ticks[symbol]).ToList();
+                    Resolution.Tick, extendedMarketHours: extendedMarket).SelectMany(x => x.Ticks[symbol]).ToList();
                 AssertExtendedMarketHistoryResults(symbolsTimeSpanHistory, historyExpectedCount, extendedMarket);
 
                 // Symbol array, periods
@@ -1993,12 +1993,12 @@ tradeBar = TradeBar
 
                 //// Symbol array, date range
                 var symbolsdateRangeHistory = algorithm.History(new[] { symbol }, start, end,
-                    Resolution.Tick, extendedMarket: extendedMarket).SelectMany(x => x.Ticks[symbol]).ToList();
+                    Resolution.Tick, extendedMarketHours: extendedMarket).SelectMany(x => x.Ticks[symbol]).ToList();
                 AssertExtendedMarketHistoryResults(symbolsdateRangeHistory, historyExpectedCount, extendedMarket);
 
                 // Generic, no symbol, time span
                 var typedNoSymbolTimeSpanHistory = algorithm.History<Tick>(timeSpan,
-                    Resolution.Tick, extendedMarket: extendedMarket).ToList();
+                    Resolution.Tick, extendedMarketHours: extendedMarket).ToList();
                 AssertExtendedMarketHistoryResults(typedNoSymbolTimeSpanHistory, cSharpTypedMultiSymbolHistoryExpectedCount, extendedMarket);
 
                 //// Generic, no symbol, periods
@@ -2009,7 +2009,7 @@ tradeBar = TradeBar
 
                 //// Generic, single symbol, time span
                 var typedSingleSymbolTimeSpanHistory = algorithm.History<Tick>(symbol, timeSpan,
-                    Resolution.Tick, extendedMarket: extendedMarket).ToList();
+                    Resolution.Tick, extendedMarketHours: extendedMarket).ToList();
                 AssertExtendedMarketHistoryResults(typedSingleSymbolTimeSpanHistory, historyExpectedCount, extendedMarket);
 
                 // Generic, single symbol, periods
@@ -2017,12 +2017,12 @@ tradeBar = TradeBar
 
                 //// Generic, single symbol, date range
                 var typedSingleSymbolDateRangeHistory = algorithm.History<Tick>(symbol, start, end,
-                    Resolution.Tick, extendedMarket: extendedMarket).ToList();
+                    Resolution.Tick, extendedMarketHours: extendedMarket).ToList();
                 AssertExtendedMarketHistoryResults(typedSingleSymbolDateRangeHistory, historyExpectedCount, extendedMarket);
 
                 // Generic, symbol array, time span
                 var typedSymbolsTimeSpanHistory = algorithm.History<Tick>(new[] { symbol }, timeSpan,
-                    Resolution.Tick, extendedMarket: extendedMarket).ToList();
+                    Resolution.Tick, extendedMarketHours: extendedMarket).ToList();
                 AssertExtendedMarketHistoryResults(typedSymbolsTimeSpanHistory, cSharpTypedMultiSymbolHistoryExpectedCount, extendedMarket);
 
                 // Generic, symbol array, periods
@@ -2030,7 +2030,7 @@ tradeBar = TradeBar
 
                 // Generic, symbol array, date range
                 var typedSymbolsDateRangeHistory = algorithm.History<Tick>(new[] { symbol }, start, end,
-                    Resolution.Tick, extendedMarket: extendedMarket).ToList();
+                    Resolution.Tick, extendedMarketHours: extendedMarket).ToList();
                 AssertExtendedMarketHistoryResults(typedSymbolsDateRangeHistory, cSharpTypedMultiSymbolHistoryExpectedCount, extendedMarket);
             }
             else
@@ -2049,7 +2049,7 @@ tick = Tick
 
                     // Single symbol, time span
                     var singleSymbolTimeSpanHistory = algorithm.History(pySymbol, timeSpan,
-                        Resolution.Tick, extendedMarket: extendedMarket);
+                        Resolution.Tick, extendedMarketHours: extendedMarket);
                     AssertExtendedMarketHistoryResults(singleSymbolTimeSpanHistory, historyExpectedCount, extendedMarket);
 
                     // Single symbol, periods
@@ -2057,12 +2057,12 @@ tick = Tick
 
                     // Single symbol, date range
                     var singleSymbolDateRangeHistory = algorithm.History(pySymbol, start, end,
-                        Resolution.Tick, extendedMarket: extendedMarket);
+                        Resolution.Tick, extendedMarketHours: extendedMarket);
                     AssertExtendedMarketHistoryResults(singleSymbolDateRangeHistory, historyExpectedCount, extendedMarket);
 
                     // Symbol array, time span
                     var symbolsTimeSpanHistory = algorithm.History(pySymbols, timeSpan,
-                        Resolution.Tick, extendedMarket: extendedMarket);
+                        Resolution.Tick, extendedMarketHours: extendedMarket);
                     AssertExtendedMarketHistoryResults(symbolsTimeSpanHistory, historyExpectedCount, extendedMarket);
 
                     // Symbol array, periods
@@ -2070,17 +2070,17 @@ tick = Tick
 
                     // Symbol array, date range
                     var symbolsDateRangeHistory = algorithm.History(pySymbols, start, end,
-                        Resolution.Tick, extendedMarket: extendedMarket);
+                        Resolution.Tick, extendedMarketHours: extendedMarket);
                     AssertExtendedMarketHistoryResults(symbolsDateRangeHistory, historyExpectedCount, extendedMarket);
 
                     // Generic, single symbol, time span
                     var typedSingleSymbolTimeSpanHistory = algorithm.History(pyTickType, pySymbol, timeSpan,
-                        Resolution.Tick, extendedMarket: extendedMarket);
+                        Resolution.Tick, extendedMarketHours: extendedMarket);
                     AssertExtendedMarketHistoryResults(typedSingleSymbolTimeSpanHistory, pythonTypedHistoryExpectedCount, extendedMarket);
 
                     // Same as previous but using a Symbol instead of pySymbol
                     typedSingleSymbolTimeSpanHistory = algorithm.History(pyTickType, symbol, timeSpan,
-                        Resolution.Tick, extendedMarket: extendedMarket);
+                        Resolution.Tick, extendedMarketHours: extendedMarket);
                     AssertExtendedMarketHistoryResults(typedSingleSymbolTimeSpanHistory, pythonTypedHistoryExpectedCount, extendedMarket);
 
                     // Generic, single symbol, periods
@@ -2088,17 +2088,17 @@ tick = Tick
 
                     // Generic, single symbol, date range
                     var typedSingleSymbolDateRangeHistory = algorithm.History(pyTickType, pySymbol, start, end,
-                        Resolution.Tick, extendedMarket: extendedMarket);
+                        Resolution.Tick, extendedMarketHours: extendedMarket);
                     AssertExtendedMarketHistoryResults(typedSingleSymbolDateRangeHistory, pythonTypedHistoryExpectedCount, extendedMarket);
 
                     // Same as previous but using a Symbol instead of pySymbol
                     typedSingleSymbolDateRangeHistory = algorithm.History(pyTickType, symbol, start, end,
-                        Resolution.Tick, extendedMarket: extendedMarket);
+                        Resolution.Tick, extendedMarketHours: extendedMarket);
                     AssertExtendedMarketHistoryResults(typedSingleSymbolDateRangeHistory, pythonTypedHistoryExpectedCount, extendedMarket);
 
                     // Generic, symbol array, time span
                     var typedSymbolsTimeSpanHistory = algorithm.History(pyTickType, pySymbols, timeSpan,
-                        Resolution.Tick, extendedMarket: extendedMarket);
+                        Resolution.Tick, extendedMarketHours: extendedMarket);
                     AssertExtendedMarketHistoryResults(typedSymbolsTimeSpanHistory, pythonTypedHistoryExpectedCount, extendedMarket);
 
                     // Generic, symbol array, periods
@@ -2106,7 +2106,7 @@ tick = Tick
 
                     // Generic, symbol array, date range
                     var typedSymbolsDateRangeHistory = algorithm.History(pyTickType, pySymbols, start, end,
-                        Resolution.Tick, extendedMarket: extendedMarket);
+                        Resolution.Tick, extendedMarketHours: extendedMarket);
                     AssertExtendedMarketHistoryResults(typedSymbolsDateRangeHistory, pythonTypedHistoryExpectedCount, extendedMarket);
                 }
             }
@@ -2141,22 +2141,22 @@ tick = Tick
             var start = new DateTime(2014, 06, 09);
             var end = new DateTime(2014, 06, 10);
             var algorithm = GetAlgorithm(end);
-            var aapl = algorithm.AddEquity("AAPL", extendedMarket: assetWithExtendedMarket);
+            var aapl = algorithm.AddEquity("AAPL", extendedMarketHours: assetWithExtendedMarket);
             var config = algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(aapl.Symbol).First();
             var exchangeHours = aapl.Exchange.Hours;
 
             var historyRequestFactory = new HistoryRequestFactory(algorithm);
             var extendedMarket = resolution != Resolution.Hour ? requestWithExtendedMarket ?? assetWithExtendedMarket : false;
-            var marketOpen = exchangeHours.GetNextMarketOpen(start, extendedMarket: extendedMarket);
+            var marketOpen = exchangeHours.GetNextMarketOpen(start, extendedMarketHours: extendedMarket);
             if (resolution == Resolution.Hour)
             {
                 // Adjust the expected start in case the regular hours segment is not an exact int number of hours
-                var marketClose = exchangeHours.GetNextMarketClose(marketOpen, extendedMarket: extendedMarket);
+                var marketClose = exchangeHours.GetNextMarketClose(marketOpen, extendedMarketHours: extendedMarket);
                 marketOpen += TimeSpan.FromHours((marketClose.TimeOfDay - marketOpen.TimeOfDay).TotalHours - requestPeriods);
             }
 
             var requestStart = historyRequestFactory.GetStartTimeAlgoTz(aapl.Symbol, requestPeriods, resolution, exchangeHours,
-                config.DataTimeZone, extendedMarket: requestWithExtendedMarket);
+                config.DataTimeZone, extendedMarketHours: requestWithExtendedMarket);
             Assert.AreEqual(marketOpen, requestStart);
         }
 
@@ -2244,7 +2244,7 @@ tick = Tick
         {
             var resolution = Resolution.Daily;
             var algorithm = GetAlgorithm(dateTime);
-            algorithm.AddFuture(Futures.Indices.SP500EMini, resolution, extendedMarket: true);
+            algorithm.AddFuture(Futures.Indices.SP500EMini, resolution, extendedMarketHours: true);
 
             return algorithm;
         }
@@ -2387,7 +2387,7 @@ tick = Tick
                 Assert.AreEqual(expectedCurrentTime, currentTime);
                 Assert.IsTrue(
                     // subtract `period` since the times list has the EndTime
-                    hours.IsOpen(currentTime - period, extendedMarket: false),
+                    hours.IsOpen(currentTime - period, extendedMarketHours: false),
                     $"Current time {currentTime} is not open");
             }
         }

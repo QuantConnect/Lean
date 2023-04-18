@@ -53,8 +53,8 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 10, 10);
             SetCash(1000000);
 
-            _futureSP500 = AddFuture(RootSP500, Resolution, extendedMarket: ExtendedMarketHours);
-            _futureGold = AddFuture(RootGold, Resolution, extendedMarket: ExtendedMarketHours);
+            _futureSP500 = AddFuture(RootSP500, Resolution, extendedMarketHours: ExtendedMarketHours);
+            _futureGold = AddFuture(RootGold, Resolution, extendedMarketHours: ExtendedMarketHours);
 
             // set our expiry filter for this futures chain
             // SetFilter method accepts TimeSpan objects or integer for days.

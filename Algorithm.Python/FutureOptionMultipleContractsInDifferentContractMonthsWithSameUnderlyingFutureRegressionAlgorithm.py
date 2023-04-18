@@ -33,7 +33,7 @@ class FutureOptionMultipleContractsInDifferentContractMonthsWithSameUnderlyingFu
         self.SetStartDate(2020, 1, 4)
         self.SetEndDate(2020, 1, 6)
 
-        goldFutures = self.AddFuture("GC", Resolution.Minute, Market.COMEX, extendedMarket=True)
+        goldFutures = self.AddFuture("GC", Resolution.Minute, Market.COMEX, extendedMarketHours=True)
         goldFutures.SetFilter(0, 365)
 
         self.AddFutureOption(goldFutures.Symbol)

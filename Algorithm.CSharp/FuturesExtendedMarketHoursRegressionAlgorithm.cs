@@ -40,10 +40,10 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 6);
             SetEndDate(2013, 10, 11);
 
-            _es = AddFuture(Futures.Indices.SP500EMini, Resolution.Hour, fillForward: true, extendedMarket: true);
+            _es = AddFuture(Futures.Indices.SP500EMini, Resolution.Hour, fillForward: true, extendedMarketHours: true);
             _es.SetFilter(0, 180);
 
-            _gc = AddFuture(Futures.Metals.Gold, Resolution.Hour, fillForward: true, extendedMarket: false);
+            _gc = AddFuture(Futures.Metals.Gold, Resolution.Hour, fillForward: true, extendedMarketHours: false);
             _gc.SetFilter(0, 180);
         }
 

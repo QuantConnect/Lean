@@ -2322,7 +2322,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     break;
 
                 case SecurityType.Future:
-                    security = algorithm.AddFutureContract(symbol, resolution, fillForward: false, extendedMarket: true);
+                    security = algorithm.AddFutureContract(symbol, resolution, fillForward: false, extendedMarketHours: true);
                     break;
 
                 case SecurityType.Option:
@@ -2821,7 +2821,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
             else if (securityType == SecurityType.Future)
             {
-                var future = algorithm.AddFuture(Futures.Indices.SP500EMini, Resolution.Minute, extendedMarket: true);
+                var future = algorithm.AddFuture(Futures.Indices.SP500EMini, Resolution.Minute, extendedMarketHours: true);
                 // Must include weeklys because the contracts returned by the lookup, futureSymbol1 & futureSymbol2, are non-standard
                 future.SetFilter(x => x.IncludeWeeklys());
                 exchangeTimeZone = future.Exchange.TimeZone;
