@@ -1009,13 +1009,9 @@ namespace QuantConnect.Algorithm
         /// </summary>
         private void CheckPeriodBasedHistoryRequestResolution(IEnumerable<Symbol> symbols, Resolution? resolution)
         {
-            foreach (var symbol in symbols)
+            if (symbols.Any(symbol => GetResolution(symbol, resolution) == Resolution.Tick))
             {
-                var res = GetResolution(symbol, resolution);
-                if (res == Resolution.Tick)
-                {
-                    throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
-                }
+                throw new InvalidOperationException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
             }
         }
 

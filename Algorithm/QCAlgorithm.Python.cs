@@ -956,10 +956,7 @@ namespace QuantConnect.Algorithm
             bool? extendedMarketHours = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
-            if (symbols.Any(symbol => GetResolution(symbol, resolution) == Resolution.Tick))
-            {
-                throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
-            }
+            CheckPeriodBasedHistoryRequestResolution(symbols, resolution);
 
             var requestedType = type.CreateType();
             var requests = CreateBarCountHistoryRequests(symbols, requestedType, periods, resolution, fillForward, extendedMarketHours);
@@ -1028,10 +1025,7 @@ namespace QuantConnect.Algorithm
             bool? extendedMarketHours = null)
         {
             resolution = GetResolution(symbol, resolution);
-            if (resolution == Resolution.Tick)
-            {
-                throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
-            }
+            CheckPeriodBasedHistoryRequestResolution(new[] { symbol }, resolution);
 
             var marketHours = GetMarketHours(symbol);
             var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, marketHours.ExchangeHours,

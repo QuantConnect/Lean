@@ -209,10 +209,10 @@ def getTradesOnlyHistory(algorithm, symbol, start):
 
             if (language == Language.CSharp)
             {
-                Assert.Throws<ArgumentException>(() => _algorithm.History<Tick>(spy, 1).ToList());
-                Assert.Throws<ArgumentException>(() => _algorithm.History<Tick>(spy, 1, Resolution.Tick).ToList());
-                Assert.Throws<ArgumentException>(() => _algorithm.History<Tick>(new [] { spy }, 1).ToList());
-                Assert.Throws<ArgumentException>(() => _algorithm.History<Tick>(new [] { spy }, 1, Resolution.Tick).ToList());
+                Assert.Throws<InvalidOperationException>(() => _algorithm.History<Tick>(spy, 1).ToList());
+                Assert.Throws<InvalidOperationException>(() => _algorithm.History<Tick>(spy, 1, Resolution.Tick).ToList());
+                Assert.Throws<InvalidOperationException>(() => _algorithm.History<Tick>(new [] { spy }, 1).ToList());
+                Assert.Throws<InvalidOperationException>(() => _algorithm.History<Tick>(new [] { spy }, 1, Resolution.Tick).ToList());
             }
             else
             {
@@ -221,10 +221,10 @@ def getTradesOnlyHistory(algorithm, symbol, start):
                     _algorithm.SetPandasConverter();
                     using var pyTickType = typeof(Tick).ToPython();
                     using var pySymbols = new PyList(new [] { spy.ToPython() });
-                    Assert.Throws<ArgumentException>(() => _algorithm.History(pyTickType, spy, 1));
-                    Assert.Throws<ArgumentException>(() => _algorithm.History(pyTickType, spy, 1, Resolution.Tick));
-                    Assert.Throws<ArgumentException>(() => _algorithm.History(pyTickType, pySymbols, 1));
-                    Assert.Throws<ArgumentException>(() => _algorithm.History(pyTickType, pySymbols, 1, Resolution.Tick));
+                    Assert.Throws<InvalidOperationException>(() => _algorithm.History(pyTickType, spy, 1));
+                    Assert.Throws<InvalidOperationException>(() => _algorithm.History(pyTickType, spy, 1, Resolution.Tick));
+                    Assert.Throws<InvalidOperationException>(() => _algorithm.History(pyTickType, pySymbols, 1));
+                    Assert.Throws<InvalidOperationException>(() => _algorithm.History(pyTickType, pySymbols, 1, Resolution.Tick));
                 }
             }
         }
