@@ -25,7 +25,7 @@ namespace QuantConnect.Indicators;
 /// of real (inPhase) and imaginary (quadrature) parts.
 /// http://www.technicalanalysis.org.uk/moving-averages/Ehle.pdf
 /// </summary>
-public class HilbertTransformIndicator : Indicator, IIndicatorWarmUpPeriodProvider
+public class HilbertTransform : Indicator, IIndicatorWarmUpPeriodProvider
 {
     private readonly IndicatorBase<IndicatorDataPoint> _input;
     private readonly IndicatorBase<IndicatorDataPoint> _prev;
@@ -57,7 +57,7 @@ public class HilbertTransformIndicator : Indicator, IIndicatorWarmUpPeriodProvid
     /// <param name="quadratureMultiplicationFactor">The multiplication factor used in the calculation of the quadrature component of
     /// the Hilbert Transform. This parameter also adjusts the sensitivity and responsiveness of the
     /// transform to changes in the input signal.</param>
-    public HilbertTransformIndicator(string name, int length, decimal inPhaseMultiplicationFactor, decimal quadratureMultiplicationFactor)
+    public HilbertTransform(string name, int length, decimal inPhaseMultiplicationFactor, decimal quadratureMultiplicationFactor)
         : base(name)
     {
         var quadratureWarmUpPeriod = length;
@@ -125,7 +125,7 @@ public class HilbertTransformIndicator : Indicator, IIndicatorWarmUpPeriodProvid
     /// <param name="quadratureMultiplicationFactor">The multiplication factor used in the calculation of the quadrature component of
     /// the Hilbert Transform. This parameter also adjusts the sensitivity and responsiveness of the
     /// transform to changes in the input signal.</param>
-    public HilbertTransformIndicator(int length = 7, decimal inPhaseMultiplicationFactor = 0.635M, decimal quadratureMultiplicationFactor = 0.338M)
+    public HilbertTransform(int length = 7, decimal inPhaseMultiplicationFactor = 0.635M, decimal quadratureMultiplicationFactor = 0.338M)
         : this($"Hilbert({length}, {inPhaseMultiplicationFactor}, {quadratureMultiplicationFactor})", length, inPhaseMultiplicationFactor, quadratureMultiplicationFactor)
     {
     }

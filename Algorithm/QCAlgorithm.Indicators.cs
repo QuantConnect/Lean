@@ -692,16 +692,13 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         [DocumentationAttribute(Indicators)]
-        public HilbertTransformIndicator HT(
-            Symbol symbol,
-            int length, decimal inPhaseMultiplicationFactor, decimal quadratureMultiplicationFactor,
-            Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        public HilbertTransform HT(Symbol symbol, int length, decimal inPhaseMultiplicationFactor, decimal quadratureMultiplicationFactor, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
             var name = CreateIndicatorName(symbol, $"HT({length}, {inPhaseMultiplicationFactor}, {quadratureMultiplicationFactor})", resolution);
-            var hilbertTransformIndicator = new HilbertTransformIndicator(length, inPhaseMultiplicationFactor, quadratureMultiplicationFactor);
-            InitializeIndicator(symbol, hilbertTransformIndicator, resolution, selector);
+            var hilbertTransform = new HilbertTransform(length, inPhaseMultiplicationFactor, quadratureMultiplicationFactor);
+            InitializeIndicator(symbol, hilbertTransform, resolution, selector);
 
-            return hilbertTransformIndicator;
+            return hilbertTransform;
         }
 
         /// <summary>

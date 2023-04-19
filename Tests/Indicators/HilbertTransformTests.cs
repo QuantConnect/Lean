@@ -20,11 +20,11 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators;
 
 [TestFixture]
-public class HilbertTransformIndicatorTests : CommonIndicatorTests<IndicatorDataPoint>
+public class HilbertTransformTests : CommonIndicatorTests<IndicatorDataPoint>
 {
     protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
     {
-        return new HilbertTransformIndicator();
+        return new HilbertTransform();
     }
 
     protected override string TestFileName => "spy_with_hilbert.csv";
@@ -34,31 +34,31 @@ public class HilbertTransformIndicatorTests : CommonIndicatorTests<IndicatorData
     [Test]
     public void ComparesAgainstExternalDataInPhase()
     {
-        var hilbertTransformIndicator = new HilbertTransformIndicator();
+        var hilbertTransform = new HilbertTransform();
         TestHelper.TestIndicator(
-            hilbertTransformIndicator,
+            hilbertTransform,
             TestFileName,
             "InPhase",
             (_, expected) =>
-                Assert.AreEqual(expected, (double)hilbertTransformIndicator.InPhase.Current.Value, 1e-3));
+                Assert.AreEqual(expected, (double)hilbertTransform.InPhase.Current.Value, 1e-3));
     }
 
     [Test]
     public void ComparesAgainstExternalDataQuadrature()
     {
-        var hilbertTransformIndicator = new HilbertTransformIndicator();
+        var hilbertTransform = new HilbertTransform();
         TestHelper.TestIndicator(
-            hilbertTransformIndicator,
+            hilbertTransform,
             TestFileName,
             "Quadrature",
             (actual, expected) =>
-                Assert.AreEqual(expected, (double)hilbertTransformIndicator.Quadrature.Current.Value, 1e-3));
+                Assert.AreEqual(expected, (double)hilbertTransform.Quadrature.Current.Value, 1e-3));
     }
 
     [Test]
     public override void ResetsProperly()
     {
-        var hti = new HilbertTransformIndicator(length: 2);
+        var hti = new HilbertTransform(length: 2);
         hti.Update(DateTime.Today, 1m);
         hti.Update(DateTime.Today.AddSeconds(1), 2m);
         Assert.IsFalse(hti.IsReady);
