@@ -13,8 +13,6 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace QuantConnect.Indicators;
@@ -23,10 +21,11 @@ namespace QuantConnect.Indicators;
 /// This indicator computes the Hilbert Transform Indicator by John Ehlers.
 /// By using present and prior price differences, and some feedback, price values are split into their complex number components
 /// of real (inPhase) and imaginary (quadrature) parts.
-/// http://www.technicalanalysis.org.uk/moving-averages/Ehle.pdf
+/// <remark>Source: http://www.technicalanalysis.org.uk/moving-averages/Ehle.pdf</remark>
 /// </summary>
 public class HilbertTransform : Indicator, IIndicatorWarmUpPeriodProvider
 {
+    private readonly int _length;
     private readonly IndicatorBase<IndicatorDataPoint> _input;
     private readonly IndicatorBase<IndicatorDataPoint> _prev;
     private readonly IndicatorBase<IndicatorDataPoint> _detrendPrice;
@@ -46,31 +45,39 @@ public class HilbertTransform : Indicator, IIndicatorWarmUpPeriodProvider
     public IndicatorBase<IndicatorDataPoint> Quadrature { get; }
 
     /// <summary>
+    /// Required period, in data points, for the indicator to be ready and fully initialized.
+    /// </summary>
+    public int WarmUpPeriod => _length + 2;
+
+    /// <summary>
+    /// Gets a flag indicating when this indicator is ready and fully initialized
+    /// </summary>
+    public override bool IsReady => Samples >= WarmUpPeriod;
+
+    /// <summary>
     /// Creates a new Hilbert Transform indicator
     /// </summary>
     /// <param name="name">The name of this indicator</param>
     /// <param name="length">The length of the FIR filter used in the calculation of the Hilbert Transform.
     /// This parameter determines the number of filter coefficients in the FIR filter.</param>
-    /// <param name="inPhaseMultiplicationFactor">The multiplication factor used in the calculation of the in-phase component
-    /// of the Hilbert Transform. This parameter adjusts the sensitivity and responsiveness of
-    /// the transform to changes in the input signal.</param>
-    /// <param name="quadratureMultiplicationFactor">The multiplication factor used in the calculation of the quadrature component of
-    /// the Hilbert Transform. This parameter also adjusts the sensitivity and responsiveness of the
-    /// transform to changes in the input signal.</param>
+    /// <param name="inPhaseMultiplicationFactor">The multiplication factor used in the calculation of the in-phase component of the Hilbert Transform. 
+    /// This parameter adjusts the sensitivity and responsiveness of the transform to changes in the input signal.</param>
+    /// <param name="quadratureMultiplicationFactor">The multiplication factor used in the calculation of the quadrature component of the Hilbert Transform. 
+    /// This parameter also adjusts the sensitivity and responsiveness of the transform to changes in the input signal.</param>
     public HilbertTransform(string name, int length, decimal inPhaseMultiplicationFactor, decimal quadratureMultiplicationFactor)
         : base(name)
     {
-        var quadratureWarmUpPeriod = length;
-        var inPhaseWarmUpPeriod = length + 2;
-        WarmUpPeriod = Math.Max(quadratureWarmUpPeriod, inPhaseWarmUpPeriod);
+        _length = length;
 
         _input = new Identity(name + "_input");
         _prev = new Delay(name + "_prev", length);
         _detrendPrice = _input.Minus(_prev);
         _detrendPriceDelay2 = new Delay(name + "_detrendPriceDelay2", 2);
         _detrendPriceDelay4 = new Delay(name + "_detrendPriceDelay4", 4);
+        // Update after InPhase & Quadrature property, so delay length -1
         _inPhaseDelay3 = new Delay(name + "_inPhaseDelay3", 2);
         _quadratureDelay2 = new Delay(name + "_quadratureDelay2", 1);
+
         InPhase = new FunctionalIndicator<IndicatorDataPoint>(name + "_inPhase",
             _ =>
             {
@@ -82,7 +89,7 @@ public class HilbertTransform : Indicator, IIndicatorWarmUpPeriodProvider
                 var v2Value = _detrendPriceDelay2.IsReady ? _detrendPriceDelay2.Current.Value : decimal.Zero;
                 var v4Value = _detrendPriceDelay4.IsReady ? _detrendPriceDelay4.Current.Value : decimal.Zero;
                 var inPhase3Value = _inPhaseDelay3.IsReady ? _inPhaseDelay3.Current.Value : decimal.Zero;
-                return (v4Value - v2Value * inPhaseMultiplicationFactor) * 1.25M + inPhase3Value * inPhaseMultiplicationFactor;
+                return (v4Value - v2Value * inPhaseMultiplicationFactor + inPhase3Value * inPhaseMultiplicationFactor) * 1.25M;
             },
             _ => Samples > length + 2,
             () =>
@@ -92,6 +99,7 @@ public class HilbertTransform : Indicator, IIndicatorWarmUpPeriodProvider
                 _detrendPriceDelay4.Reset();
                 _inPhaseDelay3.Reset();
             });
+
         Quadrature = new FunctionalIndicator<IndicatorDataPoint>(name + "_quad",
             _ =>
             {
@@ -131,11 +139,6 @@ public class HilbertTransform : Indicator, IIndicatorWarmUpPeriodProvider
     }
 
     /// <summary>
-    /// Gets a flag indicating when this indicator is ready and fully initialized
-    /// </summary>
-    public override bool IsReady => Samples >= WarmUpPeriod;
-
-    /// <summary>
     /// Computes the next value of this indicator from the given state
     /// </summary>
     /// <param name="input">The input given to the indicator</param>
@@ -172,11 +175,6 @@ public class HilbertTransform : Indicator, IIndicatorWarmUpPeriodProvider
 
         return input.Value;
     }
-
-    /// <summary>
-    /// Required period, in data points, for the indicator to be ready and fully initialized.
-    /// </summary>
-    public int WarmUpPeriod { get; }
 
     /// <summary>
     /// Resets this indicator to its initial state
