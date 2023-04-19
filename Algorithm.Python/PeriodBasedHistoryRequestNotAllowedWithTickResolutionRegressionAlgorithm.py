@@ -45,6 +45,6 @@ class PeriodBasedHistoryRequestNotAllowedWithTickResolutionRegressionAlgorithm(Q
         try:
             historyCall()
             raise Exception(f"{historyCallDescription}: expected an exception to be thrown")
-        except ArgumentException:
+        except InvalidOperationException:
             # expected
             pass
