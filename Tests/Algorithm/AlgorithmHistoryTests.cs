@@ -2387,15 +2387,8 @@ tick = Tick
         /// </summary>
         private static void AssertHistoryResultResolution(IEnumerable<BaseData> history, Resolution resolution)
         {
-            if (resolution != Resolution.Tick)
-            {
-                var expectedTimeSpan = resolution.ToTimeSpan();
-                Assert.IsTrue(history.All(data => data.EndTime - data.Time == expectedTimeSpan));
-            }
-            else
-            {
-                Assert.IsTrue(history.All(data => data.EndTime - data.Time < Time.OneSecond));
-            }
+            var expectedTimeSpan = resolution.ToTimeSpan();
+            Assert.IsTrue(history.All(data => data.EndTime - data.Time == expectedTimeSpan));
         }
 
         private static List<PyObject> GetHistoryDataFrameIndex(PyObject history)
