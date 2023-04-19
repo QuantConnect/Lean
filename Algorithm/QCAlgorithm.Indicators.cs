@@ -678,6 +678,30 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new Hilbert Transform indicator
+        /// </summary>
+        /// <param name="symbol">The symbol whose Hilbert transform we want</param>
+        /// <param name="length">The length of the FIR filter used in the calculation of the Hilbert Transform.
+        /// This parameter determines the number of filter coefficients in the FIR filter.</param>
+        /// <param name="inPhaseMultiplicationFactor">The multiplication factor used in the calculation of the in-phase component
+        /// of the Hilbert Transform. This parameter adjusts the sensitivity and responsiveness of
+        /// the transform to changes in the input signal.</param>
+        /// <param name="quadratureMultiplicationFactor">The multiplication factor used in the calculation of the quadrature component of
+        /// the Hilbert Transform. This parameter also adjusts the sensitivity and responsiveness of the
+        /// transform to changes in the input signal.</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        [DocumentationAttribute(Indicators)]
+        public HilbertTransform HT(Symbol symbol, int length, decimal inPhaseMultiplicationFactor, decimal quadratureMultiplicationFactor, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"HT({length}, {inPhaseMultiplicationFactor}, {quadratureMultiplicationFactor})", resolution);
+            var hilbertTransform = new HilbertTransform(length, inPhaseMultiplicationFactor, quadratureMultiplicationFactor);
+            InitializeIndicator(symbol, hilbertTransform, resolution, selector);
+
+            return hilbertTransform;
+        }
+
+        /// <summary>
         /// Creates a new HullMovingAverage indicator. The Hull moving average is a series of nested weighted moving averages, is fast and smooth.
         /// </summary>
         /// <param name="symbol">The symbol whose Hull moving average we want</param>
