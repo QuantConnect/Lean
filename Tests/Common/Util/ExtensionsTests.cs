@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 using NodaTime;
@@ -43,6 +44,62 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class ExtensionsTests
     {
+        [Test]
+        public void NonExistingEmptyDirectory()
+        {
+            var nonexistingDirectory = $"NonExistingEmptyDirectory-{new Guid()}";
+            Assert.IsTrue(nonexistingDirectory.IsDirectoryEmpty());
+        }
+
+        [Test]
+        public void EmptyDirectory()
+        {
+            var directory = $"EmptyDirectory-{new Guid()}";
+            Directory.CreateDirectory(directory);
+            Assert.IsTrue(directory.IsDirectoryEmpty());
+
+            Directory.Delete(directory, true);
+        }
+
+        [Test]
+        public void DirectoryWithFile()
+        {
+            var directory = $"DirectoryWithFile-{new Guid()}";
+            Directory.CreateDirectory(directory);
+            File.WriteAllText(Path.Combine(directory, "test"), "test");
+
+            Assert.IsFalse(directory.IsDirectoryEmpty());
+
+            Directory.Delete(directory, true);
+        }
+
+        [Test]
+        public void DirectoryWithDirectory()
+        {
+            var directory = $"DirectoryWithDirectory-{new Guid()}";
+            Directory.CreateDirectory(directory);
+            Directory.CreateDirectory(Path.Combine(directory, "test"));
+
+            Assert.IsFalse(directory.IsDirectoryEmpty());
+
+            Directory.Delete(directory, true);
+        }
+
+        [Test]
+        public void EmptyDirectoryCached()
+        {
+            var directory = $"EmptyDirectoryCached-{new Guid()}";
+            Directory.CreateDirectory(directory);
+
+            Assert.IsTrue(directory.IsDirectoryEmpty());
+
+            File.WriteAllText(Path.Combine(directory, "test"), "test");
+
+            Assert.IsTrue(directory.IsDirectoryEmpty());
+
+            Directory.Delete(directory, true);
+        }
+
         [Test]
         public void ToMD5()
         {
