@@ -59,9 +59,20 @@ public class HilbertTransformTests : CommonIndicatorTests<IndicatorDataPoint>
     public override void ResetsProperly()
     {
         var hti = new HilbertTransform(length: 2);
+        TestHelper.AssertIndicatorIsInDefaultState(hti);
+        TestHelper.AssertIndicatorIsInDefaultState(hti.Quadrature);
+        TestHelper.AssertIndicatorIsInDefaultState(hti.InPhase);
+
         hti.Update(DateTime.Today, 1m);
         hti.Update(DateTime.Today.AddSeconds(1), 2m);
-        Assert.IsFalse(hti.IsReady);
+        hti.Update(DateTime.Today.AddSeconds(2), 3m);
+        hti.Update(DateTime.Today.AddSeconds(3), 1m);
+        hti.Update(DateTime.Today.AddSeconds(4), 2m);
+        hti.Update(DateTime.Today.AddSeconds(5), 3m);
+        hti.Update(DateTime.Today.AddSeconds(6), 1m);
+        hti.Update(DateTime.Today.AddSeconds(7), 2m);
+        hti.Update(DateTime.Today.AddSeconds(8), 3m);
+        Assert.IsTrue(hti.IsReady);
 
         hti.Reset();
         TestHelper.AssertIndicatorIsInDefaultState(hti);
