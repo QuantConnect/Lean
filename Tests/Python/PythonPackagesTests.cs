@@ -25,6 +25,108 @@ namespace QuantConnect.Tests.Python
     public class PythonPackagesTests
     {
         [Test]
+        public void Tick()
+        {
+            AssertCode(
+                @"
+import numpy as np
+
+from tick.dataset import fetch_hawkes_bund_data
+from tick.hawkes import HawkesConditionalLaw
+from tick.plot import plot_hawkes_kernel_norms
+
+def RunTest():
+    timestamps_list = fetch_hawkes_bund_data()
+
+    kernel_discretization = np.hstack((0, np.logspace(-5, 0, 50)))
+    hawkes_learner = HawkesConditionalLaw(
+        claw_method=""log"", delta_lag=0.1, min_lag=5e-4, max_lag=500,
+        quad_method=""log"", n_quad=10, min_support=1e-4, max_support=1, n_threads=4)
+
+    hawkes_learner.fit(timestamps_list)
+
+    plot_hawkes_kernel_norms(hawkes_learner,
+                             node_names=[""P_u"", ""P_d"", ""T_a"", ""T_b""])");
+        }
+
+        [Test]
+        public void FixedEffectModel()
+        {
+            AssertCode(
+                @"
+import numpy as np
+import pandas as pd
+
+from fixedeffect.iv import ivgmm
+from fixedeffect.utils.panel_dgp import gen_data
+
+def RunTest():
+    N = 100
+    T = 10
+    beta = [-3,1,2,3,4]
+    ate = 1
+    exp_date = 5
+    df = gen_data(N, T, beta, ate, exp_date)
+    formula = 'y ~ x_1|id+time|0|(x_2~x_3+x_4)'
+    model_iv2sls = ivgmm(data_df = df, formula = formula)
+    result = model_iv2sls.fit()
+    result");
+        }
+
+        [Test]
+        public void Iisignature()
+        {
+            AssertCode(
+                @"
+import iisignature
+import numpy as np
+
+def RunTest():
+    path = np . random . uniform ( size =(20 ,3) )
+    signature = iisignature . sig ( path ,4)
+    s = iisignature . prepare (3 ,4)
+    logsignature = iisignature . logsig ( path , s )");
+        }
+
+        [Test]
+        public void PyStan()
+        {
+            AssertCode(
+                @"
+import stan
+
+def RunTest():
+    schools_code = """"""
+    data {
+      int<lower=0> J;         // number of schools
+      real y[J];              // estimated treatment effects
+      real<lower=0> sigma[J]; // standard error of effect estimates
+    }
+    parameters {
+      real mu;                // population treatment effect
+      real<lower=0> tau;      // standard deviation in treatment effects
+      vector[J] eta;          // unscaled deviation from mu by school
+    }
+    transformed parameters {
+      vector[J] theta = mu + tau * eta;        // school treatment effects
+    }
+    model {
+      target += normal_lpdf(eta | 0, 1);       // prior log-density
+      target += normal_lpdf(y | theta, sigma); // log-likelihood
+    }
+    """"""
+
+    schools_data = {""J"": 8,
+                    ""y"": [28,  8, -3,  7, -1,  1, 18, 12],
+                    ""sigma"": [15, 10, 16, 11,  9, 11, 10, 18]}
+
+    posterior = stan.build(schools_code, data=schools_data)
+    fit = posterior.sample(num_chains=4, num_samples=1000)
+    eta = fit[""eta""]  # array with shape (8, 4000)
+    df = fit.to_frame()  # pandas `DataFrame, requires pandas");
+        }
+
+        [Test]
         public void PyvinecopulibTest()
         {
             AssertCode(

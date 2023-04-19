@@ -227,7 +227,9 @@ RUN pip install --no-cache-dir      \
     dwave-ocean-sdk==6.1.1          \
     chardet==5.1.0                  \
     stable-baselines3==1.7.0        \
-    pystan==3.6.0
+    pystan==3.6.0                   \
+    FixedEffectModel==0.0.5         \
+    tick==0.7.0.1
 
 # Install dwave tool
 RUN dwave install --all -y
@@ -237,7 +239,7 @@ RUN conda install -c conda-forge ipopt==3.14.11 \
     && conda clean -y --all
 
 # We install need to install separately else fails to find numpy
-RUN pip install --no-cache-dir Riskfolio-Lib==4.0.3
+RUN pip install --no-cache-dir Riskfolio-Lib==4.0.3 iisignature==0.24
 
 # Install spacy models
 RUN python -m spacy download en_core_web_md && python -m spacy download en_core_web_sm
