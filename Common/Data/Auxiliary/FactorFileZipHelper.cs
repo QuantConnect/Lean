@@ -17,6 +17,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -26,11 +27,22 @@ namespace QuantConnect.Data.Auxiliary
     public static class FactorFileZipHelper
     {
         /// <summary>
+        /// Constructs the factor file path for the specified market and security type
+        /// </summary>
+        /// <param name="market">The market this symbol belongs to</param>
+        /// <param name="securityType">The security type</param>
+        /// <returns>The relative file path</returns>
+        public static string GetRelativeFactorFilePath(string market, SecurityType securityType)
+        {
+            return Invariant($"{securityType.SecurityTypeToLower()}/{market}/factor_files");
+        }
+
+        /// <summary>
         /// Gets the factor file zip filename for the specified date
         /// </summary>
         public static string GetFactorFileZipFileName(string market, DateTime date, SecurityType securityType)
         {
-            return Path.Combine(Globals.DataFolder, $"{securityType.SecurityTypeToLower()}/{market}/factor_files/factor_files_{date:yyyyMMdd}.zip");
+            return Path.Combine(Globals.DataFolder, GetRelativeFactorFilePath(market, securityType), $"factor_files_{date:yyyyMMdd}.zip");
         }
 
         /// <summary>

@@ -30,7 +30,7 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public static string GetMapFileZipFileName(string market, DateTime date, SecurityType securityType)
         {
-            return Path.Combine(Globals.DataFolder, $"{securityType.SecurityTypeToLower()}/{market}/map_files/map_files_{date:yyyyMMdd}.zip");
+            return Path.Combine(Globals.DataFolder, MapFile.GetRelativeMapFilePath(market, securityType), $"map_files_{date:yyyyMMdd}.zip");
         }
 
         /// <summary>

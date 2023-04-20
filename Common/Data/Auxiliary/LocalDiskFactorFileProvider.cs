@@ -85,7 +85,8 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         private IFactorProvider GetFactorFile(Symbol symbol, string permtick)
         {
-            var path = Path.Combine(Globals.CacheDataFolder, symbol.SecurityType.SecurityTypeToLower(), symbol.ID.Market, "factor_files", permtick.ToLowerInvariant() + ".csv");
+            var basePath = Globals.GetDataFolderPath(FactorFileZipHelper.GetRelativeFactorFilePath(symbol.ID.Market, symbol.SecurityType));
+            var path = Path.Combine(basePath, permtick.ToLowerInvariant() + ".csv");
 
             var factorFile = PriceScalingExtensions.SafeRead(permtick, _dataProvider.ReadLines(path), symbol.SecurityType);
             _cache.AddOrUpdate(symbol, factorFile, (s, c) => factorFile);

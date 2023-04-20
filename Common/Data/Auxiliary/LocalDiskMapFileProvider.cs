@@ -65,7 +65,7 @@ namespace QuantConnect.Data.Auxiliary
             var securityType = key.SecurityType;
             var market = key.Market;
 
-            var mapFileDirectory =  MapFile.GetMapFilePath(market, securityType);
+            var mapFileDirectory = Globals.GetDataFolderPath(MapFile.GetRelativeMapFilePath(market, securityType));
             if (!Directory.Exists(mapFileDirectory))
             {
                 // only write this message once per application instance
