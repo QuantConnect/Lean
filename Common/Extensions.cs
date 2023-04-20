@@ -1505,16 +1505,16 @@ namespace QuantConnect
         /// <param name="dateTime">Time to be rounded down</param>
         /// <param name="interval">Timespan interval to round to.</param>
         /// <param name="exchangeHours">The exchange hours to determine open times</param>
-        /// <param name="extendedMarket">True for extended market hours, otherwise false</param>
+        /// <param name="extendedMarketHours">True for extended market hours, otherwise false</param>
         /// <returns>Rounded datetime</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static DateTime ExchangeRoundDown(this DateTime dateTime, TimeSpan interval, SecurityExchangeHours exchangeHours, bool extendedMarket)
+        public static DateTime ExchangeRoundDown(this DateTime dateTime, TimeSpan interval, SecurityExchangeHours exchangeHours, bool extendedMarketHours)
         {
             // can't round against a zero interval
             if (interval == TimeSpan.Zero) return dateTime;
 
             var rounded = dateTime.RoundDown(interval);
-            while (!exchangeHours.IsOpen(rounded, rounded + interval, extendedMarket))
+            while (!exchangeHours.IsOpen(rounded, rounded + interval, extendedMarketHours))
             {
                 rounded -= interval;
             }
@@ -1530,10 +1530,10 @@ namespace QuantConnect
         /// <param name="interval">Timespan interval to round to.</param>
         /// <param name="exchangeHours">The exchange hours to determine open times</param>
         /// <param name="roundingTimeZone">The time zone to perform the rounding in</param>
-        /// <param name="extendedMarket">True for extended market hours, otherwise false</param>
+        /// <param name="extendedMarketHours">True for extended market hours, otherwise false</param>
         /// <returns>Rounded datetime</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static DateTime ExchangeRoundDownInTimeZone(this DateTime dateTime, TimeSpan interval, SecurityExchangeHours exchangeHours, DateTimeZone roundingTimeZone, bool extendedMarket)
+        public static DateTime ExchangeRoundDownInTimeZone(this DateTime dateTime, TimeSpan interval, SecurityExchangeHours exchangeHours, DateTimeZone roundingTimeZone, bool extendedMarketHours)
         {
             // can't round against a zero interval
             if (interval == TimeSpan.Zero) return dateTime;
@@ -1542,7 +1542,7 @@ namespace QuantConnect
             var roundedDateTimeInRoundingTimeZone = dateTimeInRoundingTimeZone.RoundDown(interval);
             var rounded = roundedDateTimeInRoundingTimeZone.ConvertTo(roundingTimeZone, exchangeHours.TimeZone);
 
-            while (!exchangeHours.IsOpen(rounded, rounded + interval, extendedMarket))
+            while (!exchangeHours.IsOpen(rounded, rounded + interval, extendedMarketHours))
             {
                 // Will subtract interval to 'dateTime' in the roundingTimeZone (using the same value type instance) to avoid issues with daylight saving time changes.
                 // GH issue 2368: subtracting interval to 'dateTime' in exchangeHours.TimeZone and converting back to roundingTimeZone
