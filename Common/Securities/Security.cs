@@ -840,6 +840,39 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Set Security Data Filter
+        /// </summary>
+        /// <param name="pyObject">Python class that represents a custom Security Data Filter</param>
+        /// <exception cref="ArgumentException"></exception>
+        public void SetDataFilter(PyObject pyObject)
+        {
+            if (pyObject.TryConvert<ISecurityDataFilter>(out var dataFilter))
+            {
+                SetDataFilter(dataFilter);
+            }
+            else if (Extensions.TryConvert<ISecurityDataFilter>(pyObject, out _, allowPythonDerivative: true))
+            {
+                SetDataFilter(new SecurityDataFilterPythonWrapper(pyObject));
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    throw new ArgumentException($"SetDataFilter: {pyObject.Repr()} is not a valid argument");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Set Security Data Filter
+        /// </summary>
+        /// <param name="dataFilter">Security Data Filter</param>
+        public void SetDataFilter(ISecurityDataFilter dataFilter)
+        {
+            DataFilter = dataFilter;
+        }
+
+        /// <summary>
         /// Returns a string that represents the current object.
         /// </summary>
         /// <returns>
