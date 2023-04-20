@@ -27,9 +27,9 @@ class HistoryWithCustomDataSourceRegressionAlgorithm(QCAlgorithm):
 
     def OnEndOfAlgorithm(self):
         aaplHistory = self.History(CustomData, self.aapl, self.StartDate, self.EndDate, Resolution.Minute,
-            fillForward=False, extendedMarket=False, dataNormalizationMode=DataNormalizationMode.Raw).droplevel(0, axis=0)
+            fillForward=False, extendedMarketHours=False, dataNormalizationMode=DataNormalizationMode.Raw).droplevel(0, axis=0)
         spyHistory = self.History(CustomData, self.spy, self.StartDate, self.EndDate, Resolution.Minute,
-            fillForward=False, extendedMarket=False, dataNormalizationMode=DataNormalizationMode.Raw).droplevel(0, axis=0)
+            fillForward=False, extendedMarketHours=False, dataNormalizationMode=DataNormalizationMode.Raw).droplevel(0, axis=0)
 
         if aaplHistory.size == 0 or spyHistory.size == 0:
             raise Exception("At least one of the history results is empty")

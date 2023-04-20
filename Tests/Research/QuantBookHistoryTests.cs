@@ -327,7 +327,7 @@ namespace QuantConnect.Tests.Research
                 var future = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, expiry);
                 var start = new DateTime(2020, 1, 5);
                 var end = new DateTime(2020, 1, 6);
-                var history = qb.GetOptionHistory(future, start, end, Resolution.Minute, extendedMarket: true);
+                var history = qb.GetOptionHistory(future, start, end, Resolution.Minute, extendedMarketHours: true);
                 dynamic df = history.GetAllData();
 
                 Assert.IsNotNull(df);
@@ -356,7 +356,7 @@ namespace QuantConnect.Tests.Research
 
                 var start = new DateTime(2020, 1, 5);
                 var end = new DateTime(2020, 1, 6);
-                var history = qb.GetOptionHistory(futureOption, start, end, Resolution.Minute, extendedMarket: true);
+                var history = qb.GetOptionHistory(futureOption, start, end, Resolution.Minute, extendedMarketHours: true);
                 dynamic df = history.GetAllData();
 
                 Assert.IsNotNull(df);
