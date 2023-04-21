@@ -174,8 +174,10 @@
   // RBI configuration
   "rbi-host": "",
   "rbi-port": "",
+  "rbi-account": "",
   "rbi-sender-comp-id": "",
   "rbi-target-comp-id": "",
+  "rbi-on-behalf-of-comp-id": "",
   "rbi-log-fix-messages": false,
 
   // Trading Technologies configuration
