@@ -2952,8 +2952,6 @@ tradeBar = TradeBar
                     {
                         mappingDates.Add(bar.EndTime.Date);
                         prevUnderlying = currentUnderlying;
-
-                        Console.WriteLine($"Mapping date: {bar.EndTime}");
                     }
                 }
 
