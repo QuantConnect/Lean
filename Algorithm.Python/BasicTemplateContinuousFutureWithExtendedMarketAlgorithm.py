@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,7 +31,7 @@ class BasicTemplateContinuousFutureWithExtendedMarketAlgorithm(QCAlgorithm):
                                                   contractDepthOffset = 0,
                                                   extendedMarketHours = True)
 
-        self._fast = self.SMA(self._continuousContract.Symbol, 3, Resolution.Daily)
+        self._fast = self.SMA(self._continuousContract.Symbol, 4, Resolution.Daily)
         self._slow = self.SMA(self._continuousContract.Symbol, 10, Resolution.Daily)
         self._currentContract = None
 
