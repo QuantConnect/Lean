@@ -46,11 +46,9 @@ class BasicTemplateContinuousFutureAlgorithm(QCAlgorithm):
 
         if not self.Portfolio.Invested:
             if self._fast.Current.Value > self._slow.Current.Value:
-                self.Log(f"Buying at {self.Time}. EMA fast: {self._fast.Current.Value}. EMA slow: {self._slow.Current.Value}")
                 self._currentContract = self.Securities[self._continuousContract.Mapped]
                 self.Buy(self._currentContract.Symbol, 1)
         elif self._fast.Current.Value < self._slow.Current.Value:
-            self.Log(f"Liquidating at {self.Time}. EMA fast: {self._fast.Current.Value}. EMA slow: {self._slow.Current.Value}")
             self.Liquidate()
 
         # We check exchange hours because the contract mapping can call OnData outside of regular hours.

@@ -74,14 +74,12 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if(_fast > _slow)
                 {
-                    Log($"Buying at {Time}. EMA fast: {_fast.Current.Value}. EMA slow: {_slow.Current.Value}");
                     _currentContract = Securities[_continuousContract.Mapped];
                     Buy(_currentContract.Symbol, 1);
                 }
             }
             else if(_fast < _slow)
             {
-                Log($"Liquidating at {Time}. EMA fast: {_fast.Current.Value}. EMA slow: {_slow.Current.Value}");
                 Liquidate();
             }
 
