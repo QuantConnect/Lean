@@ -32,7 +32,6 @@ using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Data.Custom.AlphaStreams;
 using QuantConnect.Lean.Engine.HistoricalData;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
-using System.Diagnostics;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -2122,6 +2121,257 @@ tick = Tick
             }
         }
 
+        // C#
+        [TestCase(Language.CSharp, Resolution.Daily, 61)]
+        [TestCase(Language.CSharp, Resolution.Hour, 473)]
+        [TestCase(Language.CSharp, Resolution.Minute, 26385)]
+        // Python
+        [TestCase(Language.Python, Resolution.Daily, 61)]
+        [TestCase(Language.Python, Resolution.Hour, 473)]
+        [TestCase(Language.Python, Resolution.Minute, 26385)]
+        public void HistoryRequestWithDataMappingMode(Language language, Resolution resolution, int expectedHistoryCount)
+        {
+            var start = new DateTime(2013, 10, 6);
+            var end = new DateTime(2014, 1, 1);
+            var algorithm = GetAlgorithm(end);
+            var symbol = algorithm.AddFuture(Futures.Indices.SP500EMini, resolution, fillForward: true).Symbol;
+
+            var dataMappingModes = GetAllDataMappingModes();
+            var timeSpan = end - start;
+            var periods = expectedHistoryCount;
+
+            var expectedMappingDates = new List<DateTime>
+            {
+                // DataMappingMode.LastTradingDay (0)
+                new DateTime(2013, 12, 20),
+                // DataMappingMode.FirstDayMonth (1)
+                new DateTime(2013, 12, 02),
+                // DataMappingMode.OpenInterest (2)
+                new DateTime(2013, 12, 18),
+                // DataMappingMode.OpenInterestAnnual (3)
+                new DateTime(2013, 11, 18),
+            };
+
+            if (language == Language.CSharp)
+            {
+                // No symbol, time span
+                var historyResults = dataMappingModes
+                     .Select(mappingMode => algorithm.History(timeSpan, resolution, dataMappingMode: mappingMode).ToList())
+                     .ToList();
+                AssertFuturesHistoryWithDifferentMappingModesResults(historyResults, symbol, expectedHistoryCount, resolution,
+                    expectedMappingDates);
+
+                // No symbol, periods
+                historyResults = dataMappingModes
+                     .Select(mappingMode => algorithm.History(periods, resolution, dataMappingMode: mappingMode).ToList())
+                     .ToList();
+                AssertFuturesHistoryWithDifferentMappingModesResults(historyResults, symbol, expectedHistoryCount, resolution,
+                    expectedMappingDates);
+
+                // No symbol, date range
+                // TODO: to be implemented
+
+                // Single symbols, time span
+                var tradeBarHistoryResults = dataMappingModes
+                     .Select(mappingMode => algorithm.History(symbol, timeSpan, resolution, dataMappingMode: mappingMode).ToList())
+                     .ToList();
+                AssertFuturesHistoryWithDifferentMappingModesResults(tradeBarHistoryResults, symbol, expectedHistoryCount, resolution,
+                    expectedMappingDates);
+
+                // Single symbols, periods
+                tradeBarHistoryResults = dataMappingModes
+                     .Select(mappingMode => algorithm.History(symbol, periods, resolution, dataMappingMode: mappingMode).ToList())
+                     .ToList();
+                AssertFuturesHistoryWithDifferentMappingModesResults(tradeBarHistoryResults, symbol, expectedHistoryCount, resolution,
+                    expectedMappingDates);
+
+                // Single symbols, date range
+                tradeBarHistoryResults = dataMappingModes
+                     .Select(mappingMode => algorithm.History(symbol, start, end, resolution, dataMappingMode: mappingMode).ToList())
+                     .ToList();
+                AssertFuturesHistoryWithDifferentMappingModesResults(tradeBarHistoryResults, symbol, expectedHistoryCount, resolution,
+                    expectedMappingDates);
+
+                // Symbol array, time span
+                historyResults = dataMappingModes
+                     .Select(mappingMode => algorithm.History(new[] { symbol }, timeSpan, resolution, dataMappingMode: mappingMode).ToList())
+                     .ToList();
+                AssertFuturesHistoryWithDifferentMappingModesResults(historyResults, symbol, expectedHistoryCount, resolution, expectedMappingDates);
+
+                // Symbol array, periods
+                historyResults = dataMappingModes
+                     .Select(mappingMode => algorithm.History(new[] { symbol }, periods, resolution, dataMappingMode: mappingMode).ToList())
+                     .ToList();
+                AssertFuturesHistoryWithDifferentMappingModesResults(historyResults, symbol, expectedHistoryCount, resolution, expectedMappingDates);
+
+                // Symbol array, date range
+                historyResults = dataMappingModes
+                     .Select(mappingMode => algorithm.History(new[] { symbol }, start, end, resolution, dataMappingMode: mappingMode).ToList())
+                     .ToList();
+                AssertFuturesHistoryWithDifferentMappingModesResults(historyResults, symbol, expectedHistoryCount, resolution, expectedMappingDates);
+
+                // Generic, no symbol, time span
+                var typedHistoryResults = dataMappingModes
+                     .Select(mappingMode => algorithm.History<TradeBar>(timeSpan, resolution, dataMappingMode: mappingMode).ToList())
+                     .ToList();
+                AssertFuturesHistoryWithDifferentMappingModesResults(tradeBarHistoryResults, symbol, expectedHistoryCount, resolution,
+                    expectedMappingDates);
+
+                // Generic, no symbol, periods
+                // TODO: to be implemented
+
+                // Generic, no symbol, date range
+                // TODO: to be implemented
+
+                // Generic, single symbol, time span
+                tradeBarHistoryResults = dataMappingModes
+                     .Select(mappingMode => algorithm.History<TradeBar>(symbol, timeSpan, resolution, dataMappingMode: mappingMode).ToList())
+                     .ToList();
+                AssertFuturesHistoryWithDifferentMappingModesResults(tradeBarHistoryResults, symbol, expectedHistoryCount, resolution,
+                    expectedMappingDates);
+
+                // Generic, single symbol, periods
+                tradeBarHistoryResults = dataMappingModes
+                     .Select(mappingMode => algorithm.History<TradeBar>(symbol, periods, resolution, dataMappingMode: mappingMode).ToList())
+                     .ToList();
+                AssertFuturesHistoryWithDifferentMappingModesResults(tradeBarHistoryResults, symbol, expectedHistoryCount, resolution,
+                    expectedMappingDates);
+
+                // Generic, single symbol, date range
+                tradeBarHistoryResults = dataMappingModes
+                     .Select(mappingMode => algorithm.History<TradeBar>(symbol, start, end, resolution, dataMappingMode: mappingMode).ToList())
+                     .ToList();
+                AssertFuturesHistoryWithDifferentMappingModesResults(tradeBarHistoryResults, symbol, expectedHistoryCount, resolution,
+                    expectedMappingDates);
+
+                // Generic, symbol array, time span
+                typedHistoryResults = dataMappingModes
+                     .Select(mappingMode =>
+                        algorithm.History<TradeBar>(new[] { symbol }, timeSpan, resolution, dataMappingMode: mappingMode).ToList())
+                     .ToList();
+                AssertFuturesHistoryWithDifferentMappingModesResults(typedHistoryResults, symbol, expectedHistoryCount, resolution,
+                    expectedMappingDates);
+
+                // Generic, symbol array, periods
+                typedHistoryResults = dataMappingModes
+                     .Select(mappingMode =>
+                        algorithm.History<TradeBar>(new[] { symbol }, periods, resolution, dataMappingMode: mappingMode).ToList())
+                     .ToList();
+                AssertFuturesHistoryWithDifferentMappingModesResults(typedHistoryResults, symbol, expectedHistoryCount, resolution,
+                    expectedMappingDates);
+
+                // Generic, symbol array, date range
+                typedHistoryResults = dataMappingModes
+                     .Select(mappingMode =>
+                        algorithm.History<TradeBar>(new[] { symbol }, start, end, resolution, dataMappingMode: mappingMode).ToList())
+                     .ToList();
+                AssertFuturesHistoryWithDifferentMappingModesResults(typedHistoryResults, symbol, expectedHistoryCount, resolution,
+                    expectedMappingDates);
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    var testModule = PyModule.FromString("testModule", @"
+from AlgorithmImports import *
+tradeBar = TradeBar
+                    ");
+
+                    algorithm.SetPandasConverter();
+                    using var pySymbol = symbol.ToPython();
+                    using var pySymbols = new PyList(new[] { pySymbol });
+                    using var pyTradeBar = testModule.GetAttr("tradeBar");
+
+                    // Single symbols, time span
+                    var historyResults = dataMappingModes
+                        .Select(mappingMode => algorithm.History(pySymbol, timeSpan, resolution, dataMappingMode: mappingMode))
+                        .ToList();
+                    AssertFuturesHistoryWithDifferentMappingModesResults(historyResults, symbol, expectedHistoryCount);
+
+                    // Single symbols, periods
+                    historyResults = dataMappingModes
+                        .Select(mappingMode => algorithm.History(pySymbol, periods, resolution, dataMappingMode: mappingMode))
+                        .ToList();
+                    AssertFuturesHistoryWithDifferentMappingModesResults(historyResults, symbol, expectedHistoryCount);
+
+                    // Single symbols, date range
+                    historyResults = dataMappingModes
+                        .Select(mappingMode => algorithm.History(pySymbol, start, end, resolution, dataMappingMode: mappingMode))
+                        .ToList();
+                    AssertFuturesHistoryWithDifferentMappingModesResults(historyResults, symbol, expectedHistoryCount);
+
+                    // Symbol array, time span
+                    historyResults = dataMappingModes
+                        .Select(mappingMode => algorithm.History(pySymbols, timeSpan, resolution, dataMappingMode: mappingMode))
+                        .ToList();
+                    AssertFuturesHistoryWithDifferentMappingModesResults(historyResults, symbol, expectedHistoryCount);
+
+                    // Symbol array, periods
+                    historyResults = dataMappingModes
+                        .Select(mappingMode => algorithm.History(pySymbols, periods, resolution, dataMappingMode: mappingMode))
+                        .ToList();
+                    AssertFuturesHistoryWithDifferentMappingModesResults(historyResults, symbol, expectedHistoryCount);
+
+                    // Symbol array, date range
+                    historyResults = dataMappingModes
+                        .Select(mappingMode => algorithm.History(pySymbols, start, end, resolution, dataMappingMode: mappingMode))
+                        .ToList();
+                    AssertFuturesHistoryWithDifferentMappingModesResults(historyResults, symbol, expectedHistoryCount);
+
+                    // Generic, single symbol, time span
+                    historyResults = dataMappingModes
+                        .Select(mappingMode => algorithm.History(pyTradeBar, pySymbol, timeSpan, resolution, dataMappingMode: mappingMode))
+                        .ToList();
+                    AssertFuturesHistoryWithDifferentMappingModesResults(historyResults, symbol, expectedHistoryCount);
+                    // Same as previous but using a Symbol instead of pySymbol
+                    historyResults = dataMappingModes
+                        .Select(mappingMode => algorithm.History(pyTradeBar, symbol, timeSpan, resolution, dataMappingMode: mappingMode))
+                        .ToList();
+                    AssertFuturesHistoryWithDifferentMappingModesResults(historyResults, symbol, expectedHistoryCount);
+
+                    // Generic, single symbol, periods
+                    historyResults = dataMappingModes
+                        .Select(mappingMode => algorithm.History(pyTradeBar, pySymbol, periods, resolution, dataMappingMode: mappingMode))
+                        .ToList();
+                    AssertFuturesHistoryWithDifferentMappingModesResults(historyResults, symbol, expectedHistoryCount);
+                    // Same as previous but using a Symbol instead of pySymbol
+                    historyResults = dataMappingModes
+                        .Select(mappingMode => algorithm.History(pyTradeBar, symbol, periods, resolution, dataMappingMode: mappingMode))
+                        .ToList();
+                    AssertFuturesHistoryWithDifferentMappingModesResults(historyResults, symbol, expectedHistoryCount);
+
+                    // Generic, single symbol, date range
+                    historyResults = dataMappingModes
+                        .Select(mappingMode => algorithm.History(pyTradeBar, pySymbol, start, end, resolution, dataMappingMode: mappingMode))
+                        .ToList();
+                    AssertFuturesHistoryWithDifferentMappingModesResults(historyResults, symbol, expectedHistoryCount);
+                    // Same as previous but using a Symbol instead of pySymbol
+                    historyResults = dataMappingModes
+                        .Select(mappingMode => algorithm.History(pyTradeBar,symbol, start, end, resolution, dataMappingMode: mappingMode))
+                        .ToList();
+                    AssertFuturesHistoryWithDifferentMappingModesResults(historyResults, symbol, expectedHistoryCount);
+
+                    // Generic, symbol array, time span
+                    historyResults = dataMappingModes
+                        .Select(mappingMode => algorithm.History(pyTradeBar, pySymbols, timeSpan, resolution, dataMappingMode: mappingMode))
+                        .ToList();
+                    AssertFuturesHistoryWithDifferentMappingModesResults(historyResults, symbol, expectedHistoryCount);
+
+                    // Generic, symbol array, periods
+                    historyResults = dataMappingModes
+                        .Select(mappingMode => algorithm.History(pyTradeBar, pySymbols, periods, resolution, dataMappingMode: mappingMode))
+                        .ToList();
+                    AssertFuturesHistoryWithDifferentMappingModesResults(historyResults, symbol, expectedHistoryCount);
+
+                    // Generic, symbol array, date range
+                    historyResults = dataMappingModes
+                        .Select(mappingMode => algorithm.History(pyTradeBar, pySymbols, start, end, resolution, dataMappingMode: mappingMode))
+                        .ToList();
+                    AssertFuturesHistoryWithDifferentMappingModesResults(historyResults, symbol, expectedHistoryCount);
+                }
+            }
+        }
+
         // USA Equity market hours: 4am-9:30am (pre-market), 9:30am-4pm (regular market), 4pm-8pm (post-market)
         // 6.5h (regular market duration) (rounded to 7)
         [TestCase(Resolution.Hour, false, false, 7)]
@@ -2262,9 +2512,11 @@ tick = Tick
         /// <summary>
         /// Helper method to check that all history results have the same bar count
         /// </summary>
-        private static void CheckThatHistoryResultsHaveEqualBarCount(List<List<Slice>> historyResults, int expectedHistoryCount)
+        private static void CheckThatHistoryResultsHaveEqualBarCount<T>(IEnumerable<IEnumerable<T>> historyResults, int expectedHistoryCount)
         {
-            Assert.That(historyResults, Has.All.Not.Empty.And.All.Count.EqualTo(expectedHistoryCount));
+            Assert.That(historyResults, Has.All.Not.Empty.And.All.Count.EqualTo(expectedHistoryCount),
+                $@"Expected all history results to have {expectedHistoryCount} slices, but counts where {
+                    string.Join(", ", historyResults.Select(x => x.Count()))}");
         }
 
         /// <summary>
@@ -2279,13 +2531,21 @@ tick = Tick
         /// <summary>
         /// Helper method to check that, for each history result, prices at each time are different
         /// </summary>
-        private static void CheckThatHistoryResultsHaveDifferentPrices(List<List<Slice>> historyResults, string message)
+        private static void CheckThatHistoryResultsHaveDifferentPrices(List<List<BaseData>> historyResults, string message)
         {
             for (int i = 0; i < historyResults[0].Count; i++)
             {
-                var closePrices = historyResults.Select(hr => hr[i].Values.Single().Price).ToHashSet();
-                Assert.AreEqual(historyResults.Count, closePrices.Count, message);
+                var prices = historyResults.Select(hr => hr[i].Price).ToHashSet();
+                Assert.AreEqual(historyResults.Count, prices.Count, message);
             }
+        }
+
+        /// <summary>
+        /// Helper method to check that, for each history result, prices at each time are different
+        /// </summary>
+        private static void CheckThatHistoryResultsHaveDifferentPrices(IEnumerable<IEnumerable<Slice>> historyResults, string message)
+        {
+            CheckThatHistoryResultsHaveDifferentPrices(historyResults.Select(hr => hr.Select(x => x.Values.First()).ToList()).ToList(), message);
         }
 
         /// <summary>
@@ -2402,12 +2662,14 @@ tick = Tick
 
         private static List<Symbol> GetSymbolsFromHistoryDataFrameIndex(List<PyObject> index)
         {
-            return index.Select(x => x[0].As<Symbol>()).ToList();
+            dynamic builtins = Py.Import("builtins");
+            return index.Select(x => x[builtins.len(x) > 2 ? 1 : 0].As<Symbol>()).ToList();
         }
 
         private static List<DateTime> GetTimesFromHistoryDataFrameIndex(List<PyObject> index)
         {
-            return index.Select(x => x[1].As<DateTime>()).ToList();
+            dynamic builtins = Py.Import("builtins");
+            return index.Select(x => x[builtins.len(x) > 2 ? 2 : 1].As<DateTime>()).ToList();
         }
 
         #region Fill-forwarded history assertions
@@ -2659,6 +2921,91 @@ tick = Tick
             Assert.IsTrue(symbols.All(x => x == expectedSymbol));
             var times = GetTimesFromHistoryDataFrameIndex(index);
             AssertExtendedMarketHistoryTimes(expectedSymbol, times, extendedMarket);
+        }
+
+        #endregion
+
+        #region History with different data mapping modes assertions
+
+        /// <summary>
+        /// Asserts that for a list of history results, one for a different data mapping mode, each has its expected mapping date, that is,
+        /// the date when underlying symbol change due to contract expiration.
+        /// </summary>
+        private static void AssertFuturesHistoryWithDifferentMappingModesResults(List<List<TradeBar>> historyResults, Symbol expectedSymbol,
+            int expectedHistoryCount, Resolution resolution, List<DateTime> expectedMappingDates)
+        {
+            CheckThatHistoryResultsHaveEqualBarCount(historyResults, expectedHistoryCount);
+
+            // Check that all history results have a mapping date at some point in the history
+            for (var i = 0; i < historyResults.Count; i++)
+            {
+                var history = historyResults[i];
+                var prevUnderlying = history[0].Symbol.Underlying;
+                var mappingDates = new List<DateTime>();
+
+                foreach (var bar in history)
+                {
+                    Assert.AreEqual(expectedSymbol, bar.Symbol, $"All bars symbol must have been {expectedSymbol} but found {bar.Symbol}");
+
+                    var currentUnderlying = bar.Symbol.Underlying;
+                    if (currentUnderlying != prevUnderlying)
+                    {
+                        mappingDates.Add(bar.EndTime.Date);
+                        prevUnderlying = currentUnderlying;
+                    }
+                }
+
+                Assert.AreEqual(1, mappingDates.Count, "We are expecting only one mapping for this case.");
+                var expectedMappingDate = expectedMappingDates[i];
+                Assert.AreEqual(expectedMappingDate, mappingDates[0],
+                    $"Mapping date {mappingDates[0]} for {i}th history result is not the expected one {expectedMappingDate}.");
+
+                AssertHistoryResultResolution(history, resolution);
+            }
+
+            CheckThatHistoryResultsHaveDifferentPrices(historyResults.Select(history => history.Cast<BaseData>().ToList()).ToList(),
+                "History results prices should have been different for each data mapping mode at each time");
+        }
+
+        /// <summary>
+        /// Asserts that for a list of history results, one for a different data mapping mode, each has its expected mapping date.
+        /// </summary>
+        private static void AssertFuturesHistoryWithDifferentMappingModesResults(List<List<Slice>> historyResults, Symbol expectedSymbol,
+            int expectedHistoryCount, Resolution resolution, List<DateTime> expectedMappingDates)
+        {
+            AssertFuturesHistoryWithDifferentMappingModesResults(historyResults.Select(x => x.Select(y => y.Bars.Values.First()).ToList()).ToList(),
+                expectedSymbol, expectedHistoryCount, resolution, expectedMappingDates);
+        }
+
+        /// <summary>
+        /// Asserts that for a list of history results, one for a different data mapping mode, each has its expected mapping date.
+        /// </summary>
+        private static void AssertFuturesHistoryWithDifferentMappingModesResults(List<List<DataDictionary<TradeBar>>> historyResults,
+            Symbol expectedSymbol, int expectedHistoryCount, Resolution resolution, List<DateTime> expectedMappingDates)
+        {
+            AssertFuturesHistoryWithDifferentMappingModesResults(historyResults.Select(x => x.Select(y => y[expectedSymbol]).ToList()).ToList(),
+                expectedSymbol, expectedHistoryCount, resolution, expectedMappingDates);
+        }
+
+        /// <summary>
+        /// Asserts that for a list of Python history results, one for a different data mapping mode,
+        /// the result counts are the same and contain different prices.
+        /// In the data frames we don't have access to the actual mapping dates, so we cannot do the same checks we do for C# in
+        /// <see cref="AssertFuturesHistoryWithDifferentMappingModesResults(List{List{TradeBar}}, Symbol, int, Resolution, List{DateTime})"/>.
+        /// </summary>
+        private static void AssertFuturesHistoryWithDifferentMappingModesResults(List<PyObject> historyResults, Symbol expectedSymbol,
+            int expectedHistoryCount)
+        {
+            CheckThatHistoryResultsHaveEqualBarCount(historyResults, expectedHistoryCount);
+            CheckThatHistoryResultsHaveDifferentPrices(historyResults,
+                "History results prices should have been different for each data mapping mode at each time");
+
+            foreach (var history in historyResults)
+            {
+                var index = GetHistoryDataFrameIndex(history);
+                var symbols = GetSymbolsFromHistoryDataFrameIndex(index);
+                Assert.IsTrue(symbols.All(x => x == expectedSymbol));
+            }
         }
 
         #endregion
