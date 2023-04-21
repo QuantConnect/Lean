@@ -2512,11 +2512,11 @@ tradeBar = TradeBar
         /// <summary>
         /// Helper method to check that all history results have the same bar count
         /// </summary>
-        private static void CheckThatHistoryResultsHaveEqualBarCount<T>(List<List<T>> historyResults, int expectedHistoryCount)
+        private static void CheckThatHistoryResultsHaveEqualBarCount<T>(IEnumerable<IEnumerable<T>> historyResults, int expectedHistoryCount)
         {
             Assert.That(historyResults, Has.All.Not.Empty.And.All.Count.EqualTo(expectedHistoryCount),
                 $@"Expected all history results to have {expectedHistoryCount} slices, but counts where {
-                    string.Join(", ", historyResults.Select(x => x.Count))}");
+                    string.Join(", ", historyResults.Select(x => x.Count()))}");
         }
 
         /// <summary>
@@ -2531,7 +2531,7 @@ tradeBar = TradeBar
         /// <summary>
         /// Helper method to check that, for each history result, prices at each time are different
         /// </summary>
-        private static void CheckThatHistoryResultsHaveDifferentPrices(List<List<TradeBar>> historyResults, string message)
+        private static void CheckThatHistoryResultsHaveDifferentPrices(List<List<BaseData>> historyResults, string message)
         {
             for (int i = 0; i < historyResults[0].Count; i++)
             {
@@ -2543,9 +2543,9 @@ tradeBar = TradeBar
         /// <summary>
         /// Helper method to check that, for each history result, prices at each time are different
         /// </summary>
-        private static void CheckThatHistoryResultsHaveDifferentPrices(List<List<Slice>> historyResults, string message)
+        private static void CheckThatHistoryResultsHaveDifferentPrices(IEnumerable<IEnumerable<Slice>> historyResults, string message)
         {
-            CheckThatHistoryResultsHaveDifferentPrices(historyResults.Select(hr => hr.Select(x => x.Bars.Values.First()).ToList()).ToList(), message);
+            CheckThatHistoryResultsHaveDifferentPrices(historyResults.Select(hr => hr.Select(x => x.Values.First()).ToList()).ToList(), message);
         }
 
         /// <summary>
@@ -2662,12 +2662,14 @@ tradeBar = TradeBar
 
         private static List<Symbol> GetSymbolsFromHistoryDataFrameIndex(List<PyObject> index)
         {
-            return index.Select(x => x[index.Count > 2 ? 1 : 0].As<Symbol>()).ToList();
+            dynamic builtins = Py.Import("builtins");
+            return index.Select(x => x[builtins.len(x) > 2 ? 1 : 0].As<Symbol>()).ToList();
         }
 
         private static List<DateTime> GetTimesFromHistoryDataFrameIndex(List<PyObject> index)
         {
-            return index.Select(x => x[index.Count > 2 ? 2 : 1].As<DateTime>()).ToList();
+            dynamic builtins = Py.Import("builtins");
+            return index.Select(x => x[builtins.len(x) > 2 ? 2 : 1].As<DateTime>()).ToList();
         }
 
         #region Fill-forwarded history assertions
@@ -2963,7 +2965,7 @@ tradeBar = TradeBar
                 AssertHistoryResultResolution(history, resolution);
             }
 
-            CheckThatHistoryResultsHaveDifferentPrices(historyResults,
+            CheckThatHistoryResultsHaveDifferentPrices(historyResults.Select(history => history.Cast<BaseData>().ToList()).ToList(),
                 "History results prices should have been different for each data mapping mode at each time");
         }
 
