@@ -72,6 +72,7 @@ public class HilbertTransform : Indicator, IIndicatorWarmUpPeriodProvider
         _input = new Identity(name + "_input");
         _prev = new Delay(name + "_prev", length);
         _detrendPrice = _input.Minus(_prev);
+        // 2nd and 4th order difference in detrended price, thus being the 1st and 3rd delay
         _detrendPriceDelay2 = new Delay(name + "_detrendPriceDelay2", 1);
         _detrendPriceDelay4 = new Delay(name + "_detrendPriceDelay4", 3);
         // Update after InPhase & Quadrature property, so delay length -1
