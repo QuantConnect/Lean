@@ -57,7 +57,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         public AtreyuBrokerageModel(AccountType accountType = AccountType.Margin) : base(accountType)
         {
-            _shortableProvider = new AtreyuShortableProvider(SecurityType.Equity, Market.USA);
+            _shortableProvider = new LocalDiskShortableProvider(SecurityType.Equity, "quantconnect", Market.USA);
         }
 
         /// <summary>

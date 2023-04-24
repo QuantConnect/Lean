@@ -13,9 +13,9 @@
 
 from AlgorithmImports import *
 
-class RegressionTestShortableBrokerageModel(DefaultBrokerageModel):
+class RegressionTestShortableProvider(LocalDiskShortableProvider):
     def __init__(self):
-        self.ShortableProvider = LocalDiskShortableProvider(SecurityType.Equity, "testbrokerage", Market.USA)
+        super().__init__(SecurityType.Equity, "testbrokerage", Market.USA)
 
 ### <summary>
 ### Tests that orders are denied if they exceed the max shortable quantity.
@@ -32,16 +32,17 @@ class ShortableProviderOrdersRejectedRegressionAlgorithm(QCAlgorithm):
         self.SetEndDate(2013, 10, 11)
         self.SetCash(10000000)
 
-        self.spy = self.AddEquity("SPY", Resolution.Minute).Symbol
-        self.aig = self.AddEquity("AIG", Resolution.Minute).Symbol
+        self.spy = self.AddEquity("SPY", Resolution.Minute)
+        self.aig = self.AddEquity("AIG", Resolution.Minute)
 
-        self.SetBrokerageModel(RegressionTestShortableBrokerageModel())
+        self.spy.SetShortableProvider(RegressionTestShortableProvider())
+        self.aig.SetShortableProvider(RegressionTestShortableProvider())
 
     def OnData(self, data):
         if not self.initialize:
-            self.HandleOrder(self.LimitOrder(self.spy, -1001, 10000)) # Should be canceled, exceeds the max shortable quantity
-            self.HandleOrder(self.LimitOrder(self.spy, -1000, 10000)) # Allowed, orders at or below 1000 should be accepted
-            self.HandleOrder(self.LimitOrder(self.spy, -10, 0.01)) # Should be canceled, the total quantity we would be short would exceed the max shortable quantity.
+            self.HandleOrder(self.LimitOrder(self.spy.Symbol, -1001, 10000)) # Should be canceled, exceeds the max shortable quantity
+            self.HandleOrder(self.LimitOrder(self.spy.Symbol, -1000, 10000)) # Allowed, orders at or below 1000 should be accepted
+            self.HandleOrder(self.LimitOrder(self.spy.Symbol, -10, 0.01)) # Should be canceled, the total quantity we would be short would exceed the max shortable quantity.
             self.initialize = True
             return
 
@@ -71,19 +72,19 @@ class ShortableProviderOrdersRejectedRegressionAlgorithm(QCAlgorithm):
             return
 
         if not self.invalidatedNewOrderWithPortfolioHoldings:
-            self.HandleOrder(self.MarketOrder(self.spy, -1000)) # Should succeed, no holdings and no open orders to stop this
-            spyShares = self.Portfolio[self.spy].Quantity
+            self.HandleOrder(self.MarketOrder(self.spy.Symbol, -1000)) # Should succeed, no holdings and no open orders to stop this
+            spyShares = self.Portfolio[self.spy.Symbol].Quantity
             if spyShares != -1000:
                 raise Exception(f"Expected -1000 shares in portfolio, found: {spyShares}")
 
-            self.HandleOrder(self.LimitOrder(self.spy, -1, 0.01)) # Should fail, portfolio holdings are at the max shortable quantity.
+            self.HandleOrder(self.LimitOrder(self.spy.Symbol, -1, 0.01)) # Should fail, portfolio holdings are at the max shortable quantity.
             if len(self.ordersDenied) != 1:
                 raise Exception(f"Expected limit order to fail due to existing holdings, but found {len(self.ordersDenied)} failures")
 
             self.ordersAllowed.clear()
             self.ordersDenied.clear()
 
-            self.HandleOrder(self.MarketOrder(self.aig, -1001))
+            self.HandleOrder(self.MarketOrder(self.aig.Symbol, -1001))
             if len(self.ordersAllowed) != 1:
                 raise Exception(f"Expected market order of -1001 BAC to not fail")
 

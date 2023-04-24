@@ -29,6 +29,7 @@ using Python.Runtime;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using QuantConnect.Data.Shortable;
 
 namespace QuantConnect.Securities
 {
@@ -53,7 +54,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// This securities <see cref="IShortableProvider"/>
         /// </summary>
-        protected IShortableProvider ShortableProvider { get; private set; }
+        public IShortableProvider ShortableProvider { get; private set; }
 
         /// <summary>
         /// A null security leverage value
@@ -828,6 +829,26 @@ namespace QuantConnect.Securities
         public void SetMarginModel(PyObject pyObject)
         {
             SetMarginModel(new BuyingPowerModelPythonWrapper(pyObject));
+        }
+
+        /// <summary>
+        /// Set Python Shortable Provider for this <see cref="Security"/>
+        /// </summary>
+        /// <param name="pyObject">Python class that represents a custom shortable provider</param>
+        public void SetShortableProvider(PyObject pyObject)
+        {
+            if (pyObject.TryConvert<IShortableProvider>(out var shortableProvider))
+            {
+                SetShortableProvider(shortableProvider);
+            }
+            else if (Extensions.TryConvert<IShortableProvider>(pyObject, out _, allowPythonDerivative: true))
+            {
+                SetShortableProvider(new ShortableProviderPythonWrapper(pyObject));
+            }
+            else
+            {
+                throw new Exception($"SetShortableProvider: {pyObject.Repr()} is not a valid argument");
+            }
         }
 
         /// <summary>
