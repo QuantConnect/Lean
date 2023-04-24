@@ -426,6 +426,7 @@ namespace QuantConnect.Securities
             MarginInterestRateModel = marginInterestRateModel;
             Holdings = new SecurityHolding(this, currencyConverter);
             Data = new DynamicSecurityData(registeredTypesProvider, Cache);
+            ShortableProvider = new NullShortableProvider();
 
             UpdateSubscriptionProperties();
         }
@@ -847,7 +848,10 @@ namespace QuantConnect.Securities
             }
             else
             {
-                throw new Exception($"SetShortableProvider: {pyObject.Repr()} is not a valid argument");
+                using (Py.GIL())
+                {
+                    throw new Exception($"SetShortableProvider: {pyObject.Repr()} is not a valid argument");
+                }
             }
         }
 
