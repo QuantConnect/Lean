@@ -12,14 +12,11 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-AddReference("NodaTime")
-from NodaTime import DateTimeZone
 
 ### <summary>
 ### Minute resolution regression algorithm trading Coin and USDT binance futures long and short asserting the behavior
 ### </summary>
-
-class BasicTemplateCryptoFuturesAlgorithm(QCAlgorithm):
+class BasicTemplateCryptoFutureAlgorithm(QCAlgorithm):
     # <summary>
     # Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
     # </summary>
@@ -28,13 +25,13 @@ class BasicTemplateCryptoFuturesAlgorithm(QCAlgorithm):
         self.SetStartDate(2022, 12, 13)
         self.SetEndDate(2022, 12, 13)
 
-        self.SetTimeZone(DateTimeZone.Utc)
+        self.SetTimeZone(TimeZones.Utc)
 
         try:
             self.SetBrokerageModel(BrokerageName.BinanceFutures, AccountType.Cash)
-        except ValueError:
+        except:
             # expected, we don't allow cash account type
-            return None
+            pass
 
         self.SetBrokerageModel(BrokerageName.BinanceFutures, AccountType.Margin)
 
@@ -57,14 +54,15 @@ class BasicTemplateCryptoFuturesAlgorithm(QCAlgorithm):
     # OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
     # </summary>
     # <param name="data">Slice object keyed by symbol containing the stock data</param>
-    def OnData(self,slice):
-        for interestRate in slice:
+    def OnData(self, slice):
+        interestRates = slice.Get(MarginInterestRate);
+        for interestRate in interestRates:
             self.interestPerSymbol[interestRate.Key] += 1
             self.cachedInterestRate = self.Securities[interestRate.Key].Cache.GetData[MarginInterestRate]()
             if self.cachedInterestRate != interestRate.Value:
                 raise Exception(f"Unexpected cached margin interest rate for {interestRate.Key}!")
             
-        if self.fast > self.low:
+        if self.fast > self.slow:
             if self.Portfolio.Invested == False and self.Transactions.OrdersCount == 0:
                 self.ticket = self.Buy(self.btcUsd.Symbol, 50)
                 if self.ticket.Status != OrderStatus.Invalid:
@@ -84,7 +82,7 @@ class BasicTemplateCryptoFuturesAlgorithm(QCAlgorithm):
                     raise Exception(f"Unexpected holdings cost {self.btcUsdHoldings.HoldingsCost}")
                 
                 # margin used is based on the maintenance rate
-                if (abs(self.btcUsdHoldings.AbsoluteHoldingsCost * 0.05 - self.marginUsed) > 1) or (self.btcUsd.BuyingPowerModel.GetMaintenanceMargin(self.btcUsd) != self.marginUsed):
+                if (abs(self.btcUsdHoldings.AbsoluteHoldingsCost * 0.05 - self.marginUsed) > 1) or (BuyingPowerModelExtensions.GetMaintenanceMargin(self.btcUsd.BuyingPowerModel, self.btcUsd) != self.marginUsed):
                     raise Exception(f"Unexpected margin used {self.marginUsed}")
                 
                 self.Buy(self.adaUsdt.Symbol, 1000)
@@ -101,7 +99,7 @@ class BasicTemplateCryptoFuturesAlgorithm(QCAlgorithm):
                 if abs(self.adaUsdtHoldings.AbsoluteHoldingsCost - self.holdingsValueUsdt) > 1:
                     raise Exception(f"Unexpected holdings cost {self.adaUsdtHoldings.HoldingsCost}")
                 
-                if (abs(self.adaUsdtHoldings.AbsoluteHoldingsCost * 0.05 - self.marginUsed) > 1) or (self.adaUsdt.BuyingPowerModel.GetMaintenanceMargin(self.adaUsdt) != self.marginUsed):
+                if (abs(self.adaUsdtHoldings.AbsoluteHoldingsCost * 0.05 - self.marginUsed) > 1) or (BuyingPowerModelExtensions.GetMaintenanceMargin(self.adaUsdt.BuyingPowerModel, self.adaUsdt) != self.marginUsed):
                     raise Exception(f"Unexpected margin used {self.marginUsed}")
                 
                 # position just opened should be just spread here
@@ -114,30 +112,35 @@ class BasicTemplateCryptoFuturesAlgorithm(QCAlgorithm):
                     raise Exception(f"Unexpected TotalProfit {self.Portfolio.TotalProfit}")
                 
         else:
-            if self.Time.Hours > 10 and self.Transactions.OrdersCount == 3:
+            if self.Time.hour > 10 and self.Transactions.OrdersCount == 3:
                 self.Sell(self.btcUsd.Symbol, 3)
                 self.btcUsdHoldings = self.btcUsd.Holdings
                 if abs(self.btcUsdHoldings.AbsoluteHoldingsCost - 100 * 2) > 1:
-                    raise Exception(f"Unexpected holdings cost {self.btcUsdHoldings.HoldingsCost}");
+                    raise Exception(f"Unexpected holdings cost {self.btcUsdHoldings.HoldingsCost}")
 
+                self.Sell(self.adaUsdt.Symbol, 3000)
+                adaUsdtHoldings = self.adaUsdt.Holdings
 
-                    Sell(_adaUsdt.Symbol, 3000);
+                # USDT/BUSD futures value is based on it's price
+                holdingsValueUsdt = self.adaUsdt.Price * self.adaUsdt.SymbolProperties.ContractMultiplier * 2000
 
-                    var adaUsdtHoldings = _adaUsdt.Holdings;
+                if abs(adaUsdtHoldings.AbsoluteHoldingsCost - holdingsValueUsdt) > 1:
+                    raise Exception(f"Unexpected holdings cost {adaUsdtHoldings.HoldingsCost}")
+
+                # position just opened should be just spread here
+                profit = self.Portfolio.TotalUnrealizedProfit
+                if (5 - abs(profit)) < 0:
+                    raise Exception(f"Unexpected TotalUnrealizedProfit {self.Portfolio.TotalUnrealizedProfit}")
+                # we barely did any difference on the previous trade
+                if (5 - abs(self.Portfolio.TotalProfit)) < 0:
+                    raise Exception(f"Unexpected TotalProfit {self.Portfolio.TotalProfit}")
+
                                             
     def OnEndOfAlgorithm(self):
-        # Get the margin requirements
-        buyingPowerModel = self.Securities[self.contractSymbol].BuyingPowerModel
-        name = type(buyingPowerModel).__name__
-        if name != 'FutureMarginModel':
-            raise Exception(f"Invalid buying power model. Found: {name}. Expected: FutureMarginModel")
+        if self.interestPerSymbol[self.adaUsdt.Symbol] != 1:
+                raise Exception(f"Unexpected interest rate count {self.interestPerSymbol[self.adaUsdt.Symbol]}")
+        if self.interestPerSymbol[self.btcUsd.Symbol] != 3:
+                raise Exception(f"Unexpected interest rate count {self.interestPerSymbol[self.btcUsd.Symbol]}")
 
-        initialOvernight = buyingPowerModel.InitialOvernightMarginRequirement
-        maintenanceOvernight = buyingPowerModel.MaintenanceOvernightMarginRequirement
-        initialIntraday = buyingPowerModel.InitialIntradayMarginRequirement
-        maintenanceIntraday = buyingPowerModel.MaintenanceIntradayMarginRequirement
-
-    def OnSecuritiesChanged(self, changes):
-        for addedSecurity in changes.AddedSecurities:
-            if addedSecurity.Symbol.SecurityType == SecurityType.Future and not addedSecurity.Symbol.IsCanonical() and not addedSecurity.HasData:
-                raise Exception(f"Future contracts did not work up as expected: {addedSecurity.Symbol}")
+    def OnOrderEvent(self, orderEvent):
+        self.Debug("{0} {1}".format(self.Time, orderEvent))
