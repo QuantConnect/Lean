@@ -44,7 +44,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2022, 12, 13);
             SetEndDate(2022, 12, 13);
 
-            SetTimeZone(NodaTime.DateTimeZone.Utc);
+            SetTimeZone(TimeZones.Utc);
 
             try
             {
@@ -191,7 +191,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp };
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
