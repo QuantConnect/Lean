@@ -56,14 +56,18 @@ class NumeraiPortfolioSignalExportDemonstrationAlgorithm(QCAlgorithm):
 
         self.numeraiFilename = "" # Replace this values with your submission filename (Optional)
         self.SignalExport.AddSignalExportProviders(NumeraiSignalExport(self.numeraiPublicId, self.numeraiSecretId, self.numeraiModelId, self.numeraiFilename))
+        
+        self.first_call = True
+        
+        self.SetWarmUp(100)
 
     def OnData(self, data):
         ''' Reduce the quantity of holdings for one security and increase the holdings to the another
         one when the EMA's indicators crosses between themselves, then send a signal to Numerai API '''
 
-        # Wait for our indicators to be ready
-        if not self.fast.IsReady or not self.slow.IsReady:
-            return
+        if self.first_call:
+            self.SetHoldings("SPY", 0.1)
+            self.first_call = False
 
         fast = self.fast.Current.Value
         slow = self.slow.Current.Value

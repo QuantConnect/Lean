@@ -56,6 +56,7 @@ namespace QuantConnect.Algorithm.CSharp
         private bool _emaFastIsNotSet;
         private ExponentialMovingAverage _fast;
         private ExponentialMovingAverage _slow;
+        private bool _firstCall = true;
 
         private List<string> _symbols = new() // Numerai accepts minimum 10 signals
         {
@@ -97,6 +98,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             // Set Numerai signal export provider
             SignalExport.AddSignalExportProviders(new NumeraiSignalExport(_numeraiPublicId, _numeraiSecretId, _numeraiModelId, _numeraiFilename));
+
+            SetWarmUp(100);
         }
 
         /// <summary>
@@ -108,7 +111,11 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnData(Slice slice)
         {
             // Wait for our indicators to be ready
-            if (!_fast.IsReady || !_slow.IsReady) return;
+            if (_firstCall)
+            {
+                SetHoldings("SPY", 0.1);
+                _firstCall = false;
+            }
 
             // Set the value of flag _emaFastWasAbove, to know when the ema indicators crosses between themselves.
             // Additionally, set an initial holding quantity for each symbol. This is done because Numerai only
@@ -158,7 +165,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 11743;
+        public long DataPoints => 12356;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -170,30 +177,30 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "18"},
+            {"Total Trades", "8"},
             {"Average Win", "0%"},
             {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "27.789%"},
-            {"Drawdown", "0.500%"},
+            {"Compounding Annual Return", "8.645%"},
+            {"Drawdown", "0.200%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "0.314%"},
-            {"Sharpe Ratio", "5.437"},
-            {"Probabilistic Sharpe Ratio", "65.765%"},
+            {"Net Profit", "0.106%"},
+            {"Sharpe Ratio", "4.949"},
+            {"Probabilistic Sharpe Ratio", "66.652%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.177"},
-            {"Beta", "0.233"},
-            {"Annual Standard Deviation", "0.052"},
-            {"Annual Variance", "0.003"},
-            {"Information Ratio", "-9.941"},
-            {"Tracking Error", "0.171"},
-            {"Treynor Ratio", "1.222"},
-            {"Total Fees", "$18.00"},
-            {"Estimated Strategy Capacity", "$5700000.00"},
-            {"Lowest Capacity Asset", "AIG R735QTJ8XC9X"},
-            {"Portfolio Turnover", "4.36%"},
-            {"OrderListHash", "4ec4edd00725784dcbfd212e927b210f"}
+            {"Alpha", "-0.087"},
+            {"Beta", "0.098"},
+            {"Annual Standard Deviation", "0.022"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "-9.342"},
+            {"Tracking Error", "0.201"},
+            {"Treynor Ratio", "1.102"},
+            {"Total Fees", "$8.00"},
+            {"Estimated Strategy Capacity", "$27000000.00"},
+            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
+            {"Portfolio Turnover", "2.19%"},
+            {"OrderListHash", "bf226822905e65088a80efa901ae0d68"}
         };
     }
 }
