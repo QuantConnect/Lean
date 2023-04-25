@@ -2372,6 +2372,256 @@ tradeBar = TradeBar
             }
         }
 
+        [TestCaseSource(nameof(GetHistoryWithDataNormalizationModeTestCases))]
+        public void HistoryRequestWithDataNormalizationMode(Language language, Symbol symbol, Resolution resolution,
+            DateTime start, DateTime end, int expectedHistoryCount)
+        {
+            var algorithm = GetAlgorithm(end);
+            algorithm.AddSecurity(symbol, fillForward: true);
+
+            var dataNormalizationModes = symbol.SecurityType == SecurityType.Equity
+                ? new[]
+                {
+                    DataNormalizationMode.Raw,
+                    DataNormalizationMode.Adjusted,
+                    DataNormalizationMode.SplitAdjusted
+                }
+                : new[]
+                {
+                    DataNormalizationMode.Raw,
+                    DataNormalizationMode.BackwardsRatio,
+                    DataNormalizationMode.BackwardsPanamaCanal,
+                    DataNormalizationMode.ForwardPanamaCanal
+                };
+            var timeSpan = end - start;
+            // Request periods is used to get the start and end dates only, the actual number of periods is expectedHistoryCount
+            var periods = expectedHistoryCount;
+
+            if (language == Language.CSharp)
+            {
+                // No symbol, time span
+                var historyResults = dataNormalizationModes
+                     .Select(normalizationMode => algorithm.History(timeSpan, resolution, dataNormalizationMode: normalizationMode).ToList())
+                     .ToList();
+                AssertHistoryWithDifferentNormalizationModesResults(historyResults, symbol, expectedHistoryCount, resolution);
+
+                // No symbol, periods
+                historyResults = dataNormalizationModes
+                     .Select(normalizationMode => algorithm.History(periods, resolution, dataNormalizationMode: normalizationMode).ToList())
+                     .ToList();
+                AssertHistoryWithDifferentNormalizationModesResults(historyResults, symbol, expectedHistoryCount, resolution);
+
+                // No symbol, date range
+                // TODO: to be implemented
+
+                // Single symbols, time span
+                var tradeBarHistoryResults = dataNormalizationModes
+                     .Select(normalizationMode => algorithm.History(symbol, timeSpan, resolution, dataNormalizationMode: normalizationMode).ToList())
+                     .ToList();
+                AssertHistoryWithDifferentNormalizationModesResults(tradeBarHistoryResults, symbol, expectedHistoryCount, resolution);
+
+                // Single symbols, periods
+                tradeBarHistoryResults = dataNormalizationModes
+                     .Select(normalizationMode => algorithm.History(symbol, periods, resolution, dataNormalizationMode: normalizationMode).ToList())
+                     .ToList();
+                AssertHistoryWithDifferentNormalizationModesResults(tradeBarHistoryResults, symbol, expectedHistoryCount, resolution);
+
+                // Single symbols, date range
+                tradeBarHistoryResults = dataNormalizationModes
+                     .Select(normalizationMode => algorithm.History(symbol, start, end, resolution,
+                        dataNormalizationMode: normalizationMode).ToList())
+                     .ToList();
+                AssertHistoryWithDifferentNormalizationModesResults(tradeBarHistoryResults, symbol, expectedHistoryCount, resolution);
+
+                // Symbol array, time span
+                historyResults = dataNormalizationModes
+                     .Select(normalizationMode => algorithm.History(new[] { symbol }, timeSpan, resolution,
+                        dataNormalizationMode: normalizationMode).ToList())
+                     .ToList();
+                AssertHistoryWithDifferentNormalizationModesResults(historyResults, symbol, expectedHistoryCount, resolution);
+
+                // Symbol array, periods
+                historyResults = dataNormalizationModes
+                     .Select(normalizationMode => algorithm.History(new[] { symbol }, periods, resolution,
+                        dataNormalizationMode: normalizationMode).ToList())
+                     .ToList();
+                AssertHistoryWithDifferentNormalizationModesResults(historyResults, symbol, expectedHistoryCount, resolution);
+
+                // Symbol array, date range
+                historyResults = dataNormalizationModes
+                     .Select(normalizationMode => algorithm.History(new[] { symbol }, start, end, resolution,
+                        dataNormalizationMode: normalizationMode).ToList())
+                     .ToList();
+                AssertHistoryWithDifferentNormalizationModesResults(historyResults, symbol, expectedHistoryCount, resolution);
+
+                // Generic, no symbol, time span
+                var typedHistoryResults = dataNormalizationModes
+                     .Select(normalizationMode => algorithm.History<TradeBar>(timeSpan, resolution,
+                        dataNormalizationMode: normalizationMode).ToList())
+                     .ToList();
+                AssertHistoryWithDifferentNormalizationModesResults(typedHistoryResults, symbol, expectedHistoryCount, resolution);
+
+                // Generic, no symbol, periods
+                // TODO: to be implemented
+
+                // Generic, no symbol, date range
+                // TODO: to be implemented
+
+                // Generic, single symbol, time span
+                tradeBarHistoryResults = dataNormalizationModes
+                     .Select(normalizationMode => algorithm.History<TradeBar>(symbol, timeSpan, resolution,
+                        dataNormalizationMode: normalizationMode).ToList())
+                     .ToList();
+                AssertHistoryWithDifferentNormalizationModesResults(tradeBarHistoryResults, symbol, expectedHistoryCount, resolution);
+
+                // Generic, single symbol, periods
+                tradeBarHistoryResults = dataNormalizationModes
+                     .Select(normalizationMode => algorithm.History<TradeBar>(symbol, periods, resolution,
+                        dataNormalizationMode: normalizationMode).ToList())
+                     .ToList();
+                AssertHistoryWithDifferentNormalizationModesResults(tradeBarHistoryResults, symbol, expectedHistoryCount, resolution);
+
+                // Generic, single symbol, date range
+                tradeBarHistoryResults = dataNormalizationModes
+                     .Select(normalizationMode => algorithm.History<TradeBar>(symbol, start, end, resolution,
+                        dataNormalizationMode: normalizationMode).ToList())
+                     .ToList();
+                AssertHistoryWithDifferentNormalizationModesResults(tradeBarHistoryResults, symbol, expectedHistoryCount, resolution);
+
+                // Generic, symbol array, time span
+                typedHistoryResults = dataNormalizationModes
+                     .Select(normalizationMode =>
+                        algorithm.History<TradeBar>(new[] { symbol }, timeSpan, resolution, dataNormalizationMode: normalizationMode).ToList())
+                     .ToList();
+                AssertHistoryWithDifferentNormalizationModesResults(typedHistoryResults, symbol, expectedHistoryCount, resolution);
+
+                // Generic, symbol array, periods
+                typedHistoryResults = dataNormalizationModes
+                     .Select(normalizationMode =>
+                        algorithm.History<TradeBar>(new[] { symbol }, periods, resolution, dataNormalizationMode: normalizationMode).ToList())
+                     .ToList();
+                AssertHistoryWithDifferentNormalizationModesResults(typedHistoryResults, symbol, expectedHistoryCount, resolution);
+
+                // Generic, symbol array, date range
+                typedHistoryResults = dataNormalizationModes
+                     .Select(normalizationMode =>
+                        algorithm.History<TradeBar>(new[] { symbol }, start, end, resolution, dataNormalizationMode: normalizationMode).ToList())
+                     .ToList();
+                AssertHistoryWithDifferentNormalizationModesResults(typedHistoryResults, symbol, expectedHistoryCount, resolution);
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    var testModule = PyModule.FromString("testModule", @"
+from AlgorithmImports import *
+tradeBar = TradeBar
+                    ");
+
+                    algorithm.SetPandasConverter();
+                    using var pySymbol = symbol.ToPython();
+                    using var pySymbols = new PyList(new[] { pySymbol });
+                    using var pyTradeBar = testModule.GetAttr("tradeBar");
+
+                    // Single symbols, time span
+                    var historyResults = dataNormalizationModes
+                        .Select(normalizationMode => algorithm.History(pySymbol, timeSpan, resolution, dataNormalizationMode: normalizationMode))
+                        .ToList();
+                    AssertHistoryWithDifferentNormalizationModesResults(historyResults, symbol, expectedHistoryCount);
+
+                    // Single symbols, periods
+                    historyResults = dataNormalizationModes
+                        .Select(normalizationMode => algorithm.History(pySymbol, periods, resolution, dataNormalizationMode: normalizationMode))
+                        .ToList();
+                    AssertHistoryWithDifferentNormalizationModesResults(historyResults, symbol, expectedHistoryCount);
+
+                    // Single symbols, date range
+                    historyResults = dataNormalizationModes
+                        .Select(normalizationMode => algorithm.History(pySymbol, start, end, resolution, dataNormalizationMode: normalizationMode))
+                        .ToList();
+                    AssertHistoryWithDifferentNormalizationModesResults(historyResults, symbol, expectedHistoryCount);
+
+                    // Symbol array, time span
+                    historyResults = dataNormalizationModes
+                        .Select(normalizationMode => algorithm.History(pySymbols, timeSpan, resolution, dataNormalizationMode: normalizationMode))
+                        .ToList();
+                    AssertHistoryWithDifferentNormalizationModesResults(historyResults, symbol, expectedHistoryCount);
+
+                    // Symbol array, periods
+                    historyResults = dataNormalizationModes
+                        .Select(normalizationMode => algorithm.History(pySymbols, periods, resolution, dataNormalizationMode: normalizationMode))
+                        .ToList();
+                    AssertHistoryWithDifferentNormalizationModesResults(historyResults, symbol, expectedHistoryCount);
+
+                    // Symbol array, date range
+                    historyResults = dataNormalizationModes
+                        .Select(normalizationMode => algorithm.History(pySymbols, start, end, resolution, dataNormalizationMode: normalizationMode))
+                        .ToList();
+                    AssertHistoryWithDifferentNormalizationModesResults(historyResults, symbol, expectedHistoryCount);
+
+                    // Generic, single symbol, time span
+                    historyResults = dataNormalizationModes
+                        .Select(normalizationMode => algorithm.History(pyTradeBar, pySymbol, timeSpan, resolution,
+                            dataNormalizationMode: normalizationMode))
+                        .ToList();
+                    AssertHistoryWithDifferentNormalizationModesResults(historyResults, symbol, expectedHistoryCount);
+                    // Same as previous but using a Symbol instead of pySymbol
+                    historyResults = dataNormalizationModes
+                        .Select(normalizationMode => algorithm.History(pyTradeBar, symbol, timeSpan, resolution,
+                            dataNormalizationMode: normalizationMode))
+                        .ToList();
+                    AssertHistoryWithDifferentNormalizationModesResults(historyResults, symbol, expectedHistoryCount);
+
+                    // Generic, single symbol, periods
+                    historyResults = dataNormalizationModes
+                        .Select(normalizationMode => algorithm.History(pyTradeBar, pySymbol, periods, resolution,
+                            dataNormalizationMode: normalizationMode))
+                        .ToList();
+                    AssertHistoryWithDifferentNormalizationModesResults(historyResults, symbol, expectedHistoryCount);
+                    // Same as previous but using a Symbol instead of pySymbol
+                    historyResults = dataNormalizationModes
+                        .Select(normalizationMode => algorithm.History(pyTradeBar, symbol, periods, resolution,
+                            dataNormalizationMode: normalizationMode))
+                        .ToList();
+                    AssertHistoryWithDifferentNormalizationModesResults(historyResults, symbol, expectedHistoryCount);
+
+                    // Generic, single symbol, date range
+                    historyResults = dataNormalizationModes
+                        .Select(normalizationMode => algorithm.History(pyTradeBar, pySymbol, start, end, resolution,
+                            dataNormalizationMode: normalizationMode))
+                        .ToList();
+                    AssertHistoryWithDifferentNormalizationModesResults(historyResults, symbol, expectedHistoryCount);
+                    // Same as previous but using a Symbol instead of pySymbol
+                    historyResults = dataNormalizationModes
+                        .Select(normalizationMode => algorithm.History(pyTradeBar, symbol, start, end, resolution,
+                            dataNormalizationMode: normalizationMode))
+                        .ToList();
+                    AssertHistoryWithDifferentNormalizationModesResults(historyResults, symbol, expectedHistoryCount);
+
+                    // Generic, symbol array, time span
+                    historyResults = dataNormalizationModes
+                        .Select(normalizationMode => algorithm.History(pyTradeBar, pySymbols, timeSpan, resolution,
+                            dataNormalizationMode: normalizationMode))
+                        .ToList();
+                    AssertHistoryWithDifferentNormalizationModesResults(historyResults, symbol, expectedHistoryCount);
+
+                    // Generic, symbol array, periods
+                    historyResults = dataNormalizationModes
+                        .Select(normalizationMode => algorithm.History(pyTradeBar, pySymbols, periods, resolution,
+                            dataNormalizationMode: normalizationMode))
+                        .ToList();
+                    AssertHistoryWithDifferentNormalizationModesResults(historyResults, symbol, expectedHistoryCount);
+
+                    // Generic, symbol array, date range
+                    historyResults = dataNormalizationModes
+                        .Select(normalizationMode => algorithm.History(pyTradeBar, pySymbols, start, end, resolution,
+                            dataNormalizationMode: normalizationMode))
+                        .ToList();
+                    AssertHistoryWithDifferentNormalizationModesResults(historyResults, symbol, expectedHistoryCount);
+                }
+            }
+        }
+
         // USA Equity market hours: 4am-9:30am (pre-market), 9:30am-4pm (regular market), 4pm-8pm (post-market)
         // 6.5h (regular market duration) (rounded to 7)
         [TestCase(Resolution.Hour, false, false, 7)]
@@ -2420,6 +2670,27 @@ tradeBar = TradeBar
             Assert.AreEqual(marketOpen, requestStart);
         }
 
+        private static TestCaseData[] GetHistoryWithDataNormalizationModeTestCases()
+        {
+            var equityStart = new DateTime(2014, 06, 05); // There is an AAPL split on 2014/06/06
+            var futureStart = new DateTime(2013, 12, 18); // There is an ES contract mapping on 2013/12/19
+
+            return new[] { Language.CSharp, Language.Python }.SelectMany(language =>
+            {
+                return new[]
+                {
+                    // Test cases for equity
+                    new TestCaseData(language, Symbols.AAPL, Resolution.Daily, equityStart, equityStart.AddDays(100), 70),
+                    new TestCaseData(language, Symbols.AAPL, Resolution.Hour, equityStart, equityStart.AddDays(20), 98),
+                    new TestCaseData(language, Symbols.AAPL, Resolution.Minute, equityStart, equityStart.AddDays(1), 390),
+
+                    // Test cases for futures
+                    new TestCaseData(language, Symbols.ES_Future_Chain, Resolution.Daily, futureStart, futureStart.AddDays(100), 70),
+                    new TestCaseData(language, Symbols.ES_Future_Chain, Resolution.Hour, futureStart, futureStart.AddDays(20), 90),
+                    new TestCaseData(language, Symbols.ES_Future_Chain, Resolution.Minute, futureStart, futureStart.AddDays(2), 900),
+                };
+            }).ToArray();
+        }
 
         private QCAlgorithm GetAlgorithm(DateTime dateTime)
         {
@@ -2525,7 +2796,9 @@ tradeBar = TradeBar
         private static void CheckThatHistoryResultsHaveEqualBarCount(List<PyObject> historyResults, int expectedHistoryCount)
         {
             Assert.Greater(expectedHistoryCount, 0);
-            Assert.IsTrue(historyResults.All(x => x.GetAttr("shape")[0].As<int>() == expectedHistoryCount));
+            var historyCounts = historyResults.Select(x => x.GetAttr("shape")[0].As<int>()).ToList();
+            Assert.IsTrue(historyCounts.All(count => count == expectedHistoryCount),
+                $"Expected all history results to have {expectedHistoryCount} slices/bars, but counts where {string.Join(", ", historyCounts)}");
         }
 
         /// <summary>
@@ -3006,6 +3279,61 @@ tradeBar = TradeBar
                 var symbols = GetSymbolsFromHistoryDataFrameIndex(index);
                 Assert.IsTrue(symbols.All(x => x == expectedSymbol));
             }
+        }
+
+        #endregion
+
+        #region History with different data normalization modes assertions
+
+        /// <summary>
+        /// Asserts that for a list of history results, one for a different data normalization mode, prices are different for each time.
+        /// </summary>
+        private static void AssertHistoryWithDifferentNormalizationModesResults(List<List<TradeBar>> historyResults, Symbol expectedSymbol,
+            int expectedHistoryCount, Resolution resolution)
+        {
+            CheckThatHistoryResultsHaveEqualBarCount(historyResults, expectedHistoryCount);
+            CheckThatHistoryResultsHaveDifferentPrices(historyResults.Select(history => history.Cast<BaseData>().ToList()).ToList(),
+                "History results prices should have been different for each data normalization mode at each time");
+
+            // Assert resolution and symbol
+            foreach (var history in historyResults)
+            {
+                AssertHistoryResultResolution(history, resolution);
+                foreach (var bar in history)
+                {
+                    Assert.AreEqual(expectedSymbol, bar.Symbol, $"All bars symbol must have been {expectedSymbol} but found {bar.Symbol}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Asserts that for a list of history results, one for a different data normalization mode, prices are different for each time.
+        /// </summary>
+        private static void AssertHistoryWithDifferentNormalizationModesResults(List<List<Slice>> historyResults, Symbol expectedSymbol,
+            int expectedHistoryCount, Resolution resolution)
+        {
+            AssertHistoryWithDifferentNormalizationModesResults(historyResults.Select(x => x.Select(y => y.Bars.Values.First()).ToList()).ToList(),
+                expectedSymbol, expectedHistoryCount, resolution);
+        }
+
+        /// <summary>
+        /// Asserts that for a list of history results, one for a different data normalization mode, prices are different for each time.
+        /// </summary>
+        private static void AssertHistoryWithDifferentNormalizationModesResults(List<List<DataDictionary<TradeBar>>> historyResults,
+            Symbol expectedSymbol, int expectedHistoryCount, Resolution resolution)
+        {
+            AssertHistoryWithDifferentNormalizationModesResults(historyResults.Select(x => x.Select(y => y[expectedSymbol]).ToList()).ToList(),
+                expectedSymbol, expectedHistoryCount, resolution);
+        }
+
+        /// <summary>
+        /// Asserts that for a list of history results, one for a different data normalization mode, prices are different for each time.
+        /// </summary>
+        private static void AssertHistoryWithDifferentNormalizationModesResults(List<PyObject> historyResults, Symbol expectedSymbol,
+            int expectedHistoryCount)
+        {
+            // These are the same checks done for mapping modes, even regardless of the security type
+            AssertFuturesHistoryWithDifferentMappingModesResults(historyResults, expectedSymbol, expectedHistoryCount);
         }
 
         #endregion

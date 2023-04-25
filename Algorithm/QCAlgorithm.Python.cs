@@ -847,13 +847,14 @@ namespace QuantConnect.Algorithm
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
         /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <returns>A python dictionary with pandas DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public PyObject History(PyObject tickers, int periods, Resolution? resolution = null, bool? fillForward = null,
-            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null)
+            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
-            return GetDataFrame(History(symbols, periods, resolution, fillForward, extendedMarketHours, dataMappingMode));
+            return GetDataFrame(History(symbols, periods, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode));
         }
 
         /// <summary>
@@ -866,13 +867,14 @@ namespace QuantConnect.Algorithm
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
         /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <returns>A python dictionary with pandas DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public PyObject History(PyObject tickers, TimeSpan span, Resolution? resolution = null, bool? fillForward = null,
-            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null)
+            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
-            return GetDataFrame(History(symbols, span, resolution, fillForward, extendedMarketHours, dataMappingMode));
+            return GetDataFrame(History(symbols, span, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode));
         }
 
         /// <summary>
@@ -953,17 +955,18 @@ namespace QuantConnect.Algorithm
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
         /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public PyObject History(PyObject type, PyObject tickers, int periods, Resolution? resolution = null, bool? fillForward = null,
-            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null)
+            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
             CheckPeriodBasedHistoryRequestResolution(symbols, resolution);
 
             var requestedType = type.CreateType();
             var requests = CreateBarCountHistoryRequests(symbols, requestedType, periods, resolution, fillForward, extendedMarketHours,
-                dataMappingMode);
+                dataMappingMode, dataNormalizationMode);
 
             return GetDataFrame(History(requests.Where(x => x != null)), requestedType);
         }
@@ -979,12 +982,13 @@ namespace QuantConnect.Algorithm
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
         /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public PyObject History(PyObject type, PyObject tickers, TimeSpan span, Resolution? resolution = null, bool? fillForward = null,
-            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null)
+            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null)
         {
-            return History(type, tickers, Time - span, Time, resolution, fillForward, extendedMarketHours, dataMappingMode);
+            return History(type, tickers, Time - span, Time, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode);
         }
 
         /// <summary>
@@ -998,14 +1002,15 @@ namespace QuantConnect.Algorithm
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
         /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public PyObject History(PyObject type, Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null, bool? fillForward = null,
-            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null)
+            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null)
         {
             var requestedType = type.CreateType();
             var requests = CreateDateRangeHistoryRequests(new [] {  symbol }, requestedType, start, end, resolution, fillForward,
-                extendedMarketHours, dataMappingMode);
+                extendedMarketHours, dataMappingMode, dataNormalizationMode);
             if (requests.IsNullOrEmpty())
             {
                 throw new ArgumentException($"No history data could be fetched. " +
@@ -1027,10 +1032,11 @@ namespace QuantConnect.Algorithm
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
         /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public PyObject History(PyObject type, Symbol symbol, int periods, Resolution? resolution = null, bool? fillForward = null,
-            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null)
+            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null)
         {
             resolution = GetResolution(symbol, resolution);
             CheckPeriodBasedHistoryRequestResolution(new[] { symbol }, resolution);
@@ -1038,7 +1044,7 @@ namespace QuantConnect.Algorithm
             var marketHours = GetMarketHours(symbol);
             var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, marketHours.ExchangeHours,
                 marketHours.DataTimeZone, extendedMarketHours);
-            return History(type, symbol, start, Time, resolution, fillForward, extendedMarketHours, dataMappingMode);
+            return History(type, symbol, start, Time, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode);
         }
 
         /// <summary>
@@ -1052,12 +1058,13 @@ namespace QuantConnect.Algorithm
         /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
         /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
         /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         [DocumentationAttribute(HistoricalData)]
         public PyObject History(PyObject type, Symbol symbol, TimeSpan span, Resolution? resolution = null, bool? fillForward = null,
-            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null)
+            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null)
         {
-            return History(type, symbol, Time - span, Time, resolution, fillForward, extendedMarketHours, dataMappingMode);
+            return History(type, symbol, Time - span, Time, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode);
         }
 
         /// <summary>
