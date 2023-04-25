@@ -11,24 +11,44 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
 */
 
+using Python.Runtime;
+using QuantConnect.Interfaces;
+using QuantConnect.Python;
 using System;
-using System.Collections.Generic;
 
-namespace QuantConnect.Interfaces
+namespace QuantConnect.Data.Shortable
 {
     /// <summary>
-    /// Defines a short list/easy-to-borrow provider
+    /// Python wrapper for custom shortable providers
     /// </summary>
-    public interface IShortableProvider
+    public class ShortableProviderPythonWrapper : IShortableProvider
     {
+        private readonly dynamic _shortableProvider;
+
         /// <summary>
-        /// Gets the quantity shortable for a <see cref="Symbol"/>.
+        /// Creates a new instance
+        /// </summary>
+        /// <param name="shortableProvider">The python custom shortable provider</param>
+        public ShortableProviderPythonWrapper(PyObject shortableProvider)
+        {
+            _shortableProvider = shortableProvider.ValidateImplementationOf<IShortableProvider>();
+        }
+
+        /// <summary>
+        /// Gets the quantity shortable for a <see cref="Symbol"/>, from python custom shortable provider
         /// </summary>
         /// <param name="symbol">Symbol to check shortable quantity</param>
         /// <param name="localTime">Local time of the algorithm</param>
         /// <returns>The quantity shortable for the given Symbol as a positive number. Null if the Symbol is shortable without restrictions.</returns>
-        long? ShortableQuantity(Symbol symbol, DateTime localTime);
+        public long? ShortableQuantity(Symbol symbol, DateTime localTime)
+        {
+            using (Py.GIL())
+            {
+                return (_shortableProvider.ShortableQuantity(symbol, localTime) as PyObject).GetAndDispose<long?>();
+            }
+        }
     }
 }

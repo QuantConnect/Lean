@@ -2851,7 +2851,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(TradingAndOrders)]
         public bool Shortable(Symbol symbol, decimal shortQuantity)
         {
-            var shortableQuantity = BrokerageModel.GetShortableProvider().ShortableQuantity(symbol, Time);
+            var shortableQuantity = Securities[symbol].ShortableProvider.ShortableQuantity(symbol, Time);
             if (shortableQuantity == null)
             {
                 return true;
@@ -2880,18 +2880,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(TradingAndOrders)]
         public long ShortableQuantity(Symbol symbol)
         {
-            var shortableSymbols = AllShortableSymbols();
-            return shortableSymbols.ContainsKey(symbol) ? shortableSymbols[symbol] : 0;
-        }
-
-        /// <summary>
-        /// Gets all Symbols that are shortable, as well as the quantity shortable for them
-        /// </summary>
-        /// <returns>All shortable Symbols, null if all Symbols are shortable</returns>
-        [DocumentationAttribute(TradingAndOrders)]
-        public Dictionary<Symbol, long> AllShortableSymbols()
-        {
-            return BrokerageModel.GetShortableProvider().AllShortableSymbols(Time);
+            return Securities[symbol].ShortableProvider.ShortableQuantity(symbol, Time) ?? 0;
         }
 
         /// <summary>

@@ -17,10 +17,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Brokerages;
+using QuantConnect.Securities;
 using QuantConnect.Data;
 using QuantConnect.Data.Shortable;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using System.IO;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -82,11 +84,15 @@ namespace QuantConnect.Algorithm.CSharp
             { _20140329, new Symbol[0] }
         };
 
+        private Security _security;
+
         public override void Initialize()
         {
             SetStartDate(2014, 3, 25);
             SetEndDate(2014, 3, 29);
             SetCash(10000000);
+            _security = AddEquity(_spy);
+            _security.SetShortableProvider(new RegressionTestShortableProvider());
 
             AddUniverse(CoarseSelection);
             UniverseSettings.Resolution = Resolution.Daily;
@@ -120,7 +126,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         private IEnumerable<Symbol> CoarseSelection(IEnumerable<CoarseFundamental> coarse)
         {
-            var shortableSymbols = AllShortableSymbols();
+            var shortableSymbols = (_security.ShortableProvider as dynamic).AllShortableSymbols(Time);
             var selectedSymbols = coarse
                 .Select(x => x.Symbol)
                 .Where(s => shortableSymbols.ContainsKey(s) && shortableSymbols[s] >= 500)
@@ -174,6 +180,47 @@ namespace QuantConnect.Algorithm.CSharp
             public RegressionTestShortableProvider() : base(SecurityType.Equity, "testbrokerage", Market.USA)
             {
             }
+
+            /// <summary>
+            /// Gets a list of all shortable Symbols, including the quantity shortable as a Dictionary.
+            /// </summary>
+            /// <param name="localTime">The algorithm's local time</param>
+            /// <returns>Symbol/quantity shortable as a Dictionary. Returns null if no entry data exists for this date or brokerage</returns>
+            public Dictionary<Symbol, long> AllShortableSymbols(DateTime localTime)
+            {
+                var allSymbols = new Dictionary<Symbol, long>();
+
+                // Check backwards up to one week to see if we can source a previous file.
+                // If not, then we return a list of all Symbols with quantity set to zero.
+                var i = 0;
+                while (i <= 7)
+                {
+                    var shortableListFile = Path.Combine(ShortableDataDirectory.FullName, "dates", $"{localTime.AddDays(-i):yyyyMMdd}.csv");
+
+                    foreach (var line in DataProvider.ReadLines(shortableListFile))
+                    {
+                        var csv = line.Split(',');
+                        var ticker = csv[0];
+
+                        var symbol = new Symbol(
+                                SecurityIdentifier.GenerateEquity(ticker, QuantConnect.Market.USA,
+                                    mappingResolveDate: localTime), ticker);
+                        var quantity = Parse.Long(csv[1]);
+
+                        allSymbols[symbol] = quantity;
+                    }
+
+                    if (allSymbols.Count > 0)
+                    {
+                        return allSymbols;
+                    }
+
+                    i++;
+                }
+
+                // Return our empty dictionary if we did not find a file to extract
+                return allSymbols;
+            }
         }
 
         /// <summary>
@@ -184,12 +231,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+        public Language[] Languages { get; } = { Language.CSharp};
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 35410;
+        public long DataPoints => 37754;
 
         /// <summary>
         /// Data Points count of the algorithm history

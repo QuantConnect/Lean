@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
+using QuantConnect.Securities;
 using QuantConnect.Data.Shortable;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
@@ -29,8 +30,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class ShortableProviderOrdersRejectedRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _spy;
-        private Symbol _aig;
+        private Security _spy;
+        private Security _aig;
         private readonly List<OrderTicket> _ordersAllowed = new List<OrderTicket>();
         private readonly List<OrderTicket> _ordersDenied = new List<OrderTicket>();
         private bool _initialize;
@@ -44,19 +45,20 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 11);
             SetCash(10000000);
 
-            _spy = AddEquity("SPY", Resolution.Minute).Symbol;
-            _aig = AddEquity("AIG", Resolution.Minute).Symbol;
+            _spy = AddEquity("SPY", Resolution.Minute);
+            _aig = AddEquity("AIG", Resolution.Minute);
 
-            SetBrokerageModel(new RegressionTestShortableBrokerageModel());
+            _spy.SetShortableProvider(new RegressionTestShortableProvider());
+            _aig.SetShortableProvider(new RegressionTestShortableProvider());
         }
 
         public override void OnData(Slice data)
         {
             if (!_initialize)
             {
-                HandleOrder(LimitOrder(_spy, -1001, 10000m)); // Should be canceled, exceeds the max shortable quantity
-                HandleOrder(LimitOrder(_spy, -1000, 10000m)); // Allowed, orders at or below 1000 should be accepted
-                HandleOrder(LimitOrder(_spy, -10, 0.01m)); // Should be canceled, the total quantity we would be short would exceed the max shortable quantity.
+                HandleOrder(LimitOrder(_spy.Symbol, -1001, 10000m)); // Should be canceled, exceeds the max shortable quantity
+                HandleOrder(LimitOrder(_spy.Symbol, -1000, 10000m)); // Allowed, orders at or below 1000 should be accepted
+                HandleOrder(LimitOrder(_spy.Symbol, -10, 0.01m)); // Should be canceled, the total quantity we would be short would exceed the max shortable quantity.
                 _initialize = true;
                 return;
             }
@@ -100,14 +102,14 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (!_invalidatedNewOrderWithPortfolioHoldings)
             {
-                HandleOrder(MarketOrder(_spy, -1000)); // Should succeed, no holdings and no open orders to stop this
-                var spyShares = Portfolio[_spy].Quantity;
+                HandleOrder(MarketOrder(_spy.Symbol, -1000)); // Should succeed, no holdings and no open orders to stop this
+                var spyShares = Portfolio[_spy.Symbol].Quantity;
                 if (spyShares != -1000m)
                 {
                     throw new Exception($"Expected -1000 shares in portfolio, found: {spyShares}");
                 }
 
-                HandleOrder(LimitOrder(_spy, -1, 0.01m)); // Should fail, portfolio holdings are at the max shortable quantity.
+                HandleOrder(LimitOrder(_spy.Symbol, -1, 0.01m)); // Should fail, portfolio holdings are at the max shortable quantity.
                 if (_ordersDenied.Count != 1)
                 {
                     throw new Exception($"Expected limit order to fail due to existing holdings, but found {_ordersDenied.Count} failures");
@@ -116,7 +118,7 @@ namespace QuantConnect.Algorithm.CSharp
                 _ordersAllowed.Clear();
                 _ordersDenied.Clear();
 
-                HandleOrder(MarketOrder(_aig, -1001));
+                HandleOrder(MarketOrder(_aig.Symbol, -1001));
                 if (_ordersAllowed.Count != 1)
                 {
                     throw new Exception($"Expected market order of -1001 BAC to not fail");
@@ -152,14 +154,6 @@ namespace QuantConnect.Algorithm.CSharp
         {
             public RegressionTestShortableProvider() : base(SecurityType.Equity, "testbrokerage", Market.USA)
             {
-            }
-        }
-
-        public class RegressionTestShortableBrokerageModel : DefaultBrokerageModel
-        {
-            public RegressionTestShortableBrokerageModel() : base()
-            {
-                ShortableProvider = new RegressionTestShortableProvider();
             }
         }
 
