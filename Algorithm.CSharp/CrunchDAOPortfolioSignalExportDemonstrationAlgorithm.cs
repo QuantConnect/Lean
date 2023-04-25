@@ -48,6 +48,7 @@ namespace QuantConnect.Algorithm.CSharp
         private ExponentialMovingAverage _slow;
         private bool _emaFastWasAbove;
         private bool _emaFastIsNotSet;
+        private bool _firstCall = true;
 
         /// <summary>
         /// Initialize the date and add one equity symbol, as CrunchDAO
@@ -69,6 +70,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             // Set CrunchDAO signal export provider
             SignalExport.AddSignalExportProviders(new CrunchDAOSignalExport(_crunchDAOApiKey, _crunchDAOModel, _crunchDAOSubmissionName, _crunchDAOComment));
+
+            SetWarmUp(100);
         }
 
         /// <summary>
@@ -80,7 +83,11 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnData(Slice slice)
         {
             // Wait for our indicators to be ready
-            if (!_fast.IsReady || !_slow.IsReady) return;
+            if (_firstCall)
+            {
+                SetHoldings("SPY", 0.1);
+                _firstCall = false;
+            }
 
             // Set the value of flag _emaFastWasAbove, to know when the ema indicators crosses between themselves
             if (_emaFastIsNotSet)
@@ -123,7 +130,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 3943;
+        public long DataPoints => 4152;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -135,30 +142,30 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "6"},
+            {"Total Trades", "8"},
             {"Average Win", "0%"},
             {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "9.215%"},
+            {"Compounding Annual Return", "8.645%"},
             {"Drawdown", "0.200%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "0.113%"},
-            {"Sharpe Ratio", "5.01"},
-            {"Probabilistic Sharpe Ratio", "66.849%"},
+            {"Net Profit", "0.106%"},
+            {"Sharpe Ratio", "4.949"},
+            {"Probabilistic Sharpe Ratio", "66.652%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.085"},
+            {"Alpha", "-0.087"},
             {"Beta", "0.098"},
             {"Annual Standard Deviation", "0.022"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-9.336"},
+            {"Information Ratio", "-9.342"},
             {"Tracking Error", "0.201"},
-            {"Treynor Ratio", "1.115"},
-            {"Total Fees", "$6.00"},
-            {"Estimated Strategy Capacity", "$28000000.00"},
+            {"Treynor Ratio", "1.102"},
+            {"Total Fees", "$8.00"},
+            {"Estimated Strategy Capacity", "$27000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "2.13%"},
-            {"OrderListHash", "1307d40ce1405e5454e0b565f333d6c3"}
+            {"Portfolio Turnover", "2.19%"},
+            {"OrderListHash", "bf226822905e65088a80efa901ae0d68"}
         };
     }
 }
