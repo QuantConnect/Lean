@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NodaTime;
+using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
@@ -54,6 +55,18 @@ namespace QuantConnect.Algorithm.Framework.Selection
             _algorithm = algorithm;
             _resultsLimit = resultsLimit;
             _chainContractsLookupLimit = chainContractsLookupLimit;
+        }
+
+        /// <summary>
+        ///     Creates a new instance of <see cref="OpenInterestFutureUniverseSelectionModel" />
+        /// </summary>
+        /// <param name="algorithm">Algorithm</param>
+        /// <param name="futureChainSymbolSelector">Python lambda function that selects symbols from the provided future chain</param>
+        /// <param name="chainContractsLookupLimit">Limit on how many contracts to query for open interest</param>
+        /// <param name="resultsLimit">Limit on how many contracts will be part of the universe</param>
+        public OpenInterestFutureUniverseSelectionModel(IAlgorithm algorithm, PyObject futureChainSymbolSelector, int? chainContractsLookupLimit = 6,
+            int? resultsLimit = 1) : this(algorithm, ConvertFutureChainSymbolSelectorToFunc(futureChainSymbolSelector), chainContractsLookupLimit, resultsLimit)
+        {
         }
 
         /// <summary>
@@ -119,6 +132,33 @@ namespace QuantConnect.Algorithm.Framework.Selection
                 .SelectMany(s => s.Ticks.Select(x => new Tuple<Symbol, Tick>(x.Key, x.Value.LastOrDefault())))
                 .GroupBy(x => x.Item1)
                 .ToDictionary(x => x.Key, x => x.OrderByDescending(i => i.Item2.Time).LastOrDefault().Item2.Value);
+        }
+
+        /// <summary>
+        /// Converts future chain symbol selector, provided as a Python lambda function, to Func<DateTime, IEnumerable<Symbol>>
+        /// </summary>
+        /// <param name="futureChainSymbolSelector">Python lambda function that selects symbols from the provided future chain</param>
+        /// <returns>Given Python future chain symbol selector as an objet of type Func<DateTime, IEnumerable<Symbol>> </returns>
+        /// <exception cref="ArgumentException"></exception>
+        private static Func<DateTime, IEnumerable<Symbol>> ConvertFutureChainSymbolSelectorToFunc(PyObject futureChainSymbolSelector)
+        {
+            Func<DateTime, IEnumerable<Symbol>> fineFunc;
+
+            if (futureChainSymbolSelector.TryConvertToDelegate(out fineFunc))
+            {
+                return fineFunc;
+            }
+            else if (futureChainSymbolSelector.TryConvertToDelegate(out fineFunc))
+            {
+                return fineFunc;
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    throw new ArgumentException($"FutureUniverseSelectionModel.ConvertPyObjectToFunc: {futureChainSymbolSelector.Repr()} is not a valid argument.");
+                }
+            }
         }
     }
 }
