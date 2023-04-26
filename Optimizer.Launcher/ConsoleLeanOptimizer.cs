@@ -80,7 +80,7 @@ namespace QuantConnect.Optimizer.Launcher
         protected override string RunLean(ParameterSet parameterSet, string backtestName)
         {
             var backtestId = Guid.NewGuid().ToString();
-
+            var optimizationId = NodePacket.OptimizationId;
             // start each lean instance in its own directory so they store their logs & results, else they fight for the log.txt file
             var resultDirectory = Path.Combine(_rootResultDirectory, backtestId);
             Directory.CreateDirectory(resultDirectory);
@@ -90,7 +90,7 @@ namespace QuantConnect.Optimizer.Launcher
             {
                 FileName = _leanLocation,
                 WorkingDirectory = Directory.GetParent(_leanLocation).FullName,
-                Arguments = $"--results-destination-folder \"{resultDirectory}\" --algorithm-id \"{backtestId}\" --parameters {parameterSet} --backtest-name \"{backtestName}\" {_extraLeanArguments}",
+                Arguments = $"--results-destination-folder \"{resultDirectory}\" --algorithm-id \"{backtestId}\" --optimization-id \"{optimizationId}\" --parameters {parameterSet} --backtest-name \"{backtestName}\" {_extraLeanArguments}",
                 WindowStyle = ProcessWindowStyle.Minimized
             };
 
