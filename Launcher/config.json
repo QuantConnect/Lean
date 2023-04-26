@@ -613,6 +613,7 @@
       
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "RBIBrokerage",
+      "data-queue-handler": [ "QuantConnect.Lean.Engine.DataFeeds.Queues.LiveDataQueue" ],
       "history-provider": [ "SubscriptionDataReaderHistoryProvider" ],
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
