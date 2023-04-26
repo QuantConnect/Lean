@@ -315,7 +315,7 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnsupportedOrderType(Orders.Order order)
             {
-                return Invariant($"{order.Type} order is not supported by RBI. Currently, only Market Order is supported.");
+                return Invariant($"{order.Type} order is not supported by RBI. Currently, only Market Order, Limit Order, StopMarket Order and StopLimit Order are supported.");
             }
         }
     }
