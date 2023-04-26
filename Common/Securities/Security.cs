@@ -426,7 +426,6 @@ namespace QuantConnect.Securities
             MarginInterestRateModel = marginInterestRateModel;
             Holdings = new SecurityHolding(this, currencyConverter);
             Data = new DynamicSecurityData(registeredTypesProvider, Cache);
-            ShortableProvider = new NullShortableProvider();
 
             UpdateSubscriptionProperties();
         }
@@ -848,10 +847,7 @@ namespace QuantConnect.Securities
             }
             else
             {
-                using (Py.GIL())
-                {
-                    throw new Exception($"SetShortableProvider: {pyObject.Repr()} is not a valid argument");
-                }
+                throw new Exception($"SetShortableProvider: {pyObject.Repr()} is not a valid argument");
             }
         }
 
@@ -862,39 +858,6 @@ namespace QuantConnect.Securities
         public void SetShortableProvider(IShortableProvider shortableProvider)
         {
             ShortableProvider = shortableProvider;
-        }
-
-        /// <summary>
-        /// Set Security Data Filter
-        /// </summary>
-        /// <param name="pyObject">Python class that represents a custom Security Data Filter</param>
-        /// <exception cref="ArgumentException"></exception>
-        public void SetDataFilter(PyObject pyObject)
-        {
-            if (pyObject.TryConvert<ISecurityDataFilter>(out var dataFilter))
-            {
-                SetDataFilter(dataFilter);
-            }
-            else if (Extensions.TryConvert<ISecurityDataFilter>(pyObject, out _, allowPythonDerivative: true))
-            {
-                SetDataFilter(new SecurityDataFilterPythonWrapper(pyObject));
-            }
-            else
-            {
-                using (Py.GIL())
-                {
-                    throw new ArgumentException($"SetDataFilter: {pyObject.Repr()} is not a valid argument");
-                }
-            }
-        }
-
-        /// <summary>
-        /// Set Security Data Filter
-        /// </summary>
-        /// <param name="dataFilter">Security Data Filter</param>
-        public void SetDataFilter(ISecurityDataFilter dataFilter)
-        {
-            DataFilter = dataFilter;
         }
 
         /// <summary>

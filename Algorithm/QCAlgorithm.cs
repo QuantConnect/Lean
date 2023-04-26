@@ -2851,7 +2851,13 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(TradingAndOrders)]
         public bool Shortable(Symbol symbol, decimal shortQuantity)
         {
-            var shortableQuantity = Securities[symbol].ShortableProvider.ShortableQuantity(symbol, Time);
+            if (!Securities.TryGetValue(symbol, out var security))
+            {
+                this.Log($"Given symbol {symbol} is not present in Securites");
+                return false;
+            }
+
+            var shortableQuantity = security.ShortableProvider.ShortableQuantity(symbol, Time);
             if (shortableQuantity == null)
             {
                 return true;
@@ -2878,9 +2884,13 @@ namespace QuantConnect.Algorithm
         /// shortable, or a number greater than zero if shortable.
         /// </returns>
         [DocumentationAttribute(TradingAndOrders)]
-        public long ShortableQuantity(Symbol symbol)
+        public long? ShortableQuantity(Symbol symbol)
         {
-            return Securities[symbol].ShortableProvider.ShortableQuantity(symbol, Time) ?? 0;
+            if (Securities.TryGetValue(symbol, out var security)){
+                return security.ShortableProvider.ShortableQuantity(security.Symbol, Time);
+            }
+
+            return 0;
         }
 
         /// <summary>

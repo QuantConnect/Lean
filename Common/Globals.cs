@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,7 +14,6 @@
  *
 */
 
-using System.IO;
 using System.Reflection;
 using QuantConnect.Configuration;
 
@@ -40,7 +39,7 @@ namespace QuantConnect
         /// </summary>
         public static void Reset ()
         {
-            CacheDataFolder = DataFolder = Config.Get("data-folder", Config.Get("data-directory", @"../../../Data/"));
+            DataFolder = Config.Get("data-folder", Config.Get("data-directory", @"../../../Data/"));
 
             Version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
             var versionid = Config.Get("version-id");
@@ -49,11 +48,7 @@ namespace QuantConnect
                 Version += "." + versionid;
             }
 
-            var cacheLocation = Config.Get("cache-location");
-            if (!string.IsNullOrEmpty(cacheLocation) && !cacheLocation.IsDirectoryEmpty())
-            {
-                CacheDataFolder = cacheLocation;
-            }
+            CacheDataFolder = Config.Get("cache-location", DataFolder);
         }
 
         /// <summary>
@@ -70,19 +65,5 @@ namespace QuantConnect
         /// Data path to cache folder location
         /// </summary>
         public static string CacheDataFolder { get; private set; }
-
-        /// <summary>
-        /// Helper method that will build a data folder path checking if it exists on the cache folder else will return data folder
-        /// </summary>
-        public static string GetDataFolderPath(string relativePath)
-        {
-            var result = Path.Combine(CacheDataFolder, relativePath);
-            if (result.IsDirectoryEmpty())
-            {
-                result = Path.Combine(DataFolder, relativePath);
-            }
-
-            return result;
-        }
     }
 }

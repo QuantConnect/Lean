@@ -13,6 +13,11 @@
 
 from AlgorithmImports import *
 
+AddReference("NodaTime")
+from NodaTime import DateTimeZone
+
+from math import floor
+
 ### <summary>
 ### Regression algorithm for fractional forex pair
 ### </summary>
@@ -28,7 +33,7 @@ class FractionalQuantityRegressionAlgorithm(QCAlgorithm):
         self.SetCash(100000)
         self.SetBrokerageModel(BrokerageName.GDAX, AccountType.Cash)
 
-        self.SetTimeZone(TimeZones.Utc)
+        self.SetTimeZone(DateTimeZone.Utc)
 
         security = self.AddSecurity(SecurityType.Crypto, "BTCUSD", Resolution.Daily, Market.GDAX, False, 1, True)
 
@@ -42,7 +47,7 @@ class FractionalQuantityRegressionAlgorithm(QCAlgorithm):
         self.SetBenchmark(security.Symbol)
 
     def DataConsolidated(self, sender, bar):
-        quantity = math.floor((self.Portfolio.Cash + self.Portfolio.TotalFees) / abs(bar.Value + 1))
+        quantity = floor((self.Portfolio.Cash + self.Portfolio.TotalFees) / abs(bar.Value + 1))
         btc_qnty = float(self.Portfolio["BTCUSD"].Quantity)
 
         if not self.Portfolio.Invested:

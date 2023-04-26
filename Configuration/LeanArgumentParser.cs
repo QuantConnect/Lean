@@ -48,9 +48,6 @@ namespace QuantConnect.Configuration
                 // the unique algorithm id
                 new CommandLineOption("algorithm-id", CommandOptionType.SingleValue),
 
-                // the unique optimization id
-                new CommandLineOption("optimization-id", CommandOptionType.SingleValue),
-
                 // Options grabbed from json file
                 new CommandLineOption("environment", CommandOptionType.SingleValue),
 
