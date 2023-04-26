@@ -64,6 +64,18 @@ class LiveTradingFeaturesAlgorithm(QCAlgorithm):
             self.MarketOrder('IBM',quantity)
             self.Debug('Purchased IBM on ' + str(self.Time.strftime("%m/%d/%Y")))
             self.Notify.Email("myemail@gmail.com", "Test", "Test Body", "test attachment")
+            
+    # Brokerage message event handler. This method is called for all types of brokerage messages.
+    def OnBrokerageMessage(self, messageEvent):
+        self.Debug(f"Brokerage meesage received - {messageEvent.ToString()}")
+
+    # Brokerage disconnected event handler. This method is called when the brokerage connection is lost.
+    def OnBrokerageDisconnect(self):
+        self.Debug(f"Brokerage disconnected!")
+
+    # Brokerage reconnected event handler. This method is called when the brokerage connection is restored after a disconnection.
+    def OnBrokerageReconnect(self):
+        self.Debug(f"Brokerage reconnected!")
 
 ###Custom Data Type: Bitcoin data from Quandl - http://www.quandl.com/help/api-for-bitcoin-data
 class Bitcoin(PythonData):

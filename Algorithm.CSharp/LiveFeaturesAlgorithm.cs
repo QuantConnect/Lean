@@ -16,6 +16,7 @@
 using System;
 using System.Globalization;
 using Newtonsoft.Json;
+using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
@@ -87,6 +88,30 @@ namespace QuantConnect.Algorithm.CSharp
                 Debug("Purchased IBM on " + Time.ToShortDateString());
                 Notify.Email("myemail@gmail.com", "Test", "Test Body", "test attachment");
             }
+        }
+
+        /// <summary>
+        /// Brokerage message event handler. This method is called for all types of brokerage messages.
+        /// </summary>
+        public override void OnBrokerageMessage(BrokerageMessageEvent messageEvent)
+        {
+            Debug($"Brokerage meesage received - {messageEvent.ToString()}");
+        }
+
+        /// <summary>
+        /// Brokerage disconnected event handler. This method is called when the brokerage connection is lost.
+        /// </summary>
+        public override void OnBrokerageDisconnect()
+        {
+            Debug($"Brokerage disconnected!");
+        }
+
+        /// <summary>
+        /// Brokerage reconnected event handler. This method is called when the brokerage connection is restored after a disconnection.
+        /// </summary>
+        public override void OnBrokerageReconnect()
+        {
+            Debug($"Brokerage reconnected!");
         }
 
         /// <summary>
