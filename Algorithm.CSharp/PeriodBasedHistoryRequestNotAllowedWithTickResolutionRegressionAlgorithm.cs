@@ -63,7 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
                 historyCall();
                 throw new Exception($"{historyCallDescription}: expected an exception to be thrown");
             }
-            catch (ArgumentException)
+            catch (InvalidOperationException)
             {
                 // expected
             }

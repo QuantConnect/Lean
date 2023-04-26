@@ -72,8 +72,9 @@ public class HilbertTransform : Indicator, IIndicatorWarmUpPeriodProvider
         _input = new Identity(name + "_input");
         _prev = new Delay(name + "_prev", length);
         _detrendPrice = _input.Minus(_prev);
-        _detrendPriceDelay2 = new Delay(name + "_detrendPriceDelay2", 2);
-        _detrendPriceDelay4 = new Delay(name + "_detrendPriceDelay4", 4);
+        // 2nd and 4th order difference in detrended price, thus being the 1st and 3rd delay
+        _detrendPriceDelay2 = new Delay(name + "_detrendPriceDelay2", 1);
+        _detrendPriceDelay4 = new Delay(name + "_detrendPriceDelay4", 3);
         // Update after InPhase & Quadrature property, so delay length -1
         _inPhaseDelay3 = new Delay(name + "_inPhaseDelay3", 2);
         _quadratureDelay2 = new Delay(name + "_quadratureDelay2", 1);
@@ -83,13 +84,13 @@ public class HilbertTransform : Indicator, IIndicatorWarmUpPeriodProvider
             {
                 if (!InPhase!.IsReady)
                 {
-                    return decimal.Zero;
+                    return 0m;
                 }
 
-                var v2Value = _detrendPriceDelay2.IsReady ? _detrendPriceDelay2.Current.Value : decimal.Zero;
-                var v4Value = _detrendPriceDelay4.IsReady ? _detrendPriceDelay4.Current.Value : decimal.Zero;
-                var inPhase3Value = _inPhaseDelay3.IsReady ? _inPhaseDelay3.Current.Value : decimal.Zero;
-                return (v4Value - v2Value * inPhaseMultiplicationFactor + inPhase3Value * inPhaseMultiplicationFactor) * 1.25M;
+                var v2Value = _detrendPriceDelay2.IsReady ? _detrendPriceDelay2.Current.Value : 0m;
+                var v4Value = _detrendPriceDelay4.IsReady ? _detrendPriceDelay4.Current.Value : 0m;
+                var inPhase3Value = _inPhaseDelay3.IsReady ? _inPhaseDelay3.Current.Value : 0m;
+                return 1.25m * (v4Value - v2Value * inPhaseMultiplicationFactor) + inPhase3Value * inPhaseMultiplicationFactor;
             },
             _ => Samples > length + 2,
             () =>
@@ -105,12 +106,12 @@ public class HilbertTransform : Indicator, IIndicatorWarmUpPeriodProvider
             {
                 if (!Quadrature!.IsReady)
                 {
-                    return decimal.Zero;
+                    return 0m;
                 }
 
-                var v2Value = _detrendPriceDelay2.IsReady ? _detrendPriceDelay2.Current.Value : decimal.Zero;
-                var v1Value = _detrendPrice.IsReady ? _detrendPrice.Current.Value : decimal.Zero;
-                var quadrature2Value = _quadratureDelay2.IsReady ? _quadratureDelay2.Current.Value : decimal.Zero;
+                var v2Value = _detrendPriceDelay2.IsReady ? _detrendPriceDelay2.Current.Value : 0m;
+                var v1Value = _detrendPrice.IsReady ? _detrendPrice.Current.Value : 0m;
+                var quadrature2Value = _quadratureDelay2.IsReady ? _quadratureDelay2.Current.Value : 0m;
                 return v2Value - v1Value * quadratureMultiplicationFactor + quadrature2Value * quadratureMultiplicationFactor;
             },
             _ => Samples > length,
@@ -133,7 +134,7 @@ public class HilbertTransform : Indicator, IIndicatorWarmUpPeriodProvider
     /// <param name="quadratureMultiplicationFactor">The multiplication factor used in the calculation of the quadrature component of
     /// the Hilbert Transform. This parameter also adjusts the sensitivity and responsiveness of the
     /// transform to changes in the input signal.</param>
-    public HilbertTransform(int length = 7, decimal inPhaseMultiplicationFactor = 0.635M, decimal quadratureMultiplicationFactor = 0.338M)
+    public HilbertTransform(int length = 7, decimal inPhaseMultiplicationFactor = 0.635m, decimal quadratureMultiplicationFactor = 0.338m)
         : this($"Hilbert({length}, {inPhaseMultiplicationFactor}, {quadratureMultiplicationFactor})", length, inPhaseMultiplicationFactor, quadratureMultiplicationFactor)
     {
     }

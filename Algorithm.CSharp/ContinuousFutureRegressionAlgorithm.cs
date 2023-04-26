@@ -169,7 +169,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 709638;
+        public long DataPoints => 708465;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -184,27 +184,27 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "3"},
             {"Average Win", "1.50%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "2.959%"},
+            {"Compounding Annual Return", "3.337%"},
             {"Drawdown", "1.600%"},
             {"Expectancy", "0"},
-            {"Net Profit", "1.479%"},
-            {"Sharpe Ratio", "0.805"},
-            {"Probabilistic Sharpe Ratio", "42.183%"},
+            {"Net Profit", "1.666%"},
+            {"Sharpe Ratio", "0.875"},
+            {"Probabilistic Sharpe Ratio", "44.801%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "100%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.005"},
-            {"Beta", "0.114"},
-            {"Annual Standard Deviation", "0.026"},
+            {"Alpha", "-0.007"},
+            {"Beta", "0.134"},
+            {"Annual Standard Deviation", "0.027"},
             {"Annual Variance", "0.001"},
-            {"Information Ratio", "-2.676"},
-            {"Tracking Error", "0.076"},
-            {"Treynor Ratio", "0.181"},
+            {"Information Ratio", "-2.69"},
+            {"Tracking Error", "0.075"},
+            {"Treynor Ratio", "0.175"},
             {"Total Fees", "$6.45"},
-            {"Estimated Strategy Capacity", "$180000000.00"},
+            {"Estimated Strategy Capacity", "$8000000000.00"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
-            {"Portfolio Turnover", "1.36%"},
-            {"OrderListHash", "88e74055be58b3759f493b2c47e4c097"}
+            {"Portfolio Turnover", "1.39%"},
+            {"OrderListHash", "daf9c9ec97f1590f5a049600599e3b83"}
         };
     }
 }

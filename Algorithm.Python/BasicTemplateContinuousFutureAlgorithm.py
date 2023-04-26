@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,7 +30,7 @@ class BasicTemplateContinuousFutureAlgorithm(QCAlgorithm):
                                                   dataMappingMode = DataMappingMode.LastTradingDay,
                                                   contractDepthOffset= 0)
 
-        self._fast = self.SMA(self._continuousContract.Symbol, 3, Resolution.Daily)
+        self._fast = self.SMA(self._continuousContract.Symbol, 4, Resolution.Daily)
         self._slow = self.SMA(self._continuousContract.Symbol, 10, Resolution.Daily)
         self._currentContract = None
 
@@ -53,7 +53,7 @@ class BasicTemplateContinuousFutureAlgorithm(QCAlgorithm):
 
         # We check exchange hours because the contract mapping can call OnData outside of regular hours.
         if self._currentContract is not None and self._currentContract.Symbol != self._continuousContract.Mapped and self._continuousContract.Exchange.ExchangeOpen:
-            self.Log(f"{Time} - rolling position from {self._currentContract.Symbol} to {self._continuousContract.Mapped}")
+            self.Log(f"{self.Time} - rolling position from {self._currentContract.Symbol} to {self._continuousContract.Mapped}")
 
             currentPositionSize = self._currentContract.Holdings.Quantity
             self.Liquidate(self._currentContract.Symbol)
