@@ -142,13 +142,8 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <exception cref="ArgumentException"></exception>
         private static Func<DateTime, IEnumerable<Symbol>> ConvertFutureChainSymbolSelectorToFunc(PyObject futureChainSymbolSelector)
         {
-            Func<DateTime, IEnumerable<Symbol>> fineFunc;
 
-            if (futureChainSymbolSelector.TryConvertToDelegate(out fineFunc))
-            {
-                return fineFunc;
-            }
-            else if (futureChainSymbolSelector.TryConvertToDelegate(out fineFunc))
+            if (futureChainSymbolSelector.TryConvertToDelegate(out Func<DateTime, IEnumerable<Symbol>> fineFunc))
             {
                 return fineFunc;
             }
@@ -156,7 +151,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
             {
                 using (Py.GIL())
                 {
-                    throw new ArgumentException($"FutureUniverseSelectionModel.ConvertPyObjectToFunc: {futureChainSymbolSelector.Repr()} is not a valid argument.");
+                    throw new ArgumentException($"FutureUniverseSelectionModel.ConvertFutureChainSymbolSelectorToFunc: {futureChainSymbolSelector.Repr()} is not a valid argument.");
                 }
             }
         }

@@ -26,9 +26,11 @@ class OpenInterestFuturesRegressionAlgorithm(QCAlgorithm):
         self.UniverseSettings.Resolution = Resolution.Tick
         self.SetStartDate(2013,10,8)
         self.SetEndDate(2013,10,11)
-        self.SetCash(10000000)  # Set Strategy Cash
+        self.SetCash(10000000)
+
+        # set framework models
         universe = OpenInterestFutureUniverseSelectionModel(self, lambda date_time: [Symbol.Create(Futures.Metals.Gold, SecurityType.Future, Market.COMEX)], None, len(self.expected_expiry_dates))
-        self.AddUniverseSelection(universe)
+        self.SetUniverseSelection(universe)
     
     def OnData(self,data):
         if self.Transactions.OrdersCount == 0 and data.HasData:
