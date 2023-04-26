@@ -142,7 +142,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <exception cref="ArgumentException"></exception>
         private static Func<DateTime, IEnumerable<Symbol>> ConvertFutureChainSymbolSelectorToFunc(PyObject futureChainSymbolSelector)
         {
-
             if (futureChainSymbolSelector.TryConvertToDelegate(out Func<DateTime, IEnumerable<Symbol>> fineFunc))
             {
                 return fineFunc;
