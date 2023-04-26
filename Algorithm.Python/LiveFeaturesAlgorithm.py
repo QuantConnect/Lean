@@ -41,6 +41,9 @@ class LiveTradingFeaturesAlgorithm(QCAlgorithm):
 
         ##Custom/Bitcoin Live Data: 24/7
         self.AddData(Bitcoin, 'BTC', Resolution.Second, TimeZones.Utc)
+        
+        ##if the algorithm is connected to the brokerage
+        self.is_connected = True
 
 
     ### New Bitcoin Data Event
@@ -71,10 +74,12 @@ class LiveTradingFeaturesAlgorithm(QCAlgorithm):
 
     # Brokerage disconnected event handler. This method is called when the brokerage connection is lost.
     def OnBrokerageDisconnect(self):
+        self.is_connected = False
         self.Debug(f"Brokerage disconnected!")
 
     # Brokerage reconnected event handler. This method is called when the brokerage connection is restored after a disconnection.
     def OnBrokerageReconnect(self):
+        self.is_connected = True
         self.Debug(f"Brokerage reconnected!")
 
 ###Custom Data Type: Bitcoin data from Quandl - http://www.quandl.com/help/api-for-bitcoin-data

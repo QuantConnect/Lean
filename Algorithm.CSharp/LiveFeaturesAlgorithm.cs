@@ -33,6 +33,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="runtime statistics" />
     public class LiveTradingFeaturesAlgorithm : QCAlgorithm
     {
+        private bool _isConnected;
+
         /// <summary>
         /// Initialise the Algorithm and Prepare Required Data.
         /// </summary>
@@ -50,6 +52,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             //Custom/Bitcoin Live Data: 24/7
             AddData<Bitcoin>("BTC", Resolution.Second, TimeZones.Utc);
+
+            //if the algorithm is connected to the brokerage
+            _isConnected = true;
         }
 
         /// <summary>
@@ -103,6 +108,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void OnBrokerageDisconnect()
         {
+            _isConnected = false;
             Debug($"Brokerage disconnected!");
         }
 
@@ -111,6 +117,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void OnBrokerageReconnect()
         {
+            _isConnected = true;
             Debug($"Brokerage reconnected!");
         }
 
