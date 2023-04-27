@@ -49,7 +49,7 @@ class TickDataFilteringAlgorithm(QCAlgorithm):
 # <summary>
 # Exchange filter class
 # </summary>
-class ExchangeDataFilter(ISecurityDataFilter):
+class ExchangeDataFilter(SecurityDataFilter):
 
     # <summary>
     # Save instance of the algorithm namespace
