@@ -84,10 +84,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice"></param>
         public override void OnData(Slice slice)
         {
-            // Wait for our indicators to be ready
+            // Place an order as soon as possible to send a signal.
             if (_firstCall)
             {
                 SetHoldings("SPY", 0.1);
+                var target= new PortfolioTarget(_spy, (decimal)0.1);
+                SignalExport.SetTargetPortfolio(target);
                 _firstCall = false;
             }
 

@@ -59,9 +59,10 @@ class CrunchDAOPortfolioSignalExportDemonstrationAlgorithm(QCAlgorithm):
     def OnData(self, data):
         ''' Reduce the quantity of holdings for spy or increase it when the EMA's indicators crosses
         between themselves, then send a signal to CrunchDAO API '''
-
+        # Place an order as soon as possible to send a signal.
         if self.first_call:
             self.SetHoldings("SPY", 0.1)
+            self.SignalExport.SetTargetPortfolioFromPortfolio()
             self.first_call = False
 
         fast = self.fast.Current.Value
