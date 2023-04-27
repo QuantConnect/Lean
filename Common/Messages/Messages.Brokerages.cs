@@ -306,5 +306,17 @@ namespace QuantConnect
                 return Invariant($"{order.Type} order is not supported by Wolverine. Currently, only Market Order is supported.");
             }
         }
+
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Brokerages.RBIBrokerageModel"/> class and its consumers or related classes
+        /// </summary>
+        public static class RBIBrokerageModel
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string UnsupportedOrderType(Orders.Order order)
+            {
+                return Invariant($"{order.Type} order is not supported by RBI. Currently, only Market Order, Limit Order, StopMarket Order and StopLimit Order are supported.");
+            }
+        }
     }
 }
