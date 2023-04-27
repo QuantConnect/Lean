@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2015, 12, 24);
             SetEndDate(2015, 12, 24);
-            SetCash(10000);
+            SetCash(200000);
 
             var equity = AddEquity("GOOG", leverage: 4, fillForward: true);
             var option = AddOption(equity.Symbol, fillForward: true);
