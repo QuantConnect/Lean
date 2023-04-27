@@ -2638,6 +2638,8 @@ tradeBar = TradeBar
             var symbol = algorithm.AddFuture(Futures.Indices.SP500EMini, fillForward: true).Symbol;
 
             var timeSpan = end - start;
+            // We are lacking minute data for the contract used for offset=2 on the request start date computed minute when using periods,
+            // So we use a slightly larger number of periods to compensate for that.
             var periods = resolution != Resolution.Minute ? expectedHistoryCount : (int)(expectedHistoryCount * 1.001);
             var offsets = new[] { 0, 1, 2 };
 
@@ -3575,9 +3577,7 @@ tradeBar = TradeBar
         {
             CheckThatHistoryResultsHaveEqualBarCount(historyResults, expectedHistoryCount);
 
-            using var dataProvider = new DefaultDataProvider();
-            using var zipCache = new ZipDataCacheProvider(dataProvider);
-            var futureChainProvider = new BacktestingFutureChainProvider(zipCache);
+            var futureChainProvider = new BacktestingFutureChainProvider(TestGlobals.DataCacheProvider);
             var firstDateTime = historyResults[0][0].EndTime;
             var futureChain = futureChainProvider.GetFutureContractList(expectedSymbol, firstDateTime).ToList();
 
@@ -3598,7 +3598,7 @@ tradeBar = TradeBar
             }
 
             CheckThatHistoryResultsHaveDifferentPrices(historyResults.Select(history => history.Cast<BaseData>().ToList()).ToList(),
-                "History results prices should have been different for each data mapping mode at each time");
+                "History results prices should have been different for each available offset at each time");
         }
 
         /// <summary>
