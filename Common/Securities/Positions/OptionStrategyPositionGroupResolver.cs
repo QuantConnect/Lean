@@ -59,13 +59,6 @@ namespace QuantConnect.Securities.Positions
         /// <returns>True if this resolver can group the specified positions, otherwise false</returns>
         public bool TryGroup(IReadOnlyCollection<IPosition> newPositions, PositionGroupCollection currentPositions, out IPositionGroup @group)
         {
-            if (newPositions.Count < 2)
-            {
-                // No strategy will match a single position
-                @group = null;
-                return false;
-            }
-
             IEnumerable<IPosition> positions;
             if (currentPositions.Count > 0)
             {
