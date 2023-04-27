@@ -474,20 +474,24 @@ namespace QuantConnect.Securities
         /// Profit if we closed the holdings right now including the approximate fees in units of the account's currency.
         /// </summary>
         /// <remarks>Does not use the transaction model for market fills but should.</remarks>
-        public virtual decimal TotalCloseProfit()
+        public virtual decimal TotalCloseProfit(bool includeFees = true, decimal? exitPrice = null, decimal? entryPrice = null, decimal? quantity = null)
         {
-            if (Quantity == 0)
+            var quantityToUse = quantity ?? Quantity;
+            if (quantityToUse == 0)
             {
                 return 0;
             }
 
             // this is in the account currency
-            var marketOrder = new MarketOrder(_security.Symbol, -Quantity, _security.LocalTime.ConvertToUtc(_security.Exchange.TimeZone));
+            var marketOrder = new MarketOrder(_security.Symbol, -quantityToUse, _security.LocalTime.ConvertToUtc(_security.Exchange.TimeZone));
 
-            var orderFee = _security.FeeModel.GetOrderFee(
-                new OrderFeeParameters(_security, marketOrder)).Value;
-            var feesInAccountCurrency = _currencyConverter.
-                ConvertToAccountCurrency(orderFee).Amount;
+            var feesInAccountCurrency = 0m;
+            if (includeFees)
+            {
+                var orderFee = _security.FeeModel.GetOrderFee(
+                    new OrderFeeParameters(_security, marketOrder)).Value;
+                feesInAccountCurrency = _currencyConverter.ConvertToAccountCurrency(orderFee).Amount;
+            }
 
             var price = marketOrder.Direction == OrderDirection.Sell ? _security.BidPrice : _security.AskPrice;
             if (price == 0)
@@ -497,8 +501,8 @@ namespace QuantConnect.Securities
                 price = _security.Price;
             }
 
-            var entryValue = GetQuantityValue(Quantity, AveragePrice).InAccountCurrency;
-            var potentialExitValue = GetQuantityValue(Quantity, price).InAccountCurrency;
+            var entryValue = GetQuantityValue(quantityToUse, entryPrice ?? AveragePrice).InAccountCurrency;
+            var potentialExitValue = GetQuantityValue(quantityToUse, exitPrice ?? price).InAccountCurrency;
             return potentialExitValue - entryValue - feesInAccountCurrency;
         }
 

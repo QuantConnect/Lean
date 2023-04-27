@@ -604,7 +604,7 @@ namespace QuantConnect.Securities
         /// This is the source of this instance's time.
         /// </summary>
         /// <param name="localTimeKeeper">The source of this <see cref="Security"/>'s time.</param>
-        public void SetLocalTimeKeeper(LocalTimeKeeper localTimeKeeper)
+        public virtual void SetLocalTimeKeeper(LocalTimeKeeper localTimeKeeper)
         {
             _localTimeKeeper = localTimeKeeper;
             Exchange.SetLocalDateTimeFrontier(localTimeKeeper.LocalTime);

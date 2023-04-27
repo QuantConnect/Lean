@@ -333,6 +333,11 @@ namespace QuantConnect.Brokerages
                 }
             }
 
+            if(security.Symbol.SecurityType == SecurityType.Future)
+            {
+                return new FutureSettlementModel();
+            }
+
             return new ImmediateSettlementModel();
         }
 
