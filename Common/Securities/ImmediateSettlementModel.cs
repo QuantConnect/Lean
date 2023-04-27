@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -13,8 +13,6 @@
  * limitations under the License.
 */
 
-using System;
-
 namespace QuantConnect.Securities
 {
     /// <summary>
@@ -26,14 +24,20 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Applies cash settlement rules
         /// </summary>
-        /// <param name="portfolio">The algorithm's portfolio</param>
-        /// <param name="security">The fill's security</param>
-        /// <param name="applicationTimeUtc">The fill time (in UTC)</param>
-        /// <param name="currency">The currency symbol</param>
-        /// <param name="amount">The amount of cash to apply</param>
-        public void ApplyFunds(SecurityPortfolioManager portfolio, Security security, DateTime applicationTimeUtc, string currency, decimal amount)
+        /// <param name="applyFundsParameters">The funds application parameters</param>
+        public virtual void ApplyFunds(ApplyFundsSettlementModelParameters applyFundsParameters)
         {
-            portfolio.CashBook[currency].AddAmount(amount);
+            var currency = applyFundsParameters.CashAmount.Currency;
+            var amount = applyFundsParameters.CashAmount.Amount;
+            applyFundsParameters.Portfolio.CashBook[currency].AddAmount(amount);
+        }
+
+        /// <summary>
+        /// Scan for pending settlements
+        /// </summary>
+        /// <param name="settlementParameters">The settlement parameters</param>
+        public virtual void Scan(ScanSettlementModelParameters settlementParameters)
+        {
         }
     }
 }

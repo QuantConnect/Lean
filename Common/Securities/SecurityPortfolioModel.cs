@@ -71,13 +71,13 @@ namespace QuantConnect.Securities
                 // We do however apply funds for futures options, pay/gained premium, since they affect our cash balance the moment they are purchased/sold.
                 if (security.Type != SecurityType.Future && security.Type != SecurityType.Cfd && security.Type != SecurityType.CryptoFuture)
                 {
-                    security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, quoteCash.Symbol, -fill.FillQuantity * fill.FillPrice * security.SymbolProperties.ContractMultiplier);
+                    security.SettlementModel.ApplyFunds(new ApplyFundsSettlementModelParameters(portfolio, security, fill.UtcTime, new CashAmount(-fill.FillQuantity * fill.FillPrice * security.SymbolProperties.ContractMultiplier, quoteCash.Symbol), fill));
                 }
                 if (security.Type == SecurityType.Forex || security.Type == SecurityType.Crypto)
                 {
                     // model forex fills as currency swaps
                     var forex = (IBaseCurrencySymbol) security;
-                    security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, forex.BaseCurrency.Symbol, fill.FillQuantity);
+                    security.SettlementModel.ApplyFunds(new ApplyFundsSettlementModelParameters(portfolio, security, fill.UtcTime, new CashAmount(fill.FillQuantity, forex.BaseCurrency.Symbol), fill));
                 }
 
                 // did we close or open a position further?
@@ -101,7 +101,7 @@ namespace QuantConnect.Securities
                     // Reflect account cash adjustment for futures/CFD position
                     if (security.Type == SecurityType.Future || security.Type == SecurityType.Cfd || security.Type == SecurityType.CryptoFuture)
                     {
-                        security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, closedCost.Cash.Symbol, lastTradeProfit);
+                        security.SettlementModel.ApplyFunds(new ApplyFundsSettlementModelParameters(portfolio, security, fill.UtcTime, new CashAmount(lastTradeProfit, closedCost.Cash.Symbol), fill));
                     }
 
                     //Update Vehicle Profit Tracking:

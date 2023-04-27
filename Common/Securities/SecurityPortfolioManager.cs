@@ -39,7 +39,6 @@ namespace QuantConnect.Securities
         private bool _isTotalPortfolioValueValid;
         private object _totalPortfolioValueLock = new();
         private bool _setAccountCurrencyWasCalled;
-        private readonly object _unsettledCashAmountsLocker = new object();
 
         /// <summary>
         /// Local access to the securities collection for the portfolio summation.
@@ -72,11 +71,6 @@ namespace QuantConnect.Securities
         public CashBook UnsettledCashBook { get; }
 
         /// <summary>
-        /// The list of pending funds waiting for settlement time
-        /// </summary>
-        private readonly List<UnsettledCashAmount> _unsettledCashAmounts;
-
-        /// <summary>
         /// Initialise security portfolio manager.
         /// </summary>
         public SecurityPortfolioManager(SecurityManager securityManager, SecurityTransactionManager transactions, IOrderProperties defaultOrderProperties = null)
@@ -88,7 +82,6 @@ namespace QuantConnect.Securities
 
             CashBook = new CashBook();
             UnsettledCashBook = new CashBook();
-            _unsettledCashAmounts = new List<UnsettledCashAmount>();
 
             _baseCurrencyCash = CashBook[CashBook.AccountCurrency];
 
@@ -815,43 +808,6 @@ namespace QuantConnect.Securities
             }
 
             return null;
-        }
-
-        /// <summary>
-        /// Adds an item to the list of unsettled cash amounts
-        /// </summary>
-        /// <param name="item">The item to add</param>
-        public void AddUnsettledCashAmount(UnsettledCashAmount item)
-        {
-            lock (_unsettledCashAmountsLocker)
-            {
-                _unsettledCashAmounts.Add(item);
-            }
-        }
-
-        /// <summary>
-        /// Scan the portfolio to check if unsettled funds should be settled
-        /// </summary>
-        public void ScanForCashSettlement(DateTime timeUtc)
-        {
-            lock (_unsettledCashAmountsLocker)
-            {
-                foreach (var item in _unsettledCashAmounts.ToList())
-                {
-                    // check if settlement time has passed
-                    if (timeUtc >= item.SettlementTimeUtc)
-                    {
-                        // remove item from unsettled funds list
-                        _unsettledCashAmounts.Remove(item);
-
-                        // update unsettled cashbook
-                        UnsettledCashBook[item.Currency].AddAmount(-item.Amount);
-
-                        // update settled cashbook
-                        CashBook[item.Currency].AddAmount(item.Amount);
-                    }
-                }
-            }
         }
 
         /// <summary>

@@ -490,7 +490,7 @@ namespace QuantConnect.Tests.Common.Securities
             var requiredFreeBuyingPowerPercent = 0.05m;
             var model = security.BuyingPowerModel = new SecurityMarginModel(1, requiredFreeBuyingPowerPercent);
             security.Holdings.SetHoldings(25, 2000);
-            security.SettlementModel.ApplyFunds(algo.Portfolio, security, DateTime.UtcNow.AddDays(-10), Currencies.USD, -2000 * 25);
+            security.SettlementModel.ApplyFunds(new ApplyFundsSettlementModelParameters(algo.Portfolio, security, DateTime.UtcNow.AddDays(-10), new CashAmount(-2000 * 25, Currencies.USD), null));
 
             // Margin remaining 50k + used 50k + initial margin 50k - 5k free buying power percent (5% of 100k)
             Assert.AreEqual(145000, model.GetBuyingPower(algo.Portfolio, security, OrderDirection.Sell));
@@ -513,7 +513,7 @@ namespace QuantConnect.Tests.Common.Securities
             var requiredFreeBuyingPowerPercent = 0.05m;
             var model = security.BuyingPowerModel = new SecurityMarginModel(2, requiredFreeBuyingPowerPercent);
             security.Holdings.SetHoldings(25, 2000);
-            security.SettlementModel.ApplyFunds(algo.Portfolio, security, DateTime.UtcNow.AddDays(-10), Currencies.USD, -2000 * 25);
+            security.SettlementModel.ApplyFunds(new ApplyFundsSettlementModelParameters(algo.Portfolio, security, DateTime.UtcNow.AddDays(-10), new CashAmount(-2000 * 25, Currencies.USD), null));
 
             // Margin remaining 75k + used 25k + initial margin 25k - 5k free buying power percent (5% of 100k)
             Assert.AreEqual(120000, model.GetBuyingPower(algo.Portfolio, security, OrderDirection.Sell));
@@ -536,7 +536,7 @@ namespace QuantConnect.Tests.Common.Securities
             var requiredFreeBuyingPowerPercent = 0.05m;
             var model = security.BuyingPowerModel = new SecurityMarginModel(2, requiredFreeBuyingPowerPercent);
             security.Holdings.SetHoldings(25, -2000);
-            security.SettlementModel.ApplyFunds(algo.Portfolio, security, DateTime.UtcNow.AddDays(-10), Currencies.USD, 2000 * 25);
+            security.SettlementModel.ApplyFunds(new ApplyFundsSettlementModelParameters(algo.Portfolio, security, DateTime.UtcNow.AddDays(-10), new CashAmount(2000 * 25, Currencies.USD), null));
 
             // Margin remaining 75k + used 25k + initial margin 25k - 5k free buying power percent (5% of 100k)
             Assert.AreEqual(120000, model.GetBuyingPower(algo.Portfolio, security, OrderDirection.Buy));
