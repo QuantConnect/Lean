@@ -57,7 +57,8 @@ namespace QuantConnect.Report.ReportElements
                         continue;
                     }
 
-                    backtestPercentagePerTrade.Add((Convert.ToDouble(trade.ExitPrice) - Convert.ToDouble(trade.EntryPrice)) / Convert.ToDouble(trade.EntryPrice));
+                    var sideMultiplier = trade.Direction == TradeDirection.Long ? 1 : -1;
+                    backtestPercentagePerTrade.Add(sideMultiplier * (Convert.ToDouble(trade.ExitPrice) - Convert.ToDouble(trade.EntryPrice)) / Convert.ToDouble(trade.EntryPrice));
                 }
             }
 
