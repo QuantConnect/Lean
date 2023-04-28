@@ -124,7 +124,6 @@ namespace QuantConnect.Lean.Engine
             var marginCallFrequency = TimeSpan.FromMinutes(5);
             var nextMarginCallTime = DateTime.MinValue;
             var nextSecurityModelScan = algorithm.UtcTime.RoundDown(Time.OneHour) + Time.OneHour;
-            var nextSettlementScanTime = DateTime.MinValue;
             var time = algorithm.StartDate.Date;
 
             var pendingDelistings = new List<Delisting>();

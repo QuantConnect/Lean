@@ -53,11 +53,12 @@ namespace QuantConnect.Securities
             var currency = applyFundsParameters.CashAmount.Currency;
             var amount = applyFundsParameters.CashAmount.Amount;
             var security = applyFundsParameters.Security;
+            var portfolio = applyFundsParameters.Portfolio;
             if (amount > 0)
             {
                 // positive amount: sell order filled
 
-                applyFundsParameters.Portfolio.UnsettledCashBook[currency].AddAmount(amount);
+                portfolio.UnsettledCashBook[currency].AddAmount(amount);
 
                 // find the correct settlement date (usually T+3 or T+1)
                 var settlementDate = applyFundsParameters.UtcTime.ConvertFromUtc(security.Exchange.TimeZone).Date;
@@ -82,7 +83,7 @@ namespace QuantConnect.Securities
             {
                 // negative amount: buy order filled
 
-                applyFundsParameters.Portfolio.CashBook[currency].AddAmount(amount);
+                portfolio.CashBook[currency].AddAmount(amount);
             }
         }
 
