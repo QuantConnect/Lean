@@ -19,7 +19,6 @@ using Python.Runtime;
 using QuantConnect.Benchmarks;
 using QuantConnect.Brokerages;
 using QuantConnect.Data.Market;
-using QuantConnect.Data.Shortable;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
@@ -83,8 +82,19 @@ namespace QuantConnect.Python
             {
                 using (Py.GIL())
                 {
-                    return (_model.DefaultMarkets as PyObject)
-                        .GetAndDispose<IReadOnlyDictionary<SecurityType, string>>();
+                    var markets = _model.DefaultMarkets;
+                    if ((markets as PyObject).TryConvert(out IReadOnlyDictionary<SecurityType, string> csharpDic))
+                    {
+                        return csharpDic;
+                    }
+
+                    var dic = new Dictionary<SecurityType, string>();
+                    foreach (var item in markets)
+                    {
+                        var market = (item as PyObject).As<SecurityType>();
+                        dic[market] = markets[item];
+                    }
+                    return dic;
                 }
             }
         }
@@ -135,7 +145,9 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return (_model.CanSubmitOrder(security, order, out message) as PyObject).GetAndDispose<bool>();
+                var result = _model.CanSubmitOrder(security, order, out message);
+                message = (result[1] as PyObject).As<BrokerageMessageEvent>();
+                return (result[0] as PyObject).As<bool>();
             }
         }
 
@@ -151,7 +163,9 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return (_model.CanUpdateOrder(security, order, out message) as PyObject).GetAndDispose<bool>();
+                var result = _model.CanUpdateOrder(security,order, request, out message);
+                message = (result[1] as PyObject).As<BrokerageMessageEvent>();
+                return (result[0] as PyObject).As<bool>();
             }
         }
 
