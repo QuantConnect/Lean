@@ -202,21 +202,6 @@ namespace QuantConnect.Securities.Positions
                     yield break;
                 }
 
-                // liquidating part of the strategy, only one leg left, still valid but won't be matched by any strategy definition
-                if (optionPositionCollection.Count == 1 && positionsByUnderlying.Count > 1)
-                {
-                    var onlyOptionPosition = optionPositionCollection.First();
-                    var position = positions.First(p => p.Symbol == onlyOptionPosition.Symbol);
-                    var resultingPositions = new[]
-                    {
-                        new Position(position.Symbol, onlyOptionPosition.Quantity, position.UnitQuantity)
-                    };
-                    var key = new PositionGroupKey(new OptionStrategyPositionGroupBuyingPowerModel(null), resultingPositions);
-
-                    yield return new PositionGroup(key, resultingPositions);
-                    yield break;
-                }
-
                 var matches = _strategyMatcher.MatchOnce(optionPositionCollection);
                 if (matches.Strategies.Count == 0)
                 {

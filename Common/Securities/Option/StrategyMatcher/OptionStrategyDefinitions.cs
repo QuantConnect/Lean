@@ -105,6 +105,22 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             );
 
         /// <summary>
+        /// Sell 1 call contract without holding the underlying
+        /// </summary>
+        public static OptionStrategyDefinition NakedCall { get; }
+            = OptionStrategyDefinition.Create("Naked Call",
+                OptionStrategyDefinition.CallLeg(-1)
+            );
+
+        /// <summary>
+        /// Sell 1 put contract without holding the underlying
+        /// </summary>
+        public static OptionStrategyDefinition NakedPut { get; }
+            = OptionStrategyDefinition.Create("Naked Put",
+                OptionStrategyDefinition.PutLeg(-1)
+            );
+
+        /// <summary>
         /// Bear Call Spread strategy consists of two calls with the same expiration but different strikes.
         /// The strike price of the short call is below the strike of the long call. This is a credit spread.
         /// </summary>

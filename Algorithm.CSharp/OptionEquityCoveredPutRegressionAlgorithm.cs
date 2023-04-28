@@ -51,7 +51,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                     // covered put
                     MarketOrder(atmContract.Symbol, -10);
-                    AssertDefaultGroup(atmContract.Symbol, -10);
+                    AssertOptionStrategyIsPresent(OptionStrategyDefinitions.NakedPut.Name, 10);
                     MarketOrder(atmContract.Symbol.Underlying, -1000);
                     var freeMarginPostTrade = Portfolio.MarginRemaining;
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.CoveredPut.Name, 10);

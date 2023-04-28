@@ -50,7 +50,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                     var initialMargin = Portfolio.MarginRemaining;
                     MarketOrder(shortPut.Symbol, -10);
-                    AssertDefaultGroup(shortPut.Symbol, -10);
+                    AssertOptionStrategyIsPresent(OptionStrategyDefinitions.NakedPut.Name, 10);
                     MarketOrder(longPut.Symbol, 10);
                     var freeMarginPostTrade = Portfolio.MarginRemaining;
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.BullPutSpread.Name, 10);

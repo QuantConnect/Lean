@@ -50,7 +50,7 @@ namespace QuantConnect.Algorithm.CSharp
                     var initialMargin = Portfolio.MarginRemaining;
                     // covered call
                     MarketOrder(atmContract.Symbol, -5);
-                    AssertDefaultGroup(atmContract.Symbol, -5);
+                    AssertOptionStrategyIsPresent(OptionStrategyDefinitions.NakedCall.Name, 5);
                     MarketOrder(atmContract.Symbol.Underlying, 500);
                     var freeMarginPostTrade = Portfolio.MarginRemaining;
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.CoveredCall.Name, 5);
