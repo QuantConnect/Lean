@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using QuantConnect.Data;
+
 namespace QuantConnect.Securities.Future
 {
     /// <summary>
@@ -22,5 +24,21 @@ namespace QuantConnect.Securities.Future
     /// <seealso cref="SecurityCache"/>
     public class FutureCache : SecurityCache
     {
+        /// <summary>
+        /// The current settlement price
+        /// </summary>
+        public decimal SettlementPrice { get; set; }
+
+        /// <summary>
+        /// Will consume the given data point updating the cache state and it's properties
+        /// </summary>
+        /// <param name="data">The data point to process</param>
+        /// <param name="cacheByType">True if this data point should be cached by type</param>
+        protected override void ProcessDataPoint(BaseData data, bool cacheByType)
+        {
+            base.ProcessDataPoint(data, cacheByType);
+
+            SettlementPrice = Price;
+        }
     }
 }

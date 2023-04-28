@@ -50,7 +50,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
                 SymbolProperties.GetDefault(Currencies.USD),
                 portfolio.CashBook,
                 RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache());
+                new FutureCache());
             future.FeeModel = new ConstantFeeModel(0);
             future.SettlementModel = model;
             var futureHoldings = (FutureHolding)future.Holdings;
@@ -128,7 +128,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
                 SymbolProperties.GetDefault(Currencies.USD),
                 portfolio.CashBook,
                 RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache());
+                new FutureCache());
             future.SettlementModel = model;
             future.FeeModel = new ConstantFeeModel(0);
             securities.Add(future);

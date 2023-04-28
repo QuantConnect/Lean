@@ -22,11 +22,6 @@ namespace QuantConnect.Securities.Future
     public class FutureHolding : SecurityHolding
     {
         /// <summary>
-        /// The current settlement price
-        /// </summary>
-        public decimal SettlementPrice { get; set; }
-
-        /// <summary>
         /// The cash settled profit for the current open position
         /// </summary>
         public virtual decimal SettledProfit { get; set; }
@@ -50,18 +45,6 @@ namespace QuantConnect.Securities.Future
         public FutureHolding(Security security, ICurrencyConverter currencyConverter)
             : base(security, currencyConverter)
         {
-        }
-
-        /// <summary>
-        /// Update local copy of closing price value.
-        /// </summary>
-        /// <param name="closingPrice">Price of the underlying asset to be used for calculating market price / portfolio value</param>
-        public override void UpdateMarketPrice(decimal closingPrice)
-        {
-            base.UpdateMarketPrice(closingPrice);
-
-            // simple settlement price logic, we just use the latest price. This could potentially be replaced by a settlement price algorithm or data feed
-            SettlementPrice = closingPrice;
         }
     }
 }

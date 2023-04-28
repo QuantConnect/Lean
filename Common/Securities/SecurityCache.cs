@@ -132,7 +132,7 @@ namespace QuantConnect.Securities
 
             var last = data[data.Count - 1];
 
-            AddDataImpl(last, cacheByType: false);
+            ProcessDataPoint(last, cacheByType: false);
         }
 
         /// <summary>
@@ -144,10 +144,15 @@ namespace QuantConnect.Securities
         /// </summary>
         public void AddData(BaseData data)
         {
-            AddDataImpl(data, cacheByType: true);
+            ProcessDataPoint(data, cacheByType: true);
         }
 
-        private void AddDataImpl(BaseData data, bool cacheByType)
+        /// <summary>
+        /// Will consume the given data point updating the cache state and it's properties
+        /// </summary>
+        /// <param name="data">The data point to process</param>
+        /// <param name="cacheByType">True if this data point should be cached by type</param>
+        protected virtual void ProcessDataPoint(BaseData data, bool cacheByType)
         {
             var tick = data as Tick;
             if (tick?.TickType == TickType.OpenInterest)

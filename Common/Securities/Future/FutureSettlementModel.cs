@@ -86,7 +86,8 @@ namespace QuantConnect.Securities.Future
                 if ((_lastSettlementDate != default) && security.Invested)
                 {
                     var futureHolding = (FutureHolding)security.Holdings;
-                    _settlementPrice = futureHolding.SettlementPrice;
+                    var futureCache = (FutureCache)security.Cache;
+                    _settlementPrice = futureCache.SettlementPrice;
                     _settledFutureQuantity = security.Holdings.Quantity;
 
                     // We settled the daily P&L, losers pay winners

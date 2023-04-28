@@ -15,6 +15,12 @@
 */
 
 using System.Collections.Generic;
+using QuantConnect.Securities.Cfd;
+using QuantConnect.Securities.Forex;
+using QuantConnect.Securities.Index;
+using QuantConnect.Securities.Option;
+using QuantConnect.Securities.Future;
+using QuantConnect.Securities.Equity;
 
 namespace QuantConnect.Securities
 {
@@ -49,7 +55,32 @@ namespace QuantConnect.Securities
         /// <returns>The cache instance to use</returns>
         public SecurityCache GetSecurityCache(Symbol symbol)
         {
-            var securityCache = new SecurityCache();
+            SecurityCache securityCache;
+            switch (symbol.SecurityType)
+            {
+                case SecurityType.Equity:
+                    securityCache = new EquityCache();
+                    break;
+                case SecurityType.Option:
+                    securityCache = new OptionCache();
+                    break;
+                case SecurityType.Forex:
+                    securityCache = new ForexCache();
+                    break;
+                case SecurityType.Future:
+                    securityCache = new FutureCache();
+                    break;
+                case SecurityType.Cfd:
+                    securityCache = new CfdCache();
+                    break;
+                case SecurityType.Index:
+                    securityCache = new IndexCache();
+                    break;
+                default:
+                    securityCache = new SecurityCache();
+                    break;
+            }
+
             // lock just in case but we do not expect this class be used by multiple consumers
             lock (_relatedSymbols)
             {
