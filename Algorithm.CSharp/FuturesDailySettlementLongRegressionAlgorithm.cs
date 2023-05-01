@@ -36,6 +36,18 @@ namespace QuantConnect.Algorithm.CSharp
         private Future _future;
 
         /// <summary>
+        /// Expected cash balance for each day
+        /// </summary>
+        protected virtual Dictionary<DateTime, decimal> ExpectedCash { get; } = new()
+        {
+            { new DateTime(2013, 10, 07), 100000 },
+            { new DateTime(2013, 10, 08), 103264.45m },
+            { new DateTime(2013, 10, 09), 101231.05m },
+            { new DateTime(2013, 10, 10), 101962.10m },
+            { new DateTime(2013, 10, 10, 17, 0, 0), 100905.65m }
+        };
+
+        /// <summary>
         /// Order side factor
         /// </summary>
         protected virtual int OrderSide => 1;
@@ -62,6 +74,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">The current slice of data keyed by symbol string</param>
         public override void OnData(Slice slice)
         {
+            AssertCash(Time.Date);
+
             if (Transactions.OrdersCount == 0)
             {
                 // initial trade
@@ -102,6 +116,18 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        private void AssertCash(DateTime currentTime)
+        {
+            if (ExpectedCash.Remove(currentTime, out var expected))
+            {
+                var value = Portfolio.CashBook.TotalValueInAccountCurrency;
+                if (expected != value)
+                {
+                    throw new Exception($"Unexpected cash balance {value} expected {expected}");
+                }
+            }
+        }
+
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
             if (orderEvent.Status.IsFill())
@@ -132,6 +158,8 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception($"Unexpected UnrealizedProfit value {holdings.UnrealizedProfit}");
             }
+
+            AssertCash(Time);
         }
 
         /// <summary>

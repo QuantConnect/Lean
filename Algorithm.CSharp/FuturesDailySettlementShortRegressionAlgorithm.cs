@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -23,6 +24,18 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class FuturesDailySettlementShortRegressionAlgorithm : FuturesDailySettlementLongRegressionAlgorithm
     {
+        /// <summary>
+        /// Expected cash balance for each day
+        /// </summary>
+        protected override Dictionary<DateTime, decimal> ExpectedCash { get; } = new()
+        {
+            { new DateTime(2013, 10, 07), 100000 },
+            { new DateTime(2013, 10, 08), 96701.95m },
+            { new DateTime(2013, 10, 09), 98718.55m },
+            { new DateTime(2013, 10, 10), 97937.10m },
+            { new DateTime(2013, 10, 10, 17, 0, 0), 98943.15m }
+        };
+
         /// <summary>
         /// Order side factor
         /// </summary>
