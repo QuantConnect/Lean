@@ -84,7 +84,7 @@ namespace QuantConnect.Securities.Future
                 new FutureFillModel(),
                 new InteractiveBrokersFeeModel(),
                 new ConstantSlippageModel(0),
-                new ImmediateSettlementModel(),
+                new FutureSettlementModel(),
                 Securities.VolatilityModel.Null,
                 null,
                 new SecurityDataFilter(),
@@ -131,7 +131,7 @@ namespace QuantConnect.Securities.Future
                 new FutureFillModel(),
                 new InteractiveBrokersFeeModel(),
                 new ConstantSlippageModel(0),
-                new ImmediateSettlementModel(),
+                new FutureSettlementModel(),
                 Securities.VolatilityModel.Null,
                 null,
                 new SecurityDataFilter(),
@@ -197,6 +197,22 @@ namespace QuantConnect.Securities.Future
         public IDerivativeSecurityFilter ContractFilter
         {
             get; set;
+        }
+
+        /// <summary>
+        /// Sets the <see cref="LocalTimeKeeper"/> to be used for this <see cref="Security"/>.
+        /// This is the source of this instance's time.
+        /// </summary>
+        /// <param name="localTimeKeeper">The source of this <see cref="Security"/>'s time.</param>
+        public override void SetLocalTimeKeeper(LocalTimeKeeper localTimeKeeper)
+        {
+            base.SetLocalTimeKeeper(localTimeKeeper);
+
+            var model = SettlementModel as FutureSettlementModel;
+            if (model != null)
+            {
+                model.SetLocalDateTimeFrontier(LocalTime);
+            }
         }
 
         /// <summary>

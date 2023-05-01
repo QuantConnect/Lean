@@ -23,6 +23,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Python;
+using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Positions;
 
 namespace QuantConnect.Securities
@@ -433,11 +434,17 @@ namespace QuantConnect.Securities
                                 totalHoldingsValueWithoutForexCryptoFutureCfd += position.Holdings.HoldingsValue;
                             }
 
-                            // Futures and CFDs don't impact account cash, so they must be calculated
+                            // CFDs don't impact account cash, so they must be calculated
                             // by applying the unrealized P&L to the cash balance.
-                            if (securityType == SecurityType.Future || securityType == SecurityType.Cfd || securityType == SecurityType.CryptoFuture)
+                            if (securityType == SecurityType.Cfd || securityType == SecurityType.CryptoFuture)
                             {
                                 totalFuturesAndCfdHoldingsValue += position.Holdings.UnrealizedProfit;
+                            }
+                            // Futures P&L is settled daily into cash, here we take into account the current days unsettled profit
+                            if (securityType == SecurityType.Future)
+                            {
+                                var futureHoldings = (FutureHolding)position.Holdings;
+                                totalFuturesAndCfdHoldingsValue += futureHoldings.UnsettledProfit;
                             }
                         }
 

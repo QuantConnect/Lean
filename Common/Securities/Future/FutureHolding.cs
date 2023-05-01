@@ -22,6 +22,22 @@ namespace QuantConnect.Securities.Future
     public class FutureHolding : SecurityHolding
     {
         /// <summary>
+        /// The cash settled profit for the current open position
+        /// </summary>
+        public virtual decimal SettledProfit { get; set; }
+
+        /// <summary>
+        /// Unsettled profit for the current open position <see cref="SettledProfit"/>
+        /// </summary>
+        public virtual decimal UnsettledProfit
+        {
+            get
+            {
+                return TotalCloseProfit() - SettledProfit;
+            }
+        }
+
+        /// <summary>
         /// Future Holding Class constructor
         /// </summary>
         /// <param name="security">The future security being held</param>
