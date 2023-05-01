@@ -146,6 +146,13 @@ namespace QuantConnect.Python
             using (Py.GIL())
             {
                 var result = _model.CanSubmitOrder(security, order, out message);
+                // Since pythonnet does not support out parameters, the methods return
+                // a tuple where the out parameter comes after the other returned values
+                if (!PyTuple.IsTupleType(result))
+                {
+                    throw new ArgumentException($@"{_model.__class__.__name__}.CanSubmitOrder(): Must return a tuple value where the first value is a bool and the second a BrokerageMessageEvent");
+                }
+
                 message = (result[1] as PyObject).As<BrokerageMessageEvent>();
                 return (result[0] as PyObject).As<bool>();
             }
@@ -164,6 +171,13 @@ namespace QuantConnect.Python
             using (Py.GIL())
             {
                 var result = _model.CanUpdateOrder(security,order, request, out message);
+                // Since pythonnet does not support out parameters, the methods return
+                // a tuple where the out parameter comes after the other returned values
+                if (!PyTuple.IsTupleType(result))
+                {
+                    throw new ArgumentException($@"{_model.__class__.__name__}.CanUpdateOrder(): Must return a tuple value where the first value is a bool and the second a BrokerageMessageEvent");
+                }
+
                 message = (result[1] as PyObject).As<BrokerageMessageEvent>();
                 return (result[0] as PyObject).As<bool>();
             }

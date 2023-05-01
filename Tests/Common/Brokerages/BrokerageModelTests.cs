@@ -17,6 +17,7 @@ using System;
 using NodaTime;
 using NUnit.Framework;
 using Python.Runtime;
+using QuantConnect.Orders;
 using QuantConnect.Brokerages;
 using QuantConnect.Python;
 using QuantConnect.Securities;
@@ -52,6 +53,69 @@ class CustomBrokerageModel({brokerage.GetType().Name}):
                 ").GetAttr("CustomBrokerageModel");
 
                 Assert.AreEqual(brokerageName, BrokerageModel.GetBrokerageName(new BrokerageModelPythonWrapper(PyCustomBrokerageModel())));
+            }
+        }
+
+        [Test]
+        public void CustomPythonBrokerageCanSubmitOrderMethodFailsWhenNoTupleIsReturned()
+        {
+            using (Py.GIL())
+            {
+                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
+                    @$"
+from AlgorithmImports import *
+
+class CustomBrokerageModel(DefaultBrokerageModel):
+    def CanSubmitOrder(self, security: SecurityType, order: Order, message: BrokerageMessageEvent):
+        return True
+                ").GetAttr("CustomBrokerageModel");
+
+                static Security getSecurity(Symbol symbol) =>
+                new(symbol,
+                    SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
+                    new Cash(Currencies.USD, 0, 1),
+                    SymbolProperties.GetDefault(Currencies.USD),
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache());
+
+                var security = getSecurity(Symbols.SPY);
+                var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
+                var order = new TestOrder();
+                var message = new BrokerageMessageEvent(BrokerageMessageType.Information, "", "");
+                Assert.Throws<ArgumentException>(() => model.CanSubmitOrder(security, order, out message));
+            }
+        }
+
+        [Test]
+        public void CustomPythonBrokerageCanUpdateOrderMethodFailsWhenNoTupleIsReturned()
+        {
+            using (Py.GIL())
+            {
+                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
+                    @$"
+from AlgorithmImports import *
+
+class CustomBrokerageModel(DefaultBrokerageModel):
+    def CanUpdateOrder(self, security: SecurityType, order: Order, request: UpdateOrderRequest, message: BrokerageMessageEvent):
+        return False
+                ").GetAttr("CustomBrokerageModel");
+
+                static Security getSecurity(Symbol symbol) =>
+                new(symbol,
+                    SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
+                    new Cash(Currencies.USD, 0, 1),
+                    SymbolProperties.GetDefault(Currencies.USD),
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache());
+
+                var security = getSecurity(Symbols.SPY);
+                var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
+                var order = new TestOrder();
+                var updateRequest = new UpdateOrderRequest(DateTime.Now, 1, new UpdateOrderFields());
+                var message = new BrokerageMessageEvent(BrokerageMessageType.Information, "", "");
+                Assert.Throws<ArgumentException>(() => model.CanUpdateOrder(security, order, updateRequest, out message));
             }
         }
 
@@ -155,6 +219,24 @@ class CustomBrokerageModel({brokerage.GetType().Name}):
                 new TestCaseData(new InteractiveBrokersBrokerageModel(AccountType.Cash), AccountType.Cash, SecurityType.Forex, typeof(CashBuyingPowerModel)),
                 new TestCaseData(new InteractiveBrokersBrokerageModel(AccountType.Margin), AccountType.Margin, SecurityType.Forex, typeof(SecurityMarginModel)),
             };
+        }
+
+        /// <summary>
+        /// Class to test custom python brokerage model CanUpdateOrder() and CanSubmitOrder() methods works correctly
+        /// </summary>
+        private class TestOrder : Order
+        {
+            public override OrderType Type => throw new NotImplementedException();
+
+            public override Order Clone()
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override decimal GetValueImpl(Security security)
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }
