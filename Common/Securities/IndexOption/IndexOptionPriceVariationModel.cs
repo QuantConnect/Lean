@@ -28,7 +28,7 @@ namespace QuantConnect.Securities.IndexOption
         /// <returns>Decimal minimum price variation of a given security</returns>
         public decimal GetMinimumPriceVariation(GetMinimumPriceVariationParameters parameters)
         {
-            return IndexOptionSymbolProperties.MinimumPriceVariationForPrice(parameters.ReferencePrice);
+            return IndexOptionSymbolProperties.MinimumPriceVariationForPrice(parameters.Security.Symbol, parameters.ReferencePrice);
         }
     }
 }
