@@ -99,11 +99,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             {"Total Trades", "4"},
             {"Average Win", "0%"},
-            {"Average Loss", "-0.02%"},
-            {"Compounding Annual Return", "-5.684%"},
+            {"Average Loss", "-0.01%"},
+            {"Compounding Annual Return", "-4.893%"},
             {"Drawdown", "0.700%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "-0.107%"},
+            {"Net Profit", "-0.092%"},
             {"Sharpe Ratio", "0"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "100%"},
@@ -119,8 +119,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Fees", "$1252.00"},
             {"Estimated Strategy Capacity", "$130000.00"},
             {"Lowest Capacity Asset", "GOOCV W78ZFMML01JA|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "1.20%"},
-            {"OrderListHash", "583b89f10ce6ca6fa842b21a35fbf0f2"}
+            {"Portfolio Turnover", "1.17%"},
+            {"OrderListHash", "2814378e93ca769b28317db902c2f4e5"}
         };
     }
 }
