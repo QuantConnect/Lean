@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -50,17 +50,17 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(0, portfolio.UnsettledCash);
 
             var timeUtc = Noon.ConvertToUtc(TimeZones.NewYork);
-            model.ApplyFunds(portfolio, security, timeUtc, Currencies.USD, 1000);
+            model.ApplyFunds(new ApplyFundsSettlementModelParameters(portfolio, security, timeUtc, new CashAmount(1000, Currencies.USD), null));
 
             Assert.AreEqual(2000, portfolio.Cash);
             Assert.AreEqual(0, portfolio.UnsettledCash);
 
-            model.ApplyFunds(portfolio, security, timeUtc, Currencies.USD, -500);
+            model.ApplyFunds(new ApplyFundsSettlementModelParameters(portfolio, security, timeUtc, new CashAmount(-500, Currencies.USD), null));
 
             Assert.AreEqual(1500, portfolio.Cash);
             Assert.AreEqual(0, portfolio.UnsettledCash);
 
-            model.ApplyFunds(portfolio, security, timeUtc, Currencies.USD, 1000);
+            model.ApplyFunds(new ApplyFundsSettlementModelParameters(portfolio, security, timeUtc, new CashAmount(1000, Currencies.USD), null));
 
             Assert.AreEqual(2500, portfolio.Cash);
             Assert.AreEqual(0, portfolio.UnsettledCash);
