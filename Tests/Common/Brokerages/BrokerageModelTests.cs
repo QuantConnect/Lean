@@ -88,6 +88,41 @@ class CustomBrokerageModel(DefaultBrokerageModel):
         }
 
         [Test]
+        public void CustomPythonBrokerageCanSubmitOrderMethodDoesNotFailWhenTupleIsReturned()
+        {
+            using (Py.GIL())
+            {
+                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
+                    @$"
+from AlgorithmImports import *
+
+class CustomBrokerageModel(DefaultBrokerageModel):
+    def CanSubmitOrder(self, security: SecurityType, order: Order, message: BrokerageMessageEvent):
+        message = None
+        return True, message
+                ").GetAttr("CustomBrokerageModel");
+
+                static Security getSecurity(Symbol symbol) =>
+                new(symbol,
+                    SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
+                    new Cash(Currencies.USD, 0, 1),
+                    SymbolProperties.GetDefault(Currencies.USD),
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache());
+
+                var security = getSecurity(Symbols.SPY);
+                var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
+                var order = new TestOrder();
+                var message = new BrokerageMessageEvent(BrokerageMessageType.Information, "", "");
+                var result = false;
+                Assert.DoesNotThrow(() => result = model.CanSubmitOrder(security, order, out message));
+                Assert.IsTrue(result);
+                Assert.IsNull(message);
+            }
+        }
+
+        [Test]
         public void CustomPythonBrokerageCanUpdateOrderMethodFailsWhenNoTupleIsReturned()
         {
             using (Py.GIL())
@@ -116,6 +151,43 @@ class CustomBrokerageModel(DefaultBrokerageModel):
                 var updateRequest = new UpdateOrderRequest(DateTime.Now, 1, new UpdateOrderFields());
                 var message = new BrokerageMessageEvent(BrokerageMessageType.Information, "", "");
                 Assert.Throws<ArgumentException>(() => model.CanUpdateOrder(security, order, updateRequest, out message));
+            }
+        }
+
+        [Test]
+        public void CustomPythonBrokerageCanUpdateOrderMethodDoesNotFailWhenNoTupleReturned()
+        {
+            using (Py.GIL())
+            {
+                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
+                    @$"
+from AlgorithmImports import *
+
+class CustomBrokerageModel(DefaultBrokerageModel):
+    def CanUpdateOrder(self, security: SecurityType, order: Order, request: UpdateOrderRequest, message: BrokerageMessageEvent):
+        message = BrokerageMessageEvent(BrokerageMessageType.Information, """", """")
+        return False, message
+                ").GetAttr("CustomBrokerageModel");
+
+                static Security getSecurity(Symbol symbol) =>
+                new(symbol,
+                    SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
+                    new Cash(Currencies.USD, 0, 1),
+                    SymbolProperties.GetDefault(Currencies.USD),
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache());
+
+                var security = getSecurity(Symbols.SPY);
+                var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
+                var order = new TestOrder();
+                var updateRequest = new UpdateOrderRequest(DateTime.Now, 1, new UpdateOrderFields());
+                var result = true;
+                var message = new BrokerageMessageEvent(BrokerageMessageType.Information, "", "");
+                Assert.DoesNotThrow(() => result = model.CanUpdateOrder(security, order, updateRequest, out message));
+                Assert.IsFalse(result);
+                var expectedMessage = new BrokerageMessageEvent(BrokerageMessageType.Information, "", "");
+                Assert.AreEqual(expectedMessage.Message, message.Message);
             }
         }
 
