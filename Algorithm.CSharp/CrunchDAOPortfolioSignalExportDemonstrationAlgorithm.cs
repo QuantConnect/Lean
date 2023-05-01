@@ -82,6 +82,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice"></param>
         public override void OnData(Slice slice)
         {
+            if (IsWarmingUp) return;
+
             // Place an order as soon as possible to send a signal.
             if (_firstCall)
             {

@@ -67,6 +67,8 @@ class NumeraiSignalExportDemonstrationAlgorithm(QCAlgorithm):
     def OnData(self, data):
         ''' Reduce the quantity of holdings for one security and increase the holdings to the another
         one when the EMA's indicators crosses between themselves, then send a signal to Numerai API '''
+        if self.IsWarmingUp: return
+        
         # Place an order as soon as possible to send a signal.
         if self.first_call:
             self.SetHoldings("SPY", 0.1)
