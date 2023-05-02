@@ -61,6 +61,7 @@ namespace QuantConnect.Tests.Engine.Setup
             _brokerage = new TestBrokerage();
 
             _brokerageSetupHandler = new TestableBrokerageSetupHandler();
+            _transactionHandler.Initialize(_algorithm, _brokerage, _resultHandler);
         }
 
         [OneTimeTearDown]

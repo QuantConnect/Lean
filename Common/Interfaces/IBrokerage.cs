@@ -48,6 +48,11 @@ namespace QuantConnect.Interfaces
         event EventHandler<OptionNotificationEventArgs> OptionNotification;
 
         /// <summary>
+        /// Event that fires each time there's a brokerage side generated order
+        /// </summary>
+        event EventHandler<NewBrokerageOrderNotificationEventArgs> NewBrokerageOrderNotification;
+
+        /// <summary>
         /// Event that fires each time a delisting occurs
         /// </summary>
         /// <remarks>TODO: Wire brokerages to call this event to process delistings</remarks>
