@@ -21,6 +21,7 @@ using QuantConnect.Orders;
 using QuantConnect.Brokerages;
 using QuantConnect.Python;
 using QuantConnect.Securities;
+using Moq;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
@@ -70,20 +71,10 @@ class CustomBrokerageModel(DefaultBrokerageModel):
         return True
                 ").GetAttr("CustomBrokerageModel");
 
-                static Security getSecurity(Symbol symbol) =>
-                new(symbol,
-                    SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
-                    new Cash(Currencies.USD, 0, 1),
-                    SymbolProperties.GetDefault(Currencies.USD),
-                    ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache());
-
-                var security = getSecurity(Symbols.SPY);
+                var security = GetSecurity(Symbols.SPY);
                 var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
-                var order = new TestOrder();
                 var message = new BrokerageMessageEvent(BrokerageMessageType.Information, "", "");
-                Assert.Throws<ArgumentException>(() => model.CanSubmitOrder(security, order, out message));
+                Assert.Throws<ArgumentException>(() => model.CanSubmitOrder(security, _order.Object, out message));
             }
         }
 
@@ -102,21 +93,11 @@ class CustomBrokerageModel(DefaultBrokerageModel):
         return True, message
                 ").GetAttr("CustomBrokerageModel");
 
-                static Security getSecurity(Symbol symbol) =>
-                new(symbol,
-                    SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
-                    new Cash(Currencies.USD, 0, 1),
-                    SymbolProperties.GetDefault(Currencies.USD),
-                    ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache());
-
-                var security = getSecurity(Symbols.SPY);
+                var security = GetSecurity(Symbols.SPY);
                 var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
-                var order = new TestOrder();
                 var message = new BrokerageMessageEvent(BrokerageMessageType.Information, "", "");
                 var result = false;
-                Assert.DoesNotThrow(() => result = model.CanSubmitOrder(security, order, out message));
+                Assert.DoesNotThrow(() => result = model.CanSubmitOrder(security, _order.Object, out message));
                 Assert.IsTrue(result);
                 Assert.IsNull(message);
             }
@@ -136,21 +117,11 @@ class CustomBrokerageModel(DefaultBrokerageModel):
         return False
                 ").GetAttr("CustomBrokerageModel");
 
-                static Security getSecurity(Symbol symbol) =>
-                new(symbol,
-                    SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
-                    new Cash(Currencies.USD, 0, 1),
-                    SymbolProperties.GetDefault(Currencies.USD),
-                    ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache());
-
-                var security = getSecurity(Symbols.SPY);
+                var security = GetSecurity(Symbols.SPY);
                 var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
-                var order = new TestOrder();
                 var updateRequest = new UpdateOrderRequest(DateTime.Now, 1, new UpdateOrderFields());
                 var message = new BrokerageMessageEvent(BrokerageMessageType.Information, "", "");
-                Assert.Throws<ArgumentException>(() => model.CanUpdateOrder(security, order, updateRequest, out message));
+                Assert.Throws<ArgumentException>(() => model.CanUpdateOrder(security, _order.Object, updateRequest, out message));
             }
         }
 
@@ -169,48 +140,96 @@ class CustomBrokerageModel(DefaultBrokerageModel):
         return False, message
                 ").GetAttr("CustomBrokerageModel");
 
-                static Security getSecurity(Symbol symbol) =>
-                new(symbol,
-                    SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
-                    new Cash(Currencies.USD, 0, 1),
-                    SymbolProperties.GetDefault(Currencies.USD),
-                    ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache());
-
-                var security = getSecurity(Symbols.SPY);
+                var security = GetSecurity(Symbols.SPY);
                 var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
-                var order = new TestOrder();
                 var updateRequest = new UpdateOrderRequest(DateTime.Now, 1, new UpdateOrderFields());
                 var result = true;
                 var message = new BrokerageMessageEvent(BrokerageMessageType.Information, "", "");
-                Assert.DoesNotThrow(() => result = model.CanUpdateOrder(security, order, updateRequest, out message));
+                Assert.DoesNotThrow(() => result = model.CanUpdateOrder(security, _order.Object, updateRequest, out message));
                 Assert.IsFalse(result);
                 Assert.AreEqual("Order can not be updated", message.Message);
+            }
+        }
+
+        [TestCaseSource(nameof(GetBrokerageNameTestCases))]
+        public void CustomPythonBrokerageCanSubmitOrderMethodDoesNotFailWhenIsNotOverriden(IBrokerageModel brokerage, BrokerageName brokerageName)
+        {
+            using (Py.GIL())
+            {
+                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
+                    @$"
+from AlgorithmImports import *
+
+class CustomBrokerageModel({brokerage.GetType().Name}):
+    pass
+                ").GetAttr("CustomBrokerageModel");
+
+                var security = GetSecurity(Symbols.SPY);
+                var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
+                var message = new BrokerageMessageEvent(BrokerageMessageType.Information, "", "Initial Message");
+                Assert.DoesNotThrow(() => model.CanSubmitOrder(security, _order.Object, out message));
+
+                if (message != null)
+                {
+                    Assert.AreNotEqual("Initial Message", message.Message);
+                }
+            }
+        }
+
+        [TestCaseSource(nameof(GetBrokerageNameTestCases))]
+        public void CustomPythonBrokerageCanUpdateOrderMethodDoesNotFailWhenIsNotOverriden(IBrokerageModel brokerage, BrokerageName brokerageName)
+        {
+            using (Py.GIL())
+            {
+                dynamic PyCustomBrokerageModel = PyModule.FromString("testModule",
+                    @$"
+from AlgorithmImports import *
+
+class CustomBrokerageModel({brokerage.GetType().Name}):
+    pass
+                ").GetAttr("CustomBrokerageModel");
+
+                var security = GetSecurity(Symbols.SPY);
+                var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
+                var updateRequest = new UpdateOrderRequest(DateTime.Now, 1, new UpdateOrderFields());
+                var message = new BrokerageMessageEvent(BrokerageMessageType.Information, "", "Initial Message");
+                Assert.DoesNotThrow(() => model.CanUpdateOrder(security, _order.Object, updateRequest, out message));
+
+                if (message != null)
+                {
+                    Assert.AreNotEqual("Initial Message", message.Message);
+                }
             }
         }
 
         [TestCaseSource(nameof(GetBrokerageBuyingPowerModel))]
         public void GetsCorrectBuyingPowerModelForSecurityAndAccountType(IBrokerageModel brokerage, AccountType accountType, SecurityType securityType, Type type)
         {
-            static Security getSecurity(Symbol symbol) =>
-                new(symbol,
-                    SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
-                    new Cash(Currencies.USD, 0, 1),
-                    SymbolProperties.GetDefault(Currencies.USD),
-                    ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null,
-                    new SecurityCache());
-
             var security = securityType == SecurityType.Equity
-                ? getSecurity(Symbols.SPY)
-                : getSecurity(Symbols.EURUSD);
+                ? GetSecurity(Symbols.SPY)
+                : GetSecurity(Symbols.EURUSD);
 
             var buyingPowerModel = brokerage?.GetBuyingPowerModel(security);
 
             Assert.AreEqual(buyingPowerModel.GetType(), type);
         }
 
+        private static Security GetSecurity(Symbol symbol) =>
+        new(symbol,
+            SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
+            new Cash(Currencies.USD, 0, 1),
+            SymbolProperties.GetDefault(Currencies.USD),
+            ErrorCurrencyConverter.Instance,
+            RegisteredSecurityDataTypesProvider.Null,
+        new SecurityCache());
+
+        private static Mock<MarketOrder> _order = new Mock<MarketOrder>
+        {
+            Object =
+                {
+                    Quantity = 100
+                }
+        };
 
         private static TestCaseData[] GetBrokerageNameTestCases()
         {
@@ -290,24 +309,6 @@ class CustomBrokerageModel(DefaultBrokerageModel):
                 new TestCaseData(new InteractiveBrokersBrokerageModel(AccountType.Cash), AccountType.Cash, SecurityType.Forex, typeof(CashBuyingPowerModel)),
                 new TestCaseData(new InteractiveBrokersBrokerageModel(AccountType.Margin), AccountType.Margin, SecurityType.Forex, typeof(SecurityMarginModel)),
             };
-        }
-
-        /// <summary>
-        /// Class to test custom python brokerage model CanUpdateOrder() and CanSubmitOrder() methods works correctly
-        /// </summary>
-        private class TestOrder : Order
-        {
-            public override OrderType Type => throw new NotImplementedException();
-
-            public override Order Clone()
-            {
-                throw new NotImplementedException();
-            }
-
-            protected override decimal GetValueImpl(Security security)
-            {
-                throw new NotImplementedException();
-            }
         }
     }
 }

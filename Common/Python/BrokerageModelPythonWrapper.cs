@@ -91,9 +91,12 @@ namespace QuantConnect.Python
                     var dic = new Dictionary<SecurityType, string>();
                     foreach (var item in markets)
                     {
-                        var market = (item as PyObject).As<SecurityType>();
+                        using var pyItem = item as PyObject;
+                        var market = pyItem.As<SecurityType>();
                         dic[market] = markets[item];
                     }
+
+                    (markets as PyObject).Dispose();
                     return dic;
                 }
             }
@@ -145,7 +148,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                var result = _model.CanSubmitOrder(security, order, out message);
+                using var result = _model.CanSubmitOrder(security, order, out message) as PyObject;
                 // Since pythonnet does not support out parameters, the methods return
                 // a tuple where the out parameter comes after the other returned values
                 if (!PyTuple.IsTupleType(result))
@@ -153,8 +156,8 @@ namespace QuantConnect.Python
                     throw new ArgumentException($@"{_model.__class__.__name__}.CanSubmitOrder(): Must return a tuple value where the first value is a bool and the second a BrokerageMessageEvent");
                 }
 
-                message = (result[1] as PyObject).As<BrokerageMessageEvent>();
-                return (result[0] as PyObject).As<bool>();
+                message = result[1].As<BrokerageMessageEvent>();
+                return result[0].As<bool>();
             }
         }
 
@@ -170,7 +173,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                var result = _model.CanUpdateOrder(security,order, request, out message);
+                using var result = _model.CanUpdateOrder(security,order, request, out message) as PyObject;
                 // Since pythonnet does not support out parameters, the methods return
                 // a tuple where the out parameter comes after the other returned values
                 if (!PyTuple.IsTupleType(result))
@@ -178,8 +181,8 @@ namespace QuantConnect.Python
                     throw new ArgumentException($@"{_model.__class__.__name__}.CanUpdateOrder(): Must return a tuple value where the first value is a bool and the second a BrokerageMessageEvent");
                 }
 
-                message = (result[1] as PyObject).As<BrokerageMessageEvent>();
-                return (result[0] as PyObject).As<bool>();
+                message = result[1].As<BrokerageMessageEvent>();
+                return result[0].As<bool>();
             }
         }
 

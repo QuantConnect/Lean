@@ -25,7 +25,7 @@ using System.Collections.Generic;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm to test we can specify an custom brokerage model, and override some of its methods
+    /// Regression algorithm to test we can specify a custom brokerage model, and override some of its methods
     /// </summary>
     public class CustomBrokerageModelRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
@@ -38,7 +38,6 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2013, 10, 7);
             SetEndDate(2013, 10, 11);
-            SetCash(10000000);
             SetBrokerageModel(new CustomBrokerageModel());
             AddEquity("SPY", Resolution.Daily);
             AddEquity("AIG", Resolution.Daily);
@@ -149,26 +148,26 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0.179%"},
-            {"Drawdown", "0.000%"},
+            {"Compounding Annual Return", "19.594%"},
+            {"Drawdown", "0.200%"},
             {"Expectancy", "0"},
-            {"Net Profit", "0.002%"},
-            {"Sharpe Ratio", "4.805"},
-            {"Probabilistic Sharpe Ratio", "66.935%"},
+            {"Net Profit", "0.245%"},
+            {"Sharpe Ratio", "5.194"},
+            {"Probabilistic Sharpe Ratio", "66.956%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.001"},
-            {"Beta", "0.001"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-8.916"},
-            {"Tracking Error", "0.222"},
-            {"Treynor Ratio", "1.069"},
+            {"Alpha", "-0.12"},
+            {"Beta", "0.145"},
+            {"Annual Standard Deviation", "0.032"},
+            {"Annual Variance", "0.001"},
+            {"Information Ratio", "-9.54"},
+            {"Tracking Error", "0.19"},
+            {"Treynor Ratio", "1.156"},
             {"Total Fees", "$1.00"},
-            {"Estimated Strategy Capacity", "$370000000000.00"},
+            {"Estimated Strategy Capacity", "$4100000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.03%"},
+            {"Portfolio Turnover", "2.90%"},
             {"OrderListHash", "ddc47b6d41e85b84d8bb9cf1523e1829"}
         };
     }

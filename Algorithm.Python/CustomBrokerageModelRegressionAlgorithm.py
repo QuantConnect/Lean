@@ -14,13 +14,12 @@
 from AlgorithmImports import *
 
 ### <summary>
-### Regression algorithm to test we can specify an custom brokerage model, and override some of its methods
+### Regression algorithm to test we can specify a custom brokerage model, and override some of its methods
 ### </summary>
 class CustomBrokerageModelRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
         self.SetStartDate(2013,10,7)
         self.SetEndDate(2013,10,11)
-        self.SetCash(10000000)
         self.SetBrokerageModel(CustomBrokerageModel())
         self.AddEquity("SPY", Resolution.Daily)
         self.AddEquity("AIG", Resolution.Daily)
