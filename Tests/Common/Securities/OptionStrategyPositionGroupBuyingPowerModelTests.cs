@@ -608,12 +608,6 @@ namespace QuantConnect.Tests.Common.Securities
 
             var currentUsedMargin = buyingPowerModel.GetInitialMarginRequirement(_portfolio, positionGroup);
 
-            Console.WriteLine($"Long unit margin: {longUnitMargin}");
-            Console.WriteLine($"Short unit margin: {shortUnitMargin}");
-            Console.WriteLine($"Expected quantity: {expectedQuantity}");
-            Console.WriteLine($"Initial used margin: {currentUsedMargin}");
-            Console.WriteLine($"Final target margin: {targetFinalMargin}");
-
             var quantity = buyingPowerModel.GetPositionGroupOrderQuantity(_portfolio, positionGroup, currentUsedMargin, targetFinalMargin,
                 longUnitGroup, longUnitMargin, out _);
 

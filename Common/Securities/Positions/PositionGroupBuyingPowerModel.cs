@@ -310,7 +310,7 @@ namespace QuantConnect.Securities.Positions
 
             // 6. Begin iterating
             var lastPositionGroupOrderQuantity = 0m;    // For safety check
-            decimal orderFees = 0m;
+            decimal orderFees;
             decimal signedTargetHoldingsMargin;
             decimal positionGroupQuantity;
             do
@@ -561,15 +561,17 @@ namespace QuantConnect.Securities.Positions
             // so we can calculate holdings to get to the new target margin directly. This is very helpful for
             // odd cases where margin requirements aren't linear.
             var positionGroupQuantity = -currentPositionGroup.Quantity;
+
             // Use the margin for one unit to make our initial guess.
             positionGroupQuantity += targetFinalMargin / unitMargin;
-            // TODO: Do we need this rounding?
+
             // Determine the rounding mode for this order size
             var roundingMode = targetFinalMargin < 0
                 // Ending in short position; orders need to be rounded towards positive so we end up under our target
                 ? MidpointRounding.ToPositiveInfinity
                 // Ending in long position; orders need to be rounded towards negative so we end up under our target
                 : MidpointRounding.ToNegativeInfinity;
+
             // Round this order size appropriately
             positionGroupQuantity = positionGroupQuantity.DiscretelyRoundBy(1, roundingMode);
 
