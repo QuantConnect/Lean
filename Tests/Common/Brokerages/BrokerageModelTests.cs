@@ -155,7 +155,7 @@ class CustomBrokerageModel(DefaultBrokerageModel):
         }
 
         [Test]
-        public void CustomPythonBrokerageCanUpdateOrderMethodDoesNotFailWhenNoTupleReturned()
+        public void CustomPythonBrokerageCanUpdateOrderMethodDoesNotFailWhenTupleReturned()
         {
             using (Py.GIL())
             {
@@ -165,7 +165,7 @@ from AlgorithmImports import *
 
 class CustomBrokerageModel(DefaultBrokerageModel):
     def CanUpdateOrder(self, security: SecurityType, order: Order, request: UpdateOrderRequest, message: BrokerageMessageEvent):
-        message = BrokerageMessageEvent(BrokerageMessageType.Information, """", """")
+        message = BrokerageMessageEvent(BrokerageMessageType.Information, """", ""Order can not be updated"")
         return False, message
                 ").GetAttr("CustomBrokerageModel");
 
@@ -186,8 +186,7 @@ class CustomBrokerageModel(DefaultBrokerageModel):
                 var message = new BrokerageMessageEvent(BrokerageMessageType.Information, "", "");
                 Assert.DoesNotThrow(() => result = model.CanUpdateOrder(security, order, updateRequest, out message));
                 Assert.IsFalse(result);
-                var expectedMessage = new BrokerageMessageEvent(BrokerageMessageType.Information, "", "");
-                Assert.AreEqual(expectedMessage.Message, message.Message);
+                Assert.AreEqual("Order can not be updated", message.Message);
             }
         }
 
