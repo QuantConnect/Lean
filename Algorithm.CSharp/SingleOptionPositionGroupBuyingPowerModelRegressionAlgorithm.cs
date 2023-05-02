@@ -75,11 +75,16 @@ namespace QuantConnect.Algorithm.CSharp
 
             for (var expectedQuantity = 1; expectedQuantity <= absQuantity; expectedQuantity++)
             {
-                var deltaBuyingPower = marginPerNakedShortUnit * expectedQuantity * 0.95m;
+                // Test going ever shorter
+                var deltaBuyingPower = -marginPerNakedShortUnit * expectedQuantity * 1.05m;
+                PerfomQuantityCalculations(positionGroup, security, -expectedQuantity, deltaBuyingPower);
+
+                // Test going longer until liquidated
+                deltaBuyingPower = marginPerNakedShortUnit * expectedQuantity * 0.95m;
                 PerfomQuantityCalculations(positionGroup, security, expectedQuantity, deltaBuyingPower);
             }
 
-            // Now test that for buying power deltas greater than the total margin used,
+            // Now test going long: for buying power deltas greater than the total margin used,
             // the calculated order quantity starts increasing by the margin required for
             // a group unit without underlyings (complete liquidation + going long)
             var longUnitGroup = positionGroup.Key.CreateUnitGroup();
@@ -89,7 +94,10 @@ namespace QuantConnect.Algorithm.CSharp
             for (var i = 1; i < 10; i++)
             {
                 var expectedQuantity = absQuantity + i;
-                var deltaBuyingPower = usedMargin + marginPerLongUnit * i;
+                // Add 5% to account for initial margin used calculation differences:
+                //  - The position group buying power model uses initial margin for assets at current price.
+                //  - The security buying power model uses initial margin for holdings value directly.
+                var deltaBuyingPower = usedMargin + marginPerLongUnit * 1.05m * i;
                 PerfomQuantityCalculations(positionGroup, security, expectedQuantity, deltaBuyingPower);
             }
         }
@@ -97,9 +105,11 @@ namespace QuantConnect.Algorithm.CSharp
         private void PerfomQuantityCalculations(IPositionGroup positionGroup, Security security, int expectedQuantity,
             decimal deltaBuyingPower)
         {
-            var positionQuantityForDeltaWithPositionGroupBuyingPowerModel = positionGroup.BuyingPowerModel.GetMaximumLotsForDeltaBuyingPower(
-                    new GetMaximumLotsForDeltaBuyingPowerParameters(Portfolio, positionGroup, deltaBuyingPower,
-                        minimumOrderMarginPortfolioPercentage: 0)).NumberOfLots;
+            var positionQuantityForDeltaWithPositionGroupBuyingPowerModel = new TestPositionGroupBuyingPowerModel()
+                .GetMaximumLotsForDeltaBuyingPower(new GetMaximumLotsForDeltaBuyingPowerParameters(Portfolio, positionGroup, deltaBuyingPower,
+                    minimumOrderMarginPortfolioPercentage: 0)).NumberOfLots;
+
+            Debug($"Expected quantity: {expectedQuantity}  --  Actual: {positionQuantityForDeltaWithPositionGroupBuyingPowerModel}");
 
             var positionQuantityForDeltaWithSecurityPositionGroupBuyingPowerModel = new SecurityPositionGroupBuyingPowerModel()
                 .GetMaximumLotsForDeltaBuyingPower(new GetMaximumLotsForDeltaBuyingPowerParameters(Portfolio, positionGroup, deltaBuyingPower,
@@ -109,19 +119,46 @@ namespace QuantConnect.Algorithm.CSharp
                 new GetMaximumOrderQuantityForDeltaBuyingPowerParameters(Portfolio, security, deltaBuyingPower,
                     minimumOrderMarginPortfolioPercentage: 0)).Quantity;
 
-            if (positionQuantityForDeltaWithPositionGroupBuyingPowerModel != positionQuantityForDeltaWithSecurityPositionGroupBuyingPowerModel ||
-                positionQuantityForDeltaWithPositionGroupBuyingPowerModel != positionQuantityForDeltaWithSecurityBuyingPowerModel)
-            {
-                throw new Exception($"Expected all order quantity for delta buying power calls to return the same. Results were: " +
-                    $"PositionGroupBuyingPowerModel: {positionQuantityForDeltaWithPositionGroupBuyingPowerModel}\n" +
-                    $"SecurityPositionGroupBuyingPowerModel: {positionQuantityForDeltaWithSecurityPositionGroupBuyingPowerModel}\n" +
-                    $"BuyingPowerModel: {positionQuantityForDeltaWithSecurityBuyingPowerModel}\n");
-            }
-
             if (positionQuantityForDeltaWithPositionGroupBuyingPowerModel != expectedQuantity)
             {
                 throw new Exception($@"Expected position quantity for delta buying power to be {expectedQuantity} but was {
                     positionQuantityForDeltaWithPositionGroupBuyingPowerModel}");
+            }
+
+            if (positionQuantityForDeltaWithPositionGroupBuyingPowerModel != positionQuantityForDeltaWithSecurityPositionGroupBuyingPowerModel ||
+                positionQuantityForDeltaWithPositionGroupBuyingPowerModel != positionQuantityForDeltaWithSecurityBuyingPowerModel)
+            {
+                throw new Exception($"Expected all order quantity for delta buying power calls to return the same. Results were:\n" +
+                    $"    PositionGroupBuyingPowerModel: {positionQuantityForDeltaWithPositionGroupBuyingPowerModel}\n" +
+                    $"    SecurityPositionGroupBuyingPowerModel: {positionQuantityForDeltaWithSecurityPositionGroupBuyingPowerModel}\n" +
+                    $"    BuyingPowerModel: {positionQuantityForDeltaWithSecurityBuyingPowerModel}\n");
+            }
+        }
+
+        private class TestPositionGroupBuyingPowerModel : PositionGroupBuyingPowerModel
+        {
+            public override InitialMargin GetInitialMarginRequiredForOrder(PositionGroupInitialMarginForOrderParameters parameters)
+            {
+                var ptr = typeof(SecurityPositionGroupBuyingPowerModel).GetMethod("GetInitialMarginRequiredForOrder").MethodHandle.GetFunctionPointer();
+                var method = (Func<PositionGroupInitialMarginForOrderParameters, InitialMargin>)Activator.CreateInstance(
+                    typeof(Func<PositionGroupInitialMarginForOrderParameters, InitialMargin>), this, ptr);
+                return method(parameters);
+            }
+
+            public override InitialMargin GetInitialMarginRequirement(PositionGroupInitialMarginParameters parameters)
+            {
+                var ptr = typeof(SecurityPositionGroupBuyingPowerModel).GetMethod("GetInitialMarginRequirement").MethodHandle.GetFunctionPointer();
+                var method = (Func<PositionGroupInitialMarginParameters, InitialMargin>)Activator.CreateInstance(
+                    typeof(Func<PositionGroupInitialMarginParameters, InitialMargin>), this, ptr);
+                return method(parameters);
+            }
+
+            public override MaintenanceMargin GetMaintenanceMargin(PositionGroupMaintenanceMarginParameters parameters)
+            {
+                var ptr = typeof(SecurityPositionGroupBuyingPowerModel).GetMethod("GetMaintenanceMargin").MethodHandle.GetFunctionPointer();
+                var method = (Func<PositionGroupMaintenanceMarginParameters, MaintenanceMargin>)Activator.CreateInstance(
+                    typeof(Func<PositionGroupMaintenanceMarginParameters, MaintenanceMargin>), this, ptr);
+                return method(parameters);
             }
         }
 

@@ -247,19 +247,12 @@ namespace QuantConnect.Securities.Positions
             //   2. If targeting zero, we can short circuit and return the negative of existing position quantities
             //   3. Determine target buying power, taking into account RequiredFreeBuyingPowerPercent
             //   4. Determine current used margin [we're using initial here to match BuyingPowerModel]
-            //   5. Determine if we need to buy or sell to reach the target and convert to absolutes
+            //   5. Check that the change of margin is above our models minimum percentage change
             //   6. Resolve the group's 'unit' quantities, this is our step size
-            //   7. Compute the initial margin requirement for a single unit
-            //   7a. Compute and add order fees into the unit initial margin requirement
-            //   8. Verify the target is greater than 1 unit's initial margin, otherwise exit w/ zero
-            //   8a. Define minimum bounds on the target as target - (unit order margin + fees)
-            //   9. Assuming linearity, compute estimate of absolute order quantity to reach target
-            //  10. Begin iterating
-            //  11. For each quantity estimate, compute initial margin requirement
-            //  12. Compute order fees and add to the initial margin requirement
-            //  13. Check to see if current estimate yields is w/in one unit's margin of target (must be less than)
-            //  14. Compute a new quantity estimate
-            //  15. After 13 results in ending iteration, return result w/ direction from #5
+            //  6a. Compute the initial margin requirement for a single unit
+            //   7. Begin iterating until the allocated holdings margin (after order fees are applied) less or equal to the expected target margin
+            //  7a. Calculate the amount to order to get the target margin
+            //  7b. Apply order fees to the allocated holdings margin and compare to the target margin to end loop.
 
             var portfolio = parameters.Portfolio;
 
@@ -305,7 +298,7 @@ namespace QuantConnect.Securities.Positions
                 return new GetMaximumLotsResult(0, reason, false);
             }
 
-            // 6. Resolve 'unit'
+            // 6. Resolve 'unit' group -- this is our step size
             var groupUnit = parameters.PositionGroup.Key.CreateUnitGroup();
 
             // 6a. Compute initial margin requirement for a single unit
@@ -321,14 +314,14 @@ namespace QuantConnect.Securities.Positions
                 );
             }
 
-            var lastPositionGroupOrderQuantity = 0m;     // For safety check
+            // 7. Begin iterating
+            var lastPositionGroupOrderQuantity = 0m;    // For safety check
             decimal orderFees = 0m;
             decimal signedTargetHoldingsMargin;
             decimal positionGroupQuantity;
-
             do
             {
-                // Calculate our order quantity
+                // 7a.Calculate the amount to order to get the target margin
                 positionGroupQuantity = GetPositionGroupOrderQuantity(portfolio, currentPositionGroup, currentSignedUsedMargin,
                     signedTargetFinalMargin, groupUnit, absUnitMargin, out signedTargetHoldingsMargin);
                 if (positionGroupQuantity == 0)
@@ -343,7 +336,7 @@ namespace QuantConnect.Securities.Positions
                     return new GetMaximumLotsResult(0, reason, false);
                 }
 
-                // Determine order fees
+                // 7b.Apply order fees to the allocated holdings margin
                 orderFees = GetOrderFeeInAccountCurrency(portfolio, currentPositionGroup.WithQuantity(positionGroupQuantity));
 
                 // Update our target portfolio margin allocated when considering fees, then calculate the new FinalOrderMargin
