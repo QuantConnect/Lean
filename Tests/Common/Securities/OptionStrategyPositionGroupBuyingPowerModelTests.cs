@@ -20,6 +20,7 @@ using NUnit.Framework;
 
 using QuantConnect.Algorithm;
 using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
@@ -503,59 +504,67 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsTrue(hasSufficientBuyingPowerResult.IsSufficient);
         }
 
-        [Test]
-        public void PositionGroupOrderQuantityCalculationForDeltaBuyingPower()
+        // Going even shorter
+        [TestCase(-10, -11)]
+        // Going "less" short
+        [TestCase(-10, -9)]
+        // Liquidating
+        [TestCase(-10, 0)]
+        // Going long from short
+        [TestCase(-10, 10)]
+        public void PositionGroupOrderQuantityCalculationForDeltaBuyingPowerFromShortPosition(int initialHoldingsQuantity, int finalPositionQuantity)
         {
-            const decimal price = 1m;
-            const decimal underlyingPrice = 200m;
-
-            _equity.SetMarketPrice(new Tick { Value = underlyingPrice });
-            _callOption.SetMarketPrice(new Tick { Value = price });
-            _putOption.SetMarketPrice(new Tick { Value = price });
-
-            var initialHoldingsQuantity = -10;
-            _callOption.Holdings.SetHoldings(1.5m, initialHoldingsQuantity);
-            _putOption.Holdings.SetHoldings(1m, initialHoldingsQuantity);
-
-            Assert.AreEqual(1, _portfolio.PositionGroups.Count);
-
-            var positionGroup = _portfolio.PositionGroups.First();
-            Assert.AreEqual(OptionStrategyDefinitions.Straddle.Name, positionGroup.BuyingPowerModel.ToString());
-
-            var callOptionPosition = positionGroup.Positions.Single(x => x.Symbol == _callOption.Symbol);
-            Assert.AreEqual(initialHoldingsQuantity, callOptionPosition.Quantity);
-
-            var putOptionPosition = positionGroup.Positions.Single(x => x.Symbol == _putOption.Symbol);
-            Assert.AreEqual(initialHoldingsQuantity, putOptionPosition.Quantity);
-
-            var usedMargin = _portfolio.TotalMarginUsed;
+            // Just making sure we start from a short position
             var absQuantity = Math.Abs(initialHoldingsQuantity);
+            initialHoldingsQuantity = -absQuantity;
+
+            SetUpOptionStrategy(initialHoldingsQuantity);
+            var positionGroup = _portfolio.PositionGroups.Single();
+
+            var expectedQuantity = finalPositionQuantity - initialHoldingsQuantity;
+            var usedMargin = _portfolio.TotalMarginUsed;
             var marginPerNakedShortUnit = usedMargin / absQuantity;
 
-            for (var expectedQuantity = 1m; expectedQuantity <= absQuantity; expectedQuantity++)
-            {
-                // Test going ever shorter
-                var deltaBuyingPower = -marginPerNakedShortUnit * expectedQuantity * 1.01m;
-                ComputeAndAssertQuantityForDeltaBuyingPower(positionGroup, -expectedQuantity, deltaBuyingPower);
-
-                // Test going longer until liquidated
-                deltaBuyingPower = marginPerNakedShortUnit * expectedQuantity * 0.99m;
-                ComputeAndAssertQuantityForDeltaBuyingPower(positionGroup, expectedQuantity, deltaBuyingPower);
-            }
-
-            // Now test going long: for buying power deltas greater than the total margin used,
-            // the calculated order quantity starts increasing by the margin required for
-            // a group unit without underlyings (complete liquidation + going long)
             var longUnitGroup = positionGroup.Key.CreateUnitGroup();
             var marginPerLongUnit = longUnitGroup.BuyingPowerModel.GetInitialMarginRequirement(
                 new PositionGroupInitialMarginParameters(_portfolio, longUnitGroup)).Value;
 
-            for (var i = 1m; i < 10m; i++)
-            {
-                var expectedQuantity = absQuantity + i;
-                var deltaBuyingPower = usedMargin + marginPerLongUnit * 1.01m * i;
-                ComputeAndAssertQuantityForDeltaBuyingPower(positionGroup, expectedQuantity, deltaBuyingPower);
-            }
+            var deltaBuyingPower = usedMargin + finalPositionQuantity * (finalPositionQuantity < 0 ? marginPerNakedShortUnit : marginPerLongUnit);
+
+            ComputeAndAssertQuantityForDeltaBuyingPower(positionGroup, expectedQuantity, deltaBuyingPower);
+        }
+
+        // Going even longer
+        [TestCase(10, 11)]
+        // Going "less" long
+        [TestCase(10, 9)]
+        // Liquidating
+        [TestCase(10, 0)]
+        // Going short from long
+        [TestCase(10, -10)]
+        public void PositionGroupOrderQuantityCalculationForDeltaBuyingPowerFromLongPosition(int initialHoldingsQuantity, int finalPositionQuantity)
+        {
+            // Just making sure we start from a long position
+            initialHoldingsQuantity = Math.Abs(initialHoldingsQuantity);
+
+            SetUpOptionStrategy(initialHoldingsQuantity);
+            var positionGroup = _portfolio.PositionGroups.Single();
+
+            var expectedQuantity = finalPositionQuantity - initialHoldingsQuantity;
+            var usedMargin = _portfolio.TotalMarginUsed;
+            var marginPerLongUnit = usedMargin / initialHoldingsQuantity;
+
+            var shortUnitGroup = positionGroup.WithQuantity(-1);
+            var marginPerNakedShortUnit = shortUnitGroup.BuyingPowerModel.GetInitialMarginRequirement(
+                new PositionGroupInitialMarginParameters(_portfolio, shortUnitGroup)).Value;
+
+            var deltaBuyingPower = finalPositionQuantity >= 0
+                //Going even longer / Going "less" long/ Liquidating
+                ? expectedQuantity * marginPerLongUnit
+                // Going short from long
+                : -usedMargin + Math.Abs(finalPositionQuantity) * marginPerNakedShortUnit;
+
+            ComputeAndAssertQuantityForDeltaBuyingPower(positionGroup, expectedQuantity, deltaBuyingPower);
         }
 
         /// <summary>
@@ -1492,6 +1501,30 @@ namespace QuantConnect.Tests.Common.Securities
                     "",
                     groupOrderManager: groupOrderManager))
             };
+        }
+
+        private void SetUpOptionStrategy(int initialHoldingsQuantity)
+        {
+            const decimal price = 1.5m;
+            const decimal underlyingPrice = 300m;
+
+            _equity.SetMarketPrice(new Tick { Value = underlyingPrice });
+            _callOption.SetMarketPrice(new Tick { Value = price });
+            _putOption.SetMarketPrice(new Tick { Value = price });
+
+            _callOption.Holdings.SetHoldings(1m, initialHoldingsQuantity);
+            _putOption.Holdings.SetHoldings(1m, initialHoldingsQuantity);
+
+            Assert.AreEqual(1, _portfolio.PositionGroups.Count);
+
+            var positionGroup = _portfolio.PositionGroups.First();
+            Assert.AreEqual(OptionStrategyDefinitions.Straddle.Name, positionGroup.BuyingPowerModel.ToString());
+
+            var callOptionPosition = positionGroup.Positions.Single(x => x.Symbol == _callOption.Symbol);
+            Assert.AreEqual(initialHoldingsQuantity, callOptionPosition.Quantity);
+
+            var putOptionPosition = positionGroup.Positions.Single(x => x.Symbol == _putOption.Symbol);
+            Assert.AreEqual(initialHoldingsQuantity, putOptionPosition.Quantity);
         }
 
         private void ComputeAndAssertQuantityForDeltaBuyingPower(IPositionGroup positionGroup, decimal expectedQuantity, decimal deltaBuyingPower)

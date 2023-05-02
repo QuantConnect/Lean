@@ -262,7 +262,7 @@ namespace QuantConnect.Securities.Positions
             // 2. If targeting zero, short circuit and return the negative of existing quantities
             if (parameters.TargetBuyingPower == 0m)
             {
-                return parameters.Result(currentPositionGroup.Quantity);
+                return parameters.Result(-currentPositionGroup.Quantity);
             }
 
             // 3. Determine target buying power, taking into account RequiredFreeBuyingPowerPercent
