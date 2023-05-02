@@ -1248,10 +1248,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private void HandleAccountChanged(AccountEvent account)
         {
             // how close are we?
-            var delta = -(_algorithm.Portfolio.CashBook[account.CurrencySymbol].Amount - account.CashBalance);
-            if (delta != 0)
+            var existingCashBalance = _algorithm.Portfolio.CashBook[account.CurrencySymbol].Amount;
+            if (existingCashBalance != account.CashBalance)
             {
-                Log.Trace($"BrokerageTransactionHandler.HandleAccountChanged(): {account.CurrencySymbol} Cash Delta: {delta} will update: {_brokerage.AccountInstantlyUpdated}");
+                Log.Trace($"BrokerageTransactionHandler.HandleAccountChanged(): {account.CurrencySymbol} Cash Lean: {existingCashBalance} Brokerage: {account.CashBalance}. Will update: {_brokerage.AccountInstantlyUpdated}");
             }
 
             // maybe we don't actually want to do this, this data can be delayed. Must be explicitly supported by brokerage
