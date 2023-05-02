@@ -105,6 +105,8 @@ namespace QuantConnect.Algorithm.CSharp
         private void PerfomQuantityCalculations(IPositionGroup positionGroup, Security security, int expectedQuantity,
             decimal deltaBuyingPower)
         {
+            // We use the custom TestPositionGroupBuyingPowerModel class here because the default buying power model for position groups is the
+            // OptionStrategyPositionGroupBuyingPowerModel, which does not support single-leg positions yet.
             var positionQuantityForDeltaWithPositionGroupBuyingPowerModel = new TestPositionGroupBuyingPowerModel()
                 .GetMaximumLotsForDeltaBuyingPower(new GetMaximumLotsForDeltaBuyingPowerParameters(Portfolio, positionGroup, deltaBuyingPower,
                     minimumOrderMarginPortfolioPercentage: 0)).NumberOfLots;
@@ -139,26 +141,46 @@ namespace QuantConnect.Algorithm.CSharp
         {
             public override InitialMargin GetInitialMarginRequiredForOrder(PositionGroupInitialMarginForOrderParameters parameters)
             {
-                var ptr = typeof(SecurityPositionGroupBuyingPowerModel).GetMethod("GetInitialMarginRequiredForOrder").MethodHandle.GetFunctionPointer();
-                var method = (Func<PositionGroupInitialMarginForOrderParameters, InitialMargin>)Activator.CreateInstance(
-                    typeof(Func<PositionGroupInitialMarginForOrderParameters, InitialMargin>), this, ptr);
-                return method(parameters);
+                var initialMarginRequirement = 0m;
+                foreach (var position in parameters.PositionGroup)
+                {
+                    var security = parameters.Portfolio.Securities[position.Symbol];
+                    initialMarginRequirement += security.BuyingPowerModel.GetInitialMarginRequiredForOrder(
+                        new InitialMarginRequiredForOrderParameters(parameters.Portfolio.CashBook, security, parameters.Order)
+                    );
+                }
+
+                return initialMarginRequirement;
             }
 
             public override InitialMargin GetInitialMarginRequirement(PositionGroupInitialMarginParameters parameters)
             {
-                var ptr = typeof(SecurityPositionGroupBuyingPowerModel).GetMethod("GetInitialMarginRequirement").MethodHandle.GetFunctionPointer();
-                var method = (Func<PositionGroupInitialMarginParameters, InitialMargin>)Activator.CreateInstance(
-                    typeof(Func<PositionGroupInitialMarginParameters, InitialMargin>), this, ptr);
-                return method(parameters);
+                var initialMarginRequirement = 0m;
+                foreach (var position in parameters.PositionGroup)
+                {
+                    var security = parameters.Portfolio.Securities[position.Symbol];
+                    initialMarginRequirement += security.BuyingPowerModel.GetInitialMarginRequirement(
+                        security, position.Quantity
+                    );
+                }
+
+                return initialMarginRequirement;
             }
 
             public override MaintenanceMargin GetMaintenanceMargin(PositionGroupMaintenanceMarginParameters parameters)
             {
-                var ptr = typeof(SecurityPositionGroupBuyingPowerModel).GetMethod("GetMaintenanceMargin").MethodHandle.GetFunctionPointer();
-                var method = (Func<PositionGroupMaintenanceMarginParameters, MaintenanceMargin>)Activator.CreateInstance(
-                    typeof(Func<PositionGroupMaintenanceMarginParameters, MaintenanceMargin>), this, ptr);
-                return method(parameters);
+                var buyingPower = 0m;
+                foreach (var position in parameters.PositionGroup)
+                {
+                    var security = parameters.Portfolio.Securities[position.Symbol];
+                    var result = security.BuyingPowerModel.GetMaintenanceMargin(
+                        MaintenanceMarginParameters.ForQuantityAtCurrentPrice(security, position.Quantity)
+                    );
+
+                    buyingPower += result;
+                }
+
+                return buyingPower;
             }
         }
 
