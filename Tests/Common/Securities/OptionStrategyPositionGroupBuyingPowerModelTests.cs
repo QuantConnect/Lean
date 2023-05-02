@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Fasterflect;
 using NUnit.Framework;
 
 using QuantConnect.Algorithm;
@@ -565,6 +566,75 @@ namespace QuantConnect.Tests.Common.Securities
                 : -usedMargin + Math.Abs(finalPositionQuantity) * marginPerNakedShortUnit;
 
             ComputeAndAssertQuantityForDeltaBuyingPower(positionGroup, expectedQuantity, deltaBuyingPower);
+        }
+
+        [TestCase(-10, 1, +1)]
+        [TestCase(-10, 1, -1)]
+        [TestCase(-10, 2, +1)]
+        [TestCase(-10, 2, -1)]
+        [TestCase(-10, 0.5, +1)]
+        [TestCase(-10, 0.5, -1)]
+        [TestCase(10, 1, +1)]
+        [TestCase(10, 1, -1)]
+        [TestCase(10, 2, +1)]
+        [TestCase(10, 2, -1)]
+        [TestCase(10, 0.5, +1)]
+        [TestCase(10, 0.5, -1)]
+        public void OrderQuantityCalculation(int initialHoldingsQuantity, decimal targetMarginPercent, int targetMarginDirection)
+        {
+            // The targetMarginDirection whether we want to go in the same direction as the holdings:
+            //   +1: short will go shorter and long will go longer
+            //   -1: short will go towards long and vice-versa
+
+            SetUpOptionStrategy(initialHoldingsQuantity);
+            var positionGroup = _portfolio.PositionGroups.Single();
+
+            var expectedQuantity = Math.Sign(targetMarginDirection) * initialHoldingsQuantity * targetMarginPercent;
+            var finalPositionQuantity = initialHoldingsQuantity + expectedQuantity;
+
+            var buyingPowerModel = positionGroup.BuyingPowerModel as PositionGroupBuyingPowerModel;
+
+            var longUnitGroup = positionGroup.Key.CreateUnitGroup();
+            var longUnitMargin = buyingPowerModel.GetInitialMarginRequirement(_portfolio, longUnitGroup);
+
+            var shortUnitGroup = positionGroup.WithQuantity(-1);
+            var shortUnitMargin = buyingPowerModel.GetInitialMarginRequirement(_portfolio, shortUnitGroup);
+
+            var targetFinalMargin = finalPositionQuantity < 0
+                // Final position will be short
+                ? -finalPositionQuantity * shortUnitMargin
+                // Final position will be long (or closed)
+                : finalPositionQuantity * longUnitMargin;
+
+            var currentUsedMargin = buyingPowerModel.GetInitialMarginRequirement(_portfolio, positionGroup);
+
+            Console.WriteLine($"Long unit margin: {longUnitMargin}");
+            Console.WriteLine($"Short unit margin: {shortUnitMargin}");
+            Console.WriteLine($"Expected quantity: {expectedQuantity}");
+            Console.WriteLine($"Initial used margin: {currentUsedMargin}");
+            Console.WriteLine($"Final target margin: {targetFinalMargin}");
+
+            var quantity = buyingPowerModel.GetPositionGroupOrderQuantity(_portfolio, positionGroup, currentUsedMargin, targetFinalMargin,
+                longUnitGroup, longUnitMargin, out _);
+
+            // Reducing the position or going shorter
+            if (targetFinalMargin < currentUsedMargin)
+            {
+                Assert.Less(quantity, 0);
+            }
+            // Increasing the position
+            else if (targetFinalMargin >= currentUsedMargin)
+            {
+                Assert.Greater(quantity, 0);
+            }
+
+            // Liquidating
+            if (targetFinalMargin == 0)
+            {
+                Assert.AreEqual(-initialHoldingsQuantity, quantity);
+            }
+
+            Assert.AreEqual(expectedQuantity, quantity);
         }
 
         /// <summary>
