@@ -176,7 +176,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             _brokerage.NewBrokerageOrderNotification += (sender, e) =>
             {
-                AddOpenOrder(e.Order);
+                AddOpenOrder(e.Order, _algorithm);
             };
 
             _brokerage.DelistingNotification += (sender, e) =>
@@ -668,11 +668,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <summary>
         /// Register an already open Order
         /// </summary>
-        public void AddOpenOrder(Order order)
+        public void AddOpenOrder(Order order, IAlgorithm algorithm)
         {
-            order.Id = _algorithm.Transactions.GetIncrementOrderId();
+            order.Id = algorithm.Transactions.GetIncrementOrderId();
 
-            var orderTicket = order.ToOrderTicket(_algorithm.Transactions);
+            var orderTicket = order.ToOrderTicket(algorithm.Transactions);
 
             _openOrders.AddOrUpdate(order.Id, order, (i, o) => order);
             _completeOrders.AddOrUpdate(order.Id, order, (i, o) => order);
@@ -1310,7 +1310,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                     // Create our order and add it
                     var order = new MarketOrder(security.Symbol, quantity, _algorithm.UtcTime, tag);
-                    AddOpenOrder(order);
+                    AddOpenOrder(order, _algorithm);
 
                     // Create our fill with the latest price
                     var fill = new OrderEvent(order, _algorithm.UtcTime, OrderFee.Zero)
@@ -1432,7 +1432,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             // generate new exercise order and ticket for the option
             var order = new OptionExerciseOrder(security.Symbol, quantity, CurrentTimeUtc);
-            AddOpenOrder(order);
+            AddOpenOrder(order, _algorithm);
             return order;
         }
 

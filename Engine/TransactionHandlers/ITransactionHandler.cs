@@ -79,6 +79,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <summary>
         /// Register an already open Order
         /// </summary>
-        void AddOpenOrder(Order order);
+        void AddOpenOrder(Order order, IAlgorithm algorithm);
     }
 }

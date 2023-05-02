@@ -526,7 +526,7 @@ namespace QuantConnect.Lean.Engine.Setup
             // add options first to ensure raw data normalization mode is set on the equity underlyings
             foreach (var order in openOrders.OrderByDescending(x => x.SecurityType))
             {
-                transactionHandler.AddOpenOrder(order);
+                transactionHandler.AddOpenOrder(order, algorithm);
 
                 Log.Trace($"BrokerageSetupHandler.Setup(): Has open order: {order}");
                 resultHandler.DebugMessage($"BrokerageSetupHandler.Setup(): Open order detected.  Creating order tickets for open order {order.Symbol.Value} with quantity {order.Quantity}. Beware that this order ticket may not accurately reflect the quantity of the order if the open order is partially filled.");
