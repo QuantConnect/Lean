@@ -55,7 +55,7 @@ namespace QuantConnect.Algorithm.CSharp
             // and created a API key. See (https://signals.numer.ai/account)
             var numeraiPublicId = "";
 
-            // Numerai Public ID: This value is provided by Numerai Signals in their main webpage once you've logged in
+            // Numerai Secret ID: This value is provided by Numerai Signals in their main webpage once you've logged in
             // and created a API key. See (https://signals.numer.ai/account)
             var numeraiSecretId = "";
 
@@ -70,8 +70,11 @@ namespace QuantConnect.Algorithm.CSharp
         public void SubmitSignals()
         {
             // Select the subset of ETF constituents we can trade
-            var symbols = _securities.Where(security => security.HasData).Select(security => security.Symbol);
-            if (symbols.Count() == 0)
+            var symbols = _securities.Where(security => security.HasData)
+                            .Select(security => security.Symbol)
+                            .OrderBy(symbol => symbol)
+                            .ToList();
+            if (symbols.Count == 0)
             {
                 return;
             }
@@ -80,13 +83,10 @@ namespace QuantConnect.Algorithm.CSharp
             // var history = History(symbols, 22, Resolution.Daily);
 
             // Create portfolio targets
-            var denominator = symbols.Count() * (symbols.Count() + 1) / 2.0m; // sum of 1, 2, ..., symbols.Count()
-            symbols = symbols.OrderBy(symbol => symbol);
-            var targets = new List<PortfolioTarget>();
-            for (var i = 0; i < symbols.Count(); i++)
-            {
-                targets.Add(new PortfolioTarget(symbols.ToList()[i], (i + 1) / denominator));
-            }
+            //  Numerai requires that at least one of the signals have a unique weight
+            //  To ensure they are all unique, this demo gives a linear allocation to each symbol (ie. 1/55, 2/55, ..., 10/55)
+            var denominator = symbols.Count * (symbols.Count + 1) / 2.0m; // sum of 1, 2, ..., symbols.Count
+            var targets = symbols.Select((symbol, i) => new PortfolioTarget(symbol, (i + 1) / denominator)).ToList();
 
             // (Optional) Place trades
             SetHoldings(targets);

@@ -46,7 +46,7 @@ class NumeraiSignalExportDemonstrationAlgorithm(QCAlgorithm):
         # and created a API key. See (https://signals.numer.ai/account)
         numerai_public_id = ""
 
-        # Numerai Public ID: This value is provided by Numerai Signals in their main webpage once you've logged in
+        # Numerai Secret ID: This value is provided by Numerai Signals in their main webpage once you've logged in
         # and created a API key. See (https://signals.numer.ai/account)
         numerai_secret_id = ""
 
@@ -60,7 +60,7 @@ class NumeraiSignalExportDemonstrationAlgorithm(QCAlgorithm):
 
     def submit_signals(self):
         # Select the subset of ETF constituents we can trade
-        symbols = [security.Symbol for security in self.securities if security.HasData]
+        symbols = sorted([security.Symbol for security in self.securities if security.HasData])
         if len(symbols) == 0:
             return
 
@@ -68,8 +68,10 @@ class NumeraiSignalExportDemonstrationAlgorithm(QCAlgorithm):
         # close_prices = self.History(symbols, 22, Resolution.Daily).close.unstack(0)
         
         # Create portfolio targets
+        #  Numerai requires that at least one of the signals have a unique weight
+        #  To ensure they are all unique, this demo gives a linear allocation to each symbol (ie. 1/55, 2/55, ..., 10/55)
         denominator = len(symbols) * (len(symbols) + 1) / 2 # sum of 1, 2, ..., len(symbols)
-        targets = [PortfolioTarget(symbol, (i+1) / denominator) for i, symbol in enumerate(sorted(symbols))]
+        targets = [PortfolioTarget(symbol, (i+1) / denominator) for i, symbol in enumerate(symbols)]
 
         # (Optional) Place trades
         self.SetHoldings(targets)
