@@ -16,12 +16,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Fasterflect;
 using NUnit.Framework;
 
 using QuantConnect.Algorithm;
 using QuantConnect.Data.Market;
-using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;

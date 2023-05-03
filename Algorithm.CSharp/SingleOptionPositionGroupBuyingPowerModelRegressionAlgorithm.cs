@@ -44,8 +44,7 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption(equitySymbol);
             _optionSymbol = option.Symbol;
 
-            option.SetFilter(u => u.Strikes(-2, +2)
-                .Expiration(0, 180));
+            option.SetFilter(u => u.Strikes(-2, +2).Expiration(0, 180));
         }
 
         public override void OnData(Slice slice)
@@ -94,7 +93,7 @@ namespace QuantConnect.Algorithm.CSharp
             for (var i = 1; i < 10; i++)
             {
                 var expectedQuantity = absQuantity + i;
-                // Add 5% to account for initial margin used calculation differences:
+                // Add 5% to account for order fees, rounding errors and initial margin used calculation differences:
                 //  - The position group buying power model uses initial margin for assets at current price.
                 //  - The security buying power model uses initial margin for holdings value directly.
                 var deltaBuyingPower = usedMargin + marginPerLongUnit * 1.05m * i;
