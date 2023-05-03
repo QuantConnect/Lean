@@ -118,21 +118,13 @@ namespace QuantConnect.Securities.Option
 
                 return new MaintenanceMargin(inAccountCurrency);
             }
-            else if (_optionStrategy.Name == OptionStrategyDefinitions.NakedCall.Name)
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.NakedCall.Name
+                || _optionStrategy.Name == OptionStrategyDefinitions.NakedPut.Name)
             {
-                var callOption = parameters.PositionGroup.Positions.Single();
-                var callSecurity = (Option)parameters.Portfolio.Securities[callOption.Symbol];
-                var margin = callSecurity.BuyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(
-                    callSecurity, callOption.Quantity));
-
-                return new MaintenanceMargin(margin);
-            }
-            else if (_optionStrategy.Name == OptionStrategyDefinitions.NakedPut.Name)
-            {
-                var putOption = parameters.PositionGroup.Positions.Single();
-                var putSecurity = (Option)parameters.Portfolio.Securities[putOption.Symbol];
-                var margin = putSecurity.BuyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(
-                    putSecurity, putOption.Quantity));
+                var option = parameters.PositionGroup.Positions.Single();
+                var security = (Option)parameters.Portfolio.Securities[option.Symbol];
+                var margin = security.BuyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(security,
+                    option.Quantity));
 
                 return new MaintenanceMargin(margin);
             }
@@ -235,19 +227,12 @@ namespace QuantConnect.Securities.Option
 
                 return new InitialMargin(margin.Value);
             }
-            else if (_optionStrategy.Name == OptionStrategyDefinitions.NakedCall.Name)
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.NakedCall.Name
+                || _optionStrategy.Name == OptionStrategyDefinitions.NakedPut.Name)
             {
-                var callOption = parameters.PositionGroup.Positions.Single();
-                var callSecurity = (Option)parameters.Portfolio.Securities[callOption.Symbol];
-                var margin = callSecurity.BuyingPowerModel.GetInitialMarginRequirement(callSecurity, callOption.Quantity);
-
-                return new InitialMargin(margin);
-            }
-            else if (_optionStrategy.Name == OptionStrategyDefinitions.NakedPut.Name)
-            {
-                var putOption = parameters.PositionGroup.Positions.Single();
-                var putSecurity = (Option)parameters.Portfolio.Securities[putOption.Symbol];
-                var margin = putSecurity.BuyingPowerModel.GetInitialMarginRequirement(putSecurity, putOption.Quantity);
+                var option = parameters.PositionGroup.Positions.Single();
+                var security = (Option)parameters.Portfolio.Securities[option.Symbol];
+                var margin = security.BuyingPowerModel.GetInitialMarginRequirement(security, option.Quantity);
 
                 return new InitialMargin(margin);
             }
