@@ -39,12 +39,13 @@ namespace QuantConnect.Tests.Algorithm
         {
             var algorithm = new QCAlgorithm();
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.SetLiveMode(false);
             var security = algorithm.AddEquity("SPY");
             security.Exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
             security.SetMarketPrice(new Tick { Value = 270m });
             algorithm.SetFinishedWarmingUp();
 
-            var brokerage = new NullBrokerage();
+            using var brokerage = new NullBrokerage();
             var transactionHandler = new BrokerageTransactionHandler();
 
             transactionHandler.Initialize(algorithm, brokerage, new LiveTradingResultHandler());

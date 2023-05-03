@@ -20,7 +20,6 @@ using System.Threading;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
-using static QuantConnect.StringExtensions;
 using Python.Runtime;
 
 namespace QuantConnect.Securities
@@ -35,7 +34,7 @@ namespace QuantConnect.Securities
         private int _orderId;
         private int _groupOrderManagerId;
         private readonly SecurityManager _securities;
-        private TimeSpan _marketOrderFillTimeout = TimeSpan.FromSeconds(5);
+        private TimeSpan _marketOrderFillTimeout = TimeSpan.MinValue;
 
         private IOrderProcessor _orderProcessor;
 
@@ -363,8 +362,10 @@ namespace QuantConnect.Securities
 
             if (!orderTicket.OrderClosed.WaitOne(_marketOrderFillTimeout))
             {
-                Log.Error($@"SecurityTransactionManager.WaitForOrder(): {
-                    Messages.SecurityTransactionManager.OrderNotFilledWithinExpectedTime(_marketOrderFillTimeout)}");
+                if(_marketOrderFillTimeout > TimeSpan.Zero)
+                {
+                    Log.Error($@"SecurityTransactionManager.WaitForOrder(): {Messages.SecurityTransactionManager.OrderNotFilledWithinExpectedTime(_marketOrderFillTimeout)}");
+                }
 
                 return false;
             }
@@ -508,6 +509,27 @@ namespace QuantConnect.Securities
                     clone = clone.AddMilliseconds(1);
                 }
                 _transactionRecord.Add(clone, transactionProfitLoss);
+            }
+        }
+
+        /// <summary>
+        /// Set live mode state of the algorithm
+        /// </summary>
+        /// <param name="isLiveMode">True, live mode is enabled</param>
+        public void SetLiveMode(bool isLiveMode)
+        {
+            if (isLiveMode)
+            {
+                if(MarketOrderFillTimeout == TimeSpan.MinValue)
+                {
+                    // set default value in live trading
+                    MarketOrderFillTimeout = TimeSpan.FromSeconds(5);
+                }
+            }
+            else
+            {
+                // always zero in backtesting, fills happen synchronously, there's no dedicated thread like in live
+                MarketOrderFillTimeout = TimeSpan.Zero;
             }
         }
     }
