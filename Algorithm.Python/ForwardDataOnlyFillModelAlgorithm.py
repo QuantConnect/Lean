@@ -14,7 +14,8 @@
 from AlgorithmImports import *
 
 ### <summary>
-###
+### Example of custom fill model for security to only fill bars of data obtained after the order was placed. This is to encourage more
+### pessimistic fill models and eliminate the possibility to fill on old market data that may not be relevant.
 ### </summary>
 class ForwardDataOnlyFillModelAlgorithm(QCAlgorithm):
     def Initialize(self):
@@ -24,20 +25,27 @@ class ForwardDataOnlyFillModelAlgorithm(QCAlgorithm):
         self.security = self.AddEquity("SPY", Resolution.Hour)
         self.security.SetFillModel(ForwardDataOnlyFillModel())
 
-    def OnData(self, data: Slice):
+        self.Schedule.On(self.DateRules.WeekStart(), self.TimeRules.AfterMarketOpen(self.security.Symbol), self.Trade)
+
+    def Trade(self):
         if not self.Portfolio.Invested:
+            if self.Time.hour != 9 or self.Time.minute != 30:
+                raise Exception(f"Unexpected event time {self.Time}")
+
             ticket = self.Buy("SPY", 1)
             if ticket.Status != OrderStatus.Submitted:
-                raise Exception(f"Unexpected order status {ticket.Status}");
+                raise Exception(f"Unexpected order status {ticket.Status}")
 
     def OnOrderEvent(self, orderEvent: OrderEvent):
         self.Debug(f"OnOrderEvent:: {orderEvent}")
+        if orderEvent.Status == OrderStatus.Filled and (self.Time.hour != 10 or self.Time.minute != 0):
+            raise Exception(f"Unexpected fill time {self.Time}")
 
 class ForwardDataOnlyFillModel(EquityFillModel):
     def Fill(self, parameters: FillModelParameters):
         orderLocalTime = Extensions.ConvertFromUtc(parameters.Order.Time, parameters.Security.Exchange.TimeZone)
         for dataType in [ QuoteBar, TradeBar, Tick ]:
             data = parameters.Security.Cache.GetData[dataType]()
-            if not data is None and orderLocalTime < data.EndTime:
+            if not data is None and orderLocalTime <= data.EndTime:
                 return super().Fill(parameters)
         return Fill([])

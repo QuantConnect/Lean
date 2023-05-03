@@ -14,7 +14,6 @@
 */
 
 using System;
-using QuantConnect.Data;
 using QuantConnect.Orders;
 using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
@@ -24,7 +23,8 @@ using System.Collections.Generic;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// 
+    /// Example of custom fill model for security to only fill bars of data obtained after the order was placed. This is to encourage more
+    /// pessimistic fill models and eliminate the possibility to fill on old market data that may not be relevant.
     /// </summary>
     public class ForwardDataOnlyFillModelAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
@@ -35,16 +35,19 @@ namespace QuantConnect.Algorithm.CSharp
 
             var security = AddEquity("SPY", Resolution.Hour);
             security.SetFillModel(new ForwardDataOnlyFillModel());
+
+            Schedule.On(DateRules.WeekStart(), TimeRules.AfterMarketOpen(security.Symbol), Trade);
         }
 
-        /// <summary>
-        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        public void Trade()
         {
             if (!Portfolio.Invested)
             {
+                if(Time.TimeOfDay != new TimeSpan(9, 30, 0))
+                {
+                    throw new Exception($"Unexpected event time {Time}");
+                }
+
                 var ticket = Buy("SPY", 1);
                 if(ticket.Status != OrderStatus.Submitted)
                 {
@@ -56,6 +59,10 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
             Debug($"OnOrderEvent:: {orderEvent}");
+            if (orderEvent.Status == OrderStatus.Filled && (Time.Hour != 10 || Time.Minute != 0))
+            {
+                throw new Exception($"Unexpected fill time {Time}");
+            }
         }
 
         public class ForwardDataOnlyFillModel : EquityFillModel
@@ -65,7 +72,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var orderLocalTime = parameters.Order.Time.ConvertFromUtc(parameters.Security.Exchange.TimeZone);
                 foreach (var dataType in new[] { typeof(QuoteBar), typeof(TradeBar), typeof(Tick)})
                 {
-                    if(parameters.Security.Cache.TryGetValue(dataType, out var data) && data.Count > 0 && orderLocalTime < data[data.Count - 1].EndTime)
+                    if(parameters.Security.Cache.TryGetValue(dataType, out var data) && data.Count > 0 && orderLocalTime <= data[data.Count - 1].EndTime)
                     {
                         return base.Fill(parameters);
                     }
@@ -102,27 +109,27 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0.056%"},
+            {"Compounding Annual Return", "0.071%"},
             {"Drawdown", "0.000%"},
             {"Expectancy", "0"},
-            {"Net Profit", "0.005%"},
-            {"Sharpe Ratio", "2.93"},
-            {"Probabilistic Sharpe Ratio", "75.802%"},
+            {"Net Profit", "0.006%"},
+            {"Sharpe Ratio", "3.363"},
+            {"Probabilistic Sharpe Ratio", "81.116%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0"},
+            {"Alpha", "0"},
             {"Beta", "0.001"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-3.426"},
+            {"Information Ratio", "-3.425"},
             {"Tracking Error", "0.107"},
-            {"Treynor Ratio", "0.315"},
+            {"Treynor Ratio", "0.382"},
             {"Total Fees", "$1.00"},
-            {"Estimated Strategy Capacity", "$100000000000.00"},
+            {"Estimated Strategy Capacity", "$62000000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Portfolio Turnover", "0.00%"},
-            {"OrderListHash", "f06d138df73f4100d3c14a1b428beffc"}
+            {"OrderListHash", "9eac57692ae167cf5be63ad931b8a376"}
         };
     }
 }
