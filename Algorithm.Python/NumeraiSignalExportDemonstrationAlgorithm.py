@@ -14,87 +14,77 @@
 from AlgorithmImports import *
 
 ### <summary>
-### This algorithm sends a list of current portfolio targets to Numerai API every time
-### the ema indicators crosses between themselves.
+### This algorithm sends a list of current portfolio targets to Numerai API before each trading day
+### See (https://docs.numer.ai/numerai-signals/signals-overview) for more information
+### about accepted symbols, signals, etc.
 ### </summary>
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="using quantconnect" />
 ### <meta name="tag" content="securities and portfolio" />
 class NumeraiSignalExportDemonstrationAlgorithm(QCAlgorithm):
 
+    securities = []
+
     def Initialize(self):
         ''' Initialize the date and add all equity symbols present in list _symbols '''
 
-        self.SetStartDate(2013, 10, 7)   #Set Start Date
-        self.SetEndDate(2013, 10, 11)    #Set End Date
+        self.SetStartDate(2020, 10, 7)   #Set Start Date
+        self.SetEndDate(2020, 10, 12)    #Set End Date
         self.SetCash(100000)             #Set Strategy Cash
 
-        self.symbols = ["SPY", "AIG", "GOOGL", "AAPL", "AMZN", "TSLA", "NFLX", "INTC", "MSFT", "KO", "WMT", "IBM", "AMGN", "CAT"] # Numerai accepts minimum 10 signals
-        self.targets = []
+        self.SetSecurityInitializer(BrokerageModelSecurityInitializer(self.BrokerageModel, FuncSecuritySeeder(self.GetLastKnownPrices)))
 
-        # Create a new PortfolioTarget for each symbol in self.symbols, assign it an initial quantity of 0.05 and save it self.targets
-        for ticker in self.symbols:
-            symbol = self.AddEquity(ticker).Symbol
-            self.targets.append(PortfolioTarget(symbol, 0.05)) # Numerai only accepts signals between 0 and 1 (exclusive)
+        # Add the CRSP US Total Market Index constituents, which represents approximately 100% of the investable US Equity market
+        self.etf_symbol = self.AddEquity("VTI").Symbol
+        self.AddUniverse(self.Universe.ETF(self.etf_symbol))
 
-        self.fast = self.EMA("SPY", 10)
-        self.slow = self.EMA("SPY", 100)
-
-        # Initialize these flags, to check when the ema indicators crosses between themselves
-        self.emaFastIsNotSet = True;
-        self.emaFastWasAbove = False;
+        # Create a Scheduled Event to submit signals every trading day at 13:00 UTC
+        self.Schedule.On(self.DateRules.EveryDay(self.etf_symbol), self.TimeRules.At(13, 0, TimeZones.Utc), self.submit_signals)
 
         # Set Numerai signal export provider
         # Numerai Public ID: This value is provided by Numerai Signals in their main webpage once you've logged in
         # and created a API key. See (https://signals.numer.ai/account)
-        self.numeraiPublicId = ""
+        numerai_public_id = ""
 
-        # Numerai Public ID: This value is provided by Numerai Signals in their main webpage once you've logged in
+        # Numerai Secret ID: This value is provided by Numerai Signals in their main webpage once you've logged in
         # and created a API key. See (https://signals.numer.ai/account)
-        self.numeraiSecretId = ""
+        numerai_secret_id = ""
 
         # Numerai Model ID: This value is provided by Numerai Signals in their main webpage once you've logged in
         # and created a model. See (https://signals.numer.ai/models)
-        self.numeraiModelId = ""
+        numerai_model_id = ""
 
-        self.numeraiFilename = "" # Replace this values with your submission filename (Optional)
-        self.SignalExport.AddSignalExportProviders(NumeraiSignalExport(self.numeraiPublicId, self.numeraiSecretId, self.numeraiModelId, self.numeraiFilename))
+        numerai_filename = "" # (Optional) Replace this value with your submission filename 
+        self.SignalExport.AddSignalExportProviders(NumeraiSignalExport(numerai_public_id, numerai_secret_id, numerai_model_id, numerai_filename))
+
+
+    def submit_signals(self):
+        # Select the subset of ETF constituents we can trade
+        symbols = sorted([security.Symbol for security in self.securities if security.HasData])
+        if len(symbols) == 0:
+            return
+
+        # Get historical data
+        # close_prices = self.History(symbols, 22, Resolution.Daily).close.unstack(0)
         
-        self.first_call = True
-        
-        self.SetWarmUp(100)
+        # Create portfolio targets
+        #  Numerai requires that at least one of the signals have a unique weight
+        #  To ensure they are all unique, this demo gives a linear allocation to each symbol (ie. 1/55, 2/55, ..., 10/55)
+        denominator = len(symbols) * (len(symbols) + 1) / 2 # sum of 1, 2, ..., len(symbols)
+        targets = [PortfolioTarget(symbol, (i+1) / denominator) for i, symbol in enumerate(symbols)]
 
-    def OnData(self, data):
-        ''' Reduce the quantity of holdings for one security and increase the holdings to the another
-        one when the EMA's indicators crosses between themselves, then send a signal to Numerai API '''
-        if self.IsWarmingUp: return
-        
-        # Place an order as soon as possible to send a signal.
-        if self.first_call:
-            self.SetHoldings("SPY", 0.1)
-            self.targets[0] = PortfolioTarget(self.Portfolio["SPY"].Symbol, 0.1)
-            self.SignalExport.SetTargetPortfolio(self.targets)
-            self.first_call = False
+        # (Optional) Place trades
+        self.SetHoldings(targets)
 
-        fast = self.fast.Current.Value
-        slow = self.slow.Current.Value
+        # Send signals to Numerai
+        success = self.SignalExport.SetTargetPortfolio(targets)
+        if not success:
+            self.Debug(f"Couldn't send targets at {self.Time}")
 
-        # Set the value of flag _emaFastWasAbove, to know when the ema indicators crosses between themselves
-        if self.emaFastIsNotSet == True:
-            if fast > slow *1.001:
-                self.emaFastWasAbove = True
-            else:
-                self.emaFastWasAbove = False
-            self.emaFastIsNotSet = False;
 
-        # Check whether ema fast and ema slow crosses. If they do, set holdings to SPY
-        # or reduce its holdings, update its value in self.targets and send signals to
-        # Numerai API from self.targets
-        if fast > slow * 1.001 and (not self.emaFastWasAbove):
-            self.SetHoldings("SPY", 0.1)
-            self.targets[0] = PortfolioTarget(self.Portfolio["SPY"].Symbol, 0.1)
-            self.SignalExport.SetTargetPortfolio(self.targets)
-        elif fast < slow * 0.999 and (self.emaFastWasAbove):
-            self.SetHoldings("SPY", 0.01)
-            self.targets[0] = PortfolioTarget(self.Portfolio["SPY"].Symbol, 0.01)
-            self.SignalExport.SetTargetPortfolio(self.targets)
+    def OnSecuritiesChanged(self, changes: SecurityChanges) -> None:
+        for security in changes.RemovedSecurities:
+            if security in self.securities:
+                self.securities.remove(security)
+                
+        self.securities.extend([security for security in changes.AddedSecurities if security.Symbol != self.etf_symbol])
