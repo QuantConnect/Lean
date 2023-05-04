@@ -21,9 +21,12 @@ using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
+using QuantConnect.Securities.Option.StrategyMatcher;
 using QuantConnect.Securities.Positions;
+using QuantConnect.Logging;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Securities
@@ -42,6 +45,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             _algorithm = new AlgorithmStub();
             _algorithm.SetCash(100000);
+            _algorithm.SetSecurityInitializer(security => security.FeeModel = new ConstantFeeModel(0));
             _portfolio = _algorithm.Portfolio;
 
             _equity = _algorithm.AddEquity("SPY");
@@ -190,6 +194,86 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsTrue(hasSufficientBuyingPowerResult.IsSufficient);
         }
 
+        [TestCaseSource(nameof(GetOrderQuantityFromShortPositionTestCases))]
+        public void PositionGroupOrderQuantityCalculationForDeltaBuyingPowerFromShortPosition(OptionStrategyDefinition optionStrategyDefinition,
+            int initialHoldingsQuantity, int finalPositionQuantity)
+        {
+            // Just making sure we start from a short position
+            initialHoldingsQuantity = -Math.Abs(initialHoldingsQuantity);
+
+            ComputeAndAssertQuantityForDeltaBuyingPower(optionStrategyDefinition, initialHoldingsQuantity, finalPositionQuantity,
+                (initialHoldingsQuantity, finalPositionQuantity, initialUsedMargin, marginPerLongUnit, marginPerShortUnit) =>
+                {
+                    return initialUsedMargin + finalPositionQuantity * (finalPositionQuantity < 0 ? marginPerShortUnit : marginPerLongUnit);
+                });
+        }
+
+        [TestCaseSource(nameof(GetOrderQuantityFromLongPositionTestCases))]
+        public void PositionGroupOrderQuantityCalculationForDeltaBuyingPowerFromLongPosition(OptionStrategyDefinition optionStrategyDefinition,
+            int initialHoldingsQuantity, int finalPositionQuantity)
+        {
+            // Just making sure we start from a long position
+            initialHoldingsQuantity = Math.Abs(initialHoldingsQuantity);
+
+            ComputeAndAssertQuantityForDeltaBuyingPower(optionStrategyDefinition, initialHoldingsQuantity, finalPositionQuantity,
+                (initialHoldingsQuantity, finalPositionQuantity, initialUsedMargin, marginPerLongUnit, marginPerShortUnit) =>
+                {
+                    var expectedQuantity = finalPositionQuantity - initialHoldingsQuantity;
+                    return finalPositionQuantity >= 0
+                        //Going even longer / Going "less" long/ Liquidating
+                        ? expectedQuantity * marginPerLongUnit
+                        // Going short from long
+                        : -initialUsedMargin + Math.Abs(finalPositionQuantity) * marginPerShortUnit;
+                });
+        }
+
+        private void ComputeAndAssertQuantityForDeltaBuyingPower(
+            OptionStrategyDefinition optionStrategyDefinition,
+            int initialHoldingsQuantity,
+            int finalPositionQuantity,
+            // In: (initialHoldingsQuantity, finalPositionQuantity, initialUsedMargin, marginPerLongUnit, marginPerShortUnit). Out: deltaBuyingPower
+            Func<int, int, decimal, decimal, decimal, decimal> computeDeltaBuyingPower)
+        {
+            SetUpOptionStrategy(optionStrategyDefinition, initialHoldingsQuantity);
+            var positionGroup = _portfolio.PositionGroups.Single();
+
+            var expectedQuantity = finalPositionQuantity - initialHoldingsQuantity;
+            var initialUsedMargin = _portfolio.TotalMarginUsed;
+
+            var longUnitGroup = positionGroup.WithQuantity(1);
+            var marginPerLongUnit = longUnitGroup.BuyingPowerModel.GetInitialMarginRequirement(
+                new PositionGroupInitialMarginParameters(_portfolio, longUnitGroup)).Value;
+
+            var shortUnitGroup = positionGroup.WithQuantity(-1);
+            var marginPerShortUnit = shortUnitGroup.BuyingPowerModel.GetInitialMarginRequirement(
+                new PositionGroupInitialMarginParameters(_portfolio, shortUnitGroup)).Value;
+
+            Log.Trace($"Initial used margin: {initialUsedMargin}");
+            Log.Trace($"Margin per long unit: {marginPerLongUnit}");
+            Log.Trace($"Margin per short unit: {marginPerShortUnit}");
+
+            if (initialHoldingsQuantity < 0)
+            {
+                Assert.AreEqual(initialUsedMargin / Math.Abs(initialHoldingsQuantity), marginPerShortUnit);
+            }
+            else
+            {
+                Assert.AreEqual(initialUsedMargin / initialHoldingsQuantity, marginPerLongUnit);
+            }
+
+            var deltaBuyingPower = computeDeltaBuyingPower(initialHoldingsQuantity, finalPositionQuantity, initialUsedMargin, marginPerLongUnit,
+                marginPerShortUnit);
+
+            var quantity = positionGroup.BuyingPowerModel.GetMaximumLotsForDeltaBuyingPower(new GetMaximumLotsForDeltaBuyingPowerParameters(
+                _portfolio, positionGroup, deltaBuyingPower, minimumOrderMarginPortfolioPercentage: 0)).NumberOfLots;
+
+            Log.Trace($"Delta buying power: {deltaBuyingPower}");
+            Log.Trace($"Expected quantity: {expectedQuantity}");
+            Log.Trace($"Computed quantity: {quantity}");
+
+            Assert.AreEqual(expectedQuantity, quantity);
+        }
+
         private List<Order> GetStrategyOrders(decimal quantity)
         {
             var groupOrderManager = new GroupOrderManager(1, 2, quantity);
@@ -216,6 +300,68 @@ namespace QuantConnect.Tests.Common.Securities
                     "",
                     groupOrderManager: groupOrderManager))
             };
+        }
+
+        private void SetUpOptionStrategy(OptionStrategyDefinition optionStrategyDefinition, int initialHoldingsQuantity)
+        {
+            const decimal price = 1.5m;
+            const decimal underlyingPrice = 300m;
+
+            _equity.SetMarketPrice(new Tick { Value = underlyingPrice });
+            _callOption.SetMarketPrice(new Tick { Value = price });
+            _putOption.SetMarketPrice(new Tick { Value = price });
+
+            _callOption.Holdings.SetHoldings(1m, initialHoldingsQuantity);
+            _putOption.Holdings.SetHoldings(1m, initialHoldingsQuantity);
+
+            Assert.AreEqual(1, _portfolio.PositionGroups.Count);
+
+            var positionGroup = _portfolio.PositionGroups.First();
+            Assert.AreEqual(OptionStrategyDefinitions.Straddle.Name, positionGroup.BuyingPowerModel.ToString());
+
+            var callOptionPosition = positionGroup.Positions.Single(x => x.Symbol == _callOption.Symbol);
+            Assert.AreEqual(initialHoldingsQuantity, callOptionPosition.Quantity);
+
+            var putOptionPosition = positionGroup.Positions.Single(x => x.Symbol == _putOption.Symbol);
+            Assert.AreEqual(initialHoldingsQuantity, putOptionPosition.Quantity);
+        }
+
+        private static TestCaseData[] GetOrderQuantityFromLongPositionTestCases()
+        {
+            return OptionStrategyDefinitions.AllDefinitions
+                .GroupBy(strategy => strategy.Name)
+                .Select(strategies => strategies.First())
+                .SelectMany(strategy => new[]
+                {
+                    // Going even longer
+                    new TestCaseData(strategy, 10, 11),
+                    // Going "less" long
+                    new TestCaseData(strategy, 10, 9),
+                    // Liquidating
+                    new TestCaseData(strategy, 10, 0),
+                    // Going short from long
+                    new TestCaseData(strategy, 10, -10)
+                })
+                .ToArray();
+        }
+
+        private static TestCaseData[] GetOrderQuantityFromShortPositionTestCases()
+        {
+            return OptionStrategyDefinitions.AllDefinitions
+                .GroupBy(strategy => strategy.Name)
+                .Select(strategies => strategies.First())
+                .SelectMany(strategy => new[]
+                {
+                    // Going even shorter
+                    new TestCaseData(strategy, -10, -11),
+                    // Going "less" short
+                    new TestCaseData(strategy, -10, -9),
+                    // Liquidating
+                    new TestCaseData(strategy, -10, 0),
+                    // Going long from short
+                    new TestCaseData(strategy, -10, 10)
+                })
+                .ToArray();
         }
     }
 }
