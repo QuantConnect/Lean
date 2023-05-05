@@ -50,7 +50,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             _equity = _algorithm.AddEquity("SPY");
 
-            var strike = 200m;
+            var strike = 300m;
             var expiry = new DateTime(2016, 1, 15);
 
             var callOptionSymbol = Symbols.CreateOptionSymbol("SPY", OptionRight.Call, strike, expiry);
@@ -58,6 +58,8 @@ namespace QuantConnect.Tests.Common.Securities
 
             var putOptionSymbol = Symbols.CreateOptionSymbol("SPY", OptionRight.Put, strike, expiry);
             _putOption = _algorithm.AddOptionContract(putOptionSymbol);
+
+            Log.DebuggingEnabled = true;
         }
 
         [Test]
@@ -194,84 +196,26 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsTrue(hasSufficientBuyingPowerResult.IsSufficient);
         }
 
-        [TestCaseSource(nameof(GetOrderQuantityFromShortPositionTestCases))]
-        public void PositionGroupOrderQuantityCalculationForDeltaBuyingPowerFromShortPosition(OptionStrategyDefinition optionStrategyDefinition,
-            int initialHoldingsQuantity, int finalPositionQuantity)
+        [TestCaseSource(nameof(InitialMarginRequirementsTestCases))]
+        public void GetsInitialAndMaintenanceMargin(OptionStrategyDefinition optionStrategyDefinition, int quantity,
+            decimal expectedInitialMarginRequirement, decimal expectedMaintenanceMargin)
         {
-            // Just making sure we start from a short position
-            initialHoldingsQuantity = -Math.Abs(initialHoldingsQuantity);
+            var positionGroup = SetUpOptionStrategy(optionStrategyDefinition, quantity);
 
-            ComputeAndAssertQuantityForDeltaBuyingPower(optionStrategyDefinition, initialHoldingsQuantity, finalPositionQuantity,
-                (initialHoldingsQuantity, finalPositionQuantity, initialUsedMargin, marginPerLongUnit, marginPerShortUnit) =>
-                {
-                    return initialUsedMargin + finalPositionQuantity * (finalPositionQuantity < 0 ? marginPerShortUnit : marginPerLongUnit);
-                });
-        }
+            var initialMarginRequirement = positionGroup.BuyingPowerModel.GetInitialMarginRequirement(
+                new PositionGroupInitialMarginParameters(_portfolio, positionGroup));
 
-        [TestCaseSource(nameof(GetOrderQuantityFromLongPositionTestCases))]
-        public void PositionGroupOrderQuantityCalculationForDeltaBuyingPowerFromLongPosition(OptionStrategyDefinition optionStrategyDefinition,
-            int initialHoldingsQuantity, int finalPositionQuantity)
-        {
-            // Just making sure we start from a long position
-            initialHoldingsQuantity = Math.Abs(initialHoldingsQuantity);
+            var maintenanceMargin = positionGroup.BuyingPowerModel.GetMaintenanceMargin(
+                new PositionGroupMaintenanceMarginParameters(_portfolio, positionGroup));
 
-            ComputeAndAssertQuantityForDeltaBuyingPower(optionStrategyDefinition, initialHoldingsQuantity, finalPositionQuantity,
-                (initialHoldingsQuantity, finalPositionQuantity, initialUsedMargin, marginPerLongUnit, marginPerShortUnit) =>
-                {
-                    var expectedQuantity = finalPositionQuantity - initialHoldingsQuantity;
-                    return finalPositionQuantity >= 0
-                        //Going even longer / Going "less" long/ Liquidating
-                        ? expectedQuantity * marginPerLongUnit
-                        // Going short from long
-                        : -initialUsedMargin + Math.Abs(finalPositionQuantity) * marginPerShortUnit;
-                });
-        }
+            // Log expected and computed values
+            Log.Debug($"Expected initial margin requirement: {expectedInitialMarginRequirement}");
+            Log.Debug($"Expected maintenance margin: {expectedMaintenanceMargin}");
+            Log.Debug($"Initial margin requirement: {initialMarginRequirement.Value}");
+            Log.Debug($"Maintenance margin: {maintenanceMargin.Value}");
 
-        private void ComputeAndAssertQuantityForDeltaBuyingPower(
-            OptionStrategyDefinition optionStrategyDefinition,
-            int initialHoldingsQuantity,
-            int finalPositionQuantity,
-            // In: (initialHoldingsQuantity, finalPositionQuantity, initialUsedMargin, marginPerLongUnit, marginPerShortUnit). Out: deltaBuyingPower
-            Func<int, int, decimal, decimal, decimal, decimal> computeDeltaBuyingPower)
-        {
-            SetUpOptionStrategy(optionStrategyDefinition, initialHoldingsQuantity);
-            var positionGroup = _portfolio.PositionGroups.Single();
-
-            var expectedQuantity = finalPositionQuantity - initialHoldingsQuantity;
-            var initialUsedMargin = _portfolio.TotalMarginUsed;
-
-            var longUnitGroup = positionGroup.WithQuantity(1);
-            var marginPerLongUnit = longUnitGroup.BuyingPowerModel.GetInitialMarginRequirement(
-                new PositionGroupInitialMarginParameters(_portfolio, longUnitGroup)).Value;
-
-            var shortUnitGroup = positionGroup.WithQuantity(-1);
-            var marginPerShortUnit = shortUnitGroup.BuyingPowerModel.GetInitialMarginRequirement(
-                new PositionGroupInitialMarginParameters(_portfolio, shortUnitGroup)).Value;
-
-            Log.Trace($"Initial used margin: {initialUsedMargin}");
-            Log.Trace($"Margin per long unit: {marginPerLongUnit}");
-            Log.Trace($"Margin per short unit: {marginPerShortUnit}");
-
-            if (initialHoldingsQuantity < 0)
-            {
-                Assert.AreEqual(initialUsedMargin / Math.Abs(initialHoldingsQuantity), marginPerShortUnit);
-            }
-            else
-            {
-                Assert.AreEqual(initialUsedMargin / initialHoldingsQuantity, marginPerLongUnit);
-            }
-
-            var deltaBuyingPower = computeDeltaBuyingPower(initialHoldingsQuantity, finalPositionQuantity, initialUsedMargin, marginPerLongUnit,
-                marginPerShortUnit);
-
-            var quantity = positionGroup.BuyingPowerModel.GetMaximumLotsForDeltaBuyingPower(new GetMaximumLotsForDeltaBuyingPowerParameters(
-                _portfolio, positionGroup, deltaBuyingPower, minimumOrderMarginPortfolioPercentage: 0)).NumberOfLots;
-
-            Log.Trace($"Delta buying power: {deltaBuyingPower}");
-            Log.Trace($"Expected quantity: {expectedQuantity}");
-            Log.Trace($"Computed quantity: {quantity}");
-
-            Assert.AreEqual(expectedQuantity, quantity);
+            Assert.AreEqual(expectedInitialMarginRequirement, initialMarginRequirement.Value);
+            Assert.AreEqual(expectedMaintenanceMargin, maintenanceMargin.Value);
         }
 
         private List<Order> GetStrategyOrders(decimal quantity)
@@ -302,66 +246,301 @@ namespace QuantConnect.Tests.Common.Securities
             };
         }
 
-        private void SetUpOptionStrategy(OptionStrategyDefinition optionStrategyDefinition, int initialHoldingsQuantity)
+        private IPositionGroup SetUpOptionStrategy(OptionStrategyDefinition optionStrategyDefinition, int initialHoldingsQuantity)
         {
-            const decimal price = 1.5m;
-            const decimal underlyingPrice = 300m;
+            const decimal callPrice = 1.5m;
+            const decimal putPrice = 1.5m;
+            const decimal underlyingPrice = 410m;
 
             _equity.SetMarketPrice(new Tick { Value = underlyingPrice });
-            _callOption.SetMarketPrice(new Tick { Value = price });
-            _putOption.SetMarketPrice(new Tick { Value = price });
+            _callOption.SetMarketPrice(new Tick { Value = callPrice });
+            _putOption.SetMarketPrice(new Tick { Value = putPrice });
 
-            _callOption.Holdings.SetHoldings(1m, initialHoldingsQuantity);
-            _putOption.Holdings.SetHoldings(1m, initialHoldingsQuantity);
+            var expectedPositionGroupBPMStrategy = optionStrategyDefinition.Name;
 
-            Assert.AreEqual(1, _portfolio.PositionGroups.Count);
+            if (optionStrategyDefinition.Name == OptionStrategyDefinitions.CoveredCall.Name)
+            {
+                _equity.Holdings.SetHoldings(underlyingPrice, initialHoldingsQuantity * _callOption.ContractMultiplier);
+                _callOption.Holdings.SetHoldings(callPrice, -initialHoldingsQuantity);
+            }
+            else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.CoveredPut.Name)
+            {
+                _equity.Holdings.SetHoldings(underlyingPrice, -initialHoldingsQuantity * _putOption.ContractMultiplier);
+                _putOption.Holdings.SetHoldings(putPrice, -initialHoldingsQuantity);
+            }
+            else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.BearCallSpread.Name)
+            {
+                var shortCallOption = _callOption;
 
-            var positionGroup = _portfolio.PositionGroups.First();
-            Assert.AreEqual(OptionStrategyDefinitions.Straddle.Name, positionGroup.BuyingPowerModel.ToString());
+                var longCallOptionSymbol = Symbols.CreateOptionSymbol("SPY", OptionRight.Call, shortCallOption.StrikePrice + 10, shortCallOption.Expiry);
+                var longCallOption = _algorithm.AddOptionContract(longCallOptionSymbol);
+                longCallOption.SetMarketPrice(new Tick { Value = callPrice });
 
-            var callOptionPosition = positionGroup.Positions.Single(x => x.Symbol == _callOption.Symbol);
-            Assert.AreEqual(initialHoldingsQuantity, callOptionPosition.Quantity);
+                shortCallOption.Holdings.SetHoldings(callPrice, -initialHoldingsQuantity);
+                longCallOption.Holdings.SetHoldings(callPrice, initialHoldingsQuantity);
 
-            var putOptionPosition = positionGroup.Positions.Single(x => x.Symbol == _putOption.Symbol);
-            Assert.AreEqual(initialHoldingsQuantity, putOptionPosition.Quantity);
-        }
-
-        private static TestCaseData[] GetOrderQuantityFromLongPositionTestCases()
-        {
-            return OptionStrategyDefinitions.AllDefinitions
-                .GroupBy(strategy => strategy.Name)
-                .Select(strategies => strategies.First())
-                .SelectMany(strategy => new[]
+                if (initialHoldingsQuantity < 0)
                 {
-                    // Going even longer
-                    new TestCaseData(strategy, 10, 11),
-                    // Going "less" long
-                    new TestCaseData(strategy, 10, 9),
-                    // Liquidating
-                    new TestCaseData(strategy, 10, 0),
-                    // Going short from long
-                    new TestCaseData(strategy, 10, -10)
-                })
-                .ToArray();
+                    expectedPositionGroupBPMStrategy = OptionStrategyDefinitions.BullCallSpread.Name;
+                }
+            }
+            else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.BearPutSpread.Name)
+            {
+                var shortPutOption = _putOption;
+
+                var longPutOptionSymbol = Symbols.CreateOptionSymbol("SPY", OptionRight.Put, shortPutOption.StrikePrice + 10, shortPutOption.Expiry);
+                var longPutOption = _algorithm.AddOptionContract(longPutOptionSymbol);
+                longPutOption.SetMarketPrice(new Tick { Value = putPrice });
+
+                longPutOption.Holdings.SetHoldings(putPrice, initialHoldingsQuantity);
+                shortPutOption.Holdings.SetHoldings(putPrice, -initialHoldingsQuantity);
+
+                if (initialHoldingsQuantity < 0)
+                {
+                    expectedPositionGroupBPMStrategy = OptionStrategyDefinitions.BullPutSpread.Name;
+                }
+            }
+            else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.BullCallSpread.Name)
+            {
+                var longCallOption = _callOption;
+
+                var shortCallOptionSymbol = Symbols.CreateOptionSymbol("SPY", OptionRight.Call, longCallOption.StrikePrice + 10, longCallOption.Expiry);
+                var shortCallOption = _algorithm.AddOptionContract(shortCallOptionSymbol);
+                shortCallOption.SetMarketPrice(new Tick { Value = callPrice });
+
+                longCallOption.Holdings.SetHoldings(callPrice, initialHoldingsQuantity);
+                shortCallOption.Holdings.SetHoldings(callPrice, -initialHoldingsQuantity);
+
+                if (initialHoldingsQuantity < 0)
+                {
+                    expectedPositionGroupBPMStrategy = OptionStrategyDefinitions.BearCallSpread.Name;
+                }
+            }
+            else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.BullPutSpread.Name)
+            {
+                var longPutOption = _putOption;
+
+                var shortPutOptionSymbol = Symbols.CreateOptionSymbol("SPY", OptionRight.Put, longPutOption.StrikePrice + 10, longPutOption.Expiry);
+                var shortPutOption = _algorithm.AddOptionContract(shortPutOptionSymbol);
+                shortPutOption.SetMarketPrice(new Tick { Value = putPrice });
+
+                longPutOption.Holdings.SetHoldings(putPrice, initialHoldingsQuantity);
+                shortPutOption.Holdings.SetHoldings(putPrice, -initialHoldingsQuantity);
+
+                if (initialHoldingsQuantity < 0)
+                {
+                    expectedPositionGroupBPMStrategy = OptionStrategyDefinitions.BearPutSpread.Name;
+                }
+            }
+            else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.Straddle.Name)
+            {
+                _callOption.Holdings.SetHoldings(callPrice, initialHoldingsQuantity);
+                _putOption.Holdings.SetHoldings(putPrice, initialHoldingsQuantity);
+            }
+            else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.Strangle.Name)
+            {
+                var callOptionSymbol = Symbols.CreateOptionSymbol("SPY", OptionRight.Call, _putOption.StrikePrice + 10, _putOption.Expiry);
+                var callOption = _algorithm.AddOptionContract(callOptionSymbol);
+                callOption.SetMarketPrice(new Tick { Value = callPrice });
+
+                callOption.Holdings.SetHoldings(callPrice, initialHoldingsQuantity);
+                _putOption.Holdings.SetHoldings(putPrice, initialHoldingsQuantity);
+            }
+            else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.ButterflyCall.Name)
+            {
+                var lowerStrikeCallOption = _callOption;
+
+                var middleStrikeCallOptionSymbol = Symbols.CreateOptionSymbol("SPY", OptionRight.Call, lowerStrikeCallOption.StrikePrice + 10,
+                    lowerStrikeCallOption.Expiry);
+                var middleStrikeCallOption = _algorithm.AddOptionContract(middleStrikeCallOptionSymbol);
+
+                var upperStrikeCallOptionSymbol = Symbols.CreateOptionSymbol("SPY", OptionRight.Call, middleStrikeCallOption.StrikePrice + 10,
+                    middleStrikeCallOption.Expiry);
+                var upperStrikeCallOption = _algorithm.AddOptionContract(upperStrikeCallOptionSymbol);
+
+                middleStrikeCallOption.SetMarketPrice(new Tick { Value = callPrice });
+                upperStrikeCallOption.SetMarketPrice(new Tick { Value = callPrice });
+
+                lowerStrikeCallOption.Holdings.SetHoldings(callPrice, initialHoldingsQuantity);
+                middleStrikeCallOption.Holdings.SetHoldings(callPrice, -2 * initialHoldingsQuantity);
+                upperStrikeCallOption.Holdings.SetHoldings(callPrice, initialHoldingsQuantity);
+
+                if (initialHoldingsQuantity < 0)
+                {
+                    expectedPositionGroupBPMStrategy = OptionStrategyDefinitions.ShortButterflyCall.Name;
+                }
+            }
+            else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.ShortButterflyCall.Name)
+            {
+                // TODO: this code can be unified with the code in the ButterflyCall case
+                var lowerStrikeCallOption = _callOption;
+
+                var middleStrikeCallOptionSymbol = Symbols.CreateOptionSymbol("SPY", OptionRight.Call, lowerStrikeCallOption.StrikePrice + 10,
+                    lowerStrikeCallOption.Expiry);
+                var middleStrikeCallOption = _algorithm.AddOptionContract(middleStrikeCallOptionSymbol);
+
+                var upperStrikeCallOptionSymbol = Symbols.CreateOptionSymbol("SPY", OptionRight.Call, middleStrikeCallOption.StrikePrice + 10,
+                    middleStrikeCallOption.Expiry);
+                var upperStrikeCallOption = _algorithm.AddOptionContract(upperStrikeCallOptionSymbol);
+
+                middleStrikeCallOption.SetMarketPrice(new Tick { Value = callPrice });
+                upperStrikeCallOption.SetMarketPrice(new Tick { Value = callPrice });
+
+                lowerStrikeCallOption.Holdings.SetHoldings(callPrice, -initialHoldingsQuantity);
+                middleStrikeCallOption.Holdings.SetHoldings(callPrice, 2 * initialHoldingsQuantity);
+                upperStrikeCallOption.Holdings.SetHoldings(callPrice, -initialHoldingsQuantity);
+
+                if (initialHoldingsQuantity < 0)
+                {
+                    expectedPositionGroupBPMStrategy = OptionStrategyDefinitions.ButterflyCall.Name;
+                }
+            }
+            else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.ButterflyPut.Name)
+            {
+                var lowerStrikePutOption = _putOption;
+
+                var middleStrikePutOptionSymbol = Symbols.CreateOptionSymbol("SPY", OptionRight.Put, lowerStrikePutOption.StrikePrice + 10,
+                    lowerStrikePutOption.Expiry);
+                var middleStrikePutOption = _algorithm.AddOptionContract(middleStrikePutOptionSymbol);
+
+                var upperStrikePutOptionSymbol = Symbols.CreateOptionSymbol("SPY", OptionRight.Put, middleStrikePutOption.StrikePrice + 10,
+                    middleStrikePutOption.Expiry);
+                var upperStrikePutOption = _algorithm.AddOptionContract(upperStrikePutOptionSymbol);
+
+                middleStrikePutOption.SetMarketPrice(new Tick { Value = putPrice });
+                upperStrikePutOption.SetMarketPrice(new Tick { Value = putPrice });
+
+                lowerStrikePutOption.Holdings.SetHoldings(putPrice, initialHoldingsQuantity);
+                middleStrikePutOption.Holdings.SetHoldings(putPrice, -2 * initialHoldingsQuantity);
+                upperStrikePutOption.Holdings.SetHoldings(putPrice, initialHoldingsQuantity);
+
+                if (initialHoldingsQuantity < 0)
+                {
+                    expectedPositionGroupBPMStrategy = OptionStrategyDefinitions.ShortButterflyPut.Name;
+                }
+            }
+            else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.ShortButterflyPut.Name)
+            {
+                // TODO: this code can be unified with the code in the ButterflyPut case and probably with the code in the ShortButterflyCall case
+                var lowerStrikePutOption = _putOption;
+
+                var middleStrikePutOptionSymbol = Symbols.CreateOptionSymbol("SPY", OptionRight.Put, lowerStrikePutOption.StrikePrice + 10,
+                    lowerStrikePutOption.Expiry);
+                var middleStrikePutOption = _algorithm.AddOptionContract(middleStrikePutOptionSymbol);
+
+                var upperStrikePutOptionSymbol = Symbols.CreateOptionSymbol("SPY", OptionRight.Put, middleStrikePutOption.StrikePrice + 10,
+                    middleStrikePutOption.Expiry);
+                var upperStrikePutOption = _algorithm.AddOptionContract(upperStrikePutOptionSymbol);
+
+                middleStrikePutOption.SetMarketPrice(new Tick { Value = putPrice });
+                upperStrikePutOption.SetMarketPrice(new Tick { Value = putPrice });
+
+                lowerStrikePutOption.Holdings.SetHoldings(putPrice, -initialHoldingsQuantity);
+                middleStrikePutOption.Holdings.SetHoldings(putPrice, 2 * initialHoldingsQuantity);
+                upperStrikePutOption.Holdings.SetHoldings(putPrice, -initialHoldingsQuantity);
+
+                if (initialHoldingsQuantity < 0)
+                {
+                    expectedPositionGroupBPMStrategy = OptionStrategyDefinitions.ButterflyPut.Name;
+                }
+            }
+            else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.CallCalendarSpread.Name)
+            {
+                var shortCallOption = _callOption;
+
+                var longCallOptionSymbol = Symbols.CreateOptionSymbol("SPY", OptionRight.Call, shortCallOption.StrikePrice,
+                    shortCallOption.Expiry.AddDays(30));
+                var longCallOption = _algorithm.AddOptionContract(longCallOptionSymbol);
+
+                longCallOption.SetMarketPrice(new Tick { Value = callPrice });
+
+                shortCallOption.Holdings.SetHoldings(callPrice, -initialHoldingsQuantity);
+                longCallOption.Holdings.SetHoldings(callPrice, initialHoldingsQuantity);
+            }
+            else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.PutCalendarSpread.Name)
+            {
+                var shortPutOption = _putOption;
+
+                var longPutOptionSymbol = Symbols.CreateOptionSymbol("SPY", OptionRight.Put, shortPutOption.StrikePrice,
+                    shortPutOption.Expiry.AddDays(30));
+                var longPutOption = _algorithm.AddOptionContract(longPutOptionSymbol);
+
+                longPutOption.SetMarketPrice(new Tick { Value = 1m });
+
+                shortPutOption.Holdings.SetHoldings(putPrice, -initialHoldingsQuantity);
+                longPutOption.Holdings.SetHoldings(1m, initialHoldingsQuantity);
+            }
+            else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.IronCondor.Name)
+            {
+                var longPutOption = _putOption;
+
+                var shortPutOptionSymbol = Symbols.CreateOptionSymbol("SPY", OptionRight.Put, longPutOption.StrikePrice + 10, longPutOption.Expiry);
+                var shortPutOption = _algorithm.AddOptionContract(shortPutOptionSymbol);
+
+                var shortCallOptionSymbol = Symbols.CreateOptionSymbol("SPY", OptionRight.Call, shortPutOption.StrikePrice + 10, shortPutOption.Expiry);
+                var shortCallOption = _algorithm.AddOptionContract(shortCallOptionSymbol);
+
+                var longCallOptionSymbol = Symbols.CreateOptionSymbol("SPY", OptionRight.Call, shortCallOption.StrikePrice + 10,
+                    shortCallOption.Expiry);
+                var longCallOption = _algorithm.AddOptionContract(longCallOptionSymbol);
+
+                shortPutOption.SetMarketPrice(new Tick { Value = putPrice });
+                shortCallOption.SetMarketPrice(new Tick { Value = callPrice });
+                longCallOption.SetMarketPrice(new Tick { Value = callPrice });
+
+                longPutOption.Holdings.SetHoldings(putPrice, initialHoldingsQuantity);
+                shortPutOption.Holdings.SetHoldings(putPrice, -initialHoldingsQuantity);
+                shortCallOption.Holdings.SetHoldings(callPrice, -initialHoldingsQuantity);
+                longCallOption.Holdings.SetHoldings(callPrice, initialHoldingsQuantity);
+            }
+
+            var positionGroup = _portfolio.PositionGroups.Single();
+            Assert.AreEqual(expectedPositionGroupBPMStrategy, positionGroup.BuyingPowerModel.ToString());
+
+            return positionGroup;
         }
 
-        private static TestCaseData[] GetOrderQuantityFromShortPositionTestCases()
+        /// <summary>
+        /// Test cases for the <see cref="OptionStrategyPositionGroupBuyingPowerModel.GetInitialMarginRequirement"/> and
+        /// <see cref="OptionStrategyPositionGroupBuyingPowerModel.GetMaintenanceMargin"/> methods.
+        ///
+        /// TODO: We should come back and revisit these test cases to make sure they are correct.
+        /// The approximate values from IB for the prices used in the test are in the comments.
+        /// For instance, see the test case for the CoveredCall strategy. The margin values do not match IB's values.
+        /// </summary>
+        private static TestCaseData[] InitialMarginRequirementsTestCases = new[]
         {
-            return OptionStrategyDefinitions.AllDefinitions
-                .GroupBy(strategy => strategy.Name)
-                .Select(strategies => strategies.First())
-                .SelectMany(strategy => new[]
-                {
-                    // Going even shorter
-                    new TestCaseData(strategy, -10, -11),
-                    // Going "less" short
-                    new TestCaseData(strategy, -10, -9),
-                    // Liquidating
-                    new TestCaseData(strategy, -10, 0),
-                    // Going long from short
-                    new TestCaseData(strategy, -10, 10)
-                })
-                .ToArray();
-        }
+            // OptionStrategyDefinition, initialHoldingsQuantity, expectedInitialMarginRequirement, expectedMaintenanceMargin
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 1, 20500m, 20500m),             // IB:  10282.15,   10282.15
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, -1, 150m, 11075m),              // IB:  12338.58,   3000
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 1, 20500m, 20500m),              // IB:  12331.38,   3000
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -1, 20500m, 20500m),             // IB:  10276.15,   10276.15
+            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 1, 1000m, 1000m),            // IB:  0,          0
+            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -1, 0m, 0m),                 // IB:  0,          0
+            new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 1, 0m, 0m),                   // IB:  0,          0
+            new TestCaseData(OptionStrategyDefinitions.BearPutSpread, -1, 1000m, 1000m),            // IB:  1000,       1000
+            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, 1, 0m, 0m),                  // IB:  0,          0
+            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, -1, 1000m, 1000m),           // IB:  0,          0
+            new TestCaseData(OptionStrategyDefinitions.BullPutSpread, 1, 1000m, 1000m),             // IB:  1000,       1000
+            new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -1, 0m, 0m),                  // IB:  0,          0
+            new TestCaseData(OptionStrategyDefinitions.Straddle, 1, 300m, 300m),                    // IB:  0,          0
+            new TestCaseData(OptionStrategyDefinitions.Straddle, -1, -12600m, 12600m),              // IB:  3001.60,    3001.60
+            new TestCaseData(OptionStrategyDefinitions.Strangle, 1, 300m, 300m),                    // IB:  0,          0
+            new TestCaseData(OptionStrategyDefinitions.Strangle, -1, -12600m, 12600m),              // IB:  3001.60,    3001.60
+            new TestCaseData(OptionStrategyDefinitions.ButterflyCall, 1, 0m, 0m),                   // IB:  0,          0
+            new TestCaseData(OptionStrategyDefinitions.ButterflyCall, -1, 1000m, 1000m),            // IB:  0,          0
+            new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, 1, 1000m, 1000m),        // IB:  0,          0
+            new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, -1, 0m, 0m),             // IB:  0,          0
+            new TestCaseData(OptionStrategyDefinitions.ButterflyPut, 1, 0m, 0m),                    // IB:  0,          0
+            new TestCaseData(OptionStrategyDefinitions.ButterflyPut, -1, 1000m, 1000m),             // IB:  1000,       1000
+            new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, 1, 1000m, 1000m),         // IB:  1000,       1000
+            new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, -1, 0m, 0m),              // IB:  0,          0
+            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 1, 0m, 0m),              // IB:  0,          0
+            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -1, 0m, 0m),             // IB:  0,          0
+            new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, 1, 0m, 0m),               // IB:  0,          0
+            new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, -1, 0m, 0m),              // IB:  3001.6,     3001.6
+            new TestCaseData(OptionStrategyDefinitions.IronCondor, 1, 1000m, 1000m),                // IB:  1017.62,    1017.62
+            new TestCaseData(OptionStrategyDefinitions.IronCondor, -1, 0m, 0m),                     // IB:  0,          0
+        };
     }
 }
