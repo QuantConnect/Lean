@@ -27,17 +27,17 @@ class TickDataFilteringAlgorithm(QCAlgorithm):
         self.SetEndDate(2013, 10, 11)
         self.SetCash(25000)
         self.AddSecurity(SecurityType.Equity, "SPY", Resolution.Tick)
-        self.Securities["SPY"].DataFilter = ExchangeDataFilter(self)
+        self.Securities["SPY"].DataFilter = ExchangeDataFilter()
 
     # <summary>
     # Data arriving here will now be filtered.
     # </summary>
     # <param name="data">Ticks data array</param>
     def OnData(self, data):
-        if self.data.ContainsKey("SPY"): 
+        if not data.ContainsKey("SPY"): 
             return
         
-        self.spyTickList = self.data["SPY"]
+        self.spyTickList = data["SPY"]
 
         # Ticks return a list of ticks this second
         for tick in self.spyTickList:
@@ -55,46 +55,14 @@ class ExchangeDataFilter(SecurityDataFilter):
     # Save instance of the algorithm namespace
     # </summary>
     # <param name="algo"></param>
-    def ExchangeDataFilter(self, algo):
-        self.algo = algo
+    def __init__(self):
+        super().__init__()
 
     # <summary>
     # Global Market Short Codes and their full versions: (used in tick objects)
     # https://github.com/QuantConnect/QCAlgorithm/blob/master/QuantConnect.Common/Global.cs
     # </summary>
-    class MarketCodesFilter: 
-        # US Market Codes
-        US = {"A": "American Stock Exchange",
-            "B": "Boston Stock Exchange",
-            "C": "National Stock Exchange",
-            "D": "FINRA ADF",
-            "I": "International Securities Exchange",
-            "J": "Direct Edge A",
-            "K": "Direct Edge X",
-            "M": "Chicago Stock Exchange",
-            "N": "New York Stock Exchange",
-            "P": "Nyse Arca Exchange",
-            "Q": "NASDAQ OMX",
-            "T": "NASDAQ OMX",
-            "U": "OTC Bulletin Board",
-            "u": "Over-the-Counter trade in Non-NASDAQ issue",
-            "W": "Chicago Board Options Exchange",
-            "X": "Philadelphia Stock Exchange",
-            "Y": "BATS Y-Exchange, Inc",
-            "Z": "BATS Exchange, Inc"}
-
-        # Canada Market Short Codes:
-        Canada =  {"T": "Toronto", "V": "Venture"}
-            
-
-        # <summary>
-        # Select allowed exchanges for this filter: e.g. top 4
-        # </summary>
-        AllowedExchanges = ["P"]     
-        # NYSE ARCA - SPY PRIMARY EXCHANGE
-        # https://www.google.com/finance?q=NYSEARCA%3ASPY&ei=XcA2VKCSLs228waMhYCIBg
-
-
+    
 
     # <summary>
     # Filter out a tick from this vehicle, with this new data:
@@ -104,11 +72,10 @@ class ExchangeDataFilter(SecurityDataFilter):
     def Filter(self, asset, data):
         # TRUE -->  Accept Tick
         # FALSE --> Reject Tick
-        self.tick = data
 
         if isinstance(data, Tick):
             if self.tick.Exchange == "P":
                 return True
         
         return False
-
+    
