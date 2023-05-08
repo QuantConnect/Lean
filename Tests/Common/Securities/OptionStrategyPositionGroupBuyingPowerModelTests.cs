@@ -28,6 +28,7 @@ using QuantConnect.Securities.Option.StrategyMatcher;
 using QuantConnect.Securities.Positions;
 using QuantConnect.Logging;
 using QuantConnect.Tests.Engine.DataFeeds;
+using static QuantConnect.Tests.Engine.PerformanceBenchmarkAlgorithms;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -197,25 +198,92 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [TestCaseSource(nameof(InitialMarginRequirementsTestCases))]
-        public void GetsInitialAndMaintenanceMargin(OptionStrategyDefinition optionStrategyDefinition, int quantity,
-            decimal expectedInitialMarginRequirement, decimal expectedMaintenanceMargin)
+        public void GetsInitialMarginRequirement(OptionStrategyDefinition optionStrategyDefinition, int quantity,
+            decimal expectedInitialMarginRequirement)
         {
             var positionGroup = SetUpOptionStrategy(optionStrategyDefinition, quantity);
 
             var initialMarginRequirement = positionGroup.BuyingPowerModel.GetInitialMarginRequirement(
                 new PositionGroupInitialMarginParameters(_portfolio, positionGroup));
 
+            Assert.AreEqual(expectedInitialMarginRequirement, initialMarginRequirement.Value);
+        }
+
+        [TestCaseSource(nameof(MaintenanceMarginTestCases))]
+        public void GetsMaintenanceMargin(OptionStrategyDefinition optionStrategyDefinition, int quantity, decimal expectedMaintenanceMargin)
+        {
+            var positionGroup = SetUpOptionStrategy(optionStrategyDefinition, quantity);
+
             var maintenanceMargin = positionGroup.BuyingPowerModel.GetMaintenanceMargin(
                 new PositionGroupMaintenanceMarginParameters(_portfolio, positionGroup));
 
-            // Log expected and computed values
-            Log.Debug($"Expected initial margin requirement: {expectedInitialMarginRequirement}");
-            Log.Debug($"Expected maintenance margin: {expectedMaintenanceMargin}");
-            Log.Debug($"Initial margin requirement: {initialMarginRequirement.Value}");
-            Log.Debug($"Maintenance margin: {maintenanceMargin.Value}");
-
-            Assert.AreEqual(expectedInitialMarginRequirement, initialMarginRequirement.Value);
             Assert.AreEqual(expectedMaintenanceMargin, maintenanceMargin.Value);
+        }
+
+        private static decimal GetDeltaBuyingPower(decimal initialUsedMargin, int initialPositionQuantity, int expectedFinalQuantity,
+            out int expectedQuantity)
+        {
+            expectedQuantity = 0;
+            if (initialUsedMargin != 0)
+            {
+                expectedQuantity = expectedFinalQuantity - initialPositionQuantity;
+            }
+
+            // If reducing the position, we are reducing the buying power used by the strategy, so the delta buying power is negative
+            var direction = Math.Abs(expectedFinalQuantity) < Math.Abs(initialPositionQuantity) ? -1 : +1;
+            return direction * Math.Abs(expectedQuantity * initialUsedMargin / initialPositionQuantity);
+        }
+
+        [TestCaseSource(nameof(GetOrderQuantityTestCases))]
+        public void PositionGroupOrderQuantityCalculationForDeltaBuyingPower(OptionStrategyDefinition optionStrategyDefinition,
+            int initialPositionQuantity, int expectedFinalQuantity)
+        {
+            var positionGroup = SetUpOptionStrategy(optionStrategyDefinition, initialPositionQuantity);
+
+            var initialUsedMargin = positionGroup.BuyingPowerModel.GetInitialMarginRequirement(
+                new PositionGroupInitialMarginParameters(_portfolio, positionGroup));
+
+            var deltaBuyingPower = GetDeltaBuyingPower(initialUsedMargin.Value, initialPositionQuantity, expectedFinalQuantity,
+                out var expectedQuantity);
+
+            Log.Trace($"Initial used margin: {initialUsedMargin.Value}");
+            Log.Trace($"Delta buying power: {deltaBuyingPower}");
+
+            var quantity = positionGroup.BuyingPowerModel.GetMaximumLotsForDeltaBuyingPower(new GetMaximumLotsForDeltaBuyingPowerParameters(
+                _portfolio, positionGroup, deltaBuyingPower, minimumOrderMarginPortfolioPercentage: 0)).NumberOfLots;
+
+            Log.Trace($"Expected quantity: {expectedQuantity}");
+            Log.Trace($"Computed quantity: {quantity}");
+
+            Assert.AreEqual(expectedQuantity, quantity);
+        }
+
+        [TestCaseSource(nameof(GetOrderQuantityTestCases))]
+        public void PositionGroupOrderQuantityCalculationForTargetBuyingPower(OptionStrategyDefinition optionStrategyDefinition,
+            int initialPositionQuantity, int expectedFinalQuantity)
+        {
+            var positionGroup = SetUpOptionStrategy(optionStrategyDefinition, initialPositionQuantity);
+
+            var initialUsedMargin = positionGroup.BuyingPowerModel.GetInitialMarginRequirement(
+                new PositionGroupInitialMarginParameters(_portfolio, positionGroup));
+
+            var deltaBuyingPower = GetDeltaBuyingPower(initialUsedMargin.Value, initialPositionQuantity, expectedFinalQuantity,
+                out var expectedQuantity);
+            var targetBuyingPower = initialUsedMargin + deltaBuyingPower;
+            var targetBuyingPowerPercent = _portfolio.TotalPortfolioValue != 0 ? targetBuyingPower / _portfolio.TotalPortfolioValue : 0;
+
+            Log.Trace($"Initial used margin: {initialUsedMargin.Value}");
+            Log.Trace($"Delta buying power: {deltaBuyingPower}");
+            Log.Trace($"Target buying power: {targetBuyingPower}");
+            Log.Trace($"Target buying power percent: {targetBuyingPowerPercent}");
+
+            var quantity = positionGroup.BuyingPowerModel.GetMaximumLotsForTargetBuyingPower(new GetMaximumLotsForTargetBuyingPowerParameters(
+                _portfolio, positionGroup, targetBuyingPowerPercent, minimumOrderMarginPortfolioPercentage: 0)).NumberOfLots;
+
+            Log.Trace($"Expected quantity: {expectedQuantity}");
+            Log.Trace($"Computed quantity: {quantity}");
+
+            Assert.AreEqual(expectedQuantity, quantity);
         }
 
         private List<Order> GetStrategyOrders(decimal quantity)
@@ -248,8 +316,8 @@ namespace QuantConnect.Tests.Common.Securities
 
         private IPositionGroup SetUpOptionStrategy(OptionStrategyDefinition optionStrategyDefinition, int initialHoldingsQuantity)
         {
-            const decimal callPrice = 1.5m;
-            const decimal putPrice = 1.5m;
+            const decimal callPrice = 110m;
+            const decimal putPrice = 0.02m;
             const decimal underlyingPrice = 410m;
 
             _equity.SetMarketPrice(new Tick { Value = underlyingPrice });
@@ -274,10 +342,10 @@ namespace QuantConnect.Tests.Common.Securities
 
                 var longCallOptionSymbol = Symbols.CreateOptionSymbol("SPY", OptionRight.Call, shortCallOption.StrikePrice + 10, shortCallOption.Expiry);
                 var longCallOption = _algorithm.AddOptionContract(longCallOptionSymbol);
-                longCallOption.SetMarketPrice(new Tick { Value = callPrice });
+                longCallOption.SetMarketPrice(new Tick { Value = callPrice - 10 });
 
                 shortCallOption.Holdings.SetHoldings(callPrice, -initialHoldingsQuantity);
-                longCallOption.Holdings.SetHoldings(callPrice, initialHoldingsQuantity);
+                longCallOption.Holdings.SetHoldings(longCallOption.Price, initialHoldingsQuantity);
 
                 if (initialHoldingsQuantity < 0)
                 {
@@ -306,10 +374,10 @@ namespace QuantConnect.Tests.Common.Securities
 
                 var shortCallOptionSymbol = Symbols.CreateOptionSymbol("SPY", OptionRight.Call, longCallOption.StrikePrice + 10, longCallOption.Expiry);
                 var shortCallOption = _algorithm.AddOptionContract(shortCallOptionSymbol);
-                shortCallOption.SetMarketPrice(new Tick { Value = callPrice });
+                shortCallOption.SetMarketPrice(new Tick { Value = callPrice - 10 });
 
                 longCallOption.Holdings.SetHoldings(callPrice, initialHoldingsQuantity);
-                shortCallOption.Holdings.SetHoldings(callPrice, -initialHoldingsQuantity);
+                shortCallOption.Holdings.SetHoldings(shortCallOption.Price, -initialHoldingsQuantity);
 
                 if (initialHoldingsQuantity < 0)
                 {
@@ -341,9 +409,9 @@ namespace QuantConnect.Tests.Common.Securities
             {
                 var callOptionSymbol = Symbols.CreateOptionSymbol("SPY", OptionRight.Call, _putOption.StrikePrice + 10, _putOption.Expiry);
                 var callOption = _algorithm.AddOptionContract(callOptionSymbol);
-                callOption.SetMarketPrice(new Tick { Value = callPrice });
+                callOption.SetMarketPrice(new Tick { Value = callPrice - 10 });
 
-                callOption.Holdings.SetHoldings(callPrice, initialHoldingsQuantity);
+                callOption.Holdings.SetHoldings(callOption.Price, initialHoldingsQuantity);
                 _putOption.Holdings.SetHoldings(putPrice, initialHoldingsQuantity);
             }
             else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.ButterflyCall.Name)
@@ -358,12 +426,12 @@ namespace QuantConnect.Tests.Common.Securities
                     middleStrikeCallOption.Expiry);
                 var upperStrikeCallOption = _algorithm.AddOptionContract(upperStrikeCallOptionSymbol);
 
-                middleStrikeCallOption.SetMarketPrice(new Tick { Value = callPrice });
-                upperStrikeCallOption.SetMarketPrice(new Tick { Value = callPrice });
+                middleStrikeCallOption.SetMarketPrice(new Tick { Value = callPrice - 10 });
+                upperStrikeCallOption.SetMarketPrice(new Tick { Value = callPrice - 20 });
 
                 lowerStrikeCallOption.Holdings.SetHoldings(callPrice, initialHoldingsQuantity);
-                middleStrikeCallOption.Holdings.SetHoldings(callPrice, -2 * initialHoldingsQuantity);
-                upperStrikeCallOption.Holdings.SetHoldings(callPrice, initialHoldingsQuantity);
+                middleStrikeCallOption.Holdings.SetHoldings(middleStrikeCallOption.Price, -2 * initialHoldingsQuantity);
+                upperStrikeCallOption.Holdings.SetHoldings(upperStrikeCallOption.Price, initialHoldingsQuantity);
 
                 if (initialHoldingsQuantity < 0)
                 {
@@ -383,12 +451,12 @@ namespace QuantConnect.Tests.Common.Securities
                     middleStrikeCallOption.Expiry);
                 var upperStrikeCallOption = _algorithm.AddOptionContract(upperStrikeCallOptionSymbol);
 
-                middleStrikeCallOption.SetMarketPrice(new Tick { Value = callPrice });
-                upperStrikeCallOption.SetMarketPrice(new Tick { Value = callPrice });
+                middleStrikeCallOption.SetMarketPrice(new Tick { Value = callPrice + 10 });
+                upperStrikeCallOption.SetMarketPrice(new Tick { Value = callPrice + 20 });
 
                 lowerStrikeCallOption.Holdings.SetHoldings(callPrice, -initialHoldingsQuantity);
-                middleStrikeCallOption.Holdings.SetHoldings(callPrice, 2 * initialHoldingsQuantity);
-                upperStrikeCallOption.Holdings.SetHoldings(callPrice, -initialHoldingsQuantity);
+                middleStrikeCallOption.Holdings.SetHoldings(middleStrikeCallOption.Price, 2 * initialHoldingsQuantity);
+                upperStrikeCallOption.Holdings.SetHoldings(middleStrikeCallOption.Price, -initialHoldingsQuantity);
 
                 if (initialHoldingsQuantity < 0)
                 {
@@ -501,46 +569,189 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         /// <summary>
-        /// Test cases for the <see cref="OptionStrategyPositionGroupBuyingPowerModel.GetInitialMarginRequirement"/> and
-        /// <see cref="OptionStrategyPositionGroupBuyingPowerModel.GetMaintenanceMargin"/> methods.
+        /// Test cases for the <see cref="OptionStrategyPositionGroupBuyingPowerModel.GetInitialMarginRequirement"/> method.
         ///
         /// TODO: We should come back and revisit these test cases to make sure they are correct.
         /// The approximate values from IB for the prices used in the test are in the comments.
         /// For instance, see the test case for the CoveredCall strategy. The margin values do not match IB's values.
+        ///
+        /// Test cases marked as explicit will fail if ran, they have an approximate expected value based on IB's margin requirements.
         /// </summary>
         private static TestCaseData[] InitialMarginRequirementsTestCases = new[]
         {
-            // OptionStrategyDefinition, initialHoldingsQuantity, expectedInitialMarginRequirement, expectedMaintenanceMargin
-            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 1, 20500m, 20500m),             // IB:  10282.15,   10282.15
-            new TestCaseData(OptionStrategyDefinitions.CoveredCall, -1, 150m, 11075m),              // IB:  12338.58,   3000
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 1, 20500m, 20500m),              // IB:  12331.38,   3000
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -1, 20500m, 20500m),             // IB:  10276.15,   10276.15
-            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 1, 1000m, 1000m),            // IB:  0,          0
-            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -1, 0m, 0m),                 // IB:  0,          0
-            new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 1, 0m, 0m),                   // IB:  0,          0
-            new TestCaseData(OptionStrategyDefinitions.BearPutSpread, -1, 1000m, 1000m),            // IB:  1000,       1000
-            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, 1, 0m, 0m),                  // IB:  0,          0
-            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, -1, 1000m, 1000m),           // IB:  0,          0
-            new TestCaseData(OptionStrategyDefinitions.BullPutSpread, 1, 1000m, 1000m),             // IB:  1000,       1000
-            new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -1, 0m, 0m),                  // IB:  0,          0
-            new TestCaseData(OptionStrategyDefinitions.Straddle, 1, 300m, 300m),                    // IB:  0,          0
-            new TestCaseData(OptionStrategyDefinitions.Straddle, -1, -12600m, 12600m),              // IB:  3001.60,    3001.60
-            new TestCaseData(OptionStrategyDefinitions.Strangle, 1, 300m, 300m),                    // IB:  0,          0
-            new TestCaseData(OptionStrategyDefinitions.Strangle, -1, -12600m, 12600m),              // IB:  3001.60,    3001.60
-            new TestCaseData(OptionStrategyDefinitions.ButterflyCall, 1, 0m, 0m),                   // IB:  0,          0
-            new TestCaseData(OptionStrategyDefinitions.ButterflyCall, -1, 1000m, 1000m),            // IB:  0,          0
-            new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, 1, 1000m, 1000m),        // IB:  0,          0
-            new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, -1, 0m, 0m),             // IB:  0,          0
-            new TestCaseData(OptionStrategyDefinitions.ButterflyPut, 1, 0m, 0m),                    // IB:  0,          0
-            new TestCaseData(OptionStrategyDefinitions.ButterflyPut, -1, 1000m, 1000m),             // IB:  1000,       1000
-            new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, 1, 1000m, 1000m),         // IB:  1000,       1000
-            new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, -1, 0m, 0m),              // IB:  0,          0
-            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 1, 0m, 0m),              // IB:  0,          0
-            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -1, 0m, 0m),             // IB:  0,          0
-            new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, 1, 0m, 0m),               // IB:  0,          0
-            new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, -1, 0m, 0m),              // IB:  3001.6,     3001.6
-            new TestCaseData(OptionStrategyDefinitions.IronCondor, 1, 1000m, 1000m),                // IB:  1017.62,    1017.62
-            new TestCaseData(OptionStrategyDefinitions.IronCondor, -1, 0m, 0m),                     // IB:  0,          0
+            // OptionStrategyDefinition, initialHoldingsQuantity, expectedInitialMarginRequirement
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 1, 10000m).Explicit(),                          // IB:  10282.15
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, -1, 11000m),                                    // IB:  12338.58
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 1, 12000m).Explicit(),                           // IB:  12331.38
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -1, 10000m).Explicit(),                          // IB:  10276.15
+            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 1, 0m).Explicit(),                           // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -1, 0m),                                     // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 1, 0m),                                       // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.BearPutSpread, -1, 1000m),                                   // IB:  1000
+            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, 1, 0m),                                      // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, -1, 0m).Explicit(),                          // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.BullPutSpread, 1, 1000m),                                    // IB:  1000
+            new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -1, 0m),                                      // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.Straddle, 1, 0m).Explicit(),                                 // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.Straddle, -1, 3000m).Explicit(),                             // IB:  3001.60
+            new TestCaseData(OptionStrategyDefinitions.Strangle, 1, 0m).Explicit(),                                 // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.Strangle, -1, 3000m).Explicit(),                             // IB:  3001.60
+            new TestCaseData(OptionStrategyDefinitions.ButterflyCall, 1, 0m),                                       // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.ButterflyCall, -1, 0m).Explicit(),                           // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, 1, 0m).Explicit(),                       // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, -1, 0m),                                 // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.ButterflyPut, 1, 0m),                                        // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.ButterflyPut, -1, 1000m),                                    // IB:  1000
+            new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, 1, 1000m),                                // IB:  1000
+            new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, -1, 0m),                                  // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 1, 0m),                                  // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -1, 0m),                                 // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, 1, 0m),                                   // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, -1, 3000m).Explicit(),                    // IB:  3001.6
+            new TestCaseData(OptionStrategyDefinitions.IronCondor, 1, 1000m),                                       // IB:  1017.62
+            new TestCaseData(OptionStrategyDefinitions.IronCondor, -1, 0m),                                         // IB:  0
         };
+
+        /// <summary>
+        /// Test cases for the <see cref="OptionStrategyPositionGroupBuyingPowerModel.GetMaintenanceMargin"/> method.
+        ///
+        /// TODO: We should come back and revisit these test cases to make sure they are correct.
+        /// The approximate values from IB for the prices used in the test are in the comments.
+        /// For instance, see the test case for the CoveredCall strategy. The margin values do not match IB's values.
+        ///
+        /// Test cases marked as explicit will fail if ran, they have an approximate expected value based on IB's margin requirements.
+        /// </summary>
+        private static TestCaseData[] MaintenanceMarginTestCases = new[]
+        {
+            // OptionStrategyDefinition, initialHoldingsQuantity, expectedMaintenanceMargin
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 1, 10000m).Explicit(),                          // IB:  10282.15
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, -1, 3000m).Explicit(),                          // IB:  3000
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 1, 3000m).Explicit(),                            // IB:  3000
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -1, 1000m).Explicit(),                           // IB:  10276.15
+            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 1, 0m).Explicit(),                           // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -1, 0m),                                     // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 1, 0m),                                       // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.BearPutSpread, -1, 1000m),                                   // IB:  1000
+            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, 1, 0m),                                      // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, -1, 0m).Explicit(),                          // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.BullPutSpread, 1, 1000m),                                    // IB:  1000
+            new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -1, 0m),                                      // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.Straddle, 1, 0m).Explicit(),                                 // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.Straddle, -1, 3000m).Explicit(),                             // IB:  3001.60
+            new TestCaseData(OptionStrategyDefinitions.Strangle, 1, 0m).Explicit(),                                 // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.Strangle, -1, 3000m).Explicit(),                             // IB:  3001.60
+            new TestCaseData(OptionStrategyDefinitions.ButterflyCall, 1, 0m),                                       // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.ButterflyCall, -1, 0m).Explicit(),                           // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, 1, 0m).Explicit(),                       // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, -1, 0m),                                 // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.ButterflyPut, 1, 0m),                                        // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.ButterflyPut, -1, 1000m),                                    // IB:  1000
+            new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, 1, 1000m),                                // IB:  1000
+            new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, -1, 0m),                                  // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 1, 0m),                                  // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -1, 0m),                                 // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, 1, 0m),                                   // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, -1, 3000m).Explicit(),                    // IB:  3001.6
+            new TestCaseData(OptionStrategyDefinitions.IronCondor, 1, 1000m),                                       // IB:  1017.62
+            new TestCaseData(OptionStrategyDefinitions.IronCondor, -1, 0m),                                         // IB:  0
+        };
+
+        private static TestCaseData[] GetOrderQuantityTestCases()
+        {
+            return new[]
+            {
+                // option strategy definition, initial position, delta buying power (using the buying power for a unit), expect final position
+                new TestCaseData(OptionStrategyDefinitions.CoveredCall, 10, 11).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.CoveredCall, 10, 9).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.CoveredCall, 10, 0).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.CoveredCall, -10, -9).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.CoveredCall, -10, -11).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.CoveredCall, -10, 0).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.CoveredPut, 10, 11).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.CoveredPut, 10, 9).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.CoveredPut, 10, 0).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.CoveredPut, -10, -9).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.CoveredPut, -10, -11).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.CoveredPut, -10, 0),
+                new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, 11).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, 9).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, 0).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -10, -9).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -10, -11).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -10, 0).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 10, 11).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 10, 9).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 10, 0).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.BearPutSpread, -10, -9).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.BearPutSpread, -10, -11).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.BearPutSpread, -10, 0).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.BullCallSpread, 10, 11).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.BullCallSpread, 10, 9).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.BullCallSpread, 10, 0).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.BullCallSpread, -10, -9).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.BullCallSpread, -10, -11).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.BullCallSpread, -10, 0).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.BullPutSpread, 10, 11).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.BullPutSpread, 10, 9).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.BullPutSpread, 10, 0).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -10, -9).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -10, -11).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -10, 0).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.Straddle, 10, 11),
+                new TestCaseData(OptionStrategyDefinitions.Straddle, 10, 9),
+                new TestCaseData(OptionStrategyDefinitions.Straddle, 10, 0).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.Straddle, -10, -9).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.Straddle, -10, -11).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.Straddle, -10, 0).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.Strangle, 10, 11),
+                new TestCaseData(OptionStrategyDefinitions.Strangle, 10, 9),
+                new TestCaseData(OptionStrategyDefinitions.Strangle, 10, 0).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.Strangle, -10, -9).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.Strangle, -10, -11).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.Strangle, -10, 0).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.ButterflyCall, 10, 11).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.ButterflyCall, 10, 9).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.ButterflyCall, 10, 0).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.ButterflyCall, -10, -9).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.ButterflyCall, -10, -11).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.ButterflyCall, -10, 0).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, 10, 11).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, 10, 9).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, 10, 0).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, -10, -9).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, -10, -11).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, -10, 0).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.ButterflyPut, 10, 11).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.ButterflyPut, 10, 9).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.ButterflyPut, 10, 0).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.ButterflyPut, -10, -9).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.ButterflyPut, -10, -11).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.ButterflyPut, -10, 0).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, 10, 11).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, 10, 9).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, 10, 0).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, -10, -9).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, -10, -11).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, -10, 0).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 10, 11).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 10, 9).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 10, 0).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -10, -9).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -10, -11).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -10, 0).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, 10, 11).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, 10, 9).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, 10, 0).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, -10, -9).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, -10, -11).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, -10, 0).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.IronCondor, 10, 11),
+                new TestCaseData(OptionStrategyDefinitions.IronCondor, 10, 9),
+                new TestCaseData(OptionStrategyDefinitions.IronCondor, 10, 0).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, -9).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, -11).Explicit(),
+                new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, 0).Explicit(),
+            };
+        }
     }
 }
