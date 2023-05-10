@@ -39,7 +39,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(25000);
             SetStartDate(2013, 10, 07);
             SetEndDate(2013, 10, 07);
-            var spy = AddSecurity(SecurityType.Equity, "SPY", Resolution.Tick);
+            var spy = AddEquity("SPY", Resolution.Tick);
 
             //Add our custom data filter.
             spy.SetDataFilter(new TickExchangeDataFilter(this));

@@ -26,7 +26,7 @@ class TickDataFilteringAlgorithm(QCAlgorithm):
         self.SetStartDate(2013, 10, 7)
         self.SetEndDate(2013, 10, 7)
         self.SetCash(25000)
-        spy = self.AddSecurity(SecurityType.Equity, "SPY", Resolution.Tick)
+        spy = self.AddEquity("SPY", Resolution.Tick)
 
         #Add our custom data filter.
         spy.SetDataFilter(TickExchangeDataFilter(self))
