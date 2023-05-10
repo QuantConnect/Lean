@@ -419,125 +419,115 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(expectedQuantity, quantity);
         }
 
+        // option strategy definition, initial position quantity, target buying power percent, expected quantity
         private static readonly TestCaseData[] OrderQuantityForTargetBuyingPowerTestCases = new[]
         {
-            // option strategy definition, initial position quantity, final position quantity
-            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 10, 11),
-            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 10, 9),
-            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 10, 0),
-            new TestCaseData(OptionStrategyDefinitions.CoveredCall, -10, -9).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.CoveredCall, -10, -11).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.CoveredCall, -10, 0),
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 10, 11).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 10, 9).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 10, 0),
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -10, -9).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -10, -11).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -10, 0),
-            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, 11).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, 9).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, 0),
-            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -10, -9).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -10, -11).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -10, 0).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 10, 11).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 10, 9).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 10, 0).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BearPutSpread, -10, -9).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BearPutSpread, -10, -11).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BearPutSpread, -10, 0).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, 10, 11).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, 10, 9).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, 10, 0).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, -10, -9).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, -10, -11).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, -10, 0).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BullPutSpread, 10, 11).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BullPutSpread, 10, 9).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BullPutSpread, 10, 0),
-            new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -10, -9).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -10, -11).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -10, 0).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.Straddle, 10, 11),
-            new TestCaseData(OptionStrategyDefinitions.Straddle, 10, 9),
-            new TestCaseData(OptionStrategyDefinitions.Straddle, 10, 0).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.Straddle, -10, -9).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.Straddle, -10, -11).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.Straddle, -10, 0).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.Strangle, 10, 11),
-            new TestCaseData(OptionStrategyDefinitions.Strangle, 10, 9),
-            new TestCaseData(OptionStrategyDefinitions.Strangle, 10, 0).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.Strangle, -10, -9).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.Strangle, -10, -11).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.Strangle, -10, 0).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.ButterflyCall, 10, 11).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.ButterflyCall, 10, 9).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.ButterflyCall, 10, 0).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.ButterflyCall, -10, -9).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.ButterflyCall, -10, -11).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.ButterflyCall, -10, 0).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, 10, 11),
-            new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, 10, 9),
-            new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, 10, 0),
-            new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, -10, -9).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, -10, -11).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, -10, 0).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.ButterflyPut, 10, 11).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.ButterflyPut, 10, 9).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.ButterflyPut, 10, 0).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.ButterflyPut, -10, -9).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.ButterflyPut, -10, -11).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.ButterflyPut, -10, 0).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, 10, 11).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, 10, 9),
-            new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, 10, 0),
-            new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, -10, -9).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, -10, -11).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, -10, 0).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 10, 11).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 10, 9).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 10, 0).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -10, -9).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -10, -11).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -10, 0).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, 10, 11).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, 10, 9).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, 10, 0).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, -10, -9).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, -10, -11).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, -10, 0).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.IronCondor, 10, 11).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.IronCondor, 10, 9).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.IronCondor, 10, 0).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, -9).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, -11).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, 0).Explicit(),
+            // Initial margin requirement for CoveredCall with quantity 10 is 205000
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 10, 205000m * 11 / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 10, 205000m * 9 / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 10, 0m, -10),
+            // Initial margin requirement for CoveredCall with quantity -10 is 112000
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, -10, 112000m * 11 / 10, -1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, -10, 112000m * 9 / 10, +1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, -10, 0m, +10),
+            // Initial margin requirement for CoveredPut with quantity 10 is 205000
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 10, 205000m * 11 / 10, +1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 10, 205000m * 9 / 10, -1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 10, 0m, -10),
+            // Initial margin requirement for CoveredPut with quantity -10 is 205000
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -10, 205000m * 11 / 10, -1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -10, 205000m * 9 / 10, +1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -10, 0m, +10),
+            // Initial margin requirement for BearCallSpread with quantity 10 is 10000
+            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, 10000m * 11 / 10, +1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, 10000m * 9 / 10, -1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, 0m, -10),
+            // Initial margin requirement for BearCallSpread with quantity -10 is 0
+            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -10, 0m, 0).Explicit(),
+            // Initial margin requirement for BearPutSpread with quantity 10 is 0
+            new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 10, 0m, 0).Explicit(),
+            // Initial margin requirement for BearPutSpread with quantity -10 is 10000
+            new TestCaseData(OptionStrategyDefinitions.BearPutSpread, -10, 10000m * 11 / 10, -1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.BearPutSpread, -10, 10000m * 9 / 10, +1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.BearPutSpread, -10, 0m, +10).Explicit(),
+            // Initial margin requirement for BullCallSpread with quantity 10 is 0
+            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, 10, 0m, 0).Explicit(),
+            // Initial margin requirement for BullCallSpread with quantity -10 is 10000
+            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, -10, 10000m * 11 / 10, -1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, -10, 10000m * 9 / 10, +1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, -10, 0m, +10).Explicit(),
+            // Initial margin requirement for BullPutSpread with quantity 10 is 10000
+            new TestCaseData(OptionStrategyDefinitions.BullPutSpread, 10, 10000m * 11 / 10, +1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.BullPutSpread, 10, 10000m * 9 / 10, -1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.BullPutSpread, 10, 0m, -10),
+            // Initial margin requirement for BullPutSpread with quantity -10 is 0
+            new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -10, 0m, 0).Explicit(),
+            // Initial margin requirement for Straddle with quantity 10 is 112020
+            new TestCaseData(OptionStrategyDefinitions.Straddle, 10, 112020m * 11 / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.Straddle, 10, 112020m * 9 / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.Straddle, 10, 0m, -10).Explicit(),
+            // Initial margin requirement for Straddle with quantity -10 is 235019
+            new TestCaseData(OptionStrategyDefinitions.Straddle, -10, 235019m * 11 / 10, -1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.Straddle, -10, 235019m * 9 / 10, +1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.Straddle, -10, 0m, +10).Explicit(),
+            // Initial margin requirement for Strangle with quantity 10 is 102020
+            new TestCaseData(OptionStrategyDefinitions.Strangle, 10, 102020m * 11 / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.Strangle, 10, 102020m * 9 / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.Strangle, 10, 0m, -10).Explicit(),
+            // Initial margin requirement for Strangle with quantity -10 is 225020
+            new TestCaseData(OptionStrategyDefinitions.Strangle, -10, 225020m * 11 / 10, -1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.Strangle, -10, 225020m * 9 / 10, +1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.Strangle, -10, 0m, +10).Explicit(),
+            // Initial margin requirement for ButterflyCall with quantity 10 is 0
+            new TestCaseData(OptionStrategyDefinitions.ButterflyCall, 10, 0m, 0).Explicit(),
+            // Initial margin requirement for ButterflyCall with quantity -10 is 10000
+            new TestCaseData(OptionStrategyDefinitions.ButterflyCall, -10, 10000m * 11 / 10, -1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ButterflyCall, -10, 10000m * 9 / 10, +1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ButterflyCall, -10, 0m, +10).Explicit(),
+            // Initial margin requirement for ShortButterflyCall with quantity 10 is 10000
+            new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, 10, 10000m * 11 / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, 10, 10000m * 9 / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, 10, 0m, -10),
+            // Initial margin requirement for ShortButterflyCall with quantity -10 is 0
+            new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, -10, 0m, 0).Explicit(),
+            // Initial margin requirement for ButterflyPut with quantity 10 is 0
+            new TestCaseData(OptionStrategyDefinitions.ButterflyPut, 10, 0m, 0).Explicit(),
+            // Initial margin requirement for ButterflyPut with quantity -10 is 10000
+            new TestCaseData(OptionStrategyDefinitions.ButterflyPut, -10, 10000m * 11 / 10, -1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ButterflyPut, -10, 10000m * 9 / 10, +1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ButterflyPut, -10, 0m, +10).Explicit(),
+            // Initial margin requirement for ShortButterflyPut with quantity 10 is 10000
+            new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, 10, 10000m * 11 / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, 10, 10000m * 9 / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, 10, 0m, -10),
+            // Initial margin requirement for ShortButterflyPut with quantity -10 is 0
+            new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, -10, 0m, 0).Explicit(),
+            // Initial margin requirement for CallCalendarSpread with quantity 10 is 0
+            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 10, 0m, 0).Explicit(),
+            // Initial margin requirement for CallCalendarSpread with quantity -10 is 0
+            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -10, 0m, 0).Explicit(),
+            // Initial margin requirement for PutCalendarSpread with quantity 10 is 0
+            new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, 10, 0m, 0).Explicit(),
+            // Initial margin requirement for PutCalendarSpread with quantity -10 is 0
+            new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, -10, 0m, 0).Explicit(),
+            // Initial margin requirement for IronCondor with quantity 10 is 10000
+            new TestCaseData(OptionStrategyDefinitions.IronCondor, 10, 10000m * 11 / 10, +1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.IronCondor, 10, 10000m * 9 / 10, -1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.IronCondor, 10, 0m, -10).Explicit(),
+            // Initial margin requirement for IronCondor with quantity -10 is 0
+            new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, 0m, 0).Explicit(),
         };
 
         [TestCaseSource(nameof(OrderQuantityForTargetBuyingPowerTestCases))]
         public void PositionGroupOrderQuantityCalculationForTargetBuyingPower(OptionStrategyDefinition optionStrategyDefinition,
-            int initialPositionQuantity, int expectedFinalQuantity)
+            int initialPositionQuantity, decimal targetBuyingPower, int expectedQuantity)
         {
             var positionGroup = SetUpOptionStrategy(optionStrategyDefinition, initialPositionQuantity);
 
-            var initialUsedMargin = positionGroup.BuyingPowerModel.GetInitialMarginRequirement(
-                new PositionGroupInitialMarginParameters(_portfolio, positionGroup));
-
-            var deltaBuyingPower = GetDeltaBuyingPower(initialUsedMargin.Value, initialPositionQuantity, expectedFinalQuantity,
-                out var expectedQuantity);
-            var targetBuyingPower = initialUsedMargin + deltaBuyingPower;
-            var targetBuyingPowerPercent = _portfolio.TotalPortfolioValue != 0 ? targetBuyingPower / _portfolio.TotalPortfolioValue : 0;
-
-            Log.Trace($"Initial used margin: {initialUsedMargin.Value}");
-            Log.Trace($"Delta buying power: {deltaBuyingPower}");
-            Log.Trace($"Target buying power: {targetBuyingPower}");
-            Log.Trace($"Target buying power percent: {targetBuyingPowerPercent}");
+            var targetBuyingPowerPercent = targetBuyingPower / _portfolio.TotalPortfolioValue;
 
             var quantity = positionGroup.BuyingPowerModel.GetMaximumLotsForTargetBuyingPower(new GetMaximumLotsForTargetBuyingPowerParameters(
                 _portfolio, positionGroup, targetBuyingPowerPercent, minimumOrderMarginPortfolioPercentage: 0)).NumberOfLots;
-
-            Log.Trace($"Expected quantity: {expectedQuantity}");
-            Log.Trace($"Computed quantity: {quantity}");
 
             Assert.AreEqual(expectedQuantity, quantity);
         }
@@ -696,9 +686,9 @@ namespace QuantConnect.Tests.Common.Securities
             var initialUsedMargin = _portfolio.TotalMarginUsed;
             var initialPositionInitialMargin = initialPositionGroup.BuyingPowerModel.GetInitialMarginRequirement(
                 new PositionGroupInitialMarginParameters(_portfolio, initialPositionGroup));
-            Log.Trace($"Initial used margin: {initialUsedMargin}");
-            Log.Trace($"Initial position initial margin requirement: {initialPositionInitialMargin}");
-            Log.Trace($"Final quantity: {finalQuantity}");
+            Log.Debug($"Initial used margin: {initialUsedMargin}");
+            Log.Debug($"Initial position initial margin requirement: {initialPositionInitialMargin}");
+            Log.Debug($"Final quantity: {finalQuantity}");
 
             // Initial and final positions are in the same side
             if (Math.Sign(finalQuantity) == Math.Sign(initialPositionQuantity))
@@ -854,52 +844,6 @@ namespace QuantConnect.Tests.Common.Securities
         public void ReservedBuyingPowerImpactCalculation(OptionStrategyDefinition optionStrategyDefinition, int initialPositionQuantity,
             int newGroupQuantity)
         {
-            // starting long
-            if (initialPositionQuantity > 0)
-            {
-                // going longer
-                if (newGroupQuantity > 0)
-                {
-                    //Assert.Ignore();
-                }
-                // reducing long
-                else if (initialPositionQuantity + newGroupQuantity > 0)
-                {
-                    //Assert.Ignore();
-                }
-                // liquidating long position
-                else if (initialPositionQuantity + newGroupQuantity == 0)
-                {
-                    //Assert.Ignore();
-                }
-                // switching to short
-                else
-                {
-                    //Assert.Ignore();
-                }
-            }
-            // starting short
-            // going shorter
-            else if (newGroupQuantity < 0)
-            {
-                //Assert.Ignore();
-            }
-            // reducing short
-            else if (initialPositionQuantity + newGroupQuantity < 0)
-            {
-                //Assert.Ignore();
-            }
-            // liquidating short position
-            else if (initialPositionQuantity + newGroupQuantity == 0)
-            {
-                //Assert.Ignore();
-            }
-            // switching to long
-            else
-            {
-                //Assert.Ignore();
-            }
-
             var initialMargin = _portfolio.MarginRemaining;
             var initialPositionGroup = SetUpOptionStrategy(optionStrategyDefinition, initialPositionQuantity);
 
@@ -914,8 +858,8 @@ namespace QuantConnect.Tests.Common.Securities
 
             var initialUsedMargin = initialPositionGroup.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(
                 new ReservedBuyingPowerForPositionGroupParameters(_portfolio, initialPositionGroup)).AbsoluteUsedBuyingPower;
-            Log.Trace($"Initial used margin: {initialUsedMargin}");
-            Log.Trace($"Final quantity: {finalQuantity}");
+            Log.Debug($"Initial used margin: {initialUsedMargin}");
+            Log.Debug($"Final quantity: {finalQuantity}");
 
             foreach (var contemplatedChangePosition in buyingPowerImpact.ContemplatedChanges)
             {
@@ -1187,20 +1131,6 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(expectedPositionGroupBPMStrategy, positionGroup.BuyingPowerModel.ToString());
 
             return positionGroup;
-        }
-
-        private static decimal GetDeltaBuyingPower(decimal initialUsedMargin, int initialPositionQuantity, int expectedFinalQuantity,
-            out int expectedQuantity)
-        {
-            expectedQuantity = 0;
-            if (initialUsedMargin != 0)
-            {
-                expectedQuantity = expectedFinalQuantity - initialPositionQuantity;
-            }
-
-            // If reducing the position, we are reducing the buying power used by the strategy, so the delta buying power is negative
-            var direction = Math.Abs(expectedFinalQuantity) < Math.Abs(initialPositionQuantity) ? -1 : +1;
-            return direction * Math.Abs(expectedQuantity * initialUsedMargin / initialPositionQuantity);
         }
     }
 }
