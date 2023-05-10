@@ -76,6 +76,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             {
 
                 var next = NextTickTime(current, _settings.Resolution, _settings.DataDensity);
+                // The current date can be the last one of the last day before the market closes
+                // so the next date could be beyond de end date
                 if (next > _settings.End)
                 {
                     break;

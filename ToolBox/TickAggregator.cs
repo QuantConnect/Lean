@@ -145,7 +145,7 @@ namespace QuantConnect.ToolBox
     }
 
     /// <summary>
-    /// Use <see cref="OpenInterestConsolidator"/> to consolidate open interest ticks daily.
+    /// Use <see cref="OpenInterestConsolidator"/> to consolidate open interest ticks into a specified resolution
     /// </summary>
     public class OpenInterestTickAggregator : TickAggregator
     {
