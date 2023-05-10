@@ -58,8 +58,6 @@ namespace QuantConnect.Tests.Common.Securities
 
             var putOptionSymbol = Symbols.CreateOptionSymbol("SPY", OptionRight.Put, strike, expiry);
             _putOption = _algorithm.AddOptionContract(putOptionSymbol);
-
-            Log.DebuggingEnabled = true;
         }
 
         /// <summary>
@@ -286,25 +284,8 @@ namespace QuantConnect.Tests.Common.Securities
         {
             _algorithm.SetCash(1000000);
 
-            IPositionGroup initialPositionGroup = null;
-            var templatePositionGroupQuantity = initialPositionQuantity;
-            if (initialPositionQuantity != 0)
-            {
-                initialPositionGroup = SetUpOptionStrategy(optionStrategy, initialPositionQuantity);
-            }
-            else
-            {
-                templatePositionGroupQuantity = 1;
-                initialPositionGroup = SetUpOptionStrategy(optionStrategy, templatePositionGroupQuantity);
-                foreach (var position in initialPositionGroup.Positions)
-                {
-                    var security = _algorithm.Securities[position.Symbol];
-                    security.Holdings.SetHoldings(0, 0);
-                }
-                Assert.AreEqual(0, _portfolio.PositionGroups.Count);
-            }
-
-            var orders = GetPositionGroupOrders(initialPositionGroup, templatePositionGroupQuantity, orderQuantity);
+            var initialPositionGroup = SetUpOptionStrategy(optionStrategy, initialPositionQuantity);
+            var orders = GetPositionGroupOrders(initialPositionGroup, initialPositionQuantity != 0 ? initialPositionQuantity : 1, orderQuantity);
             var ordersPositionGroup = _portfolio.Positions.CreatePositionGroup(orders);
 
             var result = ordersPositionGroup.BuyingPowerModel.HasSufficientBuyingPowerForOrder(
@@ -1188,6 +1169,19 @@ namespace QuantConnect.Tests.Common.Securities
 
         private IPositionGroup SetUpOptionStrategy(OptionStrategyDefinition optionStrategyDefinition, int initialHoldingsQuantity)
         {
+            if (initialHoldingsQuantity == 0)
+            {
+                var group = SetUpOptionStrategy(optionStrategyDefinition, 1);
+                foreach (var position in group.Positions)
+                {
+                    var security = _algorithm.Securities[position.Symbol];
+                    security.Holdings.SetHoldings(0, 0);
+                }
+                Assert.AreEqual(0, _portfolio.PositionGroups.Count);
+
+                return group;
+            }
+
             var may172023 = new DateTime(2023, 05, 17);
             var may192023 = new DateTime(2023, 05, 19);
 
@@ -1304,7 +1298,6 @@ namespace QuantConnect.Tests.Common.Securities
             }
             else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.ShortButterflyCall.Name)
             {
-                // TODO: this code can be unified with the code in the ButterflyCall case
                 var lowerStrikeCallOption = spyMay19_300Call;
                 var middleStrikeCallOption = spyMay19_310Call;
                 var upperStrikeCallOption = spyMay19_320Call;
@@ -1335,7 +1328,6 @@ namespace QuantConnect.Tests.Common.Securities
             }
             else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.ShortButterflyPut.Name)
             {
-                // TODO: this code can be unified with the code in the ButterflyPut case and probably with the code in the ShortButterflyCall case
                 var lowerStrikePutOption = spyMay19_300Put;
                 var middleStrikePutOption = spyMay19_310Put;
                 var upperStrikePutOption = spyMay19_320Put;
