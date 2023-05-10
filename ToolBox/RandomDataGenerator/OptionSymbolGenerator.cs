@@ -34,8 +34,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         public OptionSymbolGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random, decimal underlyingPrice, decimal maximumStrikePriceDeviation)
             : base(settings, random)
         {
-            _minExpiry = settings.Start;
-            _maxExpiry = settings.End;
+            _minExpiry = (settings.Start).AddDays(7);
+            _maxExpiry = (settings.End).AddDays(7);
             _market = settings.Market;
             _underlyingPrice = underlyingPrice;
             _symbolChainSize = settings.ChainSymbolCount;

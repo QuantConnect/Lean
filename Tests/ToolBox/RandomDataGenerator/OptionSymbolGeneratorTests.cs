@@ -140,5 +140,35 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                 Assert.GreaterOrEqual(_underlyingPrice + maximumDeviation, strikePrice);
             }
         }
+
+        [Test]
+        [TestCase("2021, 6, 2 00:00:00", "2021, 6, 4 00:00:00")]
+        [TestCase("2021, 6, 2 00:00:00", "2021, 6, 5 00:00:00")]
+        [TestCase("2021, 6, 2 00:00:00", "2021, 7, 2 00:00:00")]
+        [TestCase("2021, 6, 2 00:00:00", "2021, 6, 10 00:00:00")]
+        [TestCase("2021, 6, 2 00:00:00", "2021, 6, 11 00:00:00")]
+        [TestCase("2021, 6, 2 00:00:00", "2021, 8, 2 00:00:00")]
+        [TestCase("2021, 6, 2 00:00:00", "2021, 6, 15 00:00:00")]
+        public void OptionSymbolGeneratorCreatesOptionSymbol_WithExpirationDateAtLeastThreeDaysAfterMinExpiryDate(DateTime minExpiry, DateTime maxExpiry)
+        {
+            var symbolGenerator = new OptionSymbolGenerator(
+                new RandomDataGeneratorSettings()
+                {
+                    Market = Market.USA,
+                    Start = minExpiry,
+                    End = maxExpiry
+                },
+                new RandomValueGenerator(),
+                _underlyingPrice,
+                _maximumStrikePriceDeviation);
+            var symbols = BaseSymbolGeneratorTests.GenerateAsset(symbolGenerator).ToList();
+            Assert.AreEqual(3, symbols.Count);
+
+            foreach (var option in new[] { symbols[1], symbols[2] })
+            {
+                var expiration = option.ID.Date;
+                Assert.LessOrEqual(minExpiry.AddDays(3), expiration);
+            }
+        }
     }
 }

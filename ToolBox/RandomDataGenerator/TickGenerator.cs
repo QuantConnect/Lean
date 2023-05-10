@@ -76,6 +76,11 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             {
 
                 var next = NextTickTime(current, _settings.Resolution, _settings.DataDensity);
+                if (next > _settings.End)
+                {
+                    break;
+                }
+
                 if (_tickTypes.Contains(TickType.OpenInterest))
                 {
                     if (next.Date != current.Date)
@@ -190,7 +195,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         public Tick NextOpenInterest(DateTime dateTime, decimal previousValue, decimal maximumPercentDeviation)
         {
             var next = (long)_random.NextPrice(Symbol.SecurityType, Symbol.ID.Market, previousValue, maximumPercentDeviation);
-            return new Tick
+            return new OpenInterest
             {
                 Time = dateTime,
                 Symbol = Symbol,
