@@ -24,10 +24,12 @@ class TickDataFilteringAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         self.SetStartDate(2013, 10, 7)
-        self.SetEndDate(2013, 10, 11)
+        self.SetEndDate(2013, 10, 7)
         self.SetCash(25000)
-        self.AddSecurity(SecurityType.Equity, "SPY", Resolution.Tick)
-        self.Securities["SPY"].DataFilter = ExchangeDataFilter()
+        spy = self.AddSecurity(SecurityType.Equity, "SPY", Resolution.Tick)
+
+        #Add our custom data filter.
+        spy.SetDataFilter(TickExchangeDataFilter(self))
 
     # <summary>
     # Data arriving here will now be filtered.
@@ -37,11 +39,11 @@ class TickDataFilteringAlgorithm(QCAlgorithm):
         if not data.ContainsKey("SPY"): 
             return
         
-        self.spyTickList = data["SPY"]
+        spyTickList = data["SPY"]
 
         # Ticks return a list of ticks this second
-        for tick in self.spyTickList:
-            self.Log(tick.Exchange)
+        for tick in spyTickList:
+            self.Debug(tick.Exchange)
 
         if not self.Portfolio.Invested:
             self.SetHoldings("SPY", 1)
@@ -49,33 +51,27 @@ class TickDataFilteringAlgorithm(QCAlgorithm):
 # <summary>
 # Exchange filter class
 # </summary>
-class ExchangeDataFilter(SecurityDataFilter):
+class TickExchangeDataFilter(SecurityDataFilter):
 
     # <summary>
     # Save instance of the algorithm namespace
     # </summary>
     # <param name="algo"></param>
-    def __init__(self):
+    def __init__(self, algo: IAlgorithm):
+        self.algo = algo
         super().__init__()
-
-    # <summary>
-    # Global Market Short Codes and their full versions: (used in tick objects)
-    # https://github.com/QuantConnect/QCAlgorithm/blob/master/QuantConnect.Common/Global.cs
-    # </summary>
-    
 
     # <summary>
     # Filter out a tick from this vehicle, with this new data:
     # </summary>
     # <param name="data">New data packet:</param>
     # <param name="asset">Vehicle of this filter.</param>
-    def Filter(self, asset, data):
+    def Filter(self, asset: Security, data: BaseData):
         # TRUE -->  Accept Tick
         # FALSE --> Reject Tick
 
         if isinstance(data, Tick):
-            if self.tick.Exchange == "P":
+            if data.Exchange == str(Exchange.ARCA):
                 return True
         
         return False
-    
