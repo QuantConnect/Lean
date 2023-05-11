@@ -98,12 +98,15 @@ namespace QuantConnect.Tests.Indicators
 
             var time = DateTime.Now;
 
-            for (var i = 0; i < period.Value; i++)
+            for (var i = 1; i < period.Value; i++)
             {
-                indicator.Update(time.AddMinutes(i), Prices[i]);
-                Assert.AreEqual(Expected[i], Math.Round(indicator.Current.Value, 4));
-                Assert.AreEqual(i == period.Value - 1, indicator.IsReady);
+                indicator.Update(time.AddMinutes(i - 1), Prices[i - 1]);
+                Assert.AreEqual(Expected[i - 1], Math.Round(indicator.Current.Value, 4));
+                Assert.IsFalse(indicator.IsReady);
             }
+
+            indicator.Update(time.AddMinutes(period.Value - 1), Prices[period.Value - 1]);
+            Assert.IsTrue(indicator.IsReady);
         }
     }
 }
