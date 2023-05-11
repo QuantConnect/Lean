@@ -34,8 +34,11 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         public OptionSymbolGenerator(RandomDataGeneratorSettings settings, IRandomValueGenerator random, decimal underlyingPrice, decimal maximumStrikePriceDeviation)
             : base(settings, random)
         {
-            _minExpiry = settings.Start;
-            _maxExpiry = settings.End;
+            // We add seven days more because TickGenerator for options needs first three underlying data points to warm up
+            // the price generator, so if the expiry date is before settings.Start plus three days no quote or trade data is
+            // generated for this option
+            _minExpiry = (settings.Start).AddDays(7);
+            _maxExpiry = (settings.End).AddDays(7);
             _market = settings.Market;
             _underlyingPrice = underlyingPrice;
             _symbolChainSize = settings.ChainSymbolCount;
