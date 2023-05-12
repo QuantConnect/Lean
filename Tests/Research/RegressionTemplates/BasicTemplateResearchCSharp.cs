@@ -86,8 +86,7 @@ namespace QuantConnect.Tests.Research.RegressionTemplates
             ". Key: plugin-directory - Using default value: \"     ]    },    {     \"name\": \"stdout\",     \"output_type\": \"stream\",     \"text\": [      \"2" +
             "0220302 20:44:57.142 TRACE:: Config.Get(): Configuration key not found. Key: composer-dll-directory - Using default value: \"     ]    },    {     \"n" +
             "ame\": \"stdout\",     \"output_type\": \"stream\",     \"text\": [      \"20220302 20:44:57.142 TRACE:: Composer(): Loading Assemblies from D:\\\\qua" +
-            "ntconnect\\\\Lean\\\\Tests\\\\bin\\\\Debug\"     ]    },    {     \"name\": \"stdout\",     \"output_type\": \"stream\",     \"text\": [      \"202203" +
-            "02 20:44:57.168 TRACE:: Config.Get(): Configuration key not found. Key: data-directory - Using default value: ../../../Data/\"     ]    },    {     \"" +
+            "ntconnect\\\\Lean\\\\Tests\\\\bin\\\\Debug\"     ]    },    {     \"" +
             "name\": \"stdout\",     \"output_type\": \"stream\",     \"text\": [      \"20220302 20:44:57.168 TRACE:: Config.Get(): Configuration key not found. K" +
             "ey: version-id - Using default value: \"     ]    },    {     \"name\": \"stdout\",     \"output_type\": \"stream\",     \"text\": [      \"20220302 2" +
             "0:44:57.169 TRACE:: Config.Get(): Configuration key not found. Key: cache-location - Using default value: ../../../Data/\"     ]    },    {     \"name" +

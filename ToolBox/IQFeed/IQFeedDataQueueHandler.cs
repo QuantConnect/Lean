@@ -602,8 +602,6 @@ namespace QuantConnect.ToolBox.IQFeed
         private bool _inProgress;
         private ConcurrentDictionary<string, HistoryRequest> _requestDataByRequestId;
         private ConcurrentDictionary<string, List<BaseData>> _currentRequest;
-        private readonly string DataDirectory = Config.Get("data-directory", "../../../Data");
-        private readonly double MaxHistoryRequestMinutes = Config.GetDouble("max-history-minutes", 5);
         private readonly IQFeedDataQueueUniverseProvider _symbolUniverse;
 
         /// <summary>
