@@ -67,6 +67,21 @@ namespace QuantConnect.Tests.Algorithm.Framework
         }
 
         [Test]
+        public void CancelInsight()
+        {
+            var time = new DateTime(2000, 01, 02, 03, 04, 05, 06);
+            var insight = new Insight(time, Symbols.SPY, Time.OneMinute, InsightType.Volatility, InsightDirection.Up, 1, 2, "source-model");
+
+            insight.Cancel(time.AddMinutes(1));
+
+            Assert.AreEqual(TimeSpan.FromSeconds(59), insight.Period);
+
+            insight.Cancel(time.AddDays(1));
+
+            Assert.AreEqual(TimeSpan.FromSeconds(59), insight.Period);
+        }
+
+        [Test]
         public void SerializationUsingJsonConvertTrimsEstimatedValue()
         {
             var time = new DateTime(2000, 01, 02, 03, 04, 05, 06);
