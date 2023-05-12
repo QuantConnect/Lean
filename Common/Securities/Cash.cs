@@ -243,7 +243,7 @@ namespace QuantConnect.Securities
             // existing securities
             var securitiesToSearch = securities.Select(kvp => kvp.Value)
                 .Concat(changes.AddedSecurities)
-                .Where(s => s.Type == SecurityType.Forex || s.Type == SecurityType.Cfd || s.Type == SecurityType.Crypto);
+                .Where(s => ProvidesConversionRate(s.Type));
 
             // Create a SecurityType to Market mapping with the markets from SecurityManager members
             var markets = securities.Select(x => x.Key)
@@ -272,7 +272,7 @@ namespace QuantConnect.Securities
                     Symbol == x.Value.QuoteCurrency))
             {
                 // currency not found in any tradeable pair
-                Log.Error(Messages.Cash.NoTradablePairFoundForCurrencyConversion(Symbol, accountCurrency));
+                Log.Error(Messages.Cash.NoTradablePairFoundForCurrencyConversion(Symbol, accountCurrency, marketMap.Where(kvp => ProvidesConversionRate(kvp.Key))));
                 CurrencyConversion = ConstantCurrencyConversion.Null(accountCurrency, Symbol);
                 return null;
             }
@@ -378,6 +378,11 @@ namespace QuantConnect.Securities
 
             return marketJoin.SelectMany(market => SymbolPropertiesDatabase.FromDataFolder()
                 .GetSymbolPropertiesList(market, securityType));
+        }
+
+        private static bool ProvidesConversionRate(SecurityType securityType)
+        {
+            return securityType == SecurityType.Forex || securityType == SecurityType.Crypto || securityType == SecurityType.Cfd;
         }
 
         private void OnUpdate()
