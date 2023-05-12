@@ -37,7 +37,7 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
             try
             {
                 // Load settings from config.json
-                var dataDirectory = Config.Get("data-directory", "../../../Data");
+                var dataDirectory = Globals.DataFolder;
                 //todo: will download any exchange but always save as gdax
                 // Create an instance of the downloader
                 const string market = Market.GDAX;

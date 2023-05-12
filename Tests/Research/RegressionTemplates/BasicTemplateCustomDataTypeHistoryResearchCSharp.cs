@@ -84,9 +84,8 @@ namespace QuantConnect.Tests.Research.RegressionTemplates
             "): Configuration key not found. Key: plugin-directory - Using default value: \"     ]    },    {     \"name\": \"stdout\",     \"output_type\": \"stre" +
             "am\",     \"text\": [      \"20230217 23:38:01.501 TRACE:: Config.Get(): Configuration key not found. Key: composer-dll-directory - Using default valu" +
             "e: \"     ]    },    {     \"name\": \"stdout\",     \"output_type\": \"stream\",     \"text\": [      \"20230217 23:38:01.502 TRACE:: Composer(): Loa" +
-            "ding Assemblies from C:\\\\Users\\\\jhona\\\\QuantConnect\\\\Lean\\\\Tests\\\\bin\\\\Debug\"     ]    },    {     \"name\": \"stdout\",     \"output_t" +
-            "ype\": \"stream\",     \"text\": [      \"20230217 23:38:01.584 TRACE:: Config.Get(): Configuration key not found. Key: data-directory - Using default" +
-            " value: ../../../Data/\"     ]    },    {     \"name\": \"stdout\",     \"output_type\": \"stream\",     \"text\": [      \"20230217 23:38:01.587 TRAC" +
+            "ding Assemblies from C:\\\\Users\\\\jhona\\\\QuantConnect\\\\Lean\\\\Tests\\\\bin\\\\Debug\"     ]    },    {     \"name\": \"stdout\",     \"output_type\":" +
+            " \"stream\",     \"text\": [      \"20230217 23:38:01.587 TRAC" +
             "E:: Config.Get(): Configuration key not found. Key: version-id - Using default value: \"     ]    },    {     \"name\": \"stdout\",     \"output_type\"" +
             ": \"stream\",     \"text\": [      \"20230217 23:38:01.587 TRACE:: Config.Get(): Configuration key not found. Key: cache-location - Using default valu" +
             "e: ../../../Data/\"     ]    },    {     \"name\": \"stdout\",     \"output_type\": \"stream\",     \"text\": [      \"20230217 23:38:01.588 TRACE:: E" +
