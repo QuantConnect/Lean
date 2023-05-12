@@ -124,6 +124,8 @@ namespace QuantConnect.Lean.Engine.Setup
                 throw new ArgumentException("BrokerageSetupHandler.CreateBrokerage requires a live node packet");
             }
 
+            Log.Trace($"BrokerageSetupHandler.CreateBrokerage(): creating brokerage '{liveJob.Brokerage}'");
+
             // find the correct brokerage factory based on the specified brokerage in the live job packet
             _factory = Composer.Instance.Single<IBrokerageFactory>(brokerageFactory => brokerageFactory.BrokerageType.MatchesTypeName(liveJob.Brokerage));
             factory = _factory;

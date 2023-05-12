@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -127,16 +128,17 @@ namespace QuantConnect
             public static string NullOrEmptyCashSymbol = "Cash symbols cannot be null or empty.";
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string NoTradablePairFoundForCurrencyConversion(string cashCurrencySymbol, string accountCurrency)
+            public static string NoTradablePairFoundForCurrencyConversion(string cashCurrencySymbol, string accountCurrency,
+                IEnumerable<KeyValuePair<SecurityType, string>> marketMap)
             {
                 return Invariant($@"No tradeable pair was found for currency {cashCurrencySymbol}, conversion rate to account currency ({
-                    accountCurrency}) will be set to zero.");
+                    accountCurrency}) will be set to zero. Markets: [{string.Join(",", marketMap.Select(x => $"{x.Key}:{x.Value}"))}]");
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string AddingSecuritySymbolForCashCurrencyFeed(QuantConnect.Symbol symbol, string cashCurrencySymbol)
             {
-                return Invariant($"Adding {symbol.Value} for cash {cashCurrencySymbol} currency feed");
+                return Invariant($"Adding {symbol.Value} {symbol.ID.Market} for cash {cashCurrencySymbol} currency feed");
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
