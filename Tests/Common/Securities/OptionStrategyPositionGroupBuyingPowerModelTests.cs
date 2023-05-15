@@ -513,6 +513,7 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(-10, 10)]
         public void PositionGroupOrderQuantityCalculationForDeltaBuyingPowerFromShortPosition(int initialHoldingsQuantity, int finalPositionQuantity)
         {
+            _algorithm.SetCash(100000);
             // Just making sure we start from a short position
             var absQuantity = Math.Abs(initialHoldingsQuantity);
             initialHoldingsQuantity = -absQuantity;
@@ -543,6 +544,7 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(10, -10)]
         public void PositionGroupOrderQuantityCalculationForDeltaBuyingPowerFromLongPosition(int initialHoldingsQuantity, int finalPositionQuantity)
         {
+            _algorithm.SetCash(100000);
             // Just making sure we start from a long position
             initialHoldingsQuantity = Math.Abs(initialHoldingsQuantity);
 
@@ -911,9 +913,11 @@ namespace QuantConnect.Tests.Common.Securities
             // Initial margin for IronCondor with quantity 10 is 10000
             new TestCaseData(OptionStrategyDefinitions.IronCondor, 10, 10000m / 10, +1).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.IronCondor, 10, -10000m / 10, -1).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.IronCondor, 10, -10000m, -10).Explicit(),
-            // Initial margin for IronCondor with quantity -10 is 0
-            new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, 0m, 0).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.IronCondor, 10, -10000m, -10),
+            // Signed maintenance margin for IronCondor with quantity -10 is 0
+            new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, 0m, 0),
+            new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, 1000m, 0),
+            new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, -1000m, 0),
         };
 
         [TestCaseSource(nameof(OrderQuantityForDeltaBuyingPowerTestCases))]
@@ -922,10 +926,24 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var positionGroup = SetUpOptionStrategy(optionStrategyDefinition, initialPositionQuantity);
 
-            var quantity = positionGroup.BuyingPowerModel.GetMaximumLotsForDeltaBuyingPower(new GetMaximumLotsForDeltaBuyingPowerParameters(
-                _portfolio, positionGroup, deltaBuyingPower, minimumOrderMarginPortfolioPercentage: 0)).NumberOfLots;
+            if (initialPositionQuantity + expectedQuantity != 0)
+            {
+                // Add a small buffer to avoid rounding errors
+                deltaBuyingPower *= Math.Abs(initialPositionQuantity + expectedQuantity) > Math.Abs(initialPositionQuantity) ? 1.001m : 0.999m;
+            }
 
-            Assert.AreEqual(expectedQuantity, quantity);
+            var result = positionGroup.BuyingPowerModel.GetMaximumLotsForDeltaBuyingPower(new GetMaximumLotsForDeltaBuyingPowerParameters(
+                _portfolio, positionGroup, deltaBuyingPower, minimumOrderMarginPortfolioPercentage: 0));
+
+            Assert.IsFalse(result.IsError);
+            Assert.AreEqual(expectedQuantity, result.NumberOfLots);
+
+            // Expected quantity is 0 for test cases where no buying power is used,
+            // it should return 0 regardless of the delta, with the proper message
+            if (expectedQuantity == 0)
+            {
+                Assert.AreEqual(Messages.PositionGroupBuyingPowerModel.DeltaCannotBeApplied, result.Reason);
+            }
         }
 
         // option strategy definition, initial position quantity, target buying power percent, expected quantity
@@ -1062,9 +1080,8 @@ namespace QuantConnect.Tests.Common.Securities
             // Initial margin requirement for IronCondor with quantity 10 is 10000
             new TestCaseData(OptionStrategyDefinitions.IronCondor, 10, 10000m * 11 / 10, +1).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.IronCondor, 10, 10000m * 9 / 10, -1).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.IronCondor, 10, 0m, -10).Explicit(),
-            // Initial margin requirement for IronCondor with quantity -10 is 0
-            new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, 0m, 0).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.IronCondor, 10, 0m, -10),
+            // Signed maintenance margin for IronCondor with quantity -10 is 0
         };
 
         [TestCaseSource(nameof(OrderQuantityForTargetBuyingPowerTestCases))]
@@ -1073,6 +1090,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var positionGroup = SetUpOptionStrategy(optionStrategyDefinition, initialPositionQuantity);
 
+            targetBuyingPower *= 1.0001m; // Add a small buffer to avoid rounding errors
             var targetBuyingPowerPercent = targetBuyingPower / _portfolio.TotalPortfolioValue;
 
             var quantity = positionGroup.BuyingPowerModel.GetMaximumLotsForTargetBuyingPower(new GetMaximumLotsForTargetBuyingPowerParameters(

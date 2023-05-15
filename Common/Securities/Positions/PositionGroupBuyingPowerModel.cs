@@ -275,7 +275,7 @@ namespace QuantConnect.Securities.Positions
             var currentSignedUsedMargin = 0m;
             if (currentPositionGroup.Quantity != 0)
             {
-                currentSignedUsedMargin = this.GetInitialMarginRequirement(portfolio, currentPositionGroup);
+                currentSignedUsedMargin = Math.Sign(currentPositionGroup.Quantity) * this.GetInitialMarginRequirement(portfolio, currentPositionGroup);
             }
 
             // 4. Check that the change of margin is above our models minimum percentage change
@@ -304,8 +304,7 @@ namespace QuantConnect.Securities.Positions
                     p => portfolio.Securities.GetValueOrDefault(p.Symbol)?.Price == 0m
                 );
                 return parameters.Error(zeroPricedPosition?.Symbol.GetZeroPriceMessage()
-                    ?? $"Computed zero initial margin requirement for {parameters.PositionGroup.GetUserFriendlyName()}."
-                );
+                    ?? Messages.PositionGroupBuyingPowerModel.ComputedZeroInitialMargin(parameters.PositionGroup));
             }
 
             // 6. Begin iterating
@@ -323,8 +322,7 @@ namespace QuantConnect.Securities.Positions
                     string reason = null;
                     if (!parameters.SilenceNonErrorReasons)
                     {
-                        reason = $@"The position group order quantity has been rounded to zero. Target order margin {
-                            signedTargetFinalMargin - currentSignedUsedMargin}. ";
+                        reason = Messages.PositionGroupBuyingPowerModel.PositionGroupQuantityRoundedToZero(signedTargetFinalMargin - currentSignedUsedMargin);
                     }
 
                     return new GetMaximumLotsResult(0, reason, false);
@@ -339,11 +337,8 @@ namespace QuantConnect.Securities.Positions
                 // Start safe check after first loop, stops endless recursion
                 if (lastPositionGroupOrderQuantity == positionGroupQuantity)
                 {
-                    throw new ArgumentException(Invariant($@"Failed to converge on the target margin: {signedTargetFinalMargin
-                        }; the following information can be used to reproduce the issue. Total Portfolio Cash: {parameters.Portfolio.Cash
-                        }; Position group: {parameters.PositionGroup.GetUserFriendlyName()}; Position group order quantity: {positionGroupQuantity
-                        } Order Fee: {orderFees}; Current Holdings: {parameters.PositionGroup.Quantity
-                        }; Target Percentage: %{parameters.TargetBuyingPower * 100};"));
+                    throw new ArgumentException(Messages.PositionGroupBuyingPowerModel.FailedToConvergeOnTargetMargin(signedTargetFinalMargin,
+                        positionGroupQuantity, orderFees, parameters));
                 }
 
                 lastPositionGroupOrderQuantity = positionGroupQuantity;
@@ -374,6 +369,12 @@ namespace QuantConnect.Securities.Positions
             var usedBuyingPower = parameters.PositionGroup.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(
                 parameters.Portfolio, currentPositionGroup
             );
+
+            if (usedBuyingPower == 0)
+            {
+                // No buying power used, no delta to apply
+                return new GetMaximumLotsResult(0, Messages.PositionGroupBuyingPowerModel.DeltaCannotBeApplied, false);
+            }
 
             var signedUsedBuyingPower = Math.Sign(currentPositionGroup.Quantity) * usedBuyingPower;
             var targetBuyingPower = signedUsedBuyingPower + parameters.DeltaBuyingPower;

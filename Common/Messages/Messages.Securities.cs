@@ -21,6 +21,7 @@ using System.Text;
 
 using QuantConnect.Data;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Positions;
 
 using static QuantConnect.StringExtensions;
 
@@ -124,6 +125,34 @@ namespace QuantConnect
             {
                 return Invariant($@"Underlying Security: {underlying.Symbol.ID}; Underlying Price: {
                     underlying.Close}; Underlying Holdings: {underlying.Holdings.Quantity} @ {underlying.Holdings.AveragePrice};");
+            }
+        }
+
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Securities.PositionGroupBuyingPowerModel"/> class and its consumers or related classes
+        /// </summary>
+        public static class PositionGroupBuyingPowerModel
+        {
+
+            public static string DeltaCannotBeApplied = "No buying power used, delta cannot be applied";
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string ComputedZeroInitialMargin(IPositionGroup positionGroup)
+            {
+                return Invariant($"Computed zero initial margin requirement for {positionGroup.GetUserFriendlyName()}.");
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string PositionGroupQuantityRoundedToZero(decimal targetOrderMargin)
+            {
+                return Invariant($"The position group order quantity has been rounded to zero. Target order margin {targetOrderMargin}.");
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string FailedToConvergeOnTargetMargin(decimal targetMargin, decimal positionGroupQuantity, decimal orderFees,
+                GetMaximumLotsForTargetBuyingPowerParameters parameters)
+            {
+                return Invariant($@"Failed to converge on the target margin: {targetMargin}; the following information can be used to reproduce the issue. Total Portfolio Cash: {parameters.Portfolio.Cash}; Position group: {parameters.PositionGroup.GetUserFriendlyName()}; Position group order quantity: {positionGroupQuantity} Order Fee: {orderFees}; Current Holdings: {parameters.PositionGroup.Quantity}; Target Percentage: %{parameters.TargetBuyingPower * 100};");
             }
         }
 
