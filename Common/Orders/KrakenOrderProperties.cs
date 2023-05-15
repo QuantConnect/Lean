@@ -19,22 +19,67 @@ namespace QuantConnect.Orders
     /// <summary>
     /// Kraken order properties
     /// </summary>
+    /// <remarks>
+    /// Kraken lets you set you preference for the currency
+    /// in which your trading fees are determined if the
+    /// order is filled. But it won't necessarily give you
+    /// you choice (for example, if set it to a currency in
+    /// which you have zero balance). Also, fee currency
+    /// selection does not to opening and rollover fees.
+    /// See (https://support.kraken.com/hc/en-us/articles/202966956#howclosingtransactionswork)
+    /// for more information about the currency selection.
+    /// </remarks>
     public class KrakenOrderProperties : OrderProperties
     {
+        private bool _feeInQuote;
+        private bool _feeInBase;
+
         /// <summary>
         /// Post-only order (available when ordertype = limit)
         /// </summary>
         public bool PostOnly { get; set; }
-        
+
         /// <summary>
-        /// Prefer fee in base currency (default if selling)
+        /// Prefer fee in base currency (default if selling. Source: https://docs.kraken.com/rest/#tag/User-Trading/operation/addOrder).
+        /// It's set here: https://github.com/QuantConnect/Lean.Brokerages.Kraken/blob/master/QuantConnect.KrakenBrokerage/KrakenBrokerage.cs#L141
+        /// and used to create a Kraken order here: https://github.com/QuantConnect/Lean.Brokerages.Kraken/blob/master/QuantConnect.KrakenBrokerage/KrakenBrokerage.Messaging.cs#L353
         /// </summary>
-        public bool FeeInBase { get; set; }
-        
+        public bool FeeInBase
+        {
+            get
+            {
+                return _feeInBase;
+            }
+            set
+            {
+                if (value)
+                {
+                    _feeInBase = value;
+                    _feeInQuote = !_feeInBase;
+                }
+            }
+        }
+
         /// <summary>
-        /// Prefer fee in quote currency (default if buying, mutually exclusive with FeeInBase)
+        /// Prefer fee in quote currency (default if buying, mutually exclusive with FeeInBase. Source: https://docs.kraken.com/rest/#tag/User-Trading/operation/addOrder)
+        /// It's set here: https://github.com/QuantConnect/Lean.Brokerages.Kraken/blob/master/QuantConnect.KrakenBrokerage/KrakenBrokerage.cs#L145
+        /// and used to create a Kraken order here: https://github.com/QuantConnect/Lean.Brokerages.Kraken/blob/master/QuantConnect.KrakenBrokerage/KrakenBrokerage.Messaging.cs#L358
         /// </summary>
-        public bool FeeInQuote { get; set; }
+        public bool FeeInQuote
+        {
+            get
+            {
+                return _feeInQuote;
+            }
+            set
+            {
+                if (value)
+                {
+                    _feeInQuote = value;
+                    _feeInBase = !_feeInQuote;
+                }
+            }
+        }
         
         /// <summary>
         /// https://support.kraken.com/hc/en-us/articles/201648183-Market-Price-Protection
