@@ -81,6 +81,34 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
+            if ( (security.Holdings.Quantity + order.Quantity < 0) && (order.TimeInForce == TimeInForce.GoodTilCanceled))
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "ShortOrderIsGtc", "You cannot place short stock orders with GTC, only day orders are allowed");
+
+                return false;
+            }
+
+            if ((security.Holdings.Quantity + order.Quantity < 0) && security.Price < 5)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "SellShortOrderLastPriceBelow5", "Sell Short order cannot be placed for stock priced below $5");
+
+                return false;
+            }
+
+            if (order.Type == OrderType.Market && order.TimeInForce == TimeInForce.GoodTilCanceled)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "MarketOrderIsGtc", "You cannot place market orders with GTC, only day orders are allowed");
+
+                return false;
+            }
+
+            if (order.AbsoluteQuantity < 1 || order.AbsoluteQuantity > 10000000)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "IncorrectOrderQuantity", "Quantity should be between 1 and 10,000,000");
+
+                return false;
+            }
+
             if (!CanExecuteOrder(security, order))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "ExtendedMarket",
