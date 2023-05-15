@@ -19,16 +19,6 @@ namespace QuantConnect.Orders
     /// <summary>
     /// Kraken order properties
     /// </summary>
-    /// <remarks>
-    /// Kraken lets you set you preference for the currency
-    /// in which your trading fees are determined if the
-    /// order is filled. But it won't necessarily give you
-    /// you choice (for example, if set it to a currency in
-    /// which you have zero balance). Also, fee currency
-    /// selection does not to opening and rollover fees.
-    /// See (https://support.kraken.com/hc/en-us/articles/202966956#howclosingtransactionswork)
-    /// for more information about the currency selection.
-    /// </remarks>
     public class KrakenOrderProperties : OrderProperties
     {
         private bool _feeInQuote;
@@ -40,10 +30,9 @@ namespace QuantConnect.Orders
         public bool PostOnly { get; set; }
         
         /// <summary>
-        /// Prefer fee in base currency (default if selling. Source: https://docs.kraken.com/rest/#tag/User-Trading/operation/addOrder).
-        /// It's set here: https://github.com/QuantConnect/Lean.Brokerages.Kraken/blob/master/QuantConnect.KrakenBrokerage/KrakenBrokerage.cs#L141
-        /// and used to create a Kraken order here: https://github.com/QuantConnect/Lean.Brokerages.Kraken/blob/master/QuantConnect.KrakenBrokerage/KrakenBrokerage.Messaging.cs#L353
+        /// If true or by default when selling, fees will be charged in base currency. If false will be ignored. Mutually exclusive with FeeInQuote.
         /// </summary>
+        /// <remarks>See (https://support.kraken.com/hc/en-us/articles/202966956#howclosingtransactionswork) for more information about the currency selection.</remarks>
         public bool FeeInBase
         {
             get
@@ -61,10 +50,9 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
-        /// Prefer fee in quote currency (default if buying, mutually exclusive with FeeInBase. Source: https://docs.kraken.com/rest/#tag/User-Trading/operation/addOrder)
-        /// It's set here: https://github.com/QuantConnect/Lean.Brokerages.Kraken/blob/master/QuantConnect.KrakenBrokerage/KrakenBrokerage.cs#L145
-        /// and used to create a Kraken order here: https://github.com/QuantConnect/Lean.Brokerages.Kraken/blob/master/QuantConnect.KrakenBrokerage/KrakenBrokerage.Messaging.cs#L358
+        /// If true or by default when buying, fees will be charged in quote currency. If false will be ignored. Mutually exclusive with FeeInBase.
         /// </summary>
+        /// <remarks>See (https://support.kraken.com/hc/en-us/articles/202966956#howclosingtransactionswork) for more information about the currency selection.</remarks>
         public bool FeeInQuote
         {
             get
