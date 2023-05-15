@@ -19,7 +19,6 @@ using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
@@ -64,6 +63,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             var insights = new List<Insight>();
             foreach (var (symbol, symbolData) in _symbolDataBySymbol)
             {
+                symbolData.HandleCorporateActions(data);
+
                 if (symbolData.CanEmit())
                 {
                     var direction = InsightDirection.Flat;
@@ -77,7 +78,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                         continue;
                     }
 
-                    insights.Add(Insight.Price(symbolData.Security.Symbol, _predictionInterval, direction, magnitude, null));
+                    insights.Add(Insight.Price(symbol, _predictionInterval, direction, magnitude));
                 }
             }
             _insightCollection.AddRange(insights);
@@ -94,14 +95,20 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             // clean up data for removed securities
             foreach (var removed in changes.RemovedSecurities)
             {
-                SymbolData data;
-                if (_symbolDataBySymbol.TryGetValue(removed.Symbol, out data))
+                if (_symbolDataBySymbol.TryGetValue(removed.Symbol, out var data))
                 {
                     _symbolDataBySymbol.Remove(removed.Symbol);
-                    algorithm.SubscriptionManager.RemoveConsolidator(removed.Symbol, data.Consolidator);
+                    data.Dispose();   
                 }
 
                 CancelInsights(algorithm, removed.Symbol);
+            }
+
+            // Indicators must be updated with scaled raw data to avoid price jumps
+            var dataNormalizationMode = algorithm.UniverseSettings.DataNormalizationMode;
+            if (dataNormalizationMode == DataNormalizationMode.Raw)
+            {
+                dataNormalizationMode = DataNormalizationMode.ScaledRaw;
             }
 
             // initialize data for added securities
@@ -110,24 +117,23 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             {
                 if (!_symbolDataBySymbol.ContainsKey(added.Symbol))
                 {
-                    var symbolData = new SymbolData(algorithm, added, _lookback, _resolution);
+                    var symbolData = new SymbolData(algorithm, added.Symbol, _lookback, _resolution, dataNormalizationMode);
                     _symbolDataBySymbol[added.Symbol] = symbolData;
-                    addedSymbols.Add(symbolData.Security.Symbol);
+                    addedSymbols.Add(added.Symbol);
                 }
             }
 
             if (addedSymbols.Count > 0)
             {
                 // warmup our indicators by pushing history through the consolidators
-                algorithm.History(addedSymbols, _lookback, _resolution)
-                .PushThrough(bar =>
-                {
-                    SymbolData symbolData;
-                    if (_symbolDataBySymbol.TryGetValue(bar.Symbol, out symbolData))
+                algorithm.History(addedSymbols, _lookback, _resolution, dataNormalizationMode: dataNormalizationMode)
+                    .PushThrough(bar =>
                     {
-                        symbolData.ROC.Update(bar.EndTime, bar.Value);
-                    }
-                });
+                        if (_symbolDataBySymbol.TryGetValue(bar.Symbol, out var symbolData))
+                        {
+                            symbolData.ROC.Update(bar.EndTime, bar.Value);
+                        }
+                    });
             }
         }
 
@@ -143,27 +149,57 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <summary>
         /// Contains data specific to a symbol required by this model
         /// </summary>
-        private class SymbolData
+        private class SymbolData : IDisposable
         {
-            public Security Security;
-            public IDataConsolidator Consolidator;
+            private long _previous;
+            private QCAlgorithm _algorithm;
+            private Symbol _symbol;
+            private IDataConsolidator _consolidator;
             public RateOfChange ROC;
-            public long previous = 0;
+            public readonly Action<Slice> HandleCorporateActions;
 
-            public SymbolData(QCAlgorithm algorithm, Security security, int lookback, Resolution resolution)
+            public SymbolData(QCAlgorithm algorithm, Symbol symbol, int lookback, Resolution resolution, DataNormalizationMode dataNormalizationMode)
             {
-                Security = security;
-                Consolidator = algorithm.ResolveConsolidator(security.Symbol, resolution);
-                algorithm.SubscriptionManager.AddConsolidator(security.Symbol, Consolidator);
-                ROC = new RateOfChange(security.Symbol.ToString(), lookback);
-                algorithm.RegisterIndicator(security.Symbol, ROC, Consolidator);
+                _algorithm = algorithm;
+                _symbol = symbol;
+                _consolidator = algorithm.ResolveConsolidator(symbol, resolution);
+                ROC = new RateOfChange($"{symbol}.ROC({lookback})", lookback);
+                algorithm.RegisterIndicator(symbol, ROC, _consolidator);
+
+                HandleCorporateActions = slice =>
+                {
+                    if (slice.Splits.ContainsKey(symbol) || slice.Dividends.ContainsKey(symbol))
+                    {
+                        // We need to keep the relative difference between samples and period
+                        var delta = ROC.Samples - _previous;
+
+                        ROC.Reset();
+
+                        // warmup our indicators by pushing history through the consolidators
+                        algorithm.History(new[] { symbol }, ROC.WarmUpPeriod, resolution, 
+                                dataNormalizationMode: dataNormalizationMode)
+                            .PushThrough(bar =>
+                                {
+                                    ROC.Update(bar.EndTime, bar.Value);
+                                }
+                            );
+
+                        _previous = ROC.Samples + delta;
+                    }
+                };
             }
 
             public bool CanEmit()
             {
-                if (previous == ROC.Samples) return false;
-                previous = ROC.Samples;
+                if (_previous == ROC.Samples) return false;
+                _previous = ROC.Samples;
                 return ROC.IsReady;
+            }
+
+            public void Dispose()
+            {
+                ROC.Reset();
+                _algorithm.SubscriptionManager.RemoveConsolidator(_symbol, _consolidator);
             }
         }
     }
