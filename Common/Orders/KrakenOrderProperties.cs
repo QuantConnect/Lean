@@ -38,7 +38,7 @@ namespace QuantConnect.Orders
         /// Post-only order (available when ordertype = limit)
         /// </summary>
         public bool PostOnly { get; set; }
-
+        
         /// <summary>
         /// Prefer fee in base currency (default if selling. Source: https://docs.kraken.com/rest/#tag/User-Trading/operation/addOrder).
         /// It's set here: https://github.com/QuantConnect/Lean.Brokerages.Kraken/blob/master/QuantConnect.KrakenBrokerage/KrakenBrokerage.cs#L141
