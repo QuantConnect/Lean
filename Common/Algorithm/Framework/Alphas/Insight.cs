@@ -146,8 +146,11 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="utcTime">The algorithm's current time in UTC. See <see cref="IAlgorithm.UtcTime"/></param>
         public void Expire(DateTime utcTime)
         {
-            CloseTimeUtc = utcTime.Add(-Time.OneSecond);
-            Period = CloseTimeUtc - GeneratedTimeUtc;
+            if (IsActive(utcTime))
+            {
+                CloseTimeUtc = utcTime.Add(-Time.OneSecond);
+                Period = CloseTimeUtc - GeneratedTimeUtc;
+            }
         }
 
         /// <summary>
