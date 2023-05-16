@@ -117,7 +117,7 @@ namespace QuantConnect.Brokerages
             // Binance API provides minimum order size in quote currency
             // and hence we have to check current order size using available price and order quantity
             var quantityIsValid = true;
-            var price = 0m;
+            var price = 1m;
             switch (order)
             {
                 case LimitOrder limitOrder:
@@ -143,10 +143,16 @@ namespace QuantConnect.Brokerages
                             Messages.BinanceBrokerageModel.UnsupportedOrderTypeForSecurityType(order, security));
                         return false;
                     }
+                    price = stopLimitOrder.LimitPrice;
                     quantityIsValid &= IsOrderSizeLargeEnough(stopLimitOrder.LimitPrice);
+                    if (!quantityIsValid)
+                    {
+                        break;
+                    }
+
                     // Binance Trading UI requires this check too...
                     quantityIsValid &= IsOrderSizeLargeEnough(stopLimitOrder.StopPrice);
-                    price = stopLimitOrder.LimitPrice;
+                    price = stopLimitOrder.StopPrice;
                     break;
                 case StopMarketOrder:
                     // despite Binance API allows you to post STOP_LOSS and TAKE_PROFIT order types

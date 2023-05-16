@@ -115,7 +115,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.AreEqual(isValidOrderQuantity, message == null);
             if (!isValidOrderQuantity)
             {
-                Assert.AreEqual(Messages.DefaultBrokerageModel.InvalidOrderSize(_security, order.Object.Quantity, order.Object.LimitPrice), message.Message);
+                Assert.AreEqual(Messages.DefaultBrokerageModel.InvalidOrderSize(_security, order.Object.Quantity, Math.Min(order.Object.LimitPrice, order.Object.StopPrice)), message.Message);
             }
         }
 
