@@ -81,30 +81,32 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if ( (security.Holdings.Quantity + order.Quantity < 0) && (order.TimeInForce == TimeInForce.GoodTilCanceled))
+            if (security.Holdings.Quantity + order.Quantity < 0)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "ShortOrderIsGtc", "You cannot place short stock orders with GTC, only day orders are allowed");
+                if (order.TimeInForce == TimeInForce.GoodTilCanceled)
+                {
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "ShortOrderIsGtc", Messages.TradierBrokerageModel.ShortOrderIsGtc);
 
-                return false;
+                    return false;
+                }
+                else if (security.Price < 5)
+                {
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "SellShortOrderLastPriceBelow5", Messages.TradierBrokerageModel.SellShortOrderLastPriceBelow5);
+
+                    return false;
+                }
             }
 
-            if ((security.Holdings.Quantity + order.Quantity < 0) && security.Price < 5)
+            if (order.TimeInForce == TimeInForce.GoodTilCanceled)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "SellShortOrderLastPriceBelow5", "Sell Short order cannot be placed for stock priced below $5");
-
-                return false;
-            }
-
-            if (order.Type == OrderType.Market && order.TimeInForce == TimeInForce.GoodTilCanceled)
-            {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "MarketOrderIsGtc", "You cannot place market orders with GTC, only day orders are allowed");
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "MarketOrderIsGtc", Messages.TradierBrokerageModel.MarketOrderIsGtc);
 
                 return false;
             }
 
             if (order.AbsoluteQuantity < 1 || order.AbsoluteQuantity > 10000000)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "IncorrectOrderQuantity", "Quantity should be between 1 and 10,000,000");
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "IncorrectOrderQuantity", Messages.TradierBrokerageModel.IncorrectOrderQuantity);
 
                 return false;
             }
