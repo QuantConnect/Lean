@@ -16,6 +16,7 @@
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 
 namespace QuantConnect.Securities.Positions
 {
@@ -83,7 +84,7 @@ namespace QuantConnect.Securities.Positions
             if(positions.Count > 0)
             {
                 var firstPosition = positions.First();
-                Quantity = firstPosition.Value.Quantity / firstPosition.Value.UnitQuantity;
+                Quantity = Math.Abs(firstPosition.Value.Quantity / firstPosition.Value.UnitQuantity);
             }
         }
 

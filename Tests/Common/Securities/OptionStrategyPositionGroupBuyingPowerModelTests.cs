@@ -442,9 +442,9 @@ namespace QuantConnect.Tests.Common.Securities
                 {
                     fullLiquidationCaseConsidered = true;
                 }
-                else if (newPositionQuantity < 0)
+                else if (initialHoldingsQuantity + strategyQuantity < 0)
                 {
-                    if (newPositionQuantity > initialHoldingsQuantity)
+                    if (newPositionQuantity < Math.Abs(initialHoldingsQuantity))
                     {
                         partialLiquidationCaseConsidered = true;
                     }
@@ -503,14 +503,12 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsTrue(hasSufficientBuyingPowerResult.IsSufficient);
         }
 
-        // Going even shorter
+        // Increasing short position
         [TestCase(-10, -11)]
-        // Going "less" short
+        // Decreasing short position
         [TestCase(-10, -9)]
         // Liquidating
         [TestCase(-10, 0)]
-        // Going long from short
-        [TestCase(-10, 10)]
         public void PositionGroupOrderQuantityCalculationForDeltaBuyingPowerFromShortPosition(int initialHoldingsQuantity, int finalPositionQuantity)
         {
             _algorithm.SetCash(100000);
@@ -534,14 +532,12 @@ namespace QuantConnect.Tests.Common.Securities
             ComputeAndAssertQuantityForDeltaBuyingPower(positionGroup, expectedQuantity, deltaBuyingPower);
         }
 
-        // Going even longer
+        // Increasing position
         [TestCase(10, 11)]
-        // Going "less" long
+        // Decreasing position
         [TestCase(10, 9)]
         // Liquidating
         [TestCase(10, 0)]
-        // Going short from long
-        [TestCase(10, -10)]
         public void PositionGroupOrderQuantityCalculationForDeltaBuyingPowerFromLongPosition(int initialHoldingsQuantity, int finalPositionQuantity)
         {
             _algorithm.SetCash(100000);
@@ -570,14 +566,10 @@ namespace QuantConnect.Tests.Common.Securities
 
         [TestCase(-10, 1, +1)]
         [TestCase(-10, 1, -1)]
-        [TestCase(-10, 2, +1)]
-        [TestCase(-10, 2, -1)]
         [TestCase(-10, 0.5, +1)]
         [TestCase(-10, 0.5, -1)]
         [TestCase(10, 1, +1)]
         [TestCase(10, 1, -1)]
-        [TestCase(10, 2, +1)]
-        [TestCase(10, 2, -1)]
         [TestCase(10, 0.5, +1)]
         [TestCase(10, 0.5, -1)]
         public void OrderQuantityCalculation(int initialHoldingsQuantity, decimal targetMarginPercent, int targetMarginDirection)
@@ -589,29 +581,22 @@ namespace QuantConnect.Tests.Common.Securities
             SetUpOptionStrategy(initialHoldingsQuantity);
             var positionGroup = _portfolio.PositionGroups.Single();
 
-            var expectedQuantity = Math.Sign(targetMarginDirection) * initialHoldingsQuantity * targetMarginPercent;
-            var finalPositionQuantity = initialHoldingsQuantity + expectedQuantity;
+            var expectedQuantity = Math.Abs(initialHoldingsQuantity * targetMarginPercent) * Math.Sign(targetMarginDirection);
+            var finalPositionQuantity = initialHoldingsQuantity + Math.Sign(initialHoldingsQuantity) * expectedQuantity;
 
             var buyingPowerModel = positionGroup.BuyingPowerModel as PositionGroupBuyingPowerModel;
 
-            var longUnitGroup = positionGroup.Key.CreateUnitGroup();
-            var longUnitMargin = buyingPowerModel.GetInitialMarginRequirement(_portfolio, longUnitGroup);
+            var unitGroup = PositionGroupBuyingPowerModel.CreatePositionGroupWithQuantity(positionGroup, 1);
+            var unitMargin = Math.Abs(buyingPowerModel.GetInitialMarginRequirement(_portfolio, unitGroup));
 
-            var shortUnitGroup = positionGroup.WithQuantity(-1);
-            var shortUnitMargin = buyingPowerModel.GetInitialMarginRequirement(_portfolio, shortUnitGroup);
+            var targetFinalMargin = Math.Abs(finalPositionQuantity * unitMargin);
 
-            var targetFinalMargin = finalPositionQuantity < 0
-                // Final position will be short
-                ? -finalPositionQuantity * shortUnitMargin
-                // Final position will be long (or closed)
-                : finalPositionQuantity * longUnitMargin;
-
-            var currentUsedMargin = buyingPowerModel.GetInitialMarginRequirement(_portfolio, positionGroup);
+            var currentUsedMargin = buyingPowerModel.GetReservedBuyingPowerForPositionGroup(_portfolio, positionGroup);
 
             var quantity = buyingPowerModel.GetPositionGroupOrderQuantity(_portfolio, positionGroup, currentUsedMargin, targetFinalMargin,
-                longUnitGroup, longUnitMargin, out _);
+                unitGroup, unitMargin, out _);
 
-            // Reducing the position or going shorter
+            // Reducing the position
             if (targetFinalMargin < currentUsedMargin)
             {
                 Assert.Less(quantity, 0);
@@ -625,7 +610,8 @@ namespace QuantConnect.Tests.Common.Securities
             // Liquidating
             if (targetFinalMargin == 0)
             {
-                Assert.AreEqual(-initialHoldingsQuantity, quantity);
+                // Should always be negative when liquidating (or reducing)
+                Assert.AreEqual(-Math.Abs(initialHoldingsQuantity), quantity);
             }
 
             Assert.AreEqual(expectedQuantity, quantity);
@@ -914,7 +900,7 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.IronCondor, 10, 10000m / 10, +1).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.IronCondor, 10, -10000m / 10, -1).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.IronCondor, 10, -10000m, -10),
-            // Signed maintenance margin for IronCondor with quantity -10 is 0
+            // Maintenance margin for IronCondor with quantity -10 is 0
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, 0m, 0),
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, 1000m, 0),
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, -1000m, 0),
@@ -926,10 +912,10 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var positionGroup = SetUpOptionStrategy(optionStrategyDefinition, initialPositionQuantity);
 
-            if (initialPositionQuantity + expectedQuantity != 0)
+            if (expectedQuantity != -Math.Abs(initialPositionQuantity)) // Not liquidating
             {
                 // Add a small buffer to avoid rounding errors
-                deltaBuyingPower *= Math.Abs(initialPositionQuantity + expectedQuantity) > Math.Abs(initialPositionQuantity) ? 1.001m : 0.999m;
+                deltaBuyingPower *= deltaBuyingPower > 0 ? 1.001m : 0.999m;
             }
 
             var result = positionGroup.BuyingPowerModel.GetMaximumLotsForDeltaBuyingPower(new GetMaximumLotsForDeltaBuyingPowerParameters(
@@ -1081,7 +1067,7 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.IronCondor, 10, 10000m * 11 / 10, +1).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.IronCondor, 10, 10000m * 9 / 10, -1).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.IronCondor, 10, 0m, -10),
-            // Signed maintenance margin for IronCondor with quantity -10 is 0
+            // Maintenance margin for IronCondor with quantity -10 is 0
         };
 
         [TestCaseSource(nameof(OrderQuantityForTargetBuyingPowerTestCases))]
