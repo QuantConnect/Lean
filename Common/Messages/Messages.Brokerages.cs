@@ -59,7 +59,13 @@ namespace QuantConnect
             public static string InvalidOrderQuantity(Securities.Security security, decimal quantity)
             {
                 return Invariant($@"The minimum order size (in quote currency) for {security.Symbol.Value} is {
-                    security.SymbolProperties.MinimumOrderSize}. Order size was {quantity}.");
+                    security.SymbolProperties.MinimumOrderSize}. Order quantity was {quantity}.");
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string InvalidOrderSize(Securities.Security security, decimal quantity, decimal price)
+            {
+                return Invariant($@"The minimum order size (in quote currency) for {security.Symbol.Value} is {security.SymbolProperties.MinimumOrderSize}. Order size was {quantity * price}.");
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

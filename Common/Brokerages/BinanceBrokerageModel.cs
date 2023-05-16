@@ -122,7 +122,7 @@ namespace QuantConnect.Brokerages
             {
                 case LimitOrder limitOrder:
                     quantityIsValid &= IsOrderSizeLargeEnough(limitOrder.LimitPrice);
-                    price = limitOrder.Price;
+                    price = limitOrder.LimitPrice;
                     break;
                 case MarketOrder:
                     if (!security.HasData)
@@ -146,7 +146,7 @@ namespace QuantConnect.Brokerages
                     quantityIsValid &= IsOrderSizeLargeEnough(stopLimitOrder.LimitPrice);
                     // Binance Trading UI requires this check too...
                     quantityIsValid &= IsOrderSizeLargeEnough(stopLimitOrder.StopPrice);
-                    price = stopLimitOrder.StopPrice;
+                    price = stopLimitOrder.LimitPrice;
                     break;
                 case StopMarketOrder:
                     // despite Binance API allows you to post STOP_LOSS and TAKE_PROFIT order types
@@ -167,7 +167,7 @@ namespace QuantConnect.Brokerages
             if (!quantityIsValid)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.InvalidOrderQuantity(security, order.Quantity * price));
+                    Messages.DefaultBrokerageModel.InvalidOrderSize(security, order.Quantity, price));
 
                 return false;
             }
