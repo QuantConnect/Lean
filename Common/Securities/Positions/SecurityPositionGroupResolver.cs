@@ -53,7 +53,8 @@ namespace QuantConnect.Securities.Positions
             }
 
             var key = new PositionGroupKey(_buyingPowerModel, newPositions);
-            group = new PositionGroup(key, newPositions.ToDictionary(p => p.Symbol));
+            var position = newPositions.First();
+            group = new PositionGroup(key, position.GetGroupQuantity(), newPositions.ToDictionary(p => p.Symbol));
             return true;
         }
 
@@ -65,7 +66,7 @@ namespace QuantConnect.Securities.Positions
         public PositionGroupCollection Resolve(PositionCollection positions)
         {
             var result = new PositionGroupCollection(positions
-                .Select(position => new PositionGroup(_buyingPowerModel, position)).ToList()
+                .Select(position => new PositionGroup(_buyingPowerModel, position.GetGroupQuantity(), position)).ToList()
             );
 
             positions.Clear();

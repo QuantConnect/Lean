@@ -87,7 +87,17 @@ namespace QuantConnect.Securities.Positions
         /// <returns>A new position with the specified number of lots</returns>
         public static IPosition WithLots(this IPosition position, decimal numberOfLots)
         {
-            return new Position(position.Symbol, numberOfLots * position.UnitQuantity, position.UnitQuantity);
+            return new Position(position.Symbol, numberOfLots * position.UnitQuantity * Math.Sign(position.Quantity), position.UnitQuantity);
+        }
+
+        /// <summary>
+        /// Gets the quantity a group would have if the given position were part of it.
+        /// </summary>
+        /// <param name="position">The position</param>
+        /// <returns>The group quantity</returns>
+        public static decimal GetGroupQuantity(this IPosition position)
+        {
+            return position.Quantity / position.UnitQuantity;
         }
     }
 }

@@ -37,7 +37,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2015, 12, 23);
             SetEndDate(2015, 12, 30);
-            SetCash(200000);
+            SetCash(1000000);
 
             var equitySymbol = AddEquity("GOOG").Symbol;
 
@@ -62,42 +62,45 @@ namespace QuantConnect.Algorithm.CSharp
                 .ToList();
             var contractSymbol = callContracts[0].Symbol;
 
-            var quantity = -10;
+            // 1. Test starting from a long position
+            var quantity = 10;
             MarketOrder(contractSymbol, quantity);
 
             var security = Securities[contractSymbol];
             var positionGroup = Portfolio.PositionGroups.Single();
 
+            TestQuantityForDeltaBuyingPowerForPositionGroup(positionGroup, security);
+
+            // 2. Test starting from a short position
+            quantity = -10;
+            MarketOrder(contractSymbol, quantity - positionGroup.Quantity);
+
+            positionGroup = Portfolio.PositionGroups.Single();
+            if (positionGroup.Quantity != quantity)
+            {
+                throw new Exception($@"Expected position group quantity to be {quantity} but was {positionGroup.Quantity}");
+            }
+
+            TestQuantityForDeltaBuyingPowerForPositionGroup(positionGroup, security);
+        }
+
+        private void TestQuantityForDeltaBuyingPowerForPositionGroup(IPositionGroup positionGroup, Security security)
+        {
             var usedMargin = Portfolio.TotalMarginUsed;
-            var absQuantity = Math.Abs(quantity);
+            var absQuantity = Math.Abs(positionGroup.Quantity);
             var marginPerNakedShortUnit = usedMargin / absQuantity;
 
             for (var expectedQuantity = 1; expectedQuantity <= absQuantity; expectedQuantity++)
             {
-                // Test going ever shorter
-                var deltaBuyingPower = -marginPerNakedShortUnit * expectedQuantity * 1.05m;
+                // Test going in the same direction (longer or shorter):
+                // positive delta and expected quantity, to increment the position towards the current side
+                var deltaBuyingPower = marginPerNakedShortUnit * expectedQuantity * 1.05m;
+                PerfomQuantityCalculations(positionGroup, security, expectedQuantity, deltaBuyingPower);
+
+                // Test going towards the opposite side until liquidated:
+                // negative delta and expected quantity to reduce the position
+                deltaBuyingPower = -marginPerNakedShortUnit * expectedQuantity * 0.95m;
                 PerfomQuantityCalculations(positionGroup, security, -expectedQuantity, deltaBuyingPower);
-
-                // Test going longer until liquidated
-                deltaBuyingPower = marginPerNakedShortUnit * expectedQuantity * 0.95m;
-                PerfomQuantityCalculations(positionGroup, security, expectedQuantity, deltaBuyingPower);
-            }
-
-            // Now test going long: for buying power deltas greater than the total margin used,
-            // the calculated order quantity starts increasing by the margin required for
-            // a group unit without underlyings (complete liquidation + going long)
-            var longUnitGroup = positionGroup.Key.CreateUnitGroup();
-            var marginPerLongUnit = longUnitGroup.BuyingPowerModel.GetInitialMarginRequirement(
-                new PositionGroupInitialMarginParameters(Portfolio, longUnitGroup)).Value;
-
-            for (var i = 1; i < 10; i++)
-            {
-                var expectedQuantity = absQuantity + i;
-                // Add 5% to account for order fees, rounding errors and initial margin used calculation differences:
-                //  - The position group buying power model uses initial margin for assets at current price.
-                //  - The security buying power model uses initial margin for holdings value directly.
-                var deltaBuyingPower = usedMargin + marginPerLongUnit * 1.05m * i;
-                PerfomQuantityCalculations(positionGroup, security, expectedQuantity, deltaBuyingPower);
             }
         }
 
@@ -112,25 +115,27 @@ namespace QuantConnect.Algorithm.CSharp
 
             Debug($"Expected quantity: {expectedQuantity}  --  Actual: {positionQuantityForDeltaWithPositionGroupBuyingPowerModel}");
 
+            if (positionQuantityForDeltaWithPositionGroupBuyingPowerModel != expectedQuantity)
+            {
+                throw new Exception($@"Expected position quantity for delta buying power to be {expectedQuantity} but was {positionQuantityForDeltaWithPositionGroupBuyingPowerModel}");
+            }
+
+            var signedDeltaBuyingPower = positionGroup.Quantity < 0 ? -deltaBuyingPower : deltaBuyingPower;
             var positionQuantityForDeltaWithSecurityPositionGroupBuyingPowerModel = new SecurityPositionGroupBuyingPowerModel()
-                .GetMaximumLotsForDeltaBuyingPower(new GetMaximumLotsForDeltaBuyingPowerParameters(Portfolio, positionGroup, deltaBuyingPower,
+                .GetMaximumLotsForDeltaBuyingPower(new GetMaximumLotsForDeltaBuyingPowerParameters(Portfolio, positionGroup, signedDeltaBuyingPower,
                     minimumOrderMarginPortfolioPercentage: 0)).NumberOfLots;
 
             var positionQuantityForDeltaWithSecurityBuyingPowerModel = security.BuyingPowerModel.GetMaximumOrderQuantityForDeltaBuyingPower(
-                new GetMaximumOrderQuantityForDeltaBuyingPowerParameters(Portfolio, security, deltaBuyingPower,
+                new GetMaximumOrderQuantityForDeltaBuyingPowerParameters(Portfolio, security, signedDeltaBuyingPower,
                     minimumOrderMarginPortfolioPercentage: 0)).Quantity;
 
-            if (positionQuantityForDeltaWithPositionGroupBuyingPowerModel != expectedQuantity)
-            {
-                throw new Exception($@"Expected position quantity for delta buying power to be {expectedQuantity} but was {
-                    positionQuantityForDeltaWithPositionGroupBuyingPowerModel}");
-            }
+            var expectedSingleSecurityModelsQuantity = signedDeltaBuyingPower < 0 ? -Math.Abs(expectedQuantity) : Math.Abs(expectedQuantity);
 
-            if (positionQuantityForDeltaWithPositionGroupBuyingPowerModel != positionQuantityForDeltaWithSecurityPositionGroupBuyingPowerModel ||
-                positionQuantityForDeltaWithPositionGroupBuyingPowerModel != positionQuantityForDeltaWithSecurityBuyingPowerModel)
+            if (positionQuantityForDeltaWithSecurityPositionGroupBuyingPowerModel != expectedSingleSecurityModelsQuantity ||
+                positionQuantityForDeltaWithSecurityBuyingPowerModel != expectedSingleSecurityModelsQuantity)
             {
-                throw new Exception($"Expected all order quantity for delta buying power calls to return the same. Results were:\n" +
-                    $"    PositionGroupBuyingPowerModel: {positionQuantityForDeltaWithPositionGroupBuyingPowerModel}\n" +
+                throw new Exception($@"Expected order quantity for delta buying power calls from default buying power models to return {
+                    expectedSingleSecurityModelsQuantity}. Results were:\n" +
                     $"    SecurityPositionGroupBuyingPowerModel: {positionQuantityForDeltaWithSecurityPositionGroupBuyingPowerModel}\n" +
                     $"    BuyingPowerModel: {positionQuantityForDeltaWithSecurityBuyingPowerModel}\n");
             }
@@ -208,30 +213,30 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "1"},
+            {"Total Trades", "2"},
             {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "12.556%"},
-            {"Drawdown", "1.100%"},
-            {"Expectancy", "0"},
-            {"Net Profit", "0.249%"},
-            {"Sharpe Ratio", "6.276"},
-            {"Probabilistic Sharpe Ratio", "95.221%"},
-            {"Loss Rate", "0%"},
+            {"Average Loss", "-0.11%"},
+            {"Compounding Annual Return", "-2.852%"},
+            {"Drawdown", "0.300%"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "-0.061%"},
+            {"Sharpe Ratio", "-5.935"},
+            {"Probabilistic Sharpe Ratio", "0.982%"},
+            {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.093"},
-            {"Beta", "-0.027"},
-            {"Annual Standard Deviation", "0.015"},
+            {"Alpha", "-0.022"},
+            {"Beta", "0.007"},
+            {"Annual Standard Deviation", "0.004"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "1.261"},
-            {"Tracking Error", "0.088"},
-            {"Treynor Ratio", "-3.447"},
-            {"Total Fees", "$2.50"},
-            {"Estimated Strategy Capacity", "$140000.00"},
+            {"Information Ratio", "-0.046"},
+            {"Tracking Error", "0.084"},
+            {"Treynor Ratio", "-3.26"},
+            {"Total Fees", "$7.50"},
+            {"Estimated Strategy Capacity", "$49000.00"},
             {"Lowest Capacity Asset", "GOOCV W78ZFMML01JA|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "0.73%"},
-            {"OrderListHash", "4ad64d6b8116ed9025bb02673469ee88"}
+            {"Portfolio Turnover", "0.45%"},
+            {"OrderListHash", "8c49d2f91fd6736f968bc068f2cc188d"}
         };
     }
 }

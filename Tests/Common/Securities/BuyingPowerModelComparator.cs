@@ -81,7 +81,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             reentry = true;
             var actual = PositionGroupModel.GetMaintenanceMargin(new PositionGroupMaintenanceMarginParameters(
-                Portfolio, new PositionGroup(PositionGroupModel, new Position(parameters.Security, parameters.Quantity))
+                Portfolio, new PositionGroup(PositionGroupModel, parameters.Quantity, new Position(parameters.Security, parameters.Quantity))
             ));
 
             Assert.AreEqual(expected.Value, actual.Value,
@@ -103,7 +103,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             reentry = true;
             var actual = PositionGroupModel.GetInitialMarginRequirement(new PositionGroupInitialMarginParameters(
-                Portfolio, new PositionGroup(PositionGroupModel, new Position(parameters.Security, parameters.Quantity))
+                Portfolio, new PositionGroup(PositionGroupModel, parameters.Quantity, new Position(parameters.Security, parameters.Quantity))
             ));
 
             Assert.AreEqual(expected.Value, actual.Value,
@@ -125,7 +125,7 @@ namespace QuantConnect.Tests.Common.Securities
             }
 
             var actual = PositionGroupModel.GetInitialMarginRequiredForOrder(new PositionGroupInitialMarginForOrderParameters(
-                Portfolio, new PositionGroup(PositionGroupModel, new Position(parameters.Security, parameters.Order.Quantity)), parameters.Order
+                Portfolio, new PositionGroup(PositionGroupModel, parameters.Order.Quantity, new Position(parameters.Security, parameters.Order.Quantity)), parameters.Order
             ));
 
             Assert.AreEqual(expected.Value, actual.Value,
@@ -151,7 +151,7 @@ namespace QuantConnect.Tests.Common.Securities
             var actual = PositionGroupModel.HasSufficientBuyingPowerForOrder(
                 new HasSufficientPositionGroupBuyingPowerForOrderParameters(
                     Portfolio,
-                    new PositionGroup(PositionGroupModel, new Position(parameters.Security, parameters.Order.Quantity)),
+                    new PositionGroup(PositionGroupModel, parameters.Order.Quantity, new Position(parameters.Security, parameters.Order.Quantity)),
                     new List<Order> { parameters.Order }
                 )
             );

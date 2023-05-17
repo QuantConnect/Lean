@@ -18,6 +18,8 @@ using QuantConnect.Util;
 using System.Collections.Generic;
 using QuantConnect.Securities.Option;
 using QuantConnect.Securities.Option.StrategyMatcher;
+using System;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Securities.Positions
 {
@@ -107,7 +109,8 @@ namespace QuantConnect.Securities.Positions
                         //   will be selected as impacted group, so the group will contain the put positions
                         //   but not the call ones. In this case, we return an valid empty group because the
                         //   liquidation is happening.
-                        return new PositionGroup(new PositionGroupKey(new OptionStrategyPositionGroupBuyingPowerModel(null), new List<IPosition>()));
+                        return new PositionGroup(new PositionGroupKey(
+                            new OptionStrategyPositionGroupBuyingPowerModel(null), new List<IPosition>()), 0m);
                     }
 
                     return null;
@@ -197,7 +200,7 @@ namespace QuantConnect.Securities.Positions
                     var resultingPositions = new List<IPosition>();
                     var key = new PositionGroupKey(new OptionStrategyPositionGroupBuyingPowerModel(null), resultingPositions);
                     // we could be liquidating there will be no position left!
-                    yield return new PositionGroup(key, new Dictionary<Symbol, IPosition>());
+                    yield return new PositionGroup(key, 0, new Dictionary<Symbol, IPosition>());
                     yield break;
                 }
 
@@ -209,12 +212,16 @@ namespace QuantConnect.Securities.Positions
 
                 foreach (var matchedStrategy in matches.Strategies)
                 {
+                    var groupQuantity = Math.Abs(matchedStrategy.OptionLegs.Cast<Leg>().Concat(matchedStrategy.UnderlyingLegs)
+                        .Select(leg => leg.Quantity)
+                        .GreatestCommonDivisor());
                     var positionsToGroup = matchedStrategy.OptionLegs
-                        .Select(optionLeg => (IPosition)new Position(optionLeg.Symbol, optionLeg.Quantity, 1))
-                        .Concat(matchedStrategy.UnderlyingLegs.Select(underlyingLeg => new Position(underlyingLeg.Symbol, underlyingLeg.Quantity * contractMultiplier, 1)))
+                        .Select(optionLeg => (IPosition)new Position(optionLeg.Symbol, optionLeg.Quantity, Math.Abs(optionLeg.Quantity) / groupQuantity))
+                        .Concat(matchedStrategy.UnderlyingLegs.Select(underlyingLeg => new Position(underlyingLeg.Symbol,
+                            underlyingLeg.Quantity * contractMultiplier, (Math.Abs(underlyingLeg.Quantity) * contractMultiplier / groupQuantity))))
                         .ToArray();
 
-                    yield return new PositionGroup(new OptionStrategyPositionGroupBuyingPowerModel(matchedStrategy), positionsToGroup);
+                    yield return new PositionGroup(new OptionStrategyPositionGroupBuyingPowerModel(matchedStrategy), groupQuantity, positionsToGroup);
                 }
             }
         }

@@ -57,8 +57,8 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         /// <param name="buyingPowerModel">The buying power model to use for this group</param>
         /// <param name="positions">The positions comprising this group</param>
-        public PositionGroup(IPositionGroupBuyingPowerModel buyingPowerModel, params IPosition[] positions)
-            : this(new PositionGroupKey(buyingPowerModel, positions), positions.ToDictionary(p => p.Symbol))
+        public PositionGroup(IPositionGroupBuyingPowerModel buyingPowerModel, decimal quantity, params IPosition[] positions)
+            : this(new PositionGroupKey(buyingPowerModel, positions), quantity, positions.ToDictionary(p => p.Symbol))
         {
         }
 
@@ -67,8 +67,8 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         /// <param name="key">The deterministic key for this group</param>
         /// <param name="positions">The positions comprising this group</param>
-        public PositionGroup(PositionGroupKey key, params IPosition[] positions)
-            : this(key, positions.ToDictionary(p => p.Symbol))
+        public PositionGroup(PositionGroupKey key, decimal quantity, params IPosition[] positions)
+            : this(key, quantity, positions.ToDictionary(p => p.Symbol))
         {
         }
 
@@ -77,14 +77,15 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         /// <param name="key">The deterministic key for this group</param>
         /// <param name="positions">The positions comprising this group</param>
-        public PositionGroup(PositionGroupKey key, Dictionary<Symbol, IPosition> positions)
+        public PositionGroup(PositionGroupKey key, decimal quantity, Dictionary<Symbol, IPosition> positions)
         {
             Key = key;
+            Quantity = quantity;
             _positions = positions;
-            if(positions.Count > 0)
+
+            if (positions.Any(kvp => Math.Abs(kvp.Value.Quantity / kvp.Value.UnitQuantity) != Math.Abs(Quantity)))
             {
-                var firstPosition = positions.First();
-                Quantity = Math.Abs(firstPosition.Value.Quantity / firstPosition.Value.UnitQuantity);
+                throw new ArgumentException(Messages.PositionGroup.InvalidQuantity(Quantity, positions.Values));
             }
         }
 

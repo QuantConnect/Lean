@@ -125,7 +125,7 @@ namespace QuantConnect.Securities.Positions
                 IPositionGroup group;
                 if (!TryGetGroup(key, out group))
                 {
-                    return new PositionGroup(key, key.CreateEmptyPositions());
+                    return new PositionGroup(key, 0m, key.CreateEmptyPositions());
                 }
 
                 return group;
