@@ -163,7 +163,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             _securityChanges = changes != SecurityChanges.None;
             // Get removed symbol and invalidate them in the insight collection
             _removedSymbols = changes.RemovedSecurities.Select(x => x.Symbol).ToList();
-            algorithm?.Insights.Clear(_removedSymbols.ToArray());
+            algorithm?.Insights.Expire(_removedSymbols.ToArray());
         }
 
         /// <summary>
