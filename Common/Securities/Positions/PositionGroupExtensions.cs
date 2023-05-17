@@ -55,8 +55,7 @@ namespace QuantConnect.Securities.Positions
             }
 
             var positions = template.ToArray(p => p.WithLots(groupQuantity));
-            var quantity = template.Key.BuyingPowerModel is OptionStrategyPositionGroupBuyingPowerModel ? Math.Abs(groupQuantity) : groupQuantity;
-            return new PositionGroup(template.Key, positions.Length > 0 ?Math.Abs(quantity) : quantity, positions);
+            return new PositionGroup(template.Key, positions.Length > 0 ? Math.Abs(groupQuantity) : groupQuantity, positions);
         }
 
         /// <summary>

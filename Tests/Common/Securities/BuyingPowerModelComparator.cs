@@ -148,10 +148,11 @@ namespace QuantConnect.Tests.Common.Securities
             }
 
             reentry = true;
+            var position = new Position(parameters.Security, parameters.Order.Quantity);
             var actual = PositionGroupModel.HasSufficientBuyingPowerForOrder(
                 new HasSufficientPositionGroupBuyingPowerForOrderParameters(
                     Portfolio,
-                    new PositionGroup(PositionGroupModel, parameters.Order.Quantity, new Position(parameters.Security, parameters.Order.Quantity)),
+                    new PositionGroup(PositionGroupModel, position.GetGroupQuantity(), position),
                     new List<Order> { parameters.Order }
                 )
             );
@@ -204,7 +205,8 @@ namespace QuantConnect.Tests.Common.Securities
 
             // we're not comparing group quantities, which is the number of position lots, but rather the implied
             // position quantities resulting from having that many lots.
-            var resizedPositionGroup = positionGroup.WithQuantity(actual.NumberOfLots);
+            var resizedPositionGroup = positionGroup.WithQuantity(
+                Math.Sign(positionGroup.Quantity) == -1 ? -actual.NumberOfLots : actual.NumberOfLots);
             var position = resizedPositionGroup.GetPosition(security.Symbol);
 
             var bpmOrder = new MarketOrder(security.Symbol, expected.Quantity, parameters.Portfolio.Securities.UtcTime);
@@ -269,7 +271,8 @@ namespace QuantConnect.Tests.Common.Securities
 
             // we're not comparing group quantities, which is the number of position lots, but rather the implied
             // position quantities resulting from having that many lots.
-            var resizedPositionGroup = positionGroup.WithQuantity(actual.NumberOfLots);
+            var resizedPositionGroup = positionGroup.WithQuantity(
+                Math.Sign(positionGroup.Quantity) == -1 ? -actual.NumberOfLots : actual.NumberOfLots);
             var position = resizedPositionGroup.GetPosition(security.Symbol);
 
             var bpmOrder = new MarketOrder(security.Symbol, expected.Quantity, parameters.Portfolio.Securities.UtcTime);
