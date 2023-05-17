@@ -117,7 +117,7 @@ namespace QuantConnect.Brokerages
             // Binance API provides minimum order size in quote currency
             // and hence we have to check current order size using available price and order quantity
             var quantityIsValid = true;
-            var price = 1m;
+            decimal price;
             switch (order)
             {
                 case LimitOrder limitOrder:
