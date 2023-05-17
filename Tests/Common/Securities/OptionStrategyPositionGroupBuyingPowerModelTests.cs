@@ -1272,17 +1272,8 @@ namespace QuantConnect.Tests.Common.Securities
                     position.Quantity / initialPositionQuantity * newGroupQuantity, position.UnitQuantity)))).Single();
 
             var finalQuantity = initialPositionQuantity + newGroupQuantity;
-            OrderDirection direction;
-            if (Math.Abs(finalQuantity) < Math.Abs(initialPositionQuantity))
-            {
-                direction = initialPositionGroup.GetPositionSide() == PositionSide.Long ? OrderDirection.Sell : OrderDirection.Buy;
-            }
-            else
-            {
-                direction = initialPositionGroup.GetPositionSide() == PositionSide.Long ? OrderDirection.Buy : OrderDirection.Sell;
-            }
             var buyingPower = positionGroup.BuyingPowerModel.GetPositionGroupBuyingPower(new PositionGroupBuyingPowerParameters(_portfolio,
-                positionGroup, direction));
+                positionGroup));
 
             var initialUsedMargin = _portfolio.TotalMarginUsed;
             var initialPositionInitialMargin = positionGroup.BuyingPowerModel.GetInitialMarginRequirement(

@@ -27,24 +27,6 @@ namespace QuantConnect.Securities.Positions
     public static class PositionGroupExtensions
     {
         /// <summary>
-        /// Gets the position side (long/short/none) of the specified <paramref name="group"/>
-        /// </summary>
-        public static PositionSide GetPositionSide(this IPositionGroup group)
-        {
-            if (group.Quantity > 0)
-            {
-                return PositionSide.Long;
-            }
-
-            if (group.Quantity < 0)
-            {
-                return PositionSide.Short;
-            }
-
-            return PositionSide.None;
-        }
-
-        /// <summary>
         /// Gets the position in the <paramref name="group"/> matching the provided <param name="symbol"></param>
         /// </summary>
         public static IPosition GetPosition(this IPositionGroup group, Symbol symbol)
@@ -113,7 +95,7 @@ namespace QuantConnect.Securities.Positions
             }
 
             // The final group has a smaller quantity than the initial group
-            return finalGroup.Quantity < initialGroup.Quantity &&
+            return Math.Abs(finalGroup.Quantity) < Math.Abs(initialGroup.Quantity) &&
                 finalGroup.All(position => Math.Sign(position.Quantity) == Math.Sign(initialGroup.GetPosition(position.Symbol).Quantity));
         }
 

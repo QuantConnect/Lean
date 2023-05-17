@@ -33,24 +33,14 @@ namespace QuantConnect.Securities.Positions
         public SecurityPortfolioManager Portfolio { get; }
 
         /// <summary>
-        /// Gets the direction in which buying power is to be computed
-        /// </summary>
-        public OrderDirection Direction { get; }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="PositionGroupBuyingPowerParameters"/> class
         /// </summary>
         /// <param name="portfolio">The algorithm's portfolio manager</param>
         /// <param name="positionGroup">The position group</param>
         /// <param name="direction">The direction to compute buying power in</param>
-        public PositionGroupBuyingPowerParameters(
-            SecurityPortfolioManager portfolio,
-            IPositionGroup positionGroup,
-            OrderDirection direction
-            )
+        public PositionGroupBuyingPowerParameters(SecurityPortfolioManager portfolio, IPositionGroup positionGroup)
         {
             Portfolio = portfolio;
-            Direction = direction;
             PositionGroup = positionGroup;
         }
 

@@ -102,13 +102,10 @@ namespace QuantConnect.Securities.Positions
         public static PositionGroupBuyingPower GetPositionGroupBuyingPower(
             this IPositionGroupBuyingPowerModel model,
             SecurityPortfolioManager portfolio,
-            IPositionGroup positionGroup,
-            OrderDirection direction
+            IPositionGroup positionGroup
             )
         {
-            return model.GetPositionGroupBuyingPower(new PositionGroupBuyingPowerParameters(
-                portfolio, positionGroup, direction
-            ));
+            return model.GetPositionGroupBuyingPower(new PositionGroupBuyingPowerParameters(portfolio, positionGroup));
         }
     }
 }

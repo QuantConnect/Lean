@@ -153,15 +153,6 @@ namespace QuantConnect.Securities.Positions
             //   3. Confirm we haven't exceeded maintenance margin limits via GetReservedBuyingPowerImpact's delta
 
             // 1. Confirm we meet initial margin requirements, accounting for buffer
-            var direction = parameters.Orders.Select(o =>
-            {
-                if (o.GroupOrderManager != null)
-                {
-                    return o.GroupOrderManager.Direction;
-                }
-                return o.Direction;
-            }).First();
-
             var deltaBuyingPowerArgs = new ReservedBuyingPowerImpactParameters(parameters.Portfolio, parameters.PositionGroup, parameters.Orders);
             var deltaBuyingPower = GetReservedBuyingPowerImpact(deltaBuyingPowerArgs).Delta;
 
@@ -171,7 +162,7 @@ namespace QuantConnect.Securities.Positions
                 return parameters.Sufficient();
             }
 
-            var availableBuyingPower = this.GetPositionGroupBuyingPower(parameters.Portfolio, parameters.PositionGroup, direction);
+            var availableBuyingPower = this.GetPositionGroupBuyingPower(parameters.Portfolio, parameters.PositionGroup);
 
             // 2. Confirm we pass position group specific checks
             var result = PassesPositionGroupSpecificBuyingPowerForOrderChecks(parameters, availableBuyingPower);
