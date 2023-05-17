@@ -97,7 +97,7 @@ namespace QuantConnect.Brokerages
                 }
             }
 
-            if (order.TimeInForce == TimeInForce.GoodTilCanceled)
+            if (order.Type == OrderType.Market && order.TimeInForce == TimeInForce.GoodTilCanceled)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "MarketOrderIsGtc", Messages.TradierBrokerageModel.MarketOrderIsGtc);
 

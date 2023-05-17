@@ -100,6 +100,19 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.IsTrue(_tradierBrokerageModel.CanSubmitOrder(security, order.Object, out var message));
         }
 
+        [Test]
+        public void CanSubmitOrderReturnsTrueQuantityIsValidIsLimitAndPriceAbove5()
+        {
+            var order = new Mock<Order>();
+            order.Object.Quantity = -100;
+            order.Setup(o => o.Type).Returns(OrderType.Limit);
+            var security = TestsHelpers.GetSecurity(securityType: SecurityType.Equity, symbol: "IBM", market: Market.USA);
+            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 1000));
+            security.Holdings.SetHoldings(6, 100);
+            order.Object.Symbol = security.Symbol;
+            Assert.IsTrue(_tradierBrokerageModel.CanSubmitOrder(security, order.Object, out var message));
+        }
+
         private Order GetOrder()
         {
             var order = new Mock<Order>();
