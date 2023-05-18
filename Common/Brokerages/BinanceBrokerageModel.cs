@@ -117,10 +117,12 @@ namespace QuantConnect.Brokerages
             // Binance API provides minimum order size in quote currency
             // and hence we have to check current order size using available price and order quantity
             var quantityIsValid = true;
+            decimal price;
             switch (order)
             {
                 case LimitOrder limitOrder:
                     quantityIsValid &= IsOrderSizeLargeEnough(limitOrder.LimitPrice);
+                    price = limitOrder.LimitPrice;
                     break;
                 case MarketOrder:
                     if (!security.HasData)
@@ -131,7 +133,7 @@ namespace QuantConnect.Brokerages
                         return false;
                     }
 
-                    var price = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
+                    price = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
                     quantityIsValid &= IsOrderSizeLargeEnough(price);
                     break;
                 case StopLimitOrder stopLimitOrder:
@@ -141,9 +143,16 @@ namespace QuantConnect.Brokerages
                             Messages.BinanceBrokerageModel.UnsupportedOrderTypeForSecurityType(order, security));
                         return false;
                     }
+                    price = stopLimitOrder.LimitPrice;
                     quantityIsValid &= IsOrderSizeLargeEnough(stopLimitOrder.LimitPrice);
+                    if (!quantityIsValid)
+                    {
+                        break;
+                    }
+
                     // Binance Trading UI requires this check too...
                     quantityIsValid &= IsOrderSizeLargeEnough(stopLimitOrder.StopPrice);
+                    price = stopLimitOrder.StopPrice;
                     break;
                 case StopMarketOrder:
                     // despite Binance API allows you to post STOP_LOSS and TAKE_PROFIT order types
@@ -164,7 +173,7 @@ namespace QuantConnect.Brokerages
             if (!quantityIsValid)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.InvalidOrderQuantity(security, order.Quantity));
+                    Messages.DefaultBrokerageModel.InvalidOrderSize(security, order.Quantity, price));
 
                 return false;
             }
