@@ -81,36 +81,6 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (security.Holdings.Quantity + order.Quantity < 0)
-            {
-                if (order.TimeInForce == TimeInForce.GoodTilCanceled)
-                {
-                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "ShortOrderIsGtc", Messages.TradierBrokerageModel.ShortOrderIsGtc);
-
-                    return false;
-                }
-                else if (security.Price < 5)
-                {
-                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "SellShortOrderLastPriceBelow5", Messages.TradierBrokerageModel.SellShortOrderLastPriceBelow5);
-
-                    return false;
-                }
-            }
-
-            if (order.Type == OrderType.Market && order.TimeInForce == TimeInForce.GoodTilCanceled)
-            {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "MarketOrderIsGtc", Messages.TradierBrokerageModel.MarketOrderIsGtc);
-
-                return false;
-            }
-
-            if (order.AbsoluteQuantity < 1 || order.AbsoluteQuantity > 10000000)
-            {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "IncorrectOrderQuantity", Messages.TradierBrokerageModel.IncorrectOrderQuantity);
-
-                return false;
-            }
-
             if (!CanExecuteOrder(security, order))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "ExtendedMarket",
