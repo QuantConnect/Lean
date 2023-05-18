@@ -286,8 +286,6 @@ namespace QuantConnect
         /// </summary>
         public static class OrderTicket
         {
-            public static string NullCancelRequest = "CancelRequest is null.";
-
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string GetFieldError(Orders.OrderTicket ticket, OrderField field)
             {

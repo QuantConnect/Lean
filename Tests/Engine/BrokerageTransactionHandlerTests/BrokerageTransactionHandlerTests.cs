@@ -640,6 +640,44 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         }
 
         [Test]
+        public void UpdateOrderRequestShouldFailForInvalidOrder()
+        {
+            // Initializes the transaction handler
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            using var broker = new BacktestingBrokerage(_algorithm);
+            transactionHandler.Initialize(_algorithm, broker, new BacktestingResultHandler());
+
+            // Creates a limit order
+            var security = _algorithm.Securities[_symbol];
+            _algorithm.Transactions.SetOrderProcessor(transactionHandler);
+
+            var orderTicket = _algorithm.MarketOrder(security.Symbol, 1);
+            Assert.AreEqual(orderTicket.Status, OrderStatus.Invalid);
+
+            orderTicket.UpdateQuantity(10);
+            Assert.AreEqual(orderTicket.Status, OrderStatus.Invalid);
+        }
+
+        [Test]
+        public void CancelOrderRequestShouldFailForInvalidOrder()
+        {
+            // Initializes the transaction handler
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            using var broker = new BacktestingBrokerage(_algorithm);
+            transactionHandler.Initialize(_algorithm, broker, new BacktestingResultHandler());
+
+            // Creates a limit order
+            var security = _algorithm.Securities[_symbol];
+            _algorithm.Transactions.SetOrderProcessor(transactionHandler);
+
+            var orderTicket = _algorithm.MarketOrder(security.Symbol, 1);
+            Assert.AreEqual(orderTicket.Status, OrderStatus.Invalid);
+
+            orderTicket.Cancel();
+            Assert.AreEqual(orderTicket.Status, OrderStatus.Invalid);
+        }
+
+        [Test]
         public void UpdateOrderRequestShouldFailForFilledOrder()
         {
             // Initializes the transaction handler
