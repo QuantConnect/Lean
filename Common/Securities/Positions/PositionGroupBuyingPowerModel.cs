@@ -212,7 +212,16 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         /// <param name="parameters">An object containing the portfolio, the position group and the target
         ///     signed buying power percentage</param>
-        /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
+        /// <returns>
+        /// Returns the maximum allowed market order quantity and if zero, also the reason.
+        ///
+        /// Since there is no sense of "short" or "long" on position groups with multiple positions,
+        /// the sign of the returned quantity will indicate the direction of the order regarding the original position group:
+        ///     - quantity &lt; 0: the order should be placed in the same direction as the original position group to increase it,
+        ///                        without changing the existing positions' signs.
+        ///     - quantity &gt; 0: the order should be placed in the opposite direction as the original position group to reduce it,
+        ///                        using each position's opposite sign.
+        /// </returns>
         public virtual GetMaximumLotsResult GetMaximumLotsForTargetBuyingPower(
             GetMaximumLotsForTargetBuyingPowerParameters parameters
             )
