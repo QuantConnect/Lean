@@ -30,7 +30,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     public class PortfolioConstructionModel : IPortfolioConstructionModel
     {
         private Func<DateTime, DateTime?> _rebalancingFunc;
-        private List<Symbol> _removedSymbols;
         private DateTime? _rebalancingTime;
         private bool _securityChanges;
 
@@ -103,14 +102,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
             var targets = new List<IPortfolioTarget>();
 
-            // Create flatten target for each security that was removed from the universe
-            if (_removedSymbols != null)
-            {
-                var universeDeselectionTargets = _removedSymbols.Select(symbol => new PortfolioTarget(symbol, 0));
-                targets.AddRange(universeDeselectionTargets);
-                _removedSymbols = null;
-            }
-
             var lastActiveInsights = PythonWrapper?.GetTargetInsights()
                                                  ?? GetTargetInsights();
 
@@ -162,8 +153,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
             _securityChanges = changes != SecurityChanges.None;
             // Get removed symbol and invalidate them in the insight collection
-            _removedSymbols = changes.RemovedSecurities.Select(x => x.Symbol).ToList();
-            algorithm?.Insights.Clear(_removedSymbols.ToArray());
+            var removedSymbols = changes.RemovedSecurities.Select(x => x.Symbol);
+            algorithm?.Insights.Expire(removedSymbols);
         }
 
         /// <summary>
