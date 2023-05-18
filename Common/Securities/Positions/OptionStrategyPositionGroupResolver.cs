@@ -109,8 +109,7 @@ namespace QuantConnect.Securities.Positions
                         //   will be selected as impacted group, so the group will contain the put positions
                         //   but not the call ones. In this case, we return an valid empty group because the
                         //   liquidation is happening.
-                        return new PositionGroup(new PositionGroupKey(
-                            new OptionStrategyPositionGroupBuyingPowerModel(null), new List<IPosition>()), 0m);
+                        return PositionGroup.Empty(new OptionStrategyPositionGroupBuyingPowerModel(null));
                     }
 
                     return null;
@@ -197,10 +196,8 @@ namespace QuantConnect.Securities.Positions
 
                 if (optionPositionCollection.Count == 0 && positionsByUnderlying.Any())
                 {
-                    var resultingPositions = new List<IPosition>();
-                    var key = new PositionGroupKey(new OptionStrategyPositionGroupBuyingPowerModel(null), resultingPositions);
                     // we could be liquidating there will be no position left!
-                    yield return new PositionGroup(key, 0, new Dictionary<Symbol, IPosition>());
+                    yield return PositionGroup.Empty(new OptionStrategyPositionGroupBuyingPowerModel(null));
                     yield break;
                 }
 
@@ -216,9 +213,15 @@ namespace QuantConnect.Securities.Positions
                         .Select(leg => leg.Quantity)
                         .GreatestCommonDivisor());
                     var positionsToGroup = matchedStrategy.OptionLegs
-                        .Select(optionLeg => (IPosition)new Position(optionLeg.Symbol, optionLeg.Quantity, Math.Abs(optionLeg.Quantity) / groupQuantity))
+                        .Select(optionLeg => (IPosition)new Position(optionLeg.Symbol, optionLeg.Quantity,
+                            // The unit quantity of each position is the ratio of the quantity of the leg to the group quantity.
+                            // e.g. a butterfly call strategy three legs: 10:-20:10, the unit quantity of each leg is 1:2:1
+                            Math.Abs(optionLeg.Quantity) / groupQuantity))
                         .Concat(matchedStrategy.UnderlyingLegs.Select(underlyingLeg => new Position(underlyingLeg.Symbol,
-                            underlyingLeg.Quantity * contractMultiplier, (Math.Abs(underlyingLeg.Quantity) * contractMultiplier / groupQuantity))))
+                            underlyingLeg.Quantity * contractMultiplier,
+                            // Same as for the option legs, but we need to multiply by the contract multiplier.
+                            // e.g. a covered call strategy has 100 shares of the underlying, per shorted contract
+                            (Math.Abs(underlyingLeg.Quantity) * contractMultiplier / groupQuantity))))
                         .ToArray();
 
                     yield return new PositionGroup(new OptionStrategyPositionGroupBuyingPowerModel(matchedStrategy), groupQuantity, positionsToGroup);

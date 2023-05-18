@@ -16,7 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Securities.Option;
+
 using QuantConnect.Util;
 
 namespace QuantConnect.Securities.Positions
@@ -69,20 +69,33 @@ namespace QuantConnect.Securities.Positions
         }
 
         /// <summary>
+        /// Determines whether the position group is empty
+        /// </summary>
+        /// <param name="positionGroup">The position group</param>
+        /// <returns>True if the position group is empty, that is, it has no positions, false otherwise</returns></returns>
+        public static bool IsEmpty(this IPositionGroup positionGroup)
+        {
+            return positionGroup.Count == 0;
+        }
+
+        /// <summary>
         /// Checks whether the provided groups are closing/reducing each other, that is, each of their positions are in opposite sides.
         /// </summary>
-        /// <param name="finalGroup">Source position group</param>
-        /// <param name="initialGroup">Target position group</param>
-        /// <returns>Whether the position groups close/reduce each other</returns>
+        /// <param name="finalGroup">The final position group that would result from a trade</param>
+        /// <param name="initialGroup">The initial position group before a trade</param>
+        /// <returns>Whether final resulting position group is a reduction of the initial one</returns>
         public static bool Closes(this IPositionGroup finalGroup, IPositionGroup initialGroup)
         {
-            if (finalGroup.Key != initialGroup.Key)
+            // Liquidating
+            if (finalGroup.IsEmpty())
             {
-                return false;
+                return true;
             }
 
             // Liquidating
-            if (finalGroup.Quantity == 0)
+            if (finalGroup.Quantity == 0 &&
+                // The initial group includes all positions being liquidated
+                finalGroup.All(position => initialGroup.TryGetPosition(position.Symbol, out _)))
             {
                 return true;
             }

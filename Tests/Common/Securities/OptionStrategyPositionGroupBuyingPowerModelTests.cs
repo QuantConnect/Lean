@@ -137,7 +137,7 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 20, -100 - 20, true), // 20 to short
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 20, -1000 - 20, true),  // 20 to greater short
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -20, (1000000 / 1000) - -20, true),   // -20 to max long
-            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -20, (1000000 / 1000 + 1) - -20, false).Explicit(),   // -20 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -20, (1000000 / 1000 + 1) - -20, false),   // -20 to max long + 1
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -20, 20, true), // -20 to 0
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -20, -100 - -20, true),    // -20 to short
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -20, -1000 - -20, true),  // -20 to greater short
@@ -150,7 +150,7 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 20, 1000 - 20, true), // 20 to greater long
             new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 20, -20, true), // 20 to 0
             new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 20, -(1000000 / 1000) - 20, true), // 20 to max short
-            new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 20, -(1000000 / 1000 + 1) - 20, false).Explicit(),  // 20 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 20, -(1000000 / 1000 + 1) - 20, false),  // 20 to max short + 1
             new TestCaseData(OptionStrategyDefinitions.BearPutSpread, -20, 100 - -20, true),   // -20 to long
             new TestCaseData(OptionStrategyDefinitions.BearPutSpread, -20, 1000 - -20, true),   // -20 to greater long
             new TestCaseData(OptionStrategyDefinitions.BearPutSpread, -20, 20, true), // -20 to 0
@@ -165,7 +165,7 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.BullCallSpread, 20, 1000 - 20, true), // 20 to greater long
             new TestCaseData(OptionStrategyDefinitions.BullCallSpread, 20, -20, true), // 20 to 0
             new TestCaseData(OptionStrategyDefinitions.BullCallSpread, 20, -(1000000 / 1000) - 20, true), // 20 to max short
-            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, 20, -(1000000 / 1000 + 1) - 20, false).Explicit(),  // 20 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, 20, -(1000000 / 1000 + 1) - 20, false),  // 20 to max short + 1
             new TestCaseData(OptionStrategyDefinitions.BullCallSpread, -20, 100 - -20, true),   // -20 to long
             new TestCaseData(OptionStrategyDefinitions.BullCallSpread, -20, 1000 - -20, true),   // -20 to greater long
             new TestCaseData(OptionStrategyDefinitions.BullCallSpread, -20, 20, true), // -20 to 0
@@ -182,7 +182,7 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.BullPutSpread, 20, -100 - 20, true), // 20 to short
             new TestCaseData(OptionStrategyDefinitions.BullPutSpread, 20, -1000 - 20, true),  // 20 to greater short
             new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -20, (1000000 / 1000) - -20, true),   // -20 to max long
-            new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -20, (1000000 / 1000 + 1) - -20, false).Explicit(),   // -20 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -20, (1000000 / 1000 + 1) - -20, false),   // -20 to max long + 1
             new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -20, 20, true), // -20 to 0
             new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -20, -100 - -20, true),    // -20 to short
             new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -20, -1000 - -20, true),  // -20 to greater short
@@ -407,7 +407,7 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.IronCondor, 20, -100 - 20, true), // 20 to short
             new TestCaseData(OptionStrategyDefinitions.IronCondor, 20, -1000 - 20, true),  // 20 to greater short
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -20, (1000000 / 1000) - -20, true),   // -20 to max long
-            new TestCaseData(OptionStrategyDefinitions.IronCondor, -20, (1000000 / 1000 + 1) - -20, false).Explicit(),   // -20 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.IronCondor, -20, (1000000 / 1000 + 1) - -20, false),   // -20 to max long + 1
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -20, 20, true), // -20 to 0
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -20, -100 - -20, true),    // -20 to short
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -20, -1000 - -20, true),  // -20 to greater short
@@ -540,10 +540,6 @@ namespace QuantConnect.Tests.Common.Securities
             var orders = GetStrategyOrders(quantity);
 
             var positionGroup = _portfolio.Positions.CreatePositionGroup(orders);
-
-            var deltaBuyingPowerArgs = new ReservedBuyingPowerImpactParameters(_portfolio, positionGroup, orders);
-            var deltaBuyingPower = positionGroup.BuyingPowerModel.GetReservedBuyingPowerImpact(deltaBuyingPowerArgs).Delta;
-            Assert.Less(deltaBuyingPower, 0);
 
             var hasSufficientBuyingPowerResult = positionGroup.BuyingPowerModel.HasSufficientBuyingPowerForOrder(
                 new HasSufficientPositionGroupBuyingPowerForOrderParameters(_portfolio, positionGroup, orders));
@@ -1148,19 +1144,19 @@ namespace QuantConnect.Tests.Common.Securities
             // Going from 10 to 9.
             // Expected buying power for reducing, closing or going short:
             // (1000000 initial cash - 205000 used margin) margin remaining + 205000 used margin + 205000 initial margin requirement
-            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 10, -1, (1000000m - 205000m) + 205000m + 205000m).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 10, -1, (1000000m - 205000m) + 205000m + 205000m),
             // Going from 10 to 0.
-            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 10, -10, (1000000m - 205000m) + 205000m + 205000m).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 10, -10, (1000000m - 205000m) + 205000m + 205000m),
             // Going from 10 to -10.
-            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 10, -20, (1000000m - 205000m) + 205000m + 205000m).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 10, -20, (1000000m - 205000m) + 205000m + 205000m),
             // Expected buying power for going shorter:
             // (1000000 initial cash - 166000 used margin) margin remaining
             new TestCaseData(OptionStrategyDefinitions.CoveredCall, -10, -1, 1000000m - 166000m),
             // Expected buying power for reducing, closing or going long:
             // (1000000 initial cash - 166000 used margin) margin remaining + 166000 used margin + 166000 initial margin requirement
-            new TestCaseData(OptionStrategyDefinitions.CoveredCall, -10, 1, (1000000m - 166000m) + 166000m + 112000m).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.CoveredCall, -10, 10, (1000000m - 166000m) + 166000m + 112000m).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.CoveredCall, -10, 20, (1000000m - 166000m) + 166000m + 112000m).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, -10, 1, (1000000m - 166000m) + 166000m + 112000m),
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, -10, 10, (1000000m - 166000m) + 166000m + 112000m),
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, -10, 20, (1000000m - 166000m) + 166000m + 112000m),
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCall, 10, -1, 1000000m - 166000m),
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCall, 10, 1, (1000000m - 166000m) + 166000m + 112000m).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCall, 10, 10, (1000000m - 166000m) + 166000m + 112000m).Explicit(),
@@ -1170,12 +1166,12 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCall, -10, -10, (1000000m - 205000m) + 205000m + 205000m).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCall, -10, -20, (1000000m - 205000m) + 205000m + 205000m).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, 10, 1, 1000000m - 205000m),
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 10, -1, (1000000m - 205000m) + 205000m + 205000m).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 10, -10, (1000000m - 205000m) + 205000m + 205000m).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 10, -1, (1000000m - 205000m) + 205000m + 205000m),
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 10, -10, (1000000m - 205000m) + 205000m + 205000m),
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, 10, -20, (1000000m - 205000m) + 205000m + 205000m),
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, -10, -1, 1000000m - 205000m),
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -10, 1, (1000000m - 205000m) + 205000m + 205000m).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -10, 10, (1000000m - 205000m) + 205000m + 205000m).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -10, 1, (1000000m - 205000m) + 205000m + 205000m),
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -10, 10, (1000000m - 205000m) + 205000m + 205000m),
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, -10, 20, (1000000m - 205000m) + 205000m + 205000m),
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, 10, -1, 1000000m - 205000m),
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, 10, 1, (1000000m - 205000m) + 205000m + 205000m).Explicit(),
@@ -1186,45 +1182,45 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -10, -10, (1000000m - 205000m) + 205000m + 205000m).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -10, -20, (1000000m - 205000m) + 205000m + 205000m),
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, 1, 1000000m - 10000m),
-            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, -1, (1000000m - 10000m) + 10000m + 10000m).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, -10, (1000000m - 10000m) + 10000m + 10000m).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, -20, (1000000m - 10000m) + 10000m + 10000m).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, -1, (1000000m - 10000m) + 10000m + 10000m),
+            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, -10, (1000000m - 10000m) + 10000m + 10000m),
+            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, -20, (1000000m - 10000m) + 10000m + 10000m),
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -10, -1, 1000000m - 0),
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -10, 1, (1000000m - 0) + 0 + 0),
-            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -10, 10, (1000000m - 0) + 0 + 0).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -10, 20, (1000000m - 0) + 0 + 0).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -10, 10, (1000000m - 0) + 0 + 0),
+            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -10, 20, (1000000m - 0) + 0 + 0),
             new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 10, 1, 1000000m - 0),
             new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 10, -1, (1000000m - 0) + 0 + 0),
-            new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 10, -10, (1000000m - 0) + 0 + 0).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 10, -20, (1000000m - 0) + 0 + 0).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 10, -10, (1000000m - 0) + 0 + 0),
+            new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 10, -20, (1000000m - 0) + 0 + 0),
             new TestCaseData(OptionStrategyDefinitions.BearPutSpread, -10, -1, 1000000m - 10000m),
-            new TestCaseData(OptionStrategyDefinitions.BearPutSpread, -10, 1, (1000000m - 10000m) + 10000m + 10000m).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BearPutSpread, -10, 10, (1000000m - 10000m) + 10000m + 10000m).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BearPutSpread, -10, 20, (1000000m - 10000m) + 10000m + 10000m).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.BearPutSpread, -10, 1, (1000000m - 10000m) + 10000m + 10000m),
+            new TestCaseData(OptionStrategyDefinitions.BearPutSpread, -10, 10, (1000000m - 10000m) + 10000m + 10000m),
+            new TestCaseData(OptionStrategyDefinitions.BearPutSpread, -10, 20, (1000000m - 10000m) + 10000m + 10000m),
             new TestCaseData(OptionStrategyDefinitions.BullCallSpread, 10, 1, 1000000m - 0),
             new TestCaseData(OptionStrategyDefinitions.BullCallSpread, 10, -1, (1000000m - 0) + 0 + 0),
-            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, 10, -10, (1000000m - 0) + 0 + 0).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, 10, -20, (1000000m - 0) + 0 + 0).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, 10, -10, (1000000m - 0) + 0 + 0),
+            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, 10, -20, (1000000m - 0) + 0 + 0),
             new TestCaseData(OptionStrategyDefinitions.BullCallSpread, -10, -1, 1000000m - 10000m),
-            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, -10, 1, (1000000m - 10000m) + 10000m + 10000m).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, -10, 10, (1000000m - 10000m) + 10000m + 10000m).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, -10, 20, (1000000m - 10000m) + 10000m + 10000m).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, -10, 1, (1000000m - 10000m) + 10000m + 10000m),
+            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, -10, 10, (1000000m - 10000m) + 10000m + 10000m),
+            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, -10, 20, (1000000m - 10000m) + 10000m + 10000m),
             new TestCaseData(OptionStrategyDefinitions.BullPutSpread, 10, 1, 1000000m - 10000m),
-            new TestCaseData(OptionStrategyDefinitions.BullPutSpread, 10, -1, (1000000m - 10000m) + 10000m + 10000m).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BullPutSpread, 10, -10, (1000000m - 10000m) + 10000m + 10000m).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BullPutSpread, 10, -20, (1000000m - 10000m) + 10000m + 10000m).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.BullPutSpread, 10, -1, (1000000m - 10000m) + 10000m + 10000m),
+            new TestCaseData(OptionStrategyDefinitions.BullPutSpread, 10, -10, (1000000m - 10000m) + 10000m + 10000m),
+            new TestCaseData(OptionStrategyDefinitions.BullPutSpread, 10, -20, (1000000m - 10000m) + 10000m + 10000m),
             new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -10, -1, 1000000m - 0),
             new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -10, 1, (1000000m - 0) + 0 + 0),
-            new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -10, 10, (1000000m - 0) + 0 + 0).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -10, 20, (1000000m - 0) + 0 + 0).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -10, 10, (1000000m - 0) + 0 + 0),
+            new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -10, 20, (1000000m - 0) + 0 + 0),
             new TestCaseData(OptionStrategyDefinitions.Straddle, 10, 1, 1000000m - 112020m),
-            new TestCaseData(OptionStrategyDefinitions.Straddle, 10, -1, (1000000m - 112020m) + 112020m + 112020m).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.Straddle, 10, -10, (1000000m - 112020m) + 112020m + 112020m).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.Straddle, 10, -20, (1000000m - 112020m) + 112020m + 112020m).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.Straddle, 10, -1, (1000000m - 112020m) + 112020m + 112020m),
+            new TestCaseData(OptionStrategyDefinitions.Straddle, 10, -10, (1000000m - 112020m) + 112020m + 112020m),
+            new TestCaseData(OptionStrategyDefinitions.Straddle, 10, -20, (1000000m - 112020m) + 112020m + 112020m),
             new TestCaseData(OptionStrategyDefinitions.Straddle, -10, -1, 1000000m - 235020m),
-            new TestCaseData(OptionStrategyDefinitions.Straddle, -10, 1, (1000000m - 235020m) + 235020m + 235020m).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.Straddle, -10, 10, (1000000m - 235020m) + 235020m + 235020m).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.Straddle, -10, 20, (1000000m - 235020m) + 235020m + 235020m).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.Straddle, -10, 1, (1000000m - 235020m) + 235020m + 235020m),
+            new TestCaseData(OptionStrategyDefinitions.Straddle, -10, 10, (1000000m - 235020m) + 235020m + 235020m),
+            new TestCaseData(OptionStrategyDefinitions.Straddle, -10, 20, (1000000m - 235020m) + 235020m + 235020m),
             new TestCaseData(OptionStrategyDefinitions.ShortStraddle, 10, -1, 1000000m - 235020m),
             new TestCaseData(OptionStrategyDefinitions.ShortStraddle, 10, 1, (1000000m - 235020m) + 235020m + 235020m).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.ShortStraddle, 10, 10, (1000000m - 235020m) + 235020m + 235020m).Explicit(),
@@ -1234,13 +1230,13 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ShortStraddle, -10, -10, (1000000m - 112020m) + 112020m + 112020m).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.ShortStraddle, -10, -20, (1000000m - 112020m) + 112020m + 112020m).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.Strangle, 10, 1, 1000000m - 102020m),
-            new TestCaseData(OptionStrategyDefinitions.Strangle, 10, -1, (1000000m - 102020m) + 102020m + 102020m).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.Strangle, 10, -10, (1000000m - 102020m) + 102020m + 102020m).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.Strangle, 10, -20, (1000000m - 102020m) + 102020m + 102020m).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.Strangle, 10, -1, (1000000m - 102020m) + 102020m + 102020m),
+            new TestCaseData(OptionStrategyDefinitions.Strangle, 10, -10, (1000000m - 102020m) + 102020m + 102020m),
+            new TestCaseData(OptionStrategyDefinitions.Strangle, 10, -20, (1000000m - 102020m) + 102020m + 102020m),
             new TestCaseData(OptionStrategyDefinitions.Strangle, -10, -1, 1000000m - 225020m),
-            new TestCaseData(OptionStrategyDefinitions.Strangle, -10, 1, (1000000m - 225020m) + 225020m + 225020m).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.Strangle, -10, 10, (1000000m - 225020m) + 225020m + 225020m).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.Strangle, -10, 20, (1000000m - 225020m) + 225020m + 225020m).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.Strangle, -10, 1, (1000000m - 225020m) + 225020m + 225020m),
+            new TestCaseData(OptionStrategyDefinitions.Strangle, -10, 10, (1000000m - 225020m) + 225020m + 225020m),
+            new TestCaseData(OptionStrategyDefinitions.Strangle, -10, 20, (1000000m - 225020m) + 225020m + 225020m),
             new TestCaseData(OptionStrategyDefinitions.ShortStrangle, 10, -1, 1000000m - 225020m),
             new TestCaseData(OptionStrategyDefinitions.ShortStrangle, 10, 1, (1000000m - 225020m) + 225020m + 225020m).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.ShortStrangle, 10, 10, (1000000m - 225020m) + 225020m + 225020m).Explicit(),
@@ -1254,12 +1250,12 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ButterflyCall, 10, -10, (1000000m - 0m) + 0m + 0),
             new TestCaseData(OptionStrategyDefinitions.ButterflyCall, 10, -20, (1000000m - 0m) + 0m + 0),
             new TestCaseData(OptionStrategyDefinitions.ButterflyCall, -10, -1, 1000000m - 10000m),
-            new TestCaseData(OptionStrategyDefinitions.ButterflyCall, -10, 1, (1000000m - 10000m) + 10000m + 10000m).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.ButterflyCall, -10, 10, (1000000m - 10000m) + 10000m + 10000m).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ButterflyCall, -10, 1, (1000000m - 10000m) + 10000m + 10000m),
+            new TestCaseData(OptionStrategyDefinitions.ButterflyCall, -10, 10, (1000000m - 10000m) + 10000m + 10000m),
             new TestCaseData(OptionStrategyDefinitions.ButterflyCall, -10, 20, (1000000m - 10000m) + 10000m + 10000m),
             new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, 10, 1, 1000000m - 10000m),
-            new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, 10, -1, (1000000m - 10000m) + 10000m + 10000m).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, 10, -10, (1000000m - 10000m) + 10000m + 10000m).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, 10, -1, (1000000m - 10000m) + 10000m + 10000m),
+            new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, 10, -10, (1000000m - 10000m) + 10000m + 10000m),
             new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, 10, -20, (1000000m - 10000m) + 10000m + 10000m),
             new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, -10, -1, 1000000m - 0),
             new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, -10, 1, (1000000m - 0) + 0 + 0),
@@ -1270,12 +1266,12 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ButterflyPut, 10, -10, (1000000m - 0) + 0 + 0),
             new TestCaseData(OptionStrategyDefinitions.ButterflyPut, 10, -20, (1000000m - 0) + 0 + 0),
             new TestCaseData(OptionStrategyDefinitions.ButterflyPut, -10, -1, 1000000m - 10000m),
-            new TestCaseData(OptionStrategyDefinitions.ButterflyPut, -10, 1, (1000000m - 10000m) + 10000m + 10000m).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.ButterflyPut, -10, 10, (1000000m - 10000m) + 10000m + 10000m).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ButterflyPut, -10, 1, (1000000m - 10000m) + 10000m + 10000m),
+            new TestCaseData(OptionStrategyDefinitions.ButterflyPut, -10, 10, (1000000m - 10000m) + 10000m + 10000m),
             new TestCaseData(OptionStrategyDefinitions.ButterflyPut, -10, 20, (1000000m - 10000m) + 10000m + 10000m),
             new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, 10, 1, 1000000m - 10000m),
-            new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, 10, -1, (1000000m - 10000m) + 10000m + 10000m).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, 10, -10, (1000000m - 10000m) + 10000m + 10000m).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, 10, -1, (1000000m - 10000m) + 10000m + 10000m),
+            new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, 10, -10, (1000000m - 10000m) + 10000m + 10000m),
             new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, 10, -20, (1000000m - 10000m) + 10000m + 10000m),
             new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, -10, -1, 1000000m - 0),
             new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, -10, 1, (1000000m - 0) + 0 + 0),
@@ -1283,11 +1279,11 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, -10, 20, (1000000m - 0) + 0 + 0),
             new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 10, 1, 1000000m - 0),
             new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 10, -1, (1000000m - 0) + 0 + 0),
-            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 10, -10, (1000000m - 0) + 0 + 0).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 10, -10, (1000000m - 0) + 0 + 0),
             new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 10, -20, (1000000m - 0) + 0 + 0),
             new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -10, -1, 1000000m - 0),
             new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -10, 1, (1000000m - 0) + 0 + 0),
-            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -10, 10, (1000000m - 0) + 0 + 0).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -10, 10, (1000000m - 0) + 0 + 0),
             new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -10, 20, (1000000m - 0) + 0 + 0),
             new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, -10, 1, 1000000m - 0),
             new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, -10, -1, (1000000m - 0) + 0 + 0),
@@ -1299,11 +1295,11 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, 10, 20, (1000000m - 0) + 0 + 0),
             new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, 10, 1, 1000000m - 0),
             new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, 10, -1, (1000000m - 0) + 0 + 0),
-            new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, 10, -10, (1000000m - 0) + 0 + 0).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, 10, -10, (1000000m - 0) + 0 + 0),
             new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, 10, -20, (1000000m - 0) + 0 + 0),
             new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, -10, -1, 1000000m - 0),
             new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, -10, 1, (1000000m - 0) + 0 + 0),
-            new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, -10, 10, (1000000m - 0) + 0 + 0).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, -10, 10, (1000000m - 0) + 0 + 0),
             new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, -10, 20, (1000000m - 0) + 0 + 0),
             new TestCaseData(OptionStrategyDefinitions.ShortPutCalendarSpread, 10, -1, 1000000m - 0),
             new TestCaseData(OptionStrategyDefinitions.ShortPutCalendarSpread, 10, 1, (1000000m - 0) + 0 + 0),
@@ -1314,13 +1310,13 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ShortPutCalendarSpread, -10, -10, (1000000m - 0) + 0 + 0).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.ShortPutCalendarSpread, -10, -20, (1000000m - 0) + 0 + 0),
             new TestCaseData(OptionStrategyDefinitions.IronCondor, 10, 1, 1000000m - 10000m),
-            new TestCaseData(OptionStrategyDefinitions.IronCondor, 10, -1, (1000000m - 10000m) + 10000m + 10000m).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.IronCondor, 10, -10, (1000000m - 10000m) + 10000m + 10000m).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.IronCondor, 10, -20, (1000000m - 10000m) + 10000m + 10000m).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.IronCondor, 10, -1, (1000000m - 10000m) + 10000m + 10000m),
+            new TestCaseData(OptionStrategyDefinitions.IronCondor, 10, -10, (1000000m - 10000m) + 10000m + 10000m),
+            new TestCaseData(OptionStrategyDefinitions.IronCondor, 10, -20, (1000000m - 10000m) + 10000m + 10000m),
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, -1, 1000000m - 0),
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, 1, (1000000m - 0) + 0 + 0),
-            new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, 10, (1000000m - 0) + 0 + 0).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, 20, (1000000m - 0) + 0 + 0).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, 10, (1000000m - 0) + 0 + 0),
+            new TestCaseData(OptionStrategyDefinitions.IronCondor, -10, 20, (1000000m - 0) + 0 + 0),
         };
 
         [TestCaseSource(nameof(PositionGroupBuyingPowerTestCases))]
