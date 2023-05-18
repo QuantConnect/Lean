@@ -576,21 +576,24 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(ConsolidatingData)]
         public void RegisterIndicator(Symbol symbol, PyObject indicator, PyObject pyObject, PyObject selector = null)
         {
-            try
+            // First check if this is just a regular IDataConsolidator
+            IDataConsolidator dataConsolidator;
+            PythonConsolidator customPythonConsolidator = null;
+            if (pyObject.TryConvert(out dataConsolidator) || Extensions.TryConvert<PythonConsolidator>(pyObject, out customPythonConsolidator, allowPythonDerivative: true))
             {
-                // First check if this is just a regular IDataConsolidator
-                IDataConsolidator dataConsolidator;
-                if (!pyObject.TryConvert(out dataConsolidator))
+                if (customPythonConsolidator != null)
                 {
-                    // If not then try and wrap it as a custom Python consolidator
                     dataConsolidator = new DataConsolidatorPythonWrapper(pyObject);
                 }
-                RegisterIndicator(symbol, indicator, dataConsolidator, selector);
-                return;
-            }
-            catch
-            {
 
+                try
+                {
+                    RegisterIndicator(symbol, indicator, dataConsolidator, selector);
+                    return;
+                }catch (Exception e)
+                {
+                    throw new ArgumentException("An exception was thrown while trying to register the indicator: ", e);
+                }
             }
 
             // Finally, since above didn't work, just try it as a timespan
@@ -606,9 +609,9 @@ namespace QuantConnect.Algorithm
                         RegisterIndicator(symbol, indicator, timeSpan, selector);
                     }
                 }
-                catch
+                catch (Exception e)
                 {
-                    throw new ArgumentException("Invalid third argument, should be either a valid consolidator or timedelta object");
+                    throw new ArgumentException("Invalid third argument, should be either a valid consolidator or timedelta object. The following exception was thrown: ", e);
                 }
             }
         }
