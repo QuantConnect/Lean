@@ -13,12 +13,15 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 using QuantConnect.Data;
+using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
+using QuantConnect.Securities.Positions;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -68,6 +71,23 @@ namespace QuantConnect.Algorithm.CSharp
 
                     _optionStrategy = OptionStrategies.Straddle(_optionSymbol, strike, expiry);
                     Order(_optionStrategy, OriginalQuantity);
+                }
+            }
+        }
+
+        public override void OnMarginCall(List<SubmitOrderRequest> requests)
+        {
+            base.OnMarginCall(requests);
+
+            var positionGroup = Portfolio.PositionGroups.Single();
+            foreach (var request in requests)
+            {
+                var position = positionGroup.GetPosition(request.Symbol);
+                // We expect the margin call to be for one unit of the strategy in the opposite direction
+                var expectedQuantity = -Math.Sign(position.Quantity) * 1;
+                if (request.Quantity != expectedQuantity)
+                {
+                    throw new Exception($"Expected margin call order quantity to be {expectedQuantity} but was {request.Quantity}");
                 }
             }
         }
