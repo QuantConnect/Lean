@@ -81,7 +81,7 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.CoveredCall, -20, 50 - -20, true).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.CoveredCall, -20, 60 - -20, false),
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, 0, 80, true).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 0, 90, false),
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 0, 1000000 / 12000 + 1, false),
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, 0, -90, true).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, 0, -100, false),
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, 20, 80 - 20, true),
@@ -92,8 +92,8 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, -20, -90 - -20, true),
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, -20, -100 - -20, false).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, -20, 20, true),
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -20, 80 - -20, true),
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -20, 90 - -20, false),
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -20, 1000000 / 12000 - -20, true),
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -20, 1000000 / 12000 + 1 - -20, false),
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 0, 1000, true),
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 0, 1010, false),
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 0, -980, true),
@@ -441,10 +441,10 @@ namespace QuantConnect.Tests.Common.Securities
         private static readonly TestCaseData[] InitialMarginRequirementsTestCases = new[]
         {
             // OptionStrategyDefinition, initialHoldingsQuantity, expectedInitialMarginRequirement
-            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 1, 10000m).Explicit(),          // IB:  10282.15
-            new TestCaseData(OptionStrategyDefinitions.CoveredCall, -1, 11200m),                    // IB:  12338.58
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 1, 12000m).Explicit(),           // IB:  12331.38
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -1, 10000m).Explicit(),          // IB:  10276.15
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 1, 19000m),                     // IB:  19325
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, -1, 12000m),                    // IB:  12338.58
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 1, 12000m),                      // IB:  12331.38
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -1, 10000m),                     // IB:  10276.15
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 1, 0m).Explicit(),           // IB:  0
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -1, 0m),                     // IB:  0
             new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 1, 0m),                       // IB:  0
@@ -471,6 +471,10 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, -1, 3000m).Explicit(),    // IB:  3001.6
             new TestCaseData(OptionStrategyDefinitions.IronCondor, 1, 1000m),                       // IB:  1017.62
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -1, 0m),                         // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCall, 1, 12000m),                  // IB:  inverted covered call
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCall, -1, 19000m),                 // IB:  inverted covered call
+            new TestCaseData(OptionStrategyDefinitions.ProtectivePut, 1, 10000m),                   // IB:  inverted covered put
+            new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -1, 12000m),                  // IB:  inverted covered put
         };
 
         [TestCaseSource(nameof(InitialMarginRequirementsTestCases))]
@@ -482,7 +486,28 @@ namespace QuantConnect.Tests.Common.Securities
             var initialMarginRequirement = positionGroup.BuyingPowerModel.GetInitialMarginRequirement(
                 new PositionGroupInitialMarginParameters(_portfolio, positionGroup));
 
-            Assert.AreEqual(expectedInitialMarginRequirement, initialMarginRequirement.Value);
+            Assert.AreEqual((double)expectedInitialMarginRequirement, (double)initialMarginRequirement.Value, (double)(0.2m * expectedInitialMarginRequirement));
+        }
+
+        private static readonly TestCaseData[] CoveredCallInitialMarginRequirementsTestCases = new[]
+        {
+            // OptionStrategyDefinition, initialHoldingsQuantity, expectedInitialMarginRequirement, option strike
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 2, 53700m, 200),                     // IB: 53,714
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 2, 38000m, 300),                     // IB: 38,756
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 2, 23000m, 400),                     // IB: 23,752
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 2, 21000m, 500),                     // IB: 20,939
+        };
+
+        [TestCaseSource(nameof(CoveredCallInitialMarginRequirementsTestCases))]
+        public void CoveredCallInitialMarginRequirement(OptionStrategyDefinition optionStrategyDefinition, int quantity,
+            decimal expectedInitialMarginRequirement, int strike)
+        {
+            var positionGroup = SetUpOptionStrategy(optionStrategyDefinition, quantity, strike);
+
+            var initialMarginRequirement = positionGroup.BuyingPowerModel.GetInitialMarginRequirement(
+                new PositionGroupInitialMarginParameters(_portfolio, positionGroup));
+
+            Assert.AreEqual((double)expectedInitialMarginRequirement, (double)initialMarginRequirement.Value, (double)(0.2m * expectedInitialMarginRequirement));
         }
 
         /// <summary>
@@ -497,10 +522,10 @@ namespace QuantConnect.Tests.Common.Securities
         private static readonly TestCaseData[] MaintenanceMarginTestCases = new[]
         {
             // OptionStrategyDefinition, initialHoldingsQuantity, expectedMaintenanceMargin
-            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 1, 10000m).Explicit(),          // IB:  10282.15
-            new TestCaseData(OptionStrategyDefinitions.CoveredCall, -1, 3000m).Explicit(),          // IB:  3000
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 1, 3000m).Explicit(),            // IB:  3000
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -1, 1000m).Explicit(),           // IB:  10276.15
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 1, 19000m),                     // IB:  19325
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, -1, 3000m),                     // IB:  3000
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 1, 12000m),                      // IB:  12000m
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -1, 10000m),                     // IB:  10276
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 1, 0m).Explicit(),           // IB:  0
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -1, 0m),                     // IB:  0
             new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 1, 0m),                       // IB:  0
@@ -527,6 +552,10 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, -1, 3000m).Explicit(),    // IB:  3001.6
             new TestCaseData(OptionStrategyDefinitions.IronCondor, 1, 1000m),                       // IB:  1017.62
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -1, 0m),                         // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCall, 1, 3000m),                   // IB:  inverted covered call
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCall, -1, 19000m),                 // IB:  inverted covered call
+            new TestCaseData(OptionStrategyDefinitions.ProtectivePut, 1, 10000m),                   // IB:  inverted covered Put
+            new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -1, 12000m),                  // IB:  inverted covered Put
         };
 
         [TestCaseSource(nameof(MaintenanceMarginTestCases))]
@@ -537,7 +566,7 @@ namespace QuantConnect.Tests.Common.Securities
             var maintenanceMargin = positionGroup.BuyingPowerModel.GetMaintenanceMargin(
                 new PositionGroupMaintenanceMarginParameters(_portfolio, positionGroup));
 
-            Assert.AreEqual(expectedMaintenanceMargin, maintenanceMargin.Value);
+            Assert.AreEqual((double)expectedMaintenanceMargin, (double)maintenanceMargin.Value, (double)(0.2m * expectedMaintenanceMargin));
         }
 
         // option strategy definition, initial position quantity, final position quantity
@@ -1167,7 +1196,7 @@ namespace QuantConnect.Tests.Common.Securities
                 groupOrderManager: groupOrderManager))).ToList();
         }
 
-        private IPositionGroup SetUpOptionStrategy(OptionStrategyDefinition optionStrategyDefinition, int initialHoldingsQuantity)
+        private IPositionGroup SetUpOptionStrategy(OptionStrategyDefinition optionStrategyDefinition, int initialHoldingsQuantity, int? strike = null)
         {
             if (initialHoldingsQuantity == 0)
             {
@@ -1193,8 +1222,15 @@ namespace QuantConnect.Tests.Common.Securities
             spyMay19_320Call.SetMarketPrice(new Tick { Value = 92m });
             var spyMay19_330Call = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 330, may192023));
             spyMay19_330Call.SetMarketPrice(new Tick { Value = 82m });
+
+            var spyMay17_200Call = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 200, may172023));
+            spyMay17_200Call.SetMarketPrice(new Tick { Value = 220m });
+            var spyMay17_400Call = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 400, may172023));
+            spyMay17_400Call.SetMarketPrice(new Tick { Value = 28m });
             var spyMay17_300Call = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 300, may172023));
             spyMay17_300Call.SetMarketPrice(new Tick { Value = 112m });
+            var spyMay17_500Call = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 500, may172023));
+            spyMay17_500Call.SetMarketPrice(new Tick { Value = 0.04m });
 
             var spyMay19_300Put = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Put, 300, may192023));
             spyMay19_300Put.SetMarketPrice(new Tick { Value = 0.02m });
@@ -1206,18 +1242,70 @@ namespace QuantConnect.Tests.Common.Securities
             spyMay17_300Put.SetMarketPrice(new Tick { Value = 0.01m });
 
             _equity.SetMarketPrice(new Tick { Value = 410m });
+            _equity.SetLeverage(4);
 
             var expectedPositionGroupBPMStrategy = optionStrategyDefinition.Name;
 
             if (optionStrategyDefinition.Name == OptionStrategyDefinitions.CoveredCall.Name)
             {
                 _equity.Holdings.SetHoldings(_equity.Price, initialHoldingsQuantity * _callOption.ContractMultiplier);
-                spyMay19_300Call.Holdings.SetHoldings(spyMay19_300Call.Price, -initialHoldingsQuantity);
+
+                var optionContract = spyMay19_300Call;
+                if(strike.HasValue)
+                {
+                    switch (strike.Value)
+                    {
+                        case 200:
+                            optionContract = spyMay17_200Call;
+                            break;
+                        case 300:
+                            optionContract = spyMay17_300Call;
+                            break;
+                        case 400:
+                            optionContract = spyMay17_400Call;
+                            break;
+                        case 500:
+                            optionContract = spyMay17_500Call;
+                            break;
+                    }
+                }
+
+                optionContract.Holdings.SetHoldings(optionContract.Price, -initialHoldingsQuantity);
+
+                if (initialHoldingsQuantity < 0)
+                {
+                    expectedPositionGroupBPMStrategy = OptionStrategyDefinitions.ProtectiveCall.Name;
+                }
+            }
+            else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.ProtectiveCall.Name)
+            {
+                _equity.Holdings.SetHoldings(_equity.Price, -initialHoldingsQuantity * _callOption.ContractMultiplier);
+                spyMay19_300Call.Holdings.SetHoldings(spyMay19_300Call.Price, initialHoldingsQuantity);
+
+                if (initialHoldingsQuantity < 0)
+                {
+                    expectedPositionGroupBPMStrategy = OptionStrategyDefinitions.CoveredCall.Name;
+                }
             }
             else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.CoveredPut.Name)
             {
                 _equity.Holdings.SetHoldings(_equity.Price, -initialHoldingsQuantity * _putOption.ContractMultiplier);
                 spyMay19_300Put.Holdings.SetHoldings(spyMay19_300Put.Price, -initialHoldingsQuantity);
+
+                if (initialHoldingsQuantity < 0)
+                {
+                    expectedPositionGroupBPMStrategy = OptionStrategyDefinitions.ProtectivePut.Name;
+                }
+            }
+            else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.ProtectivePut.Name)
+            {
+                _equity.Holdings.SetHoldings(_equity.Price, initialHoldingsQuantity * _putOption.ContractMultiplier);
+                spyMay19_300Put.Holdings.SetHoldings(spyMay19_300Put.Price, initialHoldingsQuantity);
+
+                if (initialHoldingsQuantity < 0)
+                {
+                    expectedPositionGroupBPMStrategy = OptionStrategyDefinitions.CoveredPut.Name;
+                }
             }
             else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.BearCallSpread.Name)
             {

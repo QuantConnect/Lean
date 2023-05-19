@@ -52,6 +52,24 @@ namespace QuantConnect.Securities.Option
                 // we could be liquidating a position
                 return new MaintenanceMargin(0);
             }
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.ProtectivePut.Name || _optionStrategy.Name == OptionStrategyDefinitions.ProtectiveCall.Name)
+            {
+                // Minimum (((10% * Call/Put Strike Price) + Call/Put Out of the Money Amount), Short Stock/Long Maintenance Requirement)
+                var optionPosition = parameters.PositionGroup.Positions.FirstOrDefault(position => position.Symbol.SecurityType.IsOption());
+                var underlyingPosition = parameters.PositionGroup.Positions.FirstOrDefault(position => !position.Symbol.SecurityType.IsOption());
+                var optionSecurity = (Option)parameters.Portfolio.Securities[optionPosition.Symbol];
+                var underlyingSecurity = parameters.Portfolio.Securities[underlyingPosition.Symbol];
+
+                var outOfTheMoneyAmount = optionSecurity.OutOfTheMoneyAmount(underlyingSecurity.Price) * optionSecurity.ContractUnitOfTrade * Math.Abs(optionPosition.Quantity);
+
+                var underlyingMarginRequired = Math.Abs(underlyingSecurity.BuyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(
+                    underlyingSecurity, underlyingPosition.Quantity)));
+
+                var result = Math.Min(0.1m * optionSecurity.StrikePrice * optionSecurity.ContractUnitOfTrade + outOfTheMoneyAmount, underlyingMarginRequired);
+                var inAccountCurrency = parameters.Portfolio.CashBook.ConvertToAccountCurrency(result, optionSecurity.QuoteCurrency.Symbol);
+
+                return new MaintenanceMargin(inAccountCurrency);
+            }
             else if(_optionStrategy.Name == OptionStrategyDefinitions.CoveredCall.Name)
             {
                 // MAX[In-the-money amount + Margin(long stock evaluated at min(mark price, strike(short call))), min(stock value, max(call value, long stock margin))]
@@ -67,7 +85,7 @@ namespace QuantConnect.Securities.Option
                 var optionValue = optionSecurity.Holdings.GetQuantityValue(optionPosition.Quantity).InAccountCurrency;
 
                 // mark price, strike price
-                var underlyingPriceToEvaluate = Math.Min(optionSecurity.Price, optionSecurity.StrikePrice);
+                var underlyingPriceToEvaluate = Math.Min(underlyingSecurity.Price, optionSecurity.StrikePrice);
                 var underlyingHypotheticalValue = underlyingSecurity.Holdings.GetQuantityValue(underlyingPosition.Quantity, underlyingPriceToEvaluate).InAccountCurrency;
 
                 var hypotheticalMarginRequired = underlyingSecurity.BuyingPowerModel.GetMaintenanceMargin(
@@ -153,7 +171,18 @@ namespace QuantConnect.Securities.Option
         /// <param name="parameters">An object containing the security and quantity</param>
         public override InitialMargin GetInitialMarginRequirement(PositionGroupInitialMarginParameters parameters)
         {
-            if (_optionStrategy.Name == OptionStrategyDefinitions.CoveredCall.Name)
+            if (_optionStrategy.Name == OptionStrategyDefinitions.ProtectivePut.Name || _optionStrategy.Name == OptionStrategyDefinitions.ProtectiveCall.Name)
+            {
+                // 	Initial Standard Stock Margin Requirement
+                var underlyingPosition = parameters.PositionGroup.Positions.FirstOrDefault(position => !position.Symbol.SecurityType.IsOption());
+                var underlyingSecurity = parameters.Portfolio.Securities[underlyingPosition.Symbol];
+
+                var result = Math.Abs(underlyingSecurity.BuyingPowerModel.GetInitialMarginRequirement(underlyingSecurity, underlyingPosition.Quantity));
+
+                var inAccountCurrency = parameters.Portfolio.CashBook.ConvertToAccountCurrency(result, underlyingSecurity.QuoteCurrency.Symbol);
+                return new InitialMargin(inAccountCurrency);
+            }
+            else if(_optionStrategy.Name == OptionStrategyDefinitions.CoveredCall.Name)
             {
                 // Max(Call Value, Long Stock Initial Margin)
                 var optionPosition = parameters.PositionGroup.Positions.FirstOrDefault(position => position.Symbol.SecurityType.IsOption());
@@ -161,11 +190,12 @@ namespace QuantConnect.Securities.Option
                 var optionSecurity = (Option)parameters.Portfolio.Securities[optionPosition.Symbol];
                 var underlyingSecurity = parameters.Portfolio.Securities[underlyingPosition.Symbol];
 
-                var optionValue = optionSecurity.Holdings.GetQuantityValue(optionPosition.Quantity).InAccountCurrency;
+                var optionValue = Math.Abs(optionSecurity.Holdings.GetQuantityValue(optionPosition.Quantity).InAccountCurrency);
 
                 var marginRequired = underlyingSecurity.BuyingPowerModel.GetInitialMarginRequirement(underlyingSecurity, underlyingPosition.Quantity);
 
-                var result = Math.Max(optionValue, marginRequired);
+                // IB charges more than expected, this formula was infered based on actual requirements see 'CoveredCallInitialMarginRequirementsTestCases'
+                var result = optionValue * 0.8m + marginRequired;
                 var inAccountCurrency = parameters.Portfolio.CashBook.ConvertToAccountCurrency(result, optionSecurity.QuoteCurrency.Symbol);
 
                 return new InitialMargin(inAccountCurrency);

@@ -324,6 +324,7 @@ namespace QuantConnect.Securities.Option
         {
             return Math.Max(0.0m, GetPayOff(underlyingPrice));
         }
+
         /// <summary>
         /// Option payoff function at expiration time
         /// </summary>
@@ -332,6 +333,16 @@ namespace QuantConnect.Securities.Option
         public decimal GetPayOff(decimal underlyingPrice)
         {
             return Right == OptionRight.Call ? underlyingPrice - StrikePrice : StrikePrice - underlyingPrice;
+        }
+
+        /// <summary>
+        /// Option out of the money function
+        /// </summary>
+        /// <param name="underlyingPrice">The price of the underlying</param>
+        /// <returns></returns>
+        public decimal OutOfTheMoneyAmount(decimal underlyingPrice)
+        {
+            return Math.Max(0, Right == OptionRight.Call ? StrikePrice - underlyingPrice : underlyingPrice - StrikePrice);
         }
 
         /// <summary>
