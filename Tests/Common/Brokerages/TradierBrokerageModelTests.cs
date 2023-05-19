@@ -57,15 +57,6 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.AreEqual(expectedMessage.Message, message.Message);
         }
 
-        [Test]
-        public void CanSubmitOrderReturnsFalseWhenMarketOrderIsGtc()
-        {
-            var order = GetOrder();
-            Assert.IsFalse(_tradierBrokerageModel.CanSubmitOrder(_security, order, out var message));
-            var expectedMessage = new BrokerageMessageEvent(BrokerageMessageType.Warning, "MarketOrderIsGtc", "You cannot place market orders with GTC, only day orders are allowed");
-            Assert.AreEqual(expectedMessage.Message, message.Message);
-        }
-
         [TestCase(0.5)]
         [TestCase(10000001)]
         public void CanSubmitOrderReturnsFalseWhenIncorrectOrderQuantity(decimal quantity)
@@ -88,7 +79,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         }
 
         [Test]
-        public void CanSubmitOrderReturnsTrueQuantityIsValidAndNotGTCAndPriceAbove5()
+        public void CanSubmitOrderReturnsTrueWhenQuantityIsValidAndNotGTCAndPriceAbove5()
         {
             var order = new Mock<Order>();
             order.Object.Quantity = -101;
@@ -101,11 +92,10 @@ namespace QuantConnect.Tests.Common.Brokerages
         }
 
         [Test]
-        public void CanSubmitOrderReturnsTrueQuantityIsValidIsLimitAndPriceAbove5()
+        public void CanSubmitOrderReturnsTrueWhenQuantityIsValidIsMarketOrderAndPriceAbove5()
         {
             var order = new Mock<Order>();
             order.Object.Quantity = -100;
-            order.Setup(o => o.Type).Returns(OrderType.Limit);
             var security = TestsHelpers.GetSecurity(securityType: SecurityType.Equity, symbol: "IBM", market: Market.USA);
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 1000));
             security.Holdings.SetHoldings(6, 100);

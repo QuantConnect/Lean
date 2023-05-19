@@ -18,6 +18,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Slippage;
+using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 
@@ -83,7 +84,7 @@ namespace QuantConnect.Brokerages
 
             if (security.Holdings.Quantity + order.Quantity < 0)
             {
-                if (order.TimeInForce == TimeInForce.GoodTilCanceled)
+                if (order.TimeInForce is GoodTilCanceledTimeInForce)
                 {
                     message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "ShortOrderIsGtc", Messages.TradierBrokerageModel.ShortOrderIsGtc);
 
@@ -95,13 +96,6 @@ namespace QuantConnect.Brokerages
 
                     return false;
                 }
-            }
-
-            if (order.Type == OrderType.Market && order.TimeInForce == TimeInForce.GoodTilCanceled)
-            {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "MarketOrderIsGtc", Messages.TradierBrokerageModel.MarketOrderIsGtc);
-
-                return false;
             }
 
             if (order.AbsoluteQuantity < 1 || order.AbsoluteQuantity > 10000000)
