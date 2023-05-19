@@ -31,6 +31,12 @@ namespace QuantConnect.Tests.Indicators
     [TestFixture]
     public class PythonIndicatorTests : CommonIndicatorTests<IBaseData>
     {
+        [SetUp]
+        public void SetUp()
+        {
+            SymbolCache.Clear();
+        }
+
         private static PyObject CreatePythonIndicator(int period = 14)
         {
             using (Py.GIL())
