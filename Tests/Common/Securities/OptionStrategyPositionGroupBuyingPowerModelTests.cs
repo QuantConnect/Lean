@@ -81,7 +81,7 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.CoveredCall, -20, 50 - -20, true).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.CoveredCall, -20, 60 - -20, false),
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, 0, 80, true).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 0, 1000000 / 12000 + 1, false),
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 0, 1000000 / 10250 + 1, false),
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, 0, -90, true).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, 0, -100, false),
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, 20, 80 - 20, true),
@@ -92,8 +92,8 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, -20, -90 - -20, true),
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, -20, -100 - -20, false).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, -20, 20, true),
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -20, 1000000 / 12000 - -20, true),
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -20, 1000000 / 12000 + 1 - -20, false),
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -20, 1000000 / 10250 - -20, true),
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -20, 1000000 / 10250 + 1 - -20, false).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 0, 1000, true),
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 0, 1010, false),
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 0, -980, true),
@@ -472,9 +472,9 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.IronCondor, 1, 1000m),                       // IB:  1017.62
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -1, 0m),                         // IB:  0
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCall, 1, 12000m),                  // IB:  inverted covered call
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCall, -1, 19000m),                 // IB:  inverted covered call
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCall, -1, 19000m),                 // IB:  covered call
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, 1, 10000m),                   // IB:  inverted covered put
-            new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -1, 12000m),                  // IB:  inverted covered put
+            new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -1, 12000m),                  // IB:  covered put
         };
 
         [TestCaseSource(nameof(InitialMarginRequirementsTestCases))]
@@ -524,7 +524,7 @@ namespace QuantConnect.Tests.Common.Securities
             // OptionStrategyDefinition, initialHoldingsQuantity, expectedMaintenanceMargin
             new TestCaseData(OptionStrategyDefinitions.CoveredCall, 1, 19000m),                     // IB:  19325
             new TestCaseData(OptionStrategyDefinitions.CoveredCall, -1, 3000m),                     // IB:  3000
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 1, 12000m),                      // IB:  12000m
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 1, 10250m),                      // IB:  12000m
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, -1, 10000m),                     // IB:  10276
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 1, 0m).Explicit(),           // IB:  0
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -1, 0m),                     // IB:  0
@@ -553,9 +553,9 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.IronCondor, 1, 1000m),                       // IB:  1017.62
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -1, 0m),                         // IB:  0
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCall, 1, 3000m),                   // IB:  inverted covered call
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCall, -1, 19000m),                 // IB:  inverted covered call
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCall, -1, 19000m),                 // IB:  covered call
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, 1, 10000m),                   // IB:  inverted covered Put
-            new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -1, 12000m),                  // IB:  inverted covered Put
+            new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -1, 10250m),                  // IB:  covered Put
         };
 
         [TestCaseSource(nameof(MaintenanceMarginTestCases))]
@@ -572,22 +572,22 @@ namespace QuantConnect.Tests.Common.Securities
         // option strategy definition, initial position quantity, final position quantity
         private static readonly TestCaseData[] OrderQuantityForDeltaBuyingPowerTestCases = new[]
         {
-            // Initial margin for CoveredCall with quantity 10 is 205000
-            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 10, 205000m / 10, +1).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 10, -205000m / 10, -1).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 10, -205000m, -10).Explicit(),
+            // Initial margin for CoveredCall with quantity 10 is 192100m
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 10, 192100m / 10, +1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 10, -192100m / 10, -1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 10, -192100m, -10).Explicit(),
             // Initial margin for CoveredCall with quantity -10 is 112000
             new TestCaseData(OptionStrategyDefinitions.CoveredCall, -10, 112000m / 10, -1).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.CoveredCall, -10, -112000m / 10, +1).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.CoveredCall, -10, -112000m, +10).Explicit(),
-            // Initial margin for CoveredPut with quantity 10 is 205000
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 10, 205000m / 10, +1).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 10, -205000m / 10, -1).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 10, -205000m, -10).Explicit(),
-            // Initial margin for CoveredPut with quantity -10 is 205000
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -10, 205000m / 10, -1).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -10, -205000m / 10, +1).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -10, -205000m, +10),
+            // Initial margin for CoveredPut with quantity 10 is 102500
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 10, 102500 / 10, +1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 10, -102500 / 10, -1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 10, -102500, -10).Explicit(),
+            // Initial margin for CoveredPut with quantity -10 is 102500
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -10, 102500m / 10, -1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -10, -102500m / 10, +1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -10, -102500m, +10),
             // Initial margin for BullCallSpread with quantity 10 is 10000
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, 1000m, 1).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 10, -1000m, -1).Explicit(),
@@ -683,9 +683,9 @@ namespace QuantConnect.Tests.Common.Securities
         // option strategy definition, initial position quantity, target buying power percent, expected quantity
         private static readonly TestCaseData[] OrderQuantityForTargetBuyingPowerTestCases = new[]
         {
-            // Initial margin requirement for CoveredCall with quantity 10 is 205000
-            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 10, 205000m * 11 / 10, +1),
-            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 10, 205000m * 9 / 10, -1),
+            // Initial margin requirement for CoveredCall with quantity 10 is 192100m
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 10, 192100m * 11 / 10, +1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 10, 192100m * 9 / 10, -1).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.CoveredCall, 10, 0m, -10),
             // Initial margin requirement for CoveredCall with quantity -10 is 112000
             new TestCaseData(OptionStrategyDefinitions.CoveredCall, -10, 112000m * 11 / 10, -1).Explicit(),
@@ -945,7 +945,7 @@ namespace QuantConnect.Tests.Common.Securities
                 positionGroup, direction));
 
             var initialUsedMargin = _portfolio.TotalMarginUsed;
-            var initialPositionInitialMargin = initialPositionGroup.BuyingPowerModel.GetInitialMarginRequirement(
+            var initialPositionInitialMargin = positionGroup.BuyingPowerModel.GetInitialMarginRequirement(
                 new PositionGroupInitialMarginParameters(_portfolio, initialPositionGroup));
             Log.Debug($"Initial used margin: {initialUsedMargin}");
             Log.Debug($"Initial position initial margin requirement: {initialPositionInitialMargin}");

@@ -60,12 +60,13 @@ namespace QuantConnect.Securities.Option
                 var optionSecurity = (Option)parameters.Portfolio.Securities[optionPosition.Symbol];
                 var underlyingSecurity = parameters.Portfolio.Securities[underlyingPosition.Symbol];
 
-                var outOfTheMoneyAmount = optionSecurity.OutOfTheMoneyAmount(underlyingSecurity.Price) * optionSecurity.ContractUnitOfTrade * Math.Abs(optionPosition.Quantity);
+                var absOptionQuantity = Math.Abs(optionPosition.Quantity);
+                var outOfTheMoneyAmount = optionSecurity.OutOfTheMoneyAmount(underlyingSecurity.Price) * optionSecurity.ContractUnitOfTrade * absOptionQuantity;
 
                 var underlyingMarginRequired = Math.Abs(underlyingSecurity.BuyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(
                     underlyingSecurity, underlyingPosition.Quantity)));
 
-                var result = Math.Min(0.1m * optionSecurity.StrikePrice * optionSecurity.ContractUnitOfTrade + outOfTheMoneyAmount, underlyingMarginRequired);
+                var result = Math.Min(0.1m * optionSecurity.StrikePrice * optionSecurity.ContractUnitOfTrade * absOptionQuantity + outOfTheMoneyAmount, underlyingMarginRequired);
                 var inAccountCurrency = parameters.Portfolio.CashBook.ConvertToAccountCurrency(result, optionSecurity.QuoteCurrency.Symbol);
 
                 return new MaintenanceMargin(inAccountCurrency);
