@@ -283,8 +283,6 @@ namespace QuantConnect
 
             public static string SellShortOrderLastPriceBelow5 = "Sell Short order cannot be placed for stock priced below $5";
 
-            public static string MarketOrderIsGtc = "You cannot place market orders with GTC, only day orders are allowed";
-
             public static string IncorrectOrderQuantity = "Quantity should be between 1 and 10,000,000";
         }
 
