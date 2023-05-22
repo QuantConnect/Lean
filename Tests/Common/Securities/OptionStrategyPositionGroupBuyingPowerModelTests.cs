@@ -178,12 +178,13 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -20, 20, true),
             new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -20, 990 - -20, true),
             new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -20, 1010 - -20, false),
+            // Long Straddle margin is 0
             new TestCaseData(OptionStrategyDefinitions.Straddle, 0, 85, true),
-            new TestCaseData(OptionStrategyDefinitions.Straddle, 0, 90, false),
-            new TestCaseData(OptionStrategyDefinitions.Straddle, 0, -50, true).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.Straddle, 0, 90, true),
+            new TestCaseData(OptionStrategyDefinitions.Straddle, 0, -50, true),
             new TestCaseData(OptionStrategyDefinitions.Straddle, 0, -55, false),
             new TestCaseData(OptionStrategyDefinitions.Straddle, 20, 85 - 20, true),
-            new TestCaseData(OptionStrategyDefinitions.Straddle, 20, 90 - 20, false).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.Straddle, 20, 90 - 20, true),
             new TestCaseData(OptionStrategyDefinitions.Straddle, 20, -20, true),
             new TestCaseData(OptionStrategyDefinitions.Straddle, 20, -50 - 20, true),
             new TestCaseData(OptionStrategyDefinitions.Straddle, 20, -55 - 20, false).Explicit(),
@@ -192,12 +193,28 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.Straddle, -20, 20, true),
             new TestCaseData(OptionStrategyDefinitions.Straddle, -20, 85 - -20, true),
             new TestCaseData(OptionStrategyDefinitions.Straddle, -20, 90 - -20, false).Explicit(),
+            // "Short" Short Straddle margin is 0
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, 0, -85, true),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, 0, -90, true),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, 0, 50, true),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, 0, 55, false),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, 20, -85 - 20, true),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, 20, -90 - 20, true),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, 20, -20, true),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, 20, 50 - 20, true),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, 20, 55 - 20, false).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, -20, 50 - -20, true),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, -20, 55 - -20, false).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, -20, 20, true),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, -20, -85 - -20, true),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, -20, -90 - -20, true),
+            // Long Strangle margin is 0
             new TestCaseData(OptionStrategyDefinitions.Strangle, 0, 90, true),
-            new TestCaseData(OptionStrategyDefinitions.Strangle, 0, 110, false),
-            new TestCaseData(OptionStrategyDefinitions.Strangle, 0, -50, true).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.Strangle, 0, 110, true),
+            new TestCaseData(OptionStrategyDefinitions.Strangle, 0, -50, true),
             new TestCaseData(OptionStrategyDefinitions.Strangle, 0, -60, false),
             new TestCaseData(OptionStrategyDefinitions.Strangle, 20, 90 - 20, true),
-            new TestCaseData(OptionStrategyDefinitions.Strangle, 20, 110 - 20, false).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.Strangle, 20, 110 - 20, true),
             new TestCaseData(OptionStrategyDefinitions.Strangle, 20, -20, true),
             new TestCaseData(OptionStrategyDefinitions.Strangle, 20, -50 - 20, true),
             new TestCaseData(OptionStrategyDefinitions.Strangle, 20, -60 - 20, false).Explicit(),
@@ -206,6 +223,21 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.Strangle, -20, 20, true),
             new TestCaseData(OptionStrategyDefinitions.Strangle, -20, 90 - -20, true),
             new TestCaseData(OptionStrategyDefinitions.Strangle, -20, 110 - -20, false).Explicit(),
+            // "Short" Short Strangle margin is 0
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, 0, -90, true),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, 0, -110, true),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, 0, 50, true),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, 0, 60, false),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, 20, -90 - 20, true),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, 20, -110 - 20, true),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, 20, -20, true),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, 20, 50 - 20, true),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, 20, 60 - 20, false).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, -20, 50 - -20, true),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, -20, 60 - -20, false).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, -20, 20, true),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, -20, -90 - -20, true),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, -20, -110 - -20, true),
             new TestCaseData(OptionStrategyDefinitions.ButterflyCall, 0, 700, true),
             new TestCaseData(OptionStrategyDefinitions.ButterflyCall, 0, 720, false).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.ButterflyCall, 0, -640, true),
@@ -339,8 +371,6 @@ namespace QuantConnect.Tests.Common.Securities
             _callOption.Holdings.SetHoldings(1.5m, initialHoldingsQuantity);
             _putOption.Holdings.SetHoldings(1m, initialHoldingsQuantity);
 
-            var optionStrategy = OptionStrategies.Straddle(_callOption.Symbol.Canonical, _callOption.StrikePrice, _callOption.Expiry);
-
             var sufficientCaseConsidered = false;
             var insufficientCaseConsidered = false;
 
@@ -356,14 +386,9 @@ namespace QuantConnect.Tests.Common.Securities
 
             for (var strategyQuantity = Math.Abs(initialHoldingsQuantity); strategyQuantity > -30; strategyQuantity--)
             {
-                var buyingPowerModel = new OptionStrategyPositionGroupBuyingPowerModel(
-                    _callOption.Holdings.Quantity + strategyQuantity == 0
-                        // Liquidating
-                        ? null
-                        : optionStrategy);
                 var orders = GetStrategyOrders(strategyQuantity);
-
                 var positionGroup = _portfolio.Positions.CreatePositionGroup(orders);
+                var buyingPowerModel = positionGroup.BuyingPowerModel;
 
                 var maintenanceMargin = buyingPowerModel.GetMaintenanceMargin(
                     new PositionGroupMaintenanceMarginParameters(_portfolio, positionGroup));
@@ -435,23 +460,16 @@ namespace QuantConnect.Tests.Common.Securities
 
             _algorithm.SetCash(_portfolio.TotalMarginUsed * 0.95m);
 
-            var optionStrategy = OptionStrategies.Straddle(_callOption.Symbol.Canonical, _callOption.StrikePrice, _callOption.Expiry);
             var quantity = -initialHoldingsQuantity / 2;
-            var buyingPowerModel = new OptionStrategyPositionGroupBuyingPowerModel(optionStrategy);
             var orders = GetStrategyOrders(quantity);
 
             var positionGroup = _portfolio.Positions.CreatePositionGroup(orders);
 
-            var parameters = new HasSufficientPositionGroupBuyingPowerForOrderParameters(_portfolio, positionGroup, orders);
-            var availableBuyingPower = buyingPowerModel.GetPositionGroupBuyingPower(parameters.Portfolio, parameters.PositionGroup, orders.First().GroupOrderManager.Direction);
-            var deltaBuyingPowerArgs = new ReservedBuyingPowerImpactParameters(parameters.Portfolio, parameters.PositionGroup, parameters.Orders);
-            var deltaBuyingPower = buyingPowerModel.GetReservedBuyingPowerImpact(deltaBuyingPowerArgs).Delta;
-
-            // Buying power should be sufficient for reducing the position, even if the delta buying power is greater than the available buying power
+            var deltaBuyingPowerArgs = new ReservedBuyingPowerImpactParameters(_portfolio, positionGroup, orders);
+            var deltaBuyingPower = positionGroup.BuyingPowerModel.GetReservedBuyingPowerImpact(deltaBuyingPowerArgs).Delta;
             Assert.Less(deltaBuyingPower, 0);
-            Assert.Greater(deltaBuyingPower, availableBuyingPower);
 
-            var hasSufficientBuyingPowerResult = buyingPowerModel.HasSufficientBuyingPowerForOrder(
+            var hasSufficientBuyingPowerResult = positionGroup.BuyingPowerModel.HasSufficientBuyingPowerForOrder(
                 new HasSufficientPositionGroupBuyingPowerForOrderParameters(_portfolio, positionGroup, orders));
 
             Assert.IsTrue(hasSufficientBuyingPowerResult.IsSufficient);
@@ -481,10 +499,14 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.BullCallSpread, -1, 1000m),                  // IB:  1000
             new TestCaseData(OptionStrategyDefinitions.BullPutSpread, 1, 1000m),                    // IB:  1000
             new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -1, 0m),                      // IB:  0
-            new TestCaseData(OptionStrategyDefinitions.Straddle, 1, 0m).Explicit(),                 // IB:  0
-            new TestCaseData(OptionStrategyDefinitions.Straddle, -1, 3000m).Explicit(),             // IB:  3001.60
-            new TestCaseData(OptionStrategyDefinitions.Strangle, 1, 0m).Explicit(),                 // IB:  0
-            new TestCaseData(OptionStrategyDefinitions.Strangle, -1, 3000m).Explicit(),             // IB:  3001.60
+            new TestCaseData(OptionStrategyDefinitions.Straddle, 1, 0m),                            // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.Straddle, -1, 20000m),                       // IB:  20624
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, 1, 20000m),                   // IB:  20624
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, -1, 0m),                      // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.Strangle, 1, 0m),                            // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.Strangle, -1, 21000m),                       // IB:  20752
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, 1, 21000m),                   // IB:  20752
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, -1, 0m),                      // IB:  0
             new TestCaseData(OptionStrategyDefinitions.ButterflyCall, 1, 0m),                       // IB:  0
             new TestCaseData(OptionStrategyDefinitions.ButterflyCall, -1, 0m).Explicit(),           // IB:  0
             new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, 1, 0m).Explicit(),       // IB:  0
@@ -562,10 +584,14 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.BullCallSpread, -1, 1000m),                  // IB:  1000
             new TestCaseData(OptionStrategyDefinitions.BullPutSpread, 1, 1000m),                    // IB:  1000
             new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -1, 0m),                      // IB:  0
-            new TestCaseData(OptionStrategyDefinitions.Straddle, 1, 0m).Explicit(),                 // IB:  0
-            new TestCaseData(OptionStrategyDefinitions.Straddle, -1, 3000m).Explicit(),             // IB:  3001.60
-            new TestCaseData(OptionStrategyDefinitions.Strangle, 1, 0m).Explicit(),                 // IB:  0
-            new TestCaseData(OptionStrategyDefinitions.Strangle, -1, 3000m).Explicit(),             // IB:  3001.60
+            new TestCaseData(OptionStrategyDefinitions.Straddle, 1, 0m),                            // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.Straddle, -1, 20000m),                       // IB:  20624
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, 1, 20000m),                   // IB:  20624
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, -1, 0m),                      // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.Strangle, 1, 0m),                            // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.Strangle, -1, 21000m),                       // IB:  20752
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, 1, 21000m),                   // IB:  20752
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, -1, 0m),                      // IB:  0
             new TestCaseData(OptionStrategyDefinitions.ButterflyCall, 1, 0m),                       // IB:  0
             new TestCaseData(OptionStrategyDefinitions.ButterflyCall, -1, 0m).Explicit(),           // IB:  0
             new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, 1, 0m).Explicit(),       // IB:  0
@@ -608,7 +634,6 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, 10, 100000m / 10, +1).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, 10, -100000m / 10, -1).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, 10, -100000m, -10).Explicit(),
-
             // Initial margin for CoveredCall with quantity 10 is 192100m
             new TestCaseData(OptionStrategyDefinitions.CoveredCall, 10, 192100m / 10, +1).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.CoveredCall, 10, -192100m / 10, -1).Explicit(),
@@ -649,22 +674,30 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.BullPutSpread, 10, -10000m, -10).Explicit(),
             // Initial margin for BullPutSpread with quantity -10 is 0
             new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -10, 0m, 0).Explicit(),
-            // Initial margin for Straddle with quantity 10 is 112020
-            new TestCaseData(OptionStrategyDefinitions.Straddle, 10, 112020m / 10, +1),
-            new TestCaseData(OptionStrategyDefinitions.Straddle, 10, -112020m / 10, -1),
-            new TestCaseData(OptionStrategyDefinitions.Straddle, 10, -112020m, -10).Explicit(),
-            // Initial margin for Straddle with quantity -10 is 235019
-            new TestCaseData(OptionStrategyDefinitions.Straddle, -10, 235019m / 10, -1).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.Straddle, -10, -235019m / 10, +1).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.Straddle, -10, -235019m, +10).Explicit(),
-            // Initial margin for Strangle with quantity 10 is 102020
-            new TestCaseData(OptionStrategyDefinitions.Strangle, 10, 102020m / 10, +1),
-            new TestCaseData(OptionStrategyDefinitions.Strangle, 10, -102020m / 10, -1),
-            new TestCaseData(OptionStrategyDefinitions.Strangle, 10, -102020m, -10).Explicit(),
-            // Initial margin for Strangle with quantity -10 is 225020
-            new TestCaseData(OptionStrategyDefinitions.Strangle, -10, 225020m / 10, -1).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.Strangle, -10, -225020m / 10, +1).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.Strangle, -10, -225020m, +10).Explicit(),
+            // Initial margin for Straddle with quantity 10 is 0
+            new TestCaseData(OptionStrategyDefinitions.Straddle, 10, 0m, 0).Explicit(),
+            // Initial margin for Straddle with quantity -10 is 206240
+            new TestCaseData(OptionStrategyDefinitions.Straddle, -10, 206240m / 10, -1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.Straddle, -10, -206240m / 10, +1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.Straddle, -10, -206240m, +10).Explicit(),
+            // Initial margin for ShortStraddle with quantity 10 is 206240
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, 10, 206240m / 10, +1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, 10, -206240m / 10, -1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, 10, -206240m, -10).Explicit(),
+            // Initial margin for ShortStraddle with quantity -10 is 0
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, -10, 0m, 0).Explicit(),
+            // Initial margin for Strangle with quantity 10 is 0
+            new TestCaseData(OptionStrategyDefinitions.Strangle, 10, 0m, 0).Explicit(),
+            // Initial margin for Strangle with quantity -10 is 207520
+            new TestCaseData(OptionStrategyDefinitions.Strangle, -10, 207520m / 10, -1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.Strangle, -10, -207520m / 10, +1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.Strangle, -10, -207520m, +10).Explicit(),
+            // Initial margin for ShortStrangle with quantity 10 is 207520
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, 10, 207520m / 10, +1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, 10, -207520m / 10, -1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, 10, -207520m, -10).Explicit(),
+            // Initial margin for ShortStrangle with quantity 10 is 0
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, -10, 0m, 0).Explicit(),
             // Initial margin for ButterflyCall with quantity 10 is 0
             new TestCaseData(OptionStrategyDefinitions.ButterflyCall, 10, 0m, 0).Explicit(),
             // Initial margin for ButterflyCall with quantity -10 is 10000
@@ -776,22 +809,30 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.BullPutSpread, 10, 0m, -10),
             // Initial margin requirement for BullPutSpread with quantity -10 is 0
             new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -10, 0m, 0).Explicit(),
-            // Initial margin requirement for Straddle with quantity 10 is 112020
-            new TestCaseData(OptionStrategyDefinitions.Straddle, 10, 112020m * 11 / 10, +1),
-            new TestCaseData(OptionStrategyDefinitions.Straddle, 10, 112020m * 9 / 10, -1),
-            new TestCaseData(OptionStrategyDefinitions.Straddle, 10, 0m, -10).Explicit(),
-            // Initial margin requirement for Straddle with quantity -10 is 235019
-            new TestCaseData(OptionStrategyDefinitions.Straddle, -10, 235019m * 11 / 10, -1).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.Straddle, -10, 235019m * 9 / 10, +1).Explicit(),
+            // Initial margin requirement for Straddle with quantity 10 is 0
+            new TestCaseData(OptionStrategyDefinitions.Straddle, 10, 0m, 0).Explicit(),
+            // Initial margin requirement for Straddle with quantity -10 is 206240
+            new TestCaseData(OptionStrategyDefinitions.Straddle, -10, 206240m * 11 / 10, -1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.Straddle, -10, 206240m * 9 / 10, +1).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.Straddle, -10, 0m, +10).Explicit(),
-            // Initial margin requirement for Strangle with quantity 10 is 102020
-            new TestCaseData(OptionStrategyDefinitions.Strangle, 10, 102020m * 11 / 10, +1),
-            new TestCaseData(OptionStrategyDefinitions.Strangle, 10, 102020m * 9 / 10, -1),
-            new TestCaseData(OptionStrategyDefinitions.Strangle, 10, 0m, -10).Explicit(),
-            // Initial margin requirement for Strangle with quantity -10 is 225020
-            new TestCaseData(OptionStrategyDefinitions.Strangle, -10, 225020m * 11 / 10, -1).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.Strangle, -10, 225020m * 9 / 10, +1).Explicit(),
+            // Initial margin requirement for ShortStraddle with quantity 10 is 206240
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, 10, 206240m * 11 / 10, +1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, 10, 206240m * 9 / 10, -1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, 10, 0m, -10),
+            // Initial margin requirement for ShortStraddle with quantity -10 is 0
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, -10, 0m, 0).Explicit(),
+            // Initial margin requirement for Strangle with quantity 10 is 0
+            new TestCaseData(OptionStrategyDefinitions.Strangle, 10, 0m, 0).Explicit(),
+            // Initial margin requirement for Strangle with quantity -10 is 207520
+            new TestCaseData(OptionStrategyDefinitions.Strangle, -10, 207520m * 11 / 10, -1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.Strangle, -10, 207520m * 9 / 10, +1).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.Strangle, -10, 0m, +10).Explicit(),
+            // Initial margin requirement for ShortStrangle with quantity -10 is 207520
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, 10, 207520m * 11 / 10, +1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, 10, 207520m * 9 / 10, -1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, 10, 0m, -10),
+            // Initial margin requirement for ShortStrangle with quantity 10 is 0
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, 10, 0m, 0).Explicit(),
             // Initial margin requirement for ButterflyCall with quantity 10 is 0
             new TestCaseData(OptionStrategyDefinitions.ButterflyCall, 10, 0m, 0).Explicit(),
             // Initial margin requirement for ButterflyCall with quantity -10 is 10000
@@ -923,14 +964,30 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.Straddle, -10, 1),
             new TestCaseData(OptionStrategyDefinitions.Straddle, -10, 10).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.Straddle, -10, 20).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, 10, 1),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, 10, -10).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, 10, -20).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, -10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, -10, 1),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, -10, 10).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, -10, 20).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.Strangle, 10, 1),
             new TestCaseData(OptionStrategyDefinitions.Strangle, 10, -1),
             new TestCaseData(OptionStrategyDefinitions.Strangle, 10, -10).Explicit(),
-            new TestCaseData(OptionStrategyDefinitions.Strangle, 10, -20).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.Strangle, 10, -20),
             new TestCaseData(OptionStrategyDefinitions.Strangle, -10, -1),
             new TestCaseData(OptionStrategyDefinitions.Strangle, -10, 1),
             new TestCaseData(OptionStrategyDefinitions.Strangle, -10, 10).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.Strangle, -10, 20).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, 10, 1),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, 10, -10).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, 10, -20).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, -10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, -10, 1),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, -10, 10).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, -10, 20),
             new TestCaseData(OptionStrategyDefinitions.ButterflyCall, 10, 1),
             new TestCaseData(OptionStrategyDefinitions.ButterflyCall, 10, -1).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.ButterflyCall, 10, -10).Explicit(),
@@ -1104,6 +1161,14 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.Straddle, -10, 1),
             new TestCaseData(OptionStrategyDefinitions.Straddle, -10, 10),
             new TestCaseData(OptionStrategyDefinitions.Straddle, -10, 20),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, 10, 1),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, 10, -10),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, 10, -20),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, -10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, -10, 1),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, -10, 10),
+            new TestCaseData(OptionStrategyDefinitions.ShortStraddle, -10, 20),
             new TestCaseData(OptionStrategyDefinitions.Strangle, 10, 1),
             new TestCaseData(OptionStrategyDefinitions.Strangle, 10, -1),
             new TestCaseData(OptionStrategyDefinitions.Strangle, 10, -10),
@@ -1112,6 +1177,14 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.Strangle, -10, 1),
             new TestCaseData(OptionStrategyDefinitions.Strangle, -10, 10),
             new TestCaseData(OptionStrategyDefinitions.Strangle, -10, 20),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, 10, 1),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, 10, -10),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, 10, -20),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, -10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, -10, 1),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, -10, 10),
+            new TestCaseData(OptionStrategyDefinitions.ShortStrangle, -10, 20),
             new TestCaseData(OptionStrategyDefinitions.ButterflyCall, 10, 1),
             new TestCaseData(OptionStrategyDefinitions.ButterflyCall, 10, -1),
             new TestCaseData(OptionStrategyDefinitions.ButterflyCall, 10, -10),
@@ -1448,11 +1521,41 @@ namespace QuantConnect.Tests.Common.Securities
             {
                 spyMay19_300Call.Holdings.SetHoldings(spyMay19_300Call.Price, initialHoldingsQuantity);
                 spyMay19_300Put.Holdings.SetHoldings(spyMay19_300Put.Price, initialHoldingsQuantity);
+
+                if (initialHoldingsQuantity < 0)
+                {
+                    expectedPositionGroupBPMStrategy = OptionStrategyDefinitions.ShortStraddle.Name;
+                }
+            }
+            else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.ShortStraddle.Name)
+            {
+                spyMay19_300Call.Holdings.SetHoldings(spyMay19_300Call.Price, -initialHoldingsQuantity);
+                spyMay19_300Put.Holdings.SetHoldings(spyMay19_300Put.Price, -initialHoldingsQuantity);
+
+                if (initialHoldingsQuantity < 0)
+                {
+                    expectedPositionGroupBPMStrategy = OptionStrategyDefinitions.Straddle.Name;
+                }
             }
             else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.Strangle.Name)
             {
                 spyMay19_310Call.Holdings.SetHoldings(spyMay19_310Call.Price, initialHoldingsQuantity);
                 spyMay19_300Put.Holdings.SetHoldings(spyMay19_300Put.Price, initialHoldingsQuantity);
+
+                if (initialHoldingsQuantity < 0)
+                {
+                    expectedPositionGroupBPMStrategy = OptionStrategyDefinitions.ShortStrangle.Name;
+                }
+            }
+            else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.ShortStrangle.Name)
+            {
+                spyMay19_310Call.Holdings.SetHoldings(spyMay19_310Call.Price, -initialHoldingsQuantity);
+                spyMay19_300Put.Holdings.SetHoldings(spyMay19_300Put.Price, -initialHoldingsQuantity);
+
+                if (initialHoldingsQuantity < 0)
+                {
+                    expectedPositionGroupBPMStrategy = OptionStrategyDefinitions.Strangle.Name;
+                }
             }
             else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.ButterflyCall.Name)
             {

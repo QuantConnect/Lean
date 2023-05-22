@@ -37,7 +37,8 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2015, 12, 24);
             SetEndDate(2015, 12, 30);
-            SetCash(1640000);
+            // -50 of a straddle will use almost all of 900k, so will eventually trigger margin call
+            SetCash(900000);
 
             var equity = AddEquity("GOOG");
             var option = AddOption(equity.Symbol);
@@ -74,7 +75,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
-        public override bool CanRunLocally { get; } = true;
+        public override bool CanRunLocally { get; } = false;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
