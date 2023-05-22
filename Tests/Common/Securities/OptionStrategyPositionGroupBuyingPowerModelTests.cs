@@ -473,12 +473,12 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.CoveredCall, -1, 12000m),                    // IB:  12338.58
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, 1, 12000m),                      // IB:  12331.38
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, -1, 10000m),                     // IB:  10276.15
-            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 1, 0m).Explicit(),           // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 1, 1000m),                   // IB:  1000
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -1, 0m),                     // IB:  0
             new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 1, 0m),                       // IB:  0
             new TestCaseData(OptionStrategyDefinitions.BearPutSpread, -1, 1000m),                   // IB:  1000
             new TestCaseData(OptionStrategyDefinitions.BullCallSpread, 1, 0m),                      // IB:  0
-            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, -1, 0m).Explicit(),          // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, -1, 1000m),                  // IB:  1000
             new TestCaseData(OptionStrategyDefinitions.BullPutSpread, 1, 1000m),                    // IB:  1000
             new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -1, 0m),                      // IB:  0
             new TestCaseData(OptionStrategyDefinitions.Straddle, 1, 0m).Explicit(),                 // IB:  0
@@ -554,12 +554,12 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.CoveredCall, -1, 3000m),                     // IB:  3000
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, 1, 10250m),                      // IB:  12000m
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, -1, 10000m),                     // IB:  10276
-            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 1, 0m).Explicit(),           // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.BearCallSpread, 1, 1000m),                   // IB:  10000
             new TestCaseData(OptionStrategyDefinitions.BearCallSpread, -1, 0m),                     // IB:  0
             new TestCaseData(OptionStrategyDefinitions.BearPutSpread, 1, 0m),                       // IB:  0
             new TestCaseData(OptionStrategyDefinitions.BearPutSpread, -1, 1000m),                   // IB:  1000
             new TestCaseData(OptionStrategyDefinitions.BullCallSpread, 1, 0m),                      // IB:  0
-            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, -1, 0m).Explicit(),          // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.BullCallSpread, -1, 1000m),                  // IB:  1000
             new TestCaseData(OptionStrategyDefinitions.BullPutSpread, 1, 1000m),                    // IB:  1000
             new TestCaseData(OptionStrategyDefinitions.BullPutSpread, -1, 0m),                      // IB:  0
             new TestCaseData(OptionStrategyDefinitions.Straddle, 1, 0m).Explicit(),                 // IB:  0
