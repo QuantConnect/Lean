@@ -77,6 +77,8 @@ namespace QuantConnect.Research
                 Logging.Log.Error("QuantBook failed to determine Notebook kernel language");
             }
 
+            RecycleMemory();
+
             Logging.Log.Trace($"QuantBook started; Is Python: {_isPythonNotebook}");
         }
 
@@ -896,6 +898,21 @@ namespace QuantConnect.Research
             }
 
             return symbol;
+        }
+
+        private static void RecycleMemory()
+        {
+            Task.Delay(TimeSpan.FromSeconds(20)).ContinueWith(_ =>
+            {
+                if (Logging.Log.DebuggingEnabled)
+                {
+                    Logging.Log.Debug($"QuantBook.RecycleMemory(): running...");
+                }
+
+                GC.Collect();
+
+                RecycleMemory();
+            }, TaskScheduler.Current);
         }
     }
 }
