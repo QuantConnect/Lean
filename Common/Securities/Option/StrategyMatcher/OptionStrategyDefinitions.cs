@@ -71,17 +71,37 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// <summary>
         /// Hold 1 lot of the underlying and sell 1 call contract
         /// </summary>
+        /// <remarks>Inverse of the <see cref="ProtectiveCall"/></remarks>
         public static OptionStrategyDefinition CoveredCall { get; }
             = OptionStrategyDefinition.Create("Covered Call", 1,
                 OptionStrategyDefinition.CallLeg(-1)
             );
 
         /// <summary>
+        /// Hold -1 lot of the underlying and buy 1 call contract
+        /// </summary>
+        /// <remarks>Inverse of the <see cref="CoveredCall"/></remarks>
+        public static OptionStrategyDefinition ProtectiveCall { get; }
+            = OptionStrategyDefinition.Create("Protective Call", -1,
+                OptionStrategyDefinition.CallLeg(1)
+            );
+
+        /// <summary>
         /// Hold -1 lot of the underlying and sell 1 put contract
         /// </summary>
+        /// <remarks>Inverse of the <see cref="ProtectivePut"/></remarks>
         public static OptionStrategyDefinition CoveredPut { get; }
             = OptionStrategyDefinition.Create("Covered Put", -1,
                 OptionStrategyDefinition.PutLeg(-1)
+            );
+
+        /// <summary>
+        /// Hold 1 lot of the underlying and buy 1 put contract
+        /// </summary>
+        /// <remarks>Inverse of the <see cref="CoveredPut"/></remarks>
+        public static OptionStrategyDefinition ProtectivePut { get; }
+            = OptionStrategyDefinition.Create("Protective Put", 1,
+                OptionStrategyDefinition.PutLeg(1)
             );
 
         /// <summary>
