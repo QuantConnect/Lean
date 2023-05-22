@@ -124,7 +124,17 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 {
                     return false;
                 }
-                positions.Add(new Collective2Position { Symbol = target.Symbol, TypeOfSymbol = typeOfSymbol, Quant = ConvertPercentageToQuantity(_algorithm, target) });
+
+                var symbol = target.Symbol.Value;
+                if (target.Symbol.SecurityType == SecurityType.Future)
+                {
+                    symbol = SymbolRepresentation.GenerateFutureTicker(target.Symbol.ID.Symbol, target.Symbol.ID.Date, doubleDigitsYear: false, includeExpirationDate: false);
+                }
+                else if (target.Symbol.SecurityType.IsOption())
+                {
+                    symbol = SymbolRepresentation.GenerateOptionTicker(target.Symbol);
+                }
+                positions.Add(new Collective2Position { Symbol = symbol, TypeOfSymbol = typeOfSymbol, Quant = ConvertPercentageToQuantity(_algorithm, target) });
             }
 
             return true;
