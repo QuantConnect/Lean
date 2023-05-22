@@ -31,6 +31,12 @@ namespace QuantConnect.Tests.Indicators
     [TestFixture]
     public class PythonIndicatorTests : CommonIndicatorTests<IBaseData>
     {
+        [SetUp]
+        public void SetUp()
+        {
+            SymbolCache.Clear();
+        }
+
         private static PyObject CreatePythonIndicator(int period = 14)
         {
             using (Py.GIL())
@@ -256,6 +262,57 @@ class BadCustomIndicator(PythonIndicator):
 
                 //Test 3: Using a timedelta object; Should convert timedelta to timespan
                 Assert.DoesNotThrow(() => algorithm.RegisterIndicator(spy, PyIndicator, TimeDelta));
+            }
+        }
+
+        //Test 1: Using a C# Consolidator; Should convert consolidator into IDataConsolidator and fail because of the InputType
+        [TestCase("consolidator", false, "Type mismatch found between consolidator and symbol. Symbol: SPY does not support input type: QuoteBar. Supported types: TradeBar.")]
+        //Test 2: Using a Python Consolidator; Should wrap consolidator and fail because of the InputType
+        [TestCase("CustomConsolidator", true, "Type mismatch found between consolidator and symbol. Symbol: SPY does not support input type: QuoteBar. Supported types: TradeBar.")]
+        //Test 3: Using an invalid consolidator; Should try to convert into C#, Python Consolidator and timedelta and fail as the type is invalid
+        [TestCase("InvalidConsolidator", true, "Invalid third argument, should be either a valid consolidator or timedelta object. The following exception was thrown: ")]
+        public void AllPythonRegisterIndicatorBadCases(string consolidatorName, bool needsInvoke, string expectedMessage)
+        {
+            //This test covers all three bad cases of registering a indicator through Python
+
+            //Setup algorithm and Equity
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.AddData<TradeBar>("SPY", Resolution.Daily);
+            var spy = "SPY";
+
+            //Setup Python Indicator and Consolidator
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
+                    "from AlgorithmImports import *\n" +
+                    "consolidator = QuoteBarConsolidator(timedelta(days = 5)) \n" +
+                    "class CustomIndicator(PythonIndicator):\n" +
+                    "   def __init__(self):\n" +
+                    "       self.Value = 0\n" +
+                    "   def Update(self, input):\n" +
+                    "       self.Value = input.Value\n" +
+                    "       return True\n" +
+                    "class CustomConsolidator(PythonConsolidator):\n" +
+                    "   def __init__(self):\n" +
+                    "       self.InputType = QuoteBar\n" +
+                    "       self.OutputType = QuoteBar\n" +
+                    "       self.Consolidated = None\n" +
+                    "       self.WorkingData = None\n" +
+                    "class InvalidConsolidator:\n" +
+                    "   pass\n"
+                );
+
+                //Get our variables from Python
+                var PyIndicator = module.GetAttr("CustomIndicator").Invoke();
+                var Consolidator = module.GetAttr(consolidatorName);
+                if (needsInvoke)
+                {
+                    Consolidator = Consolidator.Invoke();
+                }
+
+                var exception = Assert.Throws<ArgumentException>(() => algorithm.RegisterIndicator(spy, PyIndicator, Consolidator));
+                Assert.That(exception.Message, Is.EqualTo(expectedMessage));
             }
         }
 
