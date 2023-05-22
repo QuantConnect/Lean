@@ -43,16 +43,16 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             {
                 Symbols.SPY,
                 Symbols.EURUSD,
-                Symbols.ES_Future_Chain,
-                Symbols.SPY_Option_Chain
+                Symbols.Future_ESZ18_Dec2018,
+                Symbols.SPY_C_192_Feb19_2016
             };
 
             var targetList = new List<PortfolioTarget>()
             {
                 new PortfolioTarget(Symbols.SPY, (decimal)0.2),
                 new PortfolioTarget(Symbols.EURUSD, (decimal)0.3),
-                new PortfolioTarget(Symbols.ES_Future_Chain, (decimal)0.2),
-                new PortfolioTarget(Symbols.SPY_Option_Chain, (decimal)0.3)
+                new PortfolioTarget(Symbols.Future_ESZ18_Dec2018, (decimal)0.2),
+                new PortfolioTarget(Symbols.SPY_C_192_Feb19_2016, (decimal)0.3)
             };
 
             var securityManager = CreateSecurityManager(symbols);
@@ -69,7 +69,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             var message = manager.GetMessageSent(new SignalExportTargetParameters { Targets = targetList, Algorithm = algorithm});
 
-            var expectedMessage = @"{""positions"":[{""symbol"":""SPY R735QTJ8XC9X"",""typeofsymbol"":""stock"",""quant"":99},{""symbol"":""EURUSD 8G"",""typeofsymbol"":""forex"",""quant"":149},{""symbol"":""ES 1S1"",""typeofsymbol"":""future"",""quant"":99},{""symbol"":""SPY 2U|SPY R735QTJ8XC9X"",""typeofsymbol"":""option"",""quant"":149}],""systemid"":0,""apikey"":""""}";
+            var expectedMessage = @"{""positions"":[{""symbol"":""SPY"",""typeofsymbol"":""stock"",""quant"":99},{""symbol"":""EURUSD"",""typeofsymbol"":""forex"",""quant"":149},{""symbol"":""@ESZ8"",""typeofsymbol"":""future"",""quant"":99},{""symbol"":""SPY1619B192"",""typeofsymbol"":""option"",""quant"":149}],""systemid"":0,""apikey"":""""}";
 
             Assert.AreEqual(expectedMessage, message);
         }
