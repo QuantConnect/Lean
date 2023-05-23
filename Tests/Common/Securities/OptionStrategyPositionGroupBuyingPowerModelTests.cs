@@ -486,8 +486,8 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.Strangle, 1, 0m).Explicit(),                 // IB:  0
             new TestCaseData(OptionStrategyDefinitions.Strangle, -1, 3000m).Explicit(),             // IB:  3001.60
             new TestCaseData(OptionStrategyDefinitions.ButterflyCall, 1, 0m),                       // IB:  0
-            new TestCaseData(OptionStrategyDefinitions.ButterflyCall, -1, 0m).Explicit(),           // IB:  0
-            new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, 1, 0m).Explicit(),       // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.ButterflyCall, -1, 1000m),                   // IB:  1000
+            new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, 1, 1000m),               // IB:  1000
             new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, -1, 0m),                 // IB:  0
             new TestCaseData(OptionStrategyDefinitions.ButterflyPut, 1, 0m),                        // IB:  0
             new TestCaseData(OptionStrategyDefinitions.ButterflyPut, -1, 1000m),                    // IB:  1000
@@ -567,8 +567,8 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.Strangle, 1, 0m).Explicit(),                 // IB:  0
             new TestCaseData(OptionStrategyDefinitions.Strangle, -1, 3000m).Explicit(),             // IB:  3001.60
             new TestCaseData(OptionStrategyDefinitions.ButterflyCall, 1, 0m),                       // IB:  0
-            new TestCaseData(OptionStrategyDefinitions.ButterflyCall, -1, 0m).Explicit(),           // IB:  0
-            new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, 1, 0m).Explicit(),       // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.ButterflyCall, -1, 1000m),                   // IB:  1000
+            new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, 1, 1000m),               // IB:  1000
             new TestCaseData(OptionStrategyDefinitions.ShortButterflyCall, -1, 0m),                 // IB:  0
             new TestCaseData(OptionStrategyDefinitions.ButterflyPut, 1, 0m),                        // IB:  0
             new TestCaseData(OptionStrategyDefinitions.ButterflyPut, -1, 1000m),                    // IB:  1000
