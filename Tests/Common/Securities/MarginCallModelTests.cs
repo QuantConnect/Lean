@@ -259,11 +259,10 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void GenerateMarginCallOrdersForPositionGroup()
         {
-            const int quantity = 25000;
-            const decimal leverage = 1m;
+            const int cash = 22000;
             var orderProcessor = new FakeOrderProcessor();
-            var portfolio = GetPortfolio(orderProcessor, quantity);
-            portfolio.MarginCallModel = new DefaultMarginCallModel(portfolio, null);
+            var portfolio = GetPortfolio(orderProcessor, cash);
+            portfolio.MarginCallModel = new DefaultMarginCallModel(portfolio, null, 0m);
 
             var underlying = GetSecurity(Symbols.SPY);
             var callOption = GetOption(Symbols.SPY_C_192_Feb19_2016);
@@ -334,6 +333,10 @@ namespace QuantConnect.Tests.Common.Securities
             orderProcessor.AddTicket(new OrderTicket(null, putOptionRequest));
 
             portfolio.ProcessFills(new List<OrderEvent> { callOptionOrderFill, putOptionOrderFill });
+
+            // Simulate options price increase so the remaining margin goes below zero
+            callOption.SetMarketPrice(new Tick(time.AddMinutes(1), callOption.Symbol, callOptionPrice * 1.2m, callOptionPrice * 1.2m));
+            putOption.SetMarketPrice(new Tick(time.AddMinutes(1), putOption.Symbol, putOptionPrice * 1.2m, putOptionPrice * 1.2m));
 
             var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out var issueMarginCallWarning);
             Assert.IsTrue(issueMarginCallWarning);

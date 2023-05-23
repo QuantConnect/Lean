@@ -161,13 +161,37 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             );
 
         /// <summary>
+        /// Short Straddle strategy is a combination of selling a call and selling a put, both with the same strike price
+        /// and expiration.
+        /// </summary>
+        /// <remarks>Inverse of the <see cref="Straddle"/></remarks>
+        public static OptionStrategyDefinition ShortStraddle { get; }
+            = OptionStrategyDefinition.Create("Short Straddle",
+                OptionStrategyDefinition.CallLeg(-1),
+                OptionStrategyDefinition.PutLeg(-1, (legs, p) => p.Strike == legs[0].Strike,
+                                                    (legs, p) => p.Expiration == legs[0].Expiration)
+            );
+
+        /// <summary>
         /// Strangle strategy consists of buying a call option and a put option with the same expiration date.
         /// The strike price of the call is above the strike of the put.
         /// </summary>
         public static OptionStrategyDefinition Strangle { get; }
             = OptionStrategyDefinition.Create("Strangle",
                 OptionStrategyDefinition.CallLeg(+1),
-                OptionStrategyDefinition.PutLeg(+1, (legs, p) => p.Strike <= legs[0].Strike,
+                OptionStrategyDefinition.PutLeg(+1, (legs, p) => p.Strike < legs[0].Strike,
+                                                    (legs, p) => p.Expiration == legs[0].Expiration)
+            );
+
+        /// <summary>
+        /// Strangle strategy consists of selling a call option and a put option with the same expiration date.
+        /// The strike price of the call is above the strike of the put.
+        /// </summary>
+        /// <remarks>Inverse of the <see cref="Strangle"/></remarks>
+        public static OptionStrategyDefinition ShortStrangle { get; }
+            = OptionStrategyDefinition.Create("Short Strangle",
+                OptionStrategyDefinition.CallLeg(-1),
+                OptionStrategyDefinition.PutLeg(-1, (legs, p) => p.Strike < legs[0].Strike,
                                                     (legs, p) => p.Expiration == legs[0].Expiration)
             );
 

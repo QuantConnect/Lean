@@ -55,12 +55,8 @@ namespace QuantConnect.Algorithm.CSharp
                     var freeMarginPostTrade = Portfolio.MarginRemaining;
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.Strangle.Name, 10);
 
-                    var initialMarginRequiredPut = Securities[oufOfTheMoneyPut.Symbol].BuyingPowerModel.GetInitialMarginRequirement(
-                        new InitialMarginParameters(Securities[oufOfTheMoneyPut.Symbol], 10));
-                    var initialMarginRequiredCall = Securities[oufOfTheMoneyCall.Symbol].BuyingPowerModel.GetInitialMarginRequirement(
-                        new InitialMarginParameters(Securities[oufOfTheMoneyCall.Symbol], 10));
-
-                    var expectedMarginUsage = initialMarginRequiredPut + initialMarginRequiredCall;
+                    // Long strangles have no margin requirement
+                    var expectedMarginUsage = 0m;
                     if (expectedMarginUsage != Portfolio.TotalMarginUsed)
                     {
                         throw new Exception("Unexpect margin used!");

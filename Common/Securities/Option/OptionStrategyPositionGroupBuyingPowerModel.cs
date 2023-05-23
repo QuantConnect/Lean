@@ -134,18 +134,14 @@ namespace QuantConnect.Securities.Option
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.Straddle.Name || _optionStrategy.Name == OptionStrategyDefinitions.Strangle.Name)
             {
-                // Margined as two long options.
-                var callOption = parameters.PositionGroup.Positions.Single(position => position.Symbol.ID.OptionRight == OptionRight.Call);
-                var callSecurity = (Option)parameters.Portfolio.Securities[callOption.Symbol];
-                var callMargin = callSecurity.BuyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(
-                    callSecurity, callOption.Quantity));
-
-                var putOption = parameters.PositionGroup.Positions.Single(position => position.Symbol.ID.OptionRight == OptionRight.Put);
-                var putSecurity = (Option)parameters.Portfolio.Securities[putOption.Symbol];
-                var putMargin = putSecurity.BuyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(
-                    putSecurity, putOption.Quantity));
-
-                var result = callMargin.Value + putMargin.Value;
+                // Margined as two long options: since there is not margin requirements for long options, we return 0
+                return new MaintenanceMargin(0);
+            }
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.ShortStraddle.Name || _optionStrategy.Name == OptionStrategyDefinitions.ShortStrangle.Name)
+            {
+                var result = GetShortStraddleStrangleMargin(parameters.PositionGroup, parameters.Portfolio,
+                    (option, quantity) => Math.Abs(option.BuyingPowerModel.GetMaintenanceMargin(
+                        MaintenanceMarginParameters.ForQuantityAtCurrentPrice(option, quantity))));
                 return new MaintenanceMargin(result);
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.ButterflyCall.Name || _optionStrategy.Name == OptionStrategyDefinitions.ButterflyPut.Name)
@@ -224,16 +220,13 @@ namespace QuantConnect.Securities.Option
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.Straddle.Name || _optionStrategy.Name == OptionStrategyDefinitions.Strangle.Name)
             {
-                // Margined as two long options.
-                var callOption = parameters.PositionGroup.Positions.Single(position => position.Symbol.ID.OptionRight == OptionRight.Call);
-                var callSecurity = (Option)parameters.Portfolio.Securities[callOption.Symbol];
-                var callMargin = callSecurity.BuyingPowerModel.GetInitialMarginRequirement(callSecurity, callOption.Quantity);
-
-                var putOption = parameters.PositionGroup.Positions.Single(position => position.Symbol.ID.OptionRight == OptionRight.Put);
-                var putSecurity = (Option)parameters.Portfolio.Securities[putOption.Symbol];
-                var putMargin = putSecurity.BuyingPowerModel.GetInitialMarginRequirement(putSecurity, putOption.Quantity);
-
-                var result = callMargin + putMargin;
+                // Margined as two long options: since there is not margin requirements for long options, we return 0
+                return new InitialMargin(0);
+            }
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.ShortStraddle.Name || _optionStrategy.Name == OptionStrategyDefinitions.ShortStrangle.Name)
+            {
+                var result = GetShortStraddleStrangleMargin(parameters.PositionGroup, parameters.Portfolio,
+                    (option, quantity) => Math.Abs(option.BuyingPowerModel.GetInitialMarginRequirement(option, quantity)));
                 return new InitialMargin(result);
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.ButterflyCall.Name || _optionStrategy.Name == OptionStrategyDefinitions.ButterflyPut.Name)
@@ -330,6 +323,35 @@ namespace QuantConnect.Securities.Option
 
             // convert into account currency
             return portfolio.CashBook.ConvertToAccountCurrency(strikeDifference, optionSecurity.QuoteCurrency.Symbol);
+        }
+
+        /// <summary>
+        /// Returns the margin for a short straddle or strangle.
+        /// This is the same for both the initial margin requirement and the maintenance margin.
+        /// </summary>
+        private static decimal GetShortStraddleStrangleMargin(IPositionGroup positionGroup, SecurityPortfolioManager portfolio,
+            Func<Option, decimal, decimal> getOptionMargin)
+        {
+            var callOption = positionGroup.Positions.Single(position => position.Symbol.ID.OptionRight == OptionRight.Call);
+            var callSecurity = (Option)portfolio.Securities[callOption.Symbol];
+            var callMargin = getOptionMargin(callSecurity, callOption.Quantity);
+
+            var putOption = positionGroup.Positions.Single(position => position.Symbol.ID.OptionRight == OptionRight.Put);
+            var putSecurity = (Option)portfolio.Securities[putOption.Symbol];
+            var putMargin = getOptionMargin(putSecurity, putOption.Quantity);
+
+            var result = 0m;
+
+            if (putMargin > callMargin)
+            {
+                result = putMargin + callSecurity.Price * callSecurity.ContractUnitOfTrade * Math.Abs(callOption.Quantity);
+            }
+            else
+            {
+                result = callMargin + putSecurity.Price * putSecurity.ContractUnitOfTrade * Math.Abs(putOption.Quantity);
+            }
+
+            return result;
         }
     }
 }
