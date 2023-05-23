@@ -119,10 +119,22 @@ namespace QuantConnect.Securities.Option
                 return new MaintenanceMargin(inAccountCurrency);
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.BearCallSpread.Name
-                || _optionStrategy.Name == OptionStrategyDefinitions.BullCallSpread.Name
-                || _optionStrategy.Name == OptionStrategyDefinitions.CallCalendarSpread.Name)
+                || _optionStrategy.Name == OptionStrategyDefinitions.BullCallSpread.Name)
             {
                 var result = GetLongCallShortCallStrikeDifferenceMargin(parameters.PositionGroup, parameters.Portfolio);
+                return new MaintenanceMargin(result);
+            }
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.CallCalendarSpread.Name)
+            {
+                return new MaintenanceMargin(0);
+            }
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.ShortCallCalendarSpread.Name)
+            {
+                var shortCall = parameters.PositionGroup.Positions.Single(position => position.Quantity < 0);
+                var shortCallSecurity = (Option)parameters.Portfolio.Securities[shortCall.Symbol];
+                var result = shortCallSecurity.BuyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(
+                    shortCallSecurity, shortCall.Quantity));
+
                 return new MaintenanceMargin(result);
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.BearPutSpread.Name
@@ -205,11 +217,22 @@ namespace QuantConnect.Securities.Option
                 return new InitialMargin(margin.Value);
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.BearCallSpread.Name
-                || _optionStrategy.Name == OptionStrategyDefinitions.BullCallSpread.Name
-                || _optionStrategy.Name == OptionStrategyDefinitions.CallCalendarSpread.Name)
+                || _optionStrategy.Name == OptionStrategyDefinitions.BullCallSpread.Name)
             {
                 var result = GetLongCallShortCallStrikeDifferenceMargin(parameters.PositionGroup, parameters.Portfolio);
                 return new InitialMargin(result);
+            }
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.CallCalendarSpread.Name)
+            {
+                return new InitialMargin(0);
+            }
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.ShortCallCalendarSpread.Name)
+            {
+                var shortCall = parameters.PositionGroup.Positions.Single(position => position.Quantity < 0);
+                var shortCallSecurity = (Option)parameters.Portfolio.Securities[shortCall.Symbol];
+                var result = shortCallSecurity.BuyingPowerModel.GetInitialMarginRequirement(shortCallSecurity, shortCall.Quantity);
+
+                return new InitialMargin(Math.Abs(result));
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.BearPutSpread.Name
                 || _optionStrategy.Name == OptionStrategyDefinitions.BullPutSpread.Name

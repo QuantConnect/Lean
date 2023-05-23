@@ -297,17 +297,31 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 0, 1300, true),
             new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 0, 1310, false).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 0, -40, true),
-            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 0, -60, false).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 0, -60, false),//.Explicit(),
             new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 20, 1300 - 20, true),
             new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 20, 1310 - 20, false).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 20, -20, true),
             new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 20, -40 - 20, true),
-            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 20, -60 - 20, false).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 20, -60 - 20, false),//.Explicit(),
             new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -20, -40 - -20, true),
             new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -20, -60 - -20, false).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -20, 20, true),
             new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -20, 1300 - -20, true),
             new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -20, 1310 - -20, false).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, 0, -1300, true),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, 0, -1310, false).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, 0, 40, true),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, 0, 60, false),//.Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, 20, -1300 - 20, true),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, 20, -1310 - 20, false).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, 20, -20, true),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, 20, 40 - 20, true),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, 20, 60 - 20, false),//.Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, -20, 40 - -20, true),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, -20, 60 - -20, false).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, -20, 20, true),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, -20, -1300 - -20, true),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, -20, -1310 - -20, false).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, 0, 1000, true),
             new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, 0, 10000, true),
             new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, 0, -310, true),
@@ -516,7 +530,9 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, 1, 1000m),                // IB:  1000
             new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, -1, 0m),                  // IB:  0
             new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 1, 0m),                  // IB:  0
-            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -1, 0m),                 // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -1, 20000m),             // IB:  20537
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, 1, 20000m),         // IB:  20537
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, -1, 0m),            // IB:  0
             new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, 1, 0m),                   // IB:  0
             new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, -1, 3000m).Explicit(),    // IB:  3001.6
             new TestCaseData(OptionStrategyDefinitions.IronCondor, 1, 1000m),                       // IB:  1017.62
@@ -601,7 +617,9 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, 1, 1000m),                // IB:  1000
             new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, -1, 0m),                  // IB:  0
             new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 1, 0m),                  // IB:  0
-            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -1, 0m),                 // IB:  0
+            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -1, 20000m),             // IB:  20537
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, 1, 20000m),         // IB:  20537
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, -1, 0m),            // IB:  0
             new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, 1, 0m),                   // IB:  0
             new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, -1, 3000m).Explicit(),    // IB:  3001.6
             new TestCaseData(OptionStrategyDefinitions.IronCondor, 1, 1000m),                       // IB:  1017.62
@@ -724,8 +742,16 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, -10, 0m, 0).Explicit(),
             // Initial margin for CallCalendarSpread with quantity 10 is 0
             new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 10, 0m, 0).Explicit(),
-            // Initial margin for CallCalendarSpread with quantity -10 is 0
-            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -10, 0m, 0).Explicit(),
+            // Initial margin for CallCalendarSpread with quantity -10 is 194000
+            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -10, 194000m / 10, -1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -10, -194000m / 10, +1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -10, -194000m, +10),
+            // Initial margin for ShortCallCalendarSpread with quantity 10 is 194000
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, 10, 194000m / 10, +1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, 10, -194000m / 10, -1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, 10, -194000m, -10).Explicit(),
+            // Initial margin for ShortCallCalendarSpread with quantity 10 is 0
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, 10, 0m, 0).Explicit(),
             // Initial margin for PutCalendarSpread with quantity 10 is 0
             new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, 10, 0m, 0).Explicit(),
             // Initial margin for PutCalendarSpread with quantity -10 is 0
@@ -859,8 +885,16 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, -10, 0m, 0).Explicit(),
             // Initial margin requirement for CallCalendarSpread with quantity 10 is 0
             new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 10, 0m, 0).Explicit(),
-            // Initial margin requirement for CallCalendarSpread with quantity -10 is 0
-            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -10, 0m, 0).Explicit(),
+            // Initial margin requirement for CallCalendarSpread with quantity -10 is 194000
+            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -10, 194000m * 11 / 10, -1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -10, 194000m * 9 / 10, +1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -10, 0m, +10).Explicit(),
+            // Initial margin requirement for ShortCallCalendarSpread with quantity 10 is 194000
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, 10, 194000m * 11 / 10, +1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, 10, 194000m * 9 / 10, -1).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, 10, 0m, -10).Explicit(),
+            // Initial margin requirement for ShortCallCalendarSpread with quantity -10 is 0
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, -10, 0m, 0).Explicit(),
             // Initial margin requirement for PutCalendarSpread with quantity 10 is 0
             new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, 10, 0m, 0).Explicit(),
             // Initial margin requirement for PutCalendarSpread with quantity -10 is 0
@@ -1022,12 +1056,20 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ShortButterflyPut, -10, 20),
             new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 10, 1),
             new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 10, -1),
-            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 10, -10),
+            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 10, -10).Explicit(),
             new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, 10, -20),
             new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -10, -1),
             new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -10, 1),
-            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -10, 10),
-            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -10, 20),
+            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -10, 10).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -10, 20).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, 10, 1),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, 10, -10).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, 10, -20).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, -10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, -10, 1),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, -10, 10).Explicit(),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, -10, 20),
             new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, 10, 1),
             new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, 10, -1),
             new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, 10, -10),
@@ -1225,6 +1267,14 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -10, 1),
             new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -10, 10),
             new TestCaseData(OptionStrategyDefinitions.CallCalendarSpread, -10, 20),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, 10, 1),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, 10, -10),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, 10, -20),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, -10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, -10, 1),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, -10, 10),
+            new TestCaseData(OptionStrategyDefinitions.ShortCallCalendarSpread, -10, 20),
             new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, 10, 1),
             new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, 10, -1),
             new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, 10, -10),
@@ -1624,6 +1674,24 @@ namespace QuantConnect.Tests.Common.Securities
 
                 longCallOption.Holdings.SetHoldings(longCallOption.Price, initialHoldingsQuantity);
                 shortCallOption.Holdings.SetHoldings(shortCallOption.Price, -initialHoldingsQuantity);
+
+                if (initialHoldingsQuantity < 0)
+                {
+                    expectedPositionGroupBPMStrategy = OptionStrategyDefinitions.ShortCallCalendarSpread.Name;
+                }
+            }
+            else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.ShortCallCalendarSpread.Name)
+            {
+                var longCallOption = spyMay19_300Call;
+                var shortCallOption = spyMay17_300Call;
+
+                longCallOption.Holdings.SetHoldings(longCallOption.Price, -initialHoldingsQuantity);
+                shortCallOption.Holdings.SetHoldings(shortCallOption.Price, initialHoldingsQuantity);
+
+                if (initialHoldingsQuantity < 0)
+                {
+                    expectedPositionGroupBPMStrategy = OptionStrategyDefinitions.CallCalendarSpread.Name;
+                }
             }
             else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.PutCalendarSpread.Name)
             {
