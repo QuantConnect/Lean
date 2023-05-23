@@ -507,8 +507,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             uint contractDepthOffset = 0
             )
         {
-            var dataTypes = subscriptionDataTypes ??
-                LookupSubscriptionConfigDataTypes(symbol.SecurityType, resolution ?? Resolution.Minute, symbol.IsCanonical());
+            var dataTypes = subscriptionDataTypes;
+            if(dataTypes == null)
+            {
+                if (symbol.SecurityType == SecurityType.Base && SecurityIdentifier.TryGetCustomDataTypeInstance(symbol.ID.Symbol, out var type))
+                {
+                    // we've detected custom data request if we find a type let's use it
+                    dataTypes = new List<Tuple<Type, TickType>> { new Tuple<Type, TickType>(type, TickType.Trade) };
+                }
+                else
+                {
+                    dataTypes = LookupSubscriptionConfigDataTypes(symbol.SecurityType, resolution ?? Resolution.Minute, symbol.IsCanonical());
+                }
+            }
 
             if (!dataTypes.Any())
             {

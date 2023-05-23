@@ -227,7 +227,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(Resolution.Daily, resolution);
             Assert.AreEqual("SPY.ETFConstituentData", symbol.ID.Symbol);
             Assert.AreEqual(new DateTime(2020, 1, 2), date);
-            Assert.IsTrue(symbol.ID.Symbol.TryGetCustomDataType(out var dataType));
+            Assert.IsTrue(SecurityIdentifier.TryGetCustomDataType(symbol.ID.Symbol, out var dataType));
             Assert.AreEqual(typeof(ETFConstituentData).Name, dataType);
         }
 

@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Linq;
 using QuantConnect.Util;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
@@ -70,7 +71,12 @@ namespace QuantConnect.Securities
             var configList = new SubscriptionDataConfigList(symbol);
             configList.AddRange(subscriptionDataConfigList);
 
-            var exchangeHours = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType).ExchangeHours;
+            var dataTypes = Enumerable.Empty<Type>();
+            if(symbol.SecurityType == SecurityType.Base && SecurityIdentifier.TryGetCustomDataTypeInstance(symbol.ID.Symbol, out var type))
+            {
+                dataTypes = new[] { type };
+            }
+            var exchangeHours = _marketHoursDatabase.GetEntry(symbol, dataTypes).ExchangeHours;
 
             var defaultQuoteCurrency = _cashBook.AccountCurrency;
             if (symbol.ID.SecurityType == SecurityType.Forex)

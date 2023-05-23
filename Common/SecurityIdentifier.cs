@@ -20,6 +20,7 @@ using System.Numerics;
 using Newtonsoft.Json;
 using ProtoBuf;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -43,6 +44,7 @@ namespace QuantConnect
     {
         #region Empty, DefaultDate Fields
 
+        private static readonly Dictionary<string, Type> TypeMapping = new();
         private static readonly Dictionary<string, SecurityIdentifier> SecurityIdentifierCache = new();
         private static readonly string MapFileProviderTypeName = Config.Get("map-file-provider", "LocalDiskMapFileProvider");
         private static readonly char[] InvalidCharacters = {'|', ' '};
@@ -504,7 +506,37 @@ namespace QuantConnect
                 return symbol;
             }
 
+            TypeMapping[dataType.Name] = dataType;
             return $"{symbol.ToUpperInvariant()}.{dataType.Name}";
+        }
+
+        /// <summary>
+        /// Tries to fetch the custom data type associated with a symbol
+        /// </summary>
+        /// <remarks>Custom data type <see cref="SecurityIdentifier"/> symbol value holds their data type</remarks>
+        public static bool TryGetCustomDataType(string symbol, out string type)
+        {
+            type = null;
+            if (!string.IsNullOrEmpty(symbol))
+            {
+                var index = symbol.LastIndexOf('.');
+                if (index != -1 && symbol.Length > index + 1)
+                {
+                    type = symbol.Substring(index + 1);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Tries to fetch the custom data type associated with a symbol
+        /// </summary>
+        /// <remarks>Custom data type <see cref="SecurityIdentifier"/> symbol value holds their data type</remarks>
+        public static bool TryGetCustomDataTypeInstance(string symbol, out Type type)
+        {
+            type = null;
+            return TryGetCustomDataType(symbol, out var strType) && TypeMapping.TryGetValue(strType, out type);
         }
 
         /// <summary>

@@ -258,7 +258,7 @@ namespace QuantConnect.Securities
                 || securityType == SecurityType.FutureOption && TryGetEntry(market,
                     FuturesOptionsSymbolMappings.MapFromOption(symbol), SecurityType.Future, out entry)
                 // if custom data type check for type specific entry
-                || (securityType == SecurityType.Base && symbol.TryGetCustomDataType(out var customType)
+                || (securityType == SecurityType.Base && SecurityIdentifier.TryGetCustomDataType(symbol, out var customType)
                     && _entries.TryGetValue(new SecurityDatabaseKey(market, $"TYPE.{customType}", securityType), out entry));
         }
 
