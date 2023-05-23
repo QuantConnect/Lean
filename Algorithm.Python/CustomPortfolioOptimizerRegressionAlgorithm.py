@@ -13,7 +13,6 @@
 
 from AlgorithmImports import *
 from MeanVarianceOptimizationFrameworkAlgorithm import MeanVarianceOptimizationFrameworkAlgorithm
-import numpy as np
 
 ### <summary>
 ### Regression algorithm asserting we can specify a custom portfolio
@@ -25,7 +24,7 @@ import numpy as np
 class CustomPortfolioOptimizerRegressionAlgorithm(MeanVarianceOptimizationFrameworkAlgorithm):
     def Initialize(self):
         super().Initialize()
-        self.SetPortfolioConstruction(MeanVarianceOptimizationPortfolioConstructionModel(CustomPortfolioOptimizer(), Resolution.Daily, PortfolioBias.LongShort, 1, 63, Resolution.Daily, 0.02))
+        self.SetPortfolioConstruction(MeanVarianceOptimizationPortfolioConstructionModel(Resolution.Daily, PortfolioBias.LongShort, 1, 63, Resolution.Daily, 0.02, CustomPortfolioOptimizer()))
 
 class CustomPortfolioOptimizer:
     def Optimize(self, historicalReturns, expectedReturns, covariance):
