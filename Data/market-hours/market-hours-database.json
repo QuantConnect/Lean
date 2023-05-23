@@ -47360,7 +47360,7 @@
       ]
     },
     "Index-usa-NDX": {
-      "dataTimeZone": "America/New_York",
+      "dataTimeZone": "America/Chicago",
       "exchangeTimeZone": "America/New_York",
       "sunday": [],
       "monday": [
