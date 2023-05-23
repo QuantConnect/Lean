@@ -77,9 +77,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     // be user friendly, will return contracts from the previous tradable date
-                    foreach (var symbols in GetSymbols(canonicalSymbol, Time.GetStartTimeForTradeBars(entry.ExchangeHours, date, Time.OneDay, 1, false, entry.DataTimeZone)))
+                    foreach (var symbol in GetSymbols(canonicalSymbol, Time.GetStartTimeForTradeBars(entry.ExchangeHours, date, Time.OneDay, 1, false, entry.DataTimeZone)))
                     {
-                        yield return symbols;
+                        yield return symbol;
                     }
                     yield break;
                 }
@@ -94,8 +94,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // generate and return the contract symbol for each zip entry
             foreach (var zipEntryName in entries)
             {
-                yield return LeanData.ReadSymbolFromZipEntry(canonicalSymbol, usedResolution, zipEntryName);
+                var symbol = LeanData.ReadSymbolFromZipEntry(canonicalSymbol, usedResolution, zipEntryName);
+                // do not return expired contracts, because we are potentially sourcing this information from daily/hour files we could pick up already expired contracts
+                if (!IsContractExpired(symbol, date))
+                {
+                    yield return symbol;
+                }
             }
+        }
+
+        /// <summary>
+        /// Helper method to determine if a contract is expired for the requested date
+        /// </summary>
+        protected static bool IsContractExpired(Symbol symbol, DateTime date)
+        {
+            return symbol.ID.Date.Date < date.Date;
         }
 
         private IEnumerable<string> GetZipEntries(Symbol canonicalSymbol, DateTime date, Resolution resolution)

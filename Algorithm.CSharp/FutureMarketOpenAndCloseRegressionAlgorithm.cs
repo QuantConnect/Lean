@@ -28,29 +28,29 @@ namespace QuantConnect.Algorithm.CSharp
         protected virtual bool ExtendedMarketHours => false;
 
         protected virtual List<DateTime> AfterMarketOpen => new List<DateTime>() {
-            new DateTime(2022, 02, 01, 9, 30, 0),
-            new DateTime(2022, 02, 02, 9, 30, 0),
-            new DateTime(2022, 02, 03, 9, 30, 0),
-            new DateTime(2022, 02, 04, 9, 30, 0),
-            new DateTime(2022, 02, 07, 9, 30, 0),
-            new DateTime(2022, 02, 08, 9, 30, 0)
+            new DateTime(2020, 02, 04, 9, 30, 0),
+            new DateTime(2020, 02, 05, 9, 30, 0),
+            new DateTime(2020, 02, 06, 9, 30, 0),
+            new DateTime(2020, 02, 07, 9, 30, 0),
+            new DateTime(2020, 02, 10, 9, 30, 0),
+            new DateTime(2020, 02, 11, 9, 30, 0)
         };
         protected virtual List<DateTime> BeforeMarketClose => new List<DateTime>()
         {
-            new DateTime(2022, 02, 01, 17, 0, 0),
-            new DateTime(2022, 02, 02, 17, 0, 0),
-            new DateTime(2022, 02, 03, 17, 0, 0),
-            new DateTime(2022, 02, 04, 17, 0, 0),
-            new DateTime(2022, 02, 07, 17, 0, 0),
-            new DateTime(2022, 02, 08, 17, 0, 0)
+            new DateTime(2020, 02, 04, 17, 0, 0),
+            new DateTime(2020, 02, 05, 17, 0, 0),
+            new DateTime(2020, 02, 06, 17, 0, 0),
+            new DateTime(2020, 02, 07, 17, 0, 0),
+            new DateTime(2020, 02, 10, 17, 0, 0),
+            new DateTime(2020, 02, 11, 17, 0, 0)
         };
         private Queue<DateTime> _afterMarketOpenQueue;
         private Queue<DateTime> _beforeMarketCloseQueue;
 
         public override void Initialize()
         {
-            SetStartDate(2022, 02, 01);
-            SetEndDate(2022, 02, 08);
+            SetStartDate(2020, 02, 04);
+            SetEndDate(2020, 02, 11);
             var esFuture = AddFuture("ES", extendedMarketHours: ExtendedMarketHours).Symbol;
 
             _afterMarketOpenQueue = new Queue<DateTime>(AfterMarketOpen);
@@ -100,7 +100,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 27067;
+        public virtual long DataPoints => 13586;
 
         /// </summary>
         /// Data Points count of the algorithm history
@@ -128,8 +128,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
+            {"Information Ratio", "-11.049"},
+            {"Tracking Error", "0.087"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
