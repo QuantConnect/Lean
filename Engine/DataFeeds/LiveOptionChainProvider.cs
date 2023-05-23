@@ -122,7 +122,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     // Source data from TheOCC if we're trading equity or index options
-                    foreach (var optionSymbol in GetEquityIndexOptionContractList(underlyingSymbol, expectedOptionTicker))
+                    foreach (var optionSymbol in GetEquityIndexOptionContractList(underlyingSymbol, expectedOptionTicker).Where(symbol => !IsContractExpired(symbol, date)))
                     {
                         yield return optionSymbol;
                     }
@@ -130,7 +130,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 else if (underlyingSymbol.SecurityType == SecurityType.Future)
                 {
                     // We get our data from CME if we're trading future options
-                    foreach (var optionSymbol in GetFutureOptionContractList(underlyingSymbol, date))
+                    foreach (var optionSymbol in GetFutureOptionContractList(underlyingSymbol, date).Where(symbol => !IsContractExpired(symbol, date)))
                     {
                         yield return optionSymbol;
                     }
