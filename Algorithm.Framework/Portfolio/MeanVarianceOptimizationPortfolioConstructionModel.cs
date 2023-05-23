@@ -64,6 +64,27 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         }
 
         /// <summary>
+        /// Initialize the model, with a custom Python portfolio optimizer
+        /// </summary>
+        /// <param name="optimizer">The portfolio optimization algorithm. If the algorithm is not provided then the default will be mean-variance optimization.</param>
+        /// <param name="rebalanceResolution">Rebalancing frequency</param>
+        /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
+        /// <param name="lookback">Historical return lookback period</param>
+        /// <param name="period">The time interval of history price to calculate the weight</param>
+        /// <param name="resolution">The resolution of the history price</param>
+        /// <param name="targetReturn">The target portfolio return</param>
+        public MeanVarianceOptimizationPortfolioConstructionModel(PyObject optimizer,
+            Resolution rebalanceResolution = Resolution.Daily,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort,
+            int lookback = 1,
+            int period = 63,
+            Resolution resolution = Resolution.Daily,
+            double targetReturn = 0.3)
+            : this(rebalanceResolution.ToTimeSpan(), portfolioBias, lookback, period, resolution, targetReturn, new PortfolioOptimizerPythonWrapper(optimizer))
+        {
+        }
+
+        /// <summary>
         /// Initialize the model
         /// </summary>
         /// <param name="rebalanceResolution">Rebalancing frequency</param>
