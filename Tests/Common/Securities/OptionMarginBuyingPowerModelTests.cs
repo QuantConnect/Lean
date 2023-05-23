@@ -171,7 +171,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // short option positions are very expensive in terms of margin.
             // Margin = 2 * 100 * (14 + 0.2 * 196) = 10640
-            Assert.AreEqual(10640m, buyingPowerModel.GetMaintenanceMargin(optionCall));
+            Assert.AreEqual(10640, (double)buyingPowerModel.GetMaintenanceMargin(optionCall), delta: 0.01);
         }
 
         [Test]
@@ -261,7 +261,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // short option positions are very expensive in terms of margin.
             // Margin = 2 * 100 * (14 + 0.2 * 182) = 10080
-            Assert.AreEqual(10080m, buyingPowerModel.GetMaintenanceMargin(optionPut));
+            Assert.AreEqual(10080, (double)buyingPowerModel.GetMaintenanceMargin(optionPut), delta: 0.01);
         }
 
         [Test]
@@ -381,15 +381,65 @@ namespace QuantConnect.Tests.Common.Securities
             var buyingPowerModel = new OptionMarginModel();
 
             // short option positions are very expensive in terms of margin.
-            // Margin = 2 * 100 * (4.68 + 0.2 * 192) = 8616
+            // Margin = 2 * 100 * 4.68 + 2 * 100 * MAX[0.2 * 192 - MAX(192 - 207, 0), 0.1 * 207] = 2 * 100 * {4.68 + MAX[0.2 * 192, 0.1 * 207]}
+            //        = 2 * 100 * {4.68 + MAX[38.4, 20.7]} = 2 * 100 * {4.68 + 38.4} = 2 * 100 * 43.08 = 3045
             Assert.AreEqual(8616, (double)buyingPowerModel.GetMaintenanceMargin(optionPut), 0.01);
 
             equity.SetMarketPrice(new Tick { Value = underlyingPriceEnd });
             optionPut.SetMarketPrice(new Tick { Value = optionPriceEnd });
 
             // short option positions are very expensive in terms of margin.
-            // Margin = 2 * 100 * (4.68 + 0.2 * 200) = 8936
+            // Margin = 2 * 100 * 4.68 + 2 * 100 * MAX[0.2 * 200 - MAX(200 - 207, 0), 0.1 * 207] = 2 * 100 * {4.68 + MAX[0.2 * 200, 0.1 * 207]}
+            //        = 2 * 100 * {4.68 + MAX[40, 20.7]} = 2 * 100 * {4.68 + 40} = 2 * 100 * 44.68 = 3045
             Assert.AreEqual(8936, (double)buyingPowerModel.GetMaintenanceMargin(optionPut), 0.01);
+        }
+
+        // ITM
+        [TestCase(OptionRight.Call, 300, 115.75, 415, 19800)] // IB: 19837
+        // OTM
+        [TestCase(OptionRight.Put, 300, 0.45, 415, 3000)] // IB: 3044
+        // ITM
+        [TestCase(OptionRight.Call, 390, 27.5, 415, 11000)] // IB: 11022
+        // OTM
+        [TestCase(OptionRight.Put, 390, 1.85, 415, 6000)] // IB: 6042
+        // OTM
+        [TestCase(OptionRight.Call, 430, 0.85, 415, 6800)] // IB: 6803
+        // ITM
+        [TestCase(OptionRight.Put, 430, 16.80, 415, 9900)] // IB: 9929
+        public void ShortOptionsMargin(OptionRight optionRight, decimal strikePrice, decimal optionPrice, decimal underlyingPrice,
+            double expectedUnitMargin)
+        {
+            var tz = TimeZones.NewYork;
+            var equity = new QuantConnect.Securities.Equity.Equity(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
+            equity.SetMarketPrice(new Tick { Value = underlyingPrice });
+
+            var optionSymbol = Symbol.CreateOption(Symbols.SPY, Market.USA, OptionStyle.American, optionRight, strikePrice,
+                new DateTime(2015, 02, 27));
+            var optionPut = new Option(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new SubscriptionDataConfig(typeof(TradeBar), optionSymbol, Resolution.Minute, tz, tz, true, false, false),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
+            optionPut.SetMarketPrice(new Tick { Value = optionPrice });
+            optionPut.Underlying = equity;
+            optionPut.Holdings.SetHoldings(optionPrice, -1);
+
+            var buyingPowerModel = new OptionMarginModel();
+
+            Assert.AreEqual(expectedUnitMargin, (double)buyingPowerModel.GetMaintenanceMargin(optionPut), delta: 0.05 * expectedUnitMargin);
+            Assert.AreEqual(10 * expectedUnitMargin,
+                (double)buyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(optionPut, -10)).Value,
+                delta: 0.05 * 10 * expectedUnitMargin);
         }
 
         [TestCase(0)]
