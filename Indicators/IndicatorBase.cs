@@ -14,10 +14,11 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using QuantConnect.Data;
+using System.Diagnostics;
 using QuantConnect.Logging;
+using System.Collections.Generic;
+using QuantConnect.Data.Consolidators;
 
 namespace QuantConnect.Indicators
 {
@@ -26,6 +27,13 @@ namespace QuantConnect.Indicators
     /// </summary>
     public abstract partial class IndicatorBase : IIndicator
     {
+        /// <summary>
+        /// The data consolidators associated with this indicator if any
+        /// </summary>
+        /// <remarks>These references allow us to unregister an indicator from getting future data updates through it's consolidators.
+        /// We need multiple consolitadors because some indicators consume data from multiple different symbols</remarks>
+        public ISet<IDataConsolidator> Consolidators { get; } = new HashSet<IDataConsolidator>();
+
         /// <summary>
         /// Gets the current state of this indicator. If the state has not been updated
         /// then the time on the value will equal DateTime.MinValue.
