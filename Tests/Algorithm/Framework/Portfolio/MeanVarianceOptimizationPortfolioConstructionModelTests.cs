@@ -205,6 +205,65 @@ class CustomPortfolioOptimizer:
             }
         }
 
+        [TestCase("timeDelta")]
+        [TestCase("pyFunc")]
+        public void PythonConstructorWorksWithDifferentArgumentRebalance(string rebalanceName)
+        {
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
+                    @"from AlgorithmImports import *
+timeDelta = timedelta(days=1)
+pyFunc = lambda x: x + timedelta(days=1)");
+                var rebalance = module.GetAttr(rebalanceName);
+                Assert.DoesNotThrow(() => new MeanReversionPortfolioConstructionModel(rebalance));
+            }
+        }
+
+        [TestCase("CustomPortfolioOptimizer")]
+        [TestCase("csharpOptimizer")]
+        public void PythonConstructorWorksWithDifferentOptimizers(string optimizerName)
+        {
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
+                    @"from AlgorithmImports import *
+rebalance = timedelta(days=1)
+csharpOptimizer = MinimumVariancePortfolioOptimizer()
+
+class CustomPortfolioOptimizer:
+    def Optimize(self, historicalReturns, expectedReturns, covariance):
+        pass");
+
+                var rebalance = module.GetAttr("rebalance");
+                var optimizer = module.GetAttr(optimizerName);
+                if (optimizerName == "customOptimizer")
+                {
+                    optimizer = optimizer.Invoke();
+                }
+
+                Assert.DoesNotThrow(() => new MeanVarianceOptimizationPortfolioConstructionModel(rebalance, optimizer: optimizer));
+            }
+        }
+
+        [Test]
+        public void PythonConstructorFailsWhenOptimizerTypeIsInvalid()
+        {
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
+                    @"from AlgorithmImports import *
+rebalance = timedelta(days=1)
+class CustomPortfolioOptimizer:
+    pass");
+                var rebalance = module.GetAttr("rebalance");
+                var optimizer = module.GetAttr("CustomPortfolioOptimizer").Invoke();
+
+                var message = Assert.Throws<ArgumentException>(() => new MeanVarianceOptimizationPortfolioConstructionModel(rebalance, optimizer: optimizer));
+                Assert.AreEqual("The type of the given portfolio optimizer is invalid", message.Message);
+            }
+        }
+
         protected void SetPortfolioConstruction(Language language, PortfolioBias bias)
         {
             var model = GetPortfolioConstructionModel(language, Resolution.Daily, bias);

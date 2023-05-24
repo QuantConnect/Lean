@@ -131,15 +131,23 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             : this((Func<DateTime, DateTime?>)null, portfolioBias, lookback, period, resolution, targetReturn, null)
         {
             SetRebalancingFunc(rebalance);
+
             if (optimizer != null)
             {
-                try
+                if (optimizer.TryConvert<IPortfolioOptimizer>(out var csharpOptimizer))
                 {
-                    _optimizer = new PortfolioOptimizerPythonWrapper(optimizer);
+                    _optimizer = csharpOptimizer;
                 }
-                catch
+                else
                 {
-                    throw new ArgumentException($"The type of the given portfolio optimizer is invalid");
+                    try
+                    {
+                        _optimizer = new PortfolioOptimizerPythonWrapper(optimizer);
+                    }
+                    catch
+                    {
+                        throw new ArgumentException("The type of the given portfolio optimizer is invalid");
+                    }
                 }
             }
         }
