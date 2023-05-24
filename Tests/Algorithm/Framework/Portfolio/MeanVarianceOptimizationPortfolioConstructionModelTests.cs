@@ -151,6 +151,60 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             Assert.LessOrEqual(totalCost, _algorithm.Portfolio.TotalPortfolioValue);
         }
 
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(3)]
+        [TestCase(4)]
+        [TestCase(5)]
+        [TestCase(6)]
+        [TestCase(7)]
+        public void PythonConstructorWorksWithDifferentArguments(int arguments)
+        {
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
+                    @"
+from AlgorithmImports import *
+timeDelta = timedelta(days=1)
+class CustomPortfolioOptimizer:
+    def Optimize(self, historicalReturns, expectedReturns, covariance):
+        return [0.5]*(np.array(historicalReturns)).shape[1]"
+                    );
+                var timeDelta = module.GetAttr("timeDelta");
+                var portfolioBias = PortfolioBias.LongShort;
+                var lookback = 1;
+                var period = 63;
+                var resolution = Resolution.Daily;
+                var targetReturn = 0.02;
+                var optimizer = module.GetAttr("CustomPortfolioOptimizer").Invoke();
+
+                switch (arguments)
+                {
+                    case 1:
+                        Assert.DoesNotThrow(() => new MeanVarianceOptimizationPortfolioConstructionModel(timeDelta));
+                        break;
+                    case 2:
+                        Assert.DoesNotThrow(() => new MeanVarianceOptimizationPortfolioConstructionModel(timeDelta, portfolioBias));
+                        break;
+                    case 3:
+                        Assert.DoesNotThrow(() => new MeanVarianceOptimizationPortfolioConstructionModel(timeDelta, portfolioBias, lookback));
+                        break;
+                    case 4:
+                        Assert.DoesNotThrow(() => new MeanVarianceOptimizationPortfolioConstructionModel(timeDelta, portfolioBias, lookback, period));
+                        break;
+                    case 5:
+                        Assert.DoesNotThrow(() => new MeanVarianceOptimizationPortfolioConstructionModel(timeDelta, portfolioBias, lookback, period, resolution));
+                        break;
+                    case 6:
+                        Assert.DoesNotThrow(() => new MeanVarianceOptimizationPortfolioConstructionModel(timeDelta, portfolioBias, lookback, period, resolution, targetReturn));
+                        break;
+                    case 7:
+                        Assert.DoesNotThrow(() => new MeanVarianceOptimizationPortfolioConstructionModel(timeDelta, portfolioBias, lookback, period, resolution, targetReturn, optimizer));
+                        break;
+                }
+            }
+        }
+
         protected void SetPortfolioConstruction(Language language, PortfolioBias bias)
         {
             var model = GetPortfolioConstructionModel(language, Resolution.Daily, bias);

@@ -24,7 +24,7 @@ from MeanVarianceOptimizationFrameworkAlgorithm import MeanVarianceOptimizationF
 class CustomPortfolioOptimizerRegressionAlgorithm(MeanVarianceOptimizationFrameworkAlgorithm):
     def Initialize(self):
         super().Initialize()
-        self.SetPortfolioConstruction(MeanVarianceOptimizationPortfolioConstructionModel(Resolution.Daily, PortfolioBias.LongShort, 1, 63, Resolution.Daily, 0.02, CustomPortfolioOptimizer()))
+        self.SetPortfolioConstruction(MeanVarianceOptimizationPortfolioConstructionModel(timedelta(days=1), PortfolioBias.LongShort, 1, 63, Resolution.Daily, 0.02, CustomPortfolioOptimizer()))
 
 class CustomPortfolioOptimizer:
     def Optimize(self, historicalReturns, expectedReturns, covariance):

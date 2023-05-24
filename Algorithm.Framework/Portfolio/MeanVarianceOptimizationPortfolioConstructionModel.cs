@@ -64,27 +64,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         }
 
         /// <summary>
-        /// Initialize the model with a custom Python portfolio optimizer
-        /// </summary>
-        /// <param name="rebalanceResolution">Rebalancing frequency</param>
-        /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
-        /// <param name="lookback">Historical return lookback period</param>
-        /// <param name="period">The time interval of history price to calculate the weight</param>
-        /// <param name="resolution">The resolution of the history price</param>
-        /// <param name="targetReturn">The target portfolio return</param>
-        /// <param name="optimizer">The portfolio optimization algorithm. If the algorithm is not provided then the default will be mean-variance optimization.</param>
-        public MeanVarianceOptimizationPortfolioConstructionModel(Resolution rebalanceResolution,
-            PortfolioBias portfolioBias,
-            int lookback,
-            int period,
-            Resolution resolution,
-            double targetReturn,
-            PyObject optimizer)
-            : this(rebalanceResolution.ToTimeSpan(), portfolioBias, lookback, period, resolution, targetReturn, new PortfolioOptimizerPythonWrapper(optimizer))
-        {
-        }
-
-        /// <summary>
         /// Initialize the model
         /// </summary>
         /// <param name="rebalanceResolution">Rebalancing frequency</param>
@@ -148,10 +127,21 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             int period = 63,
             Resolution resolution = Resolution.Daily,
             double targetReturn = 0.02,
-            IPortfolioOptimizer optimizer = null)
-            : this((Func<DateTime, DateTime?>)null, portfolioBias, lookback, period, resolution, targetReturn, optimizer)
+            PyObject optimizer = null)
+            : this((Func<DateTime, DateTime?>)null, portfolioBias, lookback, period, resolution, targetReturn, null)
         {
             SetRebalancingFunc(rebalance);
+            if (optimizer != null)
+            {
+                try
+                {
+                    _optimizer = new PortfolioOptimizerPythonWrapper(optimizer);
+                }
+                catch
+                {
+                    throw new ArgumentException($"The type of the given portfolio optimizer is invalid");
+                }
+            }
         }
 
         /// <summary>
