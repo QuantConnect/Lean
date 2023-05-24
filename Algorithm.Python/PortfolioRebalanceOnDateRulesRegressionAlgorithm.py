@@ -27,6 +27,10 @@ class PortfolioRebalanceOnDateRulesRegressionAlgorithm(QCAlgorithm):
         # Commented so regression algorithm is more sensitive
         #self.Settings.MinimumOrderMarginPortfolioPercentage = 0.005
 
+        # let's use 0 minimum order margin percentage so we can assert trades are only submitted immediately after rebalance on Wednesday
+        # if not, due to TPV variations happening every day we might no cross the minimum on wednesday but yes another day of the week
+        self.Settings.MinimumOrderMarginPortfolioPercentage = 0
+
         self.SetStartDate(2015,1,1)
         self.SetEndDate(2017,1,1)
 

@@ -52,6 +52,11 @@ namespace QuantConnect.Algorithm.Framework.Execution
                         {
                             algorithm.MarketOrder(security, quantity);
                         }
+                        else if (!PortfolioTarget.MinimumOrderMarginPercentageWarningSent.HasValue)
+                        {
+                            // will trigger the warning if it has not already been sent
+                            PortfolioTarget.MinimumOrderMarginPercentageWarningSent = false;
+                        }
                     }
                 }
 

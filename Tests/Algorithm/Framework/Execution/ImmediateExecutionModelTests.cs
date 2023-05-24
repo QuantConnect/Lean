@@ -20,12 +20,10 @@ using Moq;
 using NodaTime;
 using NUnit.Framework;
 using Python.Runtime;
-using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
@@ -49,8 +47,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
                 .Returns((OrderTicket)null)
                 .Callback((OrderRequest request) => actualOrdersSubmitted.Add((SubmitOrderRequest)request));
 
-            var algorithm = new QCAlgorithm();
-            algorithm.SetPandasConverter();
+            var algorithm = new AlgorithmStub();
             algorithm.Transactions.SetOrderProcessor(orderProcessor.Object);
 
             var model = GetExecutionModel(language);
@@ -96,9 +93,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
                             }
                         }, time.AddMinutes(i))));
 
-            var algorithm = new QCAlgorithm();
-            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
-            algorithm.SetPandasConverter();
+            var algorithm = new AlgorithmStub();
             algorithm.SetHistoryProvider(historyProvider.Object);
             algorithm.SetDateTime(time.AddMinutes(5));
 
@@ -147,10 +142,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
         {
             var actualOrdersSubmitted = new List<SubmitOrderRequest>();
 
-            var algorithm = new QCAlgorithm();
-            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
-            algorithm.SetPandasConverter();
-
+            var algorithm = new AlgorithmStub();
             var security = algorithm.AddEquity(Symbols.AAPL.Value);
             security.SetMarketPrice(new TradeBar { Value = 250 });
 
@@ -199,10 +191,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
         {
             var actualOrdersSubmitted = new List<SubmitOrderRequest>();
 
-            var algorithm = new QCAlgorithm();
-            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
-            algorithm.SetPandasConverter();
-
+            var algorithm = new AlgorithmStub();
+            algorithm.Settings.MinimumOrderMarginPortfolioPercentage = 0;
             var security = algorithm.AddForex(Symbols.EURUSD.Value);
             algorithm.Portfolio.SetCash("EUR", 1, 1);
             security.SetMarketPrice(new TradeBar { Value = 250 });

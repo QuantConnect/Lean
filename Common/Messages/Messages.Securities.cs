@@ -77,6 +77,13 @@ namespace QuantConnect
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string TargetOrderMarginNotAboveMinimum()
+            {
+                return "Warning: Portfolio rebalance result ignored as it resulted in a single share trade recommendation which can generate high fees." +
+                    " To disable minimum order size checks please set Settings.MinimumOrderMarginPortfolioPercentage = 0.";
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string OrderQuantityLessThanLotSize(Securities.Security security, decimal targetOrderMargin)
             {
                 return Invariant($@"The order quantity is less than the lot size of {

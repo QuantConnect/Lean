@@ -30,6 +30,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         private static decimal _freePortfolioValue;
 
         /// <summary>
+        /// Flag to determine if the minimum order margin portfolio percentage warning should or has already been sent to the user algorithm
+        /// <see cref="IAlgorithmSettings.MinimumOrderMarginPortfolioPercentage"/>
+        /// </summary>
+        public static bool? MinimumOrderMarginPercentageWarningSent { get; set; }
+
+        /// <summary>
         /// Gets the symbol of this target
         /// </summary>
         public Symbol Symbol { get; }
@@ -115,6 +121,13 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 algorithm.Error(Messages.PortfolioTarget.UnableToComputeOrderQuantityDueToNullResult(symbol, result));
 
                 return null;
+            }
+
+            if (MinimumOrderMarginPercentageWarningSent.HasValue && !MinimumOrderMarginPercentageWarningSent.Value)
+            {
+                // we send the warning once
+                MinimumOrderMarginPercentageWarningSent = true;
+                algorithm.Debug(Messages.BuyingPowerModel.TargetOrderMarginNotAboveMinimum());
             }
 
             // be sure to back out existing holdings quantity since the buying power model yields

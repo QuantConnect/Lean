@@ -14,9 +14,10 @@
 */
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
+using System.Diagnostics.CodeAnalysis;
+using QuantConnect.Algorithm.Framework.Portfolio;
 
 namespace QuantConnect.Securities
 {
@@ -401,6 +402,12 @@ namespace QuantConnect.Securities
                 {
                     var minimumValue = totalPortfolioValue * parameters.MinimumOrderMarginPortfolioPercentage;
                     reason = Messages.BuyingPowerModel.TargetOrderMarginNotAboveMinimum(absDifferenceOfMargin, minimumValue);
+                }
+
+                if (!PortfolioTarget.MinimumOrderMarginPercentageWarningSent.HasValue)
+                {
+                    // will trigger the warning if it has not already been sent
+                    PortfolioTarget.MinimumOrderMarginPercentageWarningSent = false;
                 }
                 return new GetMaximumOrderQuantityResult(0, reason, false);
             }
