@@ -217,30 +217,30 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "4"},
+            {"Total Trades", "3"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "3.225%"},
+            {"Compounding Annual Return", "3.252%"},
             {"Drawdown", "0.800%"},
             {"Expectancy", "0"},
-            {"Net Profit", "0.520%"},
-            {"Sharpe Ratio", "1.247"},
-            {"Probabilistic Sharpe Ratio", "54.498%"},
+            {"Net Profit", "0.525%"},
+            {"Sharpe Ratio", "1.255"},
+            {"Probabilistic Sharpe Ratio", "54.664%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
             {"Alpha", "0.015"},
-            {"Beta", "0.101"},
+            {"Beta", "0.1"},
             {"Annual Standard Deviation", "0.018"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-0.528"},
+            {"Information Ratio", "-0.526"},
             {"Tracking Error", "0.096"},
-            {"Treynor Ratio", "0.224"},
-            {"Total Fees", "$4.00"},
-            {"Estimated Strategy Capacity", "$1300000000.00"},
-            {"Lowest Capacity Asset", "AIG R735QTJ8XC9X"},
+            {"Treynor Ratio", "0.228"},
+            {"Total Fees", "$3.00"},
+            {"Estimated Strategy Capacity", "$1200000000.00"},
+            {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
             {"Portfolio Turnover", "0.12%"},
-            {"OrderListHash", "eb27e818f4a6609329a52feeb74bd554"}
+            {"OrderListHash", "281a09be91a563ff3892a1acfa3e233a"}
         };
     }
 }

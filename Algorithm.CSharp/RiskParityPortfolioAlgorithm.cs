@@ -67,30 +67,30 @@ namespace QuantConnect.DataLibrary.Tests
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "42"},
+            {"Total Trades", "30"},
             {"Average Win", "0.01%"},
-            {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "3.593%"},
+            {"Average Loss", "-0.01%"},
+            {"Compounding Annual Return", "3.828%"},
             {"Drawdown", "4.900%"},
-            {"Expectancy", "0.304"},
-            {"Net Profit", "0.368%"},
-            {"Sharpe Ratio", "0.227"},
-            {"Probabilistic Sharpe Ratio", "38.412%"},
-            {"Loss Rate", "47%"},
-            {"Win Rate", "53%"},
-            {"Profit-Loss Ratio", "1.48"},
-            {"Alpha", "-0.103"},
-            {"Beta", "1.222"},
+            {"Expectancy", "0.469"},
+            {"Net Profit", "0.391%"},
+            {"Sharpe Ratio", "0.235"},
+            {"Probabilistic Sharpe Ratio", "38.526%"},
+            {"Loss Rate", "36%"},
+            {"Win Rate", "64%"},
+            {"Profit-Loss Ratio", "1.31"},
+            {"Alpha", "-0.101"},
+            {"Beta", "1.224"},
             {"Annual Standard Deviation", "0.201"},
             {"Annual Variance", "0.04"},
-            {"Information Ratio", "-0.845"},
+            {"Information Ratio", "-0.824"},
             {"Tracking Error", "0.09"},
-            {"Treynor Ratio", "0.037"},
-            {"Total Fees", "$42.65"},
-            {"Estimated Strategy Capacity", "$720000000.00"},
+            {"Treynor Ratio", "0.039"},
+            {"Total Fees", "$30.65"},
+            {"Estimated Strategy Capacity", "$1100000000.00"},
             {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
-            {"Portfolio Turnover", "2.99%"},
-            {"OrderListHash", "f0d4972dbf679730bf8c8de2674d4975"}
+            {"Portfolio Turnover", "2.91%"},
+            {"OrderListHash", "3c10caa2675a03d157fe476e3af28847"}
         };
 
     }
