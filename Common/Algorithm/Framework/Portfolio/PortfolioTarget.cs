@@ -27,6 +27,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// </summary>
     public class PortfolioTarget : IPortfolioTarget
     {
+        private static decimal _freePortfolioValue;
+
         /// <summary>
         /// Gets the symbol of this target
         /// </summary>
@@ -97,7 +99,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             }
 
             // Factoring in FreePortfolioValuePercentage.
-            var adjustedPercent = percent * (algorithm.Portfolio.TotalPortfolioValue - algorithm.Settings.FreePortfolioValue)
+            var adjustedPercent = percent * (GetAdjustedTotalPortfolioValue(algorithm))
                                   / algorithm.Portfolio.TotalPortfolioValue;
 
             // we normalize the target buying power by the leverage so we work in the land of margin
@@ -121,6 +123,28 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             var quantity = result.NumberOfLots * lotSize + (returnDeltaQuantity ? 0 : security.Holdings.Quantity);
 
             return new PortfolioTarget(symbol, quantity);
+        }
+
+        /// <summary>
+        /// Helper method to get the adjusted portfolio value removing the free amount.
+        /// If the <see cref="IAlgorithmSettings.FreePortfolioValue"/> has not been set the free amount will have a trailing behavior and be updated when requested
+        /// </summary>
+        /// <param name="algorithm">The current algorithm instance</param>
+        /// <returns>The net total portfolio value to use</returns>
+        public static decimal GetAdjustedTotalPortfolioValue(IAlgorithm algorithm)
+        {
+            if (algorithm.Settings.FreePortfolioValue.HasValue)
+            {
+                // the user set it, we will respect the value set
+                _freePortfolioValue = algorithm.Settings.FreePortfolioValue.Value;
+            }
+            else
+            {
+                // keep the free portfolio value up to date every time we use it
+                _freePortfolioValue = algorithm.Portfolio.TotalPortfolioValue * algorithm.Settings.FreePortfolioValuePercentage;
+            }
+
+            return algorithm.Portfolio.TotalPortfolioValue - _freePortfolioValue;
         }
 
         /// <summary>Returns a string that represents the current object.</summary>

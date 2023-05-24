@@ -21,6 +21,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Statistics;
+using QuantConnect.Algorithm.Framework.Portfolio;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -99,7 +100,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         private void UpdateExpectedOrderQuantity(decimal target)
         {
-            _expectedOrderQuantity = ((Portfolio.TotalPortfolioValue - Settings.FreePortfolioValue) * target - _spy.Holdings.HoldingsValue)
+            _expectedOrderQuantity = (PortfolioTarget.GetAdjustedTotalPortfolioValue(this) * target - _spy.Holdings.HoldingsValue)
                 / (_spy.Price * _spy.QuoteCurrency.ConversionRate);
             _expectedOrderQuantity--; // minus 1 per fees
             _expectedOrderQuantity -= _expectedOrderQuantity % _spy.SymbolProperties.LotSize;

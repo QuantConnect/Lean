@@ -54,7 +54,7 @@ namespace QuantConnect
         /// <summary>
         /// Configurable minimum order margin portfolio percentage to ignore bad orders, orders with unrealistic small sizes
         /// </summary>
-        /// <remarks>Default value is 0. This setting is useful to avoid small trading noise when using SetHoldings</remarks>
+        /// <remarks>Default value is 0.1% of the portfolio value. This setting is useful to avoid small trading noise when using SetHoldings</remarks>
         public decimal MinimumOrderMarginPortfolioPercentage { get; set; }
 
         /// <summary>
@@ -70,7 +70,7 @@ namespace QuantConnect
         /// Gets/sets the SetHoldings buffers value.
         /// The buffer is used for orders not to be rejected due to volatility when using SetHoldings and CalculateOrderQuantity
         /// </summary>
-        public decimal FreePortfolioValue { get; set; }
+        public decimal? FreePortfolioValue { get; set; }
 
         /// <summary>
         /// Gets/sets the SetHoldings buffers value percentage.
@@ -126,8 +126,10 @@ namespace QuantConnect
             // default is unlimited
             DataSubscriptionLimit = int.MaxValue;
             LiquidateEnabled = true;
-            FreePortfolioValue = 250;
             FreePortfolioValuePercentage = 0.0025m;
+            // Because the free portfolio value has a trailing behavior by default, let's add a default minimum order margin portfolio percentage
+            // to avoid tiny trades when rebalancing, defaulting to 0.1% of the TPV
+            MinimumOrderMarginPortfolioPercentage = 0.001m;
             StalePriceTimeSpan = Time.OneHour;
             MaxAbsolutePortfolioTargetPercentage = 1000000000;
             MinAbsolutePortfolioTargetPercentage = 0.0000000001m;
