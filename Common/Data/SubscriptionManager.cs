@@ -195,6 +195,10 @@ namespace QuantConnect.Data
         /// <param name="consolidator">The consolidator instance to be removed</param>
         public void RemoveConsolidator(Symbol symbol, IDataConsolidator consolidator)
         {
+            // let's try to get associated symbol, not required but nice to have
+            symbol ??= consolidator.Consolidated?.Symbol;
+            symbol ??= consolidator.WorkingData?.Symbol;
+
             // remove consolidator from each subscription
             foreach (var subscription in _subscriptionManager.GetSubscriptionDataConfigs(symbol))
             {
