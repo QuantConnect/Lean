@@ -140,14 +140,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 }
                 else
                 {
-                    try
-                    {
-                        _optimizer = new PortfolioOptimizerPythonWrapper(optimizer);
-                    }
-                    catch
-                    {
-                        throw new ArgumentException("The type of the given portfolio optimizer is invalid");
-                    }
+                    _optimizer = new PortfolioOptimizerPythonWrapper(optimizer);
                 }
             }
         }

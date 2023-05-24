@@ -259,8 +259,7 @@ class CustomPortfolioOptimizer:
                 var rebalance = module.GetAttr("rebalance");
                 var optimizer = module.GetAttr("CustomPortfolioOptimizer").Invoke();
 
-                var message = Assert.Throws<ArgumentException>(() => new MeanVarianceOptimizationPortfolioConstructionModel(rebalance, optimizer: optimizer));
-                Assert.AreEqual("The type of the given portfolio optimizer is invalid", message.Message);
+                var message = Assert.Throws<NotImplementedException>(() => new MeanVarianceOptimizationPortfolioConstructionModel(rebalance, optimizer: optimizer));
             }
         }
 
