@@ -171,7 +171,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // short option positions are very expensive in terms of margin.
             // Margin = 2 * 100 * (14 + 0.2 * 196) = 10640
-            Assert.AreEqual(10640, (double)buyingPowerModel.GetMaintenanceMargin(optionCall), delta: 0.01);
+            Assert.AreEqual(10640, (double)buyingPowerModel.GetMaintenanceMargin(optionCall));
         }
 
         [Test]
@@ -261,7 +261,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // short option positions are very expensive in terms of margin.
             // Margin = 2 * 100 * (14 + 0.2 * 182) = 10080
-            Assert.AreEqual(10080, (double)buyingPowerModel.GetMaintenanceMargin(optionPut), delta: 0.01);
+            Assert.AreEqual(10080, (double)buyingPowerModel.GetMaintenanceMargin(optionPut));
         }
 
         [Test]
@@ -381,16 +381,14 @@ namespace QuantConnect.Tests.Common.Securities
             var buyingPowerModel = new OptionMarginModel();
 
             // short option positions are very expensive in terms of margin.
-            // Margin = 2 * 100 * 4.68 + 2 * 100 * MAX[0.2 * 192 - MAX(192 - 207, 0), 0.1 * 207] = 2 * 100 * {4.68 + MAX[0.2 * 192, 0.1 * 207]}
-            //        = 2 * 100 * {4.68 + MAX[38.4, 20.7]} = 2 * 100 * {4.68 + 38.4} = 2 * 100 * 43.08 = 3045
+            // Margin = 2 * 100 * (4.68 + 0.2 * 192) = 8616
             Assert.AreEqual(8616, (double)buyingPowerModel.GetMaintenanceMargin(optionPut), 0.01);
 
             equity.SetMarketPrice(new Tick { Value = underlyingPriceEnd });
             optionPut.SetMarketPrice(new Tick { Value = optionPriceEnd });
 
             // short option positions are very expensive in terms of margin.
-            // Margin = 2 * 100 * 4.68 + 2 * 100 * MAX[0.2 * 200 - MAX(200 - 207, 0), 0.1 * 207] = 2 * 100 * {4.68 + MAX[0.2 * 200, 0.1 * 207]}
-            //        = 2 * 100 * {4.68 + MAX[40, 20.7]} = 2 * 100 * {4.68 + 40} = 2 * 100 * 44.68 = 3045
+            // Margin = 2 * 100 * (4.68 + 0.2 * 200) = 8936
             Assert.AreEqual(8936, (double)buyingPowerModel.GetMaintenanceMargin(optionPut), 0.01);
         }
 
