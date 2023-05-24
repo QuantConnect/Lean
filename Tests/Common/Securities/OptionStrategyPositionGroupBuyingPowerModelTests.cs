@@ -551,7 +551,7 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.PutCalendarSpread, -1, 3000m),               // IB:  3121
             new TestCaseData(OptionStrategyDefinitions.ShortPutCalendarSpread, 1, 3000m),           // IB:  3121
             new TestCaseData(OptionStrategyDefinitions.ShortPutCalendarSpread, -1, 0m),             // IB:  0
-            new TestCaseData(OptionStrategyDefinitions.IronCondor, 1, 1000m),                       // IB:  1017.62
+            new TestCaseData(OptionStrategyDefinitions.IronCondor, 1, 1000m),                       // IB:  1001
             new TestCaseData(OptionStrategyDefinitions.IronCondor, -1, 0m),                         // IB:  0
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCall, 1, 12000m),                  // IB:  inverted covered call
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCall, -1, 19000m),                 // IB:  covered call

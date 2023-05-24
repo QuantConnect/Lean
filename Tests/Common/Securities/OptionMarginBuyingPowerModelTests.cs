@@ -37,24 +37,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void OptionMarginBuyingPowerModelInitializationTests()
         {
-            var tz = TimeZones.NewYork;
-            var option = new Option(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(
-                    typeof(TradeBar),
-                    Symbols.SPY_P_192_Feb19_2016,
-                    Resolution.Minute,
-                    tz,
-                    tz,
-                    true,
-                    false,
-                    false
-                ),
-                new Cash(Currencies.USD, 0, 1m),
-                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
+            var option = CreateOption(Symbols.SPY_P_192_Feb19_2016);
             var buyingPowerModel = new OptionMarginModel();
 
             // we test that options dont have leverage (100%) and it cannot be changed
@@ -68,56 +51,16 @@ namespace QuantConnect.Tests.Common.Securities
         {
             const decimal price = 1.2345m;
             const decimal underlyingPrice = 200m;
-            var tz = TimeZones.NewYork;
 
-            var equity = new QuantConnect.Securities.Equity.Equity(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
-                new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
+            var equity = CreateEquity();
             equity.SetMarketPrice(new Tick { Value = underlyingPrice });
 
-            var optionPut = new Option(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(
-                    typeof(TradeBar),
-                    Symbols.SPY_P_192_Feb19_2016,
-                    Resolution.Minute,
-                    tz,
-                    tz,
-                    true,
-                    false,
-                    false
-                ),
-                new Cash(Currencies.USD, 0, 1m),
-                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
+            var optionPut = CreateOption(Symbols.SPY_P_192_Feb19_2016);
             optionPut.SetMarketPrice(new Tick { Value = price });
             optionPut.Underlying = equity;
             optionPut.Holdings.SetHoldings(1m, 2);
 
-            var optionCall = new Option(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(
-                    typeof(TradeBar),
-                    Symbols.SPY_C_192_Feb19_2016,
-                    Resolution.Minute,
-                    tz,
-                    tz,
-                    true,
-                    false,
-                    false
-                ),
-                new Cash(Currencies.USD, 0, 1m),
-                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
+            var optionCall = CreateOption(Symbols.SPY_C_192_Feb19_2016);
             optionCall.SetMarketPrice(new Tick { Value = price });
             optionCall.Underlying = equity;
             optionCall.Holdings.SetHoldings(1.5m, 2);
@@ -134,35 +77,11 @@ namespace QuantConnect.Tests.Common.Securities
         {
             const decimal price = 14m;
             const decimal underlyingPrice = 196m;
-            var tz = TimeZones.NewYork;
 
-            var equity = new QuantConnect.Securities.Equity.Equity(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
-                new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
+            var equity = CreateEquity();
             equity.SetMarketPrice(new Tick { Value = underlyingPrice });
 
-            var optionCall = new Option(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(
-                    typeof(TradeBar),
-                    Symbols.SPY_C_192_Feb19_2016,
-                    Resolution.Minute,
-                    tz,
-                    tz,
-                    true,
-                    false,
-                    false
-                ),
-                new Cash(Currencies.USD, 0, 1m),
-                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
+            var optionCall = CreateOption(Symbols.SPY_C_192_Feb19_2016);
             optionCall.SetMarketPrice(new Tick { Value = price });
             optionCall.Underlying = equity;
             optionCall.Holdings.SetHoldings(price, -2);
@@ -179,35 +98,11 @@ namespace QuantConnect.Tests.Common.Securities
         {
             const decimal price = 14m;
             const decimal underlyingPrice = 180m;
-            var tz = TimeZones.NewYork;
 
-            var equity = new QuantConnect.Securities.Equity.Equity(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
-                new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
+            var equity = CreateEquity();
             equity.SetMarketPrice(new Tick { Value = underlyingPrice });
 
-            var optionCall = new Option(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(
-                    typeof(TradeBar),
-                    Symbols.SPY_C_192_Feb19_2016,
-                    Resolution.Minute,
-                    tz,
-                    tz,
-                    true,
-                    false,
-                    false
-                ),
-                new Cash(Currencies.USD, 0, 1m),
-                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
+            var optionCall = CreateOption(Symbols.SPY_C_192_Feb19_2016);
             optionCall.SetMarketPrice(new Tick { Value = price });
             optionCall.Underlying = equity;
             optionCall.Holdings.SetHoldings(price, -2);
@@ -224,35 +119,11 @@ namespace QuantConnect.Tests.Common.Securities
         {
             const decimal price = 14m;
             const decimal underlyingPrice = 182m;
-            var tz = TimeZones.NewYork;
 
-            var equity = new QuantConnect.Securities.Equity.Equity(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
-                new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
+            var equity = CreateEquity();
             equity.SetMarketPrice(new Tick { Value = underlyingPrice });
 
-            var optionPut = new Option(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(
-                    typeof(TradeBar),
-                    Symbols.SPY_P_192_Feb19_2016,
-                    Resolution.Minute,
-                    tz,
-                    tz,
-                    true,
-                    false,
-                    false
-                ),
-                new Cash(Currencies.USD, 0, 1m),
-                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
+            var optionPut = CreateOption(Symbols.SPY_P_192_Feb19_2016);
             optionPut.SetMarketPrice(new Tick { Value = price });
             optionPut.Underlying = equity;
             optionPut.Holdings.SetHoldings(price, -2);
@@ -269,44 +140,20 @@ namespace QuantConnect.Tests.Common.Securities
         {
             const decimal price = 14m;
             const decimal underlyingPrice = 196m;
-            var tz = TimeZones.NewYork;
 
-            var equity = new QuantConnect.Securities.Equity.Equity(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
-                new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
+            var equity = CreateEquity();
             equity.SetMarketPrice(new Tick { Value = underlyingPrice });
 
-            var optionCall = new Option(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(
-                    typeof(TradeBar),
-                    Symbols.SPY_P_192_Feb19_2016,
-                    Resolution.Minute,
-                    tz,
-                    tz,
-                    true,
-                    false,
-                    false
-                ),
-                new Cash(Currencies.USD, 0, 1m),
-                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
-            optionCall.SetMarketPrice(new Tick { Value = price });
-            optionCall.Underlying = equity;
-            optionCall.Holdings.SetHoldings(price, -2);
+            var optionPut = CreateOption(Symbols.SPY_P_192_Feb19_2016);
+            optionPut.SetMarketPrice(new Tick { Value = price });
+            optionPut.Underlying = equity;
+            optionPut.Holdings.SetHoldings(price, -2);
 
             var buyingPowerModel = new OptionMarginModel();
 
             // short option positions are very expensive in terms of margin.
             // Margin = 2 * 100 * (14 + 0.2 * 196 - (196 - 192)) = 9840
-            Assert.AreEqual(9840, (double)buyingPowerModel.GetMaintenanceMargin(optionCall), 0.01);
+            Assert.AreEqual(9840, (double)buyingPowerModel.GetMaintenanceMargin(optionPut), 0.01);
         }
 
         [Test]
@@ -315,28 +162,11 @@ namespace QuantConnect.Tests.Common.Securities
             const decimal price = 0.18m;
             const decimal underlyingPrice = 200m;
 
-            var tz = TimeZones.NewYork;
-            var equity = new QuantConnect.Securities.Equity.Equity(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
-                new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
+            var equity = CreateEquity();
             equity.SetMarketPrice(new Tick { Value = underlyingPrice });
 
-            var optionPutSymbol = Symbol.CreateOption(Symbols.SPY, Market.USA, OptionStyle.American, OptionRight.Put, 207m, new DateTime(2015, 02, 27));
-            var optionPut = new Option(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(typeof(TradeBar), optionPutSymbol, Resolution.Minute, tz, tz, true, false, false),
-                new Cash(Currencies.USD, 0, 1m),
-                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
+            var optionPut = CreateOption(equity, OptionRight.Put, 207m);
             optionPut.SetMarketPrice(new Tick { Value = price });
-            optionPut.Underlying = equity;
             optionPut.Holdings.SetHoldings(price, -2);
 
             var buyingPowerModel = new OptionMarginModel();
@@ -354,28 +184,11 @@ namespace QuantConnect.Tests.Common.Securities
             const decimal optionPriceEnd = 0.18m;
             const decimal underlyingPriceEnd = 200m;
 
-            var tz = TimeZones.NewYork;
-            var equity = new QuantConnect.Securities.Equity.Equity(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
-                new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
+            var equity = CreateEquity();
             equity.SetMarketPrice(new Tick { Value = underlyingPriceStart });
 
-            var optionPutSymbol = Symbol.CreateOption(Symbols.SPY, Market.USA, OptionStyle.American, OptionRight.Put, 207m, new DateTime(2015, 02, 27));
-            var optionPut = new Option(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(typeof(TradeBar), optionPutSymbol, Resolution.Minute, tz, tz, true, false, false),
-                new Cash(Currencies.USD, 0, 1m),
-                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
+            var optionPut = CreateOption(equity, OptionRight.Put, 207m);
             optionPut.SetMarketPrice(new Tick { Value = optionPriceStart });
-            optionPut.Underlying = equity;
             optionPut.Holdings.SetHoldings(optionPriceStart, -2);
 
             var buyingPowerModel = new OptionMarginModel();
@@ -407,36 +220,18 @@ namespace QuantConnect.Tests.Common.Securities
         public void ShortOptionsMargin(OptionRight optionRight, decimal strikePrice, decimal optionPrice, decimal underlyingPrice,
             double expectedUnitMargin)
         {
-            var tz = TimeZones.NewYork;
-            var equity = new QuantConnect.Securities.Equity.Equity(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
-                new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
+            var equity = CreateEquity();
             equity.SetMarketPrice(new Tick { Value = underlyingPrice });
 
-            var optionSymbol = Symbol.CreateOption(Symbols.SPY, Market.USA, OptionStyle.American, optionRight, strikePrice,
-                new DateTime(2015, 02, 27));
-            var optionPut = new Option(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(typeof(TradeBar), optionSymbol, Resolution.Minute, tz, tz, true, false, false),
-                new Cash(Currencies.USD, 0, 1m),
-                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
-            optionPut.SetMarketPrice(new Tick { Value = optionPrice });
-            optionPut.Underlying = equity;
-            optionPut.Holdings.SetHoldings(optionPrice, -1);
+            var putOption = CreateOption(equity, optionRight, strikePrice);
+            putOption.SetMarketPrice(new Tick { Value = optionPrice });
+            putOption.Holdings.SetHoldings(optionPrice, -1);
 
             var buyingPowerModel = new OptionMarginModel();
 
-            Assert.AreEqual(expectedUnitMargin, (double)buyingPowerModel.GetMaintenanceMargin(optionPut), delta: 0.05 * expectedUnitMargin);
+            Assert.AreEqual(expectedUnitMargin, (double)buyingPowerModel.GetMaintenanceMargin(putOption), delta: 0.05 * expectedUnitMargin);
             Assert.AreEqual(10 * expectedUnitMargin,
-                (double)buyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(optionPut, -10)).Value,
+                (double)buyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(putOption, -10)).Value,
                 delta: 0.05 * 10 * expectedUnitMargin);
         }
 
@@ -527,37 +322,12 @@ namespace QuantConnect.Tests.Common.Securities
 
             const decimal price = 1.6m;
             const decimal underlyingPrice = 410m;
-            var tz = TimeZones.NewYork;
 
-            var equity = new QuantConnect.Securities.Equity.Equity(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
-                new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
+            var equity = CreateEquity();
             equity.SetMarketPrice(new Tick { Value = underlyingPrice });
 
-            var optionCall = new Option(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new SubscriptionDataConfig(
-                    typeof(TradeBar),
-                    Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 408m, new DateTime(2023, 04, 03)),
-                    Resolution.Minute,
-                    tz,
-                    tz,
-                    true,
-                    false,
-                    false
-                ),
-                new Cash(Currencies.USD, 0, 1m),
-                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
-            );
+            var optionCall = CreateOption(equity, OptionRight.Call, 408m);
             optionCall.SetMarketPrice(new Tick { Value = price });
-            optionCall.Underlying = equity;
             optionCall.Holdings.SetHoldings(price, initialHoldings);
 
             var buyingPowerModel = new OptionMarginModel();
@@ -589,6 +359,52 @@ namespace QuantConnect.Tests.Common.Securities
                 Low = close,
                 Close = close
             });
+        }
+
+        private static QuantConnect.Securities.Equity.Equity CreateEquity()
+        {
+            var tz = TimeZones.NewYork;
+            return new QuantConnect.Securities.Equity.Equity(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
+        }
+
+        private static Option CreateOption(Security underlying, OptionRight optionRight, decimal strikePrice)
+        {
+            var tz = TimeZones.NewYork;
+            var optionSymbol = Symbol.CreateOption(underlying.Symbol, Market.USA, OptionStyle.American, optionRight, strikePrice,
+                new DateTime(2015, 02, 27));
+            var option = new Option(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new SubscriptionDataConfig(typeof(TradeBar), optionSymbol, Resolution.Minute, tz, tz, true, false, false),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
+            option.Underlying = underlying;
+
+            return option;
+        }
+
+        private static Option CreateOption(Symbol symbol)
+        {
+            var tz = TimeZones.NewYork;
+            var option = new Option(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, tz, tz, true, false, false),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
+
+            return option;
         }
     }
 }

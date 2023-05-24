@@ -231,9 +231,9 @@ namespace QuantConnect.Securities.Option
             else if (_optionStrategy.Name == OptionStrategyDefinitions.ShortCallCalendarSpread.Name
                 || _optionStrategy.Name == OptionStrategyDefinitions.ShortPutCalendarSpread.Name)
             {
-                var shortCall = parameters.PositionGroup.Positions.Single(position => position.Quantity < 0);
-                var shortCallSecurity = (Option)parameters.Portfolio.Securities[shortCall.Symbol];
-                var result = shortCallSecurity.BuyingPowerModel.GetInitialMarginRequirement(shortCallSecurity, shortCall.Quantity);
+                var shortOptionPosition = parameters.PositionGroup.Positions.Single(position => position.Quantity < 0);
+                var shortOption = (Option)parameters.Portfolio.Securities[shortOptionPosition.Symbol];
+                var result = shortOption.BuyingPowerModel.GetInitialMarginRequirement(shortOption, shortOptionPosition.Quantity);
 
                 return new InitialMargin(Math.Abs(result));
             }
