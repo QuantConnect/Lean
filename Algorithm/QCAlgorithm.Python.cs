@@ -491,12 +491,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Universes)]
         public Universe AddUniverse(Type dataType, SecurityType securityType, string name, Resolution resolution, string market, UniverseSettings universeSettings, PyObject pySelector)
         {
-            var marketHoursDbEntry = MarketHoursDatabase.GetEntry(market, name, securityType);
-            var dataTimeZone = marketHoursDbEntry.DataTimeZone;
-            var exchangeTimeZone = marketHoursDbEntry.ExchangeHours.TimeZone;
-            var symbol = QuantConnect.Symbol.Create(name, securityType, market, baseDataType: dataType);
-            var config = new SubscriptionDataConfig(dataType, symbol, resolution, dataTimeZone, exchangeTimeZone, false, false, true, true, isFilteredSubscription: false);
-
+            var config = GetCustomUniverseConfiguration(dataType, name, resolution, market);
             var selector = pySelector.ConvertToDelegate<Func<IEnumerable<IBaseData>, object>>();
 
             return AddUniverse(new FuncUniverse(config, universeSettings, baseDatas =>
