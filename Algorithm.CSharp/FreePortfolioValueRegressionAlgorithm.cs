@@ -53,9 +53,10 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            if (Settings.FreePortfolioValue != 1000000 * Settings.FreePortfolioValuePercentage)
+            var freePortfolioValue = Portfolio.TotalPortfolioValue - PortfolioTarget.GetAdjustedTotalPortfolioValue(this);
+            if (freePortfolioValue != Portfolio.TotalPortfolioValue * Settings.FreePortfolioValuePercentage)
             {
-                throw new Exception($"Unexpected FreePortfolioValue value: {Settings.FreePortfolioValue}");
+                throw new Exception($"Unexpected FreePortfolioValue value: {freePortfolioValue}");
             }
         }
 
@@ -87,32 +88,32 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "2"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "8.171%"},
-            {"Drawdown", "55.000%"},
-            {"Expectancy", "-1"},
-            {"Net Profit", "125.420%"},
+            {"Total Trades", "4"},
+            {"Average Win", "0.06%"},
+            {"Average Loss", "-0.01%"},
+            {"Compounding Annual Return", "8.173%"},
+            {"Drawdown", "55.100%"},
+            {"Expectancy", "2.639"},
+            {"Net Profit", "125.461%"},
             {"Sharpe Ratio", "0.427"},
-            {"Probabilistic Sharpe Ratio", "1.166%"},
-            {"Loss Rate", "100%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
+            {"Probabilistic Sharpe Ratio", "1.164%"},
+            {"Loss Rate", "50%"},
+            {"Win Rate", "50%"},
+            {"Profit-Loss Ratio", "6.28"},
             {"Alpha", "-0"},
-            {"Beta", "0.997"},
+            {"Beta", "0.998"},
             {"Annual Standard Deviation", "0.164"},
             {"Annual Variance", "0.027"},
-            {"Information Ratio", "-0.213"},
+            {"Information Ratio", "-0.192"},
             {"Tracking Error", "0.001"},
             {"Treynor Ratio", "0.07"},
-            {"Total Fees", "$43.46"},
-            {"Estimated Strategy Capacity", "$430000000.00"},
+            {"Total Fees", "$45.46"},
+            {"Estimated Strategy Capacity", "$190000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Portfolio Turnover", "0.03%"},
-            {"OrderListHash", "3aa1d64da57ef9841bef4aa8b0292521"}
+            {"OrderListHash", "0b931e51f326f7ddcf28a3d1b9e7de8f"}
         };
     }
 }

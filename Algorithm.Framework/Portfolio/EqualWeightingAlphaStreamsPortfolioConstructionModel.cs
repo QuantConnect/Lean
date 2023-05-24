@@ -190,8 +190,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 _targetsPerSymbolPerAlpha[alphaId] = ourExistingTargets = new Dictionary<Symbol, PortfolioTarget>();
             }
 
-            var totalUsablePortfolioValue = algorithm.Portfolio.TotalPortfolioValue - algorithm.Settings.FreePortfolioValue;
-            var alphaWeightFactor = GetAlphaWeight(portfolioState, totalUsablePortfolioValue, algorithm.Portfolio.CashBook);
+            var alphaWeightFactor = GetAlphaWeight(portfolioState, PortfolioTarget.GetAdjustedTotalPortfolioValue(algorithm), algorithm.Portfolio.CashBook);
 
             // first we create all the new aggregated targets for the provided portfolio state
             var newTargets = new Dictionary<Symbol, PortfolioTarget>();
