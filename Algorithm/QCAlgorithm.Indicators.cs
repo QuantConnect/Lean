@@ -2363,14 +2363,22 @@ namespace QuantConnect.Algorithm
         /// Will unregister an indicator and it's associated consolidator instance so they stop receiving data updates
         /// </summary>
         /// <param name="indicator">The indicator instance to unregister</param>
-        /// <param name="symbol">The symbol this indicator is consuming data from</param>
         [DocumentationAttribute(ConsolidatingData)]
         [DocumentationAttribute(Indicators)]
-        public void UnregisterIndicator(IndicatorBase indicator, Symbol symbol = null)
+        public void UnregisterIndicator(IndicatorBase indicator)
+        {
+            DeregisterIndicator(indicator);
+        }
+
+        /// <summary>
+        /// Will deregister an indicator and it's associated consolidator instance so they stop receiving data updates
+        /// </summary>
+        /// <param name="indicator">The indicator instance to deregister</param>
+        public void DeregisterIndicator(IndicatorBase indicator)
         {
             foreach (var consolidator in indicator.Consolidators)
             {
-                SubscriptionManager.RemoveConsolidator(symbol, consolidator);
+                SubscriptionManager.RemoveConsolidator(null, consolidator);
             }
 
             indicator.Consolidators.Clear();
