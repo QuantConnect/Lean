@@ -717,30 +717,7 @@ namespace QuantConnect.Research
         /// <returns>pandas.DataFrame containing the historical data of <param name="indicator"></returns>
         private PyObject Indicator(IndicatorBase<IndicatorDataPoint> indicator, IEnumerable<Slice> history, Func<IBaseData, decimal> selector = null)
         {
-            // Reset the indicator
-            indicator.Reset();
-
-            // Create a dictionary of the properties
-            var name = indicator.GetType().Name;
-
-            var properties = indicator.GetType().GetProperties()
-                .Where(x => x.PropertyType.IsGenericType)
-                .ToDictionary(x => x.Name, y => new List<IndicatorDataPoint>());
-            properties.Add(name, new List<IndicatorDataPoint>());
-
-            indicator.Updated += (s, e) =>
-            {
-                if (!indicator.IsReady)
-                {
-                    return;
-                }
-
-                foreach (var kvp in properties)
-                {
-                    var dataPoint = kvp.Key == name ? e : GetPropertyValue(s, kvp.Key + ".Current");
-                    kvp.Value.Add((IndicatorDataPoint)dataPoint);
-                }
-            };
+            var properties = WireIndicatorProperties(indicator);
 
             selector = selector ?? (x => x.Value);
 
@@ -763,30 +740,7 @@ namespace QuantConnect.Research
         private PyObject Indicator<T>(IndicatorBase<T> indicator, IEnumerable<Slice> history, Func<IBaseData, T> selector = null)
             where T : IBaseData
         {
-            // Reset the indicator
-            indicator.Reset();
-
-            // Create a dictionary of the properties
-            var name = indicator.GetType().Name;
-
-            var properties = indicator.GetType().GetProperties()
-                .Where(x => x.PropertyType.IsGenericType)
-                .ToDictionary(x => x.Name, y => new List<IndicatorDataPoint>());
-            properties.Add(name, new List<IndicatorDataPoint>());
-
-            indicator.Updated += (s, e) =>
-            {
-                if (!indicator.IsReady)
-                {
-                    return;
-                }
-
-                foreach (var kvp in properties)
-                {
-                    var dataPoint = kvp.Key == name ? e : GetPropertyValue(s, kvp.Key + ".Current");
-                    kvp.Value.Add((IndicatorDataPoint)dataPoint);
-                }
-            };
+            var properties = WireIndicatorProperties(indicator);
 
             selector = selector ?? (x => (T)x);
 
@@ -898,6 +852,36 @@ namespace QuantConnect.Research
             }
 
             return symbol;
+        }
+
+        private Dictionary<string, List<IndicatorDataPoint>> WireIndicatorProperties(IndicatorBase indicator)
+        {
+            // Reset the indicator
+            indicator.Reset();
+
+            // Create a dictionary of the properties
+            var name = indicator.GetType().Name;
+
+            var properties = indicator.GetType().GetProperties()
+                .Where(x => x.PropertyType.IsGenericType && x.Name != "Consolidators")
+                .ToDictionary(x => x.Name, y => new List<IndicatorDataPoint>());
+            properties.Add(name, new List<IndicatorDataPoint>());
+
+            indicator.Updated += (s, e) =>
+            {
+                if (!indicator.IsReady)
+                {
+                    return;
+                }
+
+                foreach (var kvp in properties)
+                {
+                    var dataPoint = kvp.Key == name ? e : GetPropertyValue(s, kvp.Key + ".Current");
+                    kvp.Value.Add((IndicatorDataPoint)dataPoint);
+                }
+            };
+
+            return properties;
         }
 
         private static void RecycleMemory()
