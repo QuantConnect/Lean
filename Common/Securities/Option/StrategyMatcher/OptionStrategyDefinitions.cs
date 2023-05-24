@@ -264,6 +264,18 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             );
 
         /// <summary>
+        /// Short Call Calendar Spread strategy is long one call option and short a second call option with a more distant
+        /// expiration.
+        /// </summary>
+        /// <remarks>Inverse of the <see cref="CallCalendarSpread"/></remarks>
+        public static OptionStrategyDefinition ShortCallCalendarSpread { get; }
+            = OptionStrategyDefinition.Create("Short Call Calendar Spread",
+                OptionStrategyDefinition.CallLeg(+1),
+                OptionStrategyDefinition.CallLeg(-1, (legs, p) => p.Strike == legs[0].Strike,
+                                                     (legs, p) => p.Expiration > legs[0].Expiration)
+            );
+
+        /// <summary>
         /// Put Calendar Spread strategy is a short one put option and long a second put option with a more distant
         /// expiration.
         /// </summary>
@@ -271,6 +283,18 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             = OptionStrategyDefinition.Create("Put Calendar Spread",
                 OptionStrategyDefinition.PutLeg(-1),
                 OptionStrategyDefinition.PutLeg(+1, (legs, p) => p.Strike == legs[0].Strike,
+                                                    (legs, p) => p.Expiration > legs[0].Expiration)
+            );
+
+        /// <summary>
+        /// Short Put Calendar Spread strategy is long one put option and short a second put option with a more distant
+        /// expiration.
+        /// </summary>
+        /// <remarks>Inverse of the <see cref="PutCalendarSpread"/></remarks>
+        public static OptionStrategyDefinition ShortPutCalendarSpread { get; }
+            = OptionStrategyDefinition.Create("Short Put Calendar Spread",
+                OptionStrategyDefinition.PutLeg(+1),
+                OptionStrategyDefinition.PutLeg(-1, (legs, p) => p.Strike == legs[0].Strike,
                                                     (legs, p) => p.Expiration > legs[0].Expiration)
             );
 

@@ -156,14 +156,19 @@ namespace QuantConnect.Securities.Option
             var underlyingValueRatio = multiplierRatio * quantityRatio * priceRatio;
 
             // calculating underlying security value less out-of-the-money amount
-            var amountOTM = option.Right == OptionRight.Call
-                ? Math.Max(0, option.StrikePrice - underlying.Close)
-                : Math.Max(0, underlying.Close - option.StrikePrice);
+            var amountOTM = option.OutOfTheMoneyAmount(underlying.Close);
             var priceRatioOTM = amountOTM / (absValue / quantityRatio);
             var underlyingValueRatioOTM = multiplierRatio * quantityRatio * priceRatioOTM;
 
+            var strikePriceRatio = option.StrikePrice / (absValue / quantityRatio);
+            strikePriceRatio = multiplierRatio * quantityRatio * strikePriceRatio;
+
+            var nakedMarginRequirement = option.Right == OptionRight.Call
+                ? NakedPositionMarginRequirement * underlyingValueRatio
+                : NakedPositionMarginRequirement * strikePriceRatio;
+
             return OptionMarginRequirement +
-                   Math.Abs(quantity) * Math.Max(NakedPositionMarginRequirement * underlyingValueRatio,
+                   Math.Abs(quantity) * Math.Max(nakedMarginRequirement,
                        NakedPositionMarginRequirementOtm * underlyingValueRatio - underlyingValueRatioOTM);
         }
     }
