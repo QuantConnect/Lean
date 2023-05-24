@@ -564,7 +564,7 @@ namespace QuantConnect.Tests.Common.Securities
             var usedMargin = _portfolio.TotalMarginUsed;
             var marginPerLongUnit = usedMargin / initialHoldingsQuantity;
 
-            var shortUnitGroup = positionGroup.WithQuantity(-1);
+            var shortUnitGroup = positionGroup.WithQuantity(-1, _portfolio.Positions);
             var marginPerNakedShortUnit = shortUnitGroup.BuyingPowerModel.GetInitialMarginRequirement(
                 new PositionGroupInitialMarginParameters(_portfolio, shortUnitGroup)).Value;
 
