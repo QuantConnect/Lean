@@ -108,6 +108,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 Portfolio = portfolio,
                 Securities = securityManager
             };
+            algorithm.Settings.MinimumOrderMarginPortfolioPercentage = 0;
+            algorithm.Settings.FreePortfolioValue = 250;
 
             using var manager = new Collective2SignalExportHandler("", 0);
 
