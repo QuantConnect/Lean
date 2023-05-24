@@ -46,16 +46,19 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         /// <param name="template">The group template</param>
         /// <param name="groupQuantity">The quantity of the new group</param>
+        /// <param name="positionMananger">The position manager to use to resolve positions</param>
         /// <returns>A position group with the same position ratios as the template but with the specified group quantity</returns>
-        public static IPositionGroup WithQuantity(this IPositionGroup template, decimal groupQuantity)
+        public static IPositionGroup WithQuantity(this IPositionGroup template, decimal groupQuantity, PositionManager positionMananger)
         {
-            if (template.Quantity == groupQuantity)
+            var positions = template.ToArray(p => p.WithLots(groupQuantity));
+
+            // Could result in an inverse strategy that would not get resolved by using the same key
+            if (groupQuantity < 0)
             {
-                return template;
+                return positionMananger.ResolvePositionGroups(new PositionCollection(positions)).Single();
             }
 
-            var positions = template.ToArray(p => p.WithLots(groupQuantity));
-            return new PositionGroup(template.Key, positions.Length > 0 ? Math.Abs(groupQuantity) : groupQuantity, positions);
+            return new PositionGroup(template.Key, groupQuantity, positions);
         }
 
         /// <summary>
@@ -63,9 +66,9 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         /// <param name="template">The group template</param>
         /// <returns>A position group with the same position ratios as the template but with the specified group quantity</returns>
-        public static IPositionGroup CreateUnitGroup(this IPositionGroup template)
+        public static IPositionGroup CreateUnitGroup(this IPositionGroup template, PositionManager positionMananger)
         {
-            return template.WithQuantity(1);
+            return template.WithQuantity(1, positionMananger);
         }
 
         /// <summary>

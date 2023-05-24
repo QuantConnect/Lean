@@ -291,7 +291,7 @@ namespace QuantConnect.Securities.Positions
             }
 
             // 5. Resolve 'unit' group -- this is our step size
-            var groupUnit = parameters.PositionGroup.CreateUnitGroup();
+            var groupUnit = parameters.PositionGroup.CreateUnitGroup(parameters.Portfolio.Positions);
 
             // 5a. Compute initial margin requirement for a single unit
             var unitMargin = Math.Abs(this.GetInitialMarginRequirement(portfolio, groupUnit));
@@ -327,7 +327,7 @@ namespace QuantConnect.Securities.Positions
                 }
 
                 // 6b.Apply order fees to the allocated holdings margin
-                orderFees = GetOrderFeeInAccountCurrency(portfolio, currentPositionGroup.WithQuantity(positionGroupQuantity));
+                orderFees = GetOrderFeeInAccountCurrency(portfolio, currentPositionGroup.WithQuantity(positionGroupQuantity, portfolio.Positions));
 
                 // Update our target portfolio margin allocated when considering fees, then calculate the new FinalOrderMargin
                 targetFinalMargin = (totalPortfolioValue - orderFees) * targetBufferFactor;
@@ -565,7 +565,7 @@ namespace QuantConnect.Securities.Positions
 
             // Calculate the initial value for the wanted final margin after the delta is applied.
             var currentGroupAbsQuantity = Math.Abs(currentPositionGroup.Quantity);
-            var finalPositionGroup = currentPositionGroup.WithQuantity(currentGroupAbsQuantity + positionGroupQuantity);
+            var finalPositionGroup = currentPositionGroup.WithQuantity(currentGroupAbsQuantity + positionGroupQuantity, portfolio.Positions);
             finalMargin = Math.Abs(this.GetReservedBuyingPowerForPositionGroup(portfolio, finalPositionGroup));
 
             // Keep the previous calculated final margin we would get after the delta is applied.
@@ -577,7 +577,7 @@ namespace QuantConnect.Securities.Positions
             while ((quantityStep < 0 && marginDifference > 0) || (quantityStep > 0 && marginDifference < 0))
             {
                 positionGroupQuantity += quantityStep;
-                finalPositionGroup = currentPositionGroup.WithQuantity(currentGroupAbsQuantity + positionGroupQuantity);
+                finalPositionGroup = currentPositionGroup.WithQuantity(currentGroupAbsQuantity + positionGroupQuantity, portfolio.Positions);
                 finalMargin = Math.Abs(this.GetReservedBuyingPowerForPositionGroup(portfolio, finalPositionGroup));
 
                 var newMarginDifference = finalMargin - targetFinalMargin;

@@ -206,7 +206,7 @@ namespace QuantConnect.Tests.Common.Securities
             // we're not comparing group quantities, which is the number of position lots, but rather the implied
             // position quantities resulting from having that many lots.
             var resizedPositionGroup = positionGroup.WithQuantity(
-                Math.Sign(positionGroup.Quantity) == -1 ? -actual.NumberOfLots : actual.NumberOfLots);
+                Math.Sign(positionGroup.Quantity) == -1 ? -actual.NumberOfLots : actual.NumberOfLots, Portfolio.Positions);
             var position = resizedPositionGroup.GetPosition(security.Symbol);
 
             var bpmOrder = new MarketOrder(security.Symbol, expected.Quantity, parameters.Portfolio.Securities.UtcTime);
@@ -272,7 +272,7 @@ namespace QuantConnect.Tests.Common.Securities
             // we're not comparing group quantities, which is the number of position lots, but rather the implied
             // position quantities resulting from having that many lots.
             var resizedPositionGroup = positionGroup.WithQuantity(
-                Math.Sign(positionGroup.Quantity) == -1 ? -actual.NumberOfLots : actual.NumberOfLots);
+                Math.Sign(positionGroup.Quantity) == -1 ? -actual.NumberOfLots : actual.NumberOfLots, Portfolio.Positions);
             var position = resizedPositionGroup.GetPosition(security.Symbol);
 
             var bpmOrder = new MarketOrder(security.Symbol, expected.Quantity, parameters.Portfolio.Securities.UtcTime);
