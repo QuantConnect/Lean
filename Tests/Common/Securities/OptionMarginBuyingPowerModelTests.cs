@@ -171,7 +171,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // short option positions are very expensive in terms of margin.
             // Margin = 2 * 100 * (14 + 0.2 * 196) = 10640
-            Assert.AreEqual(10640, (double)buyingPowerModel.GetMaintenanceMargin(optionCall));
+            Assert.AreEqual(10640m, buyingPowerModel.GetMaintenanceMargin(optionCall));
         }
 
         [Test]
@@ -261,7 +261,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // short option positions are very expensive in terms of margin.
             // Margin = 2 * 100 * (14 + 0.2 * 182) = 10080
-            Assert.AreEqual(10080, (double)buyingPowerModel.GetMaintenanceMargin(optionPut));
+            Assert.AreEqual(10080m, buyingPowerModel.GetMaintenanceMargin(optionPut));
         }
 
         [Test]
