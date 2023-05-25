@@ -674,25 +674,27 @@ namespace QuantConnect.Securities
         /// Gets the margin available for trading a specific symbol in a specific direction.
         /// </summary>
         /// <param name="symbol">The symbol to compute margin remaining for</param>
+        /// <param name="direction">The order/trading direction</param>
         /// <returns>The maximum order size that is currently executable in the specified direction</returns>
-        public decimal GetMarginRemaining(Symbol symbol)
+        public decimal GetMarginRemaining(Symbol symbol, OrderDirection direction = OrderDirection.Buy)
         {
             var security = Securities[symbol];
 
             var positionGroup = Positions.GetOrCreateDefaultGroup(security);
-            var parameters = new PositionGroupBuyingPowerParameters(this, positionGroup);
+            var parameters = new PositionGroupBuyingPowerParameters(this, positionGroup, direction);
             return positionGroup.BuyingPowerModel.GetPositionGroupBuyingPower(parameters);
         }
 
         /// <summary>
         /// Gets the margin available for trading a specific symbol in a specific direction.
-        /// Alias for <see cref="GetMarginRemaining(Symbol)"/>
+        /// Alias for <see cref="GetMarginRemaining(Symbol, OrderDirection)"/>
         /// </summary>
         /// <param name="symbol">The symbol to compute margin remaining for</param>
+        /// <param name="direction">The order/trading direction</param>
         /// <returns>The maximum order size that is currently executable in the specified direction</returns>
-        public decimal GetBuyingPower(Symbol symbol)
+        public decimal GetBuyingPower(Symbol symbol, OrderDirection direction = OrderDirection.Buy)
         {
-            return GetMarginRemaining(symbol);
+            return GetMarginRemaining(symbol, direction);
         }
 
         /// <summary>
@@ -852,6 +854,7 @@ namespace QuantConnect.Securities
             var orderSubmitRequest = orderRequest as SubmitOrderRequest;
             if (orderSubmitRequest != null)
             {
+                var direction = orderSubmitRequest.Quantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
                 var security = Securities[orderSubmitRequest.Symbol];
 
                 var positionGroup = Positions.GetOrCreateDefaultGroup(security);
@@ -859,7 +862,9 @@ namespace QuantConnect.Securities
                     this, positionGroup
                 );
 
-                var marginRemaining = positionGroup.BuyingPowerModel.GetPositionGroupBuyingPower(this, positionGroup);
+                var marginRemaining = positionGroup.BuyingPowerModel.GetPositionGroupBuyingPower(
+                    this, positionGroup, direction
+                );
 
                 Log.Trace(Messages.SecurityPortfolioManager.OrderRequestMarginInformation(marginUsed, marginRemaining.Value));
             }

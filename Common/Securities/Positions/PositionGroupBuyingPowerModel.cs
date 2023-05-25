@@ -162,7 +162,15 @@ namespace QuantConnect.Securities.Positions
                 return parameters.Sufficient();
             }
 
-            var availableBuyingPower = this.GetPositionGroupBuyingPower(parameters.Portfolio, parameters.PositionGroup);
+            var direction = parameters.Orders.Select(o =>
+            {
+                if (o.GroupOrderManager != null)
+                {
+                    return o.GroupOrderManager.Direction;
+                }
+                return o.Direction;
+            }).First();
+            var availableBuyingPower = this.GetPositionGroupBuyingPower(parameters.Portfolio, parameters.PositionGroup, direction);
 
             // 2. Confirm we pass position group specific checks
             var result = PassesPositionGroupSpecificBuyingPowerForOrderChecks(parameters, availableBuyingPower);

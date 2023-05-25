@@ -1478,8 +1478,11 @@ namespace QuantConnect.Tests.Common.Securities
                     Math.Sign(finalPosition.Quantity) == -Math.Sign(initialPositionGroup.GetPosition(finalPosition.Symbol).Quantity)));
             }
 
-            var buyingPower = finalPositionGroup.BuyingPowerModel.GetPositionGroupBuyingPower(new PositionGroupBuyingPowerParameters(_portfolio,
-                finalPositionGroup));
+            var buyingPower = finalPositionGroup.BuyingPowerModel.GetPositionGroupBuyingPower(new PositionGroupBuyingPowerParameters(
+                _portfolio,
+                finalPositionGroup,
+                // The order direction is irrelevant for the position group buying power calculation
+                OrderDirection.Buy));
 
             Assert.That(buyingPower.Value, Is.EqualTo(expectedBuyingPower).Within(1e-18));
         }
