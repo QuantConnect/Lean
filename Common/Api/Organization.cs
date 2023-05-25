@@ -80,49 +80,6 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "credit")]
         public Credit Credit { get; set; }
-
-        /// <summary>
-        /// Alphas
-        /// </summary>
-        [JsonProperty(PropertyName = "alpha")]
-        public Alpha Alpha { get; set; }
-    }
-
-    /// <summary>
-    /// Alphas
-    /// </summary>
-    public class Alpha
-    {
-        /// <summary>
-        /// Current licensed alphas
-        /// </summary>
-        public List<AlphaLicense> Licenses { get; set; }
-    }
-
-    /// <summary>
-    /// An alpha license
-    /// </summary>
-    public class AlphaLicense
-    {
-        /// <summary>
-        /// Allocated shares
-        /// </summary>
-        public decimal Shares { get; set; }
-
-        /// <summary>
-        /// Gets or sets the alpha id
-        /// </summary>
-        public string AlphaId { get; set; }
-
-        /// <summary>
-        /// The start time of this license
-        /// </summary>
-        public DateTime Start { get; set; }
-
-        /// <summary>
-        /// The end time of this license
-        /// </summary>
-        public DateTime End { get; set; }
     }
 
     /// <summary>
