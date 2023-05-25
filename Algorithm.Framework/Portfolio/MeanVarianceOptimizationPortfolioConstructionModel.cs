@@ -127,10 +127,22 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             int period = 63,
             Resolution resolution = Resolution.Daily,
             double targetReturn = 0.02,
-            IPortfolioOptimizer optimizer = null)
-            : this((Func<DateTime, DateTime?>)null, portfolioBias, lookback, period, resolution, targetReturn, optimizer)
+            PyObject optimizer = null)
+            : this((Func<DateTime, DateTime?>)null, portfolioBias, lookback, period, resolution, targetReturn, null)
         {
             SetRebalancingFunc(rebalance);
+
+            if (optimizer != null)
+            {
+                if (optimizer.TryConvert<IPortfolioOptimizer>(out var csharpOptimizer))
+                {
+                    _optimizer = csharpOptimizer;
+                }
+                else
+                {
+                    _optimizer = new PortfolioOptimizerPythonWrapper(optimizer);
+                }
+            }
         }
 
         /// <summary>

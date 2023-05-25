@@ -151,6 +151,118 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             Assert.LessOrEqual(totalCost, _algorithm.Portfolio.TotalPortfolioValue);
         }
 
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(3)]
+        [TestCase(4)]
+        [TestCase(5)]
+        [TestCase(6)]
+        [TestCase(7)]
+        public void PythonConstructorWorksWithDifferentArguments(int arguments)
+        {
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
+                    @"
+from AlgorithmImports import *
+timeDelta = timedelta(days=1)
+class CustomPortfolioOptimizer:
+    def Optimize(self, historicalReturns, expectedReturns, covariance):
+        return [0.5]*(np.array(historicalReturns)).shape[1]"
+                    );
+                var timeDelta = module.GetAttr("timeDelta");
+                var portfolioBias = PortfolioBias.LongShort;
+                var lookback = 1;
+                var period = 63;
+                var resolution = Resolution.Daily;
+                var targetReturn = 0.02;
+                var optimizer = module.GetAttr("CustomPortfolioOptimizer").Invoke();
+
+                switch (arguments)
+                {
+                    case 1:
+                        Assert.DoesNotThrow(() => new MeanVarianceOptimizationPortfolioConstructionModel(timeDelta));
+                        break;
+                    case 2:
+                        Assert.DoesNotThrow(() => new MeanVarianceOptimizationPortfolioConstructionModel(timeDelta, portfolioBias));
+                        break;
+                    case 3:
+                        Assert.DoesNotThrow(() => new MeanVarianceOptimizationPortfolioConstructionModel(timeDelta, portfolioBias, lookback));
+                        break;
+                    case 4:
+                        Assert.DoesNotThrow(() => new MeanVarianceOptimizationPortfolioConstructionModel(timeDelta, portfolioBias, lookback, period));
+                        break;
+                    case 5:
+                        Assert.DoesNotThrow(() => new MeanVarianceOptimizationPortfolioConstructionModel(timeDelta, portfolioBias, lookback, period, resolution));
+                        break;
+                    case 6:
+                        Assert.DoesNotThrow(() => new MeanVarianceOptimizationPortfolioConstructionModel(timeDelta, portfolioBias, lookback, period, resolution, targetReturn));
+                        break;
+                    case 7:
+                        Assert.DoesNotThrow(() => new MeanVarianceOptimizationPortfolioConstructionModel(timeDelta, portfolioBias, lookback, period, resolution, targetReturn, optimizer));
+                        break;
+                }
+            }
+        }
+
+        [TestCase("timeDelta")]
+        [TestCase("pyFunc")]
+        public void PythonConstructorWorksWithDifferentArgumentRebalance(string rebalanceName)
+        {
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
+                    @"from AlgorithmImports import *
+timeDelta = timedelta(days=1)
+pyFunc = lambda x: x + timedelta(days=1)");
+                var rebalance = module.GetAttr(rebalanceName);
+                Assert.DoesNotThrow(() => new MeanReversionPortfolioConstructionModel(rebalance));
+            }
+        }
+
+        [TestCase("CustomPortfolioOptimizer")]
+        [TestCase("csharpOptimizer")]
+        public void PythonConstructorWorksWithDifferentOptimizers(string optimizerName)
+        {
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
+                    @"from AlgorithmImports import *
+rebalance = timedelta(days=1)
+csharpOptimizer = MinimumVariancePortfolioOptimizer()
+
+class CustomPortfolioOptimizer:
+    def Optimize(self, historicalReturns, expectedReturns, covariance):
+        pass");
+
+                var rebalance = module.GetAttr("rebalance");
+                var optimizer = module.GetAttr(optimizerName);
+                if (optimizerName == "customOptimizer")
+                {
+                    optimizer = optimizer.Invoke();
+                }
+
+                Assert.DoesNotThrow(() => new MeanVarianceOptimizationPortfolioConstructionModel(rebalance, optimizer: optimizer));
+            }
+        }
+
+        [Test]
+        public void PythonConstructorFailsWhenOptimizerTypeIsInvalid()
+        {
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
+                    @"from AlgorithmImports import *
+rebalance = timedelta(days=1)
+class CustomPortfolioOptimizer:
+    pass");
+                var rebalance = module.GetAttr("rebalance");
+                var optimizer = module.GetAttr("CustomPortfolioOptimizer").Invoke();
+
+                var message = Assert.Throws<NotImplementedException>(() => new MeanVarianceOptimizationPortfolioConstructionModel(rebalance, optimizer: optimizer));
+            }
+        }
+
         protected void SetPortfolioConstruction(Language language, PortfolioBias bias)
         {
             var model = GetPortfolioConstructionModel(language, Resolution.Daily, bias);
