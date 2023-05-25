@@ -469,7 +469,7 @@ namespace QuantConnect
         /// <param name="symbol">The symbol to get the ticker for</param>
         /// <param name="date">The date to map the symbol to</param>
         /// <returns>The ticker for a date and symbol</returns>
-        public static string GetTicker(Symbol symbol, DateTime date)
+        public static string Ticker(Symbol symbol, DateTime date)
         {
             if (symbol.RequiresMapping())
             {

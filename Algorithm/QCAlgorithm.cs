@@ -2658,7 +2658,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(HandlingData)]
         public string Ticker(Symbol symbol)
         {
-            return SecurityIdentifier.GetTicker(symbol, Time);
+            return SecurityIdentifier.Ticker(symbol, Time);
         }
 
         /// <summary>

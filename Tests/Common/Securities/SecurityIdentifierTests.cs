@@ -47,7 +47,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void Ticker(string symbol, string expectedTicker, string date)
         {
             var equity = Symbol.Create(symbol, SecurityType.Equity, Market.USA);
-            var ticker = SecurityIdentifier.GetTicker(equity, Time.ParseDate(date));
+            var ticker = SecurityIdentifier.Ticker(equity, Time.ParseDate(date));
 
             Assert.AreEqual(expectedTicker, ticker);
         }
