@@ -369,7 +369,7 @@ namespace QuantConnect
         {
             var letter = _optionSymbology.Where(x => x.Value.Item2 == symbol.ID.OptionRight && x.Value.Item1 == symbol.ID.Date.Month).Select(x => x.Key).Single();
             var twoYearDigit = symbol.ID.Date.ToString("yy");
-            return $"{symbol.Underlying.Value}{twoYearDigit}{symbol.ID.Date.Day:00}{letter}{symbol.ID.StrikePrice}";
+            return $"{SecurityIdentifier.GetTicker(symbol.Underlying, symbol.ID.Date)}{twoYearDigit}{symbol.ID.Date.Day:00}{letter}{symbol.ID.StrikePrice}";
         }
 
         /// <summary>

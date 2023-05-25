@@ -1042,5 +1042,21 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         {
             return _baseAlgorithm.Shortable(symbol, quantity);
         }
+
+        /// <summary>
+        /// Converts the string 'ticker' symbol into a full <see cref="Symbol"/> object
+        /// This requires that the string 'ticker' has been added to the algorithm
+        /// </summary>
+        /// <param name="ticker">The ticker symbol. This should be the ticker symbol
+        /// as it was added to the algorithm</param>
+        /// <returns>The symbol object mapped to the specified ticker</returns>
+        public Symbol Symbol(string ticker) => _baseAlgorithm.Symbol(ticker);
+
+        /// <summary>
+        /// For the given symbol will resolve the ticker it used at the current algorithm date
+        /// </summary>
+        /// <param name="symbol">The symbol to get the ticker for</param>
+        /// <returns>The mapped ticker for a symbol</returns>
+        public string Ticker(Symbol symbol) => _baseAlgorithm.Ticker(symbol);
     }
 }

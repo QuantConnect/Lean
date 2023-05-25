@@ -125,7 +125,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                     return false;
                 }
 
-                var symbol = target.Symbol.Value;
+                var symbol = _algorithm.Ticker(target.Symbol);
                 if (target.Symbol.SecurityType == SecurityType.Future)
                 {
                     symbol = $"@{SymbolRepresentation.GenerateFutureTicker(target.Symbol.ID.Symbol, target.Symbol.ID.Date, doubleDigitsYear: false, includeExpirationDate: false)}";

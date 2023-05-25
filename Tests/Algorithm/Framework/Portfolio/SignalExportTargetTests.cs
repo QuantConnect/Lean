@@ -196,6 +196,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             using var manager = new NumeraiSignalExportHandler("", "", "");
             var algorithm = new QCAlgorithm();
+            algorithm.SetDateTime(new DateTime(2023, 03, 03));
 
             var message = manager.GetMessageSent(new SignalExportTargetParameters { Targets = targets, Algorithm = algorithm });
             var expectedMessage = "numerai_ticker,signal\nSGX SP,0.05\nAAPL US,0.1\nMSFT US,0.1\nZNGA US,0.05\nFXE US,0.05\nLODE US,0.05\nIBM US,0.05\nGOOG US,0.1\nNFLX US,0.1\nCAT US,0.1\n";
@@ -405,7 +406,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             /// <returns>Message sent to Numerai API</returns>
             public string GetMessageSent(SignalExportTargetParameters parameters)
             {
-                ConvertTargetsToNumerai(parameters.Targets, out string message);
+                ConvertTargetsToNumerai(parameters, out string message);
                 return message;
             }
         }
