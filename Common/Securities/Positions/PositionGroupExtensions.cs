@@ -82,6 +82,20 @@ namespace QuantConnect.Securities.Positions
         }
 
         /// <summary>
+        /// Checks whether the provided groups are in opposite sides, that is, each of their positions are in opposite sides.
+        /// </summary>
+        /// <param name="group">The group to check</param>
+        /// <param name="other">The group to check against</param>
+        /// <returns>
+        /// Whether the position groups are the inverted version of each other, that is, contain the same positions each on the opposite side
+        /// </returns>
+        public static bool IsInvertedOf(this IPositionGroup group, IPositionGroup other)
+        {
+            return group.Count == other.Count
+                && group.All(position => Math.Sign(position.Quantity) == -Math.Sign(other.GetPosition(position.Symbol).Quantity));
+        }
+
+        /// <summary>
         /// Checks whether the provided groups are closing/reducing each other, that is, each of their positions are in opposite sides.
         /// </summary>
         /// <param name="finalGroup">The final position group that would result from a trade</param>
@@ -95,6 +109,11 @@ namespace QuantConnect.Securities.Positions
                 return true;
             }
 
+            if (finalGroup.Count != initialGroup.Count)
+            {
+                return false;
+            }
+
             // Liquidating
             if (finalGroup.Quantity == 0 &&
                 // The initial group includes all positions being liquidated
@@ -104,7 +123,7 @@ namespace QuantConnect.Securities.Positions
             }
 
             // Each of the positions have opposite quantity signs
-            if (finalGroup.All(position => Math.Sign(position.Quantity) == -Math.Sign(initialGroup.GetPosition(position.Symbol).Quantity)))
+            if (finalGroup.IsInvertedOf(initialGroup))
             {
                 return true;
             }

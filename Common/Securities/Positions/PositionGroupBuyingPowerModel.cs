@@ -257,16 +257,25 @@ namespace QuantConnect.Securities.Positions
             // 1. Determine current holdings of position group
             var currentPositionGroup = portfolio.Positions[parameters.PositionGroup.Key];
 
+            var inverted = false;
+            var targetBuyingPower = parameters.TargetBuyingPower;
+            if (parameters.PositionGroup.IsInvertedOf(currentPositionGroup))
+            {
+                inverted = true;
+                targetBuyingPower = -targetBuyingPower;
+            }
+
             // 2. Determine target buying power, taking into account RequiredFreeBuyingPowerPercent
             var bufferFactor = 1 - RequiredFreeBuyingPowerPercent;
-            var targetBufferFactor = bufferFactor * parameters.TargetBuyingPower;
+            var targetBufferFactor = bufferFactor * targetBuyingPower;
             var totalPortfolioValue = portfolio.TotalPortfolioValue;
             var targetFinalMargin = targetBufferFactor * totalPortfolioValue;
 
             // 2a. If targeting zero, simply return the negative of the quantity
             if (targetFinalMargin == 0)
             {
-                return parameters.Result(-Math.Abs(currentPositionGroup.Quantity));
+                var quantity = -Math.Abs(currentPositionGroup.Quantity);
+                return parameters.Result(inverted ? -quantity : quantity);
             }
 
             // 3. Determine initial margin requirement for current holdings
@@ -291,7 +300,7 @@ namespace QuantConnect.Securities.Positions
             }
 
             // 5. Resolve 'unit' group -- this is our step size
-            var groupUnit = parameters.PositionGroup.CreateUnitGroup(parameters.Portfolio.Positions);
+            var groupUnit = currentPositionGroup.CreateUnitGroup(parameters.Portfolio.Positions);
 
             // 5a. Compute initial margin requirement for a single unit
             var unitMargin = Math.Abs(groupUnit.BuyingPowerModel.GetInitialMarginRequirement(portfolio, groupUnit));
@@ -345,7 +354,7 @@ namespace QuantConnect.Securities.Positions
             // Ensure that our target holdings margin will be less than or equal to our target allocated margin
             while (Math.Abs(targetHoldingsMargin) > Math.Abs(targetFinalMargin));
 
-            return parameters.Result(positionGroupQuantity);
+            return parameters.Result(inverted ? -positionGroupQuantity : positionGroupQuantity);
         }
 
         /// <summary>
@@ -375,6 +384,10 @@ namespace QuantConnect.Securities.Positions
             }
 
             var targetBuyingPower = usedBuyingPower + parameters.DeltaBuyingPower;
+            if (parameters.PositionGroup.IsInvertedOf(currentPositionGroup))
+            {
+                targetBuyingPower = parameters.DeltaBuyingPower - usedBuyingPower;
+            }
 
             var targetBuyingPowerPercent = parameters.Portfolio.TotalPortfolioValue != 0
                 ? targetBuyingPower / parameters.Portfolio.TotalPortfolioValue

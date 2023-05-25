@@ -975,6 +975,67 @@ namespace QuantConnect.Tests.Common.Securities
                 Assert.AreEqual(Messages.PositionGroupBuyingPowerModel.DeltaCannotBeApplied, result.Reason);
             }
         }
+        private static TestCaseData[] OrderQuantityForDeltaBuyingPowerWithCustomPositionGroupParameterTestCases()
+        {
+            return OrderQuantityForDeltaBuyingPowerTestCases
+                .SelectMany(testCaseData =>
+                {
+                    var testCases = new List<TestCaseData>(2);
+                    foreach (var referencePositionSideSign in new[] { +1, -1 })
+                    {
+                        var args = testCaseData.OriginalArguments.ToList();
+                        args.Add(+1);
+                        var data = new TestCaseData(args.ToArray());
+
+                        if (testCaseData.RunState == NUnit.Framework.Interfaces.RunState.Explicit)
+                        {
+                            data.Explicit();
+                        }
+
+                        testCases.Add(data);
+                    }
+
+                    return testCases;
+                })
+                .ToArray();
+        }
+
+        /// <summary>
+        /// Tests <see cref="OptionStrategyPositionGroupBuyingPowerModel.GetMaximumLotsForDeltaBuyingPower"/> with reference position group in
+        /// same and opposite side of the existing position group.
+        /// </summary>
+        [TestCaseSource(nameof(OrderQuantityForDeltaBuyingPowerWithCustomPositionGroupParameterTestCases))]
+        public void PositionGroupOrderQuantityCalculationForDeltaBuyingPowerWithCustomPositionGroupParameter(
+            OptionStrategyDefinition optionStrategyDefinition, int initialPositionQuantity, decimal deltaBuyingPower, int expectedQuantity,
+            int referencePositionSideSign)
+        {
+            var currentPositionGroup = SetUpOptionStrategy(optionStrategyDefinition, initialPositionQuantity);
+
+            if (expectedQuantity != -Math.Abs(initialPositionQuantity)) // Not liquidating
+            {
+                // Add a small buffer to avoid rounding errors
+                var usedMargin = _portfolio.TotalMarginUsed;
+                deltaBuyingPower *= deltaBuyingPower > 0 || Math.Abs(deltaBuyingPower) > usedMargin ? 1.001m : 0.999m;
+            }
+
+            // Using a reference position with in the same position side as the one in the portfolio
+            var referencePositionGroup = new PositionGroup(currentPositionGroup.BuyingPowerModel, 1,
+                currentPositionGroup.Select(position => new Position(position.Symbol,
+                    referencePositionSideSign * Math.Sign(position.Quantity) * position.UnitQuantity, position.UnitQuantity)).ToArray());
+
+            var result = currentPositionGroup.BuyingPowerModel.GetMaximumLotsForDeltaBuyingPower(new GetMaximumLotsForDeltaBuyingPowerParameters(
+                _portfolio, referencePositionGroup, referencePositionSideSign * deltaBuyingPower, minimumOrderMarginPortfolioPercentage: 0));
+
+            Assert.IsFalse(result.IsError);
+            Assert.AreEqual(expectedQuantity, result.NumberOfLots);
+
+            // Expected quantity is 0 for test cases where no buying power is used,
+            // it should return 0 regardless of the delta, with the proper message
+            if (expectedQuantity == 0)
+            {
+                Assert.AreEqual(Messages.PositionGroupBuyingPowerModel.DeltaCannotBeApplied, result.Reason);
+            }
+        }
 
         /// <remarks>
         /// TODO: Revisit the explicit test cases when we can take into account premium for strategies with zero margin.
@@ -1137,6 +1198,55 @@ namespace QuantConnect.Tests.Common.Securities
                 _portfolio, positionGroup, targetBuyingPowerPercent, minimumOrderMarginPortfolioPercentage: 0)).NumberOfLots;
 
             Assert.AreEqual(expectedQuantity, quantity);
+        }
+
+        private static TestCaseData[] OrderQuantityForTargetBuyingPowerWithCustomPositionGroupParameterTestCases()
+        {
+            return OrderQuantityForTargetBuyingPowerTestCases
+                .SelectMany(testCaseData =>
+                {
+                    var testCases = new List<TestCaseData>(2);
+                    foreach (var referencePositionSideSign in new[] { +1, -1 })
+                    {
+                        var args = testCaseData.OriginalArguments.ToList();
+                        args.Add(+1);
+                        var data = new TestCaseData(args.ToArray());
+
+                        if (testCaseData.RunState == NUnit.Framework.Interfaces.RunState.Explicit)
+                        {
+                            data.Explicit();
+                        }
+
+                        testCases.Add(data);
+                    }
+
+                    return testCases;
+                })
+                .ToArray();
+        }
+
+        /// <summary>
+        /// Tests <see cref="OptionStrategyPositionGroupBuyingPowerModel.GetMaximumLotsForTargetBuyingPower"/> with reference position group in
+        /// same and opposite side of the existing position group.
+        /// </summary>
+        [TestCaseSource(nameof(OrderQuantityForTargetBuyingPowerWithCustomPositionGroupParameterTestCases))]
+        public void PositionGroupOrderQuantityCalculationForTargetBuyingPowerWithCustomPositionGroupParameter(
+            OptionStrategyDefinition optionStrategyDefinition, int initialPositionQuantity, decimal targetBuyingPower, int expectedQuantity,
+            int referenceGroupSideSign)
+        {
+            var currentPositionGroup = SetUpOptionStrategy(optionStrategyDefinition, initialPositionQuantity);
+
+            targetBuyingPower *= 1.0001m; // Add a small buffer to avoid rounding errors
+            var targetBuyingPowerPercent = targetBuyingPower / _portfolio.TotalPortfolioValue;
+
+            var referencePositionGroup = new PositionGroup(currentPositionGroup.BuyingPowerModel, 1,
+                currentPositionGroup.Select(position => new Position(position.Symbol,
+                    referenceGroupSideSign * Math.Sign(position.Quantity) * position.UnitQuantity, position.UnitQuantity)).ToArray());
+
+            var quantity = currentPositionGroup.BuyingPowerModel.GetMaximumLotsForTargetBuyingPower(new GetMaximumLotsForTargetBuyingPowerParameters(
+                _portfolio, referencePositionGroup, referenceGroupSideSign * targetBuyingPowerPercent,
+                minimumOrderMarginPortfolioPercentage: 0)).NumberOfLots;
+            Assert.AreEqual(referenceGroupSideSign * expectedQuantity, quantity);
         }
 
         /// <summary>
