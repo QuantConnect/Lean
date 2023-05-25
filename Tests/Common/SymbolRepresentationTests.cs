@@ -61,6 +61,8 @@ namespace QuantConnect.Tests.Common
         }
 
         [TestCase("MSFT1615D30.5", "MSFT", OptionRight.Call, "30.5", "20160415")]
+        [TestCase("GOOG1415D30.5", "GOOG", OptionRight.Call, "30.5", "20140415")]
+        [TestCase("GOOCV1415C30.5", "GOOCV", OptionRight.Call, "30.5", "20140315")]
         public void IQFeedTickerRoundTrip(string encodedOption, string underlying, OptionRight optionRight, decimal strike, string expiration)
         {
             var parsedOption = SymbolRepresentation.ParseOptionTickerIQFeed(encodedOption);

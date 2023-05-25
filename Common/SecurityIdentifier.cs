@@ -49,7 +49,7 @@ namespace QuantConnect
         private static readonly string MapFileProviderTypeName = Config.Get("map-file-provider", "LocalDiskMapFileProvider");
         private static readonly char[] InvalidCharacters = {'|', ' '};
         private static readonly Lazy<IMapFileProvider> MapFileProvider = new Lazy<IMapFileProvider>(
-            () => Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(MapFileProviderTypeName)
+            () => Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(MapFileProviderTypeName, forceTypeNameOnExisting: false)
         );
 
         /// <summary>
@@ -463,6 +463,25 @@ namespace QuantConnect
             }
 
             return GenerateEquity(firstDate, symbol, market);
+        }
+
+        /// <summary>
+        /// For the given symbol will resolve the ticker it used at the requested date
+        /// </summary>
+        /// <param name="symbol">The symbol to get the ticker for</param>
+        /// <param name="date">The date to map the symbol to</param>
+        /// <returns>The ticker for a date and symbol</returns>
+        public static string Ticker(Symbol symbol, DateTime date)
+        {
+            if (symbol.RequiresMapping())
+            {
+                var resolver = MapFileProvider.Value.Get(AuxiliaryDataKey.Create(symbol));
+                var mapfile = resolver.ResolveMapFile(symbol);
+
+                return mapfile.GetMappedSymbol(date.Date, symbol.Value);
+            }
+
+            return symbol.Value;
         }
 
         /// <summary>

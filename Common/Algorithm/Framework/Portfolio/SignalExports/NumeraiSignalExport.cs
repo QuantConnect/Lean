@@ -127,7 +127,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                 return false;
             }
 
-            if (!ConvertTargetsToNumerai(parameters.Targets, out string positions))
+            if (!ConvertTargetsToNumerai(parameters, out string positions))
             {
                 return false;
             }
@@ -139,13 +139,13 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// <summary>
         /// Verifies each holding's signal is between 0 and 1 (exclusive)
         /// </summary>
-        /// <param name="holdings">A list of portfolio holdings expected to be sent to Numerai API</param>
+        /// <param name="parameters">A list of portfolio holdings expected to be sent to Numerai API</param>
         /// <param name="positions">A message with the desired positions in the expected Numerai API format</param>
         /// <returns>True if a string message with the positions could be obtained, false otherwise</returns>
-        protected bool ConvertTargetsToNumerai(List<PortfolioTarget> holdings, out string positions)
+        protected bool ConvertTargetsToNumerai(SignalExportTargetParameters parameters, out string positions)
         {
             positions = "numerai_ticker,signal\n";
-            foreach ( var holding in holdings )
+            foreach ( var holding in parameters.Targets)
             {
                 if (holding.Quantity <= 0 || holding.Quantity >= 1)
                 {
@@ -153,7 +153,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
                     return false;
                 }
 
-                positions += $"{holding.Symbol.Value} {_numeraiMarketFormat[holding.Symbol.ID.Market]},{holding.Quantity}\n";
+                positions += $"{parameters.Algorithm.Ticker(holding.Symbol)} {_numeraiMarketFormat[holding.Symbol.ID.Market]},{holding.Quantity}\n";
             }
 
             return true;

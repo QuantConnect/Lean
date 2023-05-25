@@ -160,6 +160,7 @@ namespace QuantConnect.Algorithm
             Transactions = new SecurityTransactionManager(this, Securities);
             Portfolio = new SecurityPortfolioManager(Securities, Transactions, DefaultOrderProperties);
             SignalExport = new SignalExportManager(this);
+
             BrokerageModel = new DefaultBrokerageModel();
             Notify = new NotificationManager(false); // Notification manager defaults to disabled.
 
@@ -2646,6 +2647,18 @@ namespace QuantConnect.Algorithm
         public Symbol Symbol(string ticker)
         {
             return SymbolCache.GetSymbol(ticker);
+        }
+
+        /// <summary>
+        /// For the given symbol will resolve the ticker it used at the current algorithm date
+        /// </summary>
+        /// <param name="symbol">The symbol to get the ticker for</param>
+        /// <returns>The mapped ticker for a symbol</returns>
+        [DocumentationAttribute(AddingData)]
+        [DocumentationAttribute(HandlingData)]
+        public string Ticker(Symbol symbol)
+        {
+            return SecurityIdentifier.Ticker(symbol, Time);
         }
 
         /// <summary>
