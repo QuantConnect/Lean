@@ -20,7 +20,6 @@ using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
-using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 using System;
 using System.Collections.Generic;
@@ -55,21 +54,15 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new PortfolioTarget(Symbols.SPY_C_192_Feb19_2016, (decimal)0.3)
             };
 
-            var securityManager = CreateSecurityManager(symbols);
-            var transactionManager = new SecurityTransactionManager(null, securityManager);
-            var portfolio = new SecurityPortfolioManager(securityManager, transactionManager);
-            portfolio.SetCash(50000);
-            var algorithm = new QCAlgorithm
-            {
-                Portfolio = portfolio,
-                Securities = securityManager
-            };
+            var algorithm = new AlgorithmStub();
+            AddSymbols(symbols, algorithm);
+            algorithm.Portfolio.SetCash(50000);
 
             using var manager = new Collective2SignalExportHandler("", 0);
 
             var message = manager.GetMessageSent(new SignalExportTargetParameters { Targets = targetList, Algorithm = algorithm});
 
-            var expectedMessage = @"{""positions"":[{""symbol"":""SPY"",""typeofsymbol"":""stock"",""quant"":99},{""symbol"":""EURUSD"",""typeofsymbol"":""forex"",""quant"":149},{""symbol"":""@ESZ8"",""typeofsymbol"":""future"",""quant"":99},{""symbol"":""SPY1619B192"",""typeofsymbol"":""option"",""quant"":149}],""systemid"":0,""apikey"":""""}";
+            var expectedMessage = @"{""positions"":[{""symbol"":""SPY"",""typeofsymbol"":""stock"",""quant"":99},{""symbol"":""EURUSD"",""typeofsymbol"":""forex"",""quant"":149},{""symbol"":""@ESZ8"",""typeofsymbol"":""future"",""quant"":2},{""symbol"":""SPY1619B192"",""typeofsymbol"":""option"",""quant"":1}],""systemid"":0,""apikey"":""""}";
 
             Assert.AreEqual(expectedMessage, message);
         }
@@ -99,15 +92,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new PortfolioTarget(Symbols.CAT, (decimal)(-1.0))
             };
 
-            var securityManager = CreateSecurityManager(symbols);
-            var transactionManager = new SecurityTransactionManager(null, securityManager);
-            var portfolio = new SecurityPortfolioManager(securityManager, transactionManager);
-            portfolio.SetCash(50000);
-            var algorithm = new QCAlgorithm
-            {
-                Portfolio = portfolio,
-                Securities = securityManager
-            };
+            var algorithm = new AlgorithmStub();
+            AddSymbols(symbols, algorithm);
+            algorithm.Portfolio.SetCash(50000);
             algorithm.Settings.MinimumOrderMarginPortfolioPercentage = 0;
             algorithm.Settings.FreePortfolioValue = 250;
 
@@ -148,13 +135,12 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new PortfolioTarget(Symbols.CAT, (decimal)0.2),
             };
 
-            var securityManager = CreateSecurityManager(symbols);
+            var algorithm = new AlgorithmStub();
+            AddSymbols(symbols, algorithm);
             using var manager = new CrunchDAOSignalExportHandler("", "");
-            var algorithm = new QCAlgorithm();
-            algorithm.Securities = securityManager;
 
             var message = manager.GetMessageSent(new SignalExportTargetParameters { Targets = targetList, Algorithm = algorithm });
-            var expectedMessage = "ticker,date,signal\nSPY R735QTJ8XC9X,2016-02-16,0.2\nAAPL R735QTJ8XC9X,2016-02-16,0.2\nCAT 2T,2016-02-16,0.2\n";
+            var expectedMessage = "ticker,date,signal\nSPY,2016-02-16,0.2\nAAPL,2016-02-16,0.2\nCAT,2016-02-16,0.2\n";
 
             Assert.AreEqual(expectedMessage, message);
         }
@@ -177,10 +163,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 targetList.Add(new PortfolioTarget(symbol, (decimal)0.1));
             }
 
-            var securityManager = CreateSecurityManager(symbols);
+            var algorithm = new AlgorithmStub();
+            AddSymbols(symbols, algorithm);
+            algorithm.Portfolio.SetCash(50000);
             using var manager = new CrunchDAOSignalExport("", "");
-            var algorithm = new QCAlgorithm();
-            algorithm.Securities = securityManager;
 
             var result = manager.Send(new SignalExportTargetParameters { Targets = targetList, Algorithm = algorithm });
             Assert.IsFalse(result);
@@ -308,35 +294,15 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             Assert.IsFalse(signalExportManagerHandler.GetPortfolioTargets(out _));
         }
 
-        private static SecurityManager CreateSecurityManager(List<Symbol> symbols)
+        private static void AddSymbols(List<Symbol> symbols, QCAlgorithm algorithm)
         {
-            var reference = new DateTime(2016, 02, 16, 11, 53, 30);
-            var timeKeeper = new TimeKeeper(reference);
-            var securityManager = new SecurityManager(timeKeeper);
+            algorithm.SetDateTime(new DateTime(2016, 02, 16, 11, 53, 30));
 
             foreach (var symbol in symbols)
             {
-                var security = CreateSecurity(symbol);
-                securityManager.Add(security);
+                var security = algorithm.AddSecurity(symbol);
+                security.SetMarketPrice(new Tick { Value = 100 });
             }
-
-            return securityManager;
-        }
-
-        private static Security CreateSecurity(Symbol symbol)
-        {
-            var security = new Security(
-                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                CreateTradeBarConfig(symbol),
-                new QuantConnect.Securities.Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache()
-            );
-
-            security.SetMarketPrice(new Tick { Value = 100 });
-            return security;
         }
 
         /// <summary>

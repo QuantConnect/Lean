@@ -32,7 +32,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
             var model = new ImmediateSettlementModel();
             var config = CreateTradeBarConfig();
             var security = new Security(

@@ -125,7 +125,7 @@ namespace QuantConnect.Tests.Engine.Results
             var timeKeeper = new TimeKeeper(new DateTime(2014, 6, 24, 12, 0, 0).ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
             var securities = new SecurityManager(timeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             var algorithm = new QCAlgorithm();
             algorithm.Securities = securities;

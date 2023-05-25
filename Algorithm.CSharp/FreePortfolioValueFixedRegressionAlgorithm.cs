@@ -36,7 +36,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            var freePortfolioValue = Portfolio.TotalPortfolioValue - PortfolioTarget.GetAdjustedTotalPortfolioValue(this);
+            var freePortfolioValue = Portfolio.TotalPortfolioValue - Portfolio.AdjustedTotalPortfolioValue;
             if (freePortfolioValue != 500)
             {
                 throw new Exception($"Unexpected FreePortfolioValue value: {freePortfolioValue}");

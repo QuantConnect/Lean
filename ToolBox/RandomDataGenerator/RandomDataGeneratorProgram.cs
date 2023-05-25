@@ -104,7 +104,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 })),
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCacheProvider(
-                    new SecurityPortfolioManager(securityManager, new SecurityTransactionManager(null, securityManager))),
+                    new SecurityPortfolioManager(securityManager, new SecurityTransactionManager(null, securityManager), new AlgorithmSettings())),
                 new MapFilePrimaryExchangeProvider(Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider")))
             );
             securityManager.SetSecurityService(securityService);

@@ -52,7 +52,7 @@ namespace QuantConnect.Tests.Common.Securities
             if (portfolio == null)
             {
                 var securities = new SecurityManager(timeKeeper ?? new TimeKeeper(DateTime.UtcNow));
-                Portfolio = new SecurityPortfolioManager(securities, new SecurityTransactionManager(null, securities));
+                Portfolio = new SecurityPortfolioManager(securities, new SecurityTransactionManager(null, securities), new AlgorithmSettings());
             }
             if (orderProcessor != null)
             {

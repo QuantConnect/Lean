@@ -40,6 +40,8 @@ namespace QuantConnect.Securities
         private bool _isTotalPortfolioValueValid;
         private object _totalPortfolioValueLock = new();
         private bool _setAccountCurrencyWasCalled;
+        private decimal _freePortfolioValue;
+        private IAlgorithmSettings _algorithmSettings;
 
         /// <summary>
         /// Local access to the securities collection for the portfolio summation.
@@ -74,10 +76,11 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Initialise security portfolio manager.
         /// </summary>
-        public SecurityPortfolioManager(SecurityManager securityManager, SecurityTransactionManager transactions, IOrderProperties defaultOrderProperties = null)
+        public SecurityPortfolioManager(SecurityManager securityManager, SecurityTransactionManager transactions, IAlgorithmSettings algorithmSettings, IOrderProperties defaultOrderProperties = null)
         {
             Securities = securityManager;
             Transactions = transactions;
+            _algorithmSettings = algorithmSettings;
             Positions = new PositionManager(securityManager);
             MarginCallModel = new DefaultMarginCallModel(this, defaultOrderProperties);
 
@@ -458,6 +461,30 @@ namespace QuantConnect.Securities
                 }
 
                 return _totalPortfolioValue;
+            }
+        }
+
+        /// <summary>
+        /// Returns the adjusted total portfolio value removing the free amount
+        /// If the <see cref="IAlgorithmSettings.FreePortfolioValue"/> has not been set, the free amount will have a trailing behavior and be updated when requested
+        /// </summary>
+        public decimal AdjustedTotalPortfolioValue
+        {
+            get
+            {
+                if (_algorithmSettings.FreePortfolioValue.HasValue)
+                {
+                    // the user set it, we will respect the value set
+                    _freePortfolioValue = _algorithmSettings.FreePortfolioValue.Value;
+                }
+                else
+                {
+                    // keep the free portfolio value up to date every time we use it
+                    _freePortfolioValue = TotalPortfolioValue * _algorithmSettings.FreePortfolioValuePercentage;
+                }
+
+                return TotalPortfolioValue - _freePortfolioValue;
+
             }
         }
 
