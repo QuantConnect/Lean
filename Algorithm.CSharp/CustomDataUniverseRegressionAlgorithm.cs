@@ -27,7 +27,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class CustomDataUniverseRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Queue<DateTime> _selectionTime = new (new[] {
+        private readonly Queue<DateTime> _selectionTime = new (new[] {
             new DateTime(2014, 03, 24, 0, 0, 0),
             new DateTime(2014, 03, 25, 0, 0, 0),
             new DateTime(2014, 03, 26, 0, 0, 0),
@@ -47,16 +47,20 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 03, 31);
 
             UniverseSettings.Resolution = Resolution.Daily;
-            var universe = AddUniverse<CoarseFundamental>("custom-data-universe", (coarse) =>
+            AddUniverse<CoarseFundamental>("custom-data-universe", (coarse) =>
             {
                 Debug($"Universe selection called: {Time} Count: {coarse.Count()}");
 
                 var expectedTime = _selectionTime.Dequeue();
                 if (expectedTime != Time)
                 {
-                    throw new Exception($"Unexpected selection time {Time}");
+                    throw new Exception($"Unexpected selection time {Time} expected {expectedTime}");
                 }
-                return coarse.OrderByDescending(x => x.DollarVolume).Select(x => x.Symbol).Take(10);
+                return coarse.OrderByDescending(x => x.DollarVolume)
+                    .SelectMany(x => new[] {
+                        x.Symbol,
+                        QuantConnect.Symbol.CreateBase(typeof(CustomData), x.Symbol)})
+                    .Take(20);
             });
         }
 
@@ -68,9 +72,16 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
-                foreach (var symbol in data.Keys)
+                var customData = data.Get<CustomData>();
+                var symbols = data.Keys.Where(symbol => symbol.SecurityType != SecurityType.Base).ToList();
+                foreach (var symbol in symbols)
                 {
-                    SetHoldings(symbol, 1m / data.Keys.Count);
+                    SetHoldings(symbol, 1m / symbols.Count);
+
+                    if (!customData.Any(custom => custom.Key.Underlying == symbol))
+                    {
+                        throw new Exception($"Custom data was not found for underlying symbol {symbol}");
+                    }
                 }
             }
         }
@@ -91,12 +102,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp };
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 42574;
+        public long DataPoints => 42611;
 
         /// <summary>
         /// Data Points count of the algorithm history
