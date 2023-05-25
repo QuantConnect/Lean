@@ -117,7 +117,7 @@ namespace QuantConnect.Tests.Common.Securities
             security.SetLeverage(10m);
             securities.Add(CASH, security);
             var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
             portfolio.SetCash(equity[0]);
 
             for (int i = 0; i < fills.Count; i++)
@@ -179,7 +179,7 @@ namespace QuantConnect.Tests.Common.Securities
             subscriptions.SetDataManager(dataManager);
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
             portfolio.SetCash(equity[0]);
             portfolio.CashBook.Add("MCH", mchQuantity[0], 0);
             portfolio.CashBook.Add("JWB", jwbQuantity[0], 0);
@@ -292,7 +292,7 @@ namespace QuantConnect.Tests.Common.Securities
             var transactions = new SecurityTransactionManager(null, securities);
             var orderProcessor = new OrderProcessor();
             transactions.SetOrderProcessor(orderProcessor);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
             portfolio.CashBook[Currencies.USD].SetAmount(quantity);
 
             var config = CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL);
@@ -376,7 +376,7 @@ namespace QuantConnect.Tests.Common.Securities
             var transactions = new SecurityTransactionManager(null, securities);
             var orderProcessor = new OrderProcessor();
             transactions.SetOrderProcessor(orderProcessor);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
             portfolio.CashBook[Currencies.USD].SetAmount(quantity / leverage + freeCash);
 
             var config = CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL);
@@ -437,7 +437,7 @@ namespace QuantConnect.Tests.Common.Securities
             var transactions = new SecurityTransactionManager(null, securities);
             var orderProcessor = new OrderProcessor();
             transactions.SetOrderProcessor(orderProcessor);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
             portfolio.CashBook[Currencies.USD].SetAmount(quantity / leverage);
 
             var config = CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL);
@@ -526,7 +526,7 @@ namespace QuantConnect.Tests.Common.Securities
             var transactions = new SecurityTransactionManager(null, securities);
             var orderProcessor = new OrderProcessor();
             transactions.SetOrderProcessor(orderProcessor);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
             portfolio.CashBook[Currencies.USD].SetAmount(1000);
 
             var config = CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL);
@@ -574,7 +574,7 @@ namespace QuantConnect.Tests.Common.Securities
             var transactions = new SecurityTransactionManager(null, securities);
             var orderProcessor = new OrderProcessor();
             transactions.SetOrderProcessor(orderProcessor);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
             portfolio.CashBook[Currencies.USD].SetAmount(1000);
             portfolio.CashBook.Add("EUR",  1000, 1.1m);
             portfolio.CashBook.Add("GBP", -1000, 2.0m);
@@ -651,7 +651,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
             portfolio.SetCash(0);
 
             securities.Add(
@@ -685,7 +685,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
             portfolio.SetCash(0);
 
             securities.Add(
@@ -719,7 +719,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
             portfolio.SetCash(0);
 
             securities.Add(
@@ -752,7 +752,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
             portfolio.SetCash(0);
             portfolio.SetCash("EUR", 0, 1.10m);
 
@@ -787,7 +787,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
             portfolio.SetCash(0);
             portfolio.SetCash("EUR", 0, 1.10m);
 
@@ -828,7 +828,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
             portfolio.SetCash(0);
             portfolio.SetCash("EUR", 0, 1.10m);
 
@@ -863,7 +863,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
             portfolio.SetCash(0);
 
             securities.Add(
@@ -891,7 +891,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
             portfolio.SetCash(0);
 
             securities.Add(
@@ -920,7 +920,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
             portfolio.SetCash(0);
 
             securities.Add(
@@ -950,7 +950,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
             portfolio.SetCash(1000);
             var eurCash = portfolio.CashBook.Add("EUR", 0, 1.1000m);
 
@@ -985,7 +985,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
             portfolio.SetCash(10000);
             var btcCash = portfolio.CashBook.Add("BTC", 0, 4000.01m);
 
@@ -1024,7 +1024,7 @@ namespace QuantConnect.Tests.Common.Securities
             var securityExchangeHours = SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours();
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
             portfolio.SetCash(1000);
             securities.Add(
                 Symbols.AAPL,
@@ -1087,7 +1087,7 @@ namespace QuantConnect.Tests.Common.Securities
             var transactions = new SecurityTransactionManager(null, securities);
             var orderProcessor = new OrderProcessor();
             transactions.SetOrderProcessor(orderProcessor);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
             portfolio.CashBook[Currencies.USD].SetAmount(amount);
 
             var config = CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL);
@@ -1156,7 +1156,7 @@ namespace QuantConnect.Tests.Common.Securities
             var transactions = new SecurityTransactionManager(null, securities);
             var orderProcessor = new OrderProcessor();
             transactions.SetOrderProcessor(orderProcessor);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
             portfolio.CashBook[Currencies.USD].SetAmount(amount);
 
             var config = CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL);
@@ -1222,7 +1222,7 @@ namespace QuantConnect.Tests.Common.Securities
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
             var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
             transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
@@ -1294,7 +1294,7 @@ namespace QuantConnect.Tests.Common.Securities
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
             var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
             transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
@@ -1363,7 +1363,7 @@ namespace QuantConnect.Tests.Common.Securities
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
             var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
             transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
@@ -1433,7 +1433,7 @@ namespace QuantConnect.Tests.Common.Securities
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
             var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
             transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
@@ -1503,7 +1503,7 @@ namespace QuantConnect.Tests.Common.Securities
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
             var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
             transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
@@ -1575,7 +1575,7 @@ namespace QuantConnect.Tests.Common.Securities
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
             var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
             transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
@@ -1650,7 +1650,7 @@ namespace QuantConnect.Tests.Common.Securities
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
             var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
             transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
@@ -1723,7 +1723,7 @@ namespace QuantConnect.Tests.Common.Securities
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
             var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
             transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
@@ -1797,7 +1797,7 @@ namespace QuantConnect.Tests.Common.Securities
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
             var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
             transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
@@ -1866,7 +1866,7 @@ namespace QuantConnect.Tests.Common.Securities
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
             var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
             transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
@@ -1937,7 +1937,7 @@ namespace QuantConnect.Tests.Common.Securities
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
             var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
             transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
@@ -2005,7 +2005,7 @@ namespace QuantConnect.Tests.Common.Securities
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
             var orderProcessor = new OrderProcessor();
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             var time = DateTime.Now;
             algorithm.Securities = securities;
@@ -2069,7 +2069,7 @@ namespace QuantConnect.Tests.Common.Securities
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
             var orderProcessor = new OrderProcessor();
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             var time = DateTime.Now;
             algorithm.Securities = securities;
@@ -2133,7 +2133,7 @@ namespace QuantConnect.Tests.Common.Securities
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
             var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
             transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
@@ -2201,7 +2201,7 @@ namespace QuantConnect.Tests.Common.Securities
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
             var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
             transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
@@ -2273,7 +2273,7 @@ namespace QuantConnect.Tests.Common.Securities
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
             var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
             transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
@@ -2347,7 +2347,7 @@ namespace QuantConnect.Tests.Common.Securities
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
             var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
             transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
@@ -2420,7 +2420,7 @@ namespace QuantConnect.Tests.Common.Securities
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
             var transactionHandler = new BacktestingTransactionHandler();
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
 
             algorithm.Securities = securities;
             transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), _resultHandler);
@@ -2617,9 +2617,6 @@ namespace QuantConnect.Tests.Common.Securities
         public void SetAccountCurrency()
         {
             var algorithm = new QCAlgorithm();
-            var securities = new SecurityManager(TimeKeeper);
-            var transactions = new SecurityTransactionManager(null, securities);
-            algorithm.Portfolio = new SecurityPortfolioManager(securities, transactions);
 
             Assert.AreEqual(Currencies.USD, algorithm.AccountCurrency);
             Assert.AreEqual(Currencies.USD, algorithm.Portfolio.CashBook.AccountCurrency);
@@ -2635,13 +2632,9 @@ namespace QuantConnect.Tests.Common.Securities
         public void CanNotChangeAccountCurrencyAfterAddingASecurity()
         {
             var algorithm = new QCAlgorithm();
-            var securities = new SecurityManager(TimeKeeper);
-            var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            algorithm.SetDateTime(TimeKeeper.UtcTime);
 
-            algorithm.Securities = securities;
-
-            securities.Add(
+            algorithm.Securities.Add(
                 Symbols.SPY,
                 new Security(
                     SecurityExchangeHours,
@@ -2653,42 +2646,31 @@ namespace QuantConnect.Tests.Common.Securities
                     new SecurityCache()
                 )
             );
-            Assert.Throws<InvalidOperationException>(() => portfolio.SetAccountCurrency(Currencies.USD));
+            Assert.Throws<InvalidOperationException>(() => algorithm.Portfolio.SetAccountCurrency(Currencies.USD));
         }
 
         [TestCase("SetCash(decimal cash)")]
         [TestCase("SetCash(string symbol, ...)")]
         public void CanNotChangeAccountCurrencyAfterSettingCash(string overload)
         {
-            var securities = new SecurityManager(TimeKeeper);
-            var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
-
+            var algorithm = new QCAlgorithm();
             if (overload == "SetCash(decimal cash)")
             {
-                portfolio.SetCash(10);
+                algorithm.Portfolio.SetCash(10);
             }
             else
             {
-                portfolio.SetCash(Currencies.USD, 1, 1);
+                algorithm.Portfolio.SetCash(Currencies.USD, 1, 1);
             }
-            Assert.Throws<InvalidOperationException>(() => portfolio.SetAccountCurrency(Currencies.USD));
+            Assert.Throws<InvalidOperationException>(() => algorithm.Portfolio.SetAccountCurrency(Currencies.USD));
         }
 
         [Test]
         public void AddsEmptyUnsettledCashInstancesAsNewCashInstancesAreAddedToTheCashBook()
         {
             var algorithm = new QCAlgorithm();
-            var securities = new SecurityManager(TimeKeeper);
-            var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
-
-            algorithm.Securities = securities;
-            algorithm.Transactions = transactions;
-            algorithm.Portfolio = portfolio;
-
             var additions = 0;
-            portfolio.UnsettledCashBook.Updated += (sender, args) =>
+            algorithm.Portfolio.UnsettledCashBook.Updated += (sender, args) =>
             {
                 if (args.UpdateType == CashBookUpdateType.Added)
                 {
@@ -2717,14 +2699,6 @@ namespace QuantConnect.Tests.Common.Securities
         public void UpdatesUnsettledCashCurrencyConversionAsItIsUpdatedForSettledCash()
         {
             var algorithm = new QCAlgorithm();
-            var securities = new SecurityManager(TimeKeeper);
-            var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
-
-            algorithm.Securities = securities;
-            algorithm.Transactions = transactions;
-            algorithm.Portfolio = portfolio;
-
             algorithm.SetCash(Currencies.EUR, 1000, 1.08m);
             algorithm.SetCash("AUD", 1000, 0.7m);
 

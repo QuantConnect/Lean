@@ -349,7 +349,7 @@ namespace QuantConnect.Tests.Common.Securities
             var transactions = new SecurityTransactionManager(null, securities);
             transactions.SetOrderProcessor(orderProcessor);
 
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
             portfolio.SetCash(cash);
 
             return portfolio;

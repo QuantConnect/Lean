@@ -15,9 +15,8 @@
 
 using System;
 using NUnit.Framework;
-using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Securities;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -25,25 +24,15 @@ namespace QuantConnect.Tests.Common.Securities
     public class AccountCurrencyImmediateSettlementModelTests
     {
         private static readonly DateTime Noon = new DateTime(2014, 6, 24, 12, 0, 0);
-        private static readonly TimeKeeper TimeKeeper = new TimeKeeper(Noon.ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
 
         [Test]
         public void FundsAreSettledImmediately()
         {
-            var securities = new SecurityManager(TimeKeeper);
-            var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var algorithm = new AlgorithmStub();
+            algorithm.SetDateTime(Noon);
+            var portfolio = algorithm.Portfolio;
+            var security = algorithm.AddSecurity(Symbols.SPY);
             var model = new AccountCurrencyImmediateSettlementModel();
-            var config = CreateTradeBarConfig(Symbols.SPY);
-            var security = new Security(
-                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
-                config,
-                new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache()
-            );
 
             portfolio.SetCash(1000);
             Assert.AreEqual(1000, portfolio.Cash);
@@ -69,23 +58,13 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void FundsAreSettledInAccountCurrency()
         {
-            var securities = new SecurityManager(TimeKeeper);
-            var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var algorithm = new AlgorithmStub();
+            algorithm.SetDateTime(Noon);
+            var portfolio = algorithm.Portfolio;
+            var security = algorithm.AddSecurity(Symbols.DE30EUR);
             var model = new AccountCurrencyImmediateSettlementModel();
             portfolio.SetCash(1000);
             portfolio.SetCash("EUR", 0, 1.1m);
-
-            var config = CreateTradeBarConfig(Symbols.DE30EUR);
-            var security = new Security(
-                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
-                config,
-                portfolio.CashBook["EUR"],
-                SymbolProperties.GetDefault("EUR"),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache()
-            );
 
             Assert.AreEqual(1000, portfolio.Cash);
             Assert.AreEqual(0, portfolio.UnsettledCash);
@@ -108,11 +87,6 @@ namespace QuantConnect.Tests.Common.Securities
             // 1550 + 1000 * 1.1 = 2650
             Assert.AreEqual(2650, portfolio.Cash);
             Assert.AreEqual(0, portfolio.UnsettledCash);
-        }
-
-        private SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol)
-        {
-            return new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
         }
     }
 }

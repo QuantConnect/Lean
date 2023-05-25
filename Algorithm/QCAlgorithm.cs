@@ -158,7 +158,7 @@ namespace QuantConnect.Algorithm
 
             Securities = new SecurityManager(_timeKeeper);
             Transactions = new SecurityTransactionManager(this, Securities);
-            Portfolio = new SecurityPortfolioManager(Securities, Transactions, DefaultOrderProperties);
+            Portfolio = new SecurityPortfolioManager(Securities, Transactions, Settings, DefaultOrderProperties);
             SignalExport = new SignalExportManager(this);
 
             BrokerageModel = new DefaultBrokerageModel();
