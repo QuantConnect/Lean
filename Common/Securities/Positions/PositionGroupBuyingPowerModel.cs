@@ -267,6 +267,8 @@ namespace QuantConnect.Securities.Positions
 
             var inverted = false;
             var targetBuyingPower = parameters.TargetBuyingPower;
+            // The reference position group is not necessarily in the same side as the position group in the portfolio, it could be the inverted.
+            // So the consumer needs the result relative to that position group instead of the one being held.
             if (parameters.PositionGroup.IsInvertedOf(currentPositionGroup))
             {
                 inverted = true;
@@ -392,6 +394,8 @@ namespace QuantConnect.Securities.Positions
             }
 
             var targetBuyingPower = usedBuyingPower + parameters.DeltaBuyingPower;
+            // The reference position group is not necessarily in the same side as the position group in the portfolio, it could be the inverted.
+            // So the consumer needs the result relative to that position group instead of the one being held.
             if (parameters.PositionGroup.IsInvertedOf(currentPositionGroup))
             {
                 targetBuyingPower = parameters.DeltaBuyingPower - usedBuyingPower;

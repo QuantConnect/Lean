@@ -984,7 +984,7 @@ namespace QuantConnect.Tests.Common.Securities
                     foreach (var referencePositionSideSign in new[] { +1, -1 })
                     {
                         var args = testCaseData.OriginalArguments.ToList();
-                        args.Add(+1);
+                        args.Add(referencePositionSideSign);
                         var data = new TestCaseData(args.ToArray());
 
                         if (testCaseData.RunState == NUnit.Framework.Interfaces.RunState.Explicit)
@@ -1003,6 +1003,9 @@ namespace QuantConnect.Tests.Common.Securities
         /// <summary>
         /// Tests <see cref="OptionStrategyPositionGroupBuyingPowerModel.GetMaximumLotsForDeltaBuyingPower"/> with reference position group in
         /// same and opposite side of the existing position group.
+        ///
+        /// The reference position group is not necessarily in the same side as the position group in the portfolio, it could be the inverted.
+        /// So the consumer needs the result relative to that position group instead of the one being held.
         /// </summary>
         [TestCaseSource(nameof(OrderQuantityForDeltaBuyingPowerWithCustomPositionGroupParameterTestCases))]
         public void PositionGroupOrderQuantityCalculationForDeltaBuyingPowerWithCustomPositionGroupParameter(
@@ -1027,7 +1030,7 @@ namespace QuantConnect.Tests.Common.Securities
                 _portfolio, referencePositionGroup, referencePositionSideSign * deltaBuyingPower, minimumOrderMarginPortfolioPercentage: 0));
 
             Assert.IsFalse(result.IsError);
-            Assert.AreEqual(expectedQuantity, result.NumberOfLots);
+            Assert.AreEqual(referencePositionSideSign * expectedQuantity, result.NumberOfLots);
 
             // Expected quantity is 0 for test cases where no buying power is used,
             // it should return 0 regardless of the delta, with the proper message
@@ -1209,7 +1212,7 @@ namespace QuantConnect.Tests.Common.Securities
                     foreach (var referencePositionSideSign in new[] { +1, -1 })
                     {
                         var args = testCaseData.OriginalArguments.ToList();
-                        args.Add(+1);
+                        args.Add(referencePositionSideSign);
                         var data = new TestCaseData(args.ToArray());
 
                         if (testCaseData.RunState == NUnit.Framework.Interfaces.RunState.Explicit)
@@ -1228,6 +1231,9 @@ namespace QuantConnect.Tests.Common.Securities
         /// <summary>
         /// Tests <see cref="OptionStrategyPositionGroupBuyingPowerModel.GetMaximumLotsForTargetBuyingPower"/> with reference position group in
         /// same and opposite side of the existing position group.
+        ///
+        /// The reference position group is not necessarily in the same side as the position group in the portfolio, it could be the inverted.
+        /// So the consumer needs the result relative to that position group instead of the one being held.
         /// </summary>
         [TestCaseSource(nameof(OrderQuantityForTargetBuyingPowerWithCustomPositionGroupParameterTestCases))]
         public void PositionGroupOrderQuantityCalculationForTargetBuyingPowerWithCustomPositionGroupParameter(
