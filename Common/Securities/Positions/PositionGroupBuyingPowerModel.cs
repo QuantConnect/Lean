@@ -261,7 +261,7 @@ namespace QuantConnect.Securities.Positions
             var bufferFactor = 1 - RequiredFreeBuyingPowerPercent;
             var targetBufferFactor = bufferFactor * parameters.TargetBuyingPower;
             var totalPortfolioValue = portfolio.TotalPortfolioValue;
-            var targetFinalMargin = Math.Abs(targetBufferFactor * totalPortfolioValue);
+            var targetFinalMargin = targetBufferFactor * totalPortfolioValue;
 
             // 2a. If targeting zero, simply return the negative of the quantity
             if (targetFinalMargin == 0)
@@ -273,7 +273,7 @@ namespace QuantConnect.Securities.Positions
             var currentUsedMargin = 0m;
             if (currentPositionGroup.Quantity != 0)
             {
-                currentUsedMargin = Math.Abs(this.GetReservedBuyingPowerForPositionGroup(portfolio, currentPositionGroup));
+                currentUsedMargin = this.GetReservedBuyingPowerForPositionGroup(portfolio, currentPositionGroup);
             }
 
             // 4. Check that the change of margin is above our models minimum percentage change
@@ -464,7 +464,8 @@ namespace QuantConnect.Securities.Positions
         {
             // determine if we're unable to converge by seeing if quantity estimate hasn't changed
             if (Math.Abs(currentMarginDifference) > Math.Abs(lastMarginDifference) &&
-                Math.Sign(currentMarginDifference) == Math.Sign(lastMarginDifference))
+                Math.Sign(currentMarginDifference) == Math.Sign(lastMarginDifference)
+                || currentMarginDifference == lastMarginDifference)
             {
                 string message;
                 if (groupUnit.Count == 1)
@@ -560,27 +561,32 @@ namespace QuantConnect.Securities.Positions
             var quantityStep = targetFinalMargin > currentUsedMargin ? +1 : -1;
 
             // Compute initial position group quantity estimate -- group quantities are whole numbers [number of lots/unit quantities].
-            // Start with a unit step towards the determined direction.
-            var positionGroupQuantity = quantityStep;
+            //   - If going to the opposite side (target margin < 0), move towards said side from 0 since we need to completely close the position.
+            //   - Else, just start with a unit step towards the determined direction.
+            var currentGroupAbsQuantity = Math.Abs(currentPositionGroup.Quantity);
+            var positionGroupQuantity = targetFinalMargin < 0 ? -currentGroupAbsQuantity + quantityStep : quantityStep;
 
             // Calculate the initial value for the wanted final margin after the delta is applied.
-            var currentGroupAbsQuantity = Math.Abs(currentPositionGroup.Quantity);
             var finalPositionGroup = currentPositionGroup.WithQuantity(currentGroupAbsQuantity + positionGroupQuantity, portfolio.Positions);
-            finalMargin = Math.Abs(this.GetReservedBuyingPowerForPositionGroup(portfolio, finalPositionGroup));
+            finalMargin = finalPositionGroup.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(portfolio, finalPositionGroup);
 
             // Keep the previous calculated final margin we would get after the delta is applied.
             // This is useful for the cases were the final group gets us with final margin greater than the target.
             var prevFinalMargin = finalMargin;
 
             // Begin iterating until the final margin is equal or greater than the target margin.
-            var marginDifference = finalMargin - targetFinalMargin;
+            var absTargetFinalMargin = Math.Abs(targetFinalMargin);
+            var getMarginDifference = (decimal currentFinalMargin) =>
+                targetFinalMargin < 0 ? absTargetFinalMargin - currentFinalMargin : currentFinalMargin - absTargetFinalMargin;
+
+            var marginDifference = getMarginDifference(finalMargin);
             while ((quantityStep < 0 && marginDifference > 0) || (quantityStep > 0 && marginDifference < 0))
             {
                 positionGroupQuantity += quantityStep;
                 finalPositionGroup = currentPositionGroup.WithQuantity(currentGroupAbsQuantity + positionGroupQuantity, portfolio.Positions);
-                finalMargin = Math.Abs(this.GetReservedBuyingPowerForPositionGroup(portfolio, finalPositionGroup));
+                finalMargin = finalPositionGroup.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(portfolio, finalPositionGroup);
 
-                var newMarginDifference = finalMargin - targetFinalMargin;
+                var newMarginDifference = getMarginDifference(finalMargin);
                 if (UnableToConverge(newMarginDifference, marginDifference, groupUnit, portfolio, positionGroupQuantity,
                     targetFinalMargin, currentUsedMargin, unitMargin, out var error))
                 {
@@ -592,7 +598,7 @@ namespace QuantConnect.Securities.Positions
 
             // If the final margin is greater than the target, the result is the previous quantity,
             // which is the maximum allowed to be within the target margin.
-            if (finalMargin > targetFinalMargin)
+            if (finalMargin > absTargetFinalMargin)
             {
                 finalMargin = prevFinalMargin;
                 return positionGroupQuantity - quantityStep;
