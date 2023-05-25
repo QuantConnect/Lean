@@ -273,7 +273,7 @@ namespace QuantConnect.Securities.Positions
             var currentUsedMargin = 0m;
             if (currentPositionGroup.Quantity != 0)
             {
-                currentUsedMargin = this.GetReservedBuyingPowerForPositionGroup(portfolio, currentPositionGroup);
+                currentUsedMargin = currentPositionGroup.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(portfolio, currentPositionGroup);
             }
 
             // 4. Check that the change of margin is above our models minimum percentage change
@@ -294,7 +294,7 @@ namespace QuantConnect.Securities.Positions
             var groupUnit = parameters.PositionGroup.CreateUnitGroup(parameters.Portfolio.Positions);
 
             // 5a. Compute initial margin requirement for a single unit
-            var unitMargin = Math.Abs(this.GetInitialMarginRequirement(portfolio, groupUnit));
+            var unitMargin = Math.Abs(groupUnit.BuyingPowerModel.GetInitialMarginRequirement(portfolio, groupUnit));
             if (unitMargin == 0m)
             {
                 // likely due to missing price data
