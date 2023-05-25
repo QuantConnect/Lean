@@ -92,7 +92,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "5"},
+            {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
@@ -111,11 +111,11 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$21.23"},
-            {"Estimated Strategy Capacity", "$22000000.00"},
+            {"Total Fees", "$17.23"},
+            {"Estimated Strategy Capacity", "$130000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "19.98%"},
-            {"OrderListHash", "632386514a9cf27653301bc01a190b8f"}
+            {"Portfolio Turnover", "19.95%"},
+            {"OrderListHash", "3b27bd2fab54f421555a060e0fc0bc36"}
         };
     }
 }

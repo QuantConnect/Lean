@@ -648,7 +648,7 @@ namespace QuantConnect.Tests.Common.Securities
             var securityManager = new SecurityManager(timeKeeper);
             securityManager.Add(security);
             var transactionManager = new SecurityTransactionManager(null, securityManager);
-            portfolio = new SecurityPortfolioManager(securityManager, transactionManager);
+            portfolio = new SecurityPortfolioManager(securityManager, transactionManager, new AlgorithmSettings());
             portfolio.SetCash(accountCurrency, 100 * 1000m, 1m);
             Assert.AreEqual(0, security.Holdings.Quantity);
             Assert.AreEqual(100*1000m, portfolio.CashBook[accountCurrency].Amount);

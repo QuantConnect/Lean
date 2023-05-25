@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         {
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
             var model = new FutureSettlementModel();
             var entry = MarketHoursDatabase.FromDataFolder().GetEntry(Symbols.Fut_SPY_Feb19_2016.ID.Market, Symbols.Fut_SPY_Feb19_2016, SecurityType.Future);
             var future = new Future(Symbols.Fut_SPY_Feb19_2016,
@@ -119,7 +119,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         {
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
-            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
             var model = new FutureSettlementModel();
             var entry = MarketHoursDatabase.FromDataFolder().GetEntry(Symbols.Fut_SPY_Feb19_2016.ID.Market, Symbols.Fut_SPY_Feb19_2016, SecurityType.Future);
             var future = new Future(Symbols.Fut_SPY_Feb19_2016,

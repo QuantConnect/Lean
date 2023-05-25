@@ -41,28 +41,25 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         public virtual void SetUp()
         {
             _nowUtc = new DateTime(2021, 1, 10);
-            _algorithm = new QCAlgorithm();
+            _algorithm = new AlgorithmStub();
             _algorithm.SetFinishedWarmingUp();
-            _algorithm.SetPandasConverter();
-            _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
+            _algorithm.Settings.MinimumOrderMarginPortfolioPercentage = 0;
+            _algorithm.Settings.FreePortfolioValue = 250;
             _algorithm.SetDateTime(_nowUtc.ConvertToUtc(_algorithm.TimeZone));
             _algorithm.SetCash(1200);
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
-            var dataProvider = new SingleEntryDataCacheProvider(TestGlobals.DataProvider);
             _algorithm.SetHistoryProvider(historyProvider);
 
             historyProvider.Initialize(new HistoryProviderInitializeParameters(
                 new BacktestNodePacket(),
                 null,
                 TestGlobals.DataProvider,
-                dataProvider,
+                TestGlobals.DataCacheProvider,
                 TestGlobals.MapFileProvider,
                 TestGlobals.FactorFileProvider,
                 i => { },
                 true,
                 new DataPermissionManager()));
-
-            dataProvider.Dispose();
         }
         
         [TestCase(Language.CSharp)]

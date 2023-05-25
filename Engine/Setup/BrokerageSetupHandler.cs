@@ -348,10 +348,6 @@ namespace QuantConnect.Lean.Engine.Setup
                 //Set the starting portfolio value for the strategy to calculate performance:
                 StartingPortfolioValue = algorithm.Portfolio.TotalPortfolioValue;
                 StartingDate = DateTime.Now;
-
-                // we set the free portfolio value based on the initial total value and the free percentage value
-                algorithm.Settings.FreePortfolioValue =
-                    algorithm.Portfolio.TotalPortfolioValue * algorithm.Settings.FreePortfolioValuePercentage;
             }
             catch (Exception err)
             {

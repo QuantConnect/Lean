@@ -61,7 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 var security = Securities["SPY"];
                 var priceInAccountCurrency = Portfolio.CashBook.ConvertToAccountCurrency(security.AskPrice, security.QuoteCurrency.Symbol);
-                _expectedSpyQuantity = (Portfolio.TotalPortfolioValue - Settings.FreePortfolioValue) / priceInAccountCurrency;
+                _expectedSpyQuantity = Portfolio.TotalPortfolioValueLessFreeBuffer / priceInAccountCurrency;
                 _expectedSpyQuantity = _expectedSpyQuantity.DiscretelyRoundBy(1, MidpointRounding.ToZero);
             }
 

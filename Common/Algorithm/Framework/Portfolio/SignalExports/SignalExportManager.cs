@@ -109,7 +109,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
 
                 // FreePortfolioValue is used for orders not to be rejected due to volatility when using SetHoldings and CalculateOrderQuantity
                 // Then, we need to substract its value from the TotalPortfolioValue and obtain again the holding percentage for our holding
-                var adjustedHoldingPercent = (holdingPercent * totalPortfolioValue) / (totalPortfolioValue - _algorithm.Settings.FreePortfolioValue);
+                var adjustedHoldingPercent = (holdingPercent * totalPortfolioValue) / _algorithm.Portfolio.TotalPortfolioValueLessFreeBuffer;
                 if (holding.Quantity < 0)
                 {
                     adjustedHoldingPercent *= -1;

@@ -113,7 +113,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Average Loss", "-2.40%"},
             {"Compounding Annual Return", "1497.266%"},
             {"Drawdown", "5.500%"},
-            {"Expectancy", "1.338"},
+            {"Expectancy", "1.339"},
             {"Net Profit", "13.775%"},
             {"Sharpe Ratio", "3.309"},
             {"Probabilistic Sharpe Ratio", "61.758%"},
@@ -127,11 +127,11 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "3.309"},
             {"Tracking Error", "0.379"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$2651.01"},
+            {"Total Fees", "$2650.41"},
             {"Estimated Strategy Capacity", "$30000.00"},
             {"Lowest Capacity Asset", "BTCUSD XJ"},
-            {"Portfolio Turnover", "46.80%"},
-            {"OrderListHash", "604291218c630343a896bfa2f3104932"}
+            {"Portfolio Turnover", "46.79%"},
+            {"OrderListHash", "38a7cd7f03f62a8ac4ecd907dd2a1084"}
         };
     }
 }
