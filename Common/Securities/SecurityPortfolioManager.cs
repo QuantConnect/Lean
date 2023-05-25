@@ -468,7 +468,7 @@ namespace QuantConnect.Securities
         /// Returns the adjusted total portfolio value removing the free amount
         /// If the <see cref="IAlgorithmSettings.FreePortfolioValue"/> has not been set, the free amount will have a trailing behavior and be updated when requested
         /// </summary>
-        public decimal AdjustedTotalPortfolioValue
+        public decimal TotalPortfolioValueLessFreeBuffer
         {
             get
             {
