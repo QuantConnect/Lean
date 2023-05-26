@@ -1582,6 +1582,7 @@ namespace QuantConnect.Tests.Algorithm
         {
             var algo = GetAlgorithm(out _, 1, 0);
             algo.SetTimeZone(TimeZones.London);
+            algo.SetDateTime(new DateTime(2023, 02, 16));
 
             var es20h20 = algo.AddFutureContract(
                 Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 3, 20)),
