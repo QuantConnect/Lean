@@ -30,6 +30,9 @@ namespace QuantConnect.Tests.Common.Securities.Positions
         [TestCase(new[] { 10, 55 }, new[] { 1, 5 })]
         [TestCase(new[] { 10, -20, 4 }, new[] { 1, 2, 1 })]
         [TestCase(new[] { 10, -20, 4 }, new[] { 1, 2, 4 })]
+#if !DEBUG
+        [Ignore("Not on debug mode")]
+#endif
         public void PositionGroupCreationThrowsOnInvalidRatio(int[] positionsQuantities, int[] positionsUnitQuantities)
         {
             var symbols = GetSymbols(positionsQuantities.Length);
