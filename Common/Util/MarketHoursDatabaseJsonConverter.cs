@@ -223,7 +223,7 @@ namespace QuantConnect.Util
             /// Holiday date strings
             /// </summary>
             [JsonProperty("holidays")]
-            public List<string> Holidays;
+            public List<string> Holidays = new();
 
             /// <summary>
             /// Early closes by date
