@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using QuantConnect.Data.Custom.IconicTypes;
-using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Python;
 
@@ -48,7 +47,11 @@ namespace QuantConnect.Data
         private Lazy<DataDictionary<SymbolData>> _data;
         // UnlinkedData -> DataDictonary<UnlinkedData>
         private Dictionary<Type, object> _dataByType;
-        private List<BaseData> _rawDataList;
+
+        /// <summary>
+        /// All the data hold in this slice
+        /// </summary>
+        public List<BaseData> AllData { get; private set; }
 
         /// <summary>
         /// Gets the timestamp for this slice of data
@@ -247,7 +250,7 @@ namespace QuantConnect.Data
         {
             Time = slice.Time;
             UtcTime = slice.UtcTime;
-            _rawDataList = slice._rawDataList;
+            AllData = slice.AllData;
             _dataByType = slice._dataByType;
 
             _data = slice._data;
@@ -289,9 +292,9 @@ namespace QuantConnect.Data
         {
             Time = time;
             UtcTime = utcTime;
-            _rawDataList = data;
+            AllData = data;
             // market data
-            _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(_rawDataList));
+            _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(AllData));
 
             HasData = hasData ?? _data.Value.Count > 0;
 
@@ -513,20 +516,20 @@ namespace QuantConnect.Data
             _symbolChangedEvents = (SymbolChangedEvents)UpdateCollection(_symbolChangedEvents, inputSlice.SymbolChangedEvents);
             _marginInterestRates = (MarginInterestRates)UpdateCollection(_marginInterestRates, inputSlice.MarginInterestRates);
 
-            if (inputSlice._rawDataList.Count != 0)
+            if (inputSlice.AllData.Count != 0)
             {
-                if (_rawDataList.Count == 0)
+                if (AllData.Count == 0)
                 {
-                    _rawDataList = inputSlice._rawDataList;
+                    AllData = inputSlice.AllData;
                     _data = inputSlice._data;
                 }
                 else
                 {
                     // Should keep this._rawDataList last so that selected data points are not overriden
                     // while creating _data
-                    inputSlice._rawDataList.AddRange(_rawDataList);
-                    _rawDataList = inputSlice._rawDataList;
-                    _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(_rawDataList));
+                    inputSlice.AllData.AddRange(AllData);
+                    AllData = inputSlice.AllData;
+                    _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(AllData));
                 }
             }
         }

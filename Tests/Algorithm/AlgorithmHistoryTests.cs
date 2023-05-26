@@ -1937,22 +1937,18 @@ tradeBar = TradeBar
         }
 
         // C#
-        [TestCase(Language.CSharp, true, 326645, 69480, 0)] // 326645, 69480, 0
-        [TestCase(Language.CSharp, false, 288008, 60486, 0)] // 288008, 60486, 0
+        [TestCase(Language.CSharp, true, 326645, 69480)] // 326645, 69480
+        [TestCase(Language.CSharp, false, 288008, 60486)] // 288008, 60486
         // Python
-        [TestCase(Language.Python, true, 123519, 0, 326645)]    //, 420604
-        [TestCase(Language.Python, false, 109922, 0, 288008)] //, 288008
+        [TestCase(Language.Python, true, 326645)]    //, 420604
+        [TestCase(Language.Python, false, 288008)] //, 288008
         public void HistoryRequestWithExtendedMarketHoursTickResolution(
             Language language,
             bool extendedMarket,
             int historyExpectedCount,
             // History<T> methods that take multiple symbols still have a bug for Tick type,
             // where slice.Get() returns only the last tick for each symbol, so the expected count is different
-            int cSharpTypedMultiSymbolHistoryExpectedCount,
-            // Typed history in Python have a small bug: PandasConverter.AddSliceDataToDict() is getting data for symbols in
-            // Slice.Keys for the data frame, but some slices might not include a symbol for which there is tick data in Ticks,
-            // but it is not included in the Slice.Keys, causing some data to not be included in the data frame.
-            int pythonTypedHistoryExpectedCount)
+            int cSharpTypedMultiSymbolHistoryExpectedCount = 0)
         {
             var start = new DateTime(2013, 10, 07, 15, 30, 0);
             var end = start.AddHours(1);
@@ -2079,13 +2075,13 @@ tick = Tick
                     // Generic, single symbol, time span
                     var typedSingleSymbolTimeSpanHistory = algorithm.History(pyTickType, pySymbol, timeSpan,
                         Resolution.Tick, extendedMarketHours: extendedMarket);
-                    AssertExtendedMarketHistoryResults(typedSingleSymbolTimeSpanHistory, pythonTypedHistoryExpectedCount, extendedMarket,
+                    AssertExtendedMarketHistoryResults(typedSingleSymbolTimeSpanHistory, historyExpectedCount, extendedMarket,
                         Resolution.Tick, symbol);
 
                     // Same as previous but using a Symbol instead of pySymbol
                     typedSingleSymbolTimeSpanHistory = algorithm.History(pyTickType, symbol, timeSpan,
                         Resolution.Tick, extendedMarketHours: extendedMarket);
-                    AssertExtendedMarketHistoryResults(typedSingleSymbolTimeSpanHistory, pythonTypedHistoryExpectedCount, extendedMarket,
+                    AssertExtendedMarketHistoryResults(typedSingleSymbolTimeSpanHistory, historyExpectedCount, extendedMarket,
                         Resolution.Tick, symbol);
 
                     // Generic, single symbol, periods
@@ -2094,19 +2090,19 @@ tick = Tick
                     // Generic, single symbol, date range
                     var typedSingleSymbolDateRangeHistory = algorithm.History(pyTickType, pySymbol, start, end,
                         Resolution.Tick, extendedMarketHours: extendedMarket);
-                    AssertExtendedMarketHistoryResults(typedSingleSymbolDateRangeHistory, pythonTypedHistoryExpectedCount, extendedMarket,
+                    AssertExtendedMarketHistoryResults(typedSingleSymbolDateRangeHistory, historyExpectedCount, extendedMarket,
                         Resolution.Tick, symbol);
 
                     // Same as previous but using a Symbol instead of pySymbol
                     typedSingleSymbolDateRangeHistory = algorithm.History(pyTickType, symbol, start, end,
                         Resolution.Tick, extendedMarketHours: extendedMarket);
-                    AssertExtendedMarketHistoryResults(typedSingleSymbolDateRangeHistory, pythonTypedHistoryExpectedCount, extendedMarket,
+                    AssertExtendedMarketHistoryResults(typedSingleSymbolDateRangeHistory, historyExpectedCount, extendedMarket,
                         Resolution.Tick, symbol);
 
                     // Generic, symbol array, time span
                     var typedSymbolsTimeSpanHistory = algorithm.History(pyTickType, pySymbols, timeSpan,
                         Resolution.Tick, extendedMarketHours: extendedMarket);
-                    AssertExtendedMarketHistoryResults(typedSymbolsTimeSpanHistory, pythonTypedHistoryExpectedCount, extendedMarket,
+                    AssertExtendedMarketHistoryResults(typedSymbolsTimeSpanHistory, historyExpectedCount, extendedMarket,
                         Resolution.Tick, symbol);
 
                     // Generic, symbol array, periods
@@ -2115,7 +2111,7 @@ tick = Tick
                     // Generic, symbol array, date range
                     var typedSymbolsDateRangeHistory = algorithm.History(pyTickType, pySymbols, start, end,
                         Resolution.Tick, extendedMarketHours: extendedMarket);
-                    AssertExtendedMarketHistoryResults(typedSymbolsDateRangeHistory, pythonTypedHistoryExpectedCount, extendedMarket,
+                    AssertExtendedMarketHistoryResults(typedSymbolsDateRangeHistory, historyExpectedCount, extendedMarket,
                         Resolution.Tick, symbol);
                 }
             }

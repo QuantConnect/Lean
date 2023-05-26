@@ -193,20 +193,20 @@ namespace QuantConnect.Python
             }
             else
             {
-                var ticks = new List<Tick> { baseData as Tick };
+                var tick = baseData as Tick;
                 var tradeBar = baseData as TradeBar;
                 var quoteBar = baseData as QuoteBar;
-                Add(ticks, tradeBar, quoteBar);
+                Add(tick, tradeBar, quoteBar);
             }
         }
 
         /// <summary>
         /// Adds Lean data objects to the end of the lists
         /// </summary>
-        /// <param name="ticks">List of <see cref="Tick"/> object that contains tick information of the security</param>
+        /// <param name="tick"><see cref="Tick"/> object that contains tick information of the security</param>
         /// <param name="tradeBar"><see cref="TradeBar"/> object that contains trade bar information of the security</param>
         /// <param name="quoteBar"><see cref="QuoteBar"/> object that contains quote bar information of the security</param>
-        public void Add(IEnumerable<Tick> ticks, TradeBar tradeBar, QuoteBar quoteBar)
+        public void Add(Tick tick, TradeBar tradeBar, QuoteBar quoteBar)
         {
             if (tradeBar != null)
             {
@@ -244,47 +244,42 @@ namespace QuantConnect.Python
                     AddToSeries("bidsize", time, quoteBar.LastBidSize);
                 }
             }
-            if (ticks != null)
+            if (tick != null)
             {
-                foreach (var tick in ticks)
+                var time = tick.EndTime;
+
+                // We will fill some series with null for tick types that don't have a value for that series, so that we make sure
+                // the indices are the same for every tick series.
+
+                if (tick.TickType == TickType.Quote)
                 {
-                    if (tick == null) continue;
+                    AddToSeries("askprice", time, tick.AskPrice);
+                    AddToSeries("asksize", time, tick.AskSize);
+                    AddToSeries("bidprice", time, tick.BidPrice);
+                    AddToSeries("bidsize", time, tick.BidSize);
+                }
+                else
+                {
+                    // Trade and open interest ticks don't have these values, so we'll fill them with null.
+                    AddToSeries("askprice", time, null);
+                    AddToSeries("asksize", time, null);
+                    AddToSeries("bidprice", time, null);
+                    AddToSeries("bidsize", time, null);
+                }
 
-                    var time = tick.EndTime;
+                AddToSeries("exchange", time, tick.Exchange);
+                AddToSeries("suspicious", time, tick.Suspicious);
+                AddToSeries("quantity", time, tick.Quantity);
 
-                    // We will fill some series with null for tick types that don't have a value for that series, so that we make sure
-                    // the indices are the same for every tick series.
-
-                    if (tick.TickType == TickType.Quote)
-                    {
-                        AddToSeries("askprice", time, tick.AskPrice);
-                        AddToSeries("asksize", time, tick.AskSize);
-                        AddToSeries("bidprice", time, tick.BidPrice);
-                        AddToSeries("bidsize", time, tick.BidSize);
-                    }
-                    else
-                    {
-                        // Trade and open interest ticks don't have these values, so we'll fill them with null.
-                        AddToSeries("askprice", time, null);
-                        AddToSeries("asksize", time, null);
-                        AddToSeries("bidprice", time, null);
-                        AddToSeries("bidsize", time, null);
-                    }
-
-                    AddToSeries("exchange", time, tick.Exchange);
-                    AddToSeries("suspicious", time, tick.Suspicious);
-                    AddToSeries("quantity", time, tick.Quantity);
-
-                    if (tick.TickType == TickType.OpenInterest)
-                    {
-                        AddToSeries("openinterest", time, tick.Value);
-                        AddToSeries("lastprice", time, null);
-                    }
-                    else
-                    {
-                        AddToSeries("lastprice", time, tick.Value);
-                        AddToSeries("openinterest", time, null);
-                    }
+                if (tick.TickType == TickType.OpenInterest)
+                {
+                    AddToSeries("openinterest", time, tick.Value);
+                    AddToSeries("lastprice", time, null);
+                }
+                else
+                {
+                    AddToSeries("lastprice", time, tick.Value);
+                    AddToSeries("openinterest", time, null);
                 }
             }
         }

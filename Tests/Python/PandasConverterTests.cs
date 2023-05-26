@@ -3642,7 +3642,8 @@ def DataFrameIsEmpty():
 
             using (Py.GIL())
             {
-                Assert.AreEqual(expectedDataFrameString, dataFrame.to_string().As<string>());
+                Assert.AreEqual(expectedDataFrameString.Replace("\n", string.Empty).Replace("\r", string.Empty),
+                    dataFrame.to_string().As<string>().Replace("\n", string.Empty).Replace("\r", string.Empty));
             }
         }
 
