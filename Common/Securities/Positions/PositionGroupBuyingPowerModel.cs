@@ -224,10 +224,11 @@ namespace QuantConnect.Securities.Positions
         /// Returns the maximum allowed market order quantity and if zero, also the reason.
         ///
         /// Since there is no sense of "short" or "long" on position groups with multiple positions,
-        /// the sign of the returned quantity will indicate the direction of the order regarding the original position group:
-        ///     - quantity &gt; 0: the order should be placed in the same direction as the original position group to increase it,
-        ///                        without changing the existing positions' signs.
-        ///     - quantity &lt; 0: the order should be placed in the opposite direction as the original position group to reduce it,
+        /// the sign of the returned quantity will indicate the direction of the order regarding the
+        /// reference position group passed in the parameters:
+        ///     - quantity &gt; 0: the order should be placed in the same direction as the reference position group to increase it,
+        ///                        without changing the positions' signs.
+        ///     - quantity &lt; 0: the order should be placed in the opposite direction as the reference position group to reduce it,
         ///                        using each position's opposite sign.
         /// </returns>
         public virtual GetMaximumLotsResult GetMaximumLotsForTargetBuyingPower(
@@ -292,7 +293,7 @@ namespace QuantConnect.Securities.Positions
             var currentUsedMargin = 0m;
             if (currentPositionGroup.Quantity != 0)
             {
-                currentUsedMargin = currentPositionGroup.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(portfolio, currentPositionGroup);
+                currentUsedMargin = Math.Abs(currentPositionGroup.BuyingPowerModel.GetInitialMarginRequirement(portfolio, currentPositionGroup));
             }
 
             // 4. Check that the change of margin is above our models minimum percentage change
@@ -593,7 +594,7 @@ namespace QuantConnect.Securities.Positions
 
             // Calculate the initial value for the wanted final margin after the delta is applied.
             var finalPositionGroup = currentPositionGroup.WithQuantity(currentGroupAbsQuantity + positionGroupQuantity, portfolio.Positions);
-            finalMargin = finalPositionGroup.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(portfolio, finalPositionGroup);
+            finalMargin = Math.Abs(finalPositionGroup.BuyingPowerModel.GetInitialMarginRequirement(portfolio, finalPositionGroup));
 
             // Keep the previous calculated final margin we would get after the delta is applied.
             // This is useful for the cases were the final group gets us with final margin greater than the target.
@@ -609,7 +610,7 @@ namespace QuantConnect.Securities.Positions
             {
                 positionGroupQuantity += quantityStep;
                 finalPositionGroup = currentPositionGroup.WithQuantity(currentGroupAbsQuantity + positionGroupQuantity, portfolio.Positions);
-                finalMargin = finalPositionGroup.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(portfolio, finalPositionGroup);
+                finalMargin = Math.Abs(finalPositionGroup.BuyingPowerModel.GetInitialMarginRequirement(portfolio, finalPositionGroup));
 
                 var newMarginDifference = getMarginDifference(finalMargin);
                 if (UnableToConverge(newMarginDifference, marginDifference, groupUnit, portfolio, positionGroupQuantity,
