@@ -222,9 +222,12 @@ namespace QuantConnect.Securities.Positions
                             // Same as for the option legs, but we need to multiply by the contract multiplier.
                             // e.g. a covered call strategy has 100 shares of the underlying, per shorted contract
                             (Math.Abs(underlyingLeg.Quantity) * contractMultiplier / groupQuantity))))
-                        .ToArray();
+                        .ToDictionary(position => position.Symbol);
 
-                    yield return new PositionGroup(new OptionStrategyPositionGroupBuyingPowerModel(matchedStrategy), groupQuantity, positionsToGroup);
+                    yield return new PositionGroup(
+                        new PositionGroupKey(new OptionStrategyPositionGroupBuyingPowerModel(matchedStrategy), positionsToGroup.Values),
+                        groupQuantity,
+                        positionsToGroup);
                 }
             }
         }

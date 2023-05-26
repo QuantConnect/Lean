@@ -90,10 +90,12 @@ namespace QuantConnect.Securities.Positions
             Quantity = quantity;
             _positions = positions;
 
+#if DEBUG
             if (positions.Any(kvp => Math.Abs(kvp.Value.Quantity / kvp.Value.UnitQuantity) != Math.Abs(Quantity)))
             {
                 throw new ArgumentException(Messages.PositionGroup.InvalidQuantity(Quantity, positions.Values));
             }
+#endif
         }
 
         /// <summary>

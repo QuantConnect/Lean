@@ -87,7 +87,7 @@ namespace QuantConnect.Securities.Positions
         /// <returns>A new position with the specified number of lots</returns>
         public static IPosition WithLots(this IPosition position, decimal numberOfLots)
         {
-            var sign = position.Quantity != 0 ? Math.Sign(position.Quantity) : +1;
+            var sign = position.Quantity < 0 ? -1 : +1;
             return new Position(position.Symbol, numberOfLots * position.UnitQuantity * sign, position.UnitQuantity);
         }
 
