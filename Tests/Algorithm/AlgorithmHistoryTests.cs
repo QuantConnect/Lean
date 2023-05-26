@@ -75,7 +75,7 @@ namespace QuantConnect.Tests.Algorithm
         [TestCase(Resolution.Daily, Language.Python, 2)]
         [TestCase(Resolution.Hour, Language.Python, 14)]
         [TestCase(Resolution.Minute, Language.Python, 780)]
-        [TestCase(Resolution.Second, Language.Python, 33948)]
+        [TestCase(Resolution.Second, Language.Python, 45676)]
         public void TickResolutionSubscriptionHistoryRequestOtherResolution(Resolution resolution, Language language, int expectedHistoryCount)
         {
             var start = new DateTime(2013, 10, 07);
@@ -1670,27 +1670,27 @@ tradeBar = TradeBar
 
                     // Single symbol, time span
                     var singleSymbolTimeSpanHistory = algorithm.History(pySymbol, timeSpan, resolution, fillForward: fillForward);
-                    AssertFillForwardHistoryResults(singleSymbolTimeSpanHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
+                    AssertFillForwardHistoryResults(singleSymbolTimeSpanHistory, expectedHistoryCount, resolution, fillForward);
 
                     // Single symbol, periods
                     var singleSymbolPeriodBasedHistory = algorithm.History(pySymbol, periods, resolution, fillForward: fillForward);
-                    AssertFillForwardHistoryResults(singleSymbolPeriodBasedHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
+                    AssertFillForwardHistoryResults(singleSymbolPeriodBasedHistory, expectedHistoryCount, resolution, fillForward);
 
                     // Single symbol, date range
                     var singleSymbolDateRangeHistory = algorithm.History(pySymbol, start, end, resolution, fillForward: fillForward);
-                    AssertFillForwardHistoryResults(singleSymbolDateRangeHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
+                    AssertFillForwardHistoryResults(singleSymbolDateRangeHistory, expectedHistoryCount, resolution, fillForward);
 
                     // Symbol array, time span
                     var symbolsTimeSpanHistory = algorithm.History(pySymbols, timeSpan, resolution, fillForward: fillForward);
-                    AssertFillForwardHistoryResults(symbolsTimeSpanHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
+                    AssertFillForwardHistoryResults(symbolsTimeSpanHistory, expectedHistoryCount, resolution, fillForward);
 
                     // Symbol array, periods
                     var symbolsPeriodBasedHistory = algorithm.History(pySymbols, periods, resolution, fillForward: fillForward);
-                    AssertFillForwardHistoryResults(symbolsPeriodBasedHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
+                    AssertFillForwardHistoryResults(symbolsPeriodBasedHistory, expectedHistoryCount, resolution, fillForward);
 
                     // Symbol array, date range
                     var symbolsDateRangeHistory = algorithm.History(pySymbols, start, end, resolution, fillForward: fillForward);
-                    AssertFillForwardHistoryResults(symbolsDateRangeHistory, expectedTradeBarOnlyHistoryCount, resolution, fillForward);
+                    AssertFillForwardHistoryResults(symbolsDateRangeHistory, expectedHistoryCount, resolution, fillForward);
 
                     // Generic, single symbol, time span
                     var typedSingleSymbolTimeSpanHistory = algorithm.History(pyTradeBarType, pySymbol, timeSpan,
