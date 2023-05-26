@@ -13,12 +13,15 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 using QuantConnect.Data;
+using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
+using QuantConnect.Securities.Positions;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -72,6 +75,23 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        public override void OnMarginCall(List<SubmitOrderRequest> requests)
+        {
+            base.OnMarginCall(requests);
+
+            var positionGroup = Portfolio.PositionGroups.Single();
+            foreach (var request in requests)
+            {
+                var position = positionGroup.GetPosition(request.Symbol);
+                // We expect the margin call to be for one unit of the strategy in the opposite direction
+                var expectedQuantity = -Math.Sign(position.Quantity) * 1;
+                if (request.Quantity != expectedQuantity)
+                {
+                    throw new Exception($"Expected margin call order quantity to be {expectedQuantity} but was {request.Quantity}");
+                }
+            }
+        }
+
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
@@ -99,11 +119,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             {"Total Trades", "4"},
             {"Average Win", "0%"},
-            {"Average Loss", "-0.02%"},
-            {"Compounding Annual Return", "-5.684%"},
+            {"Average Loss", "-0.01%"},
+            {"Compounding Annual Return", "-4.893%"},
             {"Drawdown", "0.700%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "-0.107%"},
+            {"Net Profit", "-0.092%"},
             {"Sharpe Ratio", "0"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "100%"},
@@ -119,8 +139,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Fees", "$1252.00"},
             {"Estimated Strategy Capacity", "$130000.00"},
             {"Lowest Capacity Asset", "GOOCV W78ZFMML01JA|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "1.20%"},
-            {"OrderListHash", "583b89f10ce6ca6fa842b21a35fbf0f2"}
+            {"Portfolio Turnover", "1.17%"},
+            {"OrderListHash", "681be68373c2f38e51456d7f8010e7d3"}
         };
     }
 }

@@ -110,7 +110,7 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception($"Expected {expectedFilledOrdersCount} filled orders, found {filledOrdersCount}");
             }
 
-            var expectedQuantity = -(_quantity - _quantityToLiquidate);
+            var expectedQuantity = Math.Abs(_quantity - _quantityToLiquidate);
             var positionGroup = Portfolio.PositionGroups.Single();
             if (positionGroup.Quantity != expectedQuantity)
             {

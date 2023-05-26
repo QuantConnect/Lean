@@ -162,7 +162,9 @@ namespace QuantConnect.Securities
                 var security = Portfolio.Securities[position.Symbol];
                 var legQuantity = groupOrderManager == null
                     ? quantity * security.SymbolProperties.LotSize
-                    : positionGroup.Positions.Where(position => position.Symbol == security.Symbol).Single().UnitQuantity;
+                    // Have the leg quantity have the same sign as the existing position quantity.
+                    // The order direction will be determined using the group order manager quantity below.
+                    : position.UnitQuantity * Math.Sign(position.Quantity);
 
                 return new SubmitOrderRequest(
                     orderType,

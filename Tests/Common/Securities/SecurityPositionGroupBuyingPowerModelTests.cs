@@ -59,6 +59,7 @@ namespace QuantConnect.Tests.Common.Securities
             var buyingPowerModel = new SecurityPositionGroupBuyingPowerModel();
             var positionGroup = new PositionGroup(
                 buyingPowerModel,
+                -10,
                 new Position(_security.Symbol, -10, 1)
             );
 
@@ -81,6 +82,7 @@ namespace QuantConnect.Tests.Common.Securities
             var buyingPowerModel = new SecurityPositionGroupBuyingPowerModel();
             var positionGroup = new PositionGroup(
                 buyingPowerModel,
+                -10,
                 new Position(_security.Symbol, -10, 1)
             );
 
@@ -105,6 +107,7 @@ namespace QuantConnect.Tests.Common.Securities
             var buyingPowerModel = new SecurityPositionGroupBuyingPowerModel();
             var positionGroup = new PositionGroup(
                 buyingPowerModel,
+                -10,
                 new Position(_security.Symbol, -10, 1)
             );
 
