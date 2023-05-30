@@ -23,11 +23,14 @@ class BasicSetAccountCurrencyAlgorithm(QCAlgorithm):
         self.SetStartDate(2018, 4, 4)  #Set Start Date
         self.SetEndDate(2018, 4, 4)    #Set End Date
         self.SetBrokerageModel(BrokerageName.GDAX, AccountType.Cash)
+        self.SetAccountCurrencyAndAmount()
+
+        self._btcEur = self.AddCrypto("BTCEUR").Symbol
+
+    def SetAccountCurrencyAndAmount(self):
         # Before setting any cash or adding a Security call SetAccountCurrency
         self.SetAccountCurrency("EUR")
         self.SetCash(100000)           #Set Strategy Cash
-
-        self._btcEur = self.AddCrypto("BTCEUR").Symbol
 
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.

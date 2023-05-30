@@ -2613,19 +2613,29 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(profitLoss + dividendPayment - fee, algorithm.Portfolio.TotalNetProfit);
         }
 
-        [Test]
-        public void SetAccountCurrency()
+        [TestCase()]
+        [TestCase(200000)]
+        public void SetAccountCurrency(decimal? amount = null)
         {
             var algorithm = new QCAlgorithm();
 
             Assert.AreEqual(Currencies.USD, algorithm.AccountCurrency);
             Assert.AreEqual(Currencies.USD, algorithm.Portfolio.CashBook.AccountCurrency);
-            var amount = algorithm.Portfolio.CashBook[Currencies.USD].Amount;
+            var expectedAmount = algorithm.Portfolio.CashBook[Currencies.USD].Amount;
 
-            algorithm.SetAccountCurrency("btc");
+            if (amount == null)
+            {
+                algorithm.SetAccountCurrency("btc");
+            }
+            else
+            {
+                algorithm.SetAccountCurrency("btc", (decimal)amount);
+                expectedAmount = (decimal)amount;
+            }
+
             Assert.AreEqual("BTC", algorithm.AccountCurrency);
             Assert.AreEqual("BTC", algorithm.Portfolio.CashBook.AccountCurrency);
-            Assert.AreEqual(amount, algorithm.Portfolio.CashBook["BTC"].Amount);
+            Assert.AreEqual(expectedAmount, algorithm.Portfolio.CashBook["BTC"].Amount);
         }
 
         [Test]

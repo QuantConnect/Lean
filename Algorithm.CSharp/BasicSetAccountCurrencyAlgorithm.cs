@@ -35,11 +35,15 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2018, 04, 04);  //Set Start Date
             SetEndDate(2018, 04, 04);    //Set End Date
             SetBrokerageModel(BrokerageName.GDAX, AccountType.Cash);
+            SetAccountCurrency();
+            _btcEur = AddCrypto("BTCEUR").Symbol;
+        }
+
+        public virtual void SetAccountCurrency()
+        {
             //Before setting any cash or adding a Security call SetAccountCurrency
             SetAccountCurrency("EUR");
             SetCash(100000);             //Set Strategy Cash
-
-            _btcEur = AddCrypto("BTCEUR").Symbol;
         }
 
         /// <summary>
