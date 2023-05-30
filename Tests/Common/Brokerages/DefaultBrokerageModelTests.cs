@@ -20,6 +20,14 @@ using QuantConnect.Tests.Brokerages;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Orders.Fills;
+using System.Collections.Generic;
+using QuantConnect.Data.Market;
+using Fasterflect;
+using QuantConnect.Lean.Engine.TransactionHandlers;
+using System;
+using QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests;
+using QuantConnect.Brokerages.Backtesting;
+using QuantConnect.Tests.Engine;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
@@ -68,6 +76,69 @@ namespace QuantConnect.Tests.Common.Brokerages
             var security = TestsHelpers.GetSecurity(securityType: securityType, market: Market.USA);
             var fillModel = _defaultBrokerageModel.GetFillModel(security);
             Assert.AreEqual(expectedFillModel, fillModel.GetType().Name);
+        }
+
+        [Test]
+        public void ApplySplitWorksAsExpected()
+        {
+            var orderTypes = new List<OrderType>()
+            {
+                OrderType.Limit,
+                OrderType.StopLimit,
+                OrderType.LimitIfTouched
+            };
+
+            var algorithm = new BrokerageTransactionHandlerTests.TestAlgorithm
+            {
+                HistoryProvider = new BrokerageTransactionHandlerTests.EmptyHistoryProvider()
+            };
+            var transactionHandler = new BacktestingTransactionHandler();
+            transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), new TestResultHandler(Console.WriteLine));
+
+            algorithm.Transactions.SetOrderProcessor(transactionHandler);
+            algorithm.AddEquity("IBM");
+            var tickets = new List<OrderTicket>();
+            foreach (var type in orderTypes)
+            {
+                SubmitOrderRequest orderRequest = null;
+                switch (type)
+                {
+                    case OrderType.Limit:
+                        orderRequest = new SubmitOrderRequest(OrderType.Limit, SecurityType.Equity, "IBM", 100, 0, 8, 0, DateTime.UtcNow, "");
+                        break;
+                    case OrderType.StopLimit:
+                        orderRequest = new SubmitOrderRequest(OrderType.StopLimit, SecurityType.Equity, "IBM", 100, 10, 0, 0, DateTime.UtcNow, "");
+                        break;
+                    case OrderType.LimitIfTouched:
+                        orderRequest = new SubmitOrderRequest(OrderType.LimitIfTouched, SecurityType.Equity, "IBM", 100, 0, 14, 12, DateTime.UtcNow, "");
+                        break;
+                }
+                algorithm.Transactions.AddOrder(orderRequest);
+                var ticket = new OrderTicket(algorithm.Transactions, orderRequest);
+                tickets.Add(ticket);
+            }
+
+            var split = new Split("IBM", DateTime.UtcNow, 1, 0.5m, SplitType.SplitOccurred);
+            _defaultBrokerageModel.ApplySplit(tickets, split);
+            transactionHandler.ProcessSynchronousEvents();
+            foreach (var order in algorithm.Transactions.GetOrders())
+            {
+                Assert.AreEqual(200, order.Quantity);
+                var orderType = order.Type;
+                switch (orderType)
+                {
+                    case OrderType.Limit:
+                        Assert.AreEqual(4, order.GetPropertyValue("LimitPrice"));
+                        break;
+                    case OrderType.StopLimit:
+                        Assert.AreEqual(5, order.GetPropertyValue("StopPrice"));
+                        break;
+                    case OrderType.LimitIfTouched:
+                        Assert.AreEqual(6, order.GetPropertyValue("TriggerPrice"));
+                        Assert.AreEqual(7, order.GetPropertyValue("LimitPrice"));
+                        break;
+                }
+            }
         }
 
 
