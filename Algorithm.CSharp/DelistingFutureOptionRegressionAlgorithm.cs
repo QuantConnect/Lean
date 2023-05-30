@@ -107,7 +107,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>0
-        public virtual long DataPoints => 4383077;
+        public virtual long DataPoints => 4252522;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -126,7 +126,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "0.100%"},
             {"Expectancy", "-0.678"},
             {"Net Profit", "-0.111%"},
-            {"Sharpe Ratio", "-0.967"},
+            {"Sharpe Ratio", "-0.968"},
             {"Probabilistic Sharpe Ratio", "0.000%"},
             {"Loss Rate", "80%"},
             {"Win Rate", "20%"},
@@ -135,9 +135,9 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "-0.001"},
             {"Annual Standard Deviation", "0.001"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-1.075"},
+            {"Information Ratio", "-1.076"},
             {"Tracking Error", "0.107"},
-            {"Treynor Ratio", "1.353"},
+            {"Treynor Ratio", "1.357"},
             {"Total Fees", "$19.76"},
             {"Estimated Strategy Capacity", "$1300000000.00"},
             {"Lowest Capacity Asset", "DC V5E8PHPRCHJ8|DC V5E8P9SH0U0X"},

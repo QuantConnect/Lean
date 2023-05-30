@@ -123,26 +123,19 @@ namespace QuantConnect.Securities
         /// <returns>A <see cref="MarketHoursDatabase"/> class that represents the data in the market-hours folder</returns>
         public static MarketHoursDatabase FromDataFolder()
         {
-            return FromDataFolder(Globals.DataFolder);
-        }
-
-        /// <summary>
-        /// Gets the instance of the <see cref="MarketHoursDatabase"/> class produced by reading in the market hours
-        /// data found in /Data/market-hours/
-        /// </summary>
-        /// <param name="dataFolder">Path to the data folder</param>
-        /// <returns>A <see cref="MarketHoursDatabase"/> class that represents the data in the market-hours folder</returns>
-        public static MarketHoursDatabase FromDataFolder(string dataFolder)
-        {
-            lock (DataFolderMarketHoursDatabaseLock)
+            var result = _dataFolderMarketHoursDatabase;
+            if (result == null)
             {
-                if (_dataFolderMarketHoursDatabase == null)
+                lock (DataFolderMarketHoursDatabaseLock)
                 {
-                    var path = Path.Combine(dataFolder, "market-hours", "market-hours-database.json");
-                    _dataFolderMarketHoursDatabase = FromFile(path);
+                    if (_dataFolderMarketHoursDatabase == null)
+                    {
+                        var path = Path.Combine(Globals.GetDataFolderPath("market-hours"), "market-hours-database.json");
+                        result = _dataFolderMarketHoursDatabase = FromFile(path);
+                    }
                 }
             }
-            return _dataFolderMarketHoursDatabase;
+            return result;
         }
 
         /// <summary>
@@ -251,9 +244,10 @@ namespace QuantConnect.Securities
         /// <returns>True if the entry was present, else false</returns>
         public bool TryGetEntry(string market, string symbol, SecurityType securityType, out Entry entry)
         {
-            return _entries.TryGetValue(new SecurityDatabaseKey(market, symbol, securityType), out entry)
+            var symbolKey = new SecurityDatabaseKey(market, symbol, securityType);
+            return _entries.TryGetValue(symbolKey, out entry)
                 // now check with null symbol key
-                || _entries.TryGetValue(new SecurityDatabaseKey(market, null, securityType), out entry)
+                || _entries.TryGetValue(symbolKey.CreateCommonKey(), out entry)
                 // if FOP check for future
                 || securityType == SecurityType.FutureOption && TryGetEntry(market,
                     FuturesOptionsSymbolMappings.MapFromOption(symbol), SecurityType.Future, out entry)

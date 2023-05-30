@@ -56,6 +56,14 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Based on this entry will initializes the generic market and security type instance of the <see cref="SecurityDatabaseKey"/> class
+        /// </summary>
+        public SecurityDatabaseKey CreateCommonKey()
+        {
+            return new SecurityDatabaseKey(Market, null, SecurityType);
+        }
+
+        /// <summary>
         /// Parses the specified string as a <see cref="SecurityDatabaseKey"/>
         /// </summary>
         /// <param name="key">The string representation of the key</param>

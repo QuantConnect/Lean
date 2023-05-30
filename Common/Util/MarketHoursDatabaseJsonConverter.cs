@@ -117,13 +117,14 @@ namespace QuantConnect.Util
                 }
 
                 var result = new Dictionary<SecurityDatabaseKey, MarketHoursDatabase.Entry>(Entries.Count);
-                // we sort by security type so we process non options first
-                foreach (var entry in entries.OrderBy(kvp => kvp.Key.SecurityType.IsOption() ? 1 : 0))
+                // we sort so we process generic entries and non options first
+                foreach (var entry in entries.OrderBy(kvp => kvp.Key.Symbol != null ? 1 : 0).ThenBy(kvp => kvp.Key.SecurityType.IsOption() ? 1 : 0))
                 {
                     try
                     {
+                        result.TryGetValue(entry.Key.CreateCommonKey(), out var marketEntry);
                         var underlyingEntry = GetUnderlyingEntry(entry.Key, result);
-                        result[entry.Key] = entry.Value.Convert(underlyingEntry);
+                        result[entry.Key] = entry.Value.Convert(underlyingEntry, marketEntry);
                     }
                     catch (Exception err)
                     {
@@ -222,7 +223,7 @@ namespace QuantConnect.Util
             /// Holiday date strings
             /// </summary>
             [JsonProperty("holidays")]
-            public List<string> Holidays;
+            public List<string> Holidays = new();
 
             /// <summary>
             /// Early closes by date
@@ -262,7 +263,7 @@ namespace QuantConnect.Util
             /// Converts this json representation to the <see cref="MarketHoursDatabase.Entry"/> type
             /// </summary>
             /// <returns>A new instance of the <see cref="MarketHoursDatabase.Entry"/> class</returns>
-            public MarketHoursDatabase.Entry Convert(MarketHoursDatabase.Entry underlyingEntry)
+            public MarketHoursDatabase.Entry Convert(MarketHoursDatabase.Entry underlyingEntry, MarketHoursDatabase.Entry marketEntry)
             {
                 var hours = new Dictionary<DayOfWeek, LocalMarketHours>
                 {
@@ -292,6 +293,24 @@ namespace QuantConnect.Util
                     if (lateOpens.Count == 0)
                     {
                         lateOpens = underlyingEntry.ExchangeHours.LateOpens;
+                    }
+                }
+
+                if(marketEntry != null)
+                {
+                    if (marketEntry.ExchangeHours.Holidays.Count > 0)
+                    {
+                        holidayDates.UnionWith(marketEntry.ExchangeHours.Holidays);
+                    }
+
+                    if (marketEntry.ExchangeHours.EarlyCloses.Count > 0 )
+                    {
+                        earlyCloses = earlyCloses.Union(marketEntry.ExchangeHours.EarlyCloses).ToDictionary();
+                    }
+
+                    if (marketEntry.ExchangeHours.LateOpens.Count > 0)
+                    {
+                        lateOpens = lateOpens.Union(marketEntry.ExchangeHours.LateOpens).ToDictionary();
                     }
                 }
 

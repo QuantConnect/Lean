@@ -33,8 +33,8 @@ namespace QuantConnect.Securities
     public class SecurityExchangeHours
     {
         private readonly HashSet<long> _holidays;
-        private readonly Dictionary<DateTime, TimeSpan> _earlyCloses;
-        private readonly Dictionary<DateTime, TimeSpan> _lateOpens;
+        private readonly IReadOnlyDictionary<DateTime, TimeSpan> _earlyCloses;
+        private readonly IReadOnlyDictionary<DateTime, TimeSpan> _lateOpens;
 
         // these are listed individually for speed
         private readonly LocalMarketHours _sunday;
@@ -121,17 +121,15 @@ namespace QuantConnect.Securities
         public SecurityExchangeHours(
             DateTimeZone timeZone,
             IEnumerable<DateTime> holidayDates,
-            IReadOnlyDictionary<DayOfWeek, LocalMarketHours> marketHoursForEachDayOfWeek,
+            Dictionary<DayOfWeek, LocalMarketHours> marketHoursForEachDayOfWeek,
             IReadOnlyDictionary<DateTime, TimeSpan> earlyCloses,
             IReadOnlyDictionary<DateTime, TimeSpan> lateOpens)
         {
             TimeZone = timeZone;
             _holidays = holidayDates.Select(x => x.Date.Ticks).ToHashSet();
-            _earlyCloses = earlyCloses.ToDictionary(x => x.Key.Date, x => x.Value);
-            _lateOpens = lateOpens.ToDictionary(x => x.Key.Date, x => x.Value);
-
-            // make a copy of the dictionary for internal use
-            _openHoursByDay = new Dictionary<DayOfWeek, LocalMarketHours>(marketHoursForEachDayOfWeek.ToDictionary());
+            _earlyCloses = earlyCloses;
+            _lateOpens = lateOpens;
+            _openHoursByDay = marketHoursForEachDayOfWeek;
 
             SetMarketHoursForDay(DayOfWeek.Sunday, out _sunday);
             SetMarketHoursForDay(DayOfWeek.Monday, out _monday);
