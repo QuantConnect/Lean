@@ -118,6 +118,16 @@ namespace QuantConnect.Securities.Option
 
                 return new MaintenanceMargin(inAccountCurrency);
             }
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.NakedCall.Name
+                || _optionStrategy.Name == OptionStrategyDefinitions.NakedPut.Name)
+            {
+                var option = parameters.PositionGroup.Positions.Single();
+                var security = (Option)parameters.Portfolio.Securities[option.Symbol];
+                var margin = security.BuyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(security,
+                    option.Quantity));
+
+                return new MaintenanceMargin(margin);
+            }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.BearCallSpread.Name
                 || _optionStrategy.Name == OptionStrategyDefinitions.BullCallSpread.Name)
             {
@@ -216,6 +226,15 @@ namespace QuantConnect.Securities.Option
                 var margin = GetMaintenanceMargin(new PositionGroupMaintenanceMarginParameters(parameters.Portfolio, parameters.PositionGroup));
 
                 return new InitialMargin(margin.Value);
+            }
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.NakedCall.Name
+                || _optionStrategy.Name == OptionStrategyDefinitions.NakedPut.Name)
+            {
+                var option = parameters.PositionGroup.Positions.Single();
+                var security = (Option)parameters.Portfolio.Securities[option.Symbol];
+                var margin = security.BuyingPowerModel.GetInitialMarginRequirement(security, option.Quantity);
+
+                return new InitialMargin(margin);
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.BearCallSpread.Name
                 || _optionStrategy.Name == OptionStrategyDefinitions.BullCallSpread.Name)

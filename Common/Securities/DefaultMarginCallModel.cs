@@ -148,23 +148,21 @@ namespace QuantConnect.Securities
                 minimumOrderMarginPortfolioPercentage: 0
             ));
 
-            var quantity = result.NumberOfLots;
+            var absQuantity = Math.Abs(result.NumberOfLots);
             var orderType = positionGroup.Count > 1 ? OrderType.ComboMarket : OrderType.Market;
 
             GroupOrderManager groupOrderManager = null;
             if (orderType == OrderType.ComboMarket)
             {
-                groupOrderManager = new GroupOrderManager(Portfolio.Transactions.GetIncrementGroupOrderManagerId(), positionGroup.Count, quantity);
+                groupOrderManager = new GroupOrderManager(Portfolio.Transactions.GetIncrementGroupOrderManagerId(), positionGroup.Count,
+                    absQuantity);
             }
 
             return positionGroup.Positions.Select(position =>
             {
                 var security = Portfolio.Securities[position.Symbol];
-                var legQuantity = groupOrderManager == null
-                    ? quantity * security.SymbolProperties.LotSize
-                    // Have the leg quantity have the same sign as the existing position quantity.
-                    // The order direction will be determined using the group order manager quantity below.
-                    : position.UnitQuantity * Math.Sign(position.Quantity);
+                // Always reducing, so we take the absolute quantity times the opposite sign of the position
+                var legQuantity = absQuantity * position.UnitQuantity * -Math.Sign(position.Quantity);
 
                 return new SubmitOrderRequest(
                     orderType,

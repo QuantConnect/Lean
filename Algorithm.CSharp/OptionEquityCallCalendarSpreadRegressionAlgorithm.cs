@@ -51,7 +51,7 @@ namespace QuantConnect.Algorithm.CSharp
                     var initialMargin = Portfolio.MarginRemaining;
 
                     MarketOrder(shortCall.Symbol, -10);
-                    AssertDefaultGroup(shortCall.Symbol, -10);
+                    AssertOptionStrategyIsPresent(OptionStrategyDefinitions.NakedCall.Name, 10);
                     MarketOrder(longCall.Symbol, +10);
 
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.CallCalendarSpread.Name, 10);

@@ -59,7 +59,8 @@ namespace QuantConnect.Algorithm.CSharp
                     SetHoldings(shortCall.Symbol, -0.05m);
                     var freeMargin = Portfolio.MarginRemaining;
 
-                    AssertDefaultGroup(shortCall.Symbol, Securities[shortCall.Symbol].Holdings.Quantity);
+                    AssertOptionStrategyIsPresent(OptionStrategyDefinitions.NakedCall.Name,
+                        (int)Math.Abs(Securities[shortCall.Symbol].Holdings.Quantity));
 
                     SetHoldings(longCall.Symbol, +0.05m);
                     var freeMarginPostTrade = Portfolio.MarginRemaining;

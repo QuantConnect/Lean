@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                     MarketOrder(shortCall.Symbol, -5);
 
-                    AssertDefaultGroup(shortCall.Symbol, -5);
+                    AssertOptionStrategyIsPresent(OptionStrategyDefinitions.NakedCall.Name, 5);
 
                     MarketOrder(longCall.Symbol, 5);
                     var freeMarginPostTrade = Portfolio.MarginRemaining;

@@ -76,7 +76,7 @@ namespace QuantConnect.Algorithm.CSharp
             MarketOrder(contractSymbol, quantity - positionGroup.Quantity);
 
             positionGroup = Portfolio.PositionGroups.Single();
-            if (positionGroup.Quantity != quantity)
+            if (positionGroup.Positions.Single().Quantity != quantity)
             {
                 throw new Exception($@"Expected position group quantity to be {quantity} but was {positionGroup.Quantity}");
             }
@@ -117,10 +117,11 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (positionQuantityForDeltaWithPositionGroupBuyingPowerModel != expectedQuantity)
             {
-                throw new Exception($@"Expected position quantity for delta buying power to be {expectedQuantity} but was {positionQuantityForDeltaWithPositionGroupBuyingPowerModel}");
+                throw new Exception($@"Expected position quantity for delta buying power to be {expectedQuantity} but was {
+                    positionQuantityForDeltaWithPositionGroupBuyingPowerModel}");
             }
 
-            var signedDeltaBuyingPower = positionGroup.Quantity < 0 ? -deltaBuyingPower : deltaBuyingPower;
+            var signedDeltaBuyingPower = positionGroup.Positions.Single().Quantity < 0 ? -deltaBuyingPower : deltaBuyingPower;
             var positionQuantityForDeltaWithSecurityPositionGroupBuyingPowerModel = new SecurityPositionGroupBuyingPowerModel()
                 .GetMaximumLotsForDeltaBuyingPower(new GetMaximumLotsForDeltaBuyingPowerParameters(Portfolio, positionGroup, signedDeltaBuyingPower,
                     minimumOrderMarginPortfolioPercentage: 0)).NumberOfLots;

@@ -182,7 +182,8 @@ namespace QuantConnect.Securities.Positions
         {
             foreach (var positionsByUnderlying in positions
                 .Where(position => position.Symbol.SecurityType.HasOptions() || position.Symbol.SecurityType.IsOption())
-                .GroupBy(position => position.Symbol.HasUnderlying? position.Symbol.Underlying : position.Symbol))
+                .GroupBy(position => position.Symbol.HasUnderlying? position.Symbol.Underlying : position.Symbol)
+                .Select(x => x.ToList()))
             {
                 var optionPosition = positionsByUnderlying.FirstOrDefault(position => position.Symbol.SecurityType.IsOption());
                 if (optionPosition == null)
@@ -194,7 +195,7 @@ namespace QuantConnect.Securities.Positions
 
                 var optionPositionCollection = OptionPositionCollection.FromPositions(positionsByUnderlying, contractMultiplier);
 
-                if (optionPositionCollection.Count == 0 && positionsByUnderlying.Any())
+                if (optionPositionCollection.Count == 0 && positionsByUnderlying.Count > 0)
                 {
                     // we could be liquidating there will be no position left!
                     yield return PositionGroup.Empty(new OptionStrategyPositionGroupBuyingPowerModel(null));
