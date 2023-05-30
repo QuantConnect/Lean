@@ -131,8 +131,9 @@ namespace QuantConnect.Securities
                     if (_dataFolderMarketHoursDatabase == null)
                     {
                         var path = Path.Combine(Globals.GetDataFolderPath("market-hours"), "market-hours-database.json");
-                        result = _dataFolderMarketHoursDatabase = FromFile(path);
+                        _dataFolderMarketHoursDatabase = FromFile(path);
                     }
+                    result = _dataFolderMarketHoursDatabase;
                 }
             }
             return result;
