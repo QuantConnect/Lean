@@ -62,14 +62,9 @@ namespace QuantConnect.Orders
         /// <returns>True if the order is a limit order, false otherwise</returns>
         public static bool IsLimitOrder(this OrderType orderType)
         {
-            var limitOrderTypes = new HashSet<OrderType>()
-            {
-                OrderType.Limit,
-                OrderType.StopLimit,
-                OrderType.LimitIfTouched
-            };
-
-            return limitOrderTypes.Contains(orderType);
+            return orderType == OrderType.Limit
+                || orderType == OrderType.StopLimit
+                || orderType == OrderType.LimitIfTouched;
         }
 
         /// <summary>
