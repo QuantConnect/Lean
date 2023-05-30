@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
+
 namespace QuantConnect.Orders
 {
     /// <summary>
@@ -60,7 +62,14 @@ namespace QuantConnect.Orders
         /// <returns>True if the order is a limit order, false otherwise</returns>
         public static bool IsLimitOrder(this OrderType orderType)
         {
-            return orderType == OrderType.Limit || orderType == OrderType.StopLimit;
+            var limitOrderTypes = new HashSet<OrderType>()
+            {
+                OrderType.Limit,
+                OrderType.StopLimit,
+                OrderType.LimitIfTouched
+            };
+
+            return limitOrderTypes.Contains(orderType);
         }
 
         /// <summary>

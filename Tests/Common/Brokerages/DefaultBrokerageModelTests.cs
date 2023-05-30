@@ -110,7 +110,7 @@ namespace QuantConnect.Tests.Common.Brokerages
                         orderRequest = new SubmitOrderRequest(OrderType.StopLimit, SecurityType.Equity, "IBM", 100, 10, 0, 0, DateTime.UtcNow, "");
                         break;
                     case OrderType.LimitIfTouched:
-                        orderRequest = new SubmitOrderRequest(OrderType.LimitIfTouched, SecurityType.Equity, "IBM", 100, 0, 0, 12, DateTime.UtcNow, "");
+                        orderRequest = new SubmitOrderRequest(OrderType.LimitIfTouched, SecurityType.Equity, "IBM", 100, 0, 14, 12, DateTime.UtcNow, "");
                         break;
                 }
                 algorithm.Transactions.AddOrder(orderRequest);
@@ -135,6 +135,7 @@ namespace QuantConnect.Tests.Common.Brokerages
                         break;
                     case OrderType.LimitIfTouched:
                         Assert.AreEqual(6, order.GetPropertyValue("TriggerPrice"));
+                        Assert.AreEqual(7, order.GetPropertyValue("LimitPrice"));
                         break;
                 }
             }

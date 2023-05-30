@@ -65,6 +65,11 @@ namespace QuantConnect.Algorithm.CSharp
                         {
                             throw new Exception($"Order with ID: {ticket.OrderId} should have a Trigger Price equal to 1.43, but was {ticket.Get(OrderField.TriggerPrice)}");
                         }
+
+                        if (ticket.Get(OrderField.LimitPrice) != 1.43m)
+                        {
+                            throw new Exception($"Order with ID: {ticket.OrderId} should have a Limit Price equal to 1.43, but was {ticket.Get(OrderField.LimitPrice)}");
+                        }
                         break;
                     case OrderType.Limit:
                         if (ticket.Get(OrderField.LimitPrice) != 0.7143m)
@@ -130,7 +135,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", ""},
             {"Portfolio Turnover", "0%"},
-            {"OrderListHash", "0f8f82f4f9a4960816b73daa148af272"}
+            {"OrderListHash", "fb7383d38257493fe4f3427e781d9a34"}
         };
     }
 }
