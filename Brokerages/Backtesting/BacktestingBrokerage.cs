@@ -293,10 +293,7 @@ namespace QuantConnect.Brokerages.Backtesting
                     HasSufficientBuyingPowerForOrderResult hasSufficientBuyingPowerResult;
                     try
                     {
-                        var group = Algorithm.Portfolio.Positions.CreatePositionGroup(orders);
-                        hasSufficientBuyingPowerResult = group.BuyingPowerModel.HasSufficientBuyingPowerForOrder(
-                            new HasSufficientPositionGroupBuyingPowerForOrderParameters(Algorithm.Portfolio, group, orders)
-                        );
+                        hasSufficientBuyingPowerResult = Algorithm.Portfolio.HasSufficientBuyingPowerForOrder(orders);
                     }
                     catch (Exception err)
                     {

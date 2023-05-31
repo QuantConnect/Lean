@@ -51,7 +51,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         protected void AssertOptionStrategyIsPresent(string name, int? quantity = null)
         {
-            if (Portfolio.PositionGroups.Where(group => group.BuyingPowerModel is OptionStrategyPositionGroupBuyingPowerModel)
+            if (Portfolio.Positions.Groups.Where(group => group.BuyingPowerModel is OptionStrategyPositionGroupBuyingPowerModel)
                 .Count(group => ((OptionStrategyPositionGroupBuyingPowerModel)@group.BuyingPowerModel).ToString() == name
                     && (!quantity.HasValue || Math.Abs(group.Quantity) == quantity)) != 1)
             {
@@ -61,7 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         protected void AssertDefaultGroup(Symbol symbol, decimal quantity)
         {
-            if (Portfolio.PositionGroups.Where(group => group.BuyingPowerModel is SecurityPositionGroupBuyingPowerModel)
+            if (Portfolio.Positions.Groups.Where(group => group.BuyingPowerModel is SecurityPositionGroupBuyingPowerModel)
                 .Count(group => group.Positions.Any(position => position.Symbol == symbol && position.Quantity == quantity)) != 1)
             {
                 throw new Exception($"Default groupd for symbol '{symbol}' and quantity '{quantity}' was not found!");

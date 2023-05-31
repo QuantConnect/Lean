@@ -111,7 +111,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             var expectedQuantity = Math.Abs(_quantity - _quantityToLiquidate);
-            var positionGroup = Portfolio.PositionGroups.Single();
+            var positionGroup = Portfolio.Positions.Groups.Single();
             if (positionGroup.Quantity != expectedQuantity)
             {
                 throw new Exception($"Expected position quantity to be {expectedQuantity} but was {positionGroup.Quantity}");

@@ -79,7 +79,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             base.OnMarginCall(requests);
 
-            var positionGroup = Portfolio.PositionGroups.Single();
+            var positionGroup = Portfolio.Positions.Groups.Single();
             foreach (var request in requests)
             {
                 var position = positionGroup.GetPosition(request.Symbol);

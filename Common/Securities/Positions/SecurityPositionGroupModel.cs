@@ -18,21 +18,30 @@ using System.Linq;
 using QuantConnect.Orders;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Collections.ObjectModel;
 
 namespace QuantConnect.Securities.Positions
 {
     /// <summary>
     /// Responsible for managing the resolution of position groups for an algorithm
     /// </summary>
-    public class PositionManager
+    public class SecurityPositionGroupModel
     {
+        /// <summary>
+        /// Gets an implementation of <see cref="SecurityPositionGroupModel"/> that will not group multiple securities
+        /// </summary>
+        public static readonly SecurityPositionGroupModel Null = new NullSecurityPositionGroupModel();
+
         private bool _requiresGroupResolution;
 
+        private SecurityManager _securities;
         private PositionGroupCollection _groups;
-        private readonly SecurityManager _securities;
-        private readonly IPositionGroupResolver _resolver;
-        private readonly IPositionGroupBuyingPowerModel _defaultModel;
+        private IPositionGroupResolver _resolver;
+
+        /// <summary>
+        /// Get's the single security position group buying power model to use
+        /// </summary>
+        protected virtual IPositionGroupBuyingPowerModel PositionGroupBuyingPowerModel { get; } = new SecurityPositionGroupBuyingPowerModel();
+
 
         /// <summary>
         /// Gets the set of currently resolved position groups
@@ -56,16 +65,20 @@ namespace QuantConnect.Securities.Positions
         public bool IsOnlyDefaultGroups => Groups.IsOnlyDefaultGroups;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PositionManager"/> class
+        /// Initializes a new instance of the <see cref="SecurityPositionGroupModel"/> class
         /// </summary>
         /// <param name="securities">The algorithm's security manager</param>
-        public PositionManager(SecurityManager securities)
+        public virtual void Initialize(SecurityManager securities)
         {
             _securities = securities;
             Groups = PositionGroupCollection.Empty;
-            _defaultModel = new SecurityPositionGroupBuyingPowerModel();
-            _resolver = new CompositePositionGroupResolver(new OptionStrategyPositionGroupResolver(securities),
-                new SecurityPositionGroupResolver(_defaultModel));
+            _resolver = GetPositionGroupResolver();
+
+            foreach (var security in _securities.Values)
+            {
+                // if any security already present let's wire the holdings change event
+                security.Holdings.QuantityChanged += HoldingsOnQuantityChanged;
+            }
 
             // we must be notified each time our holdings change, so each time a security is added, we
             // want to bind to its SecurityHolding.QuantityChanged event so we can trigger the resolver
@@ -115,19 +128,20 @@ namespace QuantConnect.Securities.Positions
         /// Creates a position group for the specified order, pulling
         /// </summary>
         /// <param name="orders">The order</param>
+        /// <param name="group">The resulting position group</param>
         /// <returns>A new position group matching the provided order</returns>
-        public IPositionGroup CreatePositionGroup(IEnumerable<Order> orders)
+        public bool TryCreatePositionGroup(List<Order> orders, out IPositionGroup group)
         {
             var newPositions = orders.Select(order => order.CreatePositions(_securities)).SelectMany(x => x).ToList();
 
             // We send new and current positions to try resolve any strategy being executed by multiple orders
             // else the PositionGroup we will get out here will just be the default in those cases
-            if (!_resolver.TryGroup(newPositions, Groups, out var group))
+            if (!_resolver.TryGroup(newPositions, Groups, out group))
             {
-                throw new InvalidOperationException($"Unable to create group for orders: [{string.Join(",", orders.Select(o => o.Id))}]");
+                return false;
             }
 
-            return group;
+            return true;
         }
 
         /// <summary>
@@ -155,7 +169,7 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         public PositionGroupKey CreateDefaultKey(Security security)
         {
-            return new PositionGroupKey(_defaultModel, security);
+            return new PositionGroupKey(PositionGroupBuyingPowerModel, security);
         }
 
         /// <summary>
@@ -168,6 +182,15 @@ namespace QuantConnect.Securities.Positions
         {
             var key = CreateDefaultKey(security);
             return Groups[key];
+        }
+
+        /// <summary>
+        /// Get the position group resolver instance to use
+        /// </summary>
+        /// <returns>The position group resolver instance</returns>
+        protected virtual IPositionGroupResolver GetPositionGroupResolver()
+        {
+            return new CompositePositionGroupResolver(new OptionStrategyPositionGroupResolver(_securities), new SecurityPositionGroupResolver(PositionGroupBuyingPowerModel));
         }
 
         private void HoldingsOnQuantityChanged(object sender, SecurityHoldingQuantityChangedEventArgs e)

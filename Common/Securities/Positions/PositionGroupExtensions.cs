@@ -48,7 +48,7 @@ namespace QuantConnect.Securities.Positions
         /// <param name="groupQuantity">The quantity of the new group</param>
         /// <param name="positionMananger">The position manager to use to resolve positions</param>
         /// <returns>A position group with the same position ratios as the template but with the specified group quantity</returns>
-        public static IPositionGroup WithQuantity(this IPositionGroup template, decimal groupQuantity, PositionManager positionMananger)
+        public static IPositionGroup WithQuantity(this IPositionGroup template, decimal groupQuantity, SecurityPositionGroupModel positionMananger)
         {
             var positions = template.ToArray(p => p.WithLots(groupQuantity));
 
@@ -66,7 +66,7 @@ namespace QuantConnect.Securities.Positions
         /// </summary>
         /// <param name="template">The group template</param>
         /// <returns>A position group with the same position ratios as the template but with the specified group quantity</returns>
-        public static IPositionGroup CreateUnitGroup(this IPositionGroup template, PositionManager positionMananger)
+        public static IPositionGroup CreateUnitGroup(this IPositionGroup template, SecurityPositionGroupModel positionMananger)
         {
             return template.WithQuantity(1, positionMananger);
         }

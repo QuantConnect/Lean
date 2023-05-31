@@ -92,7 +92,7 @@ namespace QuantConnect.Algorithm.CSharp
             else
             {
                 // Let's check that we have the right position groups, just to make sure we are good.
-                var positionGroups = Portfolio.PositionGroups;
+                var positionGroups = Portfolio.Positions.Groups;
                 if (positionGroups.Count != 2)
                 {
                     throw new Exception($"Expected 2 position groups, one for each spread, but found {positionGroups.Count}");
