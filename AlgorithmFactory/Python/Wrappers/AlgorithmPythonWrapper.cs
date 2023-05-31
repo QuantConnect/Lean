@@ -883,12 +883,14 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public void SetBrokerageModel(IBrokerageModel brokerageModel) => _baseAlgorithm.SetBrokerageModel(brokerageModel);
 
         /// <summary>
-        /// Sets the account currency cash symbol this algorithm is to manage.
+        /// Sets the account currency cash symbol this algorithm is to manage, as well
+        /// as the amount in this currency if given
         /// </summary>
         /// <remarks>Has to be called during <see cref="Initialize"/> before
         /// calling <see cref="SetCash(decimal)"/> or adding any <see cref="Security"/></remarks>
         /// <param name="accountCurrency">The account currency cash symbol to set</param>
-        public void SetAccountCurrency(string accountCurrency) => _baseAlgorithm.SetAccountCurrency(accountCurrency);
+        /// <param name="amount">The account currency amount to set</param>
+        public void SetAccountCurrency(string accountCurrency, decimal? amount = null) => _baseAlgorithm.SetAccountCurrency(accountCurrency, amount);
 
         /// <summary>
         /// Set the starting capital for the strategy

@@ -636,12 +636,13 @@ namespace QuantConnect.Interfaces
         bool RemoveSecurity(Symbol symbol);
 
         /// <summary>
-        /// Sets the account currency cash symbol this algorithm is to manage.
-        /// </summary>
+        /// Sets the account currency cash symbol this algorithm is to manage, as well as
+        /// the amount in this currency if given
         /// <remarks>Has to be called during <see cref="Initialize"/> before
         /// calling <see cref="SetCash(decimal)"/> or adding any <see cref="Security"/></remarks>
         /// <param name="accountCurrency">The account currency cash symbol to set</param>
-        void SetAccountCurrency(string accountCurrency);
+        /// <param name="amount">The account currency amount to set</param>
+        void SetAccountCurrency(string accountCurrency, decimal? amount = null);
 
         /// <summary>
         /// Set the starting capital for the strategy
