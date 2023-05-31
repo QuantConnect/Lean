@@ -670,6 +670,7 @@ namespace QuantConnect.Securities
             }
         }
 
+        // TODO: Review and fix these comments: it doesn't return what it says it does.
         /// <summary>
         /// Gets the margin available for trading a specific symbol in a specific direction.
         /// </summary>

@@ -162,15 +162,7 @@ namespace QuantConnect.Securities.Positions
                 return parameters.Sufficient();
             }
 
-            var direction = parameters.Orders.Select(o =>
-            {
-                if (o.GroupOrderManager != null)
-                {
-                    return o.GroupOrderManager.Direction;
-                }
-                return o.Direction;
-            }).First();
-            var availableBuyingPower = this.GetPositionGroupBuyingPower(parameters.Portfolio, parameters.PositionGroup, direction);
+            var availableBuyingPower = parameters.Portfolio.MarginRemaining;
 
             // 2. Confirm we pass position group specific checks
             var result = PassesPositionGroupSpecificBuyingPowerForOrderChecks(parameters, availableBuyingPower);
@@ -180,13 +172,15 @@ namespace QuantConnect.Securities.Positions
             }
 
             // 3. Confirm that the new groupings arising from the change doesn't make maintenance margin exceed TPV
+            // We can just compare the delta to the available buying power because the delta how much the maintenance margin will increase by
+            // if the order is executed, so it needs to stay below the available buying power
             if (deltaBuyingPower <= availableBuyingPower)
             {
                 return parameters.Sufficient();
             }
 
-            return parameters.Insufficient(Invariant(
-                $"Id: {string.Join(",", parameters.Orders.Select(o => o.Id))}, Maintenance Margin Delta: {deltaBuyingPower.Normalize()}, Free Margin: {availableBuyingPower.Value.Normalize()}"
+            return parameters.Insufficient(Invariant($@"Id: {string.Join(",", parameters.Orders.Select(o => o.Id))}, Maintenance Margin Delta: {
+                deltaBuyingPower.Normalize()}, Free Margin: {availableBuyingPower.Normalize()}"
             ));
         }
 
