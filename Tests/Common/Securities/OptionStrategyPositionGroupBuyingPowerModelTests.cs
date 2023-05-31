@@ -77,9 +77,9 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.CoveredCall, 20, (1000000 / 18500 + 1) - 20, false), // 20 to max long + 1
             new TestCaseData(OptionStrategyDefinitions.CoveredCall, 20, -20, true), // 20 to 0
             new TestCaseData(OptionStrategyDefinitions.CoveredCall, 20, -(1000000 / 3000) - 20, true), // 20 to max short
-            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 20, -(1000000 / 3000 + 1) - 20, false).Explicit(),  // 20 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, 20, -(1000000 / 3000 + 1) - 20, false),  // 20 to max short + 1
             new TestCaseData(OptionStrategyDefinitions.CoveredCall, -20, (1000000 / 18500) - -20, true),   // -20 to max long
-            new TestCaseData(OptionStrategyDefinitions.CoveredCall, -20, (1000000 / 18500 + 1) - -20, false).Explicit(),   // -20 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.CoveredCall, -20, (1000000 / 18500 + 1) - -20, false),   // -20 to max long + 1
             new TestCaseData(OptionStrategyDefinitions.CoveredCall, -20, 20, true), // -20 to 0
             new TestCaseData(OptionStrategyDefinitions.CoveredCall, -20, -(1000000 / 3000) - -20, true),    // -20 to max short
             new TestCaseData(OptionStrategyDefinitions.CoveredCall, -20, -(1000000 / 3000 + 1) - -20, false),  // -20 to max short + 1
@@ -92,9 +92,9 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCall, 20, (1000000 / 3000 + 1) - 20, false), // 20 to max long + 1
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCall, 20, -20, true), // 20 to 0
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCall, 20, -(1000000 / 18500) - 20, true), // 20 to max short
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCall, 20, -(1000000 / 18500 + 1) - 20, false).Explicit(),  // 20 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCall, 20, -(1000000 / 18500 + 1) - 20, false),  // 20 to max short + 1
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCall, -20, (1000000 / 3000) - -20, true),   // -20 to max long
-            new TestCaseData(OptionStrategyDefinitions.ProtectiveCall, -20, (1000000 / 3000 + 1) - -20, false).Explicit(),   // -20 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.ProtectiveCall, -20, (1000000 / 3000 + 1) - -20, false),   // -20 to max long + 1
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCall, -20, 20, true), // -20 to 0
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCall, -20, -(1000000 / 18500) - -20, true),    // -20 to max short
             new TestCaseData(OptionStrategyDefinitions.ProtectiveCall, -20, -(1000000 / 18500 + 1) - -20, false),  // -20 to max short + 1
@@ -107,9 +107,9 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, 20, (1000000 / 10250 + 1) - 20, false), // 20 to max long + 1
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, 20, -20, true), // 20 to 0
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, 20, -(1000000 / 10250) - 20, true), // 20 to max short
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 20, -(1000000 / 10250 + 1) - 20, false).Explicit(),  // 20 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, 20, -(1000000 / 10250 + 1) - 20, false),  // 20 to max short + 1
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, -20, (1000000 / 10250) - -20, true),   // -20 to max long
-            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -20, (1000000 / 10250 + 1) - -20, false).Explicit(),   // -20 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.CoveredPut, -20, (1000000 / 10250 + 1) - -20, false),   // -20 to max long + 1
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, -20, 20, true), // -20 to 0
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, -20, -(1000000 / 10250) - -20, true),    // -20 to max short
             new TestCaseData(OptionStrategyDefinitions.CoveredPut, -20, -(1000000 / 10250 + 1) - -20, false),  // -20 to max short + 1
@@ -122,9 +122,9 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, 20, (1000000 / 10250 + 1) - 20, false), // 20 to max long + 1
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, 20, -20, true), // 20 to 0
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, 20, -(1000000 / 10250) - 20, true), // 20 to max short
-            new TestCaseData(OptionStrategyDefinitions.ProtectivePut, 20, -(1000000 / 10250 + 1) - 20, false).Explicit(),  // 20 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.ProtectivePut, 20, -(1000000 / 10250 + 1) - 20, false),  // 20 to max short + 1
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -20, (1000000 / 10250) - -20, true),   // -20 to max long
-            new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -20, (1000000 / 10250 + 1) - -20, false).Explicit(),   // -20 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -20, (1000000 / 10250 + 1) - -20, false),   // -20 to max long + 1
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -20, 20, true), // -20 to 0
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -20, -(1000000 / 10250) - -20, true),    // -20 to max short
             new TestCaseData(OptionStrategyDefinitions.ProtectivePut, -20, -(1000000 / 10250 + 1) - -20, false),  // -20 to max short + 1
