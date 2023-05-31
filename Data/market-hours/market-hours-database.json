@@ -42141,7 +42141,8 @@
           "state": "market"
         }
       ],
-      "saturday": []
+      "saturday": [],
+      "holidays": []
     },
     "IndexOption-usa-VIX": {
       "dataTimeZone": "America/New_York",
