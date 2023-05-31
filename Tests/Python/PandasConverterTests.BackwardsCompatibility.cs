@@ -31,6 +31,11 @@ namespace QuantConnect.Tests.Python
         [Test, TestCaseSource(nameof(TestDataFrameNonExceptionFunctions))]
         public void BackwardsCompatibilityDataFrameDataFrameNonExceptionFunctions(string method, string index, bool cache)
         {
+            if(method == ".to_orc()" && OS.IsWindows)
+            {
+                // not supported in windows
+                return;
+            }
             if (cache) SymbolCache.Set("SPY", Symbols.SPY);
 
             using (Py.GIL())

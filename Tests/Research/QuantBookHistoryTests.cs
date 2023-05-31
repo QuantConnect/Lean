@@ -381,7 +381,7 @@ namespace QuantConnect.Tests.Research
 
         [TestCase(true, true, 1920)]
         [TestCase(true, false, 780)]
-        [TestCase(false, true, 776)]
+        [TestCase(false, true, 898)]
         [TestCase(false, false, 390)]
         public void OptionHistorySpecifyingFillForwardAndExtendedMarket(bool fillForward, bool extendedMarket, int expectedCount)
         {

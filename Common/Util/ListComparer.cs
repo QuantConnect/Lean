@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -23,11 +23,11 @@ namespace QuantConnect.Util
     /// Useful when using a <see cref="List{T}"/> as the key of a collection.
     /// </summary>
     /// <typeparam name="T">The list type</typeparam>
-    public class ListComparer<T> : IEqualityComparer<List<T>>
+    public class ListComparer<T> : IEqualityComparer<IReadOnlyCollection<T>>
     {
         /// <summary>Determines whether the specified objects are equal.</summary>
         /// <returns>true if the specified objects are equal; otherwise, false.</returns>
-        public bool Equals(List<T> x, List<T> y)
+        public bool Equals(IReadOnlyCollection<T> x, IReadOnlyCollection<T> y)
         {
             return x.SequenceEqual(y);
         }
@@ -35,7 +35,7 @@ namespace QuantConnect.Util
         /// <summary>Returns a hash code for the specified object.</summary>
         /// <returns>A hash code for the specified object created from combining the hash
         /// code of all the elements in the collection.</returns>
-        public int GetHashCode(List<T> obj)
+        public int GetHashCode(IReadOnlyCollection<T> obj)
         {
             var hashCode = 0;
             foreach (var dateTime in obj)
