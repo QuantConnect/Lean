@@ -172,6 +172,8 @@ namespace QuantConnect.Securities.Positions
             }
 
             // 3. Confirm that the new groupings arising from the change doesn't make maintenance margin exceed TPV
+            // We can just compare the delta to the available buying power because the delta how much the maintenance margin will increase by
+            // if the order is executed, so it needs to stay below the available buying power
             if (deltaBuyingPower <= availableBuyingPower)
             {
                 return parameters.Sufficient();
