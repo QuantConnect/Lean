@@ -67,7 +67,7 @@ namespace QuantConnect.Algorithm.CSharp
             MarketOrder(contractSymbol, quantity);
 
             var security = Securities[contractSymbol];
-            var positionGroup = Portfolio.PositionGroups.Single();
+            var positionGroup = Portfolio.Positions.Groups.Single();
 
             TestQuantityForDeltaBuyingPowerForPositionGroup(positionGroup, security);
 
@@ -75,7 +75,7 @@ namespace QuantConnect.Algorithm.CSharp
             quantity = -10;
             MarketOrder(contractSymbol, quantity - positionGroup.Quantity);
 
-            positionGroup = Portfolio.PositionGroups.Single();
+            positionGroup = Portfolio.Positions.Groups.Single();
             if (positionGroup.Positions.Single().Quantity != quantity)
             {
                 throw new Exception($@"Expected position group quantity to be {quantity} but was {positionGroup.Quantity}");

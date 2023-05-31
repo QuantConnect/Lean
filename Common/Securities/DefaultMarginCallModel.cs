@@ -99,7 +99,7 @@ namespace QuantConnect.Securities
             {
                 if (totalMarginUsed > totalPortfolioValue * (1 + _marginBuffer))
                 {
-                    foreach (var positionGroup in Portfolio.PositionGroups)
+                    foreach (var positionGroup in Portfolio.Positions.Groups)
                     {
                         var positionMarginCallOrders = GenerateMarginCallOrders(
                             new MarginCallOrdersParameters(positionGroup, totalPortfolioValue, totalMarginUsed)).ToList();

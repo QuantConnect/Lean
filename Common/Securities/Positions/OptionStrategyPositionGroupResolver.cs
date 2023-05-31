@@ -13,13 +13,13 @@
  * limitations under the License.
 */
 
+using System;
 using System.Linq;
 using QuantConnect.Util;
+using QuantConnect.Orders;
 using System.Collections.Generic;
 using QuantConnect.Securities.Option;
 using QuantConnect.Securities.Option.StrategyMatcher;
-using System;
-using QuantConnect.Orders;
 
 namespace QuantConnect.Securities.Positions
 {
@@ -87,32 +87,26 @@ namespace QuantConnect.Securities.Positions
                         return positionGroup;
                     }
 
-                    // from the resolved position groups we will take those which use our buying power model and which are related to the new positions to be executed
-                    if (positionGroup.BuyingPowerModel.GetType() == typeof(OptionStrategyPositionGroupBuyingPowerModel))
+                    if (newPositions.Any(position => positionGroup.TryGetPosition(position.Symbol, out position)))
                     {
-                        if (newPositions.Any(position => positionGroup.TryGetPosition(position.Symbol, out position)))
-                        {
-                            return positionGroup;
-                        }
-
-                        // When none of the new positions are contained in the position group,
-                        // it means that we are liquidating the assets in the new positions
-                        // but some other existing positions were considered as impacted groups.
-                        // Example:
-                        //   Buy(OptionStrategies.BullCallSpread(...), 1);
-                        //   Buy(OptionStrategies.BearPutSpread(...), 1);
-                        //   ...
-                        //   Sell(OptionStrategies.BullCallSpread(...), 1);
-                        //   Sell(OptionStrategies.BearPutSpread(...), 1);
-                        //   -----
-                        //   When attempting revert the bull call position group, the bear put group
-                        //   will be selected as impacted group, so the group will contain the put positions
-                        //   but not the call ones. In this case, we return an valid empty group because the
-                        //   liquidation is happening.
-                        return PositionGroup.Empty(new OptionStrategyPositionGroupBuyingPowerModel(null));
+                        return positionGroup;
                     }
 
-                    return null;
+                    // When none of the new positions are contained in the position group,
+                    // it means that we are liquidating the assets in the new positions
+                    // but some other existing positions were considered as impacted groups.
+                    // Example:
+                    //   Buy(OptionStrategies.BullCallSpread(...), 1);
+                    //   Buy(OptionStrategies.BearPutSpread(...), 1);
+                    //   ...
+                    //   Sell(OptionStrategies.BullCallSpread(...), 1);
+                    //   Sell(OptionStrategies.BearPutSpread(...), 1);
+                    //   -----
+                    //   When attempting revert the bull call position group, the bear put group
+                    //   will be selected as impacted group, so the group will contain the put positions
+                    //   but not the call ones. In this case, we return an valid empty group because the
+                    //   liquidation is happening.
+                    return PositionGroup.Empty(new OptionStrategyPositionGroupBuyingPowerModel(null));
                 })
                 .Where(positionGroup => positionGroup != null)
                 .FirstOrDefault();

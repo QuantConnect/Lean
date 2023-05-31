@@ -41,6 +41,7 @@ namespace QuantConnect.Securities
         private object _totalPortfolioValueLock = new();
         private bool _setAccountCurrencyWasCalled;
         private decimal _freePortfolioValue;
+        private SecurityPositionGroupModel _positions;
         private IAlgorithmSettings _algorithmSettings;
 
         /// <summary>
@@ -56,12 +57,18 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Local access to the position manager
         /// </summary>
-        internal PositionManager Positions;
-
-        /// <summary>
-        /// Current read only position groups collection
-        /// </summary>
-        public PositionGroupCollection PositionGroups => Positions.Groups;
+        public SecurityPositionGroupModel Positions
+        {
+            get
+            {
+                return _positions;
+            }
+            set
+            {
+                value?.Initialize(Securities);
+                _positions = value;
+            }
+        }
 
         /// <summary>
         /// Gets the cash book that keeps track of all currency holdings (only settled cash)
@@ -81,7 +88,7 @@ namespace QuantConnect.Securities
             Securities = securityManager;
             Transactions = transactions;
             _algorithmSettings = algorithmSettings;
-            Positions = new PositionManager(securityManager);
+            Positions = new SecurityPositionGroupModel();
             MarginCallModel = new DefaultMarginCallModel(this, defaultOrderProperties);
 
             CashBook = new CashBook();
@@ -887,6 +894,41 @@ namespace QuantConnect.Securities
         public void SetMarginCallModel(PyObject pyObject)
         {
             SetMarginCallModel(new MarginCallModelPythonWrapper(pyObject));
+        }
+
+        /// <summary>
+        /// Will determine if the algorithms portfolio has enough buying power to fill the given orders
+        /// </summary>
+        /// <param name="orders">The orders to check</param>
+        /// <returns>True if the algorithm has enough buying power available</returns>
+        public HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(List<Order> orders)
+        {
+            if (Positions.TryCreatePositionGroup(orders, out var group))
+            {
+                return group.BuyingPowerModel.HasSufficientBuyingPowerForOrder(new HasSufficientPositionGroupBuyingPowerForOrderParameters(this, group, orders));
+            }
+
+            for (var i = 0; i < orders.Count; i++)
+            {
+                var order = orders[i];
+                var security = Securities[order.Symbol];
+                var result = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(this, security, order);
+                if (!result.IsSufficient)
+                {
+                    // if any fails, we fail all
+                    return result;
+                }
+            }
+            return new HasSufficientBuyingPowerForOrderResult(true);
+        }
+
+        /// <summary>
+        /// Will set the security position group model to use
+        /// </summary>
+        /// <param name="positionGroupModel">The position group model instance</param>
+        public void SetPositions(SecurityPositionGroupModel positionGroupModel)
+        {
+            Positions = positionGroupModel;
         }
     }
 }

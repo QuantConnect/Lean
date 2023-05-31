@@ -105,12 +105,12 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception("Expected the algorithm to have bought and sold a Bull Call Spread and a Bear Put Spread.");
             }
 
-            if (Portfolio.PositionGroups.Count != 1)
+            if (Portfolio.Positions.Groups.Count != 1)
             {
-                throw new Exception($"Expected 1 position group, found {Portfolio.PositionGroups.Count}");
+                throw new Exception($"Expected 1 position group, found {Portfolio.Positions.Groups.Count}");
             }
 
-            var positions = Portfolio.PositionGroups.Single().Positions.ToList();
+            var positions = Portfolio.Positions.Groups.Single().Positions.ToList();
             if (positions.Count != 1)
             {
                 throw new Exception($"Expected 1 position in the position group, found {positions.Count()}");

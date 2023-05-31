@@ -90,7 +90,7 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception("All orders should be filled");
             }
 
-            var finalStrategyQuantity = Portfolio.PositionGroups.First().Quantity;
+            var finalStrategyQuantity = Portfolio.Positions.Groups.First().Quantity;
             if (Math.Abs(OriginalQuantity) <= Math.Abs(finalStrategyQuantity))
             {
                 throw new Exception($@"Strategy position group quantity should have been decreased from the original quantity {OriginalQuantity
