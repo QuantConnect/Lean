@@ -73,8 +73,7 @@ namespace QuantConnect.Algorithm.CSharp
                         .Where(contract => contract.Right == OptionRight.Call)
                         .OrderByDescending(x => x.Expiry)
                         .ThenBy(x => x.Strike)
-                        .Take(2)
-                        .ToList();
+                        .First();
 
                     if(!_placedTrades)
                     {
@@ -85,10 +84,10 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        protected virtual void PlaceTrades(List<OptionContract> symbols)
+        protected virtual void PlaceTrades(OptionContract optionContract)
         {
-            AssertState(MarketOrder(symbols[1].Symbol.Underlying, 1000), 1, 1000);
-            AssertState(MarketOrder(symbols[0].Symbol, -10), 2, 1010);
+            AssertState(MarketOrder(optionContract.Symbol.Underlying, 1000), 1, 1000);
+            AssertState(MarketOrder(optionContract.Symbol, -10), 2, 1010);
         }
 
         protected virtual void AssertState(OrderTicket ticket, int expectedGroupCount, int expectedMarginUsed)
@@ -115,7 +114,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public virtual Language[] Languages { get; } = { Language.CSharp };
+        public virtual Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm

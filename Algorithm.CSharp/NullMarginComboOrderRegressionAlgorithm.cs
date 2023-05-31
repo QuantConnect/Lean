@@ -25,18 +25,23 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class NullMarginComboOrderRegressionAlgorithm : NullMarginMultipleOrdersRegressionAlgorithm
     {
-        protected override void PlaceTrades(List<OptionContract> symbols)
+        protected override void PlaceTrades(OptionContract optionContract)
         {
             var orderLegs = new List<Leg>()
             {
-                Leg.Create(symbols[0].Symbol, -1),
-                Leg.Create(symbols[0].Symbol.Underlying, 100),
+                Leg.Create(optionContract.Symbol, -1),
+                Leg.Create(optionContract.Symbol.Underlying, 100),
             };
             var tickets = ComboMarketOrder(orderLegs, 10).ToList();
 
             AssertState(tickets[0], 2, 1010);
             AssertState(tickets[1], 2, 1010);
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public override Language[] Languages { get; } = { Language.CSharp };
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
