@@ -602,12 +602,14 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Sets the account currency cash symbol this algorithm is to manage.
+        /// Sets the account currency cash symbol this algorithm is to manage, as well
+        /// as the starting cash in this currency if given
         /// </summary>
         /// <remarks>Has to be called before calling <see cref="SetCash(decimal)"/>
         /// or adding any <see cref="Security"/></remarks>
         /// <param name="accountCurrency">The account currency cash symbol to set</param>
-        public void SetAccountCurrency(string accountCurrency)
+        /// <param name="startingCash">The account currency starting cash to set</param>
+        public void SetAccountCurrency(string accountCurrency, decimal? startingCash = null)
         {
             accountCurrency = accountCurrency.LazyToUpper();
 
@@ -643,6 +645,11 @@ namespace QuantConnect.Securities
             CashBook.AccountCurrency = accountCurrency;
 
             _baseCurrencyCash = CashBook[accountCurrency];
+
+            if (startingCash != null)
+            {
+                SetCash((decimal)startingCash);
+            }
         }
 
         /// <summary>

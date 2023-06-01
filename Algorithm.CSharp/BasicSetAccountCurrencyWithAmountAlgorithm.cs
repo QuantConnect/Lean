@@ -14,49 +14,19 @@
 */
 
 using System.Collections.Generic;
-using QuantConnect.Brokerages;
-using QuantConnect.Data;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Basic algorithm using SetAccountCurrency
+    /// Basic algorithm using SetAccountCurrency with an amount
     /// </summary>
-    public class BasicSetAccountCurrencyAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class BasicSetAccountCurrencyWithAmountAlgorithm : BasicSetAccountCurrencyAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _btcEur;
-
-        /// <summary>
-        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
-        /// </summary>
-        public override void Initialize()
-        {
-            SetStartDate(2018, 04, 04);  //Set Start Date
-            SetEndDate(2018, 04, 04);    //Set End Date
-            SetBrokerageModel(BrokerageName.GDAX, AccountType.Cash);
-            SetAccountCurrency();
-            _btcEur = AddCrypto("BTCEUR").Symbol;
-        }
-
-        public virtual void SetAccountCurrency()
+        public override void SetAccountCurrency()
         {
             //Before setting any cash or adding a Security call SetAccountCurrency
-            SetAccountCurrency("EUR");
-            SetCash(100000);             //Set Strategy Cash
-        }
-
-        /// <summary>
-        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
-        {
-            if (!Portfolio.Invested)
-            {
-                SetHoldings(_btcEur, 1);
-                Debug("Purchased Stock");
-            }
+            SetAccountCurrency("EUR", 200000);
         }
 
         /// <summary>
@@ -103,11 +73,11 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "€298.35"},
+            {"Total Fees", "€596.71"},
             {"Estimated Strategy Capacity", "€85000.00"},
             {"Lowest Capacity Asset", "BTCEUR XJ"},
             {"Portfolio Turnover", "107.64%"},
-            {"OrderListHash", "2ba443899dcccc79dc0f04441f797bf9"}
+            {"OrderListHash", "af1850fbc1faefaf2da98080e92c43a0"}
         };
     }
 }
