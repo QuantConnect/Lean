@@ -2615,7 +2615,7 @@ namespace QuantConnect.Tests.Common.Securities
 
         [TestCase()]
         [TestCase(200000)]
-        public void SetAccountCurrency(decimal? amount = null)
+        public void SetAccountCurrency(decimal? startingCash = null)
         {
             var algorithm = new QCAlgorithm();
 
@@ -2623,14 +2623,14 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(Currencies.USD, algorithm.Portfolio.CashBook.AccountCurrency);
             var expectedAmount = algorithm.Portfolio.CashBook[Currencies.USD].Amount;
 
-            if (amount == null)
+            if (startingCash == null)
             {
                 algorithm.SetAccountCurrency("btc");
             }
             else
             {
-                algorithm.SetAccountCurrency("btc", (decimal)amount);
-                expectedAmount = (decimal)amount;
+                algorithm.SetAccountCurrency("btc", (decimal)startingCash);
+                expectedAmount = (decimal)startingCash;
             }
 
             Assert.AreEqual("BTC", algorithm.AccountCurrency);
