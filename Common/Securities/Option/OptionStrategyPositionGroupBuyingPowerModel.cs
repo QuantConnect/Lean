@@ -191,16 +191,20 @@ namespace QuantConnect.Securities.Option
         /// <param name="parameters">An object containing the security and quantity</param>
         public override InitialMargin GetInitialMarginRequirement(PositionGroupInitialMarginParameters parameters)
         {
-            if (_optionStrategy.Name == OptionStrategyDefinitions.ProtectivePut.Name || _optionStrategy.Name == OptionStrategyDefinitions.ProtectiveCall.Name)
+            var result = 0m;
+
+            if (_optionStrategy == null)
+            {
+                result = 0;
+            }
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.ProtectivePut.Name || _optionStrategy.Name == OptionStrategyDefinitions.ProtectiveCall.Name)
             {
                 // 	Initial Standard Stock Margin Requirement
                 var underlyingPosition = parameters.PositionGroup.Positions.FirstOrDefault(position => !position.Symbol.SecurityType.IsOption());
                 var underlyingSecurity = parameters.Portfolio.Securities[underlyingPosition.Symbol];
 
-                var result = Math.Abs(underlyingSecurity.BuyingPowerModel.GetInitialMarginRequirement(underlyingSecurity, underlyingPosition.Quantity));
-
-                var inAccountCurrency = parameters.Portfolio.CashBook.ConvertToAccountCurrency(result, underlyingSecurity.QuoteCurrency.Symbol);
-                return new InitialMargin(inAccountCurrency);
+                result = Math.Abs(underlyingSecurity.BuyingPowerModel.GetInitialMarginRequirement(underlyingSecurity, underlyingPosition.Quantity));
+                result = parameters.Portfolio.CashBook.ConvertToAccountCurrency(result, underlyingSecurity.QuoteCurrency.Symbol);
             }
             else if(_optionStrategy.Name == OptionStrategyDefinitions.CoveredCall.Name)
             {
@@ -214,81 +218,80 @@ namespace QuantConnect.Securities.Option
 
                 var marginRequired = underlyingSecurity.BuyingPowerModel.GetInitialMarginRequirement(underlyingSecurity, underlyingPosition.Quantity);
 
-                // IB charges more than expected, this formula was infered based on actual requirements see 'CoveredCallInitialMarginRequirementsTestCases'
-                var result = optionValue * 0.8m + marginRequired;
-                var inAccountCurrency = parameters.Portfolio.CashBook.ConvertToAccountCurrency(result, optionSecurity.QuoteCurrency.Symbol);
-
-                return new InitialMargin(inAccountCurrency);
+                // IB charges more than expected, this formula was inferred based on actual requirements see 'CoveredCallInitialMarginRequirementsTestCases'
+                result = optionValue * 0.8m + marginRequired;
+                result = parameters.Portfolio.CashBook.ConvertToAccountCurrency(result, optionSecurity.QuoteCurrency.Symbol);
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.CoveredPut.Name)
             {
                 // Initial Stock Margin Requirement + In the Money Amount
-                var margin = GetMaintenanceMargin(new PositionGroupMaintenanceMarginParameters(parameters.Portfolio, parameters.PositionGroup));
-
-                return new InitialMargin(margin.Value);
+                result = GetMaintenanceMargin(new PositionGroupMaintenanceMarginParameters(parameters.Portfolio, parameters.PositionGroup));
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.NakedCall.Name
                 || _optionStrategy.Name == OptionStrategyDefinitions.NakedPut.Name)
             {
                 var option = parameters.PositionGroup.Positions.Single();
                 var security = (Option)parameters.Portfolio.Securities[option.Symbol];
-                var margin = security.BuyingPowerModel.GetInitialMarginRequirement(security, option.Quantity);
-
-                return new InitialMargin(margin);
+                result = security.BuyingPowerModel.GetInitialMarginRequirement(security, option.Quantity);
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.BearCallSpread.Name
                 || _optionStrategy.Name == OptionStrategyDefinitions.BullCallSpread.Name)
             {
-                var result = GetLongCallShortCallStrikeDifferenceMargin(parameters.PositionGroup, parameters.Portfolio);
-                return new InitialMargin(result);
+                result = GetLongCallShortCallStrikeDifferenceMargin(parameters.PositionGroup, parameters.Portfolio);
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.CallCalendarSpread.Name
                 || _optionStrategy.Name == OptionStrategyDefinitions.PutCalendarSpread.Name)
             {
-                return new InitialMargin(0);
+                result = 0m;
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.ShortCallCalendarSpread.Name
                 || _optionStrategy.Name == OptionStrategyDefinitions.ShortPutCalendarSpread.Name)
             {
                 var shortOptionPosition = parameters.PositionGroup.Positions.Single(position => position.Quantity < 0);
                 var shortOption = (Option)parameters.Portfolio.Securities[shortOptionPosition.Symbol];
-                var result = shortOption.BuyingPowerModel.GetInitialMarginRequirement(shortOption, shortOptionPosition.Quantity);
-
-                return new InitialMargin(Math.Abs(result));
+                result = Math.Abs(shortOption.BuyingPowerModel.GetInitialMarginRequirement(shortOption, shortOptionPosition.Quantity));
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.BearPutSpread.Name
                 || _optionStrategy.Name == OptionStrategyDefinitions.BullPutSpread.Name)
             {
-                var result = GetShortPutLongPutStrikeDifferenceMargin(parameters.PositionGroup, parameters.Portfolio);
-                return new InitialMargin(result);
+                result = GetShortPutLongPutStrikeDifferenceMargin(parameters.PositionGroup, parameters.Portfolio);
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.Straddle.Name || _optionStrategy.Name == OptionStrategyDefinitions.Strangle.Name)
             {
                 // Margined as two long options: since there is not margin requirements for long options, we return 0
-                return new InitialMargin(0);
+                result = 0m;
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.ShortStraddle.Name || _optionStrategy.Name == OptionStrategyDefinitions.ShortStrangle.Name)
             {
-                var result = GetShortStraddleStrangleMargin(parameters.PositionGroup, parameters.Portfolio,
+                result = GetShortStraddleStrangleMargin(parameters.PositionGroup, parameters.Portfolio,
                     (option, quantity) => Math.Abs(option.BuyingPowerModel.GetInitialMarginRequirement(option, quantity)));
-                return new InitialMargin(result);
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.ButterflyCall.Name || _optionStrategy.Name == OptionStrategyDefinitions.ButterflyPut.Name)
             {
-                return new InitialMargin(0);
+                result = 0m;
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.ShortButterflyPut.Name || _optionStrategy.Name == OptionStrategyDefinitions.ShortButterflyCall.Name)
             {
-                var result = GetMiddleAndLowStrikeDifference(parameters.PositionGroup, parameters.Portfolio);
-                return new InitialMargin(result);
+                result = GetMiddleAndLowStrikeDifference(parameters.PositionGroup, parameters.Portfolio);
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.IronCondor.Name)
             {
-                var result = GetShortPutLongPutStrikeDifferenceMargin(parameters.PositionGroup, parameters.Portfolio);
-                return new InitialMargin(result);
+                result = GetShortPutLongPutStrikeDifferenceMargin(parameters.PositionGroup, parameters.Portfolio);
+            }
+            else
+            {
+                throw new NotImplementedException($"Option strategy {_optionStrategy.Name} margin modeling has yet to be implemented");
             }
 
-            throw new NotImplementedException($"Option strategy {_optionStrategy.Name} margin modeling has yet to be implemented");
+            // Add premium to initial margin only when it is positive (the user must pay the premium)
+            var premium = 0m;
+            foreach (var position in parameters.PositionGroup.Positions.Where(position => position.Symbol.SecurityType.IsOption()))
+            {
+                var option = (Option)parameters.Portfolio.Securities[position.Symbol];
+                premium += option.Holdings.GetQuantityValue(position.Quantity).InAccountCurrency;
+            }
+
+            return new InitialMargin(result + Math.Max(premium, 0));
         }
 
         /// <summary>

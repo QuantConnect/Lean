@@ -124,7 +124,7 @@ namespace QuantConnect.Securities.Positions
             var contemplated = 0m;
             foreach (var contemplatedGroup in contemplatedGroups)
             {
-                contemplated += contemplatedGroup.BuyingPowerModel.GetMaintenanceMargin(
+                contemplated += contemplatedGroup.BuyingPowerModel.GetInitialMarginRequirement(
                     parameters.Portfolio, contemplatedGroup
                 );
             }
