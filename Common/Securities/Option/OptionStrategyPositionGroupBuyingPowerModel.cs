@@ -232,7 +232,10 @@ namespace QuantConnect.Securities.Option
             {
                 var option = parameters.PositionGroup.Positions.Single();
                 var security = (Option)parameters.Portfolio.Securities[option.Symbol];
-                result = security.BuyingPowerModel.GetInitialMarginRequirement(security, option.Quantity);
+                result = Math.Abs(security.BuyingPowerModel.GetInitialMarginRequirement(security, option.Quantity));
+
+                // Premium is already accounted for in the initial margin requirement for naked options
+                return new InitialMargin(result);
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.BearCallSpread.Name
                 || _optionStrategy.Name == OptionStrategyDefinitions.BullCallSpread.Name)
