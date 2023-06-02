@@ -87,7 +87,8 @@ namespace QuantConnect.Algorithm.CSharp
         private void TestQuantityForDeltaBuyingPowerForPositionGroup(IPositionGroup positionGroup, Security security)
         {
             var absQuantity = Math.Abs(positionGroup.Quantity);
-            var initialMarginPerUnit = positionGroup.BuyingPowerModel.GetInitialMarginRequirement(Portfolio, positionGroup) / absQuantity;
+            var initialMarginPerUnit = ((OptionInitialMargin)positionGroup.BuyingPowerModel.GetInitialMarginRequirement(
+                new PositionGroupInitialMarginParameters(Portfolio, positionGroup))).TotalValue / absQuantity;
             var maintenanceMarginPerUnit = positionGroup.BuyingPowerModel.GetMaintenanceMargin(Portfolio, positionGroup) / absQuantity;
 
             for (var expectedQuantity = 1; expectedQuantity <= absQuantity; expectedQuantity++)
@@ -116,7 +117,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             // We use the custom TestPositionGroupBuyingPowerModel class here because the default buying power model for position groups is the
             // OptionStrategyPositionGroupBuyingPowerModel, which does not support single-leg positions yet.
-            var positionQuantityForDeltaWithPositionGroupBuyingPowerModel = new TestPositionGroupBuyingPowerModel()
+            var positionQuantityForDeltaWithPositionGroupBuyingPowerModel = positionGroup.BuyingPowerModel
                 .GetMaximumLotsForDeltaBuyingPower(new GetMaximumLotsForDeltaBuyingPowerParameters(Portfolio, positionGroup, deltaBuyingPower,
                     minimumOrderMarginPortfolioPercentage: 0)).NumberOfLots;
 

@@ -234,8 +234,9 @@ namespace QuantConnect.Securities.Option
                 var security = (Option)parameters.Portfolio.Securities[option.Symbol];
                 result = Math.Abs(security.BuyingPowerModel.GetInitialMarginRequirement(security, option.Quantity));
 
-                // Premium is already accounted for in the initial margin requirement for naked options
-                return new InitialMargin(result);
+                // Naked options are a especial case, because they already have the premium included in the margin.
+                var optionValue = security.Holdings.GetQuantityValue(option.Quantity).InAccountCurrency;
+                result -= Math.Max(optionValue, 0);
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.BearCallSpread.Name
                 || _optionStrategy.Name == OptionStrategyDefinitions.BullCallSpread.Name)
@@ -294,7 +295,7 @@ namespace QuantConnect.Securities.Option
                 premium += option.Holdings.GetQuantityValue(position.Quantity).InAccountCurrency;
             }
 
-            return new InitialMargin(result + Math.Max(premium, 0));
+            return new OptionInitialMargin(result, premium);
         }
 
         /// <summary>

@@ -129,6 +129,22 @@ namespace QuantConnect.Securities.Positions
                 );
             }
 
+            var orderGroups = positionManager.ResolvePositionGroups(new PositionCollection(positions));
+            // This should always return a single group since it is a single order/combo
+            foreach (var orderGroup in orderGroups)
+            {
+                var initialMargin = orderGroup.BuyingPowerModel.GetInitialMarginRequirement(new PositionGroupInitialMarginParameters(
+                    parameters.Portfolio, orderGroup));
+                var optionInitialMargin = initialMargin as OptionInitialMargin;
+
+                if (optionInitialMargin != null)
+                {
+                    // We need to add the premium paid for the order. We use the TotalValue-Value difference instead of Premium
+                    // to add it only when needed -- when it is debited from the account
+                    contemplated += optionInitialMargin.TotalValue - optionInitialMargin.Value;
+                }
+            }
+
             return new ReservedBuyingPowerImpact(
                 current, contemplated, impactedGroups, parameters.ContemplatedChanges, contemplatedGroups
             );
@@ -206,6 +222,12 @@ namespace QuantConnect.Securities.Positions
             )
         {
             return this.GetMaintenanceMargin(parameters.Portfolio, parameters.PositionGroup);
+        }
+
+        private static decimal GetInitialMarginValue(InitialMargin initialMargin)
+        {
+            var optionInitialMargin = initialMargin as OptionInitialMargin;
+            return optionInitialMargin?.TotalValue ?? initialMargin.Value;
         }
 
         /// <summary>
@@ -287,7 +309,8 @@ namespace QuantConnect.Securities.Positions
             var currentUsedMargin = 0m;
             if (currentPositionGroup.Quantity != 0)
             {
-                currentUsedMargin = Math.Abs(currentPositionGroup.BuyingPowerModel.GetInitialMarginRequirement(portfolio, currentPositionGroup));
+                currentUsedMargin = Math.Abs(GetInitialMarginValue(currentPositionGroup.BuyingPowerModel.GetInitialMarginRequirement(
+                    new PositionGroupInitialMarginParameters(portfolio, currentPositionGroup))));
             }
 
             // 4. Check that the change of margin is above our models minimum percentage change
@@ -308,7 +331,8 @@ namespace QuantConnect.Securities.Positions
             var groupUnit = currentPositionGroup.CreateUnitGroup(parameters.Portfolio.Positions);
 
             // 5a. Compute initial margin requirement for a single unit
-            var unitMargin = Math.Abs(groupUnit.BuyingPowerModel.GetInitialMarginRequirement(portfolio, groupUnit));
+            var unitMargin= Math.Abs(GetInitialMarginValue(groupUnit.BuyingPowerModel.GetInitialMarginRequirement(
+                new PositionGroupInitialMarginParameters(portfolio, groupUnit))));
             if (unitMargin == 0m)
             {
                 // likely due to missing price data
@@ -437,8 +461,8 @@ namespace QuantConnect.Securities.Positions
                 buyingPower += existing.Key.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(parameters.Portfolio, existing);
 
                 // 2b. Rebate the initial margin equivalent of current position
-                // this interface doesn't have a concept of initial margin as it's an impl detail of the BuyingPowerModel base class
-                buyingPower += Math.Abs(existing.Key.BuyingPowerModel.GetInitialMarginRequirement(parameters.Portfolio, existing));
+                buyingPower += Math.Abs(GetInitialMarginValue(existing.Key.BuyingPowerModel.GetInitialMarginRequirement(
+                    new PositionGroupInitialMarginParameters(parameters.Portfolio, existing))));
             }
 
             return buyingPower;
@@ -588,7 +612,8 @@ namespace QuantConnect.Securities.Positions
 
             // Calculate the initial value for the wanted final margin after the delta is applied.
             var finalPositionGroup = currentPositionGroup.WithQuantity(currentGroupAbsQuantity + positionGroupQuantity, portfolio.Positions);
-            finalMargin = Math.Abs(finalPositionGroup.BuyingPowerModel.GetInitialMarginRequirement(portfolio, finalPositionGroup));
+            finalMargin = Math.Abs(GetInitialMarginValue(finalPositionGroup.BuyingPowerModel.GetInitialMarginRequirement(
+                new PositionGroupInitialMarginParameters(portfolio, finalPositionGroup))));
 
             // Keep the previous calculated final margin we would get after the delta is applied.
             // This is useful for the cases were the final group gets us with final margin greater than the target.
@@ -604,7 +629,8 @@ namespace QuantConnect.Securities.Positions
             {
                 positionGroupQuantity += quantityStep;
                 finalPositionGroup = currentPositionGroup.WithQuantity(currentGroupAbsQuantity + positionGroupQuantity, portfolio.Positions);
-                finalMargin = Math.Abs(finalPositionGroup.BuyingPowerModel.GetInitialMarginRequirement(portfolio, finalPositionGroup));
+                finalMargin = Math.Abs(GetInitialMarginValue(finalPositionGroup.BuyingPowerModel.GetInitialMarginRequirement(
+                    new PositionGroupInitialMarginParameters(portfolio, finalPositionGroup))));
 
                 var newMarginDifference = getMarginDifference(finalMargin);
                 if (UnableToConverge(newMarginDifference, marginDifference, groupUnit, portfolio, positionGroupQuantity,
