@@ -16,6 +16,7 @@
 using Deedle;
 using MathNet.Numerics.Statistics;
 using System;
+using QuantConnect.Statistics;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -29,17 +30,32 @@ namespace QuantConnect.Report
         /// <summary>
         /// Calculate the rolling beta with the given window size (in days)
         /// </summary>
-        /// <param name="equityCurve">The equity curve you want to measure beta for</param>
-        /// <param name="benchmarkSeries">The benchmark/series you want to calculate beta with</param>
+        /// <param name="performancePoints">The performance points you want to measure beta for</param>
+        /// <param name="benchmarkPoints">The benchmark/points you want to calculate beta with</param>
         /// <param name="windowSize">Days/window to lookback</param>
         /// <returns>Rolling beta</returns>
-        public static Series<DateTime, double> Beta(Series<DateTime, double> equityCurve, Series<DateTime, double> benchmarkSeries, int windowSize = 132)
+        public static Series<DateTime, double> Beta(SortedList<DateTime, double> performancePoints, SortedList<DateTime, double> benchmarkPoints, int windowSize = 132)
         {
-            var dailyReturnsSeries = equityCurve.ResampleEquivalence(date => date.Date, s => s.LastValue())
+            Series<DateTime, double> dailyReturnsSeries = new Series<DateTime, double>(performancePoints);
+            dailyReturnsSeries.ResampleEquivalence(date => date.Date, s => s.LastValue())
                 .PercentChange();
 
-            var benchmarkReturns = benchmarkSeries.ResampleEquivalence(date => date.Date, s => s.LastValue())
+            Series<DateTime, double> benchmarkReturns = new Series<DateTime, double>(benchmarkPoints);
+            benchmarkReturns.ResampleEquivalence(date => date.Date, s => s.LastValue())
                 .CumulativeReturns();
+
+            if (benchmarkPoints.Count != 0)
+            {
+                var decimalBenchmarkDictionary = new SortedDictionary<DateTime, decimal>(benchmarkPoints.ToDictionary(item => item.Key, item => (decimal)item.Value));
+                var benchmarkReturnsList = StatisticsBuilder.CreateDifferences(decimalBenchmarkDictionary, benchmarkPoints.Keys.First(), benchmarkPoints.Keys.Last()).Skip(1);
+                benchmarkReturns = new Series<DateTime, double>(benchmarkReturnsList);
+            }
+
+            if (performancePoints.Count != 0)
+            {
+                var dailyDictionary = performancePoints.ToDictionary(item => item.Key, item => (double)(item.Value / 100)).Skip(2);
+                dailyReturnsSeries = new Series<DateTime, double>(dailyDictionary);
+            }
 
             var returns = Frame.CreateEmpty<DateTime, string>();
             returns["strategy"] = dailyReturnsSeries;

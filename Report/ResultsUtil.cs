@@ -49,6 +49,31 @@ namespace QuantConnect.Report
         }
 
         /// <summary>
+        /// Get the daily performance chart points
+        /// </summary>
+        /// <param name="result">Result object to extract the chart points</param>
+        /// <returns></returns>
+        public static SortedList<DateTime, double> PerformancePoints(Result result)
+        {
+            var points = new SortedList<DateTime, double>();
+
+            if (result == null || result.Charts == null ||
+                !result.Charts.ContainsKey("Strategy Equity") ||
+                result.Charts["Strategy Equity"].Series == null ||
+                !result.Charts["Strategy Equity"].Series.ContainsKey("Daily Performance"))
+            {
+                return points;
+            }
+
+            foreach (var point in result.Charts["Strategy Equity"].Series["Daily Performance"].Values)
+            {
+                points[Time.UnixTimeStampToDateTime(point.x)] = Convert.ToDouble(point.y);
+            }
+
+            return points;
+        }
+
+        /// <summary>
         /// Gets the points of the benchmark
         /// </summary>
         /// <param name="result">Backtesting or live results</param>
