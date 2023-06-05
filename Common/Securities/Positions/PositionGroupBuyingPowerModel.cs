@@ -392,12 +392,6 @@ namespace QuantConnect.Securities.Positions
                 parameters.Portfolio, currentPositionGroup
             );
 
-            if (usedBuyingPower == 0 && currentPositionGroup.Quantity != 0)
-            {
-                // No buying power used, no delta to apply. For instance, margin for a long butterfly call position is zero.
-                return new GetMaximumLotsResult(0, Messages.PositionGroupBuyingPowerModel.DeltaCannotBeApplied, false);
-            }
-
             var targetBuyingPower = usedBuyingPower + parameters.DeltaBuyingPower;
             // The reference position group is not necessarily in the same side as the position group in the portfolio, it could be the inverted.
             // So the consumer needs the result relative to that position group instead of the one being held.

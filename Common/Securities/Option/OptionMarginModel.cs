@@ -94,6 +94,7 @@ namespace QuantConnect.Securities.Option
         /// <returns>The maintenance margin required for the provided holdings quantity/cost/value</returns>
         public override MaintenanceMargin GetMaintenanceMargin(MaintenanceMarginParameters parameters)
         {
+            // Long options have zero maintenance margin requirement
             return parameters.Quantity >= 0 ? 0 : parameters.AbsoluteHoldingsCost * GetMaintenanceMarginRequirement(parameters);
         }
 
@@ -109,7 +110,9 @@ namespace QuantConnect.Securities.Option
                         * security.SymbolProperties.ContractMultiplier
                         * security.Price
                         * quantity;
-            return new InitialMargin(value * GetMarginRequirement(security, quantity, value));
+
+            // Initial margin requirement for long options is only the premium that is paid upfront
+            return new OptionInitialMargin(parameters.Quantity >= 0 ? 0 : value * GetMarginRequirement(security, quantity, value), value);
         }
 
         /// <summary>
