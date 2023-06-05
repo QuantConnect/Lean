@@ -20,6 +20,7 @@ using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Positions;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -40,6 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(200000);
 
             SetSecurityInitializer(security => security.MarginModel = SecurityMarginModel.Null);
+            Portfolio.SetPositions(SecurityPositionGroupModel.Null);
 
             var equity = AddEquity("GOOG");
             var option = AddOption(equity.Symbol);
