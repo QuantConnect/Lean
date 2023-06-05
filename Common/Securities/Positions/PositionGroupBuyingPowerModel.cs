@@ -446,6 +446,7 @@ namespace QuantConnect.Securities.Positions
                 buyingPower += existing.Key.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(parameters.Portfolio, existing);
 
                 // 2b. Rebate the initial margin equivalent of current position
+                // this interface doesn't have a concept of initial margin as it's an impl detail of the BuyingPowerModel base class
                 buyingPower += Math.Abs(existing.Key.BuyingPowerModel.GetInitialMarginRequirement(parameters.Portfolio, existing));
             }
 
