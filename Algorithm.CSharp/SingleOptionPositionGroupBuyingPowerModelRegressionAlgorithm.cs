@@ -87,8 +87,7 @@ namespace QuantConnect.Algorithm.CSharp
         private void TestQuantityForDeltaBuyingPowerForPositionGroup(IPositionGroup positionGroup, Security security)
         {
             var absQuantity = Math.Abs(positionGroup.Quantity);
-            var initialMarginPerUnit = ((OptionInitialMargin)positionGroup.BuyingPowerModel.GetInitialMarginRequirement(
-                new PositionGroupInitialMarginParameters(Portfolio, positionGroup))).TotalValue / absQuantity;
+            var initialMarginPerUnit = positionGroup.BuyingPowerModel.GetInitialMarginRequirement(Portfolio, positionGroup) / absQuantity;
             var maintenanceMarginPerUnit = positionGroup.BuyingPowerModel.GetMaintenanceMargin(Portfolio, positionGroup) / absQuantity;
 
             for (var expectedQuantity = 1; expectedQuantity <= absQuantity; expectedQuantity++)

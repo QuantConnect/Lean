@@ -476,8 +476,7 @@ namespace QuantConnect.Tests.Common.Securities
             var marginPerLongUnit = Math.Abs(positionGroup.BuyingPowerModel.GetInitialMarginRequirement(_portfolio, positionGroup) / initialHoldingsQuantity);
 
             var shortUnitGroup = positionGroup.WithQuantity(-1, _portfolio.Positions);
-            var marginPerNakedShortUnit = Math.Abs(shortUnitGroup.BuyingPowerModel.GetInitialMarginRequirement(
-                new PositionGroupInitialMarginParameters(_portfolio, shortUnitGroup)).Value);
+            var marginPerNakedShortUnit = Math.Abs(shortUnitGroup.BuyingPowerModel.GetInitialMarginRequirement(_portfolio, shortUnitGroup));
 
             var deltaBuyingPower = finalPositionQuantity >= 0
                 //Going even longer / Going "less" long/ Liquidating
@@ -516,12 +515,10 @@ namespace QuantConnect.Tests.Common.Securities
             //   -1: short will go towards long and vice-versa
 
             var positionGroup = SetUpOptionStrategy(OptionStrategyDefinitions.CoveredCall, initialHoldingsQuantity);
-            var currentUsedMargin = Math.Abs(((OptionInitialMargin)positionGroup.BuyingPowerModel.GetInitialMarginRequirement(
-                new PositionGroupInitialMarginParameters(_portfolio, positionGroup))).TotalValue);
+            var currentUsedMargin = Math.Abs(positionGroup.BuyingPowerModel.GetInitialMarginRequirement(_portfolio, positionGroup));
 
             var longUnitGroup = positionGroup.CreateUnitGroup(_portfolio.Positions);
-            var longUnitMargin = Math.Abs(((OptionInitialMargin)longUnitGroup.BuyingPowerModel.GetInitialMarginRequirement(
-                new PositionGroupInitialMarginParameters(_portfolio, longUnitGroup))).TotalValue);
+            var longUnitMargin = Math.Abs(longUnitGroup.BuyingPowerModel.GetInitialMarginRequirement(_portfolio, longUnitGroup));
 
             var expectedQuantity = 0m;
             var finalPositionQuantity = 0m;
@@ -530,8 +527,7 @@ namespace QuantConnect.Tests.Common.Securities
             if (targetMarginPercent > 1 && targetMarginDirection == -1)
             {
                 var shortUnitGroup = positionGroup.WithQuantity(-1, _portfolio.Positions);
-                var shortUnitMargin = Math.Abs(((OptionInitialMargin)shortUnitGroup.BuyingPowerModel.GetInitialMarginRequirement(
-                    new PositionGroupInitialMarginParameters(_portfolio, shortUnitGroup))).TotalValue);
+                var shortUnitMargin = Math.Abs(shortUnitGroup.BuyingPowerModel.GetInitialMarginRequirement(_portfolio, shortUnitGroup));
                 finalPositionQuantity = Math.Floor(-currentUsedMargin / shortUnitMargin);
                 expectedQuantity = -Math.Abs(initialHoldingsQuantity) + finalPositionQuantity;
 
@@ -630,10 +626,11 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var positionGroup = SetUpOptionStrategy(optionStrategyDefinition, quantity);
 
-            var initialMarginRequirement = positionGroup.BuyingPowerModel.GetInitialMarginRequirement(
+            var initialMarginRequirement = (OptionInitialMargin)positionGroup.BuyingPowerModel.GetInitialMarginRequirement(
                 new PositionGroupInitialMarginParameters(_portfolio, positionGroup));
 
-            Assert.AreEqual((double)expectedInitialMarginRequirement, (double)initialMarginRequirement.Value, (double)(0.2m * expectedInitialMarginRequirement));
+            Assert.AreEqual((double)expectedInitialMarginRequirement, (double)initialMarginRequirement.ValueWithoutPremium,
+                (double)(0.2m * expectedInitialMarginRequirement));
         }
 
         private static readonly TestCaseData[] CoveredCallInitialMarginRequirementsTestCases = new[]
@@ -927,15 +924,14 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var positionGroup = SetUpOptionStrategy(optionStrategyDefinition, initialPositionQuantity);
 
-            var initialMarginRequirement = (OptionInitialMargin)positionGroup.BuyingPowerModel.GetInitialMarginRequirement(
-                new PositionGroupInitialMarginParameters(_portfolio, positionGroup));
+            var initialMarginRequirement = positionGroup.BuyingPowerModel.GetInitialMarginRequirement(_portfolio, positionGroup);
             var maintenanceMargin = positionGroup.BuyingPowerModel.GetMaintenanceMargin(_portfolio, positionGroup);
             // Adjust the delta buying power:
             // GetMaximumLotsForDeltaBuyingPower will add the delta buying power to the maintenance margin and used that as a target margin,
             // but then GetMaximumLotsForTargetBuyingPower will work with initial margin requirement so we make sure the resulting quantity
             // can be ordered. In order to match this, we need to adjust the delta buying power by the difference between the initial margin
             // requirement  and maintenance margin.
-            deltaBuyingPower += initialMarginRequirement.TotalValue - maintenanceMargin;
+            deltaBuyingPower += initialMarginRequirement - maintenanceMargin;
 
             if (expectedQuantity != -Math.Abs(initialPositionQuantity)) // Not liquidating
             {
@@ -996,15 +992,14 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var currentPositionGroup = SetUpOptionStrategy(optionStrategyDefinition, initialPositionQuantity);
 
-            var initialMarginRequirement = (OptionInitialMargin)currentPositionGroup.BuyingPowerModel.GetInitialMarginRequirement(
-                new PositionGroupInitialMarginParameters(_portfolio, currentPositionGroup));
+            var initialMarginRequirement = currentPositionGroup.BuyingPowerModel.GetInitialMarginRequirement(_portfolio, currentPositionGroup);
             var maintenanceMargin = currentPositionGroup.BuyingPowerModel.GetMaintenanceMargin(_portfolio, currentPositionGroup);
             // Adjust the delta buying power:
             // GetMaximumLotsForDeltaBuyingPower will add the delta buying power to the maintenance margin and used that as a target margin,
             // but then GetMaximumLotsForTargetBuyingPower will work with initial margin requirement so we make sure the resulting quantity
             // can be ordered. In order to match this, we need to adjust the delta buying power by the difference between the initial margin
             // requirement  and maintenance margin.
-            deltaBuyingPower += initialMarginRequirement.TotalValue - maintenanceMargin;
+            deltaBuyingPower += initialMarginRequirement - maintenanceMargin;
 
             if (expectedQuantity != -Math.Abs(initialPositionQuantity)) // Not liquidating
             {
@@ -1737,15 +1732,16 @@ namespace QuantConnect.Tests.Common.Securities
             }
 
             var expectedContemplatedInitialMarginRequirement = finalQuantity != 0
-                ? finalPositionGroup.BuyingPowerModel.GetInitialMarginRequirement(_portfolio, finalPositionGroup)
+                ? ((OptionInitialMargin)finalPositionGroup.BuyingPowerModel.GetInitialMarginRequirement(
+                    new PositionGroupInitialMarginParameters(_portfolio, finalPositionGroup))).ValueWithoutPremium
                 : 0m;
             var ordersPositions = orders.Select(o => o.CreatePositions(_portfolio.Securities)).SelectMany(p => p);
             var orderGroup = _portfolio.Positions.ResolvePositionGroups(new PositionCollection(ordersPositions)).Single();
             var orderGroupInitialMargin = (OptionInitialMargin)orderGroup.BuyingPowerModel.GetInitialMarginRequirement(
                 new PositionGroupInitialMarginParameters(_portfolio, orderGroup));
-            // Use TotalValue - Value difference instead of Premium because when premium is negative, it is not added to initial margin requirements
-            // since it is credited to the account
-            expectedContemplatedInitialMarginRequirement += orderGroupInitialMargin.TotalValue - orderGroupInitialMargin.Value;
+            // Use Value-ValueWithoutPremium difference instead of Premium because when premium is negative,
+            // it is not added to initial margin requirements since it is credited to the account
+            expectedContemplatedInitialMarginRequirement += orderGroupInitialMargin.Value - orderGroupInitialMargin.ValueWithoutPremium;
 
             var expectedDelta = expectedContemplatedInitialMarginRequirement - usedMargin;
             Assert.That(buyingPowerImpact.Delta, Is.EqualTo(expectedDelta).Within(1e-18));

@@ -33,9 +33,9 @@ namespace QuantConnect.Securities
         public decimal Premium { get; }
 
         /// <summary>
-        /// The initial margin value in account currency, including the premium in cases that apply (premium debited)
+        /// The initial margin value in account currency, not including the premium in cases that apply (premium debited)
         /// </summary>
-        public decimal TotalValue { get; }
+        public decimal ValueWithoutPremium { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OptionInitialMargin"/> class
@@ -43,10 +43,10 @@ namespace QuantConnect.Securities
         /// <param name="value">The initial margin</param
         /// <param name="premium">The premium of the option/option strategy</param>
         public OptionInitialMargin(decimal value, decimal premium)
-            : base(value)
+            : base(value + Math.Max(premium, 0))
         {
             Premium = premium;
-            TotalValue = Value + Math.Max(Premium, 0);
+            ValueWithoutPremium = value;
         }
     }
 }

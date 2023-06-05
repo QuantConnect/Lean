@@ -18,6 +18,7 @@ using System.Linq;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities.Positions;
 using QuantConnect.Securities.Option.StrategyMatcher;
+using System.Collections.Generic;
 
 namespace QuantConnect.Securities.Option
 {
@@ -314,6 +315,66 @@ namespace QuantConnect.Securities.Option
             var feesWithSign = Math.Sign(initialMarginRequired) * feesInAccountCurrency.Amount;
 
             return new InitialMargin(feesWithSign + initialMarginRequired);
+        }
+
+        /// <summary>
+        /// Computes the impact on the portfolio's buying power from adding the position group to the portfolio. This is
+        /// a 'what if' analysis to determine what the state of the portfolio would be if these changes were applied. The
+        /// delta (before - after) is the margin requirement for adding the positions and if the margin used after the changes
+        /// are applied is less than the total portfolio value, this indicates sufficient capital.
+        /// </summary>
+        /// <param name="parameters">An object containing the portfolio and a position group containing the contemplated
+        /// changes to the portfolio</param>
+        /// <returns>Returns the portfolio's total portfolio value and margin used before and after the position changes are applied</returns>
+        public override ReservedBuyingPowerImpact GetReservedBuyingPowerImpact(ReservedBuyingPowerImpactParameters parameters)
+        {
+            var result = base.GetReservedBuyingPowerImpact(parameters);
+
+            var positionManager = parameters.Portfolio.Positions;
+            var ordersPositions = parameters.Orders.Select(o => o.CreatePositions(parameters.Portfolio.Securities)).SelectMany(p => p).ToList();
+            var orderGroups = positionManager.ResolvePositionGroups(new PositionCollection(ordersPositions));
+
+            var contemplatedMargin = result.Contemplated;
+
+            // We need to add the premium paid for the order:
+
+            // This should always return a single group since it is a single order/combo
+            foreach (var orderGroup in orderGroups)
+            {
+                var initialMargin = orderGroup.BuyingPowerModel.GetInitialMarginRequirement(new PositionGroupInitialMarginParameters(
+                    parameters.Portfolio, orderGroup));
+                var optionInitialMargin = initialMargin as OptionInitialMargin;
+
+                if (optionInitialMargin != null)
+                {
+                    // We need to add the premium paid for the order. We use the TotalValue-Value difference instead of Premium
+                    // to add it only when needed -- when it is debited from the account
+                    contemplatedMargin += optionInitialMargin.Value - optionInitialMargin.ValueWithoutPremium;
+                }
+            }
+
+            return new ReservedBuyingPowerImpact(result.Current, contemplatedMargin, result.ImpactedGroups, result.ContemplatedChanges,
+                result.ContemplatedGroups);
+        }
+
+        /// <summary>
+        /// Gets the initial margin required for the specified contemplated position group.
+        /// Used by <see cref="GetReservedBuyingPowerImpact"/> to get the contemplated groups margin.
+        /// </summary>
+        protected override decimal GetContemplatedGroupsInitialMargin(SecurityPortfolioManager portfolio, PositionGroupCollection contemplatedGroups)
+        {
+            var contemplatedMargin = 0m;
+            foreach (var contemplatedGroup in contemplatedGroups)
+            {
+                // We use the initial margin requirement as the contemplated groups margin in order to ensure
+                // the available buying power is enough to execute the order.
+                var initialMargin = contemplatedGroup.BuyingPowerModel.GetInitialMarginRequirement(
+                    new PositionGroupInitialMarginParameters(portfolio, contemplatedGroup));
+                var optionInitialMargin = initialMargin as OptionInitialMargin;
+                contemplatedMargin += optionInitialMargin?.ValueWithoutPremium ?? initialMargin;
+            }
+
+            return contemplatedMargin;
         }
 
         /// <summary>
