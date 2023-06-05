@@ -317,7 +317,7 @@ namespace QuantConnect.Securities.Positions
             var groupUnit = currentPositionGroup.CreateUnitGroup(parameters.Portfolio.Positions);
 
             // 5a. Compute initial margin requirement for a single unit
-            var unitMargin= Math.Abs(groupUnit.BuyingPowerModel.GetInitialMarginRequirement(portfolio, groupUnit));
+            var unitMargin = Math.Abs(groupUnit.BuyingPowerModel.GetInitialMarginRequirement(portfolio, groupUnit));
             if (unitMargin == 0m)
             {
                 // likely due to missing price data
