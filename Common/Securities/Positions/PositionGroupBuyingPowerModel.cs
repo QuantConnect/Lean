@@ -224,12 +224,6 @@ namespace QuantConnect.Securities.Positions
             return this.GetMaintenanceMargin(parameters.Portfolio, parameters.PositionGroup);
         }
 
-        private static decimal GetInitialMarginValue(InitialMargin initialMargin)
-        {
-            var optionInitialMargin = initialMargin as OptionInitialMargin;
-            return optionInitialMargin?.TotalValue ?? initialMargin.Value;
-        }
-
         /// <summary>
         /// Get the maximum position group order quantity to obtain a position with a given buying power
         /// percentage. Will not take into account free buying power.
@@ -651,6 +645,16 @@ namespace QuantConnect.Securities.Positions
             }
 
             return positionGroupQuantity;
+        }
+
+        /// <summary>
+        /// Gets the initial margin total value, including premium in case the <paramref name="initialMargin"/>
+        /// is an <see cref="OptionInitialMargin"/>
+        /// </summary>
+        private static decimal GetInitialMarginValue(InitialMargin initialMargin)
+        {
+            var optionInitialMargin = initialMargin as OptionInitialMargin;
+            return optionInitialMargin?.TotalValue ?? initialMargin.Value;
         }
     }
 }

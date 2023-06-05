@@ -18,8 +18,7 @@ using System;
 namespace QuantConnect.Securities
 {
     /// <summary>
-    /// Result type for <see cref="IBuyingPowerModel.GetInitialMarginRequirement"/>
-    /// and <see cref="IBuyingPowerModel.GetInitialMarginRequiredForOrder"/>
+    /// Result type for <see cref="Option.OptionStrategyPositionGroupBuyingPowerModel.GetInitialMarginRequirement"/>
     /// </summary>
     public class OptionInitialMargin : InitialMargin
     {
