@@ -720,14 +720,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
                 else
                 {
-                    // should of remove trade and quote bar subscription and split/dividend/delisting for both (8)
-                    Assert.AreEqual(currentSubscriptionCount - 8, _dataQueueHandler.SubscriptionDataConfigs.Count);
+                    // should of remove trade and quote bar subscription for both (4)
+                    Assert.AreEqual(currentSubscriptionCount - 4, _dataQueueHandler.SubscriptionDataConfigs.Count);
                     // internal subscription should still be there
                     Assert.AreEqual(0, _dataQueueHandler.SubscriptionDataConfigs
                         .Where(config => !config.IsInternalFeed)
                         .Count(config => config.Symbol == Symbols.SPY));
-                    // Should be 4 left because of internal subscription + its split/dividend/delisting subscriptions
-                    Assert.AreEqual(4, _dataQueueHandler.SubscriptionDataConfigs.Count(config => config.Symbol == Symbols.SPY));
+                    // Should be 2 left because of internal subscription trade/quote
+                    Assert.AreEqual(2, _dataQueueHandler.SubscriptionDataConfigs.Count(config => config.Symbol == Symbols.SPY));
                     Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
 
                     // we got what we wanted shortcut unit test
@@ -768,14 +768,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
                 else
                 {
-                    // should of remove trade and quote bar subscription and split/dividend/delisting for both (8)
-                    Assert.AreEqual(currentSubscriptionCount - 8, _dataQueueHandler.SubscriptionDataConfigs.Count);
+                    // should of remove trade and quote bar subscription for both (4)
+                    Assert.AreEqual(currentSubscriptionCount - 4, _dataQueueHandler.SubscriptionDataConfigs.Count);
                     // internal subscription should still be there
                     Assert.AreEqual(0, _dataQueueHandler.SubscriptionDataConfigs
                         .Where(config => !config.IsInternalFeed)
                         .Count(config => config.Symbol == Symbols.SPY));
-                    // Should be 4 left because of internal subscription + its split/dividend/delisting subscriptions
-                    Assert.AreEqual(4, _dataQueueHandler.SubscriptionDataConfigs.Count(config => config.Symbol == Symbols.SPY));
+                    // Should be 2 left because of internal subscription trade/quote
+                    Assert.AreEqual(2, _dataQueueHandler.SubscriptionDataConfigs.Count(config => config.Symbol == Symbols.SPY));
                     Assert.IsTrue(_dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
                     // we got what we wanted shortcut unit test
                     _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
@@ -1692,27 +1692,24 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void SkipLiveDividend(bool warmup)
         {
             var symbol = Symbols.AAPL;
+            // aapl has a dividend on the 6th
             if (warmup)
             {
-                _startDate = new DateTime(2014, 8, 10);
+                _startDate = new DateTime(2013, 11, 09);
                 _manualTimeProvider.SetCurrentTimeUtc(_startDate);
                 _algorithm.SetWarmup(5);
+            }
+            else
+            {
+                _startDate = new DateTime(2013, 11, 05);
+                _manualTimeProvider.SetCurrentTimeUtc(_startDate);
             }
 
             var startPortfolioValue = _algorithm.Portfolio.TotalPortfolioValue;
             var feed = RunDataFeed(Resolution.Daily, equities: new List<string> { symbol.Value },
                     getNextTicksFunction: delegate
                     {
-                        if (warmup)
-                        {
-                            return Enumerable.Empty<BaseData>();
-                        }
-                        return Enumerable.Range(1, 2)
-                            .Select(
-                                x => x % 2 == 0
-                                    ? (BaseData)new Tick { Symbol = symbol, TickType = TickType.Trade }
-                                    : new Dividend { Symbol = symbol, Value = 2 })
-                            .ToList();
+                        return Enumerable.Empty<BaseData>();
                     });
 
             var emittedDividend = false;
@@ -1738,6 +1735,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [TestCase(true)]
         public void LiveSplitHandling(bool warmup)
         {
+            // there's an split starting on the 7th
             var symbol = Symbols.AAPL;
             if (warmup)
             {
@@ -1745,47 +1743,51 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 _manualTimeProvider.SetCurrentTimeUtc(_startDate);
                 _algorithm.SetWarmup(6);
             }
+            else
+            {
+                _startDate = new DateTime(2014, 06, 5);
+                _manualTimeProvider.SetCurrentTimeUtc(_startDate);
+            }
 
-            var startPortfolioValue = _algorithm.Portfolio.TotalPortfolioValue;
             var feed = RunDataFeed(Resolution.Daily, equities: new List<string> { symbol.Value },
                     getNextTicksFunction: delegate
                     {
-                        if (warmup)
-                        {
-                            return Enumerable.Empty<BaseData>();
-                        }
-                        var time = _manualTimeProvider.GetUtcNow();
-                        return Enumerable.Range(1, 2)
-                            .Select(
-                                x => x % 2 == 0
-                                    ? (BaseData)new Tick { Symbol = symbol, TickType = TickType.Trade, Value = 2 }
-                                    : new Split(symbol, time.ConvertFromUtc(TimeZones.NewYork), 2, 10, SplitType.SplitOccurred))
-                            .ToList();
+                        return Enumerable.Empty<BaseData>();
                     });
 
             var holdings = _algorithm.Securities[symbol].Holdings;
             holdings.SetHoldings(10, quantity: 100);
+            var startPortfolioValue = _algorithm.Portfolio.TotalPortfolioValue;
 
             var emittedSplit = false;
+            var emittedSplitWarning = false;
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
             {
-                if (ts.Slice.Splits.TryGetValue(symbol, out var split) && split.Type == SplitType.SplitOccurred)
+                if (ts.Slice.Splits.TryGetValue(symbol, out var split))
                 {
                     Assert.AreEqual(warmup, _algorithm.IsWarmingUp);
 
-                    emittedSplit = true;
-                    // we got what we wanted shortcut unit test
-                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
+                    if(split.Type == SplitType.SplitOccurred)
+                    {
+                        emittedSplit = true;
+                        // we got what we wanted shortcut unit test
+                        _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
+                    }
+                    else
+                    {
+                        emittedSplitWarning = true;
+                    }
                 }
-            }, secondsTimeStep: warmup ? 60 * 60 : 60 * 60 * 5,
+            }, secondsTimeStep: warmup ? 60 * 60 : 60 * 60 * 12,
             endDate: _startDate.AddDays(30));
 
             Assert.IsTrue(emittedSplit);
-            Assert.AreEqual(startPortfolioValue, _algorithm.Portfolio.TotalPortfolioValue);
+            Assert.IsTrue(emittedSplitWarning);
+            Assert.AreEqual((double)startPortfolioValue, (double)_algorithm.Portfolio.TotalPortfolioValue, delta: (double)(0.1m * _algorithm.Portfolio.TotalPortfolioValue));
             if (!warmup)
             {
-                Assert.AreEqual(10, holdings.Quantity);
-                Assert.AreEqual(100, holdings.AveragePrice);
+                Assert.AreNotEqual(10, holdings.Quantity);
+                Assert.AreNotEqual(100, holdings.AveragePrice);
             }
             else
             {
@@ -1798,6 +1800,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void HandlesAuxiliaryDataAtTickResolution()
         {
+            // aapl has a dividend on the 6th
+            _startDate = new DateTime(2013, 11, 05);
+            _manualTimeProvider.SetCurrentTimeUtc(_startDate);
+
             var symbol = Symbols.AAPL;
 
             var feed = RunDataFeed(
@@ -1805,12 +1811,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 equities: new List<string> { symbol.Value },
                 getNextTicksFunction: delegate
                 {
-                    return Enumerable.Range(1, 2)
-                        .Select(
-                            x => x % 2 == 0
-                                ? (BaseData)new Tick { Symbol = symbol, TickType = TickType.Trade }
-                                : new Dividend { Symbol = symbol, Value = x })
-                        .ToList();
+                    return new[] { (BaseData)new Tick { Symbol = symbol, TickType = TickType.Trade } };
                 });
 
             var emittedTicks = false;
@@ -1827,8 +1828,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         emittedAuxData = true;
                     }
+
+                    if (emittedAuxData && emittedTicks)
+                    {
+                        // we got what we wanted shortcut unit test
+                        _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
+                    }
                 }
-            });
+            }, secondsTimeStep: 60 * 60 * 4,
+            endDate: _startDate.AddDays(2));
 
             Assert.IsTrue(emittedTicks);
             Assert.IsTrue(emittedAuxData);
@@ -2060,8 +2068,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             // Equity - Hourly resolution
             // We expect 7 hourly bars for 6.5 hours in open market hours
-            // We expect only 1 dividend at midnight
-            new TestCaseData(Symbols.SPY, Resolution.Hour, 1, 0, 7, 0, 1, 0, false, _instances[typeof(BaseData)]),
+            new TestCaseData(Symbols.SPY, Resolution.Hour, 1, 0, 7, 0, 0, 0, false, _instances[typeof(BaseData)]),
 
             // Equity - Minute resolution
             // We expect 30 minute bars for 0.5 hours in open market hours
@@ -2070,8 +2077,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // Equity - Tick resolution
             // In this test we only emit ticks once per hour
             // We expect only 6 ticks -- the 4 PM tick is not received because it's outside market hours -> times 2 (quote/trade bar)
-            // We expect only 1 dividend at midnight
-            new TestCaseData(Symbols.SPY, Resolution.Tick, 1, (7 - 1) * 2, 0, 0, 1, 0, false, _instances[typeof(BaseData)]),
+            new TestCaseData(Symbols.SPY, Resolution.Tick, 1, (7 - 1) * 2, 0, 0, 0, 0, false, _instances[typeof(BaseData)]),
 
             // Forex - FXCM
             new TestCaseData(Symbols.EURUSD, Resolution.Hour, 1, 0, 0, 24, 0, 0, false, _instances[typeof(BaseData)]),
@@ -2204,59 +2210,41 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
                 else
                 {
-                    if (symbol.SecurityType == SecurityType.Equity && exchangeTime.Day == startDate.Day + 1 &&
-                        exchangeTime.Hour == 0 && exchangeTime.Minute == 0)
+                    var tickType = TickType.Quote;
+                    var dataPoint = new Tick
                     {
-                        var dividend = new Dividend
-                        {
-                            Symbol = symbol,
-                            Time = exchangeTime,
-                            EndTime = exchangeTime,
-                            Value = actualAuxPointsEnqueued++
-                        };
+                        Symbol = symbol,
+                        Time = exchangeTime,
+                        EndTime = exchangeTime,
+                        TickType = tickType,
+                        Value = actualPricePointsEnqueued
+                    };
 
-                        dataPoints.Add(dividend);
-
-                        ConsoleWriteLine($"{algorithmTime} - FuncDataQueueHandler emitted dividend: {dividend}");
-                    }
-                    else
+                    if (symbol.SecurityType != SecurityType.Equity
+                        || resolution != Resolution.Daily
+                        || resolution != Resolution.Hour)
                     {
-                        var tickType = TickType.Quote;
-                        var dataPoint = new Tick
-                        {
-                            Symbol = symbol,
-                            Time = exchangeTime,
-                            EndTime = exchangeTime,
-                            TickType = tickType,
-                            Value = actualPricePointsEnqueued
-                        };
-
-                        if (symbol.SecurityType != SecurityType.Equity
-                            || resolution != Resolution.Daily
-                            || resolution != Resolution.Hour)
-                        {
-                            actualPricePointsEnqueued++;
-                            // equity has minute/second/tick quote data
-                            dataPoints.Add(dataPoint);
-                        }
-
-                        ConsoleWriteLine(
-                            $"{algorithmTime} - FuncDataQueueHandler emitted {tickType} tick: {dataPoint}");
-
-                        dataPoint = new Tick
-                        {
-                            Symbol = symbol,
-                            Time = exchangeTime,
-                            EndTime = exchangeTime,
-                            TickType = TickType.Trade,
-                            Value = actualPricePointsEnqueued++
-                        };
-
+                        actualPricePointsEnqueued++;
+                        // equity has minute/second/tick quote data
                         dataPoints.Add(dataPoint);
-
-                        ConsoleWriteLine(
-                            $"{algorithmTime} - FuncDataQueueHandler emitted Trade tick: {dataPoint}");
                     }
+
+                    ConsoleWriteLine(
+                        $"{algorithmTime} - FuncDataQueueHandler emitted {tickType} tick: {dataPoint}");
+
+                    dataPoint = new Tick
+                    {
+                        Symbol = symbol,
+                        Time = exchangeTime,
+                        EndTime = exchangeTime,
+                        TickType = TickType.Trade,
+                        Value = actualPricePointsEnqueued++
+                    };
+
+                    dataPoints.Add(dataPoint);
+
+                    ConsoleWriteLine(
+                        $"{algorithmTime} - FuncDataQueueHandler emitted Trade tick: {dataPoint}");
                 }
 
                 emittedData.Set();
@@ -2478,7 +2466,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     // give enough time to the producer to emit
                     if (!emittedData.WaitOne(300))
                     {
-                        Assert.Fail("Timeout waiting for data generation");
+                        Assert.Fail($"Timeout waiting for data generation at {algorithm.Time} algorithm tz");
                     }
 
                     var currentTime = timeProvider.GetUtcNow();

@@ -230,12 +230,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         EventHandler handler = (_, _) => subscription?.OnNewDataAvailable();
                         enumerator = Subscribe(request.Configuration, handler);
 
-                        if (request.Configuration.EmitSplitsAndDividends())
-                        {
-                            auxEnumerators.Add(Subscribe(new SubscriptionDataConfig(request.Configuration, typeof(Dividend)), handler));
-                            auxEnumerators.Add(Subscribe(new SubscriptionDataConfig(request.Configuration, typeof(Split)), handler));
-                        }
-
                         if (auxEnumerators.Count > 0)
                         {
                             enumerator = new LiveAuxiliaryDataSynchronizingEnumerator(_timeProvider, request.Configuration.ExchangeTimeZone, enumerator, auxEnumerators);
