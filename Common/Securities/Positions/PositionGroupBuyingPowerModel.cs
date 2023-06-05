@@ -121,7 +121,7 @@ namespace QuantConnect.Securities.Positions
             var contemplatedGroups = positionManager.ResolvePositionGroups(new PositionCollection(impactedPositions.Values));
 
             // 5. Compute contemplated margin
-            var contemplated = GetContemplatedGroupsInitialMargin(parameters.Portfolio, contemplatedGroups);
+            var contemplated = GetContemplatedGroupsInitialMargin(parameters.Portfolio, contemplatedGroups, positions);
 
             return new ReservedBuyingPowerImpact(current, contemplated, impactedGroups, parameters.ContemplatedChanges, contemplatedGroups);
         }
@@ -130,7 +130,8 @@ namespace QuantConnect.Securities.Positions
         /// Gets the initial margin required for the specified contemplated position group.
         /// Used by <see cref="GetReservedBuyingPowerImpact"/> to get the contemplated groups margin.
         /// </summary>
-        protected virtual decimal GetContemplatedGroupsInitialMargin(SecurityPortfolioManager portfolio, PositionGroupCollection contemplatedGroups)
+        protected virtual decimal GetContemplatedGroupsInitialMargin(SecurityPortfolioManager portfolio, PositionGroupCollection contemplatedGroups,
+            List<IPosition> ordersPositions)
         {
             var contemplatedMargin = 0m;
             foreach (var contemplatedGroup in contemplatedGroups)
