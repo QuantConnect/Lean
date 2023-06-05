@@ -44,9 +44,9 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var backtestPoints = ResultsUtil.PerformancePoints(_backtest);
+            var backtestPoints = ResultsUtil.EquityPoints(_backtest, "Daily Performance");
             var backtestBenchmarkPoints = ResultsUtil.BenchmarkPoints(_backtest);
-            var livePoints = ResultsUtil.PerformancePoints(_live);
+            var livePoints = ResultsUtil.EquityPoints(_live, "Daily Performance");
             var liveBenchmarkPoints = ResultsUtil.BenchmarkPoints(_live);
 
             var base64 = "";

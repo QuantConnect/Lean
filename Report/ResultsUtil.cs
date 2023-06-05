@@ -24,48 +24,24 @@ namespace QuantConnect.Report
     public static class ResultsUtil
     {
         /// <summary>
-        /// Get the equity chart points
+        /// Get the points, from the Series name given, in Strategy Equity chart
         /// </summary>
         /// <param name="result">Result object to extract the chart points</param>
+        /// <param name="seriesName">Series name from which the points will be extracted. By default is "Equity"</param>
         /// <returns></returns>
-        public static SortedList<DateTime, double> EquityPoints(Result result)
+        public static SortedList<DateTime, double> EquityPoints(Result result, string seriesName = "Equity")
         {
             var points = new SortedList<DateTime, double>();
 
             if (result == null || result.Charts == null ||
                 !result.Charts.ContainsKey("Strategy Equity") ||
                 result.Charts["Strategy Equity"].Series == null ||
-                !result.Charts["Strategy Equity"].Series.ContainsKey("Equity"))
+                !result.Charts["Strategy Equity"].Series.ContainsKey(seriesName))
             {
                 return points;
             }
 
-            foreach (var point in result.Charts["Strategy Equity"].Series["Equity"].Values)
-            {
-                points[Time.UnixTimeStampToDateTime(point.x)] = Convert.ToDouble(point.y);
-            }
-
-            return points;
-        }
-
-        /// <summary>
-        /// Get the daily performance chart points
-        /// </summary>
-        /// <param name="result">Result object to extract the chart points</param>
-        /// <returns></returns>
-        public static SortedList<DateTime, double> PerformancePoints(Result result)
-        {
-            var points = new SortedList<DateTime, double>();
-
-            if (result == null || result.Charts == null ||
-                !result.Charts.ContainsKey("Strategy Equity") ||
-                result.Charts["Strategy Equity"].Series == null ||
-                !result.Charts["Strategy Equity"].Series.ContainsKey("Daily Performance"))
-            {
-                return points;
-            }
-
-            foreach (var point in result.Charts["Strategy Equity"].Series["Daily Performance"].Values)
+            foreach (var point in result.Charts["Strategy Equity"].Series[seriesName].Values)
             {
                 points[Time.UnixTimeStampToDateTime(point.x)] = Convert.ToDouble(point.y);
             }

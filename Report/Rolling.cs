@@ -36,11 +36,11 @@ namespace QuantConnect.Report
         /// <returns>Rolling beta</returns>
         public static Series<DateTime, double> Beta(SortedList<DateTime, double> performancePoints, SortedList<DateTime, double> benchmarkPoints, int windowSize = 132)
         {
-            Series<DateTime, double> dailyReturnsSeries = new Series<DateTime, double>(performancePoints);
+            var dailyReturnsSeries = new Series<DateTime, double>(performancePoints);
             dailyReturnsSeries.ResampleEquivalence(date => date.Date, s => s.LastValue())
                 .PercentChange();
 
-            Series<DateTime, double> benchmarkReturns = new Series<DateTime, double>(benchmarkPoints);
+            var benchmarkReturns = new Series<DateTime, double>(benchmarkPoints);
             benchmarkReturns.ResampleEquivalence(date => date.Date, s => s.LastValue())
                 .CumulativeReturns();
 

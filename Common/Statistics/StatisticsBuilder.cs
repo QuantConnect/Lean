@@ -113,7 +113,7 @@ namespace QuantConnect.Statistics
 
             // Convert our benchmark values into a percentage daily performance of the benchmark, this will shorten the series by one since
             // its the percentage change between each entry (No day 0 sample)
-            var listBenchmark = CreateDifferences(benchmark, fromDate, toDate).Values.ToList();
+            var listBenchmark = CreateDifferences(benchmark, fromDate, toDate);
 
             // We will skip past day 1 of performance values to deal with the OnOpen orders causing misalignment between benchmark and
             // algorithm performance. So we drop the first value of listBenchmark (Day 1), and drop two values from performance (Day 0, Day 1)
@@ -122,7 +122,7 @@ namespace QuantConnect.Statistics
 
             var runningCapital = equity.Count == periodEquity.Count ? startingCapital : periodEquity.Values.FirstOrDefault();
 
-            return new AlgorithmPerformance(periodTrades, periodProfitLoss, periodEquity, portfolioTurnover, listPerformance, listBenchmark, runningCapital);
+            return new AlgorithmPerformance(periodTrades, periodProfitLoss, periodEquity, portfolioTurnover, listPerformance, listBenchmark.Select(x => x.Value).ToList(), runningCapital);
         }
 
         /// <summary>
@@ -280,16 +280,15 @@ namespace QuantConnect.Statistics
         }
 
         /// <summary>
-        /// Creates a sorted list of percentage change for the period
+        /// Yields pairs of date and percentage change for the period
         /// </summary>
         /// <param name="points">The values to calculate percentage change for</param>
         /// <param name="fromDate">Starting date (inclusive)</param>
         /// <param name="toDate">Ending date (inclusive)</param>
-        /// <returns>The sorted list of percentage change</returns>
-        public static SortedList<DateTime, double> CreateDifferences(SortedDictionary<DateTime, decimal> points, DateTime fromDate, DateTime toDate)
+        /// <returns>Pairs of date and percentage change</returns>
+        public static IEnumerable<KeyValuePair<DateTime, double>> CreateDifferences(SortedDictionary<DateTime, decimal> points, DateTime fromDate, DateTime toDate)
         {
             var dtPrevious = new DateTime();
-            var listPercentage = new SortedList<DateTime, double>();
 
             // Get points performance array for the given period:
             foreach (var dt in points.Keys.Where(dt => dt >= fromDate.Date && dt.Date <= toDate))
@@ -299,16 +298,14 @@ namespace QuantConnect.Statistics
                 if (hasPrevious && previous != 0)
                 {
                     var deltaPercentage = (points[dt] - previous) / previous;
-                    listPercentage.Add(dt, (double)deltaPercentage);
+                    yield return new KeyValuePair<DateTime, double>(dt, (double)deltaPercentage);
                 }
                 else if (hasPrevious)
                 {
-                    listPercentage.Add(dt, 0);
+                    yield return new KeyValuePair<DateTime, double>(dt, (double)0);
                 }
                 dtPrevious = dt;
             }
-
-            return listPercentage;
         }
     }
 }
