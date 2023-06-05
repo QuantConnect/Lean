@@ -94,7 +94,7 @@ namespace QuantConnect.Securities.Option
         /// <returns>The maintenance margin required for the provided holdings quantity/cost/value</returns>
         public override MaintenanceMargin GetMaintenanceMargin(MaintenanceMarginParameters parameters)
         {
-            return parameters.AbsoluteHoldingsCost * GetMaintenanceMarginRequirement(parameters);
+            return parameters.Quantity >= 0 ? 0 : parameters.AbsoluteHoldingsCost * GetMaintenanceMarginRequirement(parameters);
         }
 
         /// <summary>
