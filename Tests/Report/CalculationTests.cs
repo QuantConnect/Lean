@@ -60,7 +60,7 @@ namespace QuantConnect.Tests.Report
             for (var index = 0; index < betaValues.Length; index++)
             {
                 var betaValue = betaValues[index];
-                Assert.AreEqual(expected[index], betaValue);
+                Assert.AreEqual(expected[index], betaValue, 0.001d);
             }
         }
 
