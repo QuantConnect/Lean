@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Securities.Option.StrategyMatcher;
 
 namespace QuantConnect.Securities.Option
@@ -69,6 +70,26 @@ namespace QuantConnect.Securities.Option
                     }
                 }
             };
+        }
+
+        /// <summary>
+        /// Creates a Protective Call strategy that consists of selling one call contract and buying 1 lot shares of the underlying.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="strike">The strike price for the call option contract</param>
+        /// <param name="expiration">The expiration date for the call option contract</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy ProtectiveCall(Symbol canonicalOption, decimal strike, DateTime expiration)
+        {
+            // Since a protective call is an inverted covered call, we can just use the CoveredCall method and invert the legs
+            var strategy = CoveredCall(canonicalOption, strike, expiration);
+            strategy.Name = OptionStrategyDefinitions.ProtectiveCall.Name;
+            foreach (var leg in strategy.OptionLegs.Cast<OptionStrategy.LegData>().Concat(strategy.UnderlyingLegs))
+            {
+                leg.Quantity *= -1;
+            }
+
+            return strategy;
         }
 
         /// <summary>

@@ -27,11 +27,13 @@ namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// This algorithm demonstrate how to use OptionStrategies helper class to batch send orders for common strategies.
-    /// In this case, the algorithm tests the Covered Call strategy.
+    /// In this case, the algorithm tests the Covered and Protective Call strategies.
     /// </summary>
-    public class CoveredCallStrategyAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class CoveredAndProtectiveCallStrategiesAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _optionSymbol;
+        private OptionStrategy _coveredCall;
+        private OptionStrategy _protectiveCall;
 
         public override void Initialize()
         {
@@ -60,7 +62,9 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (contract != null)
                     {
-                        Buy(OptionStrategies.CoveredCall(_optionSymbol, contract.Strike, contract.Expiry), 2);
+                        _coveredCall = OptionStrategies.CoveredCall(_optionSymbol, contract.Strike, contract.Expiry);
+                        _protectiveCall = OptionStrategies.ProtectiveCall(_optionSymbol, contract.Strike, contract.Expiry);
+                        Buy(_coveredCall, 2);
                     }
                 }
             }
@@ -97,6 +101,27 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new Exception($@"Expected underlying position quantity to be {expectedUnderlyingPositionQuantity
                         }. Actual: {underlyingPosition.Quantity}");
                 }
+
+                // Now we should be able to close the position using the inverse strategy (a protective call)
+                Buy(_protectiveCall, 2);
+
+                // We can quit now, no more testing required
+                Quit();
+            }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            if (Portfolio.Invested)
+            {
+                throw new Exception("Expected no holdings at end of algorithm");
+            }
+
+            var ordersCount = Transactions.GetOrders((order) => order.Status == OrderStatus.Filled).Count();
+            if (ordersCount != 4)
+            {
+                throw new Exception("Expected 4 orders to have been submitted and filled, 2 for buying the covered call and 2 for the liquidation." +
+                    $" Actual {ordersCount}");
             }
         }
 
@@ -118,7 +143,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 476196;
+        public long DataPoints => 4494;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -130,7 +155,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "2"},
+            {"Total Trades", "4"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
@@ -149,11 +174,11 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$4.00"},
-            {"Estimated Strategy Capacity", "$6100000.00"},
-            {"Lowest Capacity Asset", "GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "16.08%"},
-            {"OrderListHash", "48c74768393c8a99fcc35c44fa410460"}
+            {"Total Fees", "$8.00"},
+            {"Estimated Strategy Capacity", "$120000.00"},
+            {"Lowest Capacity Asset", "GOOCV WBGM92QHIYO6|GOOCV VP83T1ZUHROL"},
+            {"Portfolio Turnover", "32.18%"},
+            {"OrderListHash", "44aee2765df08ed1dad3b1723445ac5e"}
         };
     }
 }

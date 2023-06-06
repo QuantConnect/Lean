@@ -15,9 +15,9 @@ from AlgorithmImports import *
 
 ### <summary>
 ### This algorithm demonstrate how to use OptionStrategies helper class to batch send orders for common strategies.
-### In this case, the algorithm tests the Covered Call strategy.
+### In this case, the algorithm tests the Covered and Protective Call strategies.
 ### </summary>
-class CoveredCallStrategyAlgorithm(QCAlgorithm):
+class CoveredAndProtectiveCallStrategiesAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         self.SetStartDate(2015, 12, 24)
@@ -41,7 +41,9 @@ class CoveredCallStrategyAlgorithm(QCAlgorithm):
                 if len(contracts) == 0: continue
                 contract = contracts[0]
                 if contract != None:
-                    self.Buy(OptionStrategies.CoveredCall(self._option_symbol, contract.Strike, contract.Expiry), 2)
+                    self._covered_call = OptionStrategies.CoveredCall(self._option_symbol, contract.Strike, contract.Expiry)
+                    self._protective_call = OptionStrategies.ProtectiveCall(self._option_symbol, contract.Strike, contract.Expiry)
+                    self.Buy(self._covered_call, 2)
         else:
             # Verify that the strategy was traded
             positionGroup = list(self.Portfolio.Positions.Groups)[0]
@@ -65,6 +67,21 @@ class CoveredCallStrategyAlgorithm(QCAlgorithm):
 
             if underlyingPosition.Quantity != expectedUnderlyingPositionQuantity:
                 raise Exception(f"Expected underlying position quantity to be {expectedUnderlyingPositionQuantity}. Actual: {underlyingPosition.Quantity}")
+
+            # Now we should be able to close the position using the inverse strategy (a protective call)
+            self.Buy(self._protective_call, 2);
+
+            # We can quit now, no more testing required
+            self.Quit();
+
+    def OnEndOfAlgorithm(self):
+        if self.Portfolio.Invested:
+            raise Exception("Expected no holdings at end of algorithm")
+
+        orders_count = len(list(self.Transactions.GetOrders(lambda order: order.Status == OrderStatus.Filled)))
+        if orders_count != 4:
+            raise Exception("Expected 4 orders to have been submitted and filled, 2 for buying the covered call and 2 for the liquidation. "
+                            f"Actual {orders_count}")
 
     def OnOrderEvent(self, orderEvent):
         self.Debug(str(orderEvent))
