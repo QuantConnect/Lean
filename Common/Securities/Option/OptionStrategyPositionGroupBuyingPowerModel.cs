@@ -233,7 +233,10 @@ namespace QuantConnect.Securities.Option
             {
                 var option = parameters.PositionGroup.Positions.Single();
                 var security = (Option)parameters.Portfolio.Securities[option.Symbol];
-                return Math.Abs(security.BuyingPowerModel.GetInitialMarginRequirement(security, option.Quantity));
+                var margin = (OptionInitialMargin)security.BuyingPowerModel.GetInitialMarginRequirement(
+                    new InitialMarginParameters(security, option.Quantity));
+
+                return new OptionInitialMargin(Math.Abs(margin.ValueWithoutPremium), margin.Premium);
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.BearCallSpread.Name
                 || _optionStrategy.Name == OptionStrategyDefinitions.BullCallSpread.Name)
