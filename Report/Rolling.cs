@@ -36,15 +36,13 @@ namespace QuantConnect.Report
         /// <returns>Rolling beta</returns>
         public static Series<DateTime, double> Beta(SortedList<DateTime, double> performancePoints, SortedList<DateTime, double> benchmarkPoints, int windowSize = 132)
         {
-            var decimalDailyDictionary = new SortedDictionary<DateTime, decimal>(performancePoints.ToDictionary(item => item.Key, item => (decimal)item.Value));
-            var dailyDictionary = StatisticsBuilder.PreprocessPerformanceValues(decimalDailyDictionary);
+            var dailyDictionary = StatisticsBuilder.PreprocessPerformanceValues(performancePoints.Select(x => new KeyValuePair<DateTime, decimal>(x.Key, (decimal)x.Value)));
             var dailyReturnsSeries = new Series<DateTime, double>(dailyDictionary);
 
             Series<DateTime, double> benchmarkReturns;
             if (benchmarkPoints.Count != 0)
             {
-                var decimalBenchmarkDictionary = new SortedDictionary<DateTime, decimal>(benchmarkPoints.ToDictionary(item => item.Key, item => (decimal)item.Value));
-                var benchmarkReturnsDictionary = StatisticsBuilder.CreateDifferences(decimalBenchmarkDictionary, benchmarkPoints.Keys.First(), benchmarkPoints.Keys.Last());
+                var benchmarkReturnsDictionary = StatisticsBuilder.CreateBenchmarkDifferences(benchmarkPoints.Select(x => new KeyValuePair<DateTime, decimal>(x.Key, (decimal)x.Value)), benchmarkPoints.Keys.First(), benchmarkPoints.Keys.Last());
                 benchmarkReturns = new Series<DateTime, double>(benchmarkReturnsDictionary);
             }
             else
