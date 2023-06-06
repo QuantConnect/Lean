@@ -40,7 +40,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Initializes a new instance of the <see cref="OptionInitialMargin"/> class
         /// </summary>
-        /// <param name="value">The initial margin</param
+        /// <param name="value">The initial margin</param>
         /// <param name="premium">The premium of the option/option strategy</param>
         public OptionInitialMargin(decimal value, decimal premium)
             : base(value + Math.Max(premium, 0))

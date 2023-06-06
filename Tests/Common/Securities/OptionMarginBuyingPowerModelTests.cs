@@ -68,8 +68,12 @@ namespace QuantConnect.Tests.Common.Securities
             var buyingPowerModel = new OptionMarginModel();
 
             // we expect long positions to be 100% charged.
-            Assert.AreEqual(optionPut.Holdings.AbsoluteHoldingsCost, buyingPowerModel.GetMaintenanceMargin(optionPut));
-            Assert.AreEqual(optionCall.Holdings.AbsoluteHoldingsCost, buyingPowerModel.GetMaintenanceMargin(optionCall));
+            Assert.AreEqual(optionPut.Holdings.AbsoluteHoldingsValue, buyingPowerModel.GetInitialMarginRequirement(optionPut, optionPut.Holdings.Quantity));
+            Assert.AreEqual(optionCall.Holdings.AbsoluteHoldingsValue, buyingPowerModel.GetInitialMarginRequirement(optionCall, optionCall.Holdings.Quantity));
+
+            // long option position have zero maintenance margin requirement
+            Assert.AreEqual(0m, buyingPowerModel.GetMaintenanceMargin(optionPut));
+            Assert.AreEqual(0m, buyingPowerModel.GetMaintenanceMargin(optionCall));
         }
 
         [Test]
@@ -89,7 +93,11 @@ namespace QuantConnect.Tests.Common.Securities
             var buyingPowerModel = new OptionMarginModel();
 
             // short option positions are very expensive in terms of margin.
-            // Margin = 2 * 100 * (14 + 0.2 * 196) = 10640
+            // they do not include premium since the user gets paid for the premium up front.
+            // Margin = quantity * contract multiplier * [option price + MAX(A, B)]
+            //      A = 20% * underlying price - OTM amount = 0.2 * 196 - 0 = 39.2
+            //      B = 10% * underlying price = 0.1 * 196 = 19.6
+            // Margin = 2 * 100 * (14 + MAX(39.2, 19.6)) = 10640
             Assert.AreEqual(10640m, buyingPowerModel.GetMaintenanceMargin(optionCall));
         }
 
