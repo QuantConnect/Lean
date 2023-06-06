@@ -36,7 +36,7 @@ namespace QuantConnect.Securities.Option
         private static SymbolPropertiesDatabase _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
 
         /// <summary>
-        /// Creates a Covered Call strategy that consists of selling one call contract and buying 1 lot shares of the underlying.
+        /// Creates a Covered Call strategy that consists of selling one call contract and buying 1 lot of the underlying.
         /// </summary>
         /// <param name="canonicalOption">Option symbol</param>
         /// <param name="strike">The strike price for the call option contract</param>
@@ -73,7 +73,7 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// Creates a Protective Call strategy that consists of selling one call contract and buying 1 lot shares of the underlying.
+        /// Creates a Protective Call strategy that consists of buying one call contract and selling 1 lot of the underlying.
         /// </summary>
         /// <param name="canonicalOption">Option symbol</param>
         /// <param name="strike">The strike price for the call option contract</param>
